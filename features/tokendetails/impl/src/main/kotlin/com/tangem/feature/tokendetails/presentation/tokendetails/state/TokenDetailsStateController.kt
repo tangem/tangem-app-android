@@ -9,6 +9,7 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
@@ -42,21 +43,29 @@ internal class TokenDetailsStateController @Inject constructor() {
                 menuItems = persistentListOf(),
             ),
             balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-                actionButtons = persistentListOf(
-                    TangemButtonUM(
-                        text = resourceReference(R.string.tangempay_card_details_add_funds),
-                        tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_down_24),
-                        onClick = { },
-                        isEnabled = true,
-                        type = TangemButtonType.Secondary,
+                addFundsButton = TangemButtonUM(
+                    text = resourceReference(R.string.tangempay_card_details_add_funds),
+                    tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_down_24),
+                    onClick = { },
+                    isEnabled = true,
+                    type = TangemButtonType.Secondary,
+                ),
+                swapButton = TangemButtonUM(
+                    text = resourceReference(R.string.common_swap),
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_exchange_default_24,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.quaternary },
                     ),
-                    TangemButtonUM(
-                        text = resourceReference(R.string.common_transfer),
-                        tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_up_24),
-                        onClick = { },
-                        isEnabled = true,
-                        type = TangemButtonType.Secondary,
-                    ),
+                    onClick = { },
+                    isEnabled = false,
+                    type = TangemButtonType.Secondary,
+                ),
+                transferButton = TangemButtonUM(
+                    text = resourceReference(R.string.common_transfer),
+                    tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_up_24),
+                    onClick = { },
+                    isEnabled = true,
+                    type = TangemButtonType.Secondary,
                 ),
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                 currencyIconState = CurrencyIconState.Loading,
@@ -70,6 +79,9 @@ internal class TokenDetailsStateController @Inject constructor() {
             ),
             isBalanceHidden = false,
             isMarketPriceAvailable = false,
+            addFundsUM = AddFundsUM.Loading,
+            transferUM = TransferUM.Loading,
+            zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
         )
     }
 }

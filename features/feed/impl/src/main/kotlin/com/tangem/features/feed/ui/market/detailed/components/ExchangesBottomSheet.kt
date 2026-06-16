@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +50,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.ExchangeItemUM
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
@@ -273,7 +275,7 @@ private fun ErrorV2(content: ExchangesBottomSheetContent.Error, modifier: Modifi
             text = stringResourceSafe(id = content.message),
             color = TangemTheme.colors2.text.neutral.tertiary,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography2.bodyRegular14,
+            style = TangemTheme.typography2.subheadlineMedium14,
         )
 
         SpacerH(8.dp)
@@ -369,6 +371,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.HEAD),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(108.dp)
                 .height(20.dp)
@@ -376,6 +379,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.START_TOP),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(52.dp)
                 .height(16.dp)
@@ -383,6 +387,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.START_BOTTOM),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(106.dp)
                 .height(20.dp)
@@ -390,6 +395,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.END_TOP),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(52.dp)
                 .height(16.dp)
@@ -425,6 +431,25 @@ private fun Preview_ExchangesBottomSheet(
                 isShown = true,
             ),
         )
+    }
+}
+
+@Preview
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ExchangesBottomSheetV2(
+    @PreviewParameter(ExchangesBottomSheetContentProvider::class) content: ExchangesBottomSheetContent,
+) {
+    TangemThemePreviewRedesign {
+        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+            ExchangesBottomSheet(
+                config = TangemBottomSheetConfig(
+                    onDismissRequest = {},
+                    content = content,
+                    isShown = true,
+                ),
+            )
+        }
     }
 }
 

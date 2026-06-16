@@ -51,9 +51,12 @@ class HideTokenTest : BaseTestCase() {
                     dialogContainer.assertIsDisplayed()
                     okButton.clickWithAssertion()
                 }
+                waitForIdle()
             }
             step("Assert token: '$tokenTitle' is not displayed") {
-                onMainScreen { assertTokenDoesNotExist(tokenTitle) }
+                flakySafely {
+                    onMainScreen { assertTokenDoesNotExist(tokenTitle) }
+                }
             }
         }
     }

@@ -21,6 +21,7 @@ import com.tangem.feature.tester.presentation.storybook.page.buttons.buttonsStor
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.tangemCheckboxStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.contextmenu.tangemContextMenuStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.deviceicon.deviceIconStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.dsComponentsListStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.tangemHeaderRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.message.tangemMessageStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.opportunitiesBGStoryFactory
@@ -37,6 +38,7 @@ import com.tangem.feature.tester.presentation.storybook.page.typography.typograp
 private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
 private fun buildStories() = listOf(
+    StoryItem(title = "💎 DS Components", factory = dsComponentsListStoryFactory),
     StoryItem(title = "🔘 Buttons", factory = buttonsStoryFactory),
     StoryItem(title = "🏷️ Badge", factory = tangemBadgeStoryFactory),
     StoryItem(title = "✨ Opportunities BG", factory = opportunitiesBGStoryFactory),

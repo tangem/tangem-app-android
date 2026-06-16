@@ -3,12 +3,24 @@ package com.tangem.common.extensions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.onAllNodesWithText
+import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.components.buttons.actions.HasBadgeKey
 import com.tangem.core.ui.components.buttons.actions.IsDimmedKey
 import io.github.kakaocup.compose.node.element.KNode
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+
+fun BaseTestCase.assertSnackbarWithText(text: String, timeoutMs: Long = WAIT_UNTIL_TIMEOUT) {
+    composeTestRule.waitUntil(timeoutMillis = timeoutMs) {
+        composeTestRule
+            .onAllNodesWithText(text, substring = true)
+            .fetchSemanticsNodes()
+            .isNotEmpty()
+    }
+}
 
 fun assertElementDoesNotExist(
     elementProvider: () -> KNode,
