@@ -113,14 +113,13 @@ internal class ExpressTransactionsModel @Inject constructor(
             ?: return
         internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
         if (expressTxState is ExchangeUM) {
-            expressTxState.info.txExternalId?.let { txExternalId ->
-                params.onRatingRequested?.invoke(
-                    txExternalId,
-                    expressTxState.provider.name,
-                    expressTxState.info.txExternalUrl.orEmpty(),
-                    expressTxState.fromUserWalletId.stringValue,
-                )
-            }
+            val ratingTxId = expressTxState.info.txExternalId ?: expressTxState.info.txId
+            params.onRatingRequested?.invoke(
+                ratingTxId,
+                expressTxState.provider.name,
+                expressTxState.info.txExternalUrl.orEmpty(),
+                expressTxState.fromUserWalletId.stringValue,
+            )
         }
     }
 
