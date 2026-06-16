@@ -108,6 +108,16 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val recipientBlock: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.RECIPIENT_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val recipientMemo: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.RECIPIENT_MEMO)
+        useUnmergedTree = true
+    }
+
     val provider: KNode = child {
         hasText(getResourceString(R.string.express_provider))
         useUnmergedTree = true

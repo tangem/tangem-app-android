@@ -8,6 +8,7 @@ import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
+import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
@@ -661,6 +662,165 @@ class SendViaSwapTest : BaseTestCase() {
             step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @AllureId("9924")
+    @DisplayName("Send via Swap: editing the memo persists the latest value")
+    @Test
+    fun sendViaSwapMemoEditPersistsLatestValueTest() {
+        val tokenName = "Bitcoin"
+        val swapTokenName = "XRP"
+        val networkName = "XRP Ledger"
+        val inputAmount = "0.001"
+        val recipientAddress = XRP_ACTIVATED_RECIPIENT_ADDRESS
+        val memoFirst = "11111111"
+        val memoSecond = "22222222"
+        val hotWalletScenarioState = "HotWalletSvS"
+        val quotesScenarioState = "Ripple"
+        val bitcoinBalanceScenarioName = "bitcoin_utxo"
+        val bitcoinBalanceScenarioState = "BalanceHotWalletSvS"
+        val assetsScenarioName = "express_api_assets"
+        val assetsScenarioState = "BitcoinExchangeEnabledWithXRP"
+        val coinsScenarioName = "coins_api"
+        val coinsScenarioState = "WithXRP"
+        val providersScenarioName = "networks_providers"
+        val providersScenarioState = "HotWalletSvS"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(bitcoinBalanceScenarioName)
+                resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(coinsScenarioName)
+                resetWireMockScenarioState(providersScenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
+            }
+            step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
+                setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
+            }
+            step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
+            }
+            step("Set WireMock scenario: '$coinsScenarioName' to state: '$coinsScenarioState'") {
+                setWireMockScenarioState(scenarioName = coinsScenarioName, state = coinsScenarioState)
+            }
+            step("Set WireMock scenario: '$providersScenarioName' to state: '$providersScenarioState'") {
+                setWireMockScenarioState(scenarioName = providersScenarioName, state = providersScenarioState)
+            }
+
+            step("Open 'Main Screen' with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Click on 'Transfer' button") {
+                onTokenDetailsScreen { transferButton.clickWithAssertion() }
+            }
+            step("Click on 'Send' button in bottom sheet") {
+                onTransferBottomSheet { sendButton.clickWithAssertion() }
+            }
+            step("Click on 'Swap to another token' button") {
+                onSendScreen { swapToAnotherTokenButton.performClick() }
+            }
+            step("Type '$swapTokenName' in search text field") {
+                onSendViaSwapScreen {
+                    searchField.performClick()
+                    searchField.performTextInput(swapTokenName)
+                }
+            }
+            step("Click on token: '$swapTokenName'") {
+                onSendViaSwapScreen { tokenItem(swapTokenName).performClick() }
+            }
+            step("Click on '$networkName' network") {
+                onChooseNetworkBottomSheet { networkItem(networkName).performClick() }
+            }
+            step("Type '$inputAmount' in text field") {
+                onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            step("Click on 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendScreen {
+                        nextButton.assertIsEnabled()
+                        nextButton.performClick()
+                    }
+                }
+            }
+            step("Type recipient address") {
+                onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
+            }
+            step("Type '$memoFirst' in 'Destination Tag' field") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendAddressScreen { destinationTagTextField.performTextReplacement(memoFirst) }
+                }
+            }
+            step("Assert 'Destination Tag' field value is '$memoFirst'") {
+                onSendAddressScreen { destinationTagTextField.assertTextContains(memoFirst) }
+            }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
+            }
+            step("Assert recipient memo on 'Send confirm' screen contains '$memoFirst'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { recipientMemo.assertTextContains(memoFirst, substring = true) }
+                }
+            }
+
+            // Edit-mode re-entry from Confirm uses the 'Continue' button, not 'Next'.
+            step("Click on recipient block to edit memo") {
+                onSendConfirmScreen { recipientBlock.performClick() }
+            }
+            step("Replace 'Destination Tag' field value with '$memoSecond'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendAddressScreen { destinationTagTextField.performTextReplacement(memoSecond) }
+                }
+            }
+            step("Assert 'Destination Tag' field value is '$memoSecond'") {
+                onSendAddressScreen { destinationTagTextField.assertTextContains(memoSecond) }
+            }
+            step("Return to 'Send confirm' screen via 'Continue' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaContinueButton()
+                }
+            }
+            step("Assert recipient memo on 'Send confirm' screen contains '$memoSecond'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { recipientMemo.assertTextContains(memoSecond, substring = true) }
+                }
+            }
+
+            step("Click on recipient block to edit memo") {
+                onSendConfirmScreen { recipientBlock.performClick() }
+            }
+            step("Replace 'Destination Tag' field value back with '$memoFirst'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendAddressScreen { destinationTagTextField.performTextReplacement(memoFirst) }
+                }
+            }
+            step("Assert 'Destination Tag' field value is '$memoFirst'") {
+                onSendAddressScreen { destinationTagTextField.assertTextContains(memoFirst) }
+            }
+            step("Return to 'Send confirm' screen via 'Continue' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaContinueButton()
+                }
+            }
+            step("Assert recipient memo on 'Send confirm' screen contains '$memoFirst'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { recipientMemo.assertTextContains(memoFirst, substring = true) }
                 }
             }
         }
