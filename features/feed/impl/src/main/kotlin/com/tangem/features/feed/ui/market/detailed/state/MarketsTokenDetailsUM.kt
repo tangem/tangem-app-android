@@ -14,6 +14,7 @@ import java.math.BigDecimal
 
 internal data class MarketsTokenDetailsUM(
     val tokenName: String,
+    val symbol: String,
     val priceText: String,
     val priceAnnotated: TextReference,
     val iconUrl: String?,

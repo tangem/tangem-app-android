@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.model.TangemPayAddFundsModel
@@ -32,7 +33,7 @@ internal class TangemPayAddFundsComponent(
         val cryptoBalance: BigDecimal,
         val fiatBalance: BigDecimal,
         val depositAddress: String,
-        val chainId: Int,
+        val cryptoCurrency: CryptoCurrency,
     )
 }
 

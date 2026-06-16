@@ -13,7 +13,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,7 +34,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val params = paramsContainer.require<TangemPayTxHistoryDetailsComponent.Params>()
+    private val params = paramsContainer.require<TangemPayTransactionBottomSheetComponent.Params>()
     val uiState: StateFlow<TangemPayTxHistoryDetailsUM>
         field = MutableStateFlow(
             value = TangemPayTxHistoryDetailsConverter.convert(

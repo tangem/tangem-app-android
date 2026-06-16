@@ -1,6 +1,9 @@
 package com.tangem.data.account.utils
 
 import com.google.common.truth.Truth
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.account.converter.CryptoPortfolioConverter
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.GetWalletAccountsResponseExtTest.Companion.createUserToken
@@ -32,12 +35,14 @@ class DefaultWalletAccountsResponseFactoryTest {
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
     private val userTokensResponseFactory = mockk<UserTokensResponseFactory>()
     private val networkFactory = mockk<NetworkFactory>()
+    private val featureTogglesManager = mockk<FeatureTogglesManager>()
 
     private val factory = DefaultWalletAccountsResponseFactory(
         userWalletsListRepository = userWalletsListRepository,
         cryptoPortfolioCF = cryptoPortfolioCF,
         userTokensResponseFactory = userTokensResponseFactory,
         networkFactory = networkFactory,
+        featureTogglesManager = featureTogglesManager,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -75,6 +80,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 userWallet = null,
                 networkFactory = networkFactory,
                 accountId = null,
+                extraBlockchains = emptyList(),
             )
         } returns userTokensResponse
 
@@ -100,6 +106,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 userWallet = null,
                 networkFactory = networkFactory,
                 accountId = null,
+                extraBlockchains = emptyList(),
             )
         }
     }
@@ -129,6 +136,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 userWallet = userWallet,
                 networkFactory = networkFactory,
                 accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
             )
         } returns defaultResponse
 
@@ -159,6 +167,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 userWallet = userWallet,
                 networkFactory = networkFactory,
                 accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
             )
         }
     }
@@ -188,6 +197,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 userWallet = userWallet,
                 networkFactory = networkFactory,
                 accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
             )
         } returns defaultResponse
 
@@ -208,6 +218,138 @@ class DefaultWalletAccountsResponseFactoryTest {
             unassignedTokens = emptyList(),
         )
         Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `create passes ADI as extra blockchain when batch is BB000053 and toggle is on`() = runTest {
+        // Arrange
+        val userWallet = mockk<UserWallet.Cold>(relaxed = true) {
+            every { walletId } returns userWalletId
+            every { scanResponse.card.batchId } returns "BB000053"
+        }
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED)
+        } returns true
+
+        val accounts = AccountList.empty(userWallet.walletId).accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+        val defaultResponse = UserTokensResponse(
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = emptyList(),
+        )
+        every {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+                extraBlockchains = listOf(Blockchain.Adi),
+            )
+        } returns defaultResponse
+        every { cryptoPortfolioConverter.convertListBack(accounts) } returns emptyList()
+
+        // Act
+        factory.create(userWalletId, null)
+
+        // Assert
+        coVerifyOrder {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+                extraBlockchains = listOf(Blockchain.Adi),
+            )
+        }
+    }
+
+    @Test
+    fun `create passes no extra blockchains when batch is BB000053 but toggle is off`() = runTest {
+        // Arrange
+        val userWallet = mockk<UserWallet.Cold>(relaxed = true) {
+            every { walletId } returns userWalletId
+            every { scanResponse.card.batchId } returns "BB000053"
+        }
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED)
+        } returns false
+
+        val accounts = AccountList.empty(userWallet.walletId).accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+        val defaultResponse = UserTokensResponse(
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = emptyList(),
+        )
+        every {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
+            )
+        } returns defaultResponse
+        every { cryptoPortfolioConverter.convertListBack(accounts) } returns emptyList()
+
+        // Act
+        factory.create(userWalletId, null)
+
+        // Assert
+        coVerifyOrder {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
+            )
+        }
+    }
+
+    @Test
+    fun `create passes no extra blockchains when batch is not BB000053 even if toggle is on`() = runTest {
+        // Arrange
+        val userWallet = mockk<UserWallet.Cold>(relaxed = true) {
+            every { walletId } returns userWalletId
+            every { scanResponse.card.batchId } returns "AC000001"
+        }
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED)
+        } returns true
+
+        val accounts = AccountList.empty(userWallet.walletId).accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+        val defaultResponse = UserTokensResponse(
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = emptyList(),
+        )
+        every {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
+            )
+        } returns defaultResponse
+        every { cryptoPortfolioConverter.convertListBack(accounts) } returns emptyList()
+
+        // Act
+        factory.create(userWalletId, null)
+
+        // Assert
+        coVerifyOrder {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+                extraBlockchains = emptyList(),
+            )
+        }
     }
 
     @Test

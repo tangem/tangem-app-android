@@ -48,6 +48,7 @@ internal class DefaultPushNotificationsBottomSheetComponent @AssistedInject cons
             config = bottomSheetConfig,
         ) {
             PushNotificationsContent(
+                isPushNotificationSettingsEnabled = model.isPushNotificationSettingsEnabled,
                 onAllowClick = model::onAllowClick,
                 onLaterClick = model::onLaterClick,
                 onAllowPermission = model::onAllowPermission,

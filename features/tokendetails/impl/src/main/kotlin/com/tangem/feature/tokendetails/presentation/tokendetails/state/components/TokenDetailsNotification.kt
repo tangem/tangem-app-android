@@ -13,7 +13,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
-import org.joda.time.DateTime
 
 @Immutable
 internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
@@ -44,24 +43,6 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             subtitle = subtitle,
             iconResId = R.drawable.ic_alert_circle_24,
             onCloseClick = onCloseClick,
-        ),
-    )
-
-    data class SwapPromo(
-        val startDateTime: DateTime,
-        val endDateTime: DateTime,
-        val onSwapClick: () -> Unit,
-        val onCloseClick: () -> Unit,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
-            title = resourceReference(id = R.string.swap_promo_title),
-            subtitle = resourceReference(id = R.string.swap_promo_text),
-            iconResId = R.drawable.img_okx_dex_logo,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(id = com.tangem.core.ui.R.string.token_swap_promotion_button),
-                onClick = onSwapClick,
-            ),
         ),
     )
 

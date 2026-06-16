@@ -3,6 +3,7 @@ package com.tangem.common.routing.deeplink
 import android.os.Bundle
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NAME_KEY
@@ -11,6 +12,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.domain.visa.model.TangemPayPushNotificationType
 import com.tangem.utils.converter.Converter
 
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
@@ -18,6 +20,7 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
     override fun convert(value: Map<String, String>): String? {
         return when {
             value[DEEPLINK_KEY] != null -> value[DEEPLINK_KEY]
+            isTangemPayPushNotificationPayload(value) -> buildTangemPayNotificationDeeplink(value)
             isTangemPushNotificationPayload(value) -> buildNotificationDeeplink(value)
             else -> null
         }
@@ -69,5 +72,20 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             payload.containsKey(NETWORK_ID_KEY) &&
             payload.containsKey(TOKEN_ID_KEY) &&
             payload.containsKey(WALLET_ID_KEY)
+    }
+
+    private fun isTangemPayPushNotificationPayload(payload: Map<String, String>): Boolean {
+        return payload.containsKey(CUSTOMER_WALLET_ID_KEY) && payload[TYPE_KEY] in TangemPayPushNotificationType.all
+    }
+
+    private fun buildTangemPayNotificationDeeplink(payload: Map<String, String>): String? {
+        val walletId = payload[CUSTOMER_WALLET_ID_KEY]
+        val type = payload[TYPE_KEY]
+        if (walletId.isNullOrEmpty() || type.isNullOrEmpty()) return null
+
+        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
+            setAction(DeepLinkRoute.PayAppMain.host)
+            payload.forEach { (key, value) -> addQueryParam(key, value) }
+        }.build()
     }
 }

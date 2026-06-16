@@ -9,7 +9,9 @@ import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 internal class AmplitudeABTestsManager(
     val application: Application,
@@ -19,9 +21,13 @@ internal class AmplitudeABTestsManager(
 
     private lateinit var client: ExperimentClient
 
+    private val variantsFetched = CompletableDeferred<Unit>()
+
+    private val logger = TangemLogger.withTag(TAG)
+
     override fun init() {
         if (::client.isInitialized) {
-            TangemLogger.w("AB Tests manager already initialized, skipping")
+            logger.w("AB Tests manager already initialized, skipping")
             return
         }
 
@@ -40,7 +46,9 @@ internal class AmplitudeABTestsManager(
                 val allVariants = client.all()
                 logAllVariants(allVariants)
             } catch (exception: Exception) {
-                TangemLogger.e("Failed to fetch AB test variants", exception)
+                logger.e("Failed to fetch AB test variants", exception)
+            } finally {
+                variantsFetched.complete(Unit)
             }
         }
     }
@@ -64,31 +72,45 @@ internal class AmplitudeABTestsManager(
         client.setUser(ExperimentUser())
     }
 
-    override fun getValue(key: String, defaultValue: String): String {
+    override suspend fun getValue(key: String, defaultValue: String): String {
+        if (!::client.isInitialized) return defaultValue
+        awaitVariantsFetched()
         return client.variant(key).value ?: defaultValue
     }
 
-    private fun logAllVariants(allVariants: Map<String, com.amplitude.experiment.Variant>) {
-        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
-        TangemLogger.d("AB Tests: Fetched ${allVariants.size} variants")
-        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
+    private suspend fun awaitVariantsFetched() {
+        if (variantsFetched.isCompleted) return
+        val completed = withTimeoutOrNull(FETCH_AWAIT_TIMEOUT_MILLIS) {
+            variantsFetched.await()
+        }
+        if (completed == null) {
+            logger.w("AB Tests variants not fetched within $FETCH_AWAIT_TIMEOUT_MILLIS ms, using default value")
+            // Prevent repeated blocking on subsequent calls; fetch can still complete in background.
+            variantsFetched.complete(Unit)
+        }
+    }
 
-        if (allVariants.isEmpty()) {
-            TangemLogger.d("No variants available")
-        } else {
-            allVariants.entries.forEachIndexed { index, (key, variant) ->
-                TangemLogger.d("[${index + 1}/${allVariants.size}] Key: $key")
-                TangemLogger.d("  → Value: ${variant.value ?: "null"}")
-                TangemLogger.d("  → Payload: ${variant.payload ?: "null"}")
-                TangemLogger.d("  → Key: ${variant.key ?: "null"}")
-                TangemLogger.d("-".repeat(SEPARATOR_LENGTH))
+    private fun logAllVariants(allVariants: Map<String, com.amplitude.experiment.Variant>) {
+        val message = buildString {
+            appendLine("AB Tests: Fetched ${allVariants.size} variants")
+            if (allVariants.isEmpty()) {
+                append("No variants available")
+            } else {
+                allVariants.entries.forEachIndexed { index, (key, variant) ->
+                    appendLine("[${index + 1}/${allVariants.size}] $key")
+                    appendLine("  → value: ${variant.value ?: "null"}")
+                    appendLine("  → key: ${variant.key ?: "null"}")
+                    append("  → payload: ${variant.payload ?: "null"}")
+                    if (index != allVariants.size - 1) appendLine()
+                }
             }
         }
 
-        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
+        logger.i(message)
     }
 
     private companion object {
-        const val SEPARATOR_LENGTH = 50
+        const val TAG = "AmplitudeABTestsManager"
+        const val FETCH_AWAIT_TIMEOUT_MILLIS = 3_000L
     }
 }

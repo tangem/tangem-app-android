@@ -62,3 +62,6 @@ sealed class ScenarioUnavailabilityReason {
         SELL, SEND // TODO staking create&process STAKING
     }
 }
+
+val ScenarioUnavailabilityReason.isLoading: Boolean
+    get() = this == ScenarioUnavailabilityReason.DataLoading || this is ScenarioUnavailabilityReason.ExpressLoading

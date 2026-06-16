@@ -49,10 +49,22 @@ class StakeKitIntegration(
 
     // Metadata
 
-    override val warmupPeriodDays: Int = yield.metadata.warmupPeriod.days
+    override val warmupPeriod: Period = yield.metadata.warmupPeriod.let { period ->
+        period.seconds?.let {
+            Period.Seconds(it)
+        } ?: period.days.let {
+            Period.Days(it)
+        }
+    }
 
-    override val cooldownPeriod: CooldownPeriod? = yield.metadata.cooldownPeriod?.days?.let {
-        CooldownPeriod.Fixed(it)
+    override val cooldownPeriod: CooldownPeriod? = yield.metadata.cooldownPeriod?.let { period ->
+        CooldownPeriod.Fixed(
+            period.seconds?.let {
+                Period.Seconds(it)
+            } ?: period.days.let {
+                Period.Days(it)
+            },
+        )
     }
 
     override val rewardSchedule: RewardSchedule = yield.metadata.rewardSchedule.toRewardSchedule()

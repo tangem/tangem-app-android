@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
+import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
 import kotlinx.coroutines.flow.Flow
 
@@ -130,6 +131,25 @@ interface P2PEthPoolRepository {
      * @return List of cached vaults (empty if cache is not populated)
      */
     suspend fun getVaultsSync(): List<P2PEthPoolVault>
+
+    /**
+     * Fetch and store vault limits from Tangem API /v1/coins/settings
+     */
+    suspend fun fetchVaultLimits()
+
+    /**
+     * Get flow of cached vault limits.
+     *
+     * @return Flow of map from vaultAddress.lowercase() to VaultLimitInfo, null if not yet fetched
+     */
+    fun getVaultLimitsFlow(): Flow<Map<String, VaultLimitInfo>?>
+
+    /**
+     * Get cached vault limits synchronously.
+     *
+     * @return Map from vaultAddress.lowercase() to VaultLimitInfo, null if not yet fetched
+     */
+    suspend fun getVaultLimitsSyncOrNull(): Map<String, VaultLimitInfo>?
 
     /**
      * Check P2PEthPool staking availability by finding public vault

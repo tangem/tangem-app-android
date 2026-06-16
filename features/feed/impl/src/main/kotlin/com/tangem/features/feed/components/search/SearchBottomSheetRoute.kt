@@ -8,7 +8,6 @@ internal sealed interface SearchBottomSheetRoute {
     data class TokenSelector(
         val entries: List<UserAssetEntry>,
         val appCurrency: AppCurrency,
-        val isBalanceHidden: Boolean,
         val onTokenSelected: (UserAssetEntry) -> Unit,
         val onDismiss: () -> Unit,
     ) : SearchBottomSheetRoute
