@@ -237,11 +237,7 @@ enum class TangemMessageEffect(val isAnimatable: Boolean) {
 
 /** Applies a message effect background to the [Modifier] based on the provided [messageEffect] and [radius] */
 @Composable
-internal fun Modifier.messageEffectBackground(
-    messageEffect: TangemMessageEffect,
-    radius: Dp,
-    contentColor: Color,
-): Modifier {
+fun Modifier.messageEffectBackground(messageEffect: TangemMessageEffect, radius: Dp, contentColor: Color): Modifier {
     val isInDarkTheme = LocalIsInDarkTheme.current
     val borderGradientColors = remember(messageEffect, isInDarkTheme) { messageEffect.getBorderGradient(isInDarkTheme) }
     val gradientColors = remember(messageEffect, isInDarkTheme) { messageEffect.getColorGradient(isInDarkTheme) }
