@@ -112,6 +112,19 @@ internal sealed class SendWithSwapAnalyticEvents(
         ),
     )
 
+    /** Token can't be used in Send with Swap, but is available in the regular Swap flow */
+    data class NoticeSwapAvailable(
+        val fromToken: CryptoCurrency,
+        val toTokenSymbol: String,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Notice - Swap Available",
+        params = mapOf(
+            SEND_TOKEN to fromToken.symbol,
+            RECEIVE_TOKEN to toTokenSymbol,
+            SEND_BLOCKCHAIN to fromToken.network.name,
+        ),
+    )
+
     data object NoticeFixedRate : SendWithSwapAnalyticEvents(
         event = "Notice - Fixed Rate",
         params = emptyMap(),

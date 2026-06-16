@@ -36,6 +36,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -43,6 +44,7 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.model.SwapProcessDataState
+import com.tangem.feature.swap.model.getLastLoadedSuccessStates
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
@@ -529,9 +531,7 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapProvider: SwapProvider,
-        bestRatedProviderId: String,
-        isNeedBestRateBadge: Boolean,
-        needApplyFCARestrictions: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
     ): SwapStateHolder {
@@ -641,13 +641,9 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = SwapProviderStateBuilder.buildContentClickable(
                 provider = swapProvider,
-                fromTokenInfo = quoteModel.fromTokenInfo,
-                toTokenInfo = quoteModel.toTokenInfo,
-                permissionState = quoteModel.permissionState,
+                state = quoteModel,
                 selectionType = ProviderState.SelectionType.CLICK,
-                isBestRate = bestRatedProviderId == swapProvider.providerId && !priceImpact.shouldShowWarning(),
-                isNeedBestRateBadge = isNeedBestRateBadge,
-                needApplyFCARestrictions = needApplyFCARestrictions,
+                additionalBadge = additionalBadge,
                 onProviderClick = actions.onProviderClick,
             ),
             priceImpact = priceImpact,
@@ -769,7 +765,7 @@ internal class StateBuilder(
         toSwapCurrencyStatus: SwapCurrencyStatus?,
         balanceStatus: SwapBalanceStatus,
         expressDataError: ExpressDataError,
-        needApplyFCARestrictions: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
         swapFee: SwapFee?,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -789,7 +785,7 @@ internal class StateBuilder(
             expressDataError = expressDataError,
             onProviderClick = actions.onProviderClick,
             selectionType = ProviderState.SelectionType.CLICK,
-            needApplyFCARestrictions = needApplyFCARestrictions,
+            additionalBadge = additionalBadge,
         )
         val type = TransactionCardType.ReadOnly(
             accountTitleUM = getCardAccountTitle(
@@ -837,7 +833,7 @@ internal class StateBuilder(
         expressDataError: ExpressDataError,
         onProviderClick: (String) -> Unit,
         selectionType: ProviderState.SelectionType,
-        needApplyFCARestrictions: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
     ): ProviderState {
         return when (expressDataError) {
             is ExpressDataError.ExchangeTooSmallAmountError -> {
@@ -848,7 +844,7 @@ internal class StateBuilder(
                         wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
-                    needApplyFCARestrictions = needApplyFCARestrictions,
+                    additionalBadge = additionalBadge,
                     onProviderClick = onProviderClick,
                 )
             }
@@ -860,7 +856,7 @@ internal class StateBuilder(
                         wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
-                    needApplyFCARestrictions = needApplyFCARestrictions,
+                    additionalBadge = additionalBadge,
                     onProviderClick = onProviderClick,
                 )
             }
@@ -1177,19 +1173,24 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         needApplyFCARestrictions: Boolean,
-        bestRatedProviderId: String,
-        isNeedBestRateBadge: Boolean,
+        isSwapBestDexRateEnabled: Boolean,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
+        val successStates = providersStates.getLastLoadedSuccessStates()
         val availableProvidersStates = providersStates.entries
             .mapNotNull { entry ->
+                val additionalBadge = SwapProviderResolver.resolveBadge(
+                    states = successStates,
+                    provider = entry.key,
+                    needApplyFCARestrictions = needApplyFCARestrictions,
+                    state = entry.value,
+                    isSwapBestDexRateEnabled = isSwapBestDexRateEnabled,
+                )
                 entry.convertToProviderBottomSheetState(
                     pricesLowerBest = pricesLowerBest,
                     onProviderSelect = actions.onProviderSelect,
-                    needApplyFCARestrictions = needApplyFCARestrictions,
                     onApprovalSelectClick = actions.onApproveTypeSelect,
-                    bestRatedProviderId = bestRatedProviderId,
-                    isNeedBestRateBadge = isNeedBestRateBadge,
+                    additionalBadge = additionalBadge,
                 )
             }
             .sortedWith(ProviderPercentDiffComparator)
@@ -1294,23 +1295,18 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
         onApprovalSelectClick: (SwapProvider) -> Unit,
-        needApplyFCARestrictions: Boolean,
-        bestRatedProviderId: String,
-        isNeedBestRateBadge: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
     ): ProviderState? {
-        val provider = this.key
-        return when (val state = this.value) {
+        val (provider, state) = this
+        return when (state) {
             is SwapState.EmptyAmountState, is SwapState.Transfer -> null
             is SwapState.QuotesLoadedState -> {
                 SwapProviderStateBuilder.buildContentSelectable(
                     provider = provider,
-                    toTokenInfo = state.toTokenInfo,
-                    permissionState = state.permissionState,
+                    state = state,
                     pricesLowerBest = pricesLowerBest,
                     selectionType = ProviderState.SelectionType.SELECT,
-                    needApplyFCARestrictions = needApplyFCARestrictions,
-                    isBestRate = bestRatedProviderId == provider.providerId && !state.priceImpact.shouldShowWarning(),
-                    isNeedBestRateBadge = isNeedBestRateBadge,
+                    additionalBadge = additionalBadge,
                     onProviderClick = onProviderSelect,
                     onApprovalSelectClick = onApprovalSelectClick,
                 )
@@ -1321,7 +1317,7 @@ internal class StateBuilder(
                 expressDataError = state.error,
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
-                needApplyFCARestrictions = needApplyFCARestrictions,
+                additionalBadge = additionalBadge,
             )
         }
     }

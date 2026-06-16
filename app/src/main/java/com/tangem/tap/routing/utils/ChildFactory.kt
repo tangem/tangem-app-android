@@ -326,10 +326,11 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = SwapComponent.Params(
-                        cryptoCurrency = route.cryptoCurrency,
+                        fromCryptoCurrency = route.fromCryptoCurrency,
+                        toCryptoCurrency = route.toCryptoCurrency,
                         userWalletId = route.userWalletId,
                         screenSource = route.screenSource,
-                        currencyPosition = when (route.currencyPosition) {
+                        fromCurrencyPosition = when (route.fromCurrencyPosition) {
                             AppRoute.Swap.CurrencyPosition.FROM -> SwapComponent.Params.CurrencyPosition.FROM
                             AppRoute.Swap.CurrencyPosition.TO -> SwapComponent.Params.CurrencyPosition.TO
                             AppRoute.Swap.CurrencyPosition.ANY -> SwapComponent.Params.CurrencyPosition.ANY
