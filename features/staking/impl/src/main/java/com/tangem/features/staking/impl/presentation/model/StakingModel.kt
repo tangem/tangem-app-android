@@ -97,6 +97,7 @@ import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstake
 import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
@@ -182,7 +183,8 @@ internal class StakingModel @Inject constructor(
             }
             StakingIntegrationID.P2PEthPool -> {
                 val vaults = p2pEthPoolRepository.getVaultsSync()
-                P2PEthPoolIntegration(integrationId, vaults)
+                val limits = p2pEthPoolRepository.getVaultLimitsSyncOrNull().orEmpty()
+                P2PEthPoolIntegration(integrationId, vaults, limits)
             }
         }
     }
@@ -641,6 +643,31 @@ internal class StakingModel @Inject constructor(
                 integration = integration,
             ),
         )
+        checkSumLimitExceeded()
+    }
+
+    private fun checkSumLimitExceeded() {
+        val maxLimit = (integration as? P2PEthPoolIntegration)
+            ?.enterArgs?.amountRequirement?.maximum
+            ?.takeIf { it.isPositive() }
+            ?: return
+
+        val enteredAmount = (uiState.value.amountState as? AmountState.Data)
+            ?.amountTextField?.cryptoAmount?.value
+            ?: return
+
+        if (enteredAmount > maxLimit) {
+            // Pass the max limit as a stable crypto-formatted value (e.g. "0.15 ETH"); the event
+            // builds the hardcoded English "Error Message" from it, so the model needs no resources.
+            val formattedMax = maxLimit.format { crypto(cryptoCurrencyStatus.currency) }
+            analyticsEventHandler.send(
+                StakingAnalyticsEvent.SumLimitError(
+                    token = cryptoCurrencyStatus.currency.symbol,
+                    blockchain = cryptoCurrencyStatus.currency.network.name,
+                    maxAmount = formattedMax,
+                ),
+            )
+        }
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -657,6 +684,7 @@ internal class StakingModel @Inject constructor(
                 integration = integration,
             ),
         )
+        checkSumLimitExceeded()
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -1098,7 +1126,12 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun showPrimaryClickAlert() {
-        messageSender.send(StakingAlertUM.stakeMoreClickUnavailable(cryptoCurrencyStatus.currency))
+        val message = if (integration is P2PEthPoolIntegration) {
+            StakingAlertUM.stakeMoreClickUnavailableNoTargets()
+        } else {
+            StakingAlertUM.stakeMoreClickUnavailable(cryptoCurrencyStatus.currency)
+        }
+        messageSender.send(message)
     }
 
     override fun onOpenLearnMoreAboutApproveClick() {

@@ -19,6 +19,9 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
+import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -290,6 +293,7 @@ internal class DefaultSwapRepository(
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
                     allowanceContract = response.allowanceContract,
+                    txType = response.txType?.toDomain(),
                 ).right()
             } catch (ex: Exception) {
                 getDataError(ex).left()
@@ -344,7 +348,7 @@ internal class DefaultSwapRepository(
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
-                        ?: return@withContext ExpressDataError.UnknownError.left()
+                        ?: return@withContext ExpressDataError.UnknownError().left()
                     if (txDetails.requestId != requestId) {
                         return@withContext ExpressDataError.InvalidRequestIdError().left()
                     }
@@ -410,7 +414,15 @@ internal class DefaultSwapRepository(
         return if (ex is ApiResponseError.HttpException) {
             errorsDataConverter.convert(ex.errorBody.orEmpty())
         } else {
-            ExpressDataError.UnknownError
+            ExpressDataError.UnknownError()
         }
+    }
+
+    override suspend fun getStoredSwapUiMode(): SwapUIMode? {
+        return appPreferencesStore.getObjectSyncOrNull(PreferencesKeys.SWAP_UI_MODE_KEY)
+    }
+
+    override suspend fun storeSwapUiMode(mode: SwapUIMode) {
+        appPreferencesStore.storeObject(PreferencesKeys.SWAP_UI_MODE_KEY, mode)
     }
 }

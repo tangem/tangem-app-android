@@ -3,12 +3,15 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.mo
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
@@ -19,7 +22,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
@@ -39,6 +41,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class MultiWalletCreateWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -67,16 +70,17 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                 resourceReference(R.string.onboarding_create_wallet_body)
             },
             onCreateWalletClick = {
-                analyticsHandler.send(OnboardingEvent.CreateWallet.ButtonCreateWallet())
+                analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet())
                 createWallet(false)
             },
             showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
             onOtherOptionsClick = {
-                analyticsHandler.send(OnboardingEvent.CreateWallet.ButtonOtherOptions())
+                analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonOtherOptions())
                 modelScope.launch {
                     onDone.emit(Step.SeedPhrase)
                 }
             },
+            onTermsOfUseClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
             dialog = null,
         ),
     )
@@ -85,7 +89,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     val onDone = MutableSharedFlow<Step>()
 
     init {
-        analyticsHandler.send(OnboardingEvent.CreateWallet.ScreenOpened())
+        analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ScreenOpened())
     }
 
     private fun createWallet(shouldReset: Boolean) {
@@ -110,7 +114,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
                     analyticsHandler.send(
-                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                        event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
                             referralId = appsFlyerStore.get()?.refcode,
                         ),

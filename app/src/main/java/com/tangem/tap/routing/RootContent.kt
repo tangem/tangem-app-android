@@ -28,6 +28,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandler
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
 import com.tangem.core.ui.message.EventMessageEffect
@@ -72,7 +73,9 @@ internal fun RootContent(
                     when (val instance = child.instance) {
                         is RoutingComponent.Child.Initial -> Unit
                         is RoutingComponent.Child.ComposableComponent -> {
-                            instance.component.Content(Modifier.fillMaxSize())
+                            ProvideHaze {
+                                instance.component.Content(Modifier.fillMaxSize())
+                            }
                         }
                         is RoutingComponent.Child.LegacyIntent -> {
                             // TODO: Remove and use it's own router: [REDACTED_JIRA]

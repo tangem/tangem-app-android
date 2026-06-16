@@ -116,7 +116,7 @@ internal fun TangemPayDetailsScreen(
                     },
                 )
 
-                if (state.balanceBlockState.cardsBlockState.cards.fastAny { it.isReissuing }) {
+                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuing } == true) {
                     item(
                         key = "REISSUE_MESSAGE",
                         content = {
@@ -157,10 +157,11 @@ internal fun TangemPayDetailsScreen(
                 }
                 if (state.accountDeactivatedNotificationConfig == null) {
                     with(expressTransactionsComponent) {
-                        expressTransactionsContent(
+                        expressTransactionsContentLegacy(
                             state = expressState.transactionsToDisplay,
                             modifier = modifier
                                 .padding(horizontal = 16.dp)
+                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                         )
                     }
@@ -168,7 +169,7 @@ internal fun TangemPayDetailsScreen(
                 }
             }
         }
-        expressTransactionsBottomSheetState?.content()
+        expressTransactionsBottomSheetState?.content(null)
     }
 }
 
@@ -254,12 +255,14 @@ private fun TangemPayDetailsBalanceBlock(
             state = state,
             isBalanceHidden = isBalanceHidden,
         )
-        CardsBlockRow(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            cardsBlockState = state.cardsBlockState,
-        )
+        state.cardsBlockState?.let { cardsBlockState ->
+            CardsBlockRow(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                cardsBlockState = cardsBlockState,
+            )
+        }
         if (state.actionButtons.isNotEmpty()) {
             HorizontalActionChips(
                 modifier = Modifier.padding(top = 12.dp),
@@ -298,7 +301,8 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = card.onClick),
+            .clickable(onClick = card.onClick)
+            .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),

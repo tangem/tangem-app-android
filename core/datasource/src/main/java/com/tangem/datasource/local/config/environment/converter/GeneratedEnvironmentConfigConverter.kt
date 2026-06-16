@@ -11,6 +11,7 @@ import com.tangem.datasource.local.config.environment.generated.GeneratedEnviron
 import com.tangem.datasource.local.config.environment.generated.GeneratedEnvironmentConfig.TonCenterApiKey
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.datasource.local.config.environment.models.P2PKeys
+import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
 
 /**
  * Converts [GeneratedEnvironmentConfig] to [EnvironmentConfig]
@@ -54,6 +55,7 @@ internal object GeneratedEnvironmentConfigConverter {
             gaslessTxApiKey = GeneratedEnvironmentConfig.gaslessTxApiKey,
             customerIoCdpApiKey = GeneratedEnvironmentConfig.CustomerIO.androidApiKey,
             surveySparrowToken = GeneratedEnvironmentConfig.SurveySparrow.apiKey,
+            surveySparrowSwapRating = createSurveySparrowSwapRating(),
         )
     }
 
@@ -120,6 +122,7 @@ internal object GeneratedEnvironmentConfigConverter {
             etherscanApiKey = GeneratedEnvironmentConfig.etherscanApiKey,
             blinkApiKey = GeneratedEnvironmentConfig.blinkApiKey,
             tatumApiKey = GeneratedEnvironmentConfig.tatumApiKey,
+            alchemyApiKey = GeneratedEnvironmentConfig.alchemyApiKey,
         )
     }
 
@@ -180,5 +183,16 @@ internal object GeneratedEnvironmentConfigConverter {
             monad = GetBlockAccessToken(rest = GetBlockAccessTokens.Monad.rest),
             stellar = GetBlockAccessToken(rest = GetBlockAccessTokens.Stellar.rest),
         )
+    }
+
+    private fun createSurveySparrowSwapRating(): SurveySparrowSwapRatingConfig? {
+        val surveyId = GeneratedEnvironmentConfig.SurveySparrow.SwapRating.surveyId.toLongOrNull()
+        val ratingQuestionId = GeneratedEnvironmentConfig.SurveySparrow.SwapRating.ratingQuestionId.toLongOrNull()
+        val feedbackQuestionId = GeneratedEnvironmentConfig.SurveySparrow.SwapRating.feedbackQuestionId.toLongOrNull()
+        return if (surveyId != null && ratingQuestionId != null && feedbackQuestionId != null) {
+            SurveySparrowSwapRatingConfig(surveyId, ratingQuestionId, feedbackQuestionId)
+        } else {
+            null
+        }
     }
 }
