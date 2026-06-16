@@ -436,7 +436,7 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
 
     fun assertTokensCount(expectedCount: Int) {
         semanticsProvider
-            .onAllNodes(withTestTag(TokenElementsTestTags.TOKEN_PRICE))
+            .onAllNodes(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM), useUnmergedTree = true)
             .assertCountEquals(expectedCount)
     }
 }
