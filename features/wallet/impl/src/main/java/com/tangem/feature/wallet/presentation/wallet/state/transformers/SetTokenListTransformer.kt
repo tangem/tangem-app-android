@@ -9,8 +9,10 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
+import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
@@ -26,11 +28,19 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isRedesignEnabled: Boolean,
     private val isAddAndManageTokensEnabled: Boolean,
+    private val isMultipleCardsEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
         TangemPayMainBlockConverter(
             tangemPayClickIntents = clickIntents,
+            isRedesignEnabled = isRedesignEnabled,
+            isMultipleCardsEnabled = isMultipleCardsEnabled,
+        )
+    }
+
+    private val virtualAccountConverter by lazy {
+        VirtualAccountMainBlockConverter(
             isRedesignEnabled = isRedesignEnabled,
         )
     }
@@ -42,6 +52,7 @@ internal class SetTokenListTransformer(
                     walletCardState = prevState.walletCardState.toLoadedState(),
                     tokensListState = prevState.tokensListState.toLoadedState(),
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
+                    virtualAccountMainUM = prevState.virtualAccountMainUM.toLoadedVirtualState(),
                     buttons = prevState.enableButtons(),
                 )
             }
@@ -60,11 +71,17 @@ internal class SetTokenListTransformer(
     override fun transform(walletUM: WalletUM): WalletUM {
         return when (walletUM) {
             is WalletUM.Content -> {
+                val tokensListUM = toLoadedState()
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
-                    tokensListUM = toLoadedState(),
-                    buttons = walletUM.enableButtons(),
+                    virtualAccountMainUM = walletUM.virtualAccountMainUM.toLoadedVirtualState(),
+                    tokensListUM = tokensListUM,
+                    buttons = if (tokensListUM is WalletTokensListUM.Empty) {
+                        walletUM.disableButtons()
+                    } else {
+                        walletUM.enableButtons()
+                    },
                 )
             }
             is WalletUM.Locked -> {
@@ -119,6 +136,17 @@ internal class SetTokenListTransformer(
         } ?: return this
 
         return tangemPayConverter.convert(paymentAccountStatus)
+    }
+
+    private fun VirtualAccountMainUM.toLoadedVirtualState(): VirtualAccountMainUM {
+        val virtualAccountStatus = when (params) {
+            is TokenConverterParams.Account -> params.accountList.accountStatuses
+                .filterIsInstance<AccountStatus.Virtual>()
+                .firstOrNull()
+            is TokenConverterParams.Wallet -> return VirtualAccountMainUM.Empty
+        } ?: return this
+
+        return virtualAccountConverter.convert(virtualAccountStatus)
     }
 
     private fun toLoadedState(): WalletTokensListUM {

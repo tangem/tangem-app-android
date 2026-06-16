@@ -40,8 +40,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = { clicked = true },
-            showWarningIcon = false,
-            showInfoIcon = false,
+            shouldShowWarningIcon = false,
+            shouldShowInfoIcon = false,
         )
 
         val result = converter.convert(content)
@@ -94,8 +94,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = {},
-            showWarningIcon = true,
-            showInfoIcon = false,
+            shouldShowWarningIcon = true,
+            shouldShowInfoIcon = false,
         )
 
         val result = converter.convert(content)
@@ -115,8 +115,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = {},
-            showWarningIcon = false,
-            showInfoIcon = true,
+            shouldShowWarningIcon = false,
+            shouldShowInfoIcon = true,
         )
 
         val result = converter.convert(content)
@@ -136,8 +136,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = {},
-            showWarningIcon = true,
-            showInfoIcon = true,
+            shouldShowWarningIcon = true,
+            shouldShowInfoIcon = true,
         )
 
         val result = converter.convert(content)
@@ -182,5 +182,33 @@ internal class YieldSupplyToEarnBlockConverterTest {
         assertThat(content.onClick).isNotNull()
         content.onClick?.invoke()
         assertThat(clicked).isTrue()
+    }
+
+    @Test
+    fun `GIVEN Available isBoostAvailable WHEN convert THEN Promo with both button callbacks`() {
+        var activateClicked = false
+        var learnMoreClicked = false
+        val available = YieldSupplyUM.Available(
+            apy = "5.1",
+            apyText = stringReference("APY 5.1% x3 → 15.3%"),
+            title = stringReference("Special offer for Yield mode"),
+            onClick = { activateClicked = true },
+            onLearnMoreClick = { learnMoreClicked = true },
+            isBoostAvailable = true,
+        )
+
+        val result = converter.convert(available)
+
+        assertThat(result).isInstanceOf(EarnBlockUM.Promo::class.java)
+        val promo = result as EarnBlockUM.Promo
+        assertThat(promo.type).isEqualTo(EarnBlockUM.Type.YieldSupply)
+        assertThat(promo.backgroundUM).isEqualTo(EarnBlockUM.BackgroundUM.AccentSoft)
+        assertThat(promo.iconUM).isInstanceOf(EarnBlockUM.IconUM.Glowing::class.java)
+
+        promo.onSecondaryClick()
+        assertThat(learnMoreClicked).isTrue()
+
+        promo.onPrimaryClick()
+        assertThat(activateClicked).isTrue()
     }
 }

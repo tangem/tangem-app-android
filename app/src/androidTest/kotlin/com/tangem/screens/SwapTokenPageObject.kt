@@ -54,6 +54,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun feeBlockCurrency(symbol: String): KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK)
+        hasAnyDescendant(withText(symbol))
+        useUnmergedTree = true
+    }
+
     val receiveAmountShimmer: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_AMOUNT_SHIMMER)
     }
@@ -69,6 +75,11 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val providersBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val bestRateText: KNode = child {
+        hasText(getResourceString(R.string.express_provider_best_rate))
         useUnmergedTree = true
     }
 

@@ -4,7 +4,10 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.datasource.local.config.environment.models.P2PKeys
 import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 data class EnvironmentConfig(
     val moonPayApiKey: String = "",
     val moonPayApiSecretKey: String = "",
@@ -32,5 +35,7 @@ data class EnvironmentConfig(
     val gaslessTxApiKey: String? = null,
     val customerIoCdpApiKey: String? = null,
     val surveySparrowToken: String? = null,
+    @Transient
     val surveySparrowSwapRating: SurveySparrowSwapRatingConfig? = null,
+    val authServiceKey: String? = null,
 )

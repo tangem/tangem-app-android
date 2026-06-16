@@ -2,7 +2,7 @@ package com.tangem.domain.swap.usecase
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.swap.models.PredefinedPercentAmount
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class CalculateAmountUseCaseTest {

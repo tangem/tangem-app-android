@@ -87,6 +87,7 @@ internal class ChooseTokenListItemConverter(
                 when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
+                    is AccountStatus.Virtual -> null
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }

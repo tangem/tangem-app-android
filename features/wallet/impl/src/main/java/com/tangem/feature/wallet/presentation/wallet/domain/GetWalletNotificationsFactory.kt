@@ -5,6 +5,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
+import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -22,6 +24,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
@@ -36,7 +39,7 @@ import javax.inject.Inject
  * Factory for creating a list of notifications that can be shown on the wallet screen.
  * These notifications are critical and should be shown separately from each other.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class GetWalletNotificationsFactory @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -45,6 +48,8 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
+    private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
@@ -52,11 +57,19 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
         val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
 
+        val assetsDiscoveryProgressFlow =
+            if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled && userWallet is UserWallet.Hot) {
+                observeAssetsDiscoveryUseCase(userWallet.walletId).distinctUntilChanged()
+            } else {
+                flowOf(AssetsDiscoveryProgress.Idle)
+            }
+
         return combine(
             flow = accountStatusListFlow,
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
-        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped ->
+            flow4 = assetsDiscoveryProgressFlow,
+        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped, assetsDiscoveryProgress ->
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
 
@@ -98,6 +111,12 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     cardTypesResolver = cardTypesResolver,
                     flattenCurrencies = flattenCurrencies,
                     isNeedToBackup = isNeedToBackup,
+                    clickIntents = clickIntents,
+                )
+
+                addAssetsDiscoveryCompletedNotification(
+                    userWallet = userWallet,
+                    assetsDiscoveryProgress = assetsDiscoveryProgress,
                     clickIntents = clickIntents,
                 )
 
@@ -255,7 +274,10 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
-            is PaymentAccountStatusValue.NotCreated -> null // TODO(Main redesign) and analytics PermanentBannerShowed
+            is PaymentAccountStatusValue.NotCreated -> WalletNotificationUM.TangemPayPromo(
+                onLaterClick = { walletClickIntents.onOnboardingBannerCloseClick(userWallet.walletId) },
+                onLearnMoreClick = { walletClickIntents.onOnboardingBannerClick(userWallet.walletId) },
+            )
             is PaymentAccountStatusValue.Error.Unavailable -> WalletNotificationUM.TangemPayUnreachable
             is PaymentAccountStatusValue.Error.CardIssueFailed,
             is PaymentAccountStatusValue.Error.ExposedDevice,
@@ -306,6 +328,20 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
     private fun List<CryptoCurrencyStatus>.hasUnreachableNetworks(): Boolean {
         return any { it.value is CryptoCurrencyStatus.Unreachable }
+    }
+
+    private fun MutableList<WalletNotificationUM>.addAssetsDiscoveryCompletedNotification(
+        userWallet: UserWallet,
+        assetsDiscoveryProgress: AssetsDiscoveryProgress,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotificationUM.AssetsDiscoveryCompleted(
+                onCloseClick = { clickIntents.onDismissAssetsDiscoveryNotification(userWallet.walletId) },
+                onManageTokensClick = { clickIntents.onAssetsDiscoveryManageClick(userWallet.walletId) },
+            ),
+            condition = assetsDiscoveryProgress is AssetsDiscoveryProgress.Completed,
+        )
     }
 
     private fun MutableList<WalletNotificationUM>.addFinishWalletActivationNotification(

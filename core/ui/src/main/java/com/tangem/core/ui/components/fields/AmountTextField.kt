@@ -39,7 +39,7 @@ import java.text.DecimalFormat
  * @param onValueChange callback
  * @param textStyle text and placeholder styles
  * @param modifier modifier
- * @param color text color
+ * @param colors text and background colors
  * @param visualTransformation text visual transformation
  * @param keyboardOptions keyboard options
  * @param keyboardActions keyboard actions
@@ -55,11 +55,10 @@ fun AmountTextField(
     onValueChange: (String) -> Unit,
     textStyle: TextStyle,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.text.primary1,
-    backgroundColor: Color = TangemTheme.colors.background.action,
+    colors: AmountTextFieldColors = TangemAmountTextFieldColors,
     visualTransformation: VisualTransformation = AmountVisualTransformation(
         decimals = decimals,
-        symbolColor = if (value.isBlank()) TangemTheme.colors.text.disabled else color,
+        symbolColor = if (value.isBlank()) colors.disabledTextColor else colors.textColor,
     ),
     keyboardOptions: KeyboardOptions = KeyboardOptions(
         keyboardType = KeyboardType.Number,
@@ -84,7 +83,7 @@ fun AmountTextField(
         } else {
             textStyle.fontSize
         }
-        val textColor = if (value.isBlank()) TangemTheme.colors.text.disabled else color
+        val textColor = if (value.isBlank()) colors.disabledTextColor else colors.textColor
         SimpleTextField(
             value = value,
             onValueChange = { newText ->
@@ -110,11 +109,27 @@ fun AmountTextField(
             readOnly = !isEnabled,
             visualTransformation = visualTransformation,
             modifier = Modifier
-                .background(backgroundColor)
+                .background(colors.backgroundColor)
                 .testTag(SendScreenTestTags.INPUT_TEXT_FIELD),
         )
     }
 }
+
+val TangemAmountTextFieldColors: AmountTextFieldColors
+    @Composable
+    @ReadOnlyComposable
+    get() = AmountTextFieldColors(
+        textColor = TangemTheme.colors.text.primary1,
+        disabledTextColor = TangemTheme.colors.text.disabled,
+        backgroundColor = TangemTheme.colors.background.action,
+    )
+
+@Immutable
+data class AmountTextFieldColors(
+    val textColor: Color,
+    val disabledTextColor: Color,
+    val backgroundColor: Color,
+)
 
 private fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
     val decimalSymbol = decimalFormat.decimalFormatSymbols.decimalSeparator
@@ -179,6 +194,7 @@ private fun AmountTextFieldPreview(
             value = text,
             decimals = amount.decimals,
             onValueChange = { text = it },
+            colors = TangemAmountTextFieldColors,
             textStyle = TangemTheme.typography.h2.copy(
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,

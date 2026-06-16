@@ -2,7 +2,9 @@ package com.tangem.tests.main
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
@@ -37,7 +39,7 @@ class MainScreenTest : BaseTestCase() {
     }
 
     @AllureId("8748")
-    @DisplayName("Main: check 'Organize tokens' button with single token no accounts")
+    @DisplayName("Main: check 'Add & Manage' button with single token no accounts")
     @Test
     fun checkOrganizeTokensButtonWithSingleTokenNoAccountsTest() {
         val scenarioState = "Cardano"
@@ -58,14 +60,14 @@ class MainScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Add & Manage' button is not displayed") {
-                onMainScreen { addAndManageButtonNode.assertIsNotDisplayed()}
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButtonNode.assertIsDisplayed() }
             }
         }
     }
 
     @AllureId("8749")
-    @DisplayName("Main: check 'Organize tokens' button with single token two accounts")
+    @DisplayName("Main: check 'Add & Manage' button with single token two accounts")
     @Test
     fun checkOrganizeTokensButtonWithSingleTokenMultiAccountsTest() {
         val scenarioState = "TwoAccountsSingleTokenEach"
@@ -84,10 +86,10 @@ class MainScreenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Assert 'Add & Manage' button is displayed") {
-                onMainScreen { addAndManageButtonNode.assertIsDisplayed() }
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
             }
             step("Click 'Add & Manage' button") {
-                onMainScreen { addAndManageButtonNode.clickWithAssertion() }
+                onMainScreen { addAndManageButton().clickWithAssertion() }
             }
             step("Assert 'Organize tokens' option is not displayed (nothing to organize)") {
                 onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
@@ -99,7 +101,7 @@ class MainScreenTest : BaseTestCase() {
     }
 
     @AllureId("8750")
-    @DisplayName("Main: check 'Organize tokens' button with multiple tokens two accounts")
+    @DisplayName("Main: check 'Add & Manage' button with multiple tokens two accounts")
     @Test
     fun checkOrganizeTokensButtonWithMultipleTokensMultiAccountsTest() {
         val scenarioState = "TwoAccountsMixed"
@@ -117,8 +119,11 @@ class MainScreenTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.6f, endHeightRatio = 0.1f)
+            }
             step("Assert 'Add & Manage' button is displayed") {
-                onMainScreen { addAndManageButtonNode.assertIsDisplayed()}
+                onMainScreen { addAndManageButtonNode.assertIsDisplayed() }
             }
         }
     }

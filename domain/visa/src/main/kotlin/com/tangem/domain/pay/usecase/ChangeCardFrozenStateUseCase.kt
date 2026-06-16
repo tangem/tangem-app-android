@@ -3,10 +3,10 @@ package com.tangem.domain.pay.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.core.error.UniversalError
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.async
 

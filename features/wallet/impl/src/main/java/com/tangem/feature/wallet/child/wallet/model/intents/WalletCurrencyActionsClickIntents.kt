@@ -41,9 +41,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.models.StoryContentIds
-import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
@@ -61,12 +61,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -316,9 +311,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        showErrorIfDemoModeOrElse {
+        showErrorIfDemoModeOrElse { userWallet ->
             modelScope.launch(dispatchers.main) {
                 getOfframpUrlUseCase(
+                    userWalletId = userWallet.walletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
                 ).onRight { url ->
@@ -480,8 +476,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
     }
 
-    private fun openExplorer() {
-        val userWalletId = stateHolder.getSelectedWalletId()
+    private fun openExplorer(userWallet: UserWallet) {
+        val userWalletId = userWallet.walletId
 
         modelScope.launch(dispatchers.main) {
             val currencyStatus = singleAccountStatusListSupplier.unwrap(userWalletId) ?: return@launch
@@ -545,7 +541,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
+    private fun showErrorIfDemoModeOrElse(action: (UserWallet) -> Unit) {
         val selectedWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         if (selectedWallet is UserWallet.Cold && isDemoCardUseCase(cardId = selectedWallet.cardId)) {
@@ -557,7 +553,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
             )
         } else {
-            action()
+            action(selectedWallet)
         }
     }
 
@@ -670,7 +666,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun navigateToSwap(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
         appRouter.push(
             AppRoute.Swap(
-                cryptoCurrency = cryptoCurrencyStatus.currency,
+                fromCryptoCurrency = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.LongTap.value,
             ),

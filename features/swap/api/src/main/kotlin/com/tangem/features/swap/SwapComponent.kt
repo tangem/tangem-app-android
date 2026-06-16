@@ -10,10 +10,11 @@ interface SwapComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
-        val cryptoCurrency: CryptoCurrency? = null,
+        val fromCryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
-        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
+        val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
+        val toCryptoCurrency: CryptoCurrency? = null,
     ) {
         data class TangemPayInput(
             val cryptoAmount: BigDecimal,

@@ -24,8 +24,8 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
@@ -72,7 +72,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val cryptoCurrencyStatus
         get() = params.cryptoCurrencyStatusFlow.value
     private val cryptoCurrency = cryptoCurrencyStatus.currency
-    private var userWallet = params.userWallet
+    private val userWallet = params.userWallet
 
     val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
         field = MutableStateFlow(
@@ -131,10 +131,12 @@ internal class YieldSupplyApproveModel @Inject constructor(
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
         uiState.update(YieldSupplyTransactionInProgressTransformer)
 
-        analyticsEventHandler.send(YieldSupplyAnalytics.ButtonGiveApprove(
-            token = cryptoCurrency.symbol,
-            blockchain = cryptoCurrency.network.name,
-        ))
+        analyticsEventHandler.send(
+            YieldSupplyAnalytics.ButtonGiveApprove(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
 
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase(
@@ -197,11 +199,13 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
         )
-        analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
-            token = cryptoCurrency.symbol,
-            blockchain = cryptoCurrency.network.name,
-            action = YieldSupplyAnalytics.Action.Approve,
-        ))
+        analyticsEventHandler.send(
+            YieldSupplyAnalytics.ApprovalAction(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                action = YieldSupplyAnalytics.Action.Approve,
+            ),
+        )
         params.callback.onTransactionSent()
     }
 

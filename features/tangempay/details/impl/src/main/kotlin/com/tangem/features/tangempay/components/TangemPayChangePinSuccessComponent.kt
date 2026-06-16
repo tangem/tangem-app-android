@@ -7,15 +7,21 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.ui.TangemPayChangePinCodeSuccessScreen
+import com.tangem.features.tangempay.ui.TangemPayChangePinCodeSuccessScreenV2
 
 internal class TangemPayChangePinSuccessComponent(
     private val appComponentContext: AppComponentContext,
+    private val isRedesignEnabled: Boolean,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     @Composable
     override fun Content(modifier: Modifier) {
         BackHandler(onBack = ::backToDetails)
-        TangemPayChangePinCodeSuccessScreen(onClick = ::backToDetails)
+        if (isRedesignEnabled) {
+            TangemPayChangePinCodeSuccessScreenV2(onClose = ::backToDetails)
+        } else {
+            TangemPayChangePinCodeSuccessScreen(onClick = ::backToDetails)
+        }
     }
 
     private fun backToDetails() {

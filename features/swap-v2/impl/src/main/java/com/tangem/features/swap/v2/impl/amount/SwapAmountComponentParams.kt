@@ -7,7 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import kotlinx.coroutines.flow.Flow

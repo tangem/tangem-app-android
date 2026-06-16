@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ReceiveAddressModel.DisplayType
 import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.entity.TangemPayAddFundsUM
 import com.tangem.features.tangempay.model.transformers.TangemPayAddFundsUMConverter
@@ -18,6 +19,7 @@ import javax.inject.Inject
 internal class TangemPayAddFundsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
@@ -38,8 +40,13 @@ internal class TangemPayAddFundsModel @Inject constructor(
                 ),
             ),
         )
-        return TangemPayAddFundsUMConverter(listener = params.listener).convert(data)
+        return TangemPayAddFundsUMConverter(
+            listener = params.listener,
+            isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
+        ).convert(data)
     }
+
+    fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
 
     fun onDismiss() {
         params.listener.onDismissAddFunds()

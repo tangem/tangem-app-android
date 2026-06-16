@@ -47,10 +47,10 @@ internal class YieldSupplyApyComponent(
 
     @Composable
     override fun BottomSheet() {
-        val state by loadingState.collectAsState()
+        val isLoadingState by loadingState.collectAsState()
         YieldSupplyApyContent(
             apy = stringReference("${params.apy}%"),
-            isLoading = state,
+            isLoading = isLoadingState,
             onBackClick = params.onBackClick,
             chartComponent = chartComponent,
         )

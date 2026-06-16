@@ -1,11 +1,16 @@
 package com.tangem.feature.swap.ui.transfer
 
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -26,11 +31,13 @@ import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
-import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
-import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
+import com.tangem.features.send.api.utils.formatFooterFiatFee
+import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -53,28 +60,32 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val toTokenSwapInfo = transferState.toTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
-        val amountTextFieldValue = (uiStateHolder.sendCardData as? SwapCardState.SwapCardData)?.amountTextFieldValue
+        val prevSendCard = uiStateHolder.sendCardData as? SwapCardState.SwapCardData
+        val prevAmountField = prevSendCard?.amountField
+        val displayValue = prevAmountField?.value.orEmpty()
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             fee = fee,
+            onBuyClick = actions.openTokenDetailsScreen,
             onReduceByAmount = actions.onReduceByAmount,
             onReduceToAmount = actions.onReduceToAmount,
         )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
                 actions = actions,
-                amountTextFieldValue = amountTextFieldValue,
+                displayValue = displayValue,
                 tokenSwapInfo = fromTokenSwapInfo,
                 appCurrency = transferState.appCurrency,
                 isAccountsMode = transferState.isAccountsMode,
                 isFromCard = true,
                 isBalanceHidden = transferState.isBalanceHidden,
                 isInsufficientBalance = isInsufficientBalance,
+                prevAmountField = prevAmountField,
             ),
             receiveCardData = createSendSwapCardState(
                 actions = actions,
-                amountTextFieldValue = amountTextFieldValue,
+                displayValue = displayValue,
                 tokenSwapInfo = toTokenSwapInfo,
                 appCurrency = transferState.appCurrency,
                 isAccountsMode = transferState.isAccountsMode,
@@ -97,15 +108,17 @@ internal class SwapTransferStateBuilder @Inject constructor(
     @Suppress("LongParameterList")
     private fun createSendSwapCardState(
         actions: UiActions,
-        amountTextFieldValue: TextFieldValue?,
+        displayValue: String,
         tokenSwapInfo: TokenSwapInfo,
         appCurrency: AppCurrency,
         isAccountsMode: Boolean,
         isFromCard: Boolean,
         isBalanceHidden: Boolean,
         isInsufficientBalance: Boolean,
+        prevAmountField: AmountFieldModel? = null,
     ): SwapCardState {
         val swapCurrencyStatus = tokenSwapInfo.swapCurrencyStatus
+        val currency = swapCurrencyStatus.currency
 
         return SwapCardState.SwapCardData(
             type = createSendTransactionCardType(
@@ -118,14 +131,89 @@ internal class SwapTransferStateBuilder @Inject constructor(
             currencyIconState = iconConverter.convert(
                 value = swapCurrencyStatus.status,
             ),
-            tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
+            tokenSymbol = stringReference(currency.symbol),
             amountEquivalent = getFormattedFiatAmount(
                 appCurrency = appCurrency,
                 amount = tokenSwapInfo.amountFiat,
             ),
-            amountTextFieldValue = amountTextFieldValue,
             balance = swapCurrencyStatus.status.getFormattedAmount(),
             isBalanceHidden = isBalanceHidden,
+            appCurrency = appCurrency,
+            amountField = if (isFromCard) {
+                buildAmountField(
+                    actions = actions,
+                    prevAmountField = prevAmountField,
+                    swapCurrencyStatus = swapCurrencyStatus,
+                    appCurrency = appCurrency,
+                )
+            } else {
+                // Read-only receive card mirrors the same display value the "from" card shows in transfer mode.
+                displayAmountField(
+                    actions = actions,
+                    value = displayValue,
+                    swapCurrencyStatus = swapCurrencyStatus,
+                    appCurrency = appCurrency,
+                )
+            },
+        )
+    }
+
+    /**
+     * Builds the read-only receive card [AmountFieldModel] in transfer mode from a display [value].
+     * The read-only UI only reads [AmountFieldModel.value].
+     */
+    private fun displayAmountField(
+        actions: UiActions,
+        value: String,
+        swapCurrencyStatus: SwapCurrencyStatus,
+        appCurrency: AppCurrency,
+    ): AmountFieldModel = AmountFieldConverter(
+        clickIntents = SwapAmountScreenClickIntents(actions),
+        cryptoCurrencyStatus = swapCurrencyStatus.status,
+        appCurrency = appCurrency,
+    ).convert(value = "").copy(
+        value = value,
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Done,
+            keyboardType = KeyboardType.Number,
+        ),
+        keyboardActions = KeyboardActions(),
+        onValuePastedTriggerDismiss = {},
+    )
+
+    /**
+     * Rebuilds the "from" card [AmountFieldModel] in transfer mode, preserving the previously entered
+     * value and the crypto/fiat toggle while refreshing currency-derived fields against the latest status.
+     */
+    private fun buildAmountField(
+        actions: UiActions,
+        prevAmountField: AmountFieldModel?,
+        swapCurrencyStatus: SwapCurrencyStatus,
+        appCurrency: AppCurrency,
+    ): AmountFieldModel {
+        val fiatRate = swapCurrencyStatus.status.value.fiatRate
+        val isFiatValue = prevAmountField?.isFiatValue == true && fiatRate != null
+        val cryptoDecimal = prevAmountField?.cryptoAmount?.value.orZero()
+        val fiatDecimal = fiatRate?.multiply(cryptoDecimal)
+        // The converter is the single source for cryptoAmount / fiatAmount construction (FIAT_DECIMALS = 2).
+        // The previously entered value + crypto/fiat toggle display are restored afterwards via copy(...),
+        // keeping the resulting AmountFieldModel field-for-field equivalent to the prior hand-rolled builder.
+        return AmountFieldConverter(
+            clickIntents = SwapAmountScreenClickIntents(actions),
+            cryptoCurrencyStatus = swapCurrencyStatus.status,
+            appCurrency = appCurrency,
+        ).convert(value = cryptoDecimal.toPlainString()).copy(
+            value = prevAmountField?.value.orEmpty(),
+            isFiatValue = isFiatValue,
+            fiatValue = fiatDecimal?.format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            }.orEmpty(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Number,
+            ),
+            keyboardActions = KeyboardActions(),
+            onValuePastedTriggerDismiss = {},
         )
     }
 
@@ -147,7 +235,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 )
             }
             TransactionCardType.Inputtable(
-                onAmountChanged = actions.onAmountChanged,
+                onCurrencyChange = actions.onCurrencyChange,
                 onFocusChanged = actions.onAmountSelected,
                 inputError = if (isInsufficientBalance) {
                     TransactionCardType.InputError.InsufficientFunds
@@ -208,9 +296,13 @@ internal class SwapTransferStateBuilder @Inject constructor(
         return when (this) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
+            is Account.Virtual -> AccountIconUM.Virtual
         }
     }
 
+    /**
+     * [isTangemPayWithdrawal] - if true - Tangem pay withdrawal done with no fee, skip fee nullability check
+     */
     @Suppress("LongParameterList")
     fun updateTransferButtonEnableState(
         dataState: SwapProcessDataState,
@@ -219,18 +311,20 @@ internal class SwapTransferStateBuilder @Inject constructor(
         uiStateHolder: SwapStateHolder,
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         fee: Fee?,
+        isTangemPayWithdrawal: Boolean,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             fee = fee,
+            onBuyClick = actions.openTokenDetailsScreen,
             onReduceByAmount = actions.onReduceByAmount,
             onReduceToAmount = actions.onReduceToAmount,
         )
         return uiStateHolder.copy(
             notifications = notifications,
             swapButton = uiStateHolder.swapButton.copy(
-                isEnabled = getTransferButtonEnabled(notifications, fee),
+                isEnabled = getTransferButtonEnabled(notifications, fee, isTangemPayWithdrawal),
             ),
             transferFooter = getSendingFooterText(
                 dataState = dataState,
@@ -241,8 +335,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
         )
     }
 
-    private fun getTransferButtonEnabled(notifications: ImmutableList<NotificationUM>, fee: Fee?): Boolean {
-        return fee != null && notifications.none { notification ->
+    private fun getTransferButtonEnabled(
+        notifications: ImmutableList<NotificationUM>,
+        fee: Fee?,
+        isTangemPayWithdrawal: Boolean,
+    ): Boolean {
+        return (fee != null || isTangemPayWithdrawal) && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
                 notification is SwapNotificationUM.Warning.ExpressGeneralError ||
@@ -296,9 +394,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
         } else {
             resourceReference(
                 id = if (isFeeConvertibleToFiat) {
-                    com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description
+                    com.tangem.features.send.impl.R.string.send_summary_transaction_description
                 } else {
-                    com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description_no_fiat_fee
+                    com.tangem.features.send.impl.R.string.send_summary_transaction_description_no_fiat_fee
                 },
                 formatArgs = wrappedList(fiatSending, fiatFee),
             )
@@ -318,13 +416,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
     fun createSuccessState(
         uiState: SwapStateHolder,
         dataState: SwapProcessDataState,
-        appCurrency: AppCurrency,
-        isAccountsMode: Boolean,
+        fee: Fee?,
         txUrl: String,
         timestamp: Long,
-        fee: TextReference?,
         onExplorerClick: () -> Unit,
     ): SwapStateHolder {
+        val transferState = requireNotNull(dataState.currentTransferState)
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val amount = dataState.amount?.parseBigDecimalOrNull() ?: BigDecimal.ZERO
@@ -334,11 +431,11 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val fromAmountText = amount.format { crypto(fromCurrency.symbol, fromCurrency.decimals) }
         val toAmountText = amount.format { crypto(toCurrency.symbol, toCurrency.decimals) }
         val fromFiatAmount = getFormattedFiatAmount(
-            appCurrency = appCurrency,
+            appCurrency = transferState.appCurrency,
             amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(amount),
         )
         val toFiatAmount = getFormattedFiatAmount(
-            appCurrency = appCurrency,
+            appCurrency = transferState.appCurrency,
             amount = toSwapCurrencyStatus.status.value.fiatRate?.multiply(amount),
         )
 
@@ -352,15 +449,15 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 isTransferMode = true,
                 providerIcon = "",
                 rate = TextReference.EMPTY,
-                fee = fee,
+                fee = fee?.let { formatFeeForSuccess(transferState = transferState, fee = it) },
                 fromTitle = getCardAccountTitle(
                     account = fromSwapCurrencyStatus.account,
-                    isAccountsMode = isAccountsMode,
+                    isAccountsMode = transferState.isAccountsMode,
                     isFromCard = true,
                 ),
                 toTitle = getCardAccountTitle(
                     account = toSwapCurrencyStatus.account,
-                    isAccountsMode = isAccountsMode,
+                    isAccountsMode = transferState.isAccountsMode,
                     isFromCard = false,
                 ),
                 fromTokenAmount = stringReference(fromAmountText),
@@ -373,5 +470,69 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 onStatusButtonClick = {},
             ),
         )
+    }
+
+    fun createTangemPayWithdrawalSuccessState(
+        uiState: SwapStateHolder,
+        dataState: SwapProcessDataState,
+        fee: Fee?,
+        onExploreClick: () -> Unit,
+    ): SwapStateHolder {
+        val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
+        val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
+        val transferState = requireNotNull(dataState.currentTransferState)
+        val amountValue = transferState.sendingAmount
+
+        val fiatAmount = getFormattedFiatAmount(
+            appCurrency = transferState.appCurrency,
+            amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(amountValue),
+        )
+
+        return uiState.copy(
+            successState = SwapSuccessStateHolder(
+                timestamp = System.currentTimeMillis(),
+                txUrl = "",
+                providerName = stringReference(""),
+                providerType = stringReference(""),
+                shouldShowStatusButton = false,
+                isTransferMode = true,
+                providerIcon = "",
+                rate = TextReference.EMPTY,
+                fee = fee?.let { formatFeeForSuccess(transferState = transferState, fee = it) },
+                fromTitle = getCardAccountTitle(
+                    account = fromSwapCurrencyStatus.account,
+                    isAccountsMode = transferState.isAccountsMode,
+                    isFromCard = true,
+                ),
+                toTitle = getCardAccountTitle(
+                    account = toSwapCurrencyStatus.account,
+                    isAccountsMode = transferState.isAccountsMode,
+                    isFromCard = false,
+                ),
+                fromTokenAmount = stringReference(amountValue.toString()),
+                toTokenAmount = stringReference(amountValue.toString()),
+                fromTokenFiatAmount = fiatAmount,
+                toTokenFiatAmount = fiatAmount,
+                fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
+                toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
+                onExploreButtonClick = onExploreClick,
+                onStatusButtonClick = {},
+            ),
+        )
+    }
+
+    private fun formatFeeForSuccess(transferState: SwapState.Transfer, fee: Fee): TextReference {
+        val feeAmount = fee.amount
+        val totalFeeValue = feeAmount.value ?: BigDecimal.ZERO
+        val cryptoFormatted = totalFeeValue.format {
+            crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
+        }
+        val appCurrency = transferState.appCurrency
+        val swapCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus
+        val fiatRate = swapCurrencyStatus.status.value.fiatRate
+        val fiatFormatted = fiatRate?.multiply(totalFeeValue).format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        return stringReference("$cryptoFormatted ($fiatFormatted)")
     }
 }

@@ -11,6 +11,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface ChooseTokenBridge : ChooseTokenBridgeInternal {
@@ -29,6 +30,12 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
         val title: TextReference,
         val isShowMarketBlock: Boolean,
         val isShowPaymentAccount: Boolean,
+        val isAppBarShown: Boolean = true,
+        /**
+         * When `true`, single-currency wallets (and single-currency-with-token wallets like NODL)
+         * are shown as selectable tabs. Swap flows keep this `false` — only multi-currency wallets apply there.
+         */
+        val isShowSingleCurrencyWallets: Boolean = false,
     ) {
         companion object {
             val SwapFrom = Settings(
@@ -45,6 +52,8 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 title = resourceReference(R.string.swapping_to_title),
                 isShowMarketBlock = true,
                 isShowPaymentAccount = false,
+                isAppBarShown = false,
+                isShowSingleCurrencyWallets = true,
             )
         }
     }
@@ -66,6 +75,9 @@ interface ChooseTokenBridgeInternal {
     val analyticsPayload: Set<ChooseTokenAnalyticsPayload>
     val searchQueryState: StateFlow<SearchQuery>
     val fullPortfolioBlock: StateFlow<ChooseTokenPortfolioFullBlockUM?>
+
+    /** Currently selected wallet tab. Used to constrain feature blocks (e.g. market block) to the wallet's type. */
+    val selectedWalletFlow: SharedFlow<UserWallet>
 
     fun onSearchQuery(query: SearchQuery)
     fun onSearchQuery(query: String) = onSearchQuery(SearchQuery(query))
@@ -90,6 +102,11 @@ data class ChooseTokenResult(
     val analyticsPayload: Set<ChooseTokenAnalyticsPayload> = emptySet(),
 ) {
     val walletId get() = wallet.walletId
+
+    val wasJustAdded: Boolean
+        get() = analyticsPayload
+            .filterIsInstance<ChooseTokenAnalyticsPayload.IsMarketTokenSelected>()
+            .any { it.value }
 }
 
 sealed interface ChooseTokenAnalyticsPayload {

@@ -10,7 +10,6 @@
     <ID>MultilineLambdaItParameter:Actions.kt${ ActionButtonContent( config = config, text = { textColor -&gt; Text(text = config.text, textColor = textColor) }, modifier = it.padding( start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing24, ), ) }</ID>
     <ID>MultilineLambdaItParameter:TangemDropdownMenu.kt${ if (it) { // Menu is expanded. 1f } else { // Menu is dismissed. 0.8f } }</ID>
     <ID>MultilineLambdaItParameter:TangemDropdownMenu.kt${ if (it) { // Menu is expanded. 1f } else { // Menu is dismissed. 0f } }</ID>
-    <ID>NestedScopeFunctions:MessageBottomSheetUMV2.kt$apply(init)</ID>
     <ID>NestedScopeFunctions:Shadow.kt$apply { isDither = true isAntiAlias = true setShadowLayer( radiusPx, offset.x.toPx(), offset.y.toPx(), color.toArgb(), ) }</ID>
     <ID>NoNameShadowing:PinTextField.kt$value</ID>
     <ID>NoNameShadowing:SimpleTextField.kt$textStyle</ID>

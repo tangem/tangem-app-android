@@ -328,6 +328,7 @@ sealed class AnalyticsParam {
         const val WALLET_TYPE = "Wallet Type"
         const val BACKUPED = "Backuped"
         const val MEMO = "Memo"
+        const val VALUE = "Value"
     }
 }
 

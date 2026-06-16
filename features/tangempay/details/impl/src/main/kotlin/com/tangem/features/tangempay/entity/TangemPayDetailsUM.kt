@@ -1,13 +1,17 @@
 package com.tangem.features.tangempay.entity
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
-import com.tangem.features.tangempay.model.CardDataType
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import kotlinx.collections.immutable.ImmutableList
+
+internal enum class CardDataType {
+    Number, Expiry, CVV
+}
 
 internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
@@ -15,7 +19,7 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
-    val addFundsEnabled: Boolean,
+    val errorNotificationConfig: NotificationConfig?,
     val accountDeactivatedNotificationConfig: NotificationConfig?,
 )
 
@@ -32,8 +36,10 @@ internal data class TangemPayCardDetailsUM(
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
     val isActionsAvailable: Boolean = false,
+    val shouldShowCardDetailsButtonOnCard: Boolean = false,
 )
 
+@Immutable
 internal sealed interface DisplayNameState {
 
     val displayName: String
@@ -61,6 +67,7 @@ internal sealed interface DisplayNameState {
     }
 }
 
+@Immutable
 internal sealed class TangemPayDetailsBalanceBlockState {
 
     abstract val actionButtons: ImmutableList<ActionButtonConfig>
@@ -74,7 +81,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     data class Content(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
         override val cardsBlockState: CardsBlockState?,
-        val fiatBalance: String,
+        val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
@@ -88,6 +95,8 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val lastDigits: String,
         val onClick: () -> Unit,
         val isReissuing: Boolean,
+        val isFrozen: Boolean,
+        val isEnabled: Boolean,
     )
 }
 

@@ -14,13 +14,14 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.api.SendNotificationsComponent
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.entity.PredefinedValues
-import com.tangem.features.send.v2.api.params.FeeSelectorParams.*
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.params.FeeSelectorParams.*
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
@@ -40,7 +41,7 @@ import kotlinx.coroutines.flow.*
 internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: Params,
-    sendDestinationBlockComponent: SendDestinationBlockComponent.Factory,
+    sendDestinationBlockComponentFactory: SendDestinationBlockComponent.Factory,
     feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
     sendNotificationsComponentFactory: SendNotificationsComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
@@ -69,7 +70,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         onClick = model::showEditAmount,
     )
 
-    private val sendDestinationBlockComponent = sendDestinationBlockComponent.create(
+    private val sendDestinationBlockComponent = sendDestinationBlockComponentFactory.create(
         context = child("sendWithSwapConfirmDestinationBlock"),
         params = SendDestinationComponentParams.DestinationBlockParams(
             state = model.uiState.value.destinationUM,
@@ -81,7 +82,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             predefinedValues = PredefinedValues.Empty,
             isAllowSelfSend = true,
         ),
-        onResult = model::onDestinationResult,
+        // No feedback: the read-only block is driven one-way by the model.uiState collector ([REDACTED_TASK_KEY]).
+        onResult = {},
         onClick = model::showEditDestination,
     )
 
@@ -151,13 +153,27 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             val confirmUM = state.confirmUM as? ConfirmUM.Content
             blockClickEnableFlow.value = confirmUM?.isTransactionInProcess == false
         }.launchIn(componentScope)
+
+        // Single source of truth: the block always mirrors the model's authoritative destinationUM.
+        model.uiState
+            .map { it.destinationUM }
+            .distinctUntilChanged()
+            .onEach(sendDestinationBlockComponent::updateState)
+            .launchIn(componentScope)
     }
 
     fun updateState(sendWithSwapUM: SendWithSwapUM) {
         amountBlockComponent.updateState(sendWithSwapUM.amountUM)
-        sendDestinationBlockComponent.updateState(sendWithSwapUM.destinationUM)
         feeSelectorBlockComponent.updateState(sendWithSwapUM.feeSelectorUM)
         model.updateState(sendWithSwapUM)
+    }
+
+    // Re-sync destination from parent on Confirm entry, bypassing the edit-mode gate; Empty only occurs on
+    // reset (which leaves Confirm), so only Content is applied ([REDACTED_TASK_KEY]).
+    fun updateDestinationState(destinationUM: DestinationUM) {
+        if (destinationUM is DestinationUM.Content && destinationUM != model.uiState.value.destinationUM) {
+            model.onDestinationResult(destinationUM)
+        }
     }
 
     @Composable

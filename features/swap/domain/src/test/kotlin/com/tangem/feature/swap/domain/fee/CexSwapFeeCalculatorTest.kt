@@ -77,7 +77,12 @@ internal class CexSwapFeeCalculatorTest {
         // None of the fee use cases were invoked
         coVerify(exactly = 0) {
             estimateFeeUseCase.invoke(any(), any(), any())
-            estimateFeeForTokenUseCase.invoke(any(), any(), any(), any())
+            estimateFeeForTokenUseCase.invoke(
+                userWallet = any(),
+                feeTokenCurrencyStatus = any(),
+                sendingTokenCurrencyStatus = any(),
+                amount = any(),
+            )
             estimateFeeForGaslessTxUseCase.invoke(any(), any(), any())
         }
     }
@@ -117,7 +122,12 @@ internal class CexSwapFeeCalculatorTest {
         // Other use cases are NOT called.
         coVerify(exactly = 0) {
             estimateFeeUseCase.invoke(any(), any(), any())
-            estimateFeeForTokenUseCase.invoke(any(), any(), any(), any())
+            estimateFeeForTokenUseCase.invoke(
+                userWallet = any(),
+                feeTokenCurrencyStatus = any(),
+                sendingTokenCurrencyStatus = any(),
+                amount = any(),
+            )
         }
     }
 
@@ -156,7 +166,12 @@ internal class CexSwapFeeCalculatorTest {
             }
             val expected = mockk<TransactionFeeExtended>(relaxed = true)
             coEvery {
-                estimateFeeForTokenUseCase(any(), any(), any(), any())
+                estimateFeeForTokenUseCase(
+                    userWallet = any(),
+                    feeTokenCurrencyStatus = any(),
+                    sendingTokenCurrencyStatus = any(),
+                    amount = any(),
+                )
             } returns expected.right()
 
             val result = sut.calculate(
@@ -232,7 +247,12 @@ internal class CexSwapFeeCalculatorTest {
                 )
             }
             coVerify(exactly = 0) {
-                estimateFeeForTokenUseCase.invoke(any(), any(), any(), any())
+                estimateFeeForTokenUseCase.invoke(
+                    userWallet = any(),
+                    feeTokenCurrencyStatus = any(),
+                    sendingTokenCurrencyStatus = any(),
+                    amount = any(),
+                )
                 estimateFeeForGaslessTxUseCase.invoke(any(), any(), any())
             }
         }

@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestBlockUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoItemUM
 import kotlinx.collections.immutable.toImmutableList
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class TransactionParamsConverterTest {
 

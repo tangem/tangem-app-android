@@ -31,7 +31,7 @@ dependencies {
     testImplementation(projects.core.pagination)
 
     /* Tests */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
 }

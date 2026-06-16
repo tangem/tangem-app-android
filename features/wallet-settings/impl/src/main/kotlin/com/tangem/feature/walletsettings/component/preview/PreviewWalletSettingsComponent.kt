@@ -63,6 +63,8 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             isNotificationsEnabled = true,
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
+            isPushNotificationSettingsEnabled = false,
+            onNotificationSettingsClick = {},
             isNotificationsPermissionGranted = false,
             onAccessCodeClick = {},
             onBackupClick = {},

@@ -4,9 +4,11 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.DOGECOIN_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
+import com.tangem.scenarios.openSendConfirmScreenViaNextButton
 import com.tangem.scenarios.openSendScreen
 import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendScreen
@@ -20,8 +22,8 @@ import org.junit.Test
 @HiltAndroidTest
 class DogecoinWarningsTest : BaseTestCase() {
     private val tokenName = "Dogecoin"
-    private val amountToLeaveLessThanDust = "5.78654978"
-    private val amountToLeaveMoreThanDust = "5.7"
+    private val amountToLeaveLessThanDust = "5.7045"
+    private val amountToLeaveMoreThanDust = "5.6"
     private val amountGreaterThanDust = "0.02"
     private val amountLessThanDust = "0.005"
     private val dustAmount = "DOGE 0.01"
@@ -56,8 +58,10 @@ class DogecoinWarningsTest : BaseTestCase() {
             step("Type address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(DOGECOIN_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
             }
             step("Assert 'Invalid amount warning' is displayed") {
                 checkSendWarning(
@@ -93,8 +97,10 @@ class DogecoinWarningsTest : BaseTestCase() {
             step("Type address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(DOGECOIN_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
             }
             step("Assert 'Invalid amount warning' is not displayed") {
                 checkSendWarning(

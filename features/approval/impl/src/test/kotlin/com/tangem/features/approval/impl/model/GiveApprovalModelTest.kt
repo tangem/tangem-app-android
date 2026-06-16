@@ -26,7 +26,7 @@ import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.approval.api.GiveApprovalComponent
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify

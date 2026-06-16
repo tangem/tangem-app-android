@@ -11,12 +11,19 @@ import java.math.BigDecimal
 
 interface TangemPayWithdrawRepository {
 
-    suspend fun withdraw(
+    suspend fun withdrawWithSwap(
         userWallet: UserWallet,
         receiverAddress: String,
         cryptoAmount: BigDecimal,
         cryptoCurrencyId: CryptoCurrency.RawID,
         exchangeData: TangemPayWithdrawExchangeState,
+    ): Either<UniversalError, WithdrawalResult>
+
+    suspend fun withdraw(
+        userWallet: UserWallet,
+        receiverAddress: String,
+        cryptoAmount: BigDecimal,
+        cryptoCurrencyId: CryptoCurrency.RawID,
     ): Either<UniversalError, WithdrawalResult>
 
     suspend fun hasWithdrawOrder(userWalletId: UserWalletId): Boolean

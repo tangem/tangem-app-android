@@ -15,8 +15,8 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 

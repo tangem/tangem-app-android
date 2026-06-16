@@ -121,6 +121,7 @@ internal class OnrampOperationModel @Inject constructor(
                         .getOrElse { AppCurrency.Default }.code
 
                     getOfframpUrlUseCase(
+                        userWalletId = selectedUserWallet.walletId,
                         cryptoCurrencyStatus = status,
                         appCurrencyCode = appCurrencyCode,
                     ).onRight { url ->

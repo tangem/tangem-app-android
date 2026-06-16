@@ -1,23 +1,27 @@
 package com.tangem.feature.tester.presentation.featuretoggles.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.configtoggle.feature.DISABLED_FEATURE_TOGGLE_VERSION
+import com.tangem.core.configtoggle.feature.FeatureToggleInfo
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
+import com.tangem.core.configtoggle.version.Version
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
-import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
-import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
+import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureToggleGroupUM
+import com.tangem.feature.tester.presentation.featuretoggles.state.TesterFeatureToggleUM
+import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesScreenUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.utils.info.AppInfoProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,9 +39,11 @@ internal class FeatureTogglesViewModel @Inject constructor(
     private val appInfoProvider: AppInfoProvider,
 ) : ViewModel() {
 
-    /** Current ui state */
-    var uiState: FeatureTogglesContentState by mutableStateOf(initState())
-        private set
+    // Declared before `state` so it is initialized before `initState()` runs in the field initializer.
+    private val appVersion: Version? = Version.create(appInfoProvider.appVersion)
+
+    val state: StateFlow<FeatureTogglesScreenUM>
+        field = MutableStateFlow(initState())
 
     private val mutableFeatureTogglesManager: MutableFeatureTogglesManager
         get() = requireNotNull(featureTogglesManager as? MutableFeatureTogglesManager) {
@@ -46,17 +52,19 @@ internal class FeatureTogglesViewModel @Inject constructor(
 
     /** Setup navigation state property by router [router] and provides app restart method by [appFinisher] */
     fun setupInteractions(router: InnerTesterRouter, appFinisher: AppFinisher) {
-        uiState = uiState.copy(
-            topBar = uiState.topBar.copy(onBackClick = router::back),
-            onRestartAppClick = appFinisher::restart,
-        )
+        state.update { current ->
+            current.copy(
+                topBar = current.topBar.copy(onBackClick = router::back),
+                onRestartAppClick = appFinisher::restart,
+            )
+        }
     }
 
-    private fun initState(): FeatureTogglesContentState {
-        return FeatureTogglesContentState(
+    private fun initState(): FeatureTogglesScreenUM {
+        return FeatureTogglesScreenUM(
             topBar = getConfigSetupState(isPrimarySetup = true),
             appVersion = appInfoProvider.appVersion,
-            featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
+            featureToggleGroups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(),
             onToggleValueChange = ::onToggleValueChange,
             onRestartAppClick = {},
         )
@@ -75,8 +83,9 @@ internal class FeatureTogglesViewModel @Inject constructor(
                 ),
             )
         } else {
-            uiState.topBar.copy(
-                refreshButton = uiState.topBar.refreshButton.copy(isVisible = !isMatchLocalConfig),
+            val topBar = state.value.topBar
+            topBar.copy(
+                refreshButton = topBar.refreshButton.copy(isVisible = !isMatchLocalConfig),
             )
         }
     }
@@ -85,12 +94,14 @@ internal class FeatureTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             mutableFeatureTogglesManager.changeToggle(name = name, isEnabled = isEnabled)
 
-            uiState = uiState.copy(featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles())
+            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups()
+            state.update { it.copy(featureToggleGroups = groups) }
 
             // delay for smoothly update animations
             delay(timeMillis = 300)
 
-            uiState = uiState.copy(topBar = getConfigSetupState(isPrimarySetup = false))
+            val topBar = getConfigSetupState(isPrimarySetup = false)
+            state.update { it.copy(topBar = topBar) }
         }
     }
 
@@ -98,17 +109,52 @@ internal class FeatureTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             mutableFeatureTogglesManager.recoverLocalConfig()
 
-            uiState = uiState.copy(
-                topBar = getConfigSetupState(isPrimarySetup = false),
-                featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
-            )
+            val topBar = getConfigSetupState(isPrimarySetup = false)
+            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups()
+            state.update { it.copy(topBar = topBar, featureToggleGroups = groups) }
         }
     }
 
-    private fun MutableFeatureTogglesManager.getTesterFeatureToggles(): ImmutableList<TesterFeatureToggle> {
-        return this
-            .getFeatureToggles()
-            .map { TesterFeatureToggle(it.key, it.value) }
+    private fun MutableFeatureTogglesManager.getTesterFeatureToggleGroups(): ImmutableList<FeatureToggleGroupUM> {
+        val togglesByStatus = getFeatureToggles()
+            .sortedWith(featureToggleComparator)
+            .map { info ->
+                TesterFeatureToggleUM(
+                    name = info.name,
+                    version = info.version,
+                    status = statusOf(info.version),
+                    isEnabled = info.isEnabled,
+                )
+            }
+            .groupBy(TesterFeatureToggleUM::status)
+
+        return TesterFeatureToggleUM.Status.entries
+            .mapNotNull { status ->
+                togglesByStatus[status]?.let { toggles ->
+                    FeatureToggleGroupUM(status = status, toggles = toggles.toImmutableList())
+                }
+            }
             .toImmutableList()
+    }
+
+    private fun statusOf(toggleVersion: String): TesterFeatureToggleUM.Status {
+        val toggle = parseToggleVersion(toggleVersion) ?: return TesterFeatureToggleUM.Status.UNDEFINED
+        val app = appVersion ?: return TesterFeatureToggleUM.Status.UNDEFINED
+        return when {
+            toggle > app -> TesterFeatureToggleUM.Status.PLANNED
+            toggle < app -> TesterFeatureToggleUM.Status.RELEASED
+            else -> TesterFeatureToggleUM.Status.PENDING
+        }
+    }
+
+    private companion object {
+        // Descending by release version; toggles with no planned release ("undefined") sink to the bottom.
+        private val featureToggleComparator: Comparator<FeatureToggleInfo> =
+            compareByDescending<FeatureToggleInfo> { parseToggleVersion(it.version) }
+                .thenBy { it.name }
+
+        // Avoids Version.create() (which logs on parse failure) for the "no planned release" sentinel.
+        private fun parseToggleVersion(version: String): Version? =
+            if (version == DISABLED_FEATURE_TOGGLE_VERSION) null else Version.create(version)
     }
 }

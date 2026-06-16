@@ -19,6 +19,21 @@ sealed interface EarnBlockUM {
         val onClick: (() -> Unit)? = null,
     ) : EarnBlockUM
 
+    /**
+     * Promo variant — a column with the [iconUM] + annotated multiline [title] + [subtitle] row on top
+     * and a pair of full-width buttons below. Button labels are fixed and hardcoded in the composable,
+     * so only their click handlers ([onSecondaryClick], [onPrimaryClick]) are exposed here.
+     */
+    data class Promo(
+        val type: Type,
+        val backgroundUM: BackgroundUM,
+        val iconUM: IconUM,
+        val title: TextReference,
+        val subtitle: TextReference,
+        val onPrimaryClick: () -> Unit,
+        val onSecondaryClick: () -> Unit,
+    ) : EarnBlockUM
+
     enum class Type { Staking, YieldSupply }
 
     @Immutable
@@ -55,6 +70,12 @@ sealed interface EarnBlockUM {
             val style: Style,
             val tone: Tone,
             val loader: Loader? = null,
+        ) : SubtitleUM
+
+        data class AccentedText(
+            val text: TextReference,
+            val accent: TextReference,
+            val style: Style,
         ) : SubtitleUM
 
         data class Loader(val tone: LoaderTone)

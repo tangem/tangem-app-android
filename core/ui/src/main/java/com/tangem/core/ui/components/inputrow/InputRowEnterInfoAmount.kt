@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.tooltip.TangemTooltip
@@ -90,7 +91,7 @@ fun InputRowEnterInfoAmount(
                         symbolColor = textColor,
                     ),
                     onValueChange = onValueChange,
-                    color = textColor,
+                    colors = TangemAmountTextFieldColors.copy(textColor = textColor),
                     isEnabled = !isReadOnly,
                     textStyle = TangemTheme.typography.body2,
                     keyboardOptions = keyboardOptions,
@@ -181,12 +182,14 @@ fun InputRowEnterInfoAmountV2(
                         symbolColor = symbolColor,
                     ),
                     onValueChange = onValueChange,
-                    color = textColor,
+                    colors = TangemAmountTextFieldColors.copy(
+                        textColor = textColor,
+                        backgroundColor = Color.Transparent,
+                    ),
                     isEnabled = !isReadOnly,
                     textStyle = TangemTheme.typography.body2,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
-                    backgroundColor = Color.Transparent,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing8)
                         .weight(1f)

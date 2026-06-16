@@ -6,7 +6,7 @@ import androidx.compose.runtime.Immutable
 internal sealed interface TangemPayDailyLimitBlockState {
     data object Loading : TangemPayDailyLimitBlockState
 
-    data object Error : TangemPayDailyLimitBlockState
+    data class Error(val onReloadClick: () -> Unit) : TangemPayDailyLimitBlockState
 
     data class Content(
         val limit: String,

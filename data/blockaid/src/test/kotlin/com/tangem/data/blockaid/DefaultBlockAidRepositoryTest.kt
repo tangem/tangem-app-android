@@ -17,8 +17,8 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class DefaultBlockAidRepositoryTest {
 
@@ -32,7 +32,7 @@ class DefaultBlockAidRepositoryTest {
 
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
-    @Before
+    @BeforeEach
     fun setup() {
         MockKAnnotations.init(this)
         repository = DefaultBlockAidRepository(api, dispatchers, mapper)

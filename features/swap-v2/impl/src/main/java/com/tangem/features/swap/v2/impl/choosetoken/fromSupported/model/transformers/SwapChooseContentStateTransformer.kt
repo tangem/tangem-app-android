@@ -12,6 +12,7 @@ import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapCho
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChooseTokenFactory.getErrorMessage
+import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.SwapChooseTokenFactory.getSwapAvailableMessage
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
@@ -21,6 +22,7 @@ internal class SwapChooseContentStateTransformer(
     private val tokenName: String,
     private val onNetworkClick: (SwapCurrencies, CryptoCurrency) -> Unit,
     private val onDismiss: () -> Unit,
+    private val onSwapClick: (CryptoCurrency) -> Unit,
 ) : Transformer<SwapChooseTokenNetworkUM> {
     override fun transform(prevState: SwapChooseTokenNetworkUM): SwapChooseTokenNetworkUM {
         val swapNetworks = pairs.fromGroup.available.map { availableCurrency ->
@@ -51,16 +53,26 @@ internal class SwapChooseContentStateTransformer(
 
         return prevState.copy(
             bottomSheetConfig = prevState.bottomSheetConfig.copy(
-                content = if (swapNetworks.isNotEmpty()) {
-                    SwapChooseTokenNetworkContentUM.Content(
+                content = when {
+                    swapNetworks.isNotEmpty() -> SwapChooseTokenNetworkContentUM.Content(
                         swapNetworks = swapNetworks,
                         messageContent = getErrorMessage(
                             tokenName = tokenName,
                             onDismiss = onDismiss,
                         ),
                     )
-                } else {
-                    SwapChooseTokenNetworkContentUM.Error(
+                    // No networks for Send with Swap, but the pair is available in the regular Swap flow
+                    pairs.fromGroup.availableForSwap.isNotEmpty() -> {
+                        val firstAvailableForSwap = pairs.fromGroup.availableForSwap.first()
+                        val swapTargetCurrency = firstAvailableForSwap.currencyStatus.currency
+                        SwapChooseTokenNetworkContentUM.SwapAvailable(
+                            messageContent = getSwapAvailableMessage(
+                                tokenName = tokenName,
+                                onSwapClick = { onSwapClick(swapTargetCurrency) },
+                            ),
+                        )
+                    }
+                    else -> SwapChooseTokenNetworkContentUM.Error(
                         messageContent = getErrorMessage(
                             tokenName = tokenName,
                             onDismiss = onDismiss,

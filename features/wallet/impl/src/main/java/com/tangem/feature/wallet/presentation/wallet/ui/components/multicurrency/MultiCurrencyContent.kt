@@ -289,7 +289,7 @@ private fun LazyListScope.accountItem(
 
         val portfolioModifier = modifier
             .padding(top = if (index != 0) TangemTheme.dimens2.x2 else TangemTheme.dimens2.x3)
-            .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
             .semantics { lazyListItemPosition = index }
             .roundedShapeItemDecoration(
                 currentIndex = 0,
@@ -522,7 +522,7 @@ private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Port
 @Composable
 internal fun NonContentItemContentV2(textColor: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Column(
-        modifier = modifier,
+        modifier = modifier.testTag(MainScreenTestTags.EMPTY_TOKENS_PLACEHOLDER),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
@@ -545,7 +545,7 @@ internal fun NonContentItemContentV2(textColor: Color, modifier: Modifier = Modi
             onClick = onClick,
             size = TangemButtonSize.X8,
             shape = TangemButtonShape.Rounded,
-            modifier = Modifier,
+            modifier = Modifier.testTag(MainScreenTestTags.EMPTY_TOKENS_ADD_BUTTON),
         )
     }
 }

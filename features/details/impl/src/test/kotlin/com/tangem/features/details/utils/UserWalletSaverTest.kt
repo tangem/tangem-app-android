@@ -292,7 +292,7 @@ internal class UserWalletSaverTest {
 
     private fun mockBuilderReturns(userWallet: UserWallet.Cold?) {
         val builder: ColdUserWalletBuilder = mockk {
-            every { build() } returns userWallet
+            coEvery { build() } returns userWallet
         }
         every { coldUserWalletBuilderFactory.create(scanResponse = any()) } returns builder
     }

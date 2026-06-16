@@ -1,7 +1,9 @@
 package com.tangem.domain.transaction.usecase
 
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
@@ -17,47 +19,184 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 
 /**
  * Unit tests for [GetFeeUseCase].
  *
- * Focus is the Yield Mode gas-limit logic introduced on this branch
- * (uncompiled Ethereum transactions whose call data is [EthereumYieldSupplySendCallData]
- * get their gas limit increased by 40%), plus error mapping, null/exception handling,
- * demo card routing, and crypto-currency-to-amount conversion in the second overload.
+ * Covers two orthogonal pieces of the compiled-transaction overload:
+ *  - The fee-source selection that chooses between the simulated `estimateFeeWithOverride` path and the legacy
+ *    `getFee` path. The simulated estimation is selected only when ALL of these hold:
+ *      - [GetFeeUseCase.invoke] is called with `isSimulateEstimation = true`
+ *      - `spenderAddress != null`
+ *      - the resolved transaction sender is an [EthereumWalletManager]
+ *  - The Yield Mode gas-limit logic: uncompiled Ethereum transactions whose call data is
+ *    [EthereumYieldSupplySendCallData] get their gas limit increased by 40%.
+ *
+ * Plus error mapping, null/exception handling, demo card routing, and crypto-currency-to-amount conversion in the
+ * second overload.
  */
-class GetFeeUseCaseTest {
+internal class GetFeeUseCaseTest {
 
-    private lateinit var walletManagersFacade: WalletManagersFacade
-    private lateinit var demoConfig: DemoConfig
-    private lateinit var useCase: GetFeeUseCase
+    private val walletManagersFacade: WalletManagersFacade = mockk()
+    private val demoConfig: DemoConfig = mockk()
 
-    private lateinit var walletManager: WalletManager
-    private lateinit var network: Network
-    private lateinit var userWallet: UserWallet.Hot
-    private lateinit var userWalletId: UserWalletId
+    private val useCase = GetFeeUseCase(
+        walletManagersFacade = walletManagersFacade,
+        demoConfig = demoConfig,
+    )
 
-    @Before
+    private val network: Network = mockk(relaxed = true)
+    private val userWalletId = UserWalletId(stringValue = "deadbeef")
+    private val userWallet: UserWallet.Hot = mockk(relaxed = true) {
+        every { walletId } returns userWalletId
+    }
+
+    private val walletManager: WalletManager = mockk()
+    private val ethereumWalletManager: EthereumWalletManager = mockk()
+    private val plainWalletManager: WalletManager = mockk()
+
+    private val transactionData: TransactionData = mockk(relaxed = true)
+    private val expectedFee: TransactionFee = mockk(relaxed = true)
+
+    @BeforeEach
     fun setup() {
-        walletManagersFacade = mockk()
-        demoConfig = mockk()
-        useCase = GetFeeUseCase(walletManagersFacade, demoConfig)
-
-        walletManager = mockk()
-        network = mockk()
-        userWalletId = mockk()
-        userWallet = mockk<UserWallet.Hot>()
-
         every { demoConfig.isDemoCardId(any()) } returns false
-        every { userWallet.walletId } returns userWalletId
         coEvery {
             walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
         } returns walletManager
     }
+
+    // region invoke(userWallet, network, transactionData, spenderAddress, isSimulateEstimation) — fee-source selection
+
+    @Test
+    fun `GIVEN simulate + spender + ethereum manager THEN estimateFee is used`() = runTest {
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        } returns ethereumWalletManager
+        coEvery {
+            ethereumWalletManager.estimateFeeWithOverride(
+                transactionData = transactionData,
+                spenderAddress = SPENDER,
+                isSimulate = true,
+            )
+        } returns Result.Success(expectedFee)
+
+        val result = useCase(
+            userWallet = userWallet,
+            network = network,
+            transactionData = transactionData,
+            spenderAddress = SPENDER,
+            isSimulateEstimation = true,
+        )
+
+        assertThat(result).isEqualTo(expectedFee.right())
+        coVerify(exactly = 1) {
+            ethereumWalletManager.estimateFeeWithOverride(
+                transactionData = transactionData,
+                spenderAddress = SPENDER,
+                isSimulate = true,
+            )
+        }
+        coVerify(exactly = 0) { ethereumWalletManager.getFee(transactionData = transactionData) }
+    }
+
+    @Test
+    fun `GIVEN simulate false THEN legacy getFee is used even for ethereum manager`() = runTest {
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        } returns ethereumWalletManager
+        coEvery { ethereumWalletManager.getFee(transactionData = transactionData) } returns
+            Result.Success(expectedFee)
+
+        val result = useCase(
+            userWallet = userWallet,
+            network = network,
+            transactionData = transactionData,
+            spenderAddress = SPENDER,
+            isSimulateEstimation = false,
+        )
+
+        assertThat(result).isEqualTo(expectedFee.right())
+        coVerify(exactly = 1) { ethereumWalletManager.getFee(transactionData = transactionData) }
+        coVerify(exactly = 0) {
+            ethereumWalletManager.estimateFeeWithOverride(
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulate = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN null spender THEN legacy getFee is used even when simulate true`() = runTest {
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        } returns ethereumWalletManager
+        coEvery { ethereumWalletManager.getFee(transactionData = transactionData) } returns
+            Result.Success(expectedFee)
+
+        val result = useCase(
+            userWallet = userWallet,
+            network = network,
+            transactionData = transactionData,
+            spenderAddress = null,
+            isSimulateEstimation = true,
+        )
+
+        assertThat(result).isEqualTo(expectedFee.right())
+        coVerify(exactly = 1) { ethereumWalletManager.getFee(transactionData = transactionData) }
+        coVerify(exactly = 0) {
+            ethereumWalletManager.estimateFeeWithOverride(
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulate = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN non-ethereum manager THEN legacy getFee is used even when simulate plus spender`() = runTest {
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        } returns plainWalletManager
+        coEvery { plainWalletManager.getFee(transactionData = transactionData) } returns
+            Result.Success(expectedFee)
+
+        val result = useCase(
+            userWallet = userWallet,
+            network = network,
+            transactionData = transactionData,
+            spenderAddress = SPENDER,
+            isSimulateEstimation = true,
+        )
+
+        assertThat(result).isEqualTo(expectedFee.right())
+        coVerify(exactly = 1) { plainWalletManager.getFee(transactionData = transactionData) }
+    }
+
+    @Test
+    fun `GIVEN getFee returns failure THEN error is mapped to GetFeeError`() = runTest {
+        val failure = Result.Failure(BlockchainSdkError.CustomError("boom"))
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        } returns plainWalletManager
+        coEvery { plainWalletManager.getFee(transactionData = transactionData) } returns failure
+
+        val result = useCase(
+            userWallet = userWallet,
+            network = network,
+            transactionData = transactionData,
+        )
+
+        assertThat(result.isLeft()).isTrue()
+        assertThat(result.leftOrNull()).isInstanceOf(GetFeeError.DataError::class.java)
+    }
+
+    // endregion
 
     // region invoke(userWallet, network, transactionData) — Yield Mode gas-limit logic
 
@@ -475,4 +614,8 @@ class GetFeeUseCaseTest {
     }
 
     // endregion
+
+    private companion object {
+        const val SPENDER = "0xSpender"
+    }
 }

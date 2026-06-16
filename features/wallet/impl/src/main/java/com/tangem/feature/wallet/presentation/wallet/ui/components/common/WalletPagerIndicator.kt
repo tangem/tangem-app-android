@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.getPullToRefreshIndicatorOffset
 import com.tangem.core.ui.ds.TangemPagerIndicator
@@ -23,7 +24,6 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 
 private const val MIN_SCALE = 0.75f
 private const val MAX_SCALE = 1f
-private const val WALLET_INDICATOR_OFFSET = 0.6f
 
 @Composable
 internal fun WalletPagerIndicator(
@@ -31,6 +31,7 @@ internal fun WalletPagerIndicator(
     behavior: TangemCollapsingAppBarBehavior,
     pullToRefreshConfig: PullToRefreshConfig?,
     pullToRefreshState: PullToRefreshState,
+    topOffset: Dp,
 ) {
     val collapsedFraction = behavior.state.collapsedFraction
     val alpha = MAX_SCALE - collapsedFraction
@@ -43,7 +44,6 @@ internal fun WalletPagerIndicator(
         pullToRefreshConfig = pullToRefreshConfig,
         pullToRefreshState = pullToRefreshState,
     )
-    val padding = height * WALLET_INDICATOR_OFFSET
 
     AnimatedVisibility(
         visible = pagerState.pageCount > 1,
@@ -64,7 +64,7 @@ internal fun WalletPagerIndicator(
             TangemPagerIndicator(
                 pagerState = pagerState,
                 modifier = Modifier
-                    .padding(top = padding)
+                    .padding(top = topOffset)
                     .scale(scaleY = 1f, scaleX = scale),
             )
         }

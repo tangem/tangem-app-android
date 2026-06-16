@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.features.yield.supply.impl"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Feature */
@@ -86,7 +81,6 @@ dependencies {
 
     /** Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)

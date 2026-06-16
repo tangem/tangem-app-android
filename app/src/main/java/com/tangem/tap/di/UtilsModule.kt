@@ -1,6 +1,7 @@
 package com.tangem.tap.di
 
 import android.content.Context
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.tap.common.deeplink.DefaultDeeplinkLauncher
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.finisher.AppFinisher
@@ -55,7 +56,10 @@ internal interface UtilsModule {
 
         @Provides
         @Singleton
-        fun provideDeeplinkLauncher(@ApplicationContext context: Context, urlOpener: UrlOpener): DeeplinkLauncher =
-            DefaultDeeplinkLauncher(context, urlOpener)
+        fun provideDeeplinkLauncher(
+            @ApplicationContext context: Context,
+            urlOpener: UrlOpener,
+            analyticsExceptionHandler: AnalyticsExceptionHandler,
+        ): DeeplinkLauncher = DefaultDeeplinkLauncher(context, urlOpener, analyticsExceptionHandler)
     }
 }

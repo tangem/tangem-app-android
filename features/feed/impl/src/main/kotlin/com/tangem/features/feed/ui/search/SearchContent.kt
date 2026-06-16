@@ -36,7 +36,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.ui.search.state.*
+import com.tangem.features.feed.ui.feed.components.MarketBlock
+import com.tangem.features.feed.ui.feed.state.MarketChartUM
+import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
+import com.tangem.features.feed.ui.search.state.SearchCallbacks
+import com.tangem.features.feed.ui.search.state.SearchContentUM
+import com.tangem.features.feed.ui.search.state.TextHintItemUM
 import kotlinx.collections.immutable.ImmutableList
 
 private const val PLACEHOLDER_COUNT = 10
@@ -46,6 +51,7 @@ private const val USER_ASSETS_LIMIT = 3
 @Composable
 internal fun SearchContent(
     content: SearchContentUM,
+    topMarkets: MarketChartUM,
     searchCallbacks: SearchCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -85,12 +91,16 @@ internal fun SearchContent(
     ) {
         when (content) {
             is SearchContentUM.InitialEmpty -> Unit
-            is SearchContentUM.History -> searchHistoryItems(
-                history = content,
-                onClearAllClick = searchCallbacks.onClearHintsClick,
-                onHintClick = searchCallbacks.onTextHintClick,
-                onHistoryTokenClick = searchCallbacks.onHistoryTokenClick,
-            )
+            is SearchContentUM.History -> if (content.textHints.isEmpty() && content.recentTokens.isEmpty()) {
+                topMarketsBlock(topMarkets, searchCallbacks)
+            } else {
+                searchHistoryItems(
+                    history = content,
+                    onClearAllClick = searchCallbacks.onClearHintsClick,
+                    onHintClick = searchCallbacks.onTextHintClick,
+                    onHistoryTokenClick = searchCallbacks.onHistoryTokenClick,
+                )
+            }
             is SearchContentUM.Results -> searchResultsItems(
                 results = content,
                 isUserAssetsExpanded = isUserAssetsExpanded,
@@ -110,6 +120,16 @@ internal fun SearchContent(
                     true
                 }
             },
+        )
+    }
+}
+
+private fun LazyListScope.topMarketsBlock(topMarkets: MarketChartUM, searchCallbacks: SearchCallbacks) {
+    item(key = "top_markets") {
+        MarketBlock(
+            marketChart = topMarkets,
+            onSeeAllClick = searchCallbacks.onTopMarketSeeAllClick,
+            onItemClick = searchCallbacks.onTopMarketItemClick,
         )
     }
 }

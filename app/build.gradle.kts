@@ -107,16 +107,12 @@ configurations.all {
 configurations.androidTestImplementation {
     exclude(module = "protobuf-lite")
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.addressBook)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     api(projects.domain.common)
@@ -236,6 +232,8 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Features */
+    implementation(projects.features.addressBook.api)
+    implementation(projects.features.addressBook.impl)
     implementation(projects.features.rating.impl)
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
@@ -255,8 +253,8 @@ dependencies {
     implementation(projects.features.tokendetails.impl)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
-    implementation(projects.features.sendV2.api)
-    implementation(projects.features.sendV2.impl)
+    implementation(projects.features.send.api)
+    implementation(projects.features.send.impl)
     implementation(projects.features.qrScanning.api)
     implementation(projects.features.qrScanning.impl)
     implementation(projects.features.staking.api)
@@ -283,6 +281,8 @@ dependencies {
     implementation(projects.features.onboardingV2.impl)
     implementation(projects.features.stories.api)
     implementation(projects.features.stories.impl)
+    implementation(projects.features.survey.api)
+    implementation(projects.features.survey.impl)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.txhistory.impl)
     implementation(projects.features.biometry.api)
@@ -319,6 +319,12 @@ dependencies {
     implementation(projects.features.tangempay.main.impl)
     implementation(projects.features.tangempay.onboarding.api)
     implementation(projects.features.tangempay.onboarding.impl)
+    implementation(projects.features.virtualAccounts.onboarding.impl)
+    implementation(projects.features.virtualAccounts.onboarding.api)
+    implementation(projects.features.virtualAccounts.main.impl)
+    implementation(projects.features.virtualAccounts.main.api)
+    implementation(projects.features.virtualAccounts.details.impl)
+    implementation(projects.features.virtualAccounts.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
     implementation(projects.features.yieldSupply.api)
@@ -422,8 +428,6 @@ dependencies {
     /** Testing libraries */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testImplementation(deps.test.junit)
-    testRuntimeOnly(deps.test.junit5.engine)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)

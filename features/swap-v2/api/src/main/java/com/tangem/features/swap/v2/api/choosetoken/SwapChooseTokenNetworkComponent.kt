@@ -18,6 +18,7 @@ interface SwapChooseTokenNetworkComponent : ComposableBottomSheetComponent {
         val isSearchedToken: Boolean,
         val onDismiss: () -> Unit,
         val onResult: (SwapCurrencies, CryptoCurrency) -> Unit,
+        val onSwapClick: (CryptoCurrency) -> Unit,
     )
 
     interface Factory : ComponentFactory<Params, SwapChooseTokenNetworkComponent>

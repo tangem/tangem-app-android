@@ -1,6 +1,7 @@
 package com.tangem.data.yield.supply.di
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.data.yield.supply.DefaultYieldModuleAddressProvider
 import com.tangem.data.yield.supply.DefaultYieldSupplyRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
@@ -12,6 +13,7 @@ import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -63,6 +65,18 @@ internal object YieldSupplyDataModule {
     @Singleton
     fun provideYieldSupplyErrorResolver(): YieldSupplyErrorResolver {
         return DefaultYieldSupplyErrorResolver
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldModuleAddressProvider(
+        walletManagersFacade: WalletManagersFacade,
+        dispatchers: CoroutineDispatcherProvider,
+    ): YieldModuleAddressProvider {
+        return DefaultYieldModuleAddressProvider(
+            walletManagersFacade = walletManagersFacade,
+            dispatchers = dispatchers,
+        )
     }
 
     @Provides

@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.data.quotes"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     // region Project - Core
     implementation(projects.core.datasource)
@@ -47,7 +42,6 @@ dependencies {
     // endregion
 
     // region Tests
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     // endregion

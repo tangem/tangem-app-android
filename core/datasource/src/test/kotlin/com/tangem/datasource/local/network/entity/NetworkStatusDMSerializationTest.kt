@@ -6,7 +6,7 @@ import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 /**
@@ -42,10 +42,12 @@ class NetworkStatusDMSerializationTest {
                     { "value": "0x123456", "type": "primary" },
                     { "value": "0xabcdef", "type": "secondary" }
                 ],
-                "amounts": { "ETH": "1.2345" },
-                "yield_supply_statuses": { 
-                    "ETH": { "is_active": false, "is_initialized": false, "is_allowed_to_spend": false }
-                }
+                "amounts": [
+                    { "id": { "value": "ethereum" }, "amount": "1.2345" }
+                ],
+                "yield_supply_statuses": [
+                    { "id": { "value": "ethereum" }, "is_active": false, "is_initialized": false, "is_allowed_to_spend": false }
+                ]
             }
         """.trimIndent()
 
@@ -129,10 +131,12 @@ class NetworkStatusDMSerializationTest {
                     { "value": "0x123456", "type": "primary" },
                     { "value": "0xabcdef", "type": "secondary" }
                 ],
-                "amounts": { "ETH": "1.2345" },
-                "yield_supply_statuses": { 
-                    "ETH": { "is_active": false, "is_initialized": false, "is_allowed_to_spend": false }
-                }
+                "amounts": [
+                    { "id": { "value": "ethereum" }, "amount": "1.2345" }
+                ],
+                "yield_supply_statuses": [
+                    { "id": { "value": "ethereum" }, "is_active": false, "is_initialized": false, "is_allowed_to_spend": false }
+                ]
             }
         """.stripJsonWhitespace()
 

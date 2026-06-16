@@ -1,13 +1,13 @@
 package com.tangem.core.configtoggle.version
 
+import com.tangem.core.configtoggle.feature.DISABLED_FEATURE_TOGGLE_VERSION
+
 /**
  * Version contract to evaluate availability of feature toggle
  *
 [REDACTED_AUTHOR]
  */
 internal object VersionAvailabilityContract {
-
-    private const val DISABLED_FEATURE_TOGGLE_VERSION = "undefined"
 
     /** Evaluate availability of feature toggles using [currentVersion] and [localVersion] */
     operator fun invoke(currentVersion: String, localVersion: String): Boolean {

@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.domain.visa"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** Project - Core */
     api(projects.core.pagination)
@@ -42,9 +37,8 @@ dependencies {
 
     /** Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

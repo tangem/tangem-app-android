@@ -1,7 +1,9 @@
 package com.tangem.datasource.utils
 
 import com.tangem.datasource.local.logs.AppLogsStore
+import com.tangem.datasource.local.logs.SensitiveUrlMasker
 import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -22,11 +24,15 @@ private const val JSON_INDENT_SPACES = 4
  * Interceptor for save network requests and responses logs
  *
  * @property appLogsStore app logs store
+ * @property sensitiveUrlMasker masker for sensitive data in URLs
+ * @property shouldCheckResponseBodySize whether to skip logging large response bodies
  *
 [REDACTED_AUTHOR]
  */
 class NetworkLogsSaveInterceptor(
     private val appLogsStore: AppLogsStore,
+    private val sensitiveUrlMasker: SensitiveUrlMasker? = null,
+    private val shouldCheckResponseBodySize: Boolean = false,
 ) : Interceptor {
 
     @Throws(IOException::class)
@@ -65,7 +71,7 @@ class NetworkLogsSaveInterceptor(
         val connection = chain.connection()
         val connectionProtocol = if (connection != null) " ${connection.protocol()}" else ""
 
-        saveLogMessage("--> ${request.method} ${request.url}$connectionProtocol\n")
+        saveLogMessage("--> ${request.method} ${request.url.maskSensitiveInfo()}$connectionProtocol\n")
     }
 
     private fun logRequestMessage(chain: Interceptor.Chain, request: Request) {
@@ -73,7 +79,7 @@ class NetworkLogsSaveInterceptor(
         val connectionProtocol = if (connection != null) " ${connection.protocol()}" else ""
 
         saveLogMessage(
-            "--> ${request.method} ${request.url}$connectionProtocol\n",
+            "--> ${request.method} ${request.url.maskSensitiveInfo()}$connectionProtocol\n",
             createRequestEndMessage(request),
         )
     }
@@ -110,7 +116,7 @@ class NetworkLogsSaveInterceptor(
         val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
         saveLogMessage(
             "<-- ${response.code}",
-            " ${response.request.url} (${tookMs}ms)\n",
+            " ${response.request.url.maskSensitiveInfo()} (${tookMs}ms)\n",
         )
     }
 
@@ -123,39 +129,45 @@ class NetworkLogsSaveInterceptor(
             "<-- END HTTP"
         } else if (bodyHasUnknownEncoding(response.headers)) {
             "<-- END HTTP (encoded body omitted)"
+        } else if (shouldCheckResponseBodySize && contentLength > WRITE_LOG_THRESHOLD_BYTES_SIZE) {
+            "Response size too large: $contentLength bytes \n<-- END HTTP"
         } else {
             val source = responseBody.source()
             source.request(Long.MAX_VALUE)
             var buffer = source.buffer
 
-            var gzippedLength: Long? = null
-            if ("gzip".equals(responseHeaders["Content-Encoding"], ignoreCase = true)) {
-                gzippedLength = buffer.size
-                GzipSource(buffer.clone()).use { gzippedResponseBody ->
-                    buffer = Buffer()
-                    buffer.writeAll(gzippedResponseBody)
-                }
-            }
-
-            val contentType = responseBody.contentType()
-            val charset: Charset = contentType?.charset(StandardCharsets.UTF_8) ?: StandardCharsets.UTF_8
-
-            if (!buffer.isProbablyUtf8()) {
-                "<-- END HTTP (binary ${buffer.size}-byte body omitted)"
+            if (shouldCheckResponseBodySize && buffer.size > WRITE_LOG_THRESHOLD_BYTES_SIZE) {
+                "Response size too large: ${buffer.size} bytes \n<-- END HTTP"
             } else {
-                val json = if (contentLength != 0L) {
-                    buffer.clone().readString(charset).beautifyJson()
-                } else {
-                    ""
+                var gzippedLength: Long? = null
+                if ("gzip".equals(responseHeaders["Content-Encoding"], ignoreCase = true)) {
+                    gzippedLength = buffer.size
+                    GzipSource(buffer.clone()).use { gzippedResponseBody ->
+                        buffer = Buffer()
+                        buffer.writeAll(gzippedResponseBody)
+                    }
                 }
 
-                val end = if (gzippedLength != null) {
-                    "<-- END HTTP (${buffer.size}-byte, $gzippedLength-gzipped-byte body)"
-                } else {
-                    "<-- END HTTP (${buffer.size}-byte body)"
-                }
+                val contentType = responseBody.contentType()
+                val charset: Charset = contentType?.charset(StandardCharsets.UTF_8) ?: StandardCharsets.UTF_8
 
-                "$json\n$end"
+                if (!buffer.isProbablyUtf8()) {
+                    "<-- END HTTP (binary ${buffer.size}-byte body omitted)"
+                } else {
+                    val json = if (contentLength != 0L) {
+                        buffer.clone().readString(charset).beautifyJson()
+                    } else {
+                        ""
+                    }
+
+                    val end = if (gzippedLength != null) {
+                        "<-- END HTTP (${buffer.size}-byte, $gzippedLength-gzipped-byte body)"
+                    } else {
+                        "<-- END HTTP (${buffer.size}-byte body)"
+                    }
+
+                    "$json\n$end"
+                }
             }
         }
 
@@ -166,10 +178,14 @@ class NetworkLogsSaveInterceptor(
         saveLogMessage(
             "<-- ${response.code}",
             spaceBeforeResponseMessage,
-            response.message,
-            " ${response.request.url} (${tookMs}ms)\n",
+            " ${response.request.url.maskSensitiveInfo()} (${tookMs}ms)\n",
             message,
         )
+    }
+
+    private fun HttpUrl.maskSensitiveInfo(): String {
+        val url = toString()
+        return sensitiveUrlMasker?.mask(url) ?: url
     }
 
     private fun bodyHasUnknownEncoding(headers: Headers): Boolean {
@@ -231,6 +247,9 @@ class NetworkLogsSaveInterceptor(
     }
 
     private companion object {
+
+        const val WRITE_LOG_THRESHOLD_BYTES_SIZE = 2_048_000L
+
         /**
          * List of URLs (host + path) for which logging is restricted
          */

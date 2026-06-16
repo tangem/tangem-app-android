@@ -11,6 +11,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.tangempay.model.TangemPayChangePinModel
 import com.tangem.features.tangempay.ui.TangemPayChangePinScreen
+import com.tangem.features.tangempay.ui.TangemPayChangePinScreenV2
 
 internal class TangemPayChangePinComponent(
     private val appComponentContext: AppComponentContext,
@@ -24,9 +25,16 @@ internal class TangemPayChangePinComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
         DisableScreenshotsDisposableEffect()
-        TangemPayChangePinScreen(
-            state = state,
-            onBackClick = router::pop,
-        )
+        if (model.isRedesignEnabled()) {
+            TangemPayChangePinScreenV2(
+                state = state,
+                onBackClick = router::pop,
+            )
+        } else {
+            TangemPayChangePinScreen(
+                state = state,
+                onBackClick = router::pop,
+            )
+        }
     }
 }
