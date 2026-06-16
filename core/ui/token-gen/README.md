@@ -1,6 +1,6 @@
 # token-gen
 
-Generates Kotlin (Jetpack Compose) source files from design tokens defined in the `ds-tokens` git submodule.
+Generates Kotlin (Jetpack Compose) source files from design tokens and icons defined in the `ds-tokens` git submodule.
 
 ## Updating tokens
 
@@ -23,10 +23,18 @@ Generates Kotlin (Jetpack Compose) source files from design tokens defined in th
    ```bash
    cd core/ui/token-gen && npm run build
    ```
+   `npm run build` generates both tokens and icons. To regenerate only one of them:
+   ```bash
+   npm run build:tokens   # node build-tokens.mjs
+   npm run build:icons    # node build-icons.mjs
+   ```
 3. Commit the generated files (and the submodule pointer too, only if you ran step 1).
 
 ## How it works
 
-The script uses [Style Dictionary v5](https://styledictionary.com/) with [@tokens-studio/sd-transforms](https://github.com/tokens-studio/sd-transforms) to read JSON token files from `core/ui/ds-tokens/tokens/` and generate Kotlin files into `core/ui/src/main/java/com/tangem/core/ui/res/generated/`.
+The build runs two scripts:
+
+- **`build-tokens.mjs`** uses [Style Dictionary v5](https://styledictionary.com/) with [@tokens-studio/sd-transforms](https://github.com/tokens-studio/sd-transforms) to read JSON token files from `core/ui/ds-tokens/tokens/` and generate Kotlin files into `core/ui/src/main/java/com/tangem/core/ui/res/generated/`.
+- **`build-icons.mjs`** generates Kotlin icon source files into `core/ui/src/main/java/com/tangem/core/ui/res/generated/icons/`.
 
 All generated files are written to `com.tangem.core.ui.res.generated` and should not be edited manually.

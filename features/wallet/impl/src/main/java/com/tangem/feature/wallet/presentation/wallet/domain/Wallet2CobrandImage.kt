@@ -378,7 +378,7 @@ internal enum class Wallet2CobrandImage(
     ElectraSea(
         cards2ResId = R.drawable.ill_electra_sea_card2_120_106,
         cards3ResId = R.drawable.ill_electra_sea_card3_120_106,
-        batchIds = setOf("AF990023", "AF990024", "AF990025"),
+        batchIds = setOf("AF990023", "AF990024", "AF990025", "AF990067", "AF990066", "AF990065"),
     ),
 
     Football(

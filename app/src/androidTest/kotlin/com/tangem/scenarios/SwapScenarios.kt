@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
@@ -291,6 +292,84 @@ fun BaseTestCase.chooseReceiveToken(tokenName: String) {
     }
     step("Click on token with name '$tokenName'") {
         onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
+}
+
+/**
+ * From a clean start: open the main screen (cold by default, or an existing hot wallet when
+ * [seedPhrase] is given), open Swap for [fromTokenName], choose [receiveTokenName] to receive and
+ * enter [amount]. Scenario states stay in the test body.
+ */
+fun BaseTestCase.openSwapAmountScreen(
+    fromTokenName: String,
+    receiveTokenName: String,
+    amount: String,
+    seedPhrase: String? = null,
+) {
+    if (seedPhrase == null) {
+        step("Open 'Main' screen") {
+            openMainScreen()
+        }
+        step("Synchronize addresses") {
+            synchronizeAddresses()
+        }
+    } else {
+        step("Open 'Main' screen with existing hot wallet") {
+            openMainScreenWithExistingHotWallet(seedPhrase)
+        }
+    }
+    step("Click on token with name: '$fromTokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
+    }
+    step("Open 'Swap' screen") {
+        openSwapScreen(from = SwapEntryPoint.TokenDetails)
+    }
+    step("Choose receive token '$receiveTokenName'") {
+        chooseReceiveToken(receiveTokenName)
+    }
+    step("Input swap amount '$amount'") {
+        waitForIdle()
+        onSwapTokenScreen {
+            textInput.clickWithAssertion()
+            textInput.performTextReplacement(amount)
+        }
+    }
+    step("Wait for the receive amount to load") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }.isSuccess
+        }
+    }
+}
+
+/**
+ * Opens the swap 'Network fee' bottom sheet, retrying the click until the fee selector shows.
+ * Single action without its own step — wrap the call in a `step(...)`.
+ */
+fun BaseTestCase.openSwapNetworkFeeSelector() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+        runCatching { onSwapTokenScreen { networkFeeBlock.performClick() } }
+        runCatching { onSendFeeSelectorBottomSheet { networkFeeTitle.assertIsDisplayed() } }.isSuccess
+    }
+}
+
+/**
+ * Opens the fee selector and switches the fee-paying token from [currentFeeToken] to [newFeeToken],
+ * then applies. Works both ways — coin -> stablecoin and back.
+ */
+fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: String) {
+    step("Open the 'Network fee' bottom sheet") {
+        openSwapNetworkFeeSelector()
+    }
+    step("Click on '$currentFeeToken' fee token to open 'Choose token'") {
+        onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() }
+    }
+    step("Select '$newFeeToken' as the fee-paying token") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSendFeeSelectorBottomSheet { feeTokenItem(newFeeToken).performClick() } }.isSuccess
+        }
+    }
+    step("Click on 'Apply' button") {
+        onSendFeeSelectorBottomSheet { applyButton.performClick() }
     }
 }
 
