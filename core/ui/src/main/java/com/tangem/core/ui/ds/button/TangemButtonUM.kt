@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.TextReference
  * @param shape              TangemButtonShape defining the shape of the button.
  * @param type               TangemButtonType defining the style type of the button.
  * @param onClick            Lambda to be invoked when the button is clicked.
+ * @param onLongClick        Lambda to be invoked when the button is long-clicked.
  *
 [REDACTED_AUTHOR]
  */
@@ -32,6 +33,7 @@ data class TangemButtonUM(
     val shape: TangemButtonShape = TangemButtonShape.Default,
     val type: TangemButtonType,
     val onClick: () -> Unit,
+    val onLongClick: (() -> Unit)? = null,
 )
 
 /** Enum class representing the style types of Tangem buttons */

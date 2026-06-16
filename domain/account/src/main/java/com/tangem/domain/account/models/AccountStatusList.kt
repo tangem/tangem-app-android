@@ -58,3 +58,10 @@ data class AccountStatusList(
         )
     }
 }
+
+fun AccountStatusList.hasMultiCurrencyAccount(): Boolean = accountStatuses.any { status ->
+    when (status) {
+        is AccountStatus.CryptoPortfolio -> status.tokenList.flattenCurrencies().size > 1
+        is AccountStatus.Payment -> false
+    }
+}

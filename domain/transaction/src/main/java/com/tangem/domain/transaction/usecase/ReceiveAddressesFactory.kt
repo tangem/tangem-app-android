@@ -1,5 +1,7 @@
 package com.tangem.domain.transaction.usecase
 
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
@@ -13,6 +15,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.transaction.R
 import com.tangem.lib.crypto.BlockchainUtils
@@ -25,6 +28,7 @@ class ReceiveAddressesFactory(
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
     suspend fun create(
@@ -66,6 +70,9 @@ class ReceiveAddressesFactory(
     ): String? {
         if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return null
         if (cryptoCurrency !is CryptoCurrency.Coin) return null
+
+        val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)
+        if (userWallet == null || !userWallet.isMultiCurrency) return null
 
         val status = dynamicAddressesRepository.getStatus(userWalletId, cryptoCurrency.network).firstOrNull()
         if (status != DynamicAddressesStatus.ENABLED) return null

@@ -4,6 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.txhistory.model.TxHistoryModel
 import com.tangem.features.txhistory.ui.txHistoryItems
@@ -20,14 +21,17 @@ internal class DefaultTxHistoryComponent @AssistedInject constructor(
 
     private val model: TxHistoryModel = getOrCreateModel(params)
 
-    override val txHistoryState: StateFlow<TxHistoryUM>
+    override val legacyTxHistoryState: StateFlow<TxHistoryUM>
+        get() = model.legacyUiState
+
+    override val txHistoryState: StateFlow<TxHistoryItemsUM>
         get() = model.uiState
 
     override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) {
         txHistoryItemsLegacy(listState, state)
     }
 
-    override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) {
+    override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) {
         txHistoryItems(listState, state)
     }
 

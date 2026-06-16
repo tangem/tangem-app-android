@@ -15,6 +15,7 @@ sealed class YieldSupplyEntryRoute : Route {
     data class Promo(
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
+        val isPromoEnabled: Boolean = false,
     ) : YieldSupplyEntryRoute()
 
     /** Route to yield supply active screen */
