@@ -36,7 +36,7 @@ class TangemTypography2 internal constructor(
         fontFamily = fontFamily,
         fontSize = 44.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = TextUnit(value = 0.37f, type = TextUnitType.Sp),
+        letterSpacing = TextUnit(value = -0.92f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 48f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -45,11 +45,11 @@ class TangemTypography2 internal constructor(
         lineBreak = LineBreak.Heading,
     )
 
-    val headingRegular34: TextStyle = TextStyle(
+    private val headingSemibold34: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 34.sp,
-        fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(value = 0.4f, type = TextUnitType.Sp),
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = TextUnit(value = -0.37f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 44f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -58,37 +58,14 @@ class TangemTypography2 internal constructor(
         lineBreak = LineBreak.Heading,
     )
 
-    val headingBold34: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 34.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = TextUnit(value = 0.4f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 44f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
-
-    val headingRegular28: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(value = 0.38f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 36f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
+    val headingRegular34: TextStyle = headingSemibold34
+    val headingBold34: TextStyle = headingSemibold34
 
     val headingSemibold28: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 28.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = TextUnit(value = 0.38f, type = TextUnitType.Sp),
+        letterSpacing = TextUnit(value = -0.37f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 36f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -97,37 +74,15 @@ class TangemTypography2 internal constructor(
         lineBreak = LineBreak.Heading,
     )
 
-    val headingBold28: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = TextUnit(value = 0.38f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 36f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
+    val headingRegular28: TextStyle = headingSemibold28
 
-    val headingRegular22: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(value = -0.26f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 28f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
+    val headingBold28: TextStyle = headingSemibold28
 
     val headingSemibold22: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 22.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = TextUnit(value = -0.26f, type = TextUnitType.Sp),
+        letterSpacing = TextUnit(value = -0.12f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 28f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -136,37 +91,15 @@ class TangemTypography2 internal constructor(
         lineBreak = LineBreak.Heading,
     )
 
-    val headingBold22: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = TextUnit(value = -0.26f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 28f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
+    val headingRegular22: TextStyle = headingSemibold22
 
-    val headingRegular20: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(value = -0.45f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 24f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
+    val headingBold22: TextStyle = headingSemibold22
 
     val headingSemibold20: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 20.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = TextUnit(value = -1.2f, type = TextUnitType.Sp),
+        letterSpacing = TextUnit(value = -0.12f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 24f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -175,37 +108,13 @@ class TangemTypography2 internal constructor(
         lineBreak = LineBreak.Heading,
     )
 
-    val headingRegular17: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 17.sp,
-        fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(value = -0.43f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
-
-    val headingMedium17: TextStyle = TextStyle(
-        fontFamily = fontFamily,
-        fontSize = 17.sp,
-        fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(value = -0.43f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
-        ),
-        lineBreak = LineBreak.Heading,
-    )
+    val headingRegular20: TextStyle = headingSemibold20
 
     val headingSemibold17: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 17.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = TextUnit(value = -0.43f, type = TextUnitType.Sp),
+        letterSpacing = TextUnit(value = -0.12f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
             alignment = LineHeightStyle.Alignment.Center,
@@ -214,10 +123,13 @@ class TangemTypography2 internal constructor(
         lineBreak = LineBreak.Heading,
     )
 
+    val headingRegular17: TextStyle = headingSemibold17
+    val headingMedium17: TextStyle = headingSemibold17
+
     val bodyRegular16: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 16.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.31f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -241,7 +153,7 @@ class TangemTypography2 internal constructor(
     val bodySemibold16: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 16.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.31f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -257,7 +169,7 @@ class TangemTypography2 internal constructor(
     val bodyRegular15: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 15.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.24f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -269,7 +181,7 @@ class TangemTypography2 internal constructor(
     val calloutRegular15: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 15.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.23f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -281,7 +193,7 @@ class TangemTypography2 internal constructor(
     val calloutSemibold15: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 15.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.23f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -309,7 +221,7 @@ class TangemTypography2 internal constructor(
     val subheadlineRegular14: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 14.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.15f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -349,7 +261,7 @@ class TangemTypography2 internal constructor(
     val captionRegular13: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 13.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = -0.08f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -365,7 +277,7 @@ class TangemTypography2 internal constructor(
     val captionSemibold13: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 13.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -389,7 +301,7 @@ class TangemTypography2 internal constructor(
     val captionRegular12: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 12.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = 0f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -429,7 +341,7 @@ class TangemTypography2 internal constructor(
     val captionRegular11: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 11.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = 0.06f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 12f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -445,7 +357,7 @@ class TangemTypography2 internal constructor(
     val captionSemibold11: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = 0.15f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 12f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
