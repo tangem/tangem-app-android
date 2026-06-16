@@ -8,11 +8,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal class TangemPayCardLimitSetupComponent(
     appComponentContext: AppComponentContext,
-    params: TangemPayDetailsContainerComponent.Params,
+    params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayCardLimitSetupModel = getOrCreateModel(params)
@@ -33,4 +34,6 @@ internal class TangemPayCardLimitSetupComponent(
             )
         }
     }
+
+    data class Params(val card: TangemPayCard, val userWalletId: UserWalletId)
 }

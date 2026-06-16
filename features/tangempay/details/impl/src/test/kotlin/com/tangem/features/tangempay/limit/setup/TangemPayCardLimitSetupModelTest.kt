@@ -6,7 +6,6 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.*
@@ -15,7 +14,6 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -52,14 +50,7 @@ internal class TangemPayCardLimitSetupModelTest {
         state = TangemPayCardState.Active,
     )
 
-    private val initialStatus: AccountStatus.Payment = AccountStatus.Payment(
-        account = Account.Payment(userWalletId = userWalletId),
-        value = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
-            every { cards } returns listOf(initialCard)
-        },
-    )
-
-    private val params = TangemPayDetailsContainerComponent.Params(initialStatus = initialStatus)
+    private val params = TangemPayCardLimitSetupComponent.Params(card = initialCard, userWalletId = userWalletId)
 
     private fun createModel(
         adminLimit: BigDecimal? = BigDecimal("1000"),

@@ -146,5 +146,9 @@
     {
         "name": "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15235_VISA_MULTIPLE_CARDS",
+        "version": "5.40"
     }
 ]

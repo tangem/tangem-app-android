@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.navigation
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.pay.TangemPayCard
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -16,13 +17,13 @@ internal sealed class TangemPayCardDetailsInnerRoute : Route {
     data object ChangePINSuccess : TangemPayCardDetailsInnerRoute()
 
     @Serializable
-    data object AddToWallet : TangemPayCardDetailsInnerRoute()
+    data class AddToWallet(val card: TangemPayCard) : TangemPayCardDetailsInnerRoute()
 
     @Serializable
-    data class EditCardDisplayName(val cardId: String) : TangemPayCardDetailsInnerRoute()
+    data class EditCardDisplayName(val card: TangemPayCard) : TangemPayCardDetailsInnerRoute()
 
     @Serializable
-    data object LimitSetup : TangemPayCardDetailsInnerRoute()
+    data class LimitSetup(val card: TangemPayCard) : TangemPayCardDetailsInnerRoute()
 
     @Serializable
     data object LimitSetupSuccess : TangemPayCardDetailsInnerRoute()

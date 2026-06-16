@@ -19,13 +19,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.components.TangemPayCardScopedParams
+import com.tangem.features.tangempay.components.TangemPayEditDisplayNameComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
 import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsController
-import com.tangem.features.tangempay.utils.requireLoaded
-import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -45,15 +43,15 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model() {
 
-    private val params: TangemPayCardScopedParams = paramsContainer.require()
+    private val params: TangemPayEditDisplayNameComponent.Params = paramsContainer.require()
 
-    private val card = params.initialStatus.requireLoaded().requireCardWithId(params.cardId)
+    private val card = params.card
     private val originalDisplayName = card.displayName?.value.orEmpty()
 
     private val cardDetailsController = cardDetailsControllerFactory.create(
         scope = modelScope,
-        initialCard = card,
-        userWalletId = params.initialStatus.userWalletId,
+        card = card,
+        userWalletId = params.userWalletId,
         config = TangemPayCardDetailsController.Config(
             isEditingNameEnabled = false,
             shouldShowCardDetailsButtonOnCard = false,
@@ -79,7 +77,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
         )
 
     init {
-        subscribeToCardNameChanges(card.id, params.initialStatus.userWalletId)
+        subscribeToCardNameChanges(card.id, params.userWalletId)
     }
 
     fun isRedesignEnabled() = featureToggles.isRedesignEnabled
@@ -126,7 +124,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
                     uiState.update { it.copy(isLoading = true) }
                     updateCardNameUseCase(
                         cardId = card.id,
-                        userWalletId = params.initialStatus.userWalletId,
+                        userWalletId = params.userWalletId,
                         displayName = cardDisplayName,
                     ).onRight {
                         router.pop()

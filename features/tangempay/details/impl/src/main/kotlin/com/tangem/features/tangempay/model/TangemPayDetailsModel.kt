@@ -99,8 +99,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     val cryptoCurrency
         get() = currentStatus.value.cryptoCurrency
 
-    // Multiple cards are temporarily gated behind the same toggle as close-card.
-    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isCloseCardEnabled
+    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isMultipleCardsEnabled
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
@@ -279,7 +278,8 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun onClickAddToWalletBlock() {
         analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
-        router.push(TangemPayAccountDetailsInnerRoute.AddToWallet)
+        val card = currentStatus.value.ifLoadedOrNull { it.cards.firstOrNull() } ?: return
+        router.push(TangemPayAccountDetailsInnerRoute.AddToWallet(card))
     }
 
     private fun onClickCloseAddToWalletBlock() {
@@ -367,14 +367,19 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onAddCardClick() {
         analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
         if (!isMultipleCardsEnabled) {
-            uiMessageSender.send(TangemPayMessagesFactory.createFutureFeature(onGotItClick = {}))
+            analytics.send(TangemPayAnalyticsEvents.FakeDoorPopupDisplayed())
+            uiMessageSender.send(
+                TangemPayMessagesFactory.createFutureFeature(
+                    onGotItClick = {
+                        analytics.send(TangemPayAnalyticsEvents.FakeDoorGotitClicked())
+                    },
+                ),
+            )
             return
         }
-        val activeCardsCount = currentStatus.value.ifLoadedOrNull { loaded ->
-            loaded.cards.count { it.cardStatus.isActive }
-        } ?: 0
-        if (activeCardsCount >= MAX_ACTIVE_CARDS) {
-            uiMessageSender.send(TangemPayMessagesFactory.createMaximumCardsIssued(maxCards = MAX_ACTIVE_CARDS))
+        val activeCardsCount = currentStatus.value.ifLoadedOrNull { loaded -> loaded.cards.count() } ?: 0
+        if (activeCardsCount >= ALLOWED_MAX_CARDS_COUNT) {
+            uiMessageSender.send(TangemPayMessagesFactory.createMaximumCardsIssued(maxCards = ALLOWED_MAX_CARDS_COUNT))
             return
         }
         modelScope.launch {
@@ -459,6 +464,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private companion object {
-        const val MAX_ACTIVE_CARDS = 3
+        const val ALLOWED_MAX_CARDS_COUNT = 3
     }
 }
