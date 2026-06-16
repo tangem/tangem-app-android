@@ -1,5 +1,7 @@
 package com.tangem.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
@@ -65,7 +67,8 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     }
 
     val fiatBalance: KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT)
+        hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT))
+        addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
         useUnmergedTree = true
     }
 
