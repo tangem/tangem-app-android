@@ -3,6 +3,8 @@ package com.tangem.features.managetokens.choosetoken.model
 import androidx.annotation.StringRes
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -11,7 +13,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
+import com.tangem.domain.markets.RawMarketToken
+import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
@@ -55,9 +63,18 @@ internal class ChooseManagedTokensModel @Inject constructor(
     paramsContainer: ParamsContainer,
     manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
+    addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
 ) : Model() {
 
     private val params: ChooseManagedTokensComponent.Params = paramsContainer.require()
+
+    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
+        scope = modelScope,
+        settings = AddToPortfolioManager.Settings.ChooseToken,
+        analyticsParams = AddToPortfolioManager.AnalyticsParams(
+            source = AnalyticsParam.ScreensSources.Send.value,
+        ),
+    )
 
     private val manageTokensMode = ManageTokensMode.Account(params.userWalletId)
 
@@ -97,8 +114,60 @@ internal class ChooseManagedTokensModel @Inject constructor(
 
         observeSearchQueryChanges()
 
+        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { result -> navigateToSwap(toCryptoCurrency = result.addedCurrency.currency) }
+            .launchIn(modelScope)
+        addToPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+
         modelScope.launch {
             manageTokensListManager.launchPagination(isCollapsed = false)
+        }
+    }
+
+    /**
+     * Invoked from the Send-with-Swap "Swap token" notice when the token is only swappable in the regular
+     * Swap flow. If the token isn't added to the wallet yet, shows the add-to-portfolio bottom sheet first;
+     * otherwise opens the Swap screen directly with [targetCurrency] pre-selected as TO.
+     */
+    fun onSwapTokenClick(token: ManagedCryptoCurrency.Token, targetCurrency: CryptoCurrency) {
+        if (token.isAdded) {
+            navigateToSwap(toCryptoCurrency = targetCurrency)
+        } else {
+            addToPortfolioManager.setTokenNetworks(token.toMarketNetworks())
+            addToPortfolioManager.setTokenParams(token.toRawMarketToken())
+            bottomSheetNavigation.activate(ChooseManageTokensBottomSheetConfig.AddToPortfolioBottomSheetConfig)
+        }
+    }
+
+    private fun navigateToSwap(toCryptoCurrency: CryptoCurrency) {
+        bottomSheetNavigation.dismiss()
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = params.initialCurrency,
+                toCryptoCurrency = toCryptoCurrency,
+                screenSource = AnalyticsParam.ScreensSources.Send.value,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+            ),
+        )
+    }
+
+    private fun ManagedCryptoCurrency.Token.toRawMarketToken(): RawMarketToken = RawMarketToken(
+        id = CryptoCurrency.RawID(id.value),
+        name = name,
+        symbol = symbol,
+    )
+
+    private fun ManagedCryptoCurrency.Token.toMarketNetworks(): List<TokenMarketInfo.Network> {
+        return availableNetworks.map { sourceNetwork ->
+            TokenMarketInfo.Network(
+                networkId = sourceNetwork.network.rawId,
+                isExchangeable = false,
+                contractAddress = (sourceNetwork as? ManagedCryptoCurrency.SourceNetwork.Default)?.contractAddress,
+                decimalCount = sourceNetwork.decimals,
+            )
         }
     }
 
