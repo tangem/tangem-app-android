@@ -20,7 +20,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -338,7 +337,7 @@ internal class WcPairModel @Inject constructor(
             is WcPairError.UriAlreadyUsed -> WcAppInfoRoutes.Alert.UriAlreadyUsed
             is WcPairError.TimeoutException -> WcAppInfoRoutes.Alert.TimeoutException
             else -> {
-                messageSender.send(ToastMessage(message = stringReference(error.message)))
+                messageSender.send(SnackbarMessage(message = stringReference(error.message)))
                 router.pop()
                 null
             }

@@ -6,6 +6,8 @@ object DeeplinkConst {
 
     const val TANGEM_SCHEME = "tangem"
     const val WALLET_ID_KEY = "user_wallet_id"
+    const val CUSTOMER_WALLET_ID_KEY = "customer_wallet_id"
+    const val CUSTOMER_ID_KEY = "customer_id"
     const val NETWORK_ID_KEY = "network_id"
     const val TYPE_KEY = "type"
     const val TOKEN_ID_KEY = "token_id"

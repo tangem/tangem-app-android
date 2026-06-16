@@ -1,6 +1,5 @@
 package com.tangem.features.feed.ui.market.list.components
 
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -20,14 +19,12 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByMenuUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
-import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.ds.button.TangemButtonIconPosition as RedesignTangemButtonIconPosition
 
@@ -120,7 +117,6 @@ private fun OptionsV2(
     modifier: Modifier = Modifier,
 ) {
     var isShowDropdownMenu by rememberSaveable { mutableStateOf(false) }
-    val background = LocalMainBottomSheetColor.current.value
 
     val segmentItems = remember {
         persistentListOf(
@@ -147,16 +143,7 @@ private fun OptionsV2(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(IntrinsicSize.Max)
-                .hazeEffectTangem {
-                    progressive = HazeProgressive.verticalGradient(
-                        startIntensity = .2f,
-                        endIntensity = 0f,
-                        easing = EaseOut,
-                        preferPerformance = true,
-                    )
-                    backgroundColor = background
-                },
+                .height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             PrimaryInverseTangemButton(
