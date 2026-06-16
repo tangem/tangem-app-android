@@ -10,7 +10,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.stories.StoriesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -55,14 +55,14 @@ internal object TokensDomainModule {
         rampStateManager: RampStateManager,
         walletManagersFacade: WalletManagersFacade,
         stakingRepository: StakingRepository,
-        promoRepository: PromoRepository,
+        storiesRepository: StoriesRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
             rampManager = rampStateManager,
             walletManagersFacade = walletManagersFacade,
             stakingRepository = stakingRepository,
-            promoRepository = promoRepository,
+            storiesRepository = storiesRepository,
             dispatchers = dispatchers,
         )
     }

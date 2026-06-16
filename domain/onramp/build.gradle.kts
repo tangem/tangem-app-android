@@ -19,7 +19,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.settings)
     implementation(deps.kotlin.serialization)
-    implementation(projects.domain.promo)
+    implementation(projects.domain.stories)
 
     /** Tests */
     testImplementation(deps.test.coroutine)

@@ -19,7 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.TitleProvider
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -114,7 +114,7 @@ internal class OnboardingMultiWalletModelTest {
         createModel(this)
         advanceUntilIdle()
 
-        verify { analyticsHandler.send(match<OnboardingEvent.Started> { true }) }
+        verify { analyticsHandler.send(match<OnboardingAnalyticsEvent.Onboarding.Started> { true }) }
     }
 
     @Test

@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,8 +30,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonsRow
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -38,10 +41,9 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
-import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
@@ -78,13 +80,13 @@ internal fun SwapScreenContent(
         ) {
             MainInfo(state)
 
-            ProviderItemBlock(state = state.providerState)
-
-            if (feeBlock != null) {
-                feeBlock(Modifier.fillMaxWidth())
+            if (state.swapUIMode == SwapUIMode.Simple) {
+                ProviderItemBlockSimple(state = state.providerState)
             } else {
-                FeeItemBlock(state = state.fee)
+                ProviderItemBlock(state = state.providerState)
             }
+
+            feeBlock?.invoke(Modifier.fillMaxWidth())
 
             if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
 
@@ -97,27 +99,47 @@ internal fun SwapScreenContent(
                         .padding(top = TangemTheme.dimens.spacing16),
                 )
             }
+            if (state.transferFooter != null) {
+                SendingText(
+                    footerText = state.transferFooter,
+                    modifier = Modifier.padding(
+                        top = TangemTheme.dimens.spacing16,
+                    ),
+                )
+            }
 
             MainButton(state = state)
         }
 
-        if (state.shouldShowMaxAmount && keyboard is Keyboard.Opened) {
-            Text(
-                text = stringResourceSafe(id = R.string.send_max_amount_label),
-                style = TangemTheme.typography.button,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .imePadding()
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors.button.secondary)
-                    .clickable { state.onMaxAmountSelected?.invoke() }
-                    .padding(
-                        horizontal = TangemTheme.dimens.spacing14,
-                        vertical = TangemTheme.dimens.spacing16,
-                    ),
-                textAlign = TextAlign.Start,
-            )
+        if (keyboard is Keyboard.Opened) {
+            when {
+                state.predefinedButtons.isNotEmpty() -> {
+                    PredefinedPercentButtonsRow(
+                        items = state.predefinedButtons,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .imePadding(),
+                    )
+                }
+                state.shouldShowMaxAmount -> {
+                    Text(
+                        text = stringResourceSafe(id = R.string.send_max_amount_label),
+                        style = TangemTheme.typography.button,
+                        color = TangemTheme.colors.text.primary1,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .imePadding()
+                            .fillMaxWidth()
+                            .background(TangemTheme.colors.button.secondary)
+                            .clickable { state.onMaxAmountSelected?.invoke() }
+                            .padding(
+                                horizontal = TangemTheme.dimens.spacing14,
+                                vertical = TangemTheme.dimens.spacing16,
+                            ),
+                        textAlign = TextAlign.Start,
+                    )
+                }
+            }
         }
     }
 }
@@ -138,14 +160,25 @@ private fun MainInfo(state: SwapStateHolder) {
             onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.FROM) },
         )
         val marginCard = TangemTheme.dimens.spacing12
-        TransactionCard(
-            priceImpact = priceImpact,
-            swapCardState = state.receiveCardData,
-            modifier = Modifier.constrainAs(bottomCard) {
-                top.linkTo(topCard.bottom, margin = marginCard)
-            },
-            onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
-        )
+        if (state.swapUIMode == SwapUIMode.Simple) {
+            TransactionCardSimple(
+                priceImpact = priceImpact,
+                swapCardState = state.receiveCardData,
+                modifier = Modifier.constrainAs(bottomCard) {
+                    top.linkTo(topCard.bottom, margin = marginCard)
+                },
+                onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
+            )
+        } else {
+            TransactionCard(
+                priceImpact = priceImpact,
+                swapCardState = state.receiveCardData,
+                modifier = Modifier.constrainAs(bottomCard) {
+                    top.linkTo(topCard.bottom, margin = marginCard)
+                },
+                onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
+            )
+        }
         val marginButton = TangemTheme.dimens.spacing30
         SwapButton(
             state,
@@ -345,7 +378,7 @@ private fun MainButton(state: SwapStateHolder) {
         state.swapButton.isHoldToConfirm -> {
             HoldToConfirmButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(R.string.swapping_swap_action),
+                text = getButtonTitle(state.swapButton.mode),
                 enabled = state.swapButton.isEnabled,
                 onConfirm = state.swapButton.onClick,
                 isLoading = state.swapButton.isInProgress,
@@ -355,11 +388,7 @@ private fun MainButton(state: SwapStateHolder) {
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = if (state.swapButton.isInProgress) {
-                    stringResourceSafe(id = R.string.swapping_swap_action_in_progress)
-                } else {
-                    stringResourceSafe(id = R.string.swapping_swap_action)
-                },
+                text = getButtonTitle(state.swapButton.mode),
                 iconResId = state.swapButton.walletInteractionIcon,
                 enabled = state.swapButton.isEnabled,
                 onClick = state.swapButton.onClick,
@@ -368,25 +397,28 @@ private fun MainButton(state: SwapStateHolder) {
     }
 }
 
+@Composable
+@ReadOnlyComposable
+private fun getButtonTitle(mode: SwapButton.Mode): String {
+    return when (mode) {
+        SwapButton.Mode.SWAP_PROGRESSING -> stringResourceSafe(id = R.string.swapping_swap_action_in_progress)
+        SwapButton.Mode.SWAP -> stringResourceSafe(id = R.string.swapping_swap_action)
+        SwapButton.Mode.TRANSFER -> stringResourceSafe(id = R.string.swapping_transfer_action)
+        SwapButton.Mode.TRANSFER_PROGRESSING -> stringResourceSafe(
+            id = R.string.swapping_transfer_action_in_progress,
+        )
+    }
+}
+
 // region preview
 
 private val state = SwapStateHolder(
     sendCardData = sendCard,
     receiveCardData = receiveCard,
-    fee = FeeItemState.Content(
-        feeType = FeeType.NORMAL,
-        title = stringReference("Fee"),
-        amountCrypto = "100",
-        symbolCrypto = "1000",
-        amountFiatFormatted = "(100)",
-        isClickable = true,
-        onClick = {},
-    ),
     notifications = persistentListOf(
         SwapNotificationUM.Info.PermissionNeeded(
-            providerName = "Provider",
-            fromTokenSymbol = "POL",
             onApproveClick = {},
+            onLearnMoreClick = {},
         ),
         SwapNotificationUM.Warning.NoAvailableTokensToSwap("POLYGON"),
     ),

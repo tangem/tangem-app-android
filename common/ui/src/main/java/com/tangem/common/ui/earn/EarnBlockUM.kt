@@ -39,9 +39,13 @@ sealed interface EarnBlockUM {
         val text: TextReference,
         val style: Style,
         val tone: Tone,
+        val iconUM: IconUM? = null,
     ) {
         enum class Style { Large, Small }
         enum class Tone { Primary, Secondary, Disabled, Accent }
+
+        data class IconUM(val tone: IconTone)
+        enum class IconTone { Warning, Info }
     }
 
     @Immutable
@@ -65,18 +69,15 @@ sealed interface EarnBlockUM {
         data class Button(
             val text: TextReference,
             val isEnabled: Boolean = true,
-        ) : TrailingUM
+            val style: Style = Style.Default,
+        ) : TrailingUM {
+            enum class Style { Default, Secondary }
+        }
 
         data class Balance(
             val fiatValue: TextReference,
             val cryptoValue: TextReference,
             val isBalanceHidden: Boolean,
         ) : TrailingUM
-
-        data class Icon(
-            val tone: IconTone,
-        ) : TrailingUM
-
-        enum class IconTone { Warning, Info }
     }
 }

@@ -48,6 +48,10 @@ import java.util.UUID
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated(
+    message = "Legacy. Use TransactionItem for redesigned screens",
+    level = DeprecationLevel.WARNING,
+)
 @Composable
 @Suppress("LongMethod")
 fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
@@ -330,6 +334,7 @@ private fun TransactionState.isGoneIf(goneCondition: TransactionState.Content.()
     return if ((this as? TransactionState.Content)?.goneCondition() == true) Visibility.Gone else Visibility.Visible
 }
 
+@Suppress("DEPRECATION")
 @Preview(showBackground = true, widthDp = 368)
 @Preview(showBackground = true, widthDp = 368, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable

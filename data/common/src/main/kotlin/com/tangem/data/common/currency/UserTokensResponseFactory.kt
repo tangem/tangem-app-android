@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.network.NetworkFactory
@@ -54,9 +55,14 @@ class UserTokensResponseFactory @Inject constructor() {
         userWallet: UserWallet?,
         networkFactory: NetworkFactory,
         accountId: AccountId?,
+        extraBlockchains: List<Blockchain> = emptyList(),
     ): UserTokensResponse {
         val tokens = if (userWallet != null) {
-            getDefaultWalletBlockchains(userWallet = userWallet, demoConfig = DemoConfig)
+            getDefaultWalletBlockchains(
+                userWallet = userWallet,
+                demoConfig = DemoConfig,
+                extraBlockchains = extraBlockchains,
+            )
                 .map { blockchain ->
                     val derivationPath = networkFactory.createDerivationPath(
                         blockchain = blockchain,
