@@ -46,6 +46,8 @@ import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -53,7 +55,6 @@ import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.utils.extensions.stripZeroPlainString
 import kotlinx.coroutines.launch
 import java.io.File
 import java.math.BigDecimal
@@ -128,55 +129,7 @@ private fun ExpressShareImageContent(
                     .matchParentSize()
                     .background(TangemColorPalette.Black),
             ) {
-                Column(
-                    modifier = Modifier.padding(
-                        start = 40.dp,
-                        end = 40.dp,
-                        top = 40.dp,
-                        bottom = 20.dp,
-                    ),
-                ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.img_tangem_logo_90_24),
-                        contentDescription = null,
-                        tint = TangemColorPalette.White,
-                    )
-                    SpacerH(36.dp)
-
-                    ExpressShareImageAmount(
-                        prefix = stringResourceSafe(R.string.common_send),
-                        amountValue = state.info.fromAmountValue,
-                        currencyIconState = state.info.fromCurrencyIcon,
-                        currencySymbol = state.info.fromAmountSymbol,
-                    )
-                    ExpressShareImageAddress(
-                        prefix = stringResourceSafe(R.string.common_from),
-                        address = state.info.fromAddress,
-                    )
-
-                    SpacerH(24.dp)
-                    ExpressShareImageSeparator()
-                    SpacerH(24.dp)
-
-                    ExpressShareImageAmount(
-                        prefix = stringResourceSafe(R.string.common_receive),
-                        amountValue = state.info.toAmountValue,
-                        currencyIconState = state.info.toCurrencyIcon,
-                        currencySymbol = state.info.toAmountSymbol,
-                    )
-                    ExpressShareImageAddress(
-                        prefix = stringResourceSafe(R.string.common_to),
-                        address = state.info.toAddress,
-                    )
-                    SpacerH(24.dp)
-
-                    ExpressShareImageProvider(state)
-                    Text(
-                        text = stringResourceSafe(R.string.express_transaction_id, state.info.txExternalId.orEmpty()),
-                        style = TangemTheme.typography2.bodySemibold16,
-                        color = TangemTheme.colors3.text.staticDark.secondary,
-                    )
-                }
+                ExpressShareInnerContent(state = state)
                 Image(
                     painter = painterResource(R.drawable.img_share_express_background),
                     contentDescription = null,
@@ -189,9 +142,70 @@ private fun ExpressShareImageContent(
 }
 
 @Composable
+private fun ExpressShareInnerContent(state: ExpressTransactionStateUM) {
+    Column(
+        modifier = Modifier.padding(
+            start = 40.dp,
+            end = 40.dp,
+            top = 40.dp,
+            bottom = 20.dp,
+        ),
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.img_tangem_logo_90_24),
+            contentDescription = null,
+            tint = TangemColorPalette.White,
+        )
+        SpacerH(36.dp)
+
+        ExpressShareImageAmount(
+            prefix = stringResourceSafe(R.string.common_send),
+            amount = state.info.fromAmountValue,
+            decimals = state.info.fromAmountDecimals,
+            currencyIconState = state.info.fromCurrencyIcon,
+            currencySymbol = state.info.fromAmountSymbol,
+        )
+        ExpressShareImageAddress(
+            prefix = stringResourceSafe(R.string.common_from),
+            address = state.info.fromAddress,
+        )
+
+        SpacerH(24.dp)
+        ExpressShareImageSeparator()
+        SpacerH(24.dp)
+
+        ExpressShareImageAmount(
+            prefix = stringResourceSafe(R.string.common_receive),
+            amount = state.info.toAmountValue,
+            decimals = state.info.toAmountDecimals,
+            currencyIconState = state.info.toCurrencyIcon,
+            currencySymbol = state.info.toAmountSymbol,
+        )
+        ExpressShareImageAddress(
+            prefix = stringResourceSafe(R.string.common_to),
+            address = state.info.toAddress,
+        )
+        SpacerH(24.dp)
+
+        ExpressShareImageProvider(state)
+        if (state.info.txExternalId != null) {
+            Text(
+                text = stringResourceSafe(
+                    R.string.express_transaction_id,
+                    state.info.txExternalId.orEmpty(),
+                ),
+                style = TangemTheme.typography2.bodySemibold16,
+                color = TangemTheme.colors3.text.staticDark.secondary,
+            )
+        }
+    }
+}
+
+@Composable
 private fun ExpressShareImageAmount(
     prefix: String,
-    amountValue: BigDecimal,
+    amount: BigDecimal,
+    decimals: Int,
     currencyIconState: CurrencyIconState,
     currencySymbol: String,
 ) {
@@ -205,7 +219,12 @@ private fun ExpressShareImageAmount(
             style = TangemTheme.typography2.bodySemibold16,
         )
         Text(
-            text = amountValue.stripZeroPlainString(),
+            text = amount.format {
+                crypto(
+                    symbol = "",
+                    decimals = decimals,
+                )
+            },
             color = TangemTheme.colors3.text.staticDark.primary,
             style = TangemTheme.typography2.bodySemibold16,
         )
