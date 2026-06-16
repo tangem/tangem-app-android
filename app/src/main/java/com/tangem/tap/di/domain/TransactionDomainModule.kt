@@ -307,7 +307,7 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
+                toggle = FeatureToggles.AND_13688_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
         )
     }
@@ -342,7 +342,7 @@ internal object TransactionDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
+                toggle = FeatureToggles.AND_13688_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
         )
     }
@@ -367,7 +367,7 @@ internal object TransactionDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
+                toggle = FeatureToggles.AND_13688_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
         )
     }
@@ -397,7 +397,7 @@ internal object TransactionDomainModule {
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
             isGaslessV2Enabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
+                toggle = FeatureToggles.AND_13688_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
         )
     }
@@ -420,7 +420,7 @@ internal object TransactionDomainModule {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
+                toggle = FeatureToggles.AND_13688_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
         )
     }
