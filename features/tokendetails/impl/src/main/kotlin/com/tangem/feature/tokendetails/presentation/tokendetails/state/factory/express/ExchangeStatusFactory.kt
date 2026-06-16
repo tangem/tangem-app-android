@@ -67,13 +67,12 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         ).conflate()
             .map { savedTransactions ->
                 val accountStatuses = savedTransactions
-                    ?.flatMap { swapTransaction ->
-                        setOf(
+                    ?.flatMapTo(mutableSetOf()) { swapTransaction ->
+                        listOf(
                             swapTransaction.fromAccount to swapTransaction.fromCryptoCurrency,
                             swapTransaction.toAccount to swapTransaction.toCryptoCurrency,
                         )
                     }
-                    ?.toMap()
                     ?.getStatuses()
                     .orEmpty()
 
@@ -199,7 +198,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
-        accountStatuses: Map<Account, CryptoCurrencyStatus>,
+        accountStatuses: Map<Account, List<CryptoCurrencyStatus>>,
     ): PersistentList<ExchangeUM> {
         if (savedTransactions == null) {
             return persistentListOf()
@@ -231,7 +230,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
-    private suspend fun Map<Account?, CryptoCurrency>.getStatuses(): Map<Account, CryptoCurrencyStatus> {
+    private suspend fun Set<Pair<Account?, CryptoCurrency>>.getStatuses(): Map<Account, List<CryptoCurrencyStatus>> {
         return mapNotNull { (account, cryptoCurrency) ->
             when (account) {
                 is Account.CryptoPortfolio -> {
@@ -248,7 +247,10 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                 ).getOrNull()
                 else -> null
             }
-        }.toMap()
+        }.groupBy(
+            keySelector = { (account, _) -> account },
+            valueTransform = { (_, status) -> status },
+        )
     }
 
     @AssistedFactory

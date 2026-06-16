@@ -59,7 +59,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
 
     fun convert(
         savedTransactions: List<SavedSwapTransactionListModel>,
-        accountStatuses: Map<Account, CryptoCurrencyStatus>,
+        accountStatuses: Map<Account, List<CryptoCurrencyStatus>>,
     ): PersistentList<ExchangeUM> {
         val result = mutableListOf<ExchangeUM>()
 
@@ -67,29 +67,18 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             .forEach { swapTransaction ->
                 val toCryptoCurrency = swapTransaction.toCryptoCurrency
                 val fromCryptoCurrency = swapTransaction.fromCryptoCurrency
-                val toCryptoCurrencyRawId = swapTransaction.toCryptoCurrency.id.rawCurrencyId
-                val fromCryptoCurrencyRawId = swapTransaction.fromCryptoCurrency.id.rawCurrencyId
-                var fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null
-                var toCryptoCurrencyStatus: CryptoCurrencyStatus? = null
+
+                val (fromCryptoCurrencyStatus, toCryptoCurrencyStatus) = extractCryptoCurrencyStatuses(
+                    swapTransaction = swapTransaction,
+                    accountStatuses = accountStatuses,
+                )
+
                 swapTransaction.transactions.forEach { transaction ->
                     val toAmount = transaction.toCryptoAmount
                     val fromAmount = transaction.fromCryptoAmount
-                    var toFiatAmount: BigDecimal? = null
-                    var fromFiatAmount: BigDecimal? = null
-                    accountStatuses.forEach { (account, cryptoCurrencyStatus) ->
-                        if (cryptoCurrencyStatus.currency.id.rawCurrencyId == fromCryptoCurrencyRawId &&
-                            account.userWalletId.stringValue == swapTransaction.fromUserWalletId
-                        ) {
-                            fromFiatAmount = cryptoCurrencyStatus.value.fiatRate?.multiply(fromAmount)
-                            fromCryptoCurrencyStatus = cryptoCurrencyStatus
-                        }
-                        if (cryptoCurrencyStatus.currency.id.rawCurrencyId == toCryptoCurrencyRawId &&
-                            account.userWalletId.stringValue == swapTransaction.toUserWalletId
-                        ) {
-                            toFiatAmount = cryptoCurrencyStatus.value.fiatRate?.multiply(toAmount)
-                            toCryptoCurrencyStatus = cryptoCurrencyStatus
-                        }
-                    }
+                    val toFiatAmount = toCryptoCurrencyStatus?.value?.fiatRate?.multiply(toAmount)
+                    val fromFiatAmount = fromCryptoCurrencyStatus?.value?.fiatRate?.multiply(fromAmount)
+
                     val statusModel = transaction.status
                     val notification = getNotification(
                         status = statusModel?.status,
@@ -153,6 +142,34 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         )
     }
 
+    private fun extractCryptoCurrencyStatuses(
+        swapTransaction: SavedSwapTransactionListModel,
+        accountStatuses: Map<Account, List<CryptoCurrencyStatus>>,
+    ): Pair<CryptoCurrencyStatus?, CryptoCurrencyStatus?> {
+        val toCryptoCurrencyId = swapTransaction.toCryptoCurrency.id
+        val fromCryptoCurrencyId = swapTransaction.fromCryptoCurrency.id
+
+        var fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null
+        var toCryptoCurrencyStatus: CryptoCurrencyStatus? = null
+
+        accountStatuses.forEach { (account, cryptoCurrencyStatuses) ->
+            cryptoCurrencyStatuses.forEach { cryptoCurrencyStatus ->
+                if (cryptoCurrencyStatus.currency.id == fromCryptoCurrencyId &&
+                    account.userWalletId.stringValue == swapTransaction.fromUserWalletId
+                ) {
+                    fromCryptoCurrencyStatus = cryptoCurrencyStatus
+                }
+                if (cryptoCurrencyStatus.currency.id == toCryptoCurrencyId &&
+                    account.userWalletId.stringValue == swapTransaction.toUserWalletId
+                ) {
+                    toCryptoCurrencyStatus = cryptoCurrencyStatus
+                }
+            }
+        }
+
+        return fromCryptoCurrencyStatus to toCryptoCurrencyStatus
+    }
+
     @Suppress("LongParameterList")
     private fun createStateInfo(
         transaction: SavedSwapTransactionModel,
@@ -182,12 +199,14 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             toFiatAmount = getFiatAmount(toFiatAmount),
             toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
             toAmountSymbol = toCryptoCurrency.symbol,
+            toAmountDecimals = toCryptoCurrency.decimals,
             toAddress = toStatusValue?.networkAddress?.defaultAddress?.value.orEmpty(),
             fromAmount = getCryptoAmount(transaction.fromCryptoAmount, fromCryptoCurrency),
             fromAmountValue = transaction.fromCryptoAmount,
             fromFiatAmount = getFiatAmount(fromFiatAmount),
             fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
             fromAmountSymbol = fromCryptoCurrency.symbol,
+            fromAmountDecimals = fromCryptoCurrency.decimals,
             fromAddress = fromStatusValue?.networkAddress?.defaultAddress?.value.orEmpty(),
             onClick = { clickIntents.onExpressTransactionClick(transaction.txId) },
             onGoToProviderClick = { url ->

@@ -666,7 +666,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun navigateToSwap(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
         appRouter.push(
             AppRoute.Swap(
-                cryptoCurrency = cryptoCurrencyStatus.currency,
+                fromCryptoCurrency = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.LongTap.value,
             ),

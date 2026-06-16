@@ -23,4 +23,24 @@ internal object SwapChooseTokenFactory {
             }
         }
     }
+
+    fun getSwapAvailableMessage(tokenName: String, onSwapClick: () -> Unit): MessageBottomSheetUM {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_alert_triangle_20) {
+                    type = MessageBottomSheetUM.Icon.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(
+                    R.string.express_send_with_swap_not_supported_title,
+                    wrappedList(tokenName),
+                )
+                body = resourceReference(R.string.express_send_with_swap_not_supported_text)
+            }
+            primaryButton {
+                text = resourceReference(R.string.express_send_with_swap_not_supported_button)
+                onClick { onSwapClick() }
+            }
+        }
+    }
 }

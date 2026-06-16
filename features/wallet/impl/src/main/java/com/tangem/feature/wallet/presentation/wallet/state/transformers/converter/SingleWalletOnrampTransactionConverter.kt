@@ -73,6 +73,7 @@ internal class SingleWalletOnrampTransactionConverter(
                     },
                 ),
                 toAmountSymbol = currency.symbol,
+                toAmountDecimals = currency.decimals,
                 toCurrencyIcon = iconStateConverter.convert(currency),
                 toAddress = status.networkAddress?.defaultAddress?.value.orEmpty(),
                 fromAmount = stringReference(
@@ -86,6 +87,7 @@ internal class SingleWalletOnrampTransactionConverter(
                 fromAmountValue = value.fromAmount,
                 fromFiatAmount = null,
                 fromAmountSymbol = value.fromCurrency.code,
+                fromAmountDecimals = value.fromCurrency.precision,
                 fromCurrencyIcon = CurrencyIconState.FiatIcon(
                     url = value.fromCurrency.image,
                     fallbackResId = R.drawable.ic_currency_24,

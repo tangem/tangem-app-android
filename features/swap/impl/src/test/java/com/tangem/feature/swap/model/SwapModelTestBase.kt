@@ -125,7 +125,7 @@ internal abstract class SwapModelTestBase {
 
     protected fun createParams(): SwapComponent.Params = SwapComponent.Params(
         userWalletId = userWalletId,
-        cryptoCurrency = null,
+        fromCryptoCurrency = null,
         screenSource = "Test",
     )
 
