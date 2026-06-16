@@ -231,7 +231,9 @@ class GaslessSendViaSwapTest : BaseTestCase() {
                 onSendConfirmScreen { secondaryAmount.assertIsDisplayed() }
             }
             step("Assert the network fee is paid in '$currencySymbol'") {
-                onSendConfirmScreen { feeBlockCurrency(currencySymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { feeBlockCurrency(currencySymbol).assertIsDisplayed() }
+                }
             }
             step("Sign, send and open the 'Transaction sent' screen") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
