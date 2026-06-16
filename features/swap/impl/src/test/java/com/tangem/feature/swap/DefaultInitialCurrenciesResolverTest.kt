@@ -1151,6 +1151,161 @@ internal class DefaultInitialCurrenciesResolverTest {
 
     // endregion
 
+    // region explicit TO currency
+
+    @Test
+    fun `GIVEN explicit TO currency present in portfolio WHEN invoke with position FROM THEN it is placed as TO`() =
+        runTest {
+            val fromId = mockk<CryptoCurrency.ID>(relaxed = true)
+            val initialFrom = mockCryptoCurrency(id = fromId)
+            val accountFrom = mockCryptoCurrency(id = fromId)
+
+            // Same token (network + contract), different id instance from the passed one.
+            val accountTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+            val explicitTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+
+            val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+            val toStatus = createCurrencyStatus(accountTo, fiatAmount = BigDecimal("50"))
+            val accountStatus = createCryptoPortfolioAccountStatus(listOf(fromStatus, toStatus))
+            setupSupplier(listOf(accountStatus))
+            setupAvailability(linkedMapOf(accountFrom to true, accountTo to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialFrom,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                isPaymentAccount = false,
+                initialToCryptoCurrency = explicitTo,
+            )
+
+            assertThat(from?.status).isSameInstanceAs(fromStatus)
+            assertThat(to?.status).isSameInstanceAs(toStatus)
+        }
+
+    @Test
+    fun `GIVEN explicit TO currency not present in portfolio WHEN invoke THEN TO stays null`() = runTest {
+        val fromId = mockk<CryptoCurrency.ID>(relaxed = true)
+        val initialFrom = mockCryptoCurrency(id = fromId)
+        val accountFrom = mockCryptoCurrency(id = fromId)
+
+        val explicitTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xNOT_IN_WALLET"))
+
+        val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+        val accountStatus = createCryptoPortfolioAccountStatus(listOf(fromStatus))
+        setupSupplier(listOf(accountStatus))
+        setupAvailability(linkedMapOf(accountFrom to true))
+
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = initialFrom,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            isPaymentAccount = false,
+            initialToCryptoCurrency = explicitTo,
+        )
+
+        assertThat(from?.status).isSameInstanceAs(fromStatus)
+        assertThat(to).isNull()
+    }
+
+    @Test
+    fun `GIVEN explicit TO currency is the same token as FROM WHEN invoke THEN TO stays null`() = runTest {
+        val sharedId = mockCurrencyId("ethereum", "0xUSDT")
+        val initialFrom = mockCryptoCurrency(id = sharedId)
+        val accountFrom = mockCryptoCurrency(id = sharedId)
+        // Passed TO is the same token as FROM (different id instance, same network + contract).
+        val explicitTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+
+        val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+        val accountStatus = createCryptoPortfolioAccountStatus(listOf(fromStatus))
+        setupSupplier(listOf(accountStatus))
+        setupAvailability(linkedMapOf(accountFrom to true))
+
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = initialFrom,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            isPaymentAccount = false,
+            initialToCryptoCurrency = explicitTo,
+        )
+
+        assertThat(from?.status).isSameInstanceAs(fromStatus)
+        assertThat(to).isNull()
+    }
+
+    @Test
+    fun `GIVEN TO slot already filled by position TO WHEN explicit TO provided THEN explicit TO is ignored`() =
+        runTest {
+            val sharedId = mockk<CryptoCurrency.ID>(relaxed = true)
+            val initialCurrency = mockCryptoCurrency(id = sharedId)
+            val accountCurrency = mockCryptoCurrency(id = sharedId)
+
+            // A different token that exists in the portfolio and would match the explicit TO.
+            val otherTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+            val explicitTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+
+            val status = createCurrencyStatus(accountCurrency, fiatAmount = BigDecimal("100"))
+            val otherStatus = createCurrencyStatus(otherTo, fiatAmount = BigDecimal("50"))
+            val accountStatus = createCryptoPortfolioAccountStatus(listOf(status, otherStatus))
+            setupSupplier(listOf(accountStatus))
+            setupAvailability(linkedMapOf(accountCurrency to true, otherTo to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                isPaymentAccount = false,
+                initialToCryptoCurrency = explicitTo,
+            )
+
+            // Position TO already placed the selected currency in TO; explicit TO must not override it.
+            assertThat(from).isNull()
+            assertThat(to?.status).isSameInstanceAs(status)
+        }
+
+    @Test
+    fun `GIVEN explicit TO currency exists in multiple accounts WHEN invoke THEN instance from FROM account is used`() =
+        runTest {
+            // FROM lives in account 1.
+            val fromId = mockk<CryptoCurrency.ID>(relaxed = true)
+            val initialFrom = mockCryptoCurrency(id = fromId)
+            val accountFrom = mockCryptoCurrency(id = fromId)
+
+            // Same TO token present in both accounts (different id instances).
+            val toInAccount1 = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+            val toInAccount2 = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+            val explicitTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+
+            val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+            val toInAccount1Status = createCurrencyStatus(toInAccount1, fiatAmount = BigDecimal("10"))
+            val toInAccount2Status = createCurrencyStatus(toInAccount2, fiatAmount = BigDecimal("5000"))
+
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(fromStatus, toInAccount1Status),
+                derivationIndexValue = 0,
+            )
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(toInAccount2Status),
+                derivationIndexValue = 1,
+            )
+            setupSupplier(listOf(account1, account2))
+            setupAvailability(linkedMapOf(accountFrom to true, toInAccount1 to true))
+            setupAvailability(linkedMapOf(toInAccount2 to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialFrom,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                isPaymentAccount = false,
+                initialToCryptoCurrency = explicitTo,
+            )
+
+            // TO must be the instance from the FROM account, not the higher-balance duplicate in account 2.
+            assertThat(from?.status).isSameInstanceAs(fromStatus)
+            assertThat(to?.status).isSameInstanceAs(toInAccount1Status)
+        }
+
+    // endregion
+
     // region helpers
 
     private fun mockCryptoCurrency(

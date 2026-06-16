@@ -5,8 +5,10 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FR
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.CURRENCY
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.VALUE
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
 /**
@@ -179,6 +181,21 @@ sealed class TokenScreenAnalyticsEvent(
     data class StakingClicked(val token: String) : TokenScreenAnalyticsEvent(
         event = "Staking Clicked",
         params = mapOf("Token" to token),
+    )
+
+    class ButtonQuickTopUp(
+        token: String,
+        blockchain: String,
+        currency: String,
+        value: String,
+    ) : TokenScreenAnalyticsEvent(
+        event = "Quick Top Up Button",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+            CURRENCY to currency,
+            VALUE to value,
+        ),
     )
 
     companion object {

@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.usecase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,13 +23,14 @@ class GetWalletsUseCase(
     operator fun invoke(): Flow<List<UserWallet>> = userWalletsListRepository.userWallets.map { requireNotNull(it) }
 
     @Throws(IllegalArgumentException::class)
-    fun invokeAsMap(isOnlyMultiCurrency: Boolean = true): Flow<LinkedHashMap<UserWalletId, UserWallet>> = invoke()
+    fun invokeAsMap(
+        isOnlyMultiCurrency: Boolean = true,
+        filterLocked: Boolean = false,
+    ): Flow<LinkedHashMap<UserWalletId, UserWallet>> = invoke()
         .map { list ->
-            val wallets = if (isOnlyMultiCurrency) {
-                list.filter { wallet -> wallet.isMultiCurrency }
-            } else {
-                list
-            }
+            val wallets = list
+                .filter { wallet -> if (isOnlyMultiCurrency) wallet.isMultiCurrency else true }
+                .filter { wallet -> if (filterLocked) !wallet.isLocked else true }
             wallets.associateByTo(
                 destination = linkedMapOf(),
                 keySelector = { wallet -> wallet.walletId },

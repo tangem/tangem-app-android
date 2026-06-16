@@ -3,8 +3,10 @@ package com.tangem.datasource.di
 import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.visa.DefaultTangemPayCardFrozenStateStore
+import com.tangem.datasource.local.visa.DefaultTangemPayCloseCardStore
 import com.tangem.datasource.local.visa.DefaultTangemPayReissueCardStore
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
+import com.tangem.datasource.local.visa.TangemPayCloseCardStore
 import com.tangem.datasource.local.visa.TangemPayReissueCardStore
 import dagger.Module
 import dagger.Provides
@@ -29,6 +31,14 @@ internal object TangemPayStoresModule {
     fun provideTangemPayReissueCardStore(prefs: AppPreferencesStore): TangemPayReissueCardStore {
         return DefaultTangemPayReissueCardStore(
             feeStore = RuntimeDataStore(),
+            prefs = prefs,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemPayCloseCardStore(prefs: AppPreferencesStore): TangemPayCloseCardStore {
+        return DefaultTangemPayCloseCardStore(
             prefs = prefs,
         )
     }
