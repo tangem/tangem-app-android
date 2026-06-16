@@ -14,6 +14,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun PushNotificationsScreen(
+    isPushNotificationSettingsEnabled: Boolean,
     onAllowClick: () -> Unit,
     onLaterClick: () -> Unit,
     onAllowPermission: () -> Unit,
@@ -24,6 +25,17 @@ internal fun PushNotificationsScreen(
         onDeny = onDenyPermission,
         permission = PUSH_PERMISSION,
     )
+
+    val argumentTwoTitleRes = if (isPushNotificationSettingsEnabled) {
+        R.string.user_push_notification_agreement_argument_two_title_v2
+    } else {
+        R.string.user_push_notification_agreement_argument_two_title
+    }
+    val argumentTwoSubtitleRes = if (isPushNotificationSettingsEnabled) {
+        R.string.user_push_notification_agreement_argument_two_subtitle_v2
+    } else {
+        R.string.user_push_notification_agreement_argument_two_subtitle
+    }
 
     Showcase(
         headerIconRes = R.drawable.ic_notification_56,
@@ -36,8 +48,8 @@ internal fun PushNotificationsScreen(
             ),
             ShowcaseItemModel(
                 iconRes = R.drawable.ic_stars_24,
-                title = resourceReference(R.string.user_push_notification_agreement_argument_two_title),
-                subTitle = resourceReference(R.string.user_push_notification_agreement_argument_two_subtitle),
+                title = resourceReference(argumentTwoTitleRes),
+                subTitle = resourceReference(argumentTwoSubtitleRes),
             ),
         ),
         primaryButton = ShowcaseButtonModel(

@@ -2,11 +2,18 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.tangem.common.ui.notifications.CreatePaymentAccountNotification
 import com.tangem.core.ui.components.notifications.NoteMigrationNotification
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.ForceDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -27,11 +34,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
         key = { it::class.java },
         contentType = { it::class.java },
         itemContent = { item ->
-            // TODO develop promo banner general component
             when (item) {
-                is WalletNotification.SwapPromo -> {
-                    // Use it on new promo action
-                }
                 is WalletNotification.NoteMigration -> {
                     NoteMigrationNotification(
                         config = item.config,
@@ -51,6 +54,14 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                             modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                         )
                     }
+                }
+                is WalletNotification.YieldBoostPromo -> {
+                    Notification(
+                        config = item.config.copy(title = annotatedReference(yieldBoostPromoTitle())),
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        iconTint = TangemTheme.colors.icon.accent,
+                        subtitleColor = TangemTheme.colors.text.secondary,
+                    )
                 }
                 is WalletNotification.CreateTangemPayAccount -> {
                     CreatePaymentAccountNotification(
@@ -80,4 +91,18 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
             }
         },
     )
+}
+
+@Composable
+private fun yieldBoostPromoTitle(): AnnotatedString {
+    val accent = TangemTheme.colors.text.accent
+    val baseTitle = stringResourceSafe(com.tangem.core.res.R.string.yield_apy_boost_banner_title)
+    val tailTitle = stringResourceSafe(com.tangem.core.res.R.string.yield_apy_boost_banner_title_apy_multiplied)
+    return buildAnnotatedString {
+        append(baseTitle)
+        append(" · ")
+        withStyle(SpanStyle(color = accent)) {
+            append(tailTitle)
+        }
+    }
 }

@@ -1,7 +1,5 @@
 package com.tangem.features.feed.components.market.details
 
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,8 +10,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
@@ -48,9 +48,9 @@ import com.tangem.features.feed.components.market.details.portfolioblock.Portfol
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTopBar
-import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -161,14 +161,6 @@ internal class DefaultMarketsTokenDetailsComponent(
         val background = LocalMainBottomSheetColor.current.value
         if (LocalRedesignEnabled.current) {
             TangemTopBar(
-                modifier = Modifier.hazeEffectTangem {
-                    progressive = HazeProgressive.verticalGradient(
-                        startIntensity = .55f,
-                        endIntensity = 0f,
-                        preferPerformance = true,
-                        easing = EaseOut,
-                    )
-                },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -176,10 +168,8 @@ internal class DefaultMarketsTokenDetailsComponent(
                         tint = TangemTheme.colors2.graphic.neutral.primary,
                         modifier = Modifier
                             .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
+                            .clip(CircleShape)
+                            .hazeEffectTangem { blurRadius = 8.dp }
                             .clickableSingle(
                                 onClick = { params.onBackClicked() },
                                 enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
@@ -194,10 +184,8 @@ internal class DefaultMarketsTokenDetailsComponent(
                         tint = TangemTheme.colors2.graphic.neutral.primary,
                         modifier = Modifier
                             .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
+                            .clip(CircleShape)
+                            .hazeEffectTangem { blurRadius = 8.dp }
                             .clickableSingle(
                                 onClick = state.onShareClick,
                                 enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
@@ -205,7 +193,11 @@ internal class DefaultMarketsTokenDetailsComponent(
                             .padding(TangemTheme.dimens2.x2_5),
                     )
                 },
-                type = TangemTopBarType.BottomSheet,
+                type = if (LocalIsOpenedInBottomSheet.current) {
+                    TangemTopBarType.BottomSheet
+                } else {
+                    TangemTopBarType.Default
+                },
             )
         } else {
             MarketsTokenDetailsTopBar(

@@ -26,7 +26,6 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
-    implementation(projects.core.configToggles)
 
     /** Compose */
     implementation(deps.compose.foundation)
