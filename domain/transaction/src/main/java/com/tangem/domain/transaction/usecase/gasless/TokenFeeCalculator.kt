@@ -322,7 +322,7 @@ internal class TokenFeeCalculator(
 
         /**
          * Fallback fee-transfer gas limit used when on-chain estimation reverts due to a zero plain balance on the
-         * yield path. TODO([REDACTED_TASK_KEY]): tune against testnet before merge.
+         * yield path. TODO: tune against testnet if needs.
          */
         val FALLBACK_FEE_TRANSFER_GAS_LIMIT: BigInteger = BigInteger("100000")
 

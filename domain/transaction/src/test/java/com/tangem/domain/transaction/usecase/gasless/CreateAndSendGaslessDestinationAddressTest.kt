@@ -14,7 +14,7 @@ import org.junit.jupiter.api.assertThrows
  * Unit tests for [CreateAndSendGaslessTransactionUseCase.getDestinationAddress] — resolves the on-chain
  * `to` of the user's main gasless sub-call.
  *
- * Regression guard for [REDACTED_TASK_KEY]: a yield-supply send must target the user's yield MODULE (the contract that
+ * Regression guard: a yield-supply send must target the user's yield MODULE (the contract that
  * runs `send(token, dest, amount)`), not the transfer recipient. Targeting the recipient reverts the whole
  * batch with GAS_ESTIMATION_FAILED / require(false).
  */
