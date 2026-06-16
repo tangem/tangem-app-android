@@ -188,7 +188,8 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 bottom.linkTo(cardNumberRef.bottom)
                             }
                             .padding(bottom = 8.dp)
-                            .size(16.dp),
+                            .size(16.dp)
+                            .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
                         painter = painterResource(id = R.drawable.ic_snow_24),
                         contentDescription = null,
                         tint = TangemTheme.colors.icon.constant,
@@ -201,7 +202,8 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 bottom.linkTo(cardNumberRef.bottom)
                             }
                             .padding(bottom = 8.dp)
-                            .size(16.dp),
+                            .size(16.dp)
+                            .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
                         color = TangemTheme.colors.text.constantWhite,
                         strokeWidth = 1.dp,
                     )

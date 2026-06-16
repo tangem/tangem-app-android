@@ -11,5 +11,6 @@ dependencies {
 
     // region Other libraries
     implementation(deps.kotlin.serialization)
+    api(deps.kotlin.datetime)
 }
 
