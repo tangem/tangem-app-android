@@ -28,7 +28,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param modifier     Modifier to be applied to the button.
  */
 @Composable
-fun SecondaryTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
+fun SecondaryTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier, withHazeEffect: Boolean = true) {
     SecondaryTangemButton(
         onClick = buttonUM.onClick,
         modifier = modifier,
@@ -39,6 +39,8 @@ fun SecondaryTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifie
         isLoading = buttonUM.isLoading,
         size = buttonUM.size,
         shape = buttonUM.shape,
+        onLongClick = buttonUM.onLongClick,
+        withHazeEffect = withHazeEffect,
     )
 }
 
@@ -68,6 +70,8 @@ fun SecondaryTangemButton(
     isLoading: Boolean = false,
     size: TangemButtonSize = TangemButtonSize.X15,
     shape: TangemButtonShape = TangemButtonShape.Default,
+    onLongClick: (() -> Unit)? = null,
+    withHazeEffect: Boolean = true,
 ) {
     val backgroundModifier = if (isEnabled) {
         Modifier.background(TangemTheme.colors2.button.backgroundSecondary)
@@ -84,7 +88,7 @@ fun SecondaryTangemButton(
         onClick = onClick,
         modifier = modifier
             .clip(shape.toShape(size))
-            .hazeEffectTangem()
+            .then(if (withHazeEffect) Modifier.hazeEffectTangem() else Modifier)
             .then(backgroundModifier),
         text = text,
         contentColor = contentColor,
@@ -93,6 +97,7 @@ fun SecondaryTangemButton(
         isLoading = isLoading,
         size = size,
         iconPosition = iconPosition,
+        onLongClick = onLongClick,
     )
 }
 
