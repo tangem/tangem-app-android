@@ -801,11 +801,13 @@ internal class SwapModel @Inject constructor(
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
                     fee = selectedFee,
                 )
-                if (isTangemPayWithdrawal()) {
-                    refreshTransferUIStateIfNeeded()
-                } else {
-                    feeSelectorRepository.state.value = FeeSelectorUM.Loading
-                    feeSelectorReloadTrigger.triggerUpdate()
+                when {
+                    uiState.successState != null -> Unit
+                    isTangemPayWithdrawal() -> refreshTransferUIStateIfNeeded()
+                    else -> {
+                        feeSelectorRepository.state.value = FeeSelectorUM.Loading
+                        feeSelectorReloadTrigger.triggerUpdate()
+                    }
                 }
             }
             is SwapState.QuotesLoadedState, is SwapState.SwapError -> Unit
@@ -1652,7 +1654,7 @@ internal class SwapModel @Inject constructor(
                         ),
                     ),
                 )
-                startLoadingQuotesFromLastState(isSilent = true)
+                startLoadingQuotesFromLastState(isSilent = true) // here
             }.flowOn(dispatchers.main).launchIn(modelScope)
             .saveIn(if (isFromCurrency) fromTokenBalanceJobHolder else toTokenBalanceJobHolder)
     }
