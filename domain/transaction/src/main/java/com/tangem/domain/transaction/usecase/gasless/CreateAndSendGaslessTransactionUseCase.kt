@@ -325,8 +325,6 @@ class CreateAndSendGaslessTransactionUseCase(
     private suspend fun getEIP7702DataForGasless(
         gaslessDataProvider: EthereumGaslessDataProvider,
     ): EIP7702AuthorizationData {
-        // The executor address is hashed into the authorization, so it must follow the same v1/v2 choice
-        // as the EIP-712 payload — otherwise the gasless service rejects the signature.
         return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = isGaslessV2Enabled)) {
             is Result.Failure -> throw dataResult.error
             is Result.Success -> dataResult.data

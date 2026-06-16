@@ -39,7 +39,6 @@ class DefaultGaslessTransactionRepository(
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
-    // The DTO must carry `gasLimit` only when the EIP-712 message signed it (v2). Keep both in sync via the flag.
     private val requestConverter = GaslessTxDataToGaslessRequestConverter(includeGasLimit = isGaslessV2Enabled)
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder(requestConverter)
     private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder(requestConverter)
@@ -148,8 +147,6 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        // Batch signing is a v2-only capability (there is no v1 batch endpoint); it is only ever reached on the
-        // yield-withdraw path, which requires v2.
         val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrow()
 
         if (!response.isSuccess) {

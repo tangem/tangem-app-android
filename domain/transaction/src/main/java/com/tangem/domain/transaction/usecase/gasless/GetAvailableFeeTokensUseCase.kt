@@ -80,7 +80,6 @@ class GetAvailableFeeTokensUseCase(
     }
 
     internal companion object {
-
         
         internal fun isEligibleFeeToken(status: CryptoCurrencyStatus, isYieldWithdrawEnabled: Boolean): Boolean {
             val yieldSupplyStatus = status.value.yieldSupplyStatus ?: return true

@@ -75,11 +75,6 @@ class EstimateFeeForTokenUseCase(
 
                     val walletManager = prepareWalletManager(userWallet, token.network)
 
-                    // Estimate-only: include the withdraw gas in the displayed fee for a yield-active
-                    // token. userWallet is deliberately NOT passed: estimates refresh repeatedly while the
-                    // user types, and the on-chain withdraw probe would fire RPC calls on every refresh —
-                    // the calculator falls back to the overestimate-safe WITHDRAW_GAS_LIMIT constant.
-                    // The exact limit and the batch plan are resolved later by GetFeeForTokenUseCase.
                     val isYieldActive = isYieldWithdrawEnabled &&
                         feeTokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 

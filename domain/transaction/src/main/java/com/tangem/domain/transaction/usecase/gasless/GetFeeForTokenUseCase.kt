@@ -93,8 +93,6 @@ class GetFeeForTokenUseCase(
                     ).bind()
 
                     if (isYieldActive) {
-                        // A yield-active fee token needs a resolved plan so the send step builds the batch
-                        // with the withdraw sub-call.
                         attachGaslessFeePlan(
                             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
                             userWallet = userWallet,

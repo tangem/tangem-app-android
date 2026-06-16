@@ -16,12 +16,6 @@ interface GaslessTxServiceApi {
         @Body transaction: GaslessTransactionRequest,
     ): ApiResponse<GaslessServiceResponse<GaslessSignedTransactionResultDTO>>
 
-    // TODO([REDACTED_TASK_KEY]): verify batch endpoint path against gasless-service README before merge
-    @POST("api/v1/transaction/batch/sign")
-    suspend fun signGaslessBatchTransaction(
-        @Body transaction: GaslessBatchTransactionRequest,
-    ): ApiResponse<GaslessServiceResponse<GaslessSignedTransactionResultDTO>>
-
     @GET("api/v1/config/fee-recipient")
     suspend fun getFeeRecipient(): ApiResponse<GaslessServiceResponse<GaslessFeeRecipient>>
 }
