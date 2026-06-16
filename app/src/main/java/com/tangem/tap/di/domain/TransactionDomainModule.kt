@@ -238,6 +238,12 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideVerifySecp256k1MessagesUseCase(): VerifySecp256k1MessagesUseCase {
+        return VerifySecp256k1MessagesUseCase()
+    }
+
+    @Provides
+    @Singleton
     fun provideCreateNFTTransferTransactionUseCase(
         transactionRepository: TransactionRepository,
     ): CreateNFTTransferTransactionUseCase {

@@ -1,7 +1,7 @@
 package com.tangem.core.ui.format.bigdecimal
 
 import com.google.common.truth.Truth
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Locale
 
