@@ -9,11 +9,13 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
+import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -25,8 +27,14 @@ import org.junit.jupiter.api.TestInstance
 class UpdateContactUseCaseTest {
 
     private val repository: AddressBookRepository = mockk(relaxUnitFun = true)
+    private val newTimestamp = "2026-06-10T14:30:00.000Z"
+    private val originalTimestamp = "2026-01-01T00:00:00.000Z"
+    private val timestampProvider: IsoTimestampProvider = mockk {
+        every { now() } returns newTimestamp
+    }
     private val useCase = UpdateContactUseCase(
         repository = repository,
+        timestampProvider = timestampProvider,
     )
 
     private val walletId = UserWalletId("011")
@@ -64,6 +72,8 @@ class UpdateContactUseCaseTest {
         assertThat(contact!!.id).isEqualTo(existing.id)
         assertThat(contact.name.value).isEqualTo("Bob")
         assertThat(contact.addressEntries).isEqualTo(updatedEntries)
+        assertThat(contact.createdAt).isEqualTo(originalTimestamp) // preserved
+        assertThat(contact.updatedAt).isEqualTo(newTimestamp) // restamped
         coVerify(exactly = 0) { repository.getContacts(any<UserWalletId>()) }
     }
 
@@ -84,6 +94,8 @@ class UpdateContactUseCaseTest {
         id = ContactId("id-$name"),
         walletId = walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        createdAt = originalTimestamp,
+        updatedAt = originalTimestamp,
         addressEntries = listOf(
             AddressEntry(
                 id = AddressEntryId("addr-$name"),
