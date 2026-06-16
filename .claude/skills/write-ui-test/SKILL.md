@@ -71,6 +71,12 @@ When the user asks to **port** an iOS test to Android:
   strings inside `step(...)`.
 - **Each click is its own** `step("Click on '$x' button")`. Combining clicks into one step hides which
   click failed in the Allure report.
+- **Every scenario call in the test body is wrapped in its own `step("…")`**, even though the scenario
+  itself contains inner `step(...)`s — the outer step names the flow in the Allure tree, the inner ones
+  detail it (nested steps are expected). `step(...)` (Allure) is callable anywhere, including inside
+  scenario extension functions; only `flakySafely` is restricted to the `TestCase` body. Caveat: don't
+  wrap a *mutating* scenario (e.g. one that long-clicks to sign+send) in `flakySafely` — a retry would
+  re-fire the action; rely on the assertion's own built-in retry instead.
 - **Step naming**: `Click on 'X' button` (not "Tap X"); `Assert <thing> is displayed` / `is not displayed`.
   Reviewers reject `is visible`, `does not exist`, `Check X visible` — the convention is **`is displayed` /
   `is not displayed`** even though older tests in the file may still use the old phrasing (don't copy it).

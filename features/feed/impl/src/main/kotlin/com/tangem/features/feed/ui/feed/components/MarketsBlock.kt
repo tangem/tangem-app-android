@@ -36,7 +36,12 @@ import com.tangem.features.feed.ui.feed.state.MarketChartConfig
 import com.tangem.features.feed.ui.feed.state.MarketChartUM
 
 @Composable
-internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedListCallbacks) {
+internal fun MarketBlock(
+    marketChart: MarketChartUM?,
+    onSeeAllClick: () -> Unit,
+    onItemClick: (MarketsListItemUM) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     AnimatedContent(
         targetState = marketChart,
@@ -48,7 +53,7 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
             MarketChartUM.Loading,
             is MarketChartUM.LoadingError,
             -> {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = modifier.fillMaxWidth()) {
                     Header(
                         title = {
                             Text(
@@ -67,16 +72,18 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
                                 maxLines = 1,
                             )
                         },
-                        onSeeAllClick = { feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
+                        onSeeAllClick = onSeeAllClick,
                         shouldShowSeeAll = currentChart is MarketChartUM.Content,
                         isLoading = currentChart is MarketChartUM.Loading,
+                        // Header text is inset so it aligns with the list item text inside the card; the card itself
+                        // sits at the block edge (supplied by [modifier]).
+                        modifier = Modifier.padding(horizontal = MARKET_BLOCK_HEADER_PADDING),
                     )
 
                     SpacerH(if (isRedesignEnabled) 20.dp else 12.dp)
 
                     Charts(
-                        onItemClick = feedListCallbacks.onMarketItemClick,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        onItemClick = onItemClick,
                         marketChart = currentChart,
                     )
                 }
@@ -115,6 +122,7 @@ internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, 
             onSeeAllClick = { onSeeAllClick() },
             shouldShowSeeAll = true,
             isLoading = marketChartConfig.marketCharts[marketChartConfig.currentSortByType] is MarketChartUM.Loading,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
         LazyRow(
@@ -220,3 +228,6 @@ private fun Charts(
 }
 
 private const val DEFAULT_CHART_SIZE_IN_MARKET = 5
+
+/** Header inset so its text aligns with the list item text inside the card (the card sits at the block edge). */
+private val MARKET_BLOCK_HEADER_PADDING = 4.dp

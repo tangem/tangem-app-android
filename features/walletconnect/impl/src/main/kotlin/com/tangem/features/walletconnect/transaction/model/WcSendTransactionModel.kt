@@ -38,14 +38,15 @@ import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SolanaLargeTransaction
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
+import com.tangem.domain.walletconnect.model.WcPsbtOutput
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
 import com.tangem.domain.walletconnect.usecase.method.*
-import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.entity.FeeSelectorData
+import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.params.FeeSelectorParams.FeeStateConfiguration
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
@@ -100,6 +101,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private var useCase: WcSignUseCase<*> by Delegates.notNull()
     private var signState: WcSignState<*> by Delegates.notNull()
     private var wcApproval: WcApproval? = null
+    private var psbtOutputs: List<WcPsbtOutput>? = null
     private var sign: () -> Unit = {}
     private val blockAidUiConverter = WcSendAndReceiveBlockAidUiConverter()
     private val feeReloadState = MutableStateFlow(false)
@@ -126,6 +128,9 @@ internal class WcSendTransactionModel @Inject constructor(
                             .onNone { unknownMethodRunnable() }
                             .getOrNull() ?: return@launch
                     this@WcSendTransactionModel.useCase = useCase
+                    if (useCase is WcPsbtUseCase) {
+                        psbtOutputs = useCase.parsePsbtOutputs()
+                    }
                     (useCase as? WcMutableFee)
                         ?.dAppFee()
                         ?.let { dAppFee ->
@@ -283,6 +288,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 onFeeReload = ::triggerFeeReload,
                 securityCheck = securityCheck.getOrNull(),
+                psbtOutputs = psbtOutputs,
                 portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
             ),
         )

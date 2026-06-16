@@ -9,7 +9,7 @@ import com.tangem.domain.transaction.error.SendTransactionError.Companion.USER_C
 import com.tangem.sdk.extensions.localizedDescriptionRes
 
 fun Result.Failure.mapToFeeError(): GetFeeError {
-    return when (this.error) {
+    return when (val gasError = error) {
         is BlockchainSdkError.Tron.AccountActivationError -> {
             GetFeeError.BlockchainErrors.TronActivationError
         }
@@ -19,7 +19,15 @@ fun Result.Failure.mapToFeeError(): GetFeeError {
         is BlockchainSdkError.Sui.OneSuiRequired -> {
             GetFeeError.BlockchainErrors.SuiOneCoinRequired
         }
-        else -> GetFeeError.DataError(this.error)
+        is BlockchainSdkError.Ethereum.EstimateOverrideError -> {
+            GetFeeError.EstimateOverrideError(
+                blockchain = gasError.blockchain,
+                tokenSymbol = gasError.tokenSymbol,
+                rpcProvider = gasError.rpcProvider,
+                error = gasError.underlyingError,
+            )
+        }
+        else -> GetFeeError.DataError(error)
     }
 }
 

@@ -155,7 +155,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createAuthModel(): TestModel {
         val environment = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
+            MOCKED_BUILD_TYPE,
             DEBUG_BUILD_TYPE,
             INTERNAL_BUILD_TYPE,
             -> ApiEnvironment.DEV
@@ -169,7 +169,10 @@ internal class ProdApiConfigsManagerTest {
             id = ApiConfig.ID.Auth,
             expected = ApiEnvironmentConfig(
                 environment = environment,
-                baseUrl = "http://localhost:8080/",
+                baseUrl = when (environment) {
+                    ApiEnvironment.PROD -> "https://authentication.tangem.org/"
+                    else -> "[REDACTED_ENV_URL]"
+                },
                 headers = emptyMap(),
             ),
         )
@@ -318,6 +321,7 @@ internal class ProdApiConfigsManagerTest {
     private fun createGaslessTxServiceModel(): TestModel {
         val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
             INTERNAL_BUILD_TYPE,

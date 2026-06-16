@@ -11,6 +11,7 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
+import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -31,9 +32,10 @@ import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacksStub
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
-import com.tangem.features.send.v2.api.NFTSendComponent
-import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.api.SendEntryPointComponent
+import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
+import com.tangem.features.send.api.NFTSendComponent
+import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
@@ -86,6 +88,7 @@ internal class ChildFactory @Inject constructor(
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
+    private val pushNotificationSettingsComponentFactory: PushNotificationSettingsComponent.Factory,
     private val walletComponentFactory: WalletEntryComponent.Factory,
     private val sendComponentFactoryV2: SendComponent.Factory,
     private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
@@ -115,6 +118,7 @@ internal class ChildFactory @Inject constructor(
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val addressBookComponentFactory: AddressBookComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -168,6 +172,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletSettingsComponent.Params(route.userWalletId),
                     componentFactory = walletSettingsComponentFactory,
+                )
+            }
+            is AppRoute.PushNotificationSettings -> {
+                createComponentChild(
+                    context = context,
+                    params = PushNotificationSettingsComponent.Params(route.userWalletId),
+                    componentFactory = pushNotificationSettingsComponentFactory,
                 )
             }
             is AppRoute.WalletBackup -> {
@@ -742,6 +753,13 @@ internal class ChildFactory @Inject constructor(
                         preselectedNetworkId = route.preselectedNetworkId,
                     ),
                     componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.AddressBook -> {
+                createComponentChild(
+                    context = context,
+                    params = AddressBookComponent.Params(route.predefinedAddress),
+                    componentFactory = addressBookComponentFactory,
                 )
             }
         }

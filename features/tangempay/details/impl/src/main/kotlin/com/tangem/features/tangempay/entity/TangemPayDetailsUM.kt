@@ -16,7 +16,7 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
-    val addFundsEnabled: Boolean,
+    val errorNotificationConfig: NotificationConfig?,
     val accountDeactivatedNotificationConfig: NotificationConfig?,
 )
 
@@ -33,6 +33,7 @@ internal data class TangemPayCardDetailsUM(
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
     val isActionsAvailable: Boolean = false,
+    val shouldShowCardDetailsButtonOnCard: Boolean = false,
 )
 
 @Immutable
@@ -91,11 +92,12 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val lastDigits: String,
         val onClick: () -> Unit,
         val isReissuing: Boolean,
+        val isFrozen: Boolean,
+        val isEnabled: Boolean,
     )
 }
 
 internal data class AddToWalletBlockState(
     val onClick: () -> Unit,
     val onClickClose: () -> Unit,
-    val shouldUseMagicEffect: Boolean,
 )

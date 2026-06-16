@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -76,7 +77,7 @@ internal fun TangemPayCardPageScreen(
                 end = TangemTheme.dimens.spacing16,
                 bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
             ),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            verticalArrangement = Arrangement.spacedBy(if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16),
         ) {
             item(key = "Card") {
                 cardDetailsBlockComponent.CardDetailsBlockContent(
@@ -108,7 +109,7 @@ private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
             cardPageItem(key = "Limit") {
                 TangemPayDailyLimitBlock(state = state.dailyLimitState)
             }
-            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+            if (state.dailyLimitState is TangemPayDailyLimitBlockState.Error) {
                 cardPageItem(key = "LimitError") {
                     TangemPayDailyLimitErrorBlock()
                 }

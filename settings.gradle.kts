@@ -144,6 +144,24 @@ dependencyResolutionManagement {
 
 }
 
+// Optional local composite build for the Blockchain SDK.
+// Enable it from local.properties (which is git-ignored, so it never reaches CI/develop):
+//
+//   blockchainSdk.local=true
+//   blockchainSdk.path=../blockchain-sdk-kotlin   # optional, this is the default
+//
+// When enabled, com.tangem:blockchain is resolved from local sources instead of the
+// published Maven artifact (tangemBlockchainSdk in gradle/tangem_dependencies.toml).
+if (properties.getProperty("blockchainSdk.local").toBoolean()) {
+    val blockchainSdkPath = properties.getProperty("blockchainSdk.path") ?: "../blockchain-sdk-kotlin"
+    println("Blockchain SDK: using local composite build from '$blockchainSdkPath'")
+    includeBuild(blockchainSdkPath) {
+        dependencySubstitution {
+            substitute(module("com.tangem:blockchain")).using(project(":blockchain"))
+        }
+    }
+}
+
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
@@ -188,6 +206,9 @@ include(":libs:tangem-sdk-api")
 // endregion Libs modules
 
 // region Feature modules
+include(":features:address-book:api")
+include(":features:address-book:impl")
+
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
@@ -217,8 +238,8 @@ include(":features:wallet:impl")
 include(":features:tokendetails:api")
 include(":features:tokendetails:impl")
 
-include(":features:send-v2:api")
-include(":features:send-v2:impl")
+include(":features:send:api")
+include(":features:send:impl")
 
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")

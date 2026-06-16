@@ -173,6 +173,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletConnectSessions(val userWalletId: UserWalletId) : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
+    data class AddressBook(
+        val predefinedAddress: String? = null,
+    ) : AppRoute(path = "/address_book/predefinedAddress/$predefinedAddress")
+
+    @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
 
         @Serializable
@@ -251,6 +256,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletSettings(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
+
+    @Serializable
+    data class PushNotificationSettings(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/push_notification_settings/${userWalletId.stringValue}")
 
     @Serializable
     data class WalletBackup(

@@ -5,12 +5,7 @@ import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardLimit
-import com.tangem.domain.models.pay.TangemPayCardLimitData
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import javax.inject.Inject
@@ -39,15 +34,17 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard()
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
-                currencyCode = value.currencyCode,
+                currencyCode = value.balance.fiatBalance.currency,
                 depositAddress = value.depositAddress,
-                fiatBalance = value.fiatBalance.toDM(),
-                cryptoBalance = value.cryptoBalance.toDM(),
-                availableForWithdrawal = value.availableForWithdrawal,
+                fiatBalance = value.balance.fiatBalance.toDM(),
+                cryptoBalance = value.balance.cryptoBalance.toDM(),
+                availableForWithdrawal = value.balance.availableForWithdrawal,
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
                         id = card.id,
+                        productInstanceId = card.productInstanceId,
+                        cardStatus = card.cardStatus.name,
                         hasPinCode = card.hasPinCode,
                         displayName = card.displayName?.value,
                         actualDailyLimit = card.limit?.actualCardLimit?.amount,
@@ -63,9 +60,11 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
+                customerId = value.customerId,
                 fiatRate = value.fiatRate,
-                fiatBalance = value.fiatBalance.toDM(),
-                cryptoBalance = value.cryptoBalance.toDM(),
+                fiatBalance = value.balance.fiatBalance.toDM(),
+                cryptoBalance = value.balance.cryptoBalance.toDM(),
+                availableForWithdrawal = value.balance.availableForWithdrawal,
             )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
@@ -90,16 +89,19 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.ActiveAccount -> PaymentAccountStatusValue.Loaded(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
-                currencyCode = value.currencyCode,
                 depositAddress = value.depositAddress,
-                fiatBalance = value.fiatBalance.toDomain(),
-                cryptoBalance = value.cryptoBalance.toDomain(),
-                availableForWithdrawal = value.availableForWithdrawal,
+                balance = PaymentAccountStatusValue.Balance(
+                    fiatBalance = value.fiatBalance.toDomain(),
+                    cryptoBalance = value.cryptoBalance.toDomain(),
+                    availableForWithdrawal = value.availableForWithdrawal,
+                ),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     TangemPayCard(
                         id = card.id,
+                        productInstanceId = card.productInstanceId,
+                        cardStatus = TangemPayCard.Status.fromString(card.cardStatus),
                         hasPinCode = card.hasPinCode,
                         displayName = card.displayName?.let { CardDisplayName(it).getOrElse { null } },
                         limit = TangemPayCardLimitData(
@@ -115,6 +117,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         state = TangemPayCardState.fromString(card.state),
                     )
                 },
+                error = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,
@@ -123,10 +126,15 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             is PaymentAccountStatusValueDM.DeactivatedAccount -> PaymentAccountStatusValue.Deactivated(
                 source = StatusSource.CACHE,
-                fiatBalance = value.fiatBalance.toDomain(),
-                cryptoBalance = value.cryptoBalance.toDomain(),
+                customerId = value.customerId,
+                balance = PaymentAccountStatusValue.Balance(
+                    fiatBalance = value.fiatBalance.toDomain(),
+                    cryptoBalance = value.cryptoBalance.toDomain(),
+                    availableForWithdrawal = value.availableForWithdrawal,
+                ),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = value.fiatRate,
+                error = null,
             )
             null -> PaymentAccountStatusValue.Error.Unavailable
         }

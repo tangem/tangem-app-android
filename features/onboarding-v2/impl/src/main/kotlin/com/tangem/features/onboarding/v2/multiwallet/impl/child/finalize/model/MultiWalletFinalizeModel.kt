@@ -334,13 +334,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             // to prevent showing finalize screen dialog on next app start
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
 
-            cardRepository.finishCardActivation(scanResponse.card.cardId)
+            cardRepository.finishCardActivation(
+                cardId = scanResponse.card.cardId,
+                hasBackupError = hasWalletBackupError,
+            )
             backupServiceHolder.backupService.get()?.discardSavedBackup()
             onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded)
         }
     }
 
-    private fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
+    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
         return requireNotNull(
             value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse)
                 .backupCardsIds(backupCardIds.toSet())

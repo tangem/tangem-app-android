@@ -7,64 +7,70 @@ import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 
 internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, CustomerInfo> {
-    @Suppress("ComplexCondition")
     override fun convert(value: CustomerMeResponse.Result): CustomerInfo {
         val kycStatus = KycStatus.fromString(status = value.kyc?.status)
-        val card = value.card
         val fiatBalance = value.balance?.fiat
         val cryptoBalance = value.balance?.crypto
-        val paymentAccount = value.paymentAccount
-        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
-            CardInfo(
-                lastFourDigits = card.cardNumberEnd,
-                balance = fiatBalance.availableBalance,
-                currencyCode = fiatBalance.currency,
-                depositAddress = value.depositAddress,
-                isPinSet = value.card?.isPinSet == true,
-                fiatBalance = fiatBalance.toDomain(),
-                cryptoBalance = cryptoBalance.toDomain(),
-                availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
-            )
-        } else {
-            null
-        }
-        val productInstance = value.productInstance?.let { instance ->
-            val status = instance.status.toDomain()
-            val cardFrozenState = when (status) {
-                Status.ACTIVE -> TangemPayCardFrozenState.Unfrozen
-                else -> TangemPayCardFrozenState.Frozen
-            }
-            val displayName = instance.displayName?.ifEmpty { null }
 
-            ProductInstance(
-                id = instance.id,
-                cardId = instance.cardId,
-                frozenState = cardFrozenState,
-                status = status,
-                displayName = if (displayName != null) CardDisplayName(displayName).getOrElse { null } else null,
-                actualCardLimit = instance.actualCardLimit?.parseCardLimit(),
-                adminCardLimit = instance.adminCardLimit?.parseCardLimit(),
-            )
+        val productInstances = value.productInstances.map { it.toDomain() }
+        val cards = if (value.paymentAccount == null || value.balance == null) {
+            emptyList()
+        } else {
+            value.cards.mapIndexed { index, cardWire ->
+                // Legacy single-card has no card_id on the card object → join to the single product instance.
+                val cardId = cardWire.cardId ?: value.productInstances.getOrNull(index)?.cardId.orEmpty()
+                buildCardInfo(cardId = cardId, card = cardWire)
+            }
         }
+
         return CustomerInfo(
             customerId = value.id,
-            productInstance = productInstance,
+            productInstances = productInstances,
+            cards = cards,
             kycStatus = kycStatus,
-            cardInfo = cardInfo,
             state = CustomerInfo.State.fromString(value.state),
             fiatBalance = fiatBalance?.toDomain(),
             cryptoBalance = cryptoBalance?.toDomain(),
+            availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
+        )
+    }
+
+    private fun CustomerMeResponse.ProductInstance.toDomain(): ProductInstance {
+        val status = status.toDomain()
+        val cardFrozenState = when (status) {
+            Status.ACTIVE -> TangemPayCardFrozenState.Unfrozen
+            else -> TangemPayCardFrozenState.Frozen
+        }
+        val name = displayName?.ifEmpty { null }
+        return ProductInstance(
+            id = id,
+            cardId = cardId,
+            frozenState = cardFrozenState,
+            status = status,
+            displayName = if (name != null) CardDisplayName(name).getOrElse { null } else null,
+            actualCardLimit = actualCardLimit?.parseCardLimit(),
+            adminCardLimit = adminCardLimit?.parseCardLimit(),
+        )
+    }
+
+    private fun buildCardInfo(cardId: String, card: CustomerMeResponse.Card): CardInfo {
+        return CardInfo(
+            cardId = cardId,
+            cardStatus = TangemPayCard.Status.fromString(card.cardStatus),
+            lastFourDigits = card.cardNumberEnd,
+            isPinSet = card.isPinSet == true,
         )
     }
 

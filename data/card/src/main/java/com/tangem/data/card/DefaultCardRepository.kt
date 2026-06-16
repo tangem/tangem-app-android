@@ -32,33 +32,9 @@ internal class DefaultCardRepository(
         appPreferencesStore.editUsedCards(cardId) { it.copy(isActivationStarted = true) }
     }
 
-    override suspend fun finishCardActivation(cardId: String) {
+    override suspend fun finishCardActivation(cardId: String, hasBackupError: Boolean) {
         appPreferencesStore.editUsedCards(cardId) {
-            it.copy(isActivationStarted = true, isActivationFinished = true)
-        }
-    }
-
-    override suspend fun finishCardsActivation(cardIds: List<String>) {
-        appPreferencesStore.editData { mutablePreferences ->
-            val usedCards = mutablePreferences.getUsedCards()
-
-            val newCards = cardIds.mapNotNull { newCardId ->
-                if (usedCards.none { it.cardId == newCardId }) {
-                    createDefaultUsedCardInfo(cardId = newCardId)
-                } else {
-                    null
-                }
-            }
-
-            val updatedUsedCards = (usedCards + newCards).map { card ->
-                if (cardIds.contains(card.cardId)) {
-                    card.copy(isActivationStarted = true, isActivationFinished = true)
-                } else {
-                    card
-                }
-            }
-
-            mutablePreferences.setObjectList(key = PreferencesKeys.USED_CARDS_INFO_KEY, value = updatedUsedCards)
+            it.copy(isActivationStarted = true, isActivationFinished = true, hasBackupError = hasBackupError)
         }
     }
 
@@ -74,6 +50,10 @@ internal class DefaultCardRepository(
         val card = getUsedCardSync(cardId) ?: return false
 
         return card.isActivationStarted && !card.isActivationFinished
+    }
+
+    override suspend fun hasBackupError(cardId: String): Boolean {
+        return getUsedCardSync(cardId)?.hasBackupError == true
     }
 
     override suspend fun isTangemTOSAccepted(): Boolean {

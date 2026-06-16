@@ -151,6 +151,7 @@ internal class MarketsPortfolioModel @Inject constructor(
                 )
                 configureReceiveAddresses(handledAction)
             },
+            coroutineScope = modelScope,
         )
     }
 

@@ -3,6 +3,8 @@ package com.tangem.features.onramp.alloffers.model
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.GetOnrampAllOffersUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
@@ -13,6 +15,7 @@ import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateFactory
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.utils.showDemoModeWarningIfNeeded
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
@@ -24,10 +27,13 @@ import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class AllOffersModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getOnrampAllOffersUseCase: GetOnrampAllOffersUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val messageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
 ) : Model(), AllOffersIntents {
 
@@ -91,6 +97,8 @@ internal class AllOffersModel @Inject constructor(
         if (event != null) {
             analyticsEventHandler.send(event)
         }
+
+        if (messageSender.showDemoModeWarningIfNeeded(params.userWallet, isDemoCardUseCase)) return
 
         dismiss()
         params.openRedirectPage(quote)

@@ -40,6 +40,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -89,6 +90,7 @@ fun AmountFieldV2(
                 } else {
                     amountUM.amountTextField.cryptoAmount to amountUM.amountTextField.value
                 }
+                val colors = TangemAmountTextFieldColors
                 AmountTextField(
                     value = primaryValue,
                     decimals = primaryAmount.decimals,
@@ -97,9 +99,10 @@ fun AmountFieldV2(
                         symbol = primaryAmount.currencySymbol,
                         currencyCode = currencyCode,
                         decimalFormat = decimalFormat,
-                        symbolColor = TangemTheme.colors.text.disabled,
+                        symbolColor = colors.disabledTextColor,
                     ),
                     onValueChange = onValueChange,
+                    colors = colors,
                     keyboardOptions = amountUM.amountTextField.keyboardOptions,
                     keyboardActions = amountUM.amountTextField.keyboardActions,
                     textStyle = TangemTheme.typography.head.copy(

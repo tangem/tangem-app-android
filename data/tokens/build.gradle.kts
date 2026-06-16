@@ -45,7 +45,7 @@ dependencies {
     // endregion
 
     // region Project - Features API
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
     // endregion
 
     // region Tangem SDKs

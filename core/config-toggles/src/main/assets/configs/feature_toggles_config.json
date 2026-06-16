@@ -80,6 +80,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_15310_ADD_FUNDS_STAGE1",
         "version": "5.39"
     },
@@ -132,11 +136,19 @@
         "version": "undefined"
     },
     {
+        "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_83_ADDRESS_BOOK_ENABLED",
         "version": "undefined"
     },
     {
         "name": "GASLESS_YIELD_WITHDRAW_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED",
         "version": "undefined"
     }
 ]

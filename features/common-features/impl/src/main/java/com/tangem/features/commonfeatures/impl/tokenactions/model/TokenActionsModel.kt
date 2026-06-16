@@ -48,6 +48,7 @@ internal class TokenActionsModel @Inject constructor(
             onHandleQuickAction = { handledAction, shouldDismiss ->
                 handledQuickAction(handledAction, shouldDismiss)
             },
+            coroutineScope = modelScope,
         )
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()

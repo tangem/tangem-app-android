@@ -29,6 +29,7 @@ internal class TangemPayEditDisplayNameComponent(
             initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = false,
+            shouldShowCardDetailsButtonOnCard = false,
         ),
     )
 
@@ -52,6 +53,7 @@ internal class TangemPayEditDisplayNameComponent(
             cardDetailsBlockComponent = cardDetailsBlockComponent,
             cardDetailsState = editingCardDetailsState,
             modifier = modifier,
+            isRedesignEnabled = model.isRedesignEnabled(),
         )
     }
 }

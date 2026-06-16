@@ -20,11 +20,13 @@ internal class GaslessTxService(
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
         createProdEnvironment(),
         createDevEnvironment(),
+        createMockedEnvironment(),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV
             INTERNAL_BUILD_TYPE,
@@ -47,6 +49,12 @@ internal class GaslessTxService(
         headers = createHeaders(ApiEnvironment.DEV),
     )
 
+    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.MOCK,
+        baseUrl = MOCK_BASE_URL,
+        headers = createHeaders(ApiEnvironment.MOCK),
+    )
+
     private fun createHeaders(environment: ApiEnvironment) = buildMap {
         putAll(RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
         put(
@@ -60,5 +68,6 @@ internal class GaslessTxService(
     private companion object {
         private const val PROD_BASE_URL = "https://gasless.tangem.org/"
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
+        private const val MOCK_BASE_URL = "[REDACTED_ENV_URL]"
     }
 }

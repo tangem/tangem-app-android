@@ -84,16 +84,16 @@ fun TangemTopNavigation(
             blur = blurBackground,
         )
 
-        val groupSpacing = TangemTheme.dimens3.spacing.s100
+        val groupSpacing = 8.dp
         Layout(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(windowInsets)
                 .padding(
-                    top = TangemTheme.dimens3.spacing.s100,
-                    bottom = TangemTheme.dimens3.spacing.s200,
-                    start = TangemTheme.dimens3.spacing.s200,
-                    end = TangemTheme.dimens3.spacing.s200,
+                    top = 8.dp,
+                    bottom = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp,
                 ),
             content = {
                 // Each optional slot caches its last non-null content so the spring exit transition
@@ -110,7 +110,7 @@ fun TangemTopNavigation(
 
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens3.spacing.s150)
+                        .padding(horizontal = 12.dp)
                         .layoutId(SlotId.Content),
                     horizontalAlignment = when (contentAlign) {
                         TangemTopNavigation.ContentAlign.Start -> Alignment.Start
@@ -130,7 +130,7 @@ fun TangemTopNavigation(
                     displayedGroup?.let { group ->
                         TangemSurface(isMaterial = true, shape = CircleShape) {
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens3.spacing.s050),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 content = group,
                             )
                         }
@@ -307,7 +307,7 @@ private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextRefere
     ) {
         displayedSubtitle?.let { text ->
             Column {
-                Spacer(Modifier.height(TangemTheme.dimens3.spacing.s025))
+                Spacer(Modifier.height(2.dp))
                 TangemNavigationText(text = text, role = TangemNavigationText.Role.Subtitle)
             }
         }

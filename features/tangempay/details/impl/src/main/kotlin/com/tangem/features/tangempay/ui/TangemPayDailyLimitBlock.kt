@@ -24,21 +24,25 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shimmers.RectangleShimmer
 import com.tangem.core.ui.ds2.shimmers.TextShimmer
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_32
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 
 @Composable
 internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     if (LocalVisaRedesignEnabled.current) {
-        CurrentLimitBlockV2(state, modifier)
+        CurrentLimitBlockV2(state, modifier.padding(top = TangemTheme.dimens2.x2))
     } else {
         TangemPayDailyLimitBlockV1(state, modifier)
     }
@@ -96,7 +100,7 @@ private fun CurrentLimitBlockV1(state: TangemPayDailyLimitBlockState) {
                 color = TangemTheme.colors.text.tertiary,
             )
             when (state) {
-                TangemPayDailyLimitBlockState.Error,
+                is TangemPayDailyLimitBlockState.Error,
                 is TangemPayDailyLimitBlockState.Content,
                 -> Text(
                     text = if (state is TangemPayDailyLimitBlockState.Content) state.limit else "—",
@@ -152,16 +156,36 @@ private fun CurrentLimitBlockV2(state: TangemPayDailyLimitBlockState, modifier: 
             state = state,
         )
 
-        if (state is TangemPayDailyLimitBlockState.Content) {
-            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+        when (state) {
+            is TangemPayDailyLimitBlockState.Content -> {
                 TangemButton(
                     modifier = Modifier
                         .padding(start = TangemTheme.dimens2.x3)
                         .layoutId(TangemRowLayoutId.TAIL),
                     variant = TangemButton.Variant.Secondary,
-                    text = resourceReference(R.string.common_edit),
+                    text = resourceReference(R.string.tangempay_card_page_daily_limit_change),
                     onClick = state.onChangeClick,
                     size = TangemButton.Size.X10,
+                )
+            }
+            is TangemPayDailyLimitBlockState.Error -> {
+                TangemButton(
+                    modifier = Modifier
+                        .padding(start = TangemTheme.dimens2.x3)
+                        .layoutId(TangemRowLayoutId.TAIL),
+                    iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_32),
+                    variant = TangemButton.Variant.Secondary,
+                    onClick = state.onReloadClick,
+                    size = TangemButton.Size.X10,
+                )
+            }
+            TangemPayDailyLimitBlockState.Loading -> {
+                RectangleShimmer(
+                    modifier = Modifier
+                        .padding(start = TangemTheme.dimens2.x3)
+                        .layoutId(TangemRowLayoutId.TAIL)
+                        .size(width = 64.dp, height = 40.dp),
+                    radius = 20.dp,
                 )
             }
         }
@@ -178,7 +202,7 @@ private fun LimitHeadIcon(state: TangemPayDailyLimitBlockState, modifier: Modifi
                     is TangemPayDailyLimitBlockState.Content,
                     TangemPayDailyLimitBlockState.Loading,
                     -> TangemTheme.colors3.bg.status.infoSubtle
-                    TangemPayDailyLimitBlockState.Error -> TangemTheme.colors3.bg.status.warningSubtle
+                    is TangemPayDailyLimitBlockState.Error -> TangemTheme.colors3.bg.status.warningSubtle
                 },
                 shape = CircleShape,
             ),
@@ -194,7 +218,7 @@ private fun LimitHeadIcon(state: TangemPayDailyLimitBlockState, modifier: Modifi
                     tint = TangemTheme.colors3.icon.brand,
                 )
             }
-            TangemPayDailyLimitBlockState.Error -> {
+            is TangemPayDailyLimitBlockState.Error -> {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_warning_20),
                     contentDescription = null,
@@ -218,7 +242,7 @@ private fun TitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifier 
                 color = TangemTheme.colors3.text.secondary,
             )
         }
-        TangemPayDailyLimitBlockState.Error -> {
+        is TangemPayDailyLimitBlockState.Error -> {
             Text(
                 modifier = modifier,
                 text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_error_title),
@@ -232,7 +256,7 @@ private fun TitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifier 
 @Composable
 private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     when (state) {
-        TangemPayDailyLimitBlockState.Error -> {
+        is TangemPayDailyLimitBlockState.Error -> {
             Text(
                 modifier = modifier,
                 text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_error_subtitle),
@@ -286,7 +310,7 @@ private fun Preview() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Content.stub())
-            TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error)
+            TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error(onReloadClick = {}))
             TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Loading)
             TangemPayDailyLimitErrorBlock()
         }
@@ -306,7 +330,7 @@ private fun PreviewV2() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Content.stub())
-                TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error)
+                TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error(onReloadClick = {}))
                 TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Loading)
                 TangemPayDailyLimitErrorBlock()
             }

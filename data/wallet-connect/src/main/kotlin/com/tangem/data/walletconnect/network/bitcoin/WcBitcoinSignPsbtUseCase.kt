@@ -19,7 +19,9 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcBitcoinMethod
+import com.tangem.domain.walletconnect.model.WcPsbtOutput
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
+import com.tangem.domain.walletconnect.usecase.method.WcPsbtUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -51,7 +53,8 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     blockAidDelegate: BlockAidVerificationDelegate,
     @SdkMoshi private val moshi: Moshi,
 ) : BaseWcSignUseCase<Nothing, TransactionData>(),
-    WcTransactionUseCase {
+    WcTransactionUseCase,
+    WcPsbtUseCase {
 
     override val wallet get() = context.session.wallet
 
@@ -117,6 +120,20 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
             is SdkResult.Failure -> {
                 emit(state.toResult(HandleMethodError.UnknownError(signedPsbtResult.error.customMessage).left()))
             }
+        }
+    }
+
+    override suspend fun parsePsbtOutputs(): List<WcPsbtOutput> {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
+            ?: return emptyList()
+        return when (val result = walletManager.parsePsbtOutputs(method.psbt)) {
+            is SdkResult.Success -> result.data.map { output ->
+                WcPsbtOutput(
+                    address = output.address,
+                    amountSatoshi = output.amountSatoshi,
+                )
+            }
+            is SdkResult.Failure -> emptyList()
         }
     }
 

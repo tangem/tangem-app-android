@@ -5,7 +5,11 @@ enum class OrderStatus {
     PROCESSING,
     COMPLETED,
     CANCELED,
-}
+    ;
 
-val OrderStatus.isFinalStatus
-    get() = this == OrderStatus.COMPLETED || this == OrderStatus.CANCELED
+    /** An order is active while it is still being processed (NEW or PROCESSING). */
+    val isActive: Boolean get() = this == NEW || this == PROCESSING
+
+    /** Terminal statuses (COMPLETED or CANCELED) — used to invalidate the local order hint. */
+    val isTerminal: Boolean get() = this == COMPLETED || this == CANCELED
+}

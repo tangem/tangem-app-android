@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.model.transformers
 
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -7,6 +8,9 @@ import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
@@ -33,6 +37,7 @@ internal class TangemPayTxHistoryItemsConverter(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun convertSpend(spend: TangemPayTxHistoryItem.Spend): TangemPayTransactionState.Content.Spend {
         val localDate = spend.date.withZone(DateTimeZone.getDefault())
         val amountPrefix = when {
@@ -59,11 +64,29 @@ internal class TangemPayTxHistoryItemsConverter(
                     else -> TangemTheme.colors.text.primary1
                 }
             },
+            amountColorV2 = {
+                if (spend.status == TangemPayTxHistoryItem.Status.DECLINED) {
+                    TangemTheme.colors3.text.status.error
+                } else {
+                    TangemTheme.colors3.text.primary
+                }
+            },
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
             subtitle = paySpendSubtitleConverter.convert(spend),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
             icon = spend.enrichedMerchantIconUrl?.let(ImageReference::Url)
                 ?: ImageReference.Res(R.drawable.ic_category_24),
+            iconV2 = if (spend.enrichedMerchantIconUrl != null) {
+                TangemIconUM.Url(
+                    url = spend.enrichedMerchantIconUrl,
+                    fallbackRes = R.drawable.ic_category_24,
+                )
+            } else {
+                TangemIconUM.Icon(
+                    iconRes = R.drawable.ic_category_24,
+                    tintReference = { TangemTheme.colors3.icon.secondary },
+                )
+            },
         )
     }
 
@@ -76,10 +99,15 @@ internal class TangemPayTxHistoryItemsConverter(
             onClick = { txHistoryUiActions.onTransactionClick(payment) },
             amount = amount,
             amountColor = themedColor { TangemTheme.colors.text.primary1 },
+            amountColorV2 = { TangemTheme.colors3.text.primary },
             title = resourceReference(R.string.tangem_pay_withdrawal),
             subtitle = stringReference("Transfers"),
             time = DateTimeFormatters.formatDate(payment.date, DateTimeFormatters.timeFormatter),
             icon = ImageReference.Res(R.drawable.ic_arrow_up_24),
+            iconV2 = TangemIconUM.Icon(
+                imageVector = Icons.ic_arrow_up_24,
+                tintReference = { TangemTheme.colors3.icon.secondary },
+            ),
         )
     }
 
@@ -93,10 +121,16 @@ internal class TangemPayTxHistoryItemsConverter(
             onClick = { txHistoryUiActions.onTransactionClick(fee) },
             amount = amount,
             amountColor = themedColor { TangemTheme.colors.text.primary1 },
+            amountColorV2 = { TangemTheme.colors3.text.primary },
             title = resourceReference(R.string.tangem_pay_fee_title),
             subtitle = fee.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_subtitle),
             icon = ImageReference.Res(R.drawable.ic_percent_24),
             time = DateTimeFormatters.formatDate(fee.date, DateTimeFormatters.timeFormatter),
+            iconV2 = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_percent_24,
+                tintReference = { TangemTheme.colors3.icon.secondary },
+            ),
+
         )
     }
 
@@ -119,6 +153,7 @@ internal class TangemPayTxHistoryItemsConverter(
                 TangemPayTxHistoryItem.Type.Deposit -> themedColor { TangemTheme.colors.text.accent }
                 TangemPayTxHistoryItem.Type.Withdrawal -> themedColor { TangemTheme.colors.text.primary1 }
             },
+            amountColorV2 = { TangemTheme.colors3.text.primary },
             title = when (collateral.type) {
                 TangemPayTxHistoryItem.Type.Deposit -> resourceReference(R.string.tangem_pay_deposit)
                 TangemPayTxHistoryItem.Type.Withdrawal -> resourceReference(R.string.tangem_pay_withdrawal)
@@ -129,6 +164,13 @@ internal class TangemPayTxHistoryItemsConverter(
                 TangemPayTxHistoryItem.Type.Withdrawal -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             },
             time = DateTimeFormatters.formatDate(collateral.date, DateTimeFormatters.timeFormatter),
+            iconV2 = TangemIconUM.Icon(
+                imageVector = when (collateral.type) {
+                    TangemPayTxHistoryItem.Type.Deposit -> Icons.ic_arrow_down_24
+                    TangemPayTxHistoryItem.Type.Withdrawal -> Icons.ic_arrow_up_24
+                },
+                tintReference = { TangemTheme.colors3.icon.secondary },
+            ),
         )
     }
 }

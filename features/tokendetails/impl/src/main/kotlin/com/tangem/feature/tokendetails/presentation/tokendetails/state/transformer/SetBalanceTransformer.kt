@@ -86,6 +86,9 @@ internal class SetBalanceTransformer(
 
         val totalCryptoAmount = computeTotal(status.value.amount, stakingCryptoAmount)
 
+        val isYieldSupplyActive = status.value.yieldSupplyStatus?.isActive == true
+        val prevContent = prev as? TokenDetailsBalanceBlockUM.Content
+
         return TokenDetailsBalanceBlockUM.Content(
             addFundsButton = prev.addFundsButton,
             swapButton = prev.swapButton,
@@ -108,6 +111,17 @@ internal class SetBalanceTransformer(
             },
             isBalanceFlickering = status.value.sources.total == StatusSource.CACHE,
             isBalanceZero = totalCryptoAmount.isNullOrZero(),
+            // Preserve the ticking yield balance produced by SetYieldSupplyBalanceTransformer across status updates
+            displayYieldSupplyFiatBalance = if (isYieldSupplyActive) {
+                prevContent?.displayYieldSupplyFiatBalance
+            } else {
+                null
+            },
+            displayYieldSupplyCryptoBalance = if (isYieldSupplyActive) {
+                prevContent?.displayYieldSupplyCryptoBalance
+            } else {
+                null
+            },
         )
     }
 

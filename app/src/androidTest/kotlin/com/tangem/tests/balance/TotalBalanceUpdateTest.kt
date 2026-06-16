@@ -74,7 +74,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
             }
             step("Open 'Markets screen'") {
-                onMainScreen { searchThroughMarketPlaceholder.performClick() }
+                onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
                 waitForIdle()
             }
             step("Click on $tokenTitle token") {

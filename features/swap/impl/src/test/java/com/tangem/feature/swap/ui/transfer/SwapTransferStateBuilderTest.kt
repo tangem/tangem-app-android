@@ -1,13 +1,16 @@
 package com.tangem.feature.swap.ui.transfer
 
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -77,9 +80,31 @@ internal class SwapTransferStateBuilderTest {
     private val iconConverter = CryptoCurrencyToIconStateConverter()
     private val fromIcon = iconConverter.convert(fromCurrencyStatus.status)
     private val toIcon = iconConverter.convert(toCurrencyStatus.status)
-    private val initialAmountTextFieldValue = TextFieldValue(
-        text = "0.5",
-        selection = TextRange(index = 3),
+    private val initialAmountValue = "0.5"
+    private val initialAmountField = AmountFieldModel(
+        value = initialAmountValue,
+        onValueChange = {},
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Number),
+        keyboardActions = KeyboardActions(),
+        cryptoAmount = com.tangem.domain.tokens.model.Amount(
+            currencySymbol = "",
+            value = BigDecimal("0.5"),
+            decimals = 18,
+        ),
+        fiatAmount = com.tangem.domain.tokens.model.Amount(
+            currencySymbol = "$",
+            value = BigDecimal("0.5"),
+            decimals = 2,
+            type = com.tangem.domain.tokens.model.AmountType.FiatType("USD"),
+        ),
+        isFiatValue = false,
+        fiatValue = "",
+        isFiatUnavailable = false,
+        isValuePasted = false,
+        onValuePastedTriggerDismiss = {},
+        isError = false,
+        isWarning = false,
+        error = TextReference.EMPTY,
     )
 
     @Test
@@ -104,7 +129,8 @@ internal class SwapTransferStateBuilderTest {
             val expectedAccountIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
             val expectedAccountName = portfolioAccount.accountName.toUM().value
             val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
-            val receiveType = (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
+            val receiveType =
+                (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
             assertThat(sendType.accountTitleUM).isEqualTo(
                 AccountTitleUM.Account(
                     prefixText = resourceReference(R.string.swapping_from_account_title),
@@ -154,7 +180,8 @@ internal class SwapTransferStateBuilderTest {
             )
 
             val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
-            val receiveType = (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
+            val receiveType =
+                (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
             assertThat(sendType.accountTitleUM).isEqualTo(
                 AccountTitleUM.Text(resourceReference(R.string.swapping_from_title_v2)),
             )
@@ -197,7 +224,8 @@ internal class SwapTransferStateBuilderTest {
             )
 
             val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
-            val receiveType = (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
+            val receiveType =
+                (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
             assertThat(sendType.accountTitleUM).isEqualTo(
                 AccountTitleUM.Text(resourceReference(R.string.swapping_insufficient_funds)),
             )
@@ -243,7 +271,8 @@ internal class SwapTransferStateBuilderTest {
             val expectedAccountIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
             val expectedAccountName = portfolioAccount.accountName.toUM().value
             val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
-            val receiveType = (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
+            val receiveType =
+                (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
             assertThat(sendType.accountTitleUM).isEqualTo(
                 AccountTitleUM.Text(resourceReference(R.string.swapping_insufficient_funds)),
             )
@@ -374,10 +403,10 @@ internal class SwapTransferStateBuilderTest {
             assertThat(refs).hasSize(3)
             assertThat(refs[0]).isInstanceOf(TextReference.Res::class.java)
             assertThat((refs[0] as TextReference.Res).id)
-                .isEqualTo(com.tangem.features.send.v2.api.R.string.send_summary_transaction_description_prefix)
+                .isEqualTo(com.tangem.features.send.api.R.string.send_summary_transaction_description_prefix)
             assertThat(refs[2]).isInstanceOf(TextReference.Res::class.java)
             assertThat((refs[2] as TextReference.Res).id)
-                .isEqualTo(com.tangem.features.send.v2.api.R.string.send_summary_transaction_description_suffix_fee_covered)
+                .isEqualTo(com.tangem.features.send.api.R.string.send_summary_transaction_description_suffix_fee_covered)
         }
 
     @Test
@@ -422,7 +451,7 @@ internal class SwapTransferStateBuilderTest {
 
             assertThat(result.transferFooter).isEqualTo(
                 resourceReference(
-                    id = com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description,
+                    id = com.tangem.features.send.impl.R.string.send_summary_transaction_description,
                     formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
                 ),
             )
@@ -467,7 +496,7 @@ internal class SwapTransferStateBuilderTest {
 
             assertThat(result.transferFooter).isEqualTo(
                 resourceReference(
-                    id = com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description_no_fiat_fee,
+                    id = com.tangem.features.send.impl.R.string.send_summary_transaction_description_no_fiat_fee,
                     formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
                 ),
             )
@@ -684,8 +713,8 @@ internal class SwapTransferStateBuilderTest {
     ) {
         val sendCard = result.sendCardData as SwapCardState.SwapCardData
         val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
-        assertThat(sendCard.amountTextFieldValue).isEqualTo(initialAmountTextFieldValue)
-        assertThat(receiveCard.amountTextFieldValue).isEqualTo(initialAmountTextFieldValue)
+        assertThat(sendCard.amountField?.value).isEqualTo(initialAmountValue)
+        assertThat(receiveCard.amountField?.value).isEqualTo(initialAmountValue)
         assertThat(sendCard.currencyIconState).isEqualTo(fromIcon)
         assertThat(receiveCard.currencyIconState).isEqualTo(toIcon)
         assertThat(sendCard.isBalanceHidden).isEqualTo(transferState.isBalanceHidden)
@@ -742,8 +771,8 @@ internal class SwapTransferStateBuilderTest {
 
     private fun baseStateHolder(): SwapStateHolder = SwapStateHolder(
         sendCardData = SwapCardState.SwapCardData(
+            appCurrency = AppCurrency.Default,
             type = TransactionCardType.Inputtable(
-                onAmountChanged = {},
                 onFocusChanged = {},
                 inputError = TransactionCardType.InputError.Empty,
                 accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.swapping_from_title_v2)),
@@ -752,7 +781,7 @@ internal class SwapTransferStateBuilderTest {
             currencyIconState = fromIcon,
             tokenSymbol = stringReference(""),
             amountEquivalent = TextReference.EMPTY,
-            amountTextFieldValue = initialAmountTextFieldValue,
+            amountField = initialAmountField,
             balance = "",
             isBalanceHidden = false,
         ),

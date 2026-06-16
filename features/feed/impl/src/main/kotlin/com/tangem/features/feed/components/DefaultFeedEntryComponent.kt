@@ -5,10 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
@@ -87,8 +84,9 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onMarketOpenClick(sortBy: SortByTypeUM?) {
-            innerRouter.push(
-                route = FeedEntryChildFactory.Child.TokenList(
+            // Markets list and search can reach each other
+            stackNavigation.bringToFront(
+                FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
                         preselectedSortType = sortBy ?: SortByTypeUM.Rating,
                         preselectedInterval = MarketsListUM.TrendInterval.H24,
@@ -142,7 +140,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun openSearch(source: String) {
-            innerRouter.push(FeedEntryChildFactory.Child.Search(source))
+            stackNavigation.bringToFront(FeedEntryChildFactory.Child.Search(source))
         }
     }
 

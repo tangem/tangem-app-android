@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -61,7 +62,7 @@ private fun BlockV2(
     subtitle: TextReference = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
 ) {
     TangemMessage(
-        modifier = modifier,
+        modifier = modifier.padding(top = TangemTheme.dimens2.x2),
         title = title,
         subtitle = subtitle,
         leadingContent = {

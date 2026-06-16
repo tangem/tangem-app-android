@@ -52,6 +52,7 @@ private fun EarnBlockV1(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modif
             onSeeAllClick = onSeeAllClick,
             isLoading = earnListUM is EarnListUM.Loading,
             shouldShowSeeAll = earnListUM is EarnListUM.Content,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
         SpacerH(12.dp)
@@ -96,6 +97,7 @@ private fun EarnBlockV2(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modif
             onSeeAllClick = onSeeAllClick,
             isLoading = earnListUM is EarnListUM.Loading,
             shouldShowSeeAll = earnListUM is EarnListUM.Content,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
         SpacerH(12.dp)

@@ -1,0 +1,32 @@
+package com.tangem.features.send.sendnft.di
+
+import com.tangem.core.decompose.di.ModelComponent
+import com.tangem.core.decompose.model.Model
+import com.tangem.features.send.sendnft.confirm.model.NFTSendConfirmModel
+import com.tangem.features.send.sendnft.model.NFTSendModel
+import com.tangem.features.send.sendnft.success.model.NFTSendSuccessModel
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
+
+@Module
+@InstallIn(ModelComponent::class)
+internal interface NFTSendModelModule {
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTSendModel::class)
+    fun provideNFTSendModel(model: NFTSendModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTSendConfirmModel::class)
+    fun provideNFTSendConfirmModel(model: NFTSendConfirmModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTSendSuccessModel::class)
+    fun provideNFTSendSuccessModel(model: NFTSendSuccessModel): Model
+}

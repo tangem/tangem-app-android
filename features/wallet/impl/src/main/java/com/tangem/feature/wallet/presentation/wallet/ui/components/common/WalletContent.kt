@@ -15,6 +15,7 @@ import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -24,17 +25,22 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollections2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
+import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
+import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WalletListContent(
     currentWallet: WalletUM,
     isBalanceHidden: Boolean,
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
 ) {
     val containerColor = TangemTheme.colors2.surface.level1
 
@@ -59,9 +65,22 @@ internal fun WalletListContent(
             notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
         )
 
+        promoBannersBlockComponent?.let { component ->
+            item(key = "PromoBannersBlock") {
+                component.Content(modifier = itemModifier)
+            }
+        }
+
         tangemPay(
             tangemPayComponent = tangemPayComponent,
             tangemPayUM = currentWallet.tangemPayMainUM,
+            isBalanceHidden = isBalanceHidden,
+            modifier = itemModifier,
+        )
+
+        virtualAccount(
+            virtualAccountComponent = virtualAccountComponent,
+            virtualAccountUM = currentWallet.virtualAccountMainUM,
             isBalanceHidden = isBalanceHidden,
             modifier = itemModifier,
         )

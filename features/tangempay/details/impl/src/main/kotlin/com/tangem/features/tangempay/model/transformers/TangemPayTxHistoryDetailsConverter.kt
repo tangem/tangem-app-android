@@ -238,13 +238,15 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Spend -> when (this.status) {
                 TangemPayTxHistoryItem.Status.DECLINED -> TangemPayTxHistoryDetailsUM.NotificationState(
                     config = NotificationConfig(
-                        title = if (declinedReason.isNullOrEmpty()) {
-                            resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
-                        } else {
-                            resourceReference(
-                                id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
-                                formatArgs = wrappedList(requireNotNull(declinedReason)),
-                            )
+                        title = declinedReason.let { reason ->
+                            if (reason.isNullOrEmpty()) {
+                                resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
+                            } else {
+                                resourceReference(
+                                    id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
+                                    formatArgs = wrappedList(TangemPayDeclinedReasonMapper.map(reason)),
+                                )
+                            }
                         },
                         subtitle = TextReference.EMPTY,
                         iconResId = R.drawable.ic_token_info_24,

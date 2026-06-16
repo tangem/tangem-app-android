@@ -16,6 +16,14 @@ internal class DefaultFeeErrorResolver : FeeErrorResolver {
             is BlockchainSdkError.Sui.OneSuiRequired -> {
                 GetFeeError.BlockchainErrors.SuiOneCoinRequired
             }
+            is BlockchainSdkError.Ethereum.EstimateOverrideError -> {
+                GetFeeError.EstimateOverrideError(
+                    blockchain = throwable.blockchain,
+                    tokenSymbol = throwable.tokenSymbol,
+                    rpcProvider = throwable.rpcProvider,
+                    error = throwable.underlyingError,
+                )
+            }
             else -> GetFeeError.DataError(throwable)
         }
     }

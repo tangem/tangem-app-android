@@ -4,7 +4,18 @@ Generates Kotlin (Jetpack Compose) source files from design tokens defined in th
 
 ## Updating tokens
 
-1. Update the `ds-tokens` submodule to the latest commit:
+> **Note:** You only need `git submodule update --remote` when you want to pull **new** design tokens
+> from the remote `ds-tokens` repository. If you're just regenerating Kotlin from the tokens already
+> checked out (e.g. changing the generation script), **skip step 1** — don't run it without the need,
+> as it moves the submodule pointer to the latest remote commit and pulls in unrelated token changes.
+>
+> For all other cases (a fresh checkout, or making sure the submodule is at the pinned commit), use:
+> ```bash
+> git submodule update --init --recursive
+> ```
+> This checks out the submodule at the commit already recorded in the repo, without pulling anything new.
+
+1. *(Only if you need newer tokens)* Update the `ds-tokens` submodule to the latest commit:
    ```bash
    git submodule update --remote core/ui/ds-tokens
    ```
@@ -12,7 +23,7 @@ Generates Kotlin (Jetpack Compose) source files from design tokens defined in th
    ```bash
    cd core/ui/token-gen && npm run build
    ```
-3. Commit both the submodule pointer and generated files.
+3. Commit the generated files (and the submodule pointer too, only if you ran step 1).
 
 ## How it works
 

@@ -1,6 +1,7 @@
 package com.tangem.feature.tester.presentation.storybook.entity
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.state.ToggleableState
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.message.TangemMessageEffect
@@ -317,6 +318,20 @@ internal data class TangemSearchStory(
         Long("long", "Search by name, symbol or contract address"),
     }
 }
+
+internal data class TangemCheckboxV2Story(
+    val state: ToggleableState,
+    val isEnabled: Boolean,
+    val onStateChange: (ToggleableState) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemCheckmarkStory(
+    val isChecked: Boolean,
+    val isEnabled: Boolean,
+    val onCheckedChange: (Boolean) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage
 
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,

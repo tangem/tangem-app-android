@@ -26,6 +26,7 @@ import coil.compose.AsyncImage
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -84,18 +85,20 @@ private fun OnrampHeaderTitle() {
 private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: String) {
     val decimalFormat = rememberDecimalFormat()
     val requester = remember { FocusRequester() }
+    val colors = TangemAmountTextFieldColors
     AmountTextField(
         value = amountField.fiatValue,
         decimals = amountField.fiatAmount.decimals,
+        colors = colors,
         visualTransformation = AmountVisualTransformation(
             decimals = amountField.fiatAmount.decimals,
             symbol = currencyCode,
             currencyCode = currencyCode,
             decimalFormat = decimalFormat,
             symbolColor = if (amountField.fiatValue.isBlank()) {
-                TangemTheme.colors.text.disabled
+                colors.disabledTextColor
             } else {
-                TangemTheme.colors.text.primary1
+                colors.textColor
             },
         ),
         onValueChange = amountField.onValueChange,

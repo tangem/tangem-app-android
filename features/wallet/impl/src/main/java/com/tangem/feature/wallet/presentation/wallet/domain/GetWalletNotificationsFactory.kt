@@ -255,7 +255,10 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
-            is PaymentAccountStatusValue.NotCreated -> null // TODO(Main redesign) and analytics PermanentBannerShowed
+            is PaymentAccountStatusValue.NotCreated -> WalletNotificationUM.TangemPayPromo(
+                onLaterClick = { walletClickIntents.onOnboardingBannerCloseClick(userWallet.walletId) },
+                onLearnMoreClick = { walletClickIntents.onOnboardingBannerClick(userWallet.walletId) },
+            )
             is PaymentAccountStatusValue.Error.Unavailable -> WalletNotificationUM.TangemPayUnreachable
             is PaymentAccountStatusValue.Error.CardIssueFailed,
             is PaymentAccountStatusValue.Error.ExposedDevice,

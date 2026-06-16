@@ -35,7 +35,7 @@ dependencies {
     implementation(projects.domain.demo)
 
     /** Api */
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
 
     /** DI */
     implementation(deps.hilt.android)

@@ -14,17 +14,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.TextButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -80,10 +79,11 @@ private fun Content(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = 
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp),
         )
+        SpacerH16()
         Spacer(Modifier.weight(1f))
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             NavigationPrimaryButton(
                 primaryButton = NavigationButton(
@@ -94,16 +94,34 @@ private fun Content(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = 
                     onClick = state.onGetCardClick,
                 ),
             )
-            TextButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(R.string.tangem_pay_terms_fees_limits),
-                onClick = state.onTermsClick,
-                colors = TangemButtonsDefaults.defaultTextButtonColors.copy(
-                    contentColor = TangemTheme.colors.text.primary1,
-                ),
-            )
+            TosText(onClick = state.onTermsClick)
         }
     }
+}
+
+@Composable
+private fun TosText(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val termsTemplate = stringResourceSafe(R.string.onboarding_create_wallet_term_of_conditions_text)
+    val termsLinkText = stringResourceSafe(R.string.disclaimer_title)
+    val termsLinkColor = TangemTheme.colors.text.accent
+    Text(
+        modifier = modifier.fillMaxWidth(),
+        text = buildAnnotatedString {
+            appendWithStyledPlaceholder(template = termsTemplate) {
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = "tos_link",
+                        styles = TextLinkStyles(SpanStyle(textDecoration = TextDecoration.None)),
+                    ) { onClick() },
+                ) {
+                    appendColored(text = termsLinkText, color = termsLinkColor)
+                }
+            }
+        },
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.text.tertiary,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable

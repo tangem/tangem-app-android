@@ -45,15 +45,21 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Option<Pair<Account.Payment, CryptoCurrencyStatus>> {
-        val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return none()
-        val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
-            is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
-            else -> return none()
-        }
+        val (accountStatus, cryptoCurrencyStatus) = invokeSync(userWalletId)
+            .getOrNull() ?: return none()
         return if (cryptoCurrencyStatus.currency == cryptoCurrency) {
             (accountStatus.account to cryptoCurrencyStatus).some()
         } else {
             none()
         }
+    }
+
+    suspend fun invokeSync(userWalletId: UserWalletId): Option<Pair<AccountStatus.Payment, CryptoCurrencyStatus>> {
+        val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return none()
+        val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
+            is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
+            else -> return none()
+        }
+        return (accountStatus to cryptoCurrencyStatus).some()
     }
 }

@@ -42,6 +42,8 @@ internal class ChooseTokenModel @Inject constructor(
         screensSourcesName = bridge.analyticsPayload
             .filterIsInstance<ChooseTokenAnalyticsPayload.ScreensSources>()
             .firstOrNull()?.value.orEmpty(),
+        selectedWalletFlow = bridge.selectedWalletFlow,
+        shouldShowSingleCurrencyWallets = bridge.settings.isShowSingleCurrencyWallets,
     )
 
     val bottomSheetNavigation get() = marketBlockDelegate.addToPortfolioSlot

@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -61,6 +62,8 @@ import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
+private const val DISABLED_ALPHA = 0.5f
+
 @Suppress("LongMethod")
 @Composable
 internal fun TangemPayDetailsScreen(
@@ -98,6 +101,20 @@ internal fun TangemPayDetailsScreen(
                             .padding(horizontal = TangemTheme.dimens.spacing16)
                             .padding(top = 4.dp)
                             .fillMaxWidth(),
+                    )
+                }
+                if (state.errorNotificationConfig != null) {
+                    item(
+                        key = "error_message",
+                        content = {
+                            Notification(
+                                modifier = Modifier
+                                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                                    .padding(top = 12.dp)
+                                    .fillMaxWidth(),
+                                config = state.errorNotificationConfig,
+                            )
+                        },
                     )
                 }
                 item(
@@ -300,11 +317,16 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = card.onClick)
+            .clickable(
+                onClick = card.onClick,
+                enabled = card.isEnabled,
+            )
             .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
     ) {
         Image(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .alpha(if (card.isEnabled) 1f else DISABLED_ALPHA)
+                .fillMaxSize(),
             painter = painterResource(
                 if (card.isReissuing) {
                     R.drawable.img_visa_card_inactive_48_32
@@ -460,20 +482,31 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 isBalanceFlickering = false,
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = persistentListOf(
-                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "1234", onClick = {}, isReissuing = false),
-                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "3456", onClick = {}, isReissuing = false),
+                        TangemPayDetailsBalanceBlockState.Card(
+                            lastDigits = "1234",
+                            onClick = {},
+                            isReissuing = false,
+                            isEnabled = false,
+                            isFrozen = false,
+                        ),
+                        TangemPayDetailsBalanceBlockState.Card(
+                            lastDigits = "3456",
+                            onClick = {},
+                            isReissuing = false,
+                            isEnabled = true,
+                            isFrozen = false,
+                        ),
                     ),
                     onAddCardClick = {},
                 ),
             ),
             isBalanceHidden = false,
-            addFundsEnabled = true,
             addToWalletBlockState = AddToWalletBlockState(
                 onClick = {},
                 onClickClose = {},
-                shouldUseMagicEffect = false,
             ),
             accountDeactivatedNotificationConfig = null,
+            errorNotificationConfig = null,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -491,15 +524,17 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                             lastDigits = "1234",
                             onClick = {},
                             isReissuing = true,
+                            isFrozen = false,
+                            isEnabled = true,
                         ),
                     ),
                     onAddCardClick = {},
                 ),
             ),
             isBalanceHidden = false,
-            addFundsEnabled = true,
             addToWalletBlockState = null,
             accountDeactivatedNotificationConfig = null,
+            errorNotificationConfig = null,
         ),
     ),
 )

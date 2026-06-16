@@ -1169,6 +1169,7 @@
   <string name="qr_scanner_error_unsupported_network_title">No se encontraron tokens compatibles</string>
   <string name="qr_scanner_warning_unknown_parameters_message">Este código QR contiene parámetros que no son reconocidos: %s. Si continúa, es posible que se pierdan algunos detalles de pago.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Parámetros desconocidos</string>
+  <string name="quick_top_up_title">Recarga rápida</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No se requiere nota</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) en la red %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s en la red %2$s</string>
@@ -1661,8 +1662,8 @@
   <string name="tangempay_card_details_rename_card_invalid_description">Solo se permiten letras y números</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Caracteres no válidos</string>
   <string name="tangempay_card_details_reveal_text">Mostrar</string>
-  <string name="tangempay_card_details_show_details">Mostrar detalles</string>
-  <string name="tangempay_card_details_title">Detalles de la tarjeta</string>
+  <string name="tangempay_card_details_show_details">Detalles</string>
+  <string name="tangempay_card_details_title">Detalles</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Por favor, inténtalo de nuevo más tarde</string>
   <string name="tangempay_card_details_unfreeze_card">Descongelar tarjeta</string>
   <string name="tangempay_card_details_view_pin_code_description">Vuelva a la aplicación si lo olvida.</string>
@@ -1685,6 +1686,24 @@
   <string name="tangempay_come_back_if_forget_pin">Vuelve a la app si lo olvidas.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Establecer un límite de %s a %s</string>
   <string name="tangempay_daily_limit_set_button">Establecer límites</string>
+  <string name="tangempay_declined_reason_1">fondos insuficientes</string>
+  <string name="tangempay_declined_reason_10">se superó el límite de gasto de la tarjeta</string>
+  <string name="tangempay_declined_reason_11">felló la verificación del CVV2</string>
+  <string name="tangempay_declined_reason_12">fecha de vencimiento incorrecta</string>
+  <string name="tangempay_declined_reason_13">PIN incorrecto</string>
+  <string name="tangempay_declined_reason_14">transacción no permitida</string>
+  <string name="tangempay_declined_reason_15">más de 25 pagos online en 2 días</string>
+  <string name="tangempay_declined_reason_16">sospecha de ataque BIN desde este comercio</string>
+  <string name="tangempay_declined_reason_17">error técnico, inténtelo de nuevo</string>
+  <string name="tangempay_declined_reason_2">más de 2 pagos en surtidores automáticos en 3 días</string>
+  <string name="tangempay_declined_reason_3">categoría de comercio de alto riesgo</string>
+  <string name="tangempay_declined_reason_4">transacción desde un país restringido</string>
+  <string name="tangempay_declined_reason_5">comerço online de alto riesgo</string>
+  <string name="tangempay_declined_reason_6">compra en surtidor automático superior a 150 $</string>
+  <string name="tangempay_declined_reason_7">categoría de comercio bloqueada</string>
+  <string name="tangempay_declined_reason_8">comerçio bloqueado</string>
+  <string name="tangempay_declined_reason_9">tarjeta bloqueada</string>
+  <string name="tangempay_declined_reason_reason">Motivo</string>
   <string name="tangempay_digital_card">Virtuale</string>
   <string name="tangempay_factory_settings_warning_title">Entiendo que perderé completamente el acceso a mi tarjeta Tangem Pay y a todos los fondos que contenga sin posibilidad de recuperación</string>
   <string name="tangempay_failed_to_issue_card">Error al emitir la tarjeta</string>
@@ -1740,6 +1759,8 @@
   <string name="tangempay_onboarding_purchases_title">Paga exactamente lo que ves</string>
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
+  <string name="tangempay_onboarding_setup_wallet_description">Y vincularemos Tangem Pay a esta wallet</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Crearemos una nueva wallet</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
   <string name="tangempay_pay_support">Soporte Pay</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
@@ -1769,7 +1790,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
   <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
-  <string name="tangempay_topup_swap_body">Intercambia cualquier activo por USDC Polygon</string>
+  <string name="tangempay_topup_swap_body">Recargue su cuenta con cualquier token de su billetera</string>
   <string name="tangempay_topup_swap_title">Desde tu Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC en Polygon</string>
   <string name="tangempay_withdrawal_note_description">Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain Polygon ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras</string>
@@ -2263,6 +2284,7 @@
   <string name="yield_apy_boost_banner_subtitle">¡Bono por primera activación!</string>
   <string name="yield_apy_boost_banner_title">Oferta especial para el modo Rendimiento</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Puedes disfrutar de un APY mejorado durante 30 días</string>
   <string name="yield_apy_boost_story_first_subtitle">Active el Modo Rendimiento por primera vez y obtenga hasta 3 veces más rendimiento durante sus primeros 30 días</string>
   <string name="yield_apy_boost_story_first_title">Bonificación del primer mes APR</string>
   <string name="yield_apy_boost_story_fourth_subtitle">Usted obtiene rendimiento de mercado + Bonificación. La bonificación se paga una vez en USDT o USDC en un plazo de 14 días tras finalizar el periodo de 30 días. Disponible mientras dure el presupuesto promocional. Se aplican términos y condiciones</string>

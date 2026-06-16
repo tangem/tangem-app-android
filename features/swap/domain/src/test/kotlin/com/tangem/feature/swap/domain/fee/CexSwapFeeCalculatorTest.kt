@@ -77,7 +77,12 @@ internal class CexSwapFeeCalculatorTest {
         // None of the fee use cases were invoked
         coVerify(exactly = 0) {
             estimateFeeUseCase.invoke(any(), any(), any())
-            estimateFeeForTokenUseCase.invoke(any(), any(), any(), any())
+            estimateFeeForTokenUseCase.invoke(
+                userWallet = any(),
+                feeTokenCurrencyStatus = any(),
+                sendingTokenCurrencyStatus = any(),
+                amount = any(),
+            )
             estimateFeeForGaslessTxUseCase.invoke(any(), any(), any())
         }
     }
@@ -116,7 +121,12 @@ internal class CexSwapFeeCalculatorTest {
         // Other use cases are NOT called.
         coVerify(exactly = 0) {
             estimateFeeUseCase.invoke(any(), any(), any())
-            estimateFeeForTokenUseCase.invoke(any(), any(), any(), any())
+            estimateFeeForTokenUseCase.invoke(
+                userWallet = any(),
+                feeTokenCurrencyStatus = any(),
+                sendingTokenCurrencyStatus = any(),
+                amount = any(),
+            )
         }
     }
 
@@ -154,7 +164,12 @@ internal class CexSwapFeeCalculatorTest {
             }
             val expected = mockk<TransactionFeeExtended>(relaxed = true)
             coEvery {
-                estimateFeeForTokenUseCase(any(), any(), any(), any())
+                estimateFeeForTokenUseCase(
+                    userWallet = any(),
+                    feeTokenCurrencyStatus = any(),
+                    sendingTokenCurrencyStatus = any(),
+                    amount = any(),
+                )
             } returns expected.right()
 
             val result = sut.calculate(
@@ -228,39 +243,44 @@ internal class CexSwapFeeCalculatorTest {
                 )
             }
             coVerify(exactly = 0) {
-                estimateFeeForTokenUseCase.invoke(any(), any(), any(), any())
+                estimateFeeForTokenUseCase.invoke(
+                    userWallet = any(),
+                    feeTokenCurrencyStatus = any(),
+                    sendingTokenCurrencyStatus = any(),
+                    amount = any(),
+                )
                 estimateFeeForGaslessTxUseCase.invoke(any(), any(), any())
             }
         }
 
     @Test
-    fun `GIVEN explicit native selectedFeeToken with non-Ethereum fee WHEN calculate THEN bump is a no-op`() =
-        runTest {
-            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-            val coinCurrency = mockk<CryptoCurrency.Coin>(relaxed = true)
-            val coinStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
-                every { currency } returns coinCurrency
-            }
-            val rawFee = Fee.Common(
-                amount = Amount(currencySymbol = "BTC", value = BigDecimal("0.0001"), decimals = 8),
-            )
-            coEvery {
-                estimateFeeUseCase(any(), any(), any())
-            } returns TransactionFee.Single(normal = rawFee).right()
-
-            val result = sut.calculate(
-                userWallet = fromStatus.userWallet,
-                fromSwapCurrencyStatus = fromStatus,
-                amount = BigDecimal("1.0"),
-                selectedFeeToken = coinStatus, isGasless = true,
-            )
-
-            result.onRight { cexResult ->
-                val loaded = cexResult.transactionFee as TransactionFeeResult.Loaded
-                val unchanged = (loaded.fee as TransactionFee.Single).normal as Fee.Common
-                assertThat(unchanged).isSameInstanceAs(rawFee)
-            }
+    fun `GIVEN explicit native selectedFeeToken with non-Ethereum fee WHEN calculate THEN bump is a no-op`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+        val coinCurrency = mockk<CryptoCurrency.Coin>(relaxed = true)
+        val coinStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
+            every { currency } returns coinCurrency
         }
+        val rawFee = Fee.Common(
+            amount = Amount(currencySymbol = "BTC", value = BigDecimal("0.0001"), decimals = 8),
+        )
+        coEvery {
+            estimateFeeUseCase(any(), any(), any())
+        } returns TransactionFee.Single(normal = rawFee).right()
+
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("1.0"),
+            selectedFeeToken = coinStatus,
+            isGasless = true,
+        )
+
+        result.onRight { cexResult ->
+            val loaded = cexResult.transactionFee as TransactionFeeResult.Loaded
+            val unchanged = (loaded.fee as TransactionFee.Single).normal as Fee.Common
+            assertThat(unchanged).isSameInstanceAs(rawFee)
+        }
+    }
 
     @Test
     fun `GIVEN native path returns Left WHEN calculate THEN error is propagated`() = runTest {

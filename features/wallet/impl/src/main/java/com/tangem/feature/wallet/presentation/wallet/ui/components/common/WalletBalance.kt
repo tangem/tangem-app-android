@@ -167,6 +167,7 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
 private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = walletBalanceUM,
+        contentKey = { it::class },
         label = "Update the balance",
         modifier = modifier.testTag(MainScreenTestTags.WALLET_BALANCE),
         transitionSpec = {

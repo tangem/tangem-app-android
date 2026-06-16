@@ -19,6 +19,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTr
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -45,6 +46,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     onrampStatusFactory: OnrampStatusFactory.Factory,
     exchangeStatusFactory: ExchangeStatusFactory.Factory,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) {
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -212,6 +214,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
                 is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(
                     config = this,
                     extraContent = extraContent,
+                    isExpressShareButtonEnabled = swapFeatureToggles.isExpressShareButtonEnabled,
                 )
             }
         }

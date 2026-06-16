@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.common.ui.expressStatus.toActiveStatusText
 import com.tangem.common.ui.expressStatus.toIconState
@@ -7,7 +8,6 @@ import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -41,6 +41,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
 
     override fun convert(value: OnrampTransaction): ExpressTransactionStateUM.OnrampUM {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val statusValue = cryptoCurrencyStatus?.value
         val appCurrency = appCurrencyProvider()
         return ExpressTransactionStateUM.OnrampUM(
             info = ExpressTransactionStateInfoUM(
@@ -63,8 +64,9 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                 toAmount = stringReference(
                     value.toAmount.format { crypto(cryptoCurrency) },
                 ),
+                toAmountValue = value.toAmount,
                 toFiatAmount = stringReference(
-                    cryptoCurrencyStatus?.value?.fiatRate?.multiply(value.toAmount).format {
+                    statusValue?.fiatRate?.multiply(value.toAmount).format {
                         fiat(
                             fiatCurrencyCode = appCurrency.code,
                             fiatCurrencySymbol = appCurrency.symbol,
@@ -73,6 +75,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                 ),
                 toAmountSymbol = cryptoCurrency.symbol,
                 toCurrencyIcon = iconStateConverter.convert(cryptoCurrency),
+                toAddress = statusValue?.networkAddress?.defaultAddress?.value.orEmpty(),
                 fromAmount = stringReference(
                     value.fromAmount.format {
                         fiat(
@@ -81,12 +84,14 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                         )
                     },
                 ),
+                fromAmountValue = value.fromAmount,
                 fromFiatAmount = null,
                 fromAmountSymbol = value.fromCurrency.code,
                 fromCurrencyIcon = CurrencyIconState.FiatIcon(
                     url = value.fromCurrency.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
+                fromAddress = null,
                 iconState = value.status.toIconState(),
                 onGoToProviderClick = { url ->
                     analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())

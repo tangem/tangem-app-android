@@ -7,7 +7,6 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import com.tangem.core.ui.components.haze.ProvideHaze
-import com.tangem.core.ui.res.generated.TangemDimens3
 import com.tangem.core.ui.res.generated.TangemTypography3
 import com.tangem.core.ui.res.generated.darkColors3
 import com.tangem.core.ui.res.generated.lightColors3
@@ -29,7 +28,6 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
 
     val rootBackgroundColor = rememberedColors.background.secondary
 
-    val tangemDimens3 = remember { TangemDimens3() }
     val tangemTypography3 = remember { TangemTypography3(InterFamily) }
     val tangemTypography2 = remember { TangemTypography2(InterFamily) }
     val tangemTypography = remember { TangemTypography(InterFamily, useMediumForRegular = true) }
@@ -42,7 +40,6 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
             LocalTangemColors provides rememberedColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
             LocalTangemColors3 provides rememberedColors3,
-            LocalTangemDimens3 provides tangemDimens3,
             LocalTangemTypography3 provides tangemTypography3,
             LocalTangemTypography2 provides tangemTypography2,
             LocalTangemTypography provides tangemTypography,
@@ -91,7 +88,7 @@ private fun lightThemeColors2(): TangemColors2 {
             primary = TangemColorPalette.Dark6,
             primaryInverted = TangemColorPalette.White,
             secondary = TangemColorPalette.Dark2,
-            tertiary = TangemColorPalette.Dark3,
+            tertiary = TangemColorPalette.Dark1,
             quaternary = TangemColorPalette.Light4,
             primaryInvertedConstant = TangemColorPalette.White,
             tertiaryConstant = TangemColorPalette.Dark1,

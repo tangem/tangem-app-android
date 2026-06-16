@@ -233,25 +233,8 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
         return when (this) {
             is TangemPayTxHistoryItem.Payment,
             is TangemPayTxHistoryItem.Collateral,
-            -> {
-                TransactionLabelUM(
-                    transactionStateType = TransactionStateType.Completed,
-                    icon = TangemIconUM.Icon(
-                        imageVector = Icons.ic_success_24,
-                        tintReference = { TangemTheme.colors3.icon.status.success },
-                    ),
-                    title = resourceReference(R.string.tangem_pay_status_completed),
-                )
-            }
-            is TangemPayTxHistoryItem.Fee -> TransactionLabelUM(
-                transactionStateType = TransactionStateType.Completed,
-                icon = TangemIconUM.Icon(
-                    imageVector = Icons.ic_success_24,
-                    tintReference = { TangemTheme.colors3.icon.status.success },
-                ),
-                title = resourceReference(R.string.tangem_pay_status_completed),
-                subtitle = resourceReference(R.string.tangem_pay_transaction_fee_notification_text),
-            )
+            is TangemPayTxHistoryItem.Fee,
+            -> null
             is TangemPayTxHistoryItem.Spend -> when (this.status) {
                 TangemPayTxHistoryItem.Status.COMPLETED -> TransactionLabelUM(
                     transactionStateType = TransactionStateType.Completed,
@@ -295,12 +278,13 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
     }
 
     private fun TangemPayTxHistoryItem.Spend.extractDeclinedSubtitle(): TextReference {
-        return if (declinedReason.isNullOrEmpty()) {
+        val reason = declinedReason
+        return if (reason.isNullOrEmpty()) {
             resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
         } else {
             resourceReference(
                 id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
-                formatArgs = wrappedList(requireNotNull(declinedReason)),
+                formatArgs = wrappedList(TangemPayDeclinedReasonMapper.map(reason)),
             )
         }
     }

@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
+import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.pushnotificationpreferences.UpdateWalletPushNotificationPreferenceUseCase
 import com.tangem.domain.pushnotificationpreferences.repository.WalletPushNotificationPreferencesRepository
 import dagger.Module
@@ -36,5 +37,13 @@ internal object PushNotificationPreferencesDomainModule {
         repository: WalletPushNotificationPreferencesRepository,
     ): UpdateWalletPushNotificationPreferenceUseCase {
         return UpdateWalletPushNotificationPreferenceUseCase(repository = repository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesSetAllWalletPushNotificationPreferencesUseCase(
+        repository: WalletPushNotificationPreferencesRepository,
+    ): SetAllWalletPushNotificationPreferencesUseCase {
+        return SetAllWalletPushNotificationPreferencesUseCase(repository = repository)
     }
 }
