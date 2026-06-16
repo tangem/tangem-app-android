@@ -2,8 +2,6 @@ package com.tangem.scenarios
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
