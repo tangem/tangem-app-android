@@ -4,7 +4,10 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class OrderRequest(@Json(name = "data") val data: Data) {
+data class OrderRequest(
+    @Json(name = "data") val data: Data,
+    @Json(name = "idempotency_key") val idempotencyKey: String,
+) {
     @JsonClass(generateAdapter = true)
     data class Data(
         @Json(name = "customer_wallet_address") val customerWalletAddress: String,
