@@ -4,10 +4,10 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CardDisplayName
@@ -24,19 +24,11 @@ import com.tangem.features.tangempay.entity.CardDataType
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.DefaultCardDetailsEventListener
 import com.tangem.utils.StringsSigns
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.Test
 
 private const val SHOW_DETAILS_TIME = 30_000L
@@ -219,7 +211,7 @@ internal class TangemPayCardDetailsControllerTest {
         onEditNameClick: () -> Unit = {},
     ): TangemPayCardDetailsController = TangemPayCardDetailsController(
         scope = scope,
-        initialCard = card,
+        card = card,
         userWalletId = userWalletId,
         config = config,
         onEditNameClick = onEditNameClick,
