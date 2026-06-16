@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class AddressBookBlob(
-    val version: String = CURRENT_VERSION,
+    val version: String = CURRENT_VERSION, // TODO Will come from BE in [REDACTED_TASK_KEY]
     val walletId: String,
     val updatedAt: String,
     val nonce: String,
