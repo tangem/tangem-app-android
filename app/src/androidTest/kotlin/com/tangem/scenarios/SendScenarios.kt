@@ -211,6 +211,7 @@ fun BaseTestCase.openSendConfirmScreenViaContinueButton() {
         onSendAddressScreen {
             addressesShimmer.assertIsNotDisplayed()
             continueButton.assertIsDisplayed()
+            continueButton.assertIsEnabled()
             continueButton.performClick()
         }
     }
