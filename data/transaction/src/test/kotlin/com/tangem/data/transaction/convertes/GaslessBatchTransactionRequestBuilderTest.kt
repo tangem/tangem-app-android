@@ -84,9 +84,9 @@ class GaslessBatchTransactionRequestBuilderTest {
 
     @Test
     fun `build - v1 converter omits per-call gasLimit`() {
-        // Arrange: a builder whose converter is in v1 mode (includeGasLimit = false)
+        // Arrange: a builder whose converter is in v1 mode (shouldIncludeGasLimit = false)
         val v1Builder = GaslessBatchTransactionRequestBuilder(
-            converter = GaslessTxDataToGaslessRequestConverter(includeGasLimit = false),
+            converter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = false),
         )
 
         // Act

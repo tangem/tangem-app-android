@@ -39,7 +39,7 @@ class DefaultGaslessTransactionRepository(
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
-    private val requestConverter = GaslessTxDataToGaslessRequestConverter(includeGasLimit = isGaslessV2Enabled)
+    private val requestConverter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = isGaslessV2Enabled)
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder(requestConverter)
     private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder(requestConverter)
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
