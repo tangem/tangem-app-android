@@ -2,6 +2,7 @@ package com.tangem.domain.card.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.CriticalEvent
 import com.tangem.core.analytics.models.getReferralParams
 
 sealed class IntroductionProcess(
@@ -9,11 +10,17 @@ sealed class IntroductionProcess(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Introduction Process", event, params) {
 
-    class ScreenOpened : IntroductionProcess("Introduction Process Screen Opened")
+    /**
+     * Tracks the user opening the Introduction Process screen.
+     */
+    class ScreenOpened : IntroductionProcess("Introduction Process Screen Opened"), CriticalEvent
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
 
+    /**
+     * Tracks opening the Create Wallet introduction screen.
+     */
     class CreateWalletIntroScreenOpened(
         screenType: ScreenType,
         referralId: String?,
@@ -23,7 +30,7 @@ sealed class IntroductionProcess(
             put(AnalyticsParam.SCREEN_TYPE, screenType.value)
             putAll(getReferralParams(referralId))
         },
-    ) {
+    ), CriticalEvent {
         enum class ScreenType(val value: String) {
             Cold("Cold Wallet"),
             Hot("Mobile Wallet"),

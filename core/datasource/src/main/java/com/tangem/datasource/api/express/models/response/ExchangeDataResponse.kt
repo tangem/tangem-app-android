@@ -75,6 +75,9 @@ data class TxDetails(
 
     @Json(name = "gas")
     val gas: String?,
+
+    @Json(name = "allowanceContract")
+    val allowanceContract: String? = null,
 )
 
 @JsonClass(generateAdapter = false)
