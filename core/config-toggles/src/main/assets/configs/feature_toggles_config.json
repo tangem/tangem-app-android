@@ -150,5 +150,9 @@
     {
         "name": "AND_15235_VISA_MULTIPLE_CARDS",
         "version": "5.40"
+    },
+    {
+        "name": "AND_15715_SWAP_BEST_DEX_RATE_ENABLED",
+        "version": "undefined"
     }
 ]

@@ -47,6 +47,7 @@ sealed class ProviderState {
     sealed class AdditionalBadge {
         data object FCAWarningList : AdditionalBadge()
         data object BestTrade : AdditionalBadge()
+        data object BestDexRate : AdditionalBadge()
         data object Empty : AdditionalBadge()
         data object PermissionRequired : AdditionalBadge()
         data object Recommended : AdditionalBadge()
