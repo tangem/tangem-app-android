@@ -61,9 +61,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                 ),
                 timestampAgoFormatted = mapFormattedDate(value.timestamp),
                 activeStatus = value.status.toActiveStatusText(cryptoCurrency.name),
-                toAmount = stringReference(
-                    value.toAmount.format { crypto(cryptoCurrency) },
-                ),
+                toAmount = stringReference(value.toAmount.format { crypto(cryptoCurrency) }),
                 toAmountValue = value.toAmount,
                 toFiatAmount = stringReference(
                     statusValue?.fiatRate?.multiply(value.toAmount).format {
@@ -73,6 +71,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                         )
                     },
                 ),
+                toAmountDecimals = cryptoCurrency.decimals,
                 toAmountSymbol = cryptoCurrency.symbol,
                 toCurrencyIcon = iconStateConverter.convert(cryptoCurrency),
                 toAddress = statusValue?.networkAddress?.defaultAddress?.value.orEmpty(),
@@ -91,6 +90,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     url = value.fromCurrency.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
+                fromAmountDecimals = value.fromCurrency.precision,
                 fromAddress = null,
                 iconState = value.status.toIconState(),
                 onGoToProviderClick = { url ->
