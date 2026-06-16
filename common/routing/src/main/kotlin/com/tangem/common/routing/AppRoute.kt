@@ -219,7 +219,6 @@ sealed class AppRoute(val path: String) : Route {
             val cryptoAmount: SerializedBigDecimal,
             val fiatAmount: SerializedBigDecimal,
             val depositAddress: String,
-            val isWithdrawal: Boolean,
         )
 
         @Serializable

@@ -68,24 +68,6 @@ internal class P2PEthPoolIntegrationTest {
         }
 
         @Test
-        fun `vault with exactly 2 ETH remaining - not available, max is null`() {
-            val vaults = listOf(buildVault("0xABC", capacity = "100", totalAssets = "48"))
-            val limits = buildLimits("0xABC" to BigDecimal("50"))
-            val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
-
-            assertThat(integration.enterArgs!!.amountRequirement!!.maximum).isNull()
-        }
-
-        @Test
-        fun `vault with less than 2 ETH remaining - not available, max is null`() {
-            val vaults = listOf(buildVault("0xABC", capacity = "100", totalAssets = "48.5"))
-            val limits = buildLimits("0xABC" to BigDecimal("50"))
-            val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
-
-            assertThat(integration.enterArgs!!.amountRequirement!!.maximum).isNull()
-        }
-
-        @Test
         fun `multiple available vaults - uses minimum remaining space`() {
             val vault1 = buildVault("0xA", capacity = "100", totalAssets = "10")
             val vault2 = buildVault("0xB", capacity = "100", totalAssets = "20")
@@ -99,27 +81,36 @@ internal class P2PEthPoolIntegrationTest {
     @Nested
     inner class Availability {
         @Test
-        fun `all vaults full - areAllTargetsFull is true`() {
+        fun `vault absent from limits - areAllTargetsFull is true`() {
             val vaults = listOf(buildVault("0xABC", capacity = "100", totalAssets = "48"))
-            val limits = buildLimits("0xABC" to BigDecimal("50"))
+            val limits = emptyMap<String, VaultLimitInfo>()
             val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
 
             assertThat(integration.areAllTargetsFull).isTrue()
         }
 
         @Test
-        fun `vault with remaining between 0_1 and 2 ETH - also considered full`() {
-            val vaults = listOf(buildVault("0xABC", capacity = "100", totalAssets = "48.5"))
-            val limits = buildLimits("0xABC" to BigDecimal("50"))
+        fun `vault with exactly 0_1 ETH remaining - not available`() {
+            val vaults = listOf(buildVault("0xABC", capacity = "100", totalAssets = "49.9"))
+            val limits = buildLimits("0xABC" to BigDecimal("50")) // remaining = 0.1
             val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
 
             assertThat(integration.areAllTargetsFull).isTrue()
+        }
+
+        @Test
+        fun `vault with remaining just above 0_1 ETH - available (regression [REDACTED_TASK_KEY])`() {
+            val vaults = listOf(buildVault("0xABC", capacity = "400", totalAssets = "321.895202388313423922"))
+            val limits = buildLimits("0xABC" to BigDecimal("322.1")) // remaining ≈ 0.2048 > 0.1
+            val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
+
+            assertThat(integration.areAllTargetsFull).isFalse()
         }
 
         @Test
         fun `at least one vault available - areAllTargetsFull is false`() {
-            val vault1 = buildVault("0xA", capacity = "100", totalAssets = "48.5") // full (1.5 remaining < 2)
-            val vault2 = buildVault("0xB", capacity = "100", totalAssets = "10") // available (40 remaining > 2)
+            val vault1 = buildVault("0xA", capacity = "100", totalAssets = "49.95") // full (0.05 remaining < 0.1)
+            val vault2 = buildVault("0xB", capacity = "100", totalAssets = "10") // available (40 remaining > 0.1)
             val limits = buildLimits("0xa" to BigDecimal("50"), "0xb" to BigDecimal("50"))
             val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, listOf(vault1, vault2), limits)
 
@@ -128,8 +119,8 @@ internal class P2PEthPoolIntegrationTest {
 
         @Test
         fun `preferred targets only contains available vaults`() {
-            val vault1 = buildVault("0xA", capacity = "100", totalAssets = "48.5") // full
-            val vault2 = buildVault("0xB", capacity = "100", totalAssets = "10") // available
+            val vault1 = buildVault("0xA", capacity = "100", totalAssets = "49.95") // full (0.05 remaining ≤ 0.1)
+            val vault2 = buildVault("0xB", capacity = "100", totalAssets = "10") // available (40 remaining > 0.1)
             val limits = buildLimits("0xa" to BigDecimal("50"), "0xb" to BigDecimal("50"))
             val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, listOf(vault1, vault2), limits)
 
