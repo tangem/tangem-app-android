@@ -46,6 +46,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
@@ -63,6 +64,7 @@ private val MarketBlockHorizontalPadding: Dp = 14.dp
 private const val TOP_FADE_MID_STOP = 0.8f
 private const val TOP_FADE_MID_ALPHA = 0.8f
 
+@Suppress("LongParameterList")
 @Composable
 internal fun TokenDetailsScreen(
     tokenDetailsUM: TokenDetailsUM,
@@ -70,6 +72,7 @@ internal fun TokenDetailsScreen(
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
+    ratingComponent: RatingComponent?,
     modifier: Modifier = Modifier,
 ) {
     val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
@@ -112,7 +115,10 @@ internal fun TokenDetailsScreen(
                     onHeightChange = { marketBlockHeight = it },
                 )
             }
-            expressState.bottomSheetSlot?.content(null)
+
+            expressState.bottomSheetSlot?.content(
+                ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
+            )
         }
     }
 }
@@ -310,6 +316,7 @@ private fun TokenDetailsScreen_Preview() {
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
             },
             expressTransactionsComponent = PreviewExpressTransactionsComponent,
+            ratingComponent = null,
         )
     }
 }

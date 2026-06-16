@@ -27,7 +27,13 @@ internal object ABTestsManagerModule {
         return if (BuildConfig.AB_TESTS_ENABLED) {
             AmplitudeABTestsManager(
                 application = application,
-                apiKey = environmentConfig.amplitudeApiKey,
+                apiKey = if (BuildConfig.TESTER_MENU_ENABLED) {
+                    requireNotNull(environmentConfig.amplitudeApiKeyDev) {
+                        "Amplitude api key not found in ${BuildConfig.BUILD_TYPE}"
+                    }
+                } else {
+                    environmentConfig.amplitudeApiKey
+                },
                 scope = appScope,
             )
         } else {

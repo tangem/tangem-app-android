@@ -76,12 +76,12 @@ internal object SwapNotificationUM {
             ),
             subtitle = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_description,
-                wrappedList(currencyName, currencySymbol),
+                wrappedList(feeCurrency.name, feeCurrency.symbol),
             ),
             iconResId = fromToken.networkIconResId,
             buttonState = onConfirmClick?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                    text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
+                    text = resourceReference(R.string.common_buy_currency, wrappedList(feeCurrency.symbol)),
                     onClick = onConfirmClick,
                 )
             },

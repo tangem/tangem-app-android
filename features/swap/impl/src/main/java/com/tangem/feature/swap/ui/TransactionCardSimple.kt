@@ -32,10 +32,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
@@ -93,10 +90,8 @@ private fun SimpleTransactionCardData(
             horizontalAlignment = Alignment.Start,
         ) {
             SimpleHeader(
-                balance = stringResourceSafe(
-                    R.string.common_balance,
-                    cardState.balance,
-                ).orMaskWithStars(cardState.isBalanceHidden),
+                balance = cardState.balance,
+                isBalanceHidden = cardState.isBalanceHidden,
                 type = cardState.type,
             )
 
@@ -260,7 +255,12 @@ private fun SimpleTransactionCardLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SimpleHeader(type: TransactionCardType, balance: String, modifier: Modifier = Modifier) {
+private fun SimpleHeader(
+    type: TransactionCardType,
+    balance: TextReference,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -282,10 +282,10 @@ private fun SimpleHeader(type: TransactionCardType, balance: String, modifier: M
             textColor = titleColor,
         )
         SpacerW16()
-        if (balance.isNotBlank()) {
+        if (balance != TextReference.EMPTY) {
             AnimatedContent(targetState = balance, label = "") { balanceText ->
                 Text(
-                    text = balanceText,
+                    text = balanceText.resolveReference().orMaskWithStars(isBalanceHidden),
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.testTag(SwapTokenScreenTestTags.BALANCE),

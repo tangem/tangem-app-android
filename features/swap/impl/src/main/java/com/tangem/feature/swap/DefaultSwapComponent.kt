@@ -148,6 +148,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val isInTransferMode by remember { derivedStateOf { dataState.currentTransferState != null } }
         val shouldHideBlock by remember {
             derivedStateOf {
+                // TODO collapse this and move to model
                 val isAmountEmptyOrZero = dataState.amount?.parseBigDecimalOrNull().isNullOrZero()
                 val isInsufficientFunds = model.uiState.isInsufficientFunds
                 val isProviderMissing = dataState.selectedProvider == null

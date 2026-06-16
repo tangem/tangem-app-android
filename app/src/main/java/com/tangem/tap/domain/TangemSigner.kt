@@ -40,6 +40,7 @@ class TangemSigner(
                                 totalSignedHashes = result.data.totalSignedHashes,
                                 remainingSignatures = result.data.remainingSignatures,
                                 isRing = result.data.batchId?.let(::isRing) == true,
+                                signedWalletPublicKey = publicKey.seedKey,
                             ),
                         )
                         if (continuation.isActive) {
@@ -86,6 +87,7 @@ class TangemSigner(
                                 totalSignedHashes = result.data.totalSignedHashes,
                                 remainingSignatures = result.data.remainingSignatures,
                                 isRing = result.data.batchId?.let(::isRing) == true,
+                                signedWalletPublicKey = publicKey.seedKey,
                             ),
                         )
                         if (continuation.isActive) {
@@ -102,8 +104,10 @@ class TangemSigner(
     }
 }
 
+@Suppress("ArrayInDataClass")
 data class TangemSignerResponse(
     val totalSignedHashes: Int?,
     val remainingSignatures: Int?,
     val isRing: Boolean,
+    val signedWalletPublicKey: ByteArray,
 )

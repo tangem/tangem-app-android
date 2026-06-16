@@ -181,6 +181,25 @@ internal class SwapInteractorImpl @Inject constructor(
         }?.providers.orEmpty()
     }
 
+    override fun extractFromSwapCurrencyFromPair(
+        pair: SwapPairLeast,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): SwapCurrencyStatus? {
+        return if (pair.from.network == fromSwapCurrencyStatus.currency.network.rawId &&
+            pair.from.contractAddress == fromSwapCurrencyStatus.currency.getContractAddress()
+        ) {
+            fromSwapCurrencyStatus
+        } else if (
+            pair.from.network == toSwapCurrencyStatus.currency.network.rawId &&
+            pair.from.contractAddress == toSwapCurrencyStatus.currency.getContractAddress()
+        ) {
+            toSwapCurrencyStatus
+        } else {
+            null
+        }
+    }
+
     override suspend fun findProvidersForPairWithCheck(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -1164,20 +1183,19 @@ internal class SwapInteractorImpl @Inject constructor(
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
         isGasless: Boolean,
+        txType: ExpressTxType?,
     ): Either<GetFeeError, SwapFee> = either {
         if (amount.value.signum() == 0) {
             raise(GetFeeError.UnknownError)
         }
-        return when (quotesLoadedState.swapProvider.type) {
-            ExchangeProviderType.DEX,
-            ExchangeProviderType.DEX_BRIDGE,
-            -> loadDexSwapFee(
+        return when (resolveQuoteFlow(quotesLoadedState.swapProvider, txType)) {
+            ResolvedFlow.DexLike -> loadDexSwapFee(
                 fromStatus = fromStatus,
                 swapData = swapData,
                 selectedFeeToken = selectedFeeToken,
                 permissionState = quotesLoadedState.permissionState,
             )
-            ExchangeProviderType.CEX -> loadCexSwapFee(
+            ResolvedFlow.CexLike -> loadCexSwapFee(
                 fromStatus = fromStatus,
                 amount = amount,
                 selectedFeeToken = selectedFeeToken,
@@ -1619,6 +1637,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         feeValue = BigDecimal.ZERO,
                     ),
                     minAdaValue = null,
+                    txType = quoteModel.txType,
                 )
 
                 when (resolveQuoteFlow(provider, quoteModel.txType)) {

@@ -9,7 +9,9 @@ import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 internal class AmplitudeABTestsManager(
     val application: Application,
@@ -18,6 +20,8 @@ internal class AmplitudeABTestsManager(
 ) : ABTestsManager {
 
     private lateinit var client: ExperimentClient
+
+    private val variantsFetched = CompletableDeferred<Unit>()
 
     private val logger = TangemLogger.withTag(TAG)
 
@@ -43,6 +47,8 @@ internal class AmplitudeABTestsManager(
                 logAllVariants(allVariants)
             } catch (exception: Exception) {
                 logger.e("Failed to fetch AB test variants", exception)
+            } finally {
+                variantsFetched.complete(Unit)
             }
         }
     }
@@ -66,8 +72,22 @@ internal class AmplitudeABTestsManager(
         client.setUser(ExperimentUser())
     }
 
-    override fun getValue(key: String, defaultValue: String): String {
+    override suspend fun getValue(key: String, defaultValue: String): String {
+        if (!::client.isInitialized) return defaultValue
+        awaitVariantsFetched()
         return client.variant(key).value ?: defaultValue
+    }
+
+    private suspend fun awaitVariantsFetched() {
+        if (variantsFetched.isCompleted) return
+        val completed = withTimeoutOrNull(FETCH_AWAIT_TIMEOUT_MILLIS) {
+            variantsFetched.await()
+        }
+        if (completed == null) {
+            logger.w("AB Tests variants not fetched within $FETCH_AWAIT_TIMEOUT_MILLIS ms, using default value")
+            // Prevent repeated blocking on subsequent calls; fetch can still complete in background.
+            variantsFetched.complete(Unit)
+        }
     }
 
     private fun logAllVariants(allVariants: Map<String, com.amplitude.experiment.Variant>) {
@@ -91,5 +111,6 @@ internal class AmplitudeABTestsManager(
 
     private companion object {
         const val TAG = "AmplitudeABTestsManager"
+        const val FETCH_AWAIT_TIMEOUT_MILLIS = 3_000L
     }
 }

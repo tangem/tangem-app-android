@@ -43,6 +43,7 @@ class SignCloreMessageUseCase(
                 cardSdkConfigRepository.getCommonSigner(
                     cardId = card.cardId.takeIf { isCardNotBackedUp },
                     twinKey = null,
+                    userWalletId = userWallet.walletId,
                 )
             }
             is UserWallet.Hot -> getHotWalletSigner(userWallet)

@@ -4,10 +4,12 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
@@ -35,7 +37,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.slot
+import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +54,7 @@ private const val TEST_XPUB = "xpub-test-value"
 private const val TOKEN_SYMBOL = "ETH"
 private const val BLOCKCHAIN_NAME = "Ethereum"
 private const val TEST_ADDRESS = "0xTestAddress"
+private const val TEST_BLOG_URL = "https://tangem.com/embed/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it"
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DynamicAddressesDelegateTest {
@@ -65,6 +70,7 @@ internal class DynamicAddressesDelegateTest {
     private val dynamicAddressesRepository: DynamicAddressesRepository = mockk(relaxed = true)
     private val getExtendedPublicKeyUseCase: GetExtendedPublicKeyForCurrencyUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private val network: Network = mockk(relaxed = true) {
         every { name } returns BLOCKCHAIN_NAME
@@ -87,7 +93,7 @@ internal class DynamicAddressesDelegateTest {
     private val onDynamicAddressesStateChanged: () -> Unit = mockk(relaxed = true)
 
     @Test
-    fun `GIVEN currency is available WHEN onDynamicAddressesClick THEN DynamicAddressesScreenOpened event is sent`() =
+    fun `GIVEN currency is available WHEN openBottomSheet THEN DynamicAddressesScreenOpened event is sent`() =
         runTest {
             // GIVEN
             every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
@@ -99,7 +105,7 @@ internal class DynamicAddressesDelegateTest {
             every { analyticsEventHandler.send(capture(eventSlot)) } returns Unit
 
             // WHEN
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // THEN
             val event = eventSlot.captured as TokenDetailsAnalyticsEvent.DynamicAddressesScreenOpened
@@ -110,19 +116,19 @@ internal class DynamicAddressesDelegateTest {
         }
 
     @Test
-    fun `GIVEN no currency WHEN onDynamicAddressesClick THEN no event is sent`() = runTest {
+    fun `GIVEN no currency WHEN openBottomSheet THEN no event is sent`() = runTest {
         // GIVEN
         val delegate = createDelegate(cryptoCurrencyStatus = null)
 
         // WHEN
-        delegate.onDynamicAddressesClick()
+        delegate.openBottomSheet()
 
         // THEN
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
-    fun `GIVEN DISABLED status AND conflicts WHEN onDynamicAddressesClick THEN Notice DynamicAddressesUnavailable is sent`() =
+    fun `GIVEN DISABLED status AND conflicts WHEN openBottomSheet THEN Notice DynamicAddressesUnavailable is sent`() =
         runTest {
             // GIVEN
             every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
@@ -131,7 +137,7 @@ internal class DynamicAddressesDelegateTest {
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
 
             // WHEN
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // THEN
             verify {
@@ -157,7 +163,7 @@ internal class DynamicAddressesDelegateTest {
             coEvery { enableDynamicAddressesUseCase(userWalletId, network, TEST_XPUB) } returns Unit.right()
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // WHEN
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.Enable).onEnableClick()
@@ -192,7 +198,7 @@ internal class DynamicAddressesDelegateTest {
                 IllegalStateException("xpub fail").left()
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // WHEN
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.Enable).onEnableClick()
@@ -220,7 +226,7 @@ internal class DynamicAddressesDelegateTest {
                 TangemSdkError.UserCancelled().left()
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // WHEN
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.Enable).onEnableClick()
@@ -244,7 +250,7 @@ internal class DynamicAddressesDelegateTest {
             EnableDynamicAddressesError.ServiceError(RuntimeException("boom")).left()
 
         val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-        delegate.onDynamicAddressesClick()
+        delegate.openBottomSheet()
 
         // WHEN
         (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.Enable).onEnableClick()
@@ -268,7 +274,7 @@ internal class DynamicAddressesDelegateTest {
             coEvery { dynamicAddressesRepository.disable(userWalletId, network) } returns Unit
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // WHEN
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithoutConsolidation)
@@ -290,6 +296,31 @@ internal class DynamicAddressesDelegateTest {
         }
 
     @Test
+    fun `GIVEN disable sheet WHEN read more clicked THEN transaction fee article is opened`() = runTest {
+        // GIVEN
+        every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
+            flowOf(DynamicAddressesStatus.ENABLED)
+        coEvery { isConsolidationRequiredUseCase(userWalletId, network) } returns false.right()
+        mockkObject(TangemBlogUrlBuilder)
+
+        try {
+            coEvery { TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee) } returns TEST_BLOG_URL
+
+            val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
+            delegate.openBottomSheet()
+
+            // WHEN
+            (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithoutConsolidation)
+                .onReadMoreClick()
+
+            // THEN
+            verify { urlOpener.openUrl(TEST_BLOG_URL) }
+        } finally {
+            unmockkObject(TangemBlogUrlBuilder)
+        }
+    }
+
+    @Test
     fun `GIVEN ENABLED status AND no consolidation WHEN menu tapped without confirmation THEN repository disable is NOT called`() =
         runTest {
             every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
@@ -297,7 +328,7 @@ internal class DynamicAddressesDelegateTest {
             coEvery { isConsolidationRequiredUseCase(userWalletId, network) } returns false.right()
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // The simple disable sheet must be shown but no backend write must happen yet.
             assertThat(delegate.bottomSheetConfig.value)
@@ -318,7 +349,7 @@ internal class DynamicAddressesDelegateTest {
 
             // WHEN
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // THEN
             val notEnoughFee = events
@@ -341,7 +372,7 @@ internal class DynamicAddressesDelegateTest {
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
 
             // WHEN: initial load + refresh
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithConsolidation)
                 .onRefreshFee()
 
@@ -365,7 +396,7 @@ internal class DynamicAddressesDelegateTest {
             coEvery { dynamicAddressesRepository.disable(userWalletId, network) } returns Unit
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // WHEN
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithConsolidation)
@@ -393,7 +424,7 @@ internal class DynamicAddressesDelegateTest {
                 SendTransactionError.UserCancelledError.left()
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.onDynamicAddressesClick()
+            delegate.openBottomSheet()
 
             // WHEN
             (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithConsolidation)
@@ -444,6 +475,7 @@ internal class DynamicAddressesDelegateTest {
             getExtendedPublicKeyUseCase = getExtendedPublicKeyUseCase,
             analyticsEventHandler = analyticsEventHandler,
             uiMessageSender = uiMessageSender,
+            urlOpener = urlOpener,
             dispatchers = TestingCoroutineDispatcherProvider(),
             userWallet = userWallet,
             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },

@@ -40,6 +40,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoClickIntents
+import com.tangem.utils.StringsSigns
 
 @Composable
 internal fun YieldSupplyPromoContent(
@@ -257,11 +258,11 @@ private fun PromoBoostCard(baseApy: String, boostedApy: String, onLearnMoreClick
             append(boostedApy)
         }
     }
-    val learnMoreLabel = stringResourceSafe(R.string.common_learn_more).lowercase()
+    val learnMoreLabel = stringResourceSafe(R.string.yield_apy_boost_promo_terms_and_conditions)
     val eligibilityText = stringResourceSafe(R.string.yield_apy_boost_promo_eligibility_text)
     val subtitleAnnotated = buildAnnotatedString {
         append(eligibilityText)
-        append(" ")
+        append("${StringsSigns.COMA_SIGN} ")
         withLink(
             link = LinkAnnotation.Clickable(
                 tag = "YIELD_BOOST_LEARN_MORE",
