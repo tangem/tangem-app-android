@@ -18,14 +18,6 @@ import com.tangem.domain.transaction.models.GaslessFeePlan
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-/**
- * Implements the gasless fee decision tree (spec steps 5–6): given an already-computed token fee,
- * decide whether the plain token balance covers it, whether to top up from the yield module, or
- * whether the fee cannot be paid.
- *
- * @param sendAmountInFeeToken amount of the fee token the user is ALSO spending in the main tx
- *        (BigDecimal.ZERO unless the fee is paid in the very token being sent).
- */
 class ResolveGaslessFeePlanUseCase(
     private val gaslessYieldRepository: GaslessYieldRepository,
 ) {

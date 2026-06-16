@@ -232,7 +232,6 @@ internal class TokenFeeCalculator(
         return rawFeeTransferGasLimit.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
     }
 
-    
     @Suppress("SwallowedException")
     private suspend fun estimateWithdrawGasLimit(
         userWallet: UserWallet?,
