@@ -68,11 +68,10 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
         .hazeEffectTangem { blurRadius = ACTION_BLUR_RADIUS }
     TangemTopBar(
         modifier = modifier
-            .statusBarsPadding()
-            .testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
+            .statusBarsPadding(),
         startContent = {
             TangemTopBarActionContent(
-                modifier = actionModifier,
+                modifier = actionModifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
                 actionUM = TangemTopBarActionUM(
                     iconRes = R.drawable.ic_arrow_back_28,
                     onClick = topAppBarUM.onBackClick,
