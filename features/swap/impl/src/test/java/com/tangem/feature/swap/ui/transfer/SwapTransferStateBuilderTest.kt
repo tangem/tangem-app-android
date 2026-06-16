@@ -782,7 +782,7 @@ internal class SwapTransferStateBuilderTest {
             tokenSymbol = stringReference(""),
             amountEquivalent = TextReference.EMPTY,
             amountField = initialAmountField,
-            balance = "",
+            balance = TextReference.EMPTY,
             isBalanceHidden = false,
         ),
         receiveCardData = SwapCardState.Loading(
