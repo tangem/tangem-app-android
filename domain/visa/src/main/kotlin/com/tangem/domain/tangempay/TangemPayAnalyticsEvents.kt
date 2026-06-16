@@ -274,6 +274,16 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Add Extra Card Clicked",
     )
 
+    class FakeDoorPopupDisplayed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Fakedoor Popup Displayed",
+    )
+
+    class FakeDoorGotitClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Fakedoor Gotit Clicked",
+    )
+
     class IssueAdditionalCardPopupShown : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Extra Card Issuance Popup Displayed",
