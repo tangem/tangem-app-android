@@ -216,12 +216,14 @@ private val PreviewExpressTransactionState: ExpressTransactionStateUM = object :
         toAmountSymbol = "BTC",
         toCurrencyIcon = CurrencyIconState.Loading,
         toAddress = "0x",
+        toAmountDecimals = 2,
         fromAmount = stringReference("100 SOL"),
         fromAmountValue = "100".toBigDecimal(),
         fromFiatAmount = null,
         fromAmountSymbol = "SOL",
         fromCurrencyIcon = CurrencyIconState.Loading,
         fromAddress = "0x",
+        fromAmountDecimals = 2,
     )
 }
 // endregion
