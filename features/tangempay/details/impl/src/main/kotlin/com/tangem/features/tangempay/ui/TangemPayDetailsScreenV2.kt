@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -17,11 +16,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,7 +69,6 @@ import kotlinx.collections.immutable.ImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
 private val InitialTopBarHeight: Dp = 64.dp
-private val BgImageFadeDistance: Dp = 96.dp
 private const val TOP_FADE_MID_STOP = 0.8f
 private const val TOP_FADE_MID_ALPHA = 0.8f
 
@@ -90,16 +86,6 @@ internal fun TangemPayDetailsScreenV2(
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     var topBarTotalHeight by remember { mutableStateOf(InitialTopBarHeight + statusBarHeight) }
     val rootBackground = TangemTheme.colors3.bg.primary
-    val fadeDistancePx = with(LocalDensity.current) { BgImageFadeDistance.toPx() }
-    val bgImageAlpha by remember(fadeDistancePx) {
-        derivedStateOf {
-            val scrollOffsetPx = when (listState.firstVisibleItemIndex) {
-                0 -> listState.firstVisibleItemScrollOffset.toFloat()
-                else -> fadeDistancePx
-            }.coerceAtLeast(0f)
-            (1f - scrollOffsetPx / fadeDistancePx).coerceIn(0f, 1f)
-        }
-    }
 
     val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
     val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
@@ -110,15 +96,6 @@ internal fun TangemPayDetailsScreenV2(
             .fillMaxSize()
             .background(rootBackground),
     ) {
-        Image(
-            modifier = Modifier
-                .fillMaxWidth(),
-            painter = painterResource(R.drawable.img_bg_pay_details),
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth,
-            alpha = bgImageAlpha,
-        )
-
         TangemPullToRefreshSlidingContainer(
             config = state.pullToRefreshConfig,
             indicatorOffset = topBarTotalHeight,
@@ -128,8 +105,8 @@ internal fun TangemPayDetailsScreenV2(
                     .fillMaxSize()
                     .topFade(
                         height = topBarTotalHeight,
-                        0f to rootBackground.copy(alpha = 1f - bgImageAlpha),
-                        TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA * (1f - bgImageAlpha)),
+                        0f to rootBackground,
+                        TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
                         1f to Color.Transparent,
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
