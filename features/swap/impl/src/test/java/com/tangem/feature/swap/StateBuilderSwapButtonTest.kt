@@ -23,6 +23,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
@@ -105,9 +106,7 @@ internal class StateBuilderSwapButtonTest {
                 quoteModel = state,
                 feeCryptoCurrencyStatus = null,
                 swapProvider = buildProvider(ExchangeProviderType.CEX),
-                bestRatedProviderId = "p",
-                isNeedBestRateBadge = false,
-                needApplyFCARestrictions = false,
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = null,
                 feeError = null,
             )
@@ -132,9 +131,7 @@ internal class StateBuilderSwapButtonTest {
                 quoteModel = state,
                 feeCryptoCurrencyStatus = null,
                 swapProvider = buildProvider(ExchangeProviderType.CEX),
-                bestRatedProviderId = "p",
-                isNeedBestRateBadge = false,
-                needApplyFCARestrictions = false,
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = null,
                 feeError = null,
             )
@@ -163,9 +160,7 @@ internal class StateBuilderSwapButtonTest {
                 quoteModel = state,
                 feeCryptoCurrencyStatus = null,
                 swapProvider = buildProvider(ExchangeProviderType.CEX),
-                bestRatedProviderId = "p",
-                isNeedBestRateBadge = false,
-                needApplyFCARestrictions = false,
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = null,
                 feeError = null,
             )
@@ -189,9 +184,7 @@ internal class StateBuilderSwapButtonTest {
                 quoteModel = state,
                 feeCryptoCurrencyStatus = null,
                 swapProvider = buildProvider(ExchangeProviderType.CEX),
-                bestRatedProviderId = "p",
-                isNeedBestRateBadge = false,
-                needApplyFCARestrictions = false,
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = buildSwapFee(),
                 feeError = null,
             )
@@ -219,9 +212,7 @@ internal class StateBuilderSwapButtonTest {
                 quoteModel = state,
                 feeCryptoCurrencyStatus = null,
                 swapProvider = buildProvider(ExchangeProviderType.CEX),
-                bestRatedProviderId = "p",
-                isNeedBestRateBadge = false,
-                needApplyFCARestrictions = false,
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = buildSwapFee(),
                 feeError = null,
             )
