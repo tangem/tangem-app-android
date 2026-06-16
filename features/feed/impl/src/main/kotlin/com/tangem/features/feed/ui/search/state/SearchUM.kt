@@ -4,11 +4,13 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.features.feed.ui.feed.state.MarketChartUM
 import kotlinx.collections.immutable.ImmutableList
 
-data class SearchUM(
+internal data class SearchUM(
     val searchBar: SearchBarUM,
     val content: SearchContentUM,
+    val topMarkets: MarketChartUM,
 )
 
 @Immutable

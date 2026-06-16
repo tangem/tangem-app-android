@@ -8,7 +8,7 @@ import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.test.core.ProvideTestModels
 import arrow.core.right
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify

@@ -93,7 +93,10 @@ internal fun WalletTopBar(
                         ),
                 ) {
                     topBarConfig.endActions.forEach { action ->
-                        TangemTopBarActionContent(action)
+                        TangemTopBarActionContent(
+                            action,
+                            modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
+                        )
                     }
                 }
             },
