@@ -43,7 +43,8 @@ internal fun DestinationBlock(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(TangemTheme.dimens.spacing12)
+            .testTag(SendConfirmScreenTestTags.RECIPIENT_BLOCK),
     ) {
         AddressWithMemoBlock(
             address = destinationUM.addressTextField,
@@ -99,7 +100,9 @@ private fun AddressWithMemoBlock(
             text = stringResourceSafe(R.string.send_memo, memo.value),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+            modifier = Modifier
+                .padding(top = TangemTheme.dimens.spacing8)
+                .testTag(SendConfirmScreenTestTags.RECIPIENT_MEMO),
         )
     }
 }
