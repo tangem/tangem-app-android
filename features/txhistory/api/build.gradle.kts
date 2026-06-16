@@ -21,6 +21,7 @@ dependencies {
     /** Compose */
     implementation(deps.compose.runtime)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
 
     /** Other */

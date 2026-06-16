@@ -166,7 +166,11 @@ internal class SetButtonsStateTransformer(
         val hasNotStaking = initialState?.yieldBalance == InnerYieldBalanceState.Empty
         val isCardano = BlockchainUtils.isCardano(cryptoCurrencyBlockchainId)
 
-        return !hasNotStaking && isCardano && currentStep == StakingStep.InitialInfo
+        if (!hasNotStaking && isCardano && currentStep == StakingStep.InitialInfo) return true
+
+        val hasStaking = initialState?.yieldBalance is InnerYieldBalanceState.Data
+        val areAllTargetsFull = initialState?.areAllTargetsFull == true
+        return hasStaking && areAllTargetsFull && currentStep == StakingStep.InitialInfo
     }
 
     private fun StakingUiState.isApprovalRequired(): Boolean {
