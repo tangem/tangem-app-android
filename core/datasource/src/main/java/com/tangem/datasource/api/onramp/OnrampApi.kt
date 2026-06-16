@@ -3,6 +3,7 @@ package com.tangem.datasource.api.onramp
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.onramp.models.request.OnrampPairsRequest
 import com.tangem.datasource.api.onramp.models.response.OnrampDataResponse
+import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampQuoteResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampStatusResponse
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
@@ -86,4 +87,11 @@ interface OnrampApi {
         @Header("refcode") refCode: String?,
         @Query("txId") txId: String,
     ): ApiResponse<OnrampStatusResponse>
+
+    @GET("onramp/history")
+    suspend fun getHistory(
+        @Query("wallet_address") walletAddress: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int = 100,
+    ): ApiResponse<OnrampHistoryResponse>
 }

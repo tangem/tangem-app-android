@@ -200,20 +200,33 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         verifyContext: Wallet.Model.VerifyContext,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
         val proposalAccountNetwork = associateNetworksDelegate.associateAccounts(sessionProposal)
+        // Display URL: shown to the user and logged to analytics. Reown's verified origin when
+        // present, otherwise its `verify.walletconnect.org` fallback. NOT trustworthy for
+        // security checks: when validation is INVALID, getDappOriginUrl returns the dApp-claimed
+        // origin (so the UI can show what was claimed), which a scam dApp can spoof.
+        val displayUrl = verifyContext.getDappOriginUrl()
         val verificationInfo = when {
             verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
             verifyContext.isScam == true -> CheckDAppResult.UNSAFE
-            else -> blockAidVerifier.verifyDApp(DAppData(sessionProposal.url)).getOrElse { error ->
-                TangemLogger.withTag(WC_TAG).e("Failed to verify DApp ${sessionProposal.name}", error)
-                CheckDAppResult.FAILED_TO_VERIFY
+            // BlockAid is scanned only against the Reown-verified origin (validation == VALID
+            // guarantees Reown confirmed origin matches the dApp's registered domain).
+            // For UNKNOWN we have no trustworthy URL: passing a dApp-claimed URL would let an
+            // impersonator (e.g. a scam claiming metadata.url=dydx.trade) inherit its target's
+            // BlockAid verdict.
+            verifyContext.validation == Wallet.Model.Validation.VALID -> {
+                blockAidVerifier.verifyDApp(DAppData(verifyContext.origin)).getOrElse { error ->
+                    TangemLogger.withTag(WC_TAG).e("Failed to verify DApp ${sessionProposal.name}", error)
+                    CheckDAppResult.FAILED_TO_VERIFY
+                }
             }
+            else -> CheckDAppResult.FAILED_TO_VERIFY
         }
         val requestedNetworks = proposalAccountNetwork
             .values.map { it.available.plus(it.required) }.flatten().toSet()
         analytics.send(
             WcAnalyticEvents.PairRequested(
                 dAppName = sessionProposal.name,
-                dAppUrl = sessionProposal.url,
+                dAppUrl = displayUrl,
                 network = requestedNetworks,
                 domainVerification = verificationInfo,
             ),
@@ -221,7 +234,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         val appMetaData = WcAppMetaData(
             name = sessionProposal.name,
             description = sessionProposal.description,
-            url = sessionProposal.url,
+            url = displayUrl,
             icons = sessionProposal.icons.map { it.toString() },
             redirect = sessionProposal.redirect,
         )
