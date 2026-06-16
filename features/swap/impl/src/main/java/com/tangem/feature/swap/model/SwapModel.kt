@@ -29,7 +29,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -81,6 +80,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
@@ -108,12 +108,12 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.send.api.entity.FeeItem
 import com.tangem.features.send.api.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.filterIf
-import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
@@ -124,8 +124,6 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Locale
 import javax.inject.Inject
-
-typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -172,7 +170,7 @@ internal class SwapModel @Inject constructor(
 
     private val params = paramsContainer.require<SwapComponent.Params>()
 
-    private val initialCryptoCurrency = params.cryptoCurrency
+    private val initialCryptoCurrency = params.fromCryptoCurrency
     private val tangemPayInput = params.tangemPayInput
 
     private var isBalanceHidden = true
@@ -230,14 +228,6 @@ internal class SwapModel @Inject constructor(
     /** Whether the user is currently entering a fiat amount in the "from" card (vs crypto). */
     private val isFiatInput = mutableStateOf(false)
     private var userCountry: UserCountry? = null
-
-    private val isUserResolvableError: (SwapState) -> Boolean = { swapState ->
-        swapState is SwapState.SwapError &&
-            (
-                swapState.error is ExpressDataError.ExchangeTooSmallAmountError ||
-                    swapState.error is ExpressDataError.ExchangeTooBigAmountError
-                )
-    }
 
     private val fromTokenBalanceJobHolder = JobHolder()
     private val toTokenBalanceJobHolder = JobHolder()
@@ -417,8 +407,9 @@ internal class SwapModel @Inject constructor(
             val (fromSwapCurrencyStatus, toSwapCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
                 initialCryptoCurrency = initialCryptoCurrency,
-                swapCurrencyPosition = params.currencyPosition,
+                swapCurrencyPosition = params.fromCurrencyPosition,
                 isPaymentAccount = params.tangemPayInput != null,
+                initialToCryptoCurrency = params.toCryptoCurrency,
             )
 
             preselectedFromCurrency = fromSwapCurrencyStatus?.currency
@@ -1043,7 +1034,7 @@ internal class SwapModel @Inject constructor(
                             )
                         }
 
-                        val successStates = providersState.getLastLoadedSuccessStates()
+                        val successStates = dataState.getLastLoadedSuccessStates()
                         val pricesLowerBest = getPricesLowerBest(provider.providerId, successStates)
                         uiState = stateBuilder.updateProvidersBottomSheetContent(
                             uiState = uiState,
@@ -1097,16 +1088,20 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun setupQuotesLoadedUiState(provider: SwapProvider, state: SwapState.QuotesLoadedState) {
-        val loadedStates = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
-        val bestRatedProviderId = findBestQuoteProvider(loadedStates)?.providerId ?: provider.providerId
+        val loadedStates = dataState.getLastLoadedSuccessStates()
+        val additionalBadge = SwapProviderResolver.resolveBadge(
+            provider = provider,
+            needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+            states = loadedStates,
+            state = state,
+            isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
+        )
         uiState = stateBuilder.createQuotesLoadedState(
             uiStateHolder = uiState,
             quoteModel = state,
             feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
             swapProvider = provider,
-            bestRatedProviderId = bestRatedProviderId,
-            isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
-            needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+            additionalBadge = additionalBadge,
             swapFee = getSelectedSwapFee(),
             feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
         )
@@ -1181,6 +1176,14 @@ internal class SwapModel @Inject constructor(
 
     private fun setupErrorUiState(provider: SwapProvider, state: SwapState.SwapError) {
         singleTaskScheduler.cancelTask()
+        val loadedStates = dataState.getLastLoadedSuccessStates()
+        val additionalBadge = SwapProviderResolver.resolveBadge(
+            provider = provider,
+            needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+            states = loadedStates,
+            state = state,
+            isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
+        )
         uiState = stateBuilder.createQuotesErrorState(
             uiStateHolder = uiState,
             swapProvider = provider,
@@ -1188,7 +1191,7 @@ internal class SwapModel @Inject constructor(
             toSwapCurrencyStatus = dataState.toSwapCurrencyStatus,
             expressDataError = state.error,
             balanceStatus = state.balanceStatus,
-            needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+            additionalBadge = additionalBadge,
             swapFee = getSelectedSwapFee(),
         )
         sendErrorAnalyticsEvent(state.error, provider)
@@ -1234,7 +1237,10 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
+            val bestQuotesProvider = SwapProviderResolver.findBest(
+                states = successLoadedData,
+                isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
+            )
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
@@ -1976,17 +1982,15 @@ internal class SwapModel @Inject constructor(
             onProviderClick = { providerId ->
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ProviderClicked())
-                val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
+                val states = dataState.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
-                val bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
+                    isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                    bestRatedProviderId = bestRatedProviderId,
-                    isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
             onProviderSelect = { providerId ->
@@ -1996,7 +2000,7 @@ internal class SwapModel @Inject constructor(
                 val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
                 val isNotNullCurrency = fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null
                 if (provider != null && swapState != null && isNotNullCurrency) {
-                    modelScope.launch {
+                    modelScope.launch(dispatchers.default) {
                         feeSelectorRepository.state.value = FeeSelectorUM.Loading
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
@@ -2156,24 +2160,6 @@ internal class SwapModel @Inject constructor(
         return selectedProvider
     }
 
-    private fun findBestQuoteProvider(state: SuccessLoadedSwapData): SwapProvider? {
-        // finding best quotes
-        return state.minByOrNull { entry ->
-            val toTokenInfo = entry.value.toTokenInfo
-            val fromAmountFiat = entry.value.fromTokenInfo.amountFiat
-            val toAmountFiat = toTokenInfo.amountFiat
-            if (!fromAmountFiat.isNullOrZero() && !toAmountFiat.isNullOrZero()) {
-                fromAmountFiat.divide(
-                    toAmountFiat,
-                    toTokenInfo.swapCurrencyStatus.currency.decimals,
-                    RoundingMode.HALF_UP,
-                )
-            } else {
-                BigDecimal.ZERO
-            }
-        }?.key
-    }
-
     private fun getPricesLowerBest(selectedProviderId: String, state: SuccessLoadedSwapData): Map<String, Float> {
         val selectedProviderEntry =
             state.filter { entry -> entry.key.providerId == selectedProviderId }.entries.firstOrNull()
@@ -2257,17 +2243,6 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
-        return this.filter { entry -> entry.value is SwapState.QuotesLoadedState }
-            .mapValues { entry -> entry.value as SwapState.QuotesLoadedState }
-    }
-
-    private fun Map<SwapProvider, SwapState>.consideredProvidersStates(): Map<SwapProvider, SwapState> {
-        return this.filter { entry ->
-            entry.value is SwapState.QuotesLoadedState || isUserResolvableError(entry.value)
-        }
-    }
-
     private fun sendNoticePermissionNeededEvent() {
         val sendTokenSymbol = dataState.fromSwapCurrencyStatus?.currency?.symbol ?: return
         val receiveTokenSymbol = dataState.toSwapCurrencyStatus?.currency?.symbol ?: return
@@ -2342,7 +2317,7 @@ internal class SwapModel @Inject constructor(
         modelScope.launch {
             val transaction = dataState.getCurrentLoadedSwapState()?.swapDataModel?.transaction
             val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
-            val fromCurrency = fromSwapCurrencyStatus?.currency ?: params.cryptoCurrency
+            val fromCurrency = fromSwapCurrencyStatus?.currency ?: params.fromCryptoCurrency
             val fromWalletId = fromSwapCurrencyStatus?.userWalletId ?: params.userWalletId
             val network = fromCurrency?.network
             val fee = getSelectedSwapFee()?.fee
