@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class SwapFromSubtitleConverterTest {
