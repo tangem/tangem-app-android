@@ -47,6 +47,7 @@ internal class UpdateStakingNotificationTransformer(
         return when (val availability = stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> buildTemporaryUnavailable()
             StakingAvailability.Unavailable -> null
+            is StakingAvailability.Full -> buildActiveBlockOrNull(isBalanceHidden)
             is StakingAvailability.Available -> getStakingInfoBlock(availability, isBalanceHidden)
         }
     }
@@ -100,6 +101,27 @@ internal class UpdateStakingNotificationTransformer(
                 rewardAmount = stakingBalance.getRewardAmount(),
                 isBalanceHidden = isBalanceHidden,
             )
+        }
+    }
+
+    private fun buildActiveBlockOrNull(isBalanceHidden: Boolean): EarnBlockUM? {
+        val status = cryptoCurrencyStatus
+        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
+        return when {
+            !stakingCryptoAmount.isNullOrZero() -> buildActiveBlock(
+                stakingAmount = stakingCryptoAmount,
+                rewardAmount = stakingBalance.getRewardAmount(),
+                isBalanceHidden = isBalanceHidden,
+            )
+            // Pending-only path: reachable for StakeKit (pending items are not part of the total);
+            // for P2PEthPool the unstaking amount is already included in getTotalStakingBalance above.
+            stakingBalance.hasPendingBalances() -> buildActiveBlock(
+                stakingAmount = stakingBalance.getPendingAmount(),
+                rewardAmount = null,
+                isBalanceHidden = isBalanceHidden,
+            )
+            else -> null
         }
     }
 
