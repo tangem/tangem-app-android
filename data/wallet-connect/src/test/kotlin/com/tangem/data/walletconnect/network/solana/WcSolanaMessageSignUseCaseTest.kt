@@ -83,7 +83,13 @@ internal class WcSolanaMessageSignUseCaseTest {
                 assertTrue(result.isLeft())
                 assertTrue(result.leftOrNull() is WcRequestError.UnknownError)
             }
-            coVerify(exactly = 0) { signUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) {
+                signUseCase(
+                    hash = any(),
+                    userWallet = any(),
+                    network = any(),
+                )
+            }
             coVerify(exactly = 0) { respondService.respond(any(), any()) }
         }
 
@@ -92,7 +98,13 @@ internal class WcSolanaMessageSignUseCaseTest {
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
             val message = "Sign in to Tangem\nNonce: 8f3a91c0d4".toByteArray()
-            coEvery { signUseCase(any(), any(), any()) } returns byteArrayOf(0x0A, 0x0B, 0x0C).right()
+            coEvery {
+                signUseCase(
+                    hash = any(),
+                    userWallet = any(),
+                    network = any(),
+                )
+            } returns byteArrayOf(0x0A, 0x0B, 0x0C).right()
             coEvery { respondService.respond(any(), any()) } returns RESPOND_RESULT.right()
             val useCase = createUseCase(rawMessage = message.encodeBase58())
 
