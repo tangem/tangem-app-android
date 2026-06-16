@@ -1,6 +1,7 @@
 package com.tangem.tap.di.data
 
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.tap.common.log.TangemBlockchainSDKLogger
 import com.tangem.tap.common.log.TangemCardSDKLogger
@@ -17,10 +18,14 @@ internal object TangemLoggingModule {
 
     @Provides
     @Singleton
-    fun provideLoggingInitializer(appLogsStore: AppLogsStore): TangemLoggingInitializer {
+    fun provideLoggingInitializer(
+        appLogsStore: AppLogsStore,
+        environmentConfig: EnvironmentConfig,
+    ): TangemLoggingInitializer {
         return TangemLoggingInitializer(
             appLogsStore = appLogsStore,
             tangemSdkLogger = TangemCardSDKLogger(appLogsStore),
+            environmentConfig = environmentConfig,
         )
     }
 
