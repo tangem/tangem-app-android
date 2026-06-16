@@ -171,7 +171,7 @@ internal class WalletTokensListUMConverter(
         } else {
             R.drawable.ic_filter_24
         }
-        return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
+        return if (accountList.flattenCurrencies().isNotEmpty() && !selectedWallet.isSingleWalletWithToken()) {
             TangemButtonUM(
                 text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
