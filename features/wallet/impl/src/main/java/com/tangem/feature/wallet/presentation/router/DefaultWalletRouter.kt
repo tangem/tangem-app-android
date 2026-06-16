@@ -120,7 +120,9 @@ internal class DefaultWalletRouter @Inject constructor(
     }
 
     override fun openAddFunds(userWalletId: UserWalletId) {
-        router.push(AppRoute.AddFunds(userWalletId = userWalletId))
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.AddFunds(userWalletId = userWalletId),
+        )
     }
 
     override fun isWalletLastScreen(): Boolean {
