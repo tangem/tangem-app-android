@@ -147,7 +147,7 @@ private fun StartIcon(
                 is TangemIconUM.Icon -> if (shouldRespectIconTint) {
                     wrappedIconRes
                 } else {
-                    wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
+                    wrappedIconRes.copy(tint = ColorReference2 { iconColor })
                 }
             },
         )
@@ -180,7 +180,7 @@ private fun EndIcon(
                 is TangemIconUM.Icon -> if (shouldRespectIconTint) {
                     wrappedIconRes
                 } else {
-                    wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
+                    wrappedIconRes.copy(tint = ColorReference2 { iconColor })
                 }
             },
         )

@@ -62,9 +62,9 @@ sealed interface StakingBalance {
 
             override val totalRewards: SerializedBigDecimal = accounts.sumOf { it.stake.totalEarnedAssets }
 
-            override val unstakingAmount: SerializedBigDecimal = accounts.sumOf { it.exitQueue.total }
+            override val unstakingAmount: SerializedBigDecimal = accounts.sumOf { it.unstakingAssets }
 
-            override val withdrawableAmount: SerializedBigDecimal = accounts.sumOf { it.availableToWithdraw }
+            override val withdrawableAmount: SerializedBigDecimal = accounts.sumOf { it.withdrawableAssets }
 
             override val entries: List<StakingBalanceEntry> = accounts.flatMap { it.toStakingBalanceEntries() }
         }

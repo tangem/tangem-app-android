@@ -1,6 +1,5 @@
 package com.tangem.features.feed.ui.news.list
 
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
@@ -15,20 +14,23 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.TopFade
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
-import com.tangem.core.ui.components.haze.hazeEffectTangem
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
+import com.tangem.features.feed.ui.feedTopFadeColorStops
 import com.tangem.features.feed.ui.news.list.components.NewsListLazyColumn
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
-import dev.chrisbanes.haze.HazeProgressive
+import com.tangem.features.feed.ui.utils.FadeConstants.BASE_FADE_LEVEL
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableSet
 
@@ -38,6 +40,7 @@ internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, m
         NewsListContentV2(
             contentPadding = contentPadding,
             state = state,
+            modifier = modifier,
         )
     } else {
         NewsListContentV1(
@@ -87,50 +90,48 @@ internal fun NewsListContentV1(contentPadding: PaddingValues, state: NewsListUM,
 }
 
 @Composable
-internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM) {
+internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val lazyListState = rememberLazyListState()
     val chipsListState = rememberLazyListState()
     var chipsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
+    val topPadding = contentPadding.calculateTopPadding()
+    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
 
     ScrollChipsToSelected(state = state, chipsListState = chipsListState)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(background),
     ) {
         NewsListLazyColumn(
-            topContentPadding = contentPadding.calculateTopPadding() + 16.dp + chipsHeight,
-            modifier = Modifier
-                .hazeSourceTangem(zIndex = 0f)
-                .align(Alignment.TopStart),
+            topContentPadding = topPadding + TangemTheme.dimens2.x4 + chipsHeight,
+            modifier = Modifier.align(Alignment.TopStart),
             newsListState = state.newsListState,
             listOfArticles = state.listOfArticles,
             lazyListState = lazyListState,
             onArticleClick = state.onArticleClick,
         )
+
+        TopFade(
+            modifier = Modifier.padding(top = topPadding),
+            colorStops = feedTopFadeColorStops(fadeColor),
+            height = TangemTheme.dimens2.x4 + chipsHeight,
+        )
+
         LazyRow(
             state = chipsListState,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top = contentPadding.calculateTopPadding(), bottom = TangemTheme.dimens2.x4)
+                .padding(top = topPadding, bottom = TangemTheme.dimens2.x4)
                 .onGloballyPositioned { coordinates ->
                     if (coordinates.size.height > 0) {
                         with(density) {
                             chipsHeight = coordinates.size.height.toDp()
                         }
                     }
-                }
-                .hazeEffectTangem {
-                    progressive = HazeProgressive.verticalGradient(
-                        startIntensity = .2f,
-                        endIntensity = 0f,
-                        easing = EaseOut,
-                        preferPerformance = true,
-                    )
-                    backgroundColor = background
                 },
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

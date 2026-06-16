@@ -14,6 +14,9 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
 
+    /* Common */
+    implementation(projects.common.routing)
+
     /* Compose */
     implementation(deps.compose.runtime)
 }

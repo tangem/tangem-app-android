@@ -58,7 +58,6 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         tokenActionsComponentFactory.create(
             context = child("tokenActionsComponent"),
             params = TokenActionsComponent.Params(
-                eventBuilder = model.eventBuilder,
                 callbacks = model,
                 data = model.tokenActionsData,
             ),

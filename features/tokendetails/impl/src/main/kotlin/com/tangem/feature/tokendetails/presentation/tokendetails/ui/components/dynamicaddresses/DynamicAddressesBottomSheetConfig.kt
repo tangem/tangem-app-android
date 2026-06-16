@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.dynamicaddresses
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 
@@ -7,7 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 internal sealed class DynamicAddressesBottomSheetConfig : TangemBottomSheetConfigContent {
 
     data class Enable(
-        val isCardScanRequired: Boolean,
+        @DrawableRes val iconRes: Int? = null,
         val isLoading: Boolean = false,
         val onEnableClick: () -> Unit,
     ) : DynamicAddressesBottomSheetConfig()
@@ -18,6 +19,8 @@ internal sealed class DynamicAddressesBottomSheetConfig : TangemBottomSheetConfi
     ) : DynamicAddressesBottomSheetConfig()
 
     data class DisableWithConsolidation(
+        @DrawableRes val iconRes: Int? = null,
+        val isHoldToConfirm: Boolean = false,
         val feeState: DisableFeeState = DisableFeeState.Loading,
         val isSending: Boolean = false,
         val onDisableClick: () -> Unit,

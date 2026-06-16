@@ -17,9 +17,9 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PreselectedMarketsInterval
+import com.tangem.domain.markets.PreselectedMarketsOrder
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.news.model.NewsListConfig
@@ -32,8 +32,6 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
-import com.tangem.domain.markets.PreselectedMarketsInterval
-import com.tangem.domain.markets.PreselectedMarketsOrder
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
@@ -199,26 +197,21 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val background = TangemTheme.colors.background.tertiary
-        CompositionLocalProvider(
-            LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
-        ) {
-            val bottomSheetState = remember {
-                derivedStateOf { BottomSheetState.EXPANDED }
-            }
-
-            BackHandler {
-                router.pop()
-            }
-
-            EntryContent(
-                bottomSheetState = bottomSheetState,
-                stackState = stack.subscribeAsState(),
-                onHeaderSizeChange = {},
-                onExpandSheet = {},
-                isOpenedInBottomSheet = false,
-            )
+        val bottomSheetState = remember {
+            derivedStateOf { BottomSheetState.EXPANDED }
         }
+
+        BackHandler {
+            router.pop()
+        }
+
+        EntryContent(
+            bottomSheetState = bottomSheetState,
+            stackState = stack.subscribeAsState(),
+            onHeaderSizeChange = {},
+            onExpandSheet = {},
+            isOpenedInBottomSheet = false,
+        )
     }
 
     private fun onChildBack() {
