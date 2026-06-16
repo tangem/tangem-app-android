@@ -40,8 +40,6 @@ class CreateAndSendGaslessTransactionUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
-    // v2 = per-call gasLimit in the EIP-712 Transaction struct (changes the typehash). Off → legacy v1 signing.
-    // Sourced from the GASLESS_YIELD_WITHDRAW_ENABLED toggle; MUST match the value used when building the DTO.
     private val isGaslessV2Enabled: Boolean,
 ) {
 

@@ -396,7 +396,6 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
-            // Same master toggle as the repository — both must agree so the signed EIP-712 and the sent DTO match.
             isGaslessV2Enabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
