@@ -1,0 +1,641 @@
+package com.tangem.features.send.send.confirm.model
+
+import android.os.SystemClock
+import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
+import com.tangem.domain.settings.NeverShowTapHelpUseCase
+import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.entity.FeeNonce
+import com.tangem.features.send.api.params.FeeSelectorParams.FeeStateConfiguration
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.send.common.CommonSendRoute
+import com.tangem.features.send.common.SendBalanceUpdater
+import com.tangem.features.send.common.SendConfirmAlertFactory
+import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.send.analytics.SendAnalyticHelper
+import com.tangem.features.send.send.confirm.SendConfirmComponent
+import com.tangem.features.send.send.confirm.model.transformers.SendConfirmInitialStateTransformer
+import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSendingStateTransformer
+import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSentStateTransformer
+import com.tangem.features.send.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
+import com.tangem.features.send.send.ui.state.SendUM
+import com.tangem.features.send.subcomponents.amount.SendAmountReduceTrigger
+import com.tangem.features.send.impl.R
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
+import com.tangem.utils.extensions.stripZeroPlainString
+import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.transformer.update
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import javax.inject.Inject
+import com.tangem.features.send.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
+
+@Suppress("LongParameterList", "LargeClass")
+@Stable
+@ModelScoped
+internal class SendConfirmModel @Inject constructor(
+    paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appRouter: AppRouter,
+    private val router: Router,
+    private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
+    private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val sendTransactionUseCase: SendTransactionUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
+    private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
+    private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
+    private val notificationsUpdateListener: SendNotificationsUpdateListener,
+    private val alertFactory: SendConfirmAlertFactory,
+    private val sendAnalyticHelper: SendAnalyticHelper,
+    private val urlOpener: UrlOpener,
+    private val shareManager: ShareManager,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
+    private val sendAmountReduceTrigger: SendAmountReduceTrigger,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+    private val currenciesRepository: CurrenciesRepository,
+    private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
+    sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
+) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
+
+    private val params: SendConfirmComponent.Params = paramsContainer.require()
+
+    private val analyticsCategoryName = params.analyticsCategoryName
+    private val userWallet = params.userWallet
+    private val appCurrency = params.appCurrency
+    private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
+    private val cryptoCurrency = cryptoCurrencyStatus.currency
+
+    private val sendBalanceUpdater = sendBalanceUpdaterFactory.create(cryptoCurrency, userWallet)
+
+    private val _uiState = MutableStateFlow(params.state)
+    val uiState = _uiState.asStateFlow()
+
+    val isBalanceHiddenFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
+    private val amountState
+        get() = uiState.value.amountUM as? AmountState.Data
+    private val destinationUM
+        get() = uiState.value.destinationUM as? DestinationUM.Content
+    private val feeUMV2
+        get() = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+
+    val confirmData: ConfirmData
+        get() = ConfirmData(
+            enteredAmount = amountState?.amountTextField?.cryptoAmount?.value,
+            enteredMemo = destinationUM?.memoTextField?.value,
+            reduceAmountBy = amountState?.reduceAmountBy.orZero(),
+            isIgnoreReduce = amountState?.isIgnoreReduce == true,
+            enteredDestination = destinationUM?.addressTextField?.actualAddress,
+            fee = feeUMV2?.selectedFeeItem?.fee,
+            feeError = (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error,
+        )
+
+    private var sendIdleTimer: Long = 0L
+    private var isAmountSubtractAvailable = false
+    internal var feeStateConfiguration: FeeStateConfiguration = FeeStateConfiguration.None
+
+    init {
+        updateAmountSubtractAvailability()
+        configConfirmNavigation()
+        subscribeOnNotificationsUpdateTrigger()
+        subscribeOnCheckFeeResultUpdates()
+        initialState()
+        subscribeOnBalanceHidden()
+        subscribeOnTapHelpUpdates()
+    }
+
+    fun updateState(state: SendUM) {
+        _uiState.value = state
+        onFeeReload()
+        updateConfirmNotifications()
+    }
+
+    fun onAmountResult(amountUM: AmountState) {
+        _uiState.update { it.copy(amountUM = amountUM) }
+        updateConfirmNotifications()
+    }
+
+    fun onDestinationResult(destinationUM: DestinationUM) {
+        _uiState.update { it.copy(destinationUM = destinationUM) }
+        updateConfirmNotifications()
+    }
+
+    override fun onFeeReload() {
+        modelScope.launch {
+            feeSelectorReloadTrigger.triggerUpdate()
+        }
+    }
+
+    override fun onAmountReduceTo(reduceTo: BigDecimal) {
+        modelScope.launch {
+            sendAmountReduceTrigger.triggerReduceTo(reduceTo)
+        }
+    }
+
+    override fun onAmountReduceBy(reduceBy: BigDecimal, reduceByDiff: BigDecimal) {
+        modelScope.launch {
+            sendAmountReduceTrigger.triggerReduceBy(
+                AmountReduceByTransformer.ReduceByData(
+                    reduceAmountBy = reduceBy,
+                    reduceAmountByDiff = reduceByDiff,
+                ),
+            )
+        }
+    }
+
+    override fun onAmountIgnore() {
+        modelScope.launch {
+            sendAmountReduceTrigger.triggerIgnoreReduce()
+        }
+    }
+
+    override fun showEditDestination() {
+        modelScope.launch {
+            neverShowTapHelpUseCase()
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Address,
+                ),
+            )
+            router.push(CommonSendRoute.Destination(isEditMode = true))
+        }
+    }
+
+    override fun showEditAmount() {
+        modelScope.launch {
+            neverShowTapHelpUseCase()
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Amount,
+                ),
+            )
+            router.push(CommonSendRoute.Amount(isEditMode = true))
+        }
+    }
+
+    override fun onSendClick() {
+        _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
+        if (SystemClock.elapsedRealtime() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
+            verifyAndSendTransaction()
+        } else {
+            modelScope.launch {
+                feeSelectorCheckReloadTrigger.triggerCheckUpdate()
+            }
+        }
+    }
+
+    override fun onExploreClick() {
+        val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
+        analyticsEventHandler.send(CommonSendAnalyticEvents.ExploreButtonClicked(analyticsCategoryName))
+        urlOpener.openUrl(confirmUM.txUrl)
+    }
+
+    override fun onShareClick() {
+        val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
+        analyticsEventHandler.send(CommonSendAnalyticEvents.ShareButtonClicked(analyticsCategoryName))
+        shareManager.shareText(confirmUM.txUrl)
+    }
+
+    override fun onFailedTxEmailClick(errorMessage: String) {
+        val amountValue = amountState?.amountTextField?.cryptoAmount?.value
+        val feeValue = confirmData.fee?.amount?.value
+
+        val receivingAmount = if (amountValue != null && feeValue != null) {
+            checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isAmountSubtractAvailable,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amountValue = confirmData.enteredAmount.orZero(),
+                feeValue = feeValue,
+                reduceAmountBy = confirmData.reduceAmountBy,
+            )
+        } else {
+            null
+        }
+
+        val amount = receivingAmount?.convertToSdkAmount(cryptoCurrencyStatus)
+
+        saveBlockchainErrorUseCase(
+            error = BlockchainErrorInfo(
+                errorMessage = errorMessage,
+                networkId = cryptoCurrency.network.id,
+                destinationAddress = confirmData.enteredDestination.orEmpty(),
+                tokenSymbol = if (amount?.type is AmountType.Token) {
+                    amount.currencySymbol
+                } else {
+                    ""
+                },
+                amount = amount?.value?.stripZeroPlainString() ?: "unknown",
+                fee = feeValue?.convertToSdkAmount(cryptoCurrencyStatus)
+                    ?.value?.stripZeroPlainString() ?: "unknown",
+            ),
+        )
+
+        modelScope.launch {
+            val metaInfo = getWalletMetaInfoUseCase.invoke(userWallet.walletId).getOrNull() ?: return@launch
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Send))
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
+        }
+    }
+
+    private fun initialState() {
+        val confirmUM = uiState.value.confirmUM
+
+        modelScope.launch {
+            val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
+            if (confirmUM is ConfirmUM.Empty) {
+                _uiState.update { state ->
+                    state.copy(
+                        confirmUM = SendConfirmInitialStateTransformer(
+                            isShowTapHelp = isShowTapHelp,
+                            walletName = stringReference(userWallet.name),
+                        ).transform(uiState.value.confirmUM),
+                        confirmData = confirmData,
+                    )
+                }
+                updateConfirmNotifications()
+            }
+        }
+    }
+
+    private fun subscribeOnTapHelpUpdates() {
+        isSendTapHelpEnabledUseCase().getOrNull()
+            ?.onEach { showTapHelp ->
+                _uiState.update { state ->
+                    val confirmUM = state.confirmUM as? ConfirmUM.Content
+                    state.copy(confirmUM = confirmUM?.copy(isShowTapHelp = showTapHelp) ?: state.confirmUM)
+                }
+            }?.launchIn(modelScope)
+    }
+
+    private fun subscribeOnNotificationsUpdateTrigger() {
+        notificationsUpdateListener.hasErrorFlow
+            .onEach { hasError ->
+                _uiState.update { state ->
+                    val feeUM = state.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+                    state.copy(
+                        confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
+                            isPrimaryButtonEnabled = !hasError && feeUM != null,
+                        ) ?: state.confirmUM,
+                    )
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun verifyAndSendTransaction() {
+        val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
+        val memo = destinationUM?.memoTextField?.value
+        val fee = feeUMV2?.selectedFeeItem?.fee
+        val nonce = (feeUMV2?.feeNonce as? FeeNonce.Nonce)?.nonce
+        val feeValue = fee?.amount?.value ?: return
+
+        val receivingAmount = checkAndCalculateSubtractedAmount(
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
+            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
+            amountValue = amountValue,
+            feeValue = feeValue,
+            reduceAmountBy = confirmData.reduceAmountBy.orZero(),
+        )
+
+        modelScope.launch {
+            createTransferTransactionUseCase(
+                amount = receivingAmount.convertToSdkAmount(cryptoCurrencyStatus),
+                fee = fee,
+                memo = memo,
+                nonce = nonce,
+                destination = destination,
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+            ).fold(
+                ifLeft = { error ->
+                    TangemLogger.e("Error", error)
+                    _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+                    alertFactory.getGenericErrorState(
+                        onFailedTxEmailClick = {
+                            onFailedTxEmailClick(error.localizedMessage.orEmpty())
+                        },
+                    )
+                },
+                ifRight = { txData ->
+                    sendTransaction(txData)
+                },
+            )
+        }
+    }
+
+    private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val feeToken = getCurrencyStatusForFeePayment().currency
+
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+
+        val result = if (isFeeInTokenCurrency) {
+            createAndSendGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionData = txData,
+                fee = feeExtended,
+            )
+        } else {
+            sendTransactionUseCase(
+                txData = txData,
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+            )
+        }
+
+        _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+
+        result.fold(
+            ifLeft = { error ->
+                alertFactory.getSendTransactionErrorState(
+                    error = error,
+                    popBack = appRouter::pop,
+                    onFailedTxEmailClick = ::onFailedTxEmailClick,
+                )
+                analyticsEventHandler.send(
+                    CommonSendAnalyticEvents.TransactionError(
+                        categoryName = analyticsCategoryName,
+                        token = cryptoCurrency.symbol,
+                        blockchain = cryptoCurrency.network.name,
+                        errorCode = error.getAnalyticsDescription(),
+                    ),
+                )
+            },
+            ifRight = { txHash ->
+                updateTransactionStatus(txData, txHash)
+                addTokenToWalletIfNeeded()
+                sendBalanceUpdater.scheduleUpdates()
+                modelScope.launch(dispatchers.default) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = cryptoCurrency,
+                        sendUM = uiState.value,
+                        account = params.accountFlow.value,
+                        feeToken = feeToken,
+                    )
+                }
+                params.callback.onResult(uiState.value)
+                params.onSendTransaction()
+            },
+        )
+    }
+
+    private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: cryptoCurrencyStatus
+        } else {
+            params.feeCryptoCurrencyStatus
+        }
+    }
+
+    private fun addTokenToWalletIfNeeded() {
+        if (cryptoCurrency !is CryptoCurrency.Token) return
+        val wallets = destinationUM?.wallets ?: return
+
+        val receivingUserWallet = wallets
+            .firstOrNull { it.address == confirmData.enteredDestination }
+            ?: return
+
+        val network = receivingUserWallet.network ?: return
+
+        modelScope.launch(dispatchers.default) {
+            val accountId = receivingUserWallet.accountId ?: return@launch
+
+            val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
+            manageCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
+                .onLeft { TangemLogger.e("Error", it) }
+        }
+    }
+
+    private fun updateTransactionStatus(txData: TransactionData.Uncompiled, txHash: String) {
+        val txUrl = getExplorerTransactionUrlUseCase(
+            txHash = txHash.ifEmpty { txData.hash.orEmpty() },
+            currency = cryptoCurrency,
+        ).getOrNull().orEmpty()
+        _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
+    }
+
+    private fun subscribeOnCheckFeeResultUpdates() {
+        feeSelectorCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
+            if (isFeeResultSuccess) {
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
+                verifyAndSendTransaction()
+            } else {
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+            }
+        }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnBalanceHidden() {
+        getBalanceHidingSettingsUseCase()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { balanceHidingSettings ->
+                isBalanceHiddenFlow.update { balanceHidingSettings.isBalanceHidden }
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun updateConfirmNotifications() {
+        modelScope.launch {
+            notificationsUpdateTrigger.triggerUpdate(
+                data = NotificationData(
+                    destinationAddress = confirmData.enteredDestination.orEmpty(),
+                    memo = confirmData.enteredMemo,
+                    amountValue = confirmData.enteredAmount.orZero(),
+                    reduceAmountBy = confirmData.reduceAmountBy.orZero(),
+                    isIgnoreReduce = confirmData.isIgnoreReduce,
+                    fee = confirmData.fee,
+                    feeError = confirmData.feeError,
+                    feeCryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
+                ),
+            )
+            _uiState.update { state ->
+                state.copy(
+                    confirmUM = SendConfirmationNotificationsTransformerV2(
+                        feeSelectorUM = uiState.value.feeSelectorUM,
+                        amountUM = uiState.value.amountUM,
+                        analyticsEventHandler = analyticsEventHandler,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        appCurrency = appCurrency,
+                        analyticsCategoryName = params.analyticsCategoryName,
+                    ).transform(uiState.value.confirmUM),
+                )
+            }
+        }
+    }
+
+    @Suppress("LongMethod")
+    private fun configConfirmNavigation() {
+        combine(
+            flow = uiState,
+            flow2 = params.currentRoute,
+            transform = { state, route -> state to route },
+        ).filter {
+            it.second is CommonSendRoute.Confirm
+        }.onEach { (state, _) ->
+            val confirmUM = state.confirmUM
+            params.callback.onResult(
+                state.copy(
+                    navigationUM = NavigationUM.Content(
+                        source = CommonSendRoute.Confirm.javaClass.simpleName,
+                        title = resourceReference(id = R.string.common_send),
+                        subtitle = null,
+                        backIconRes = when (confirmUM) {
+                            is ConfirmUM.Success -> R.drawable.ic_close_24
+                            else -> R.drawable.ic_back_24
+                        },
+                        backIconClick = {
+                            analyticsEventHandler.send(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = analyticsCategoryName,
+                                    source = SendScreenSource.Confirm,
+                                    isFromSummary = true,
+                                    isValid = confirmUM.isPrimaryButtonEnabled,
+                                ),
+                            )
+                            router.pop()
+                        },
+                        primaryButton = primaryButtonUM(),
+                        prevButton = null,
+                        secondaryPairButtonsUM = (
+                            NavigationButton(
+                                textReference = resourceReference(R.string.common_explore),
+                                iconRes = R.drawable.ic_web_24,
+                                onClick = ::onExploreClick,
+                            ) to NavigationButton(
+                                textReference = resourceReference(R.string.common_share),
+                                iconRes = R.drawable.ic_share_24,
+                                onClick = ::onShareClick,
+                            )
+                            ).takeIf { confirmUM is ConfirmUM.Success },
+                    ),
+                ),
+            )
+        }.launchIn(modelScope)
+    }
+
+    private fun primaryButtonUM(): NavigationButton {
+        val confirmUM = uiState.value.confirmUM
+        val isContent = confirmUM is ConfirmUM.Content
+        val isReadyToSend = isContent && !confirmUM.isSending
+        val isHoldToConfirm = userWallet.isHotWallet && isContent
+        return NavigationButton(
+            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
+            iconRes = walletInterationIcon(userWallet),
+            isIconVisible = isReadyToSend && !isHoldToConfirm,
+            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            isHapticClick = isReadyToSend,
+            isHoldToConfirm = isHoldToConfirm,
+            onClick = {
+                when (confirmUM) {
+                    is ConfirmUM.Success -> appRouter.pop()
+                    is ConfirmUM.Content -> if (confirmUM.isSending) {
+                        return@NavigationButton
+                    } else {
+                        onSendClick()
+                    }
+                    else -> return@NavigationButton
+                }
+            },
+        )
+    }
+
+    private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
+        return when {
+            isHoldToConfirm -> resourceReference(R.string.common_send)
+            confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
+            confirmUM is ConfirmUM.Content && confirmUM.isSending -> resourceReference(R.string.send_sending)
+            else -> resourceReference(R.string.common_send)
+        }
+    }
+
+    override fun onFeeResult(feeSelectorUM: FeeSelectorUMRedesigned) {
+        sendIdleTimer = SystemClock.elapsedRealtime()
+        _uiState.update { it.copy(feeSelectorUM = feeSelectorUM) }
+        updateAmountSubtractAvailability()
+        updateConfirmNotifications()
+    }
+
+    private fun updateAmountSubtractAvailability() {
+        modelScope.launch {
+            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
+            // we assume if feeExtraInfo is empty then pay fee in the main currency
+            val feeTokenId = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: cryptoCurrency.id
+            isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrency,
+                maybeGaslessFee = fee?.let { feeTokenId to fee },
+            ).getOrElse { false }
+        }
+    }
+
+    private companion object {
+        const val CHECK_FEE_UPDATE_DELAY = 10_000L
+    }
+}

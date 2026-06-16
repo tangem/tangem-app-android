@@ -54,11 +54,15 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             is WcSolanaMethod.SignAllTransaction -> TransactionParams.Solana(method.transaction)
             is WcSolanaMethod.SignTransaction -> TransactionParams.Solana(listOf(method.transaction))
             is WcSolanaMethod.SignAndSendTransaction -> TransactionParams.Solana(listOf(method.transaction))
-            is WcSolanaMethod.SignMessage,
-            is WcBitcoinMethod,
-            -> {
-                // BlockAid doesn't support Solana message signing and Bitcoin methods
+            is WcSolanaMethod.SignMessage -> {
+                // BlockAid doesn't support Solana message signing
                 emit(Lce.Content(createSafeResult()))
+                return@flow
+            }
+            is WcBitcoinMethod -> {
+                // BlockAid doesn't support Bitcoin methods: don't synthesize a SAFE result for an unscanned
+                // transaction
+                emit(Lce.Content(failedResult))
                 return@flow
             }
             else -> {

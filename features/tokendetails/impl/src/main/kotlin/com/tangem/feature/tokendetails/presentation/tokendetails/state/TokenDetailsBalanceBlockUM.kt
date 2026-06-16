@@ -37,6 +37,8 @@ internal sealed class TokenDetailsBalanceBlockUM {
         val displayFiatBalanceAvailable: TextReference?,
         val isBalanceFlickering: Boolean,
         val isBalanceZero: Boolean,
+        val displayYieldSupplyFiatBalance: String? = null,
+        val displayYieldSupplyCryptoBalance: String? = null,
     ) : TokenDetailsBalanceBlockUM() {
 
         val displayCryptoBalance: TextReference
