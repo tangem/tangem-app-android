@@ -3,9 +3,11 @@ package com.tangem.features.pushnotifications.impl.domain
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.features.pushnotifications.PushNotificationsFeatureToggles
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 internal class GetPushNotificationsDoubleAskVariantUseCaseTest {
@@ -19,38 +21,38 @@ internal class GetPushNotificationsDoubleAskVariantUseCaseTest {
     )
 
     @Test
-    fun `GIVEN toggle disabled WHEN invoke THEN returns Off and AB not queried`() {
+    fun `GIVEN toggle disabled WHEN invoke THEN returns Off and AB not queried`() = runTest {
         every { featureToggles.isOnboardingPushDoubleAskAbEnabled } returns false
 
         val result = useCase()
 
         assertThat(result).isEqualTo(DoubleAskVariant.Off)
-        verify(exactly = 0) { abTestsManager.getValue(any(), any()) }
+        coVerify(exactly = 0) { abTestsManager.getValue(any(), any()) }
     }
 
     @Test
-    fun `GIVEN toggle enabled AND AB returns treatment WHEN invoke THEN returns On`() {
+    fun `GIVEN toggle enabled AND AB returns treatment WHEN invoke THEN returns On`() = runTest {
         every { featureToggles.isOnboardingPushDoubleAskAbEnabled } returns true
-        every { abTestsManager.getValue(KEY, "control") } returns "treatment"
+        coEvery { abTestsManager.getValue(KEY, "control") } returns "treatment"
 
         val result = useCase()
 
         assertThat(result).isEqualTo(DoubleAskVariant.On)
-        verify(exactly = 1) { abTestsManager.getValue(KEY, "control") }
+        coVerify(exactly = 1) { abTestsManager.getValue(KEY, "control") }
     }
 
     @Test
-    fun `GIVEN toggle enabled AND AB returns control WHEN invoke THEN returns Off`() {
+    fun `GIVEN toggle enabled AND AB returns control WHEN invoke THEN returns Off`() = runTest {
         every { featureToggles.isOnboardingPushDoubleAskAbEnabled } returns true
-        every { abTestsManager.getValue(KEY, "control") } returns "control"
+        coEvery { abTestsManager.getValue(KEY, "control") } returns "control"
 
         assertThat(useCase()).isEqualTo(DoubleAskVariant.Off)
     }
 
     @Test
-    fun `GIVEN toggle enabled AND AB returns unknown WHEN invoke THEN returns Off`() {
+    fun `GIVEN toggle enabled AND AB returns unknown WHEN invoke THEN returns Off`() = runTest {
         every { featureToggles.isOnboardingPushDoubleAskAbEnabled } returns true
-        every { abTestsManager.getValue(KEY, "control") } returns "unexpected_value"
+        coEvery { abTestsManager.getValue(KEY, "control") } returns "unexpected_value"
 
         assertThat(useCase()).isEqualTo(DoubleAskVariant.Off)
     }
