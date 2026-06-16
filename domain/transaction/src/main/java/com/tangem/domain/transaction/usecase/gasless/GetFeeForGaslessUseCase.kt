@@ -181,6 +181,7 @@ class GetFeeForGaslessUseCase(
          * Sorted by (plain + effectiveProtocolBalance) descending to maximise chances of covering the fee.
          */
         val candidates = networkCurrenciesStatuses
+            .asSequence()
             .filter { it.currency is CryptoCurrency.Token }
             .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
             .filter { status ->

@@ -87,11 +87,15 @@ object Eip712TypedDataBuilder {
             put("EIP712Domain", buildEip712DomainTypeProperties())
             put("Transaction", buildTransactionTypeProperties(includeGasLimit))
             put("Fee", buildFeeTypeProperties())
-            put("GaslessBatchTransaction", JSONArray().apply {
-                put(typeProperty("transactions", "Transaction[]"))
-                put(typeProperty("fee", "Fee"))
-                put(typeProperty("nonce", "uint256"))
-            })
+            put("GaslessBatchTransaction", buildGaslessBatchTransactionTypeProperties())
+        }
+    }
+
+    private fun buildGaslessBatchTransactionTypeProperties(): JSONArray {
+        return JSONArray().apply {
+            put(typeProperty("transactions", "Transaction[]"))
+            put(typeProperty("fee", "Fee"))
+            put(typeProperty("nonce", "uint256"))
         }
     }
 
@@ -100,18 +104,18 @@ object Eip712TypedDataBuilder {
      */
     private fun buildBatchMessage(gaslessBatch: GaslessBatchTransactionData, includeGasLimit: Boolean): JSONObject {
         return JSONObject().apply {
-            put("transactions", JSONArray().apply {
-                gaslessBatch.transactions.forEach { tx ->
-                    put(JSONObject().apply {
-                        put("to", tx.to)
-                        put("value", tx.value.toString())
-                        if (includeGasLimit) put("gasLimit", tx.gasLimit.toString())
-                        put("data", tx.data.toHexString())
-                    })
-                }
-            })
+            put("transactions", buildTransactionsArray(gaslessBatch.transactions, includeGasLimit))
             put("fee", buildFeeMessage(gaslessBatch.fee))
             put("nonce", gaslessBatch.nonce.toString())
+        }
+    }
+
+    private fun buildTransactionsArray(
+        transactions: List<GaslessTransactionData.Transaction>,
+        includeGasLimit: Boolean,
+    ): JSONArray {
+        return JSONArray().apply {
+            transactions.forEach { tx -> put(buildTransactionMessage(tx, includeGasLimit)) }
         }
     }
 
@@ -124,11 +128,15 @@ object Eip712TypedDataBuilder {
             put("EIP712Domain", buildEip712DomainTypeProperties())
             put("Transaction", buildTransactionTypeProperties(includeGasLimit))
             put("Fee", buildFeeTypeProperties())
-            put("GaslessTransaction", JSONArray().apply {
-                put(typeProperty("transaction", "Transaction"))
-                put(typeProperty("fee", "Fee"))
-                put(typeProperty("nonce", "uint256"))
-            })
+            put("GaslessTransaction", buildGaslessTransactionTypeProperties())
+        }
+    }
+
+    private fun buildGaslessTransactionTypeProperties(): JSONArray {
+        return JSONArray().apply {
+            put(typeProperty("transaction", "Transaction"))
+            put(typeProperty("fee", "Fee"))
+            put(typeProperty("nonce", "uint256"))
         }
     }
 
@@ -159,14 +167,21 @@ object Eip712TypedDataBuilder {
      */
     private fun buildMessage(gaslessTransaction: GaslessTransactionData, includeGasLimit: Boolean): JSONObject {
         return JSONObject().apply {
-            put("transaction", JSONObject().apply {
-                put("to", gaslessTransaction.transaction.to)
-                put("value", gaslessTransaction.transaction.value.toString())
-                if (includeGasLimit) put("gasLimit", gaslessTransaction.transaction.gasLimit.toString())
-                put("data", gaslessTransaction.transaction.data.toHexString())
-            })
+            put("transaction", buildTransactionMessage(gaslessTransaction.transaction, includeGasLimit))
             put("fee", buildFeeMessage(gaslessTransaction.fee))
             put("nonce", gaslessTransaction.nonce.toString())
+        }
+    }
+
+    private fun buildTransactionMessage(
+        transaction: GaslessTransactionData.Transaction,
+        includeGasLimit: Boolean,
+    ): JSONObject {
+        return JSONObject().apply {
+            put("to", transaction.to)
+            put("value", transaction.value.toString())
+            if (includeGasLimit) put("gasLimit", transaction.gasLimit.toString())
+            put("data", transaction.data.toHexString())
         }
     }
 
