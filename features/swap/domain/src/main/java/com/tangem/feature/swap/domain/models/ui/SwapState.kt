@@ -95,7 +95,7 @@ data class PriceImpact(
     }
 
     fun shouldShowWarning(): Boolean {
-        return type.ordinal > Type.LOW.ordinal || amountSignificance.ordinal > AmountSignificance.LOW.ordinal
+        return type.ordinal > Type.LOW.ordinal && amountSignificance.ordinal > AmountSignificance.LOW.ordinal
     }
 
     companion object {
