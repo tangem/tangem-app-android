@@ -9,6 +9,7 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
+import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
@@ -27,9 +28,14 @@ import org.junit.jupiter.api.TestInstance
 class CreateContactUseCaseTest {
 
     private val repository: AddressBookRepository = mockk(relaxUnitFun = true)
+    private val expectedTimestamp = "2026-06-10T14:30:00.000Z"
+    private val timestampProvider: IsoTimestampProvider = mockk {
+        every { now() } returns expectedTimestamp
+    }
     private val useCase = CreateContactUseCase(
         repository = repository,
         validateContactName = ValidateContactNameUseCase(repository),
+        timestampProvider = timestampProvider,
     )
 
     private val walletId = UserWalletId("011")
@@ -71,6 +77,8 @@ class CreateContactUseCaseTest {
         assertThat(contact.name.value).isEqualTo("Alice")
         assertThat(contact.id.value).isNotEmpty()
         assertThat(contact.addressEntries).isEqualTo(addressEntries)
+        assertThat(contact.createdAt).isEqualTo(expectedTimestamp)
+        assertThat(contact.updatedAt).isEqualTo(expectedTimestamp)
     }
 
     @Test
@@ -109,6 +117,8 @@ class CreateContactUseCaseTest {
         id = ContactId("id-$name"),
         walletId = walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        createdAt = expectedTimestamp,
+        updatedAt = expectedTimestamp,
         addressEntries = listOf(
             AddressEntry(
                 id = AddressEntryId("addr-$name"),
