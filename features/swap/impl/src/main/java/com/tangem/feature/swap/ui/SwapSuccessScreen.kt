@@ -14,6 +14,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.navigationButtons.DoneButtons
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -49,10 +51,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, feeSelectorUM: FeeSelectorU
         bottomBar = {
             SwapSuccessScreenButtons(
                 textRes = R.string.common_close,
-                txUrl = state.txUrl,
-                shouldShowStatusButton = state.shouldShowStatusButton,
-                onExploreClick = state.onExploreButtonClick,
-                onStatusClick = state.onStatusButtonClick,
+                state = state,
                 onDoneClick = onBack,
             )
         },
@@ -170,40 +169,40 @@ private fun SwapAmountBlock(
     }
 }
 
-@Suppress("LongParameterList")
 @Composable
-private fun SwapSuccessScreenButtons(
-    @StringRes textRes: Int,
-    txUrl: String,
-    shouldShowStatusButton: Boolean,
-    onExploreClick: () -> Unit,
-    onStatusClick: () -> Unit,
-    onDoneClick: () -> Unit,
-) {
+private fun SwapSuccessScreenButtons(@StringRes textRes: Int, state: SwapSuccessStateHolder, onDoneClick: () -> Unit) {
+    val content = state.navigationUM as? NavigationUM.Content
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
             .padding(TangemTheme.dimens.spacing16),
     ) {
-        if (txUrl.isNotBlank()) {
-            Row {
-                SecondaryButtonIconStart(
-                    text = stringResourceSafe(id = R.string.common_explore),
-                    iconResId = R.drawable.ic_web_24,
-                    onClick = onExploreClick,
-                    modifier = Modifier.weight(1f),
-                )
-                if (shouldShowStatusButton) {
-                    SpacerW12()
+        val pairButtons = content?.secondaryPairButtonsUM
+        when {
+            // Transfer mode: explore + share, the same pair the send success screen shows.
+            pairButtons != null -> DoneButtons(pairButtons)
+            // Regular swap: single explore button (+ provider status for CEX).
+            content != null && state.txUrl.isNotBlank() -> {
+                Row {
+                    val exploreButton = content.primaryButton
                     SecondaryButtonIconStart(
-                        text = stringResourceSafe(id = R.string.express_provider),
-                        iconResId = R.drawable.ic_arrow_top_right_24,
-                        onClick = onStatusClick,
+                        text = exploreButton.textReference.resolveReference(),
+                        iconResId = requireNotNull(exploreButton.iconRes),
+                        onClick = exploreButton.onClick,
                         modifier = Modifier.weight(1f),
                     )
+                    if (state.shouldShowStatusButton) {
+                        SpacerW12()
+                        SecondaryButtonIconStart(
+                            text = stringResourceSafe(id = R.string.express_provider),
+                            iconResId = R.drawable.ic_arrow_top_right_24,
+                            onClick = state.onStatusButtonClick,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
+                SpacerH12()
             }
-            SpacerH12()
         }
         PrimaryButton(
             text = stringResourceSafe(id = textRes),

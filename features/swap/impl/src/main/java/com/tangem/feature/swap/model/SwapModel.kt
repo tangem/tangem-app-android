@@ -28,6 +28,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -152,6 +153,7 @@ internal class SwapModel @Inject constructor(
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
     private val urlOpener: UrlOpener,
+    private val shareManager: ShareManager,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
     private val tangemPayWithdrawWithSwapUseCase: TangemPayWithdrawWithSwapUseCase,
@@ -784,6 +786,7 @@ internal class SwapModel @Inject constructor(
             feePaidCurrencyStatus = feePaidCryptoCurrency,
             fee = selectedFee,
         )
+        uiState = swapTransferStateBuilder.updateTransferTitle(uiState)
         when (swapState) {
             is SwapState.EmptyAmountState -> setupEmptyAmountUiState(swapState, fromSwapCurrencyStatus)
             is SwapState.Transfer -> {
@@ -1454,6 +1457,12 @@ internal class SwapModel @Inject constructor(
                     urlOpener.openUrl(txUrl)
                 }
             },
+            onShareClick = {
+                val txUrl = uiState.successState?.txUrl.orEmpty()
+                if (txUrl.isNotEmpty()) {
+                    shareManager.shareText(txUrl)
+                }
+            },
         )
         router.replaceAll(SwapRoute.Success)
     }
@@ -1497,6 +1506,11 @@ internal class SwapModel @Inject constructor(
                     onExplorerClick = {
                         if (txUrl.isNotEmpty()) {
                             urlOpener.openUrl(txUrl)
+                        }
+                    },
+                    onShareClick = {
+                        if (txUrl.isNotEmpty()) {
+                            shareManager.shareText(txUrl)
                         }
                     },
                 )

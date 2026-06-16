@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
@@ -17,6 +18,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal data class SwapStateHolder(
+    @param:StringRes val titleId: Int,
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),

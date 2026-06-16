@@ -413,6 +413,7 @@ private fun getButtonTitle(mode: SwapButton.Mode): String {
 // region preview
 
 private val state = SwapStateHolder(
+    titleId = R.string.common_swap,
     sendCardData = sendCard,
     receiveCardData = receiveCard,
     notifications = persistentListOf(

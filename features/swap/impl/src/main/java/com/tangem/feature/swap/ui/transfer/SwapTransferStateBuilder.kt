@@ -32,6 +32,7 @@ import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
+import com.tangem.feature.swap.ui.swapSuccessNavigation
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
@@ -420,6 +421,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         txUrl: String,
         timestamp: Long,
         onExplorerClick: () -> Unit,
+        onShareClick: () -> Unit,
     ): SwapStateHolder {
         val transferState = requireNotNull(dataState.currentTransferState)
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
@@ -466,7 +468,11 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
-                onExploreButtonClick = onExplorerClick,
+                navigationUM = swapSuccessNavigation(
+                    txUrl = txUrl,
+                    exploreClick = onExplorerClick,
+                    shareClick = onShareClick,
+                ),
                 onStatusButtonClick = {},
             ),
         )
@@ -477,6 +483,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         dataState: SwapProcessDataState,
         fee: Fee?,
         onExploreClick: () -> Unit,
+        onShareClick: () -> Unit,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
@@ -515,7 +522,11 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 toTokenFiatAmount = fiatAmount,
                 fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
-                onExploreButtonClick = onExploreClick,
+                navigationUM = swapSuccessNavigation(
+                    txUrl = "",
+                    exploreClick = onExploreClick,
+                    shareClick = onShareClick,
+                ),
                 onStatusButtonClick = {},
             ),
         )
@@ -534,5 +545,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
             fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
         }
         return stringReference("$cryptoFormatted ($fiatFormatted)")
+    }
+
+    fun updateTransferTitle(uiState: SwapStateHolder): SwapStateHolder {
+        return uiState.copy(titleId = R.string.common_transfer)
     }
 }
