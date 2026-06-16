@@ -383,11 +383,14 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Open 'Main Screen' on '$cardName' card") {
                 openMainScreen(mockContent = cardType, isTwinsCard = true)
             }
-            step("Assert 'Buy' button is displayed") {
-                onMainScreen { buyButton.assertIsDisplayed() }
+            step("Assert 'Add funds' button is displayed") {
+                onMainScreen { addFundsButton.assertIsDisplayed() }
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.performClick() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.performClick() }
+            }
+            step("Click on 'Buy' button in bottom sheet") {
+                onAddFundsBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 waitForIdle()

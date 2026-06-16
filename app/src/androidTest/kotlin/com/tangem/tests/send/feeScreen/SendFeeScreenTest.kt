@@ -5,6 +5,7 @@ import com.tangem.common.constants.TestConstants.BITCOIN_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLKADOT_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TERRA_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -281,13 +282,13 @@ class SendFeeScreenTest : BaseTestCase() {
     fun checkNetworkFeeBottomSheetForBitcoinTest() {
         val tokenName = "Bitcoin"
         val tokenAmount = "0.00000001"
-        val feeAmount = "$2.86"
+        val feeAmount = "$0.48"
         val fiatFeeAmount = "$0.24"
         val marketSelectorItem = getResourceString(R.string.common_fee_selector_option_market)
         val fastSelectorItem = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSelectorItem = getResourceString(R.string.common_fee_selector_option_slow)
         val feeUpTo = getResourceString(R.string.send_max_fee)
-        val feeUpToValue = "0.0000264 BTC"
+        val feeUpToValue = "0.0000044 BTC"
         val newFeeUpToValue = "0.0000022 BTC"
         val satoshi = getResourceString(R.string.send_satoshi_per_byte_title)
         val satoshiValue = "2"
@@ -440,6 +441,32 @@ class SendFeeScreenTest : BaseTestCase() {
             }
             step("Assert '$marketSelectorItem' selector item is displayed") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(marketSelectorItem).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("547")
+    @DisplayName("Send (Fee screen): network fee recalculates on speed switch and sends")
+    @Test
+    fun recalculateFeeOnSpeedSwitchAndSendTest() {
+        val tokenName = "Ethereum"
+        val inputAmount = "0.8"
+
+        setupHooks().run {
+            step("Open the send flow for '$tokenName' on an existing hot wallet") {
+                openSendScreenWithHotWallet(seedPhrase = SVS_SEED_PHRASE_12, tokenName = tokenName)
+            }
+            step("Enter amount '$inputAmount' and open the 'Send confirm' screen") {
+                enterAmountAndOpenSendConfirm(amount = inputAmount, recipientAddress = ETHEREUM_RECIPIENT_ADDRESS)
+            }
+            waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
+            val marketFee = getNetworkFeeAmount()
+            step("Switch the network fee to 'Fast'") {
+                switchFeeToFastAndApply()
+            }
+            assertNetworkFeeChanged(marketFee)
+            step("Sign, send and open the 'Transaction sent' screen") {
+                openSendSuccessScreenViaLongClickOnSendButton()
             }
         }
     }
