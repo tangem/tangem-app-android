@@ -10,13 +10,15 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalVisaRedesignEnabled
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.model.TangemPayEditDisplayNameModel
 import com.tangem.features.tangempay.ui.TangemPayEditDisplayNameScreen
 
 internal class TangemPayEditDisplayNameComponent(
     private val appComponentContext: AppComponentContext,
-    params: TangemPayCardScopedParams,
+    params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayEditDisplayNameModel = getOrCreateModel(params)
@@ -45,4 +47,6 @@ internal class TangemPayEditDisplayNameComponent(
             )
         }
     }
+
+    data class Params(val card: TangemPayCard, val userWalletId: UserWalletId)
 }
