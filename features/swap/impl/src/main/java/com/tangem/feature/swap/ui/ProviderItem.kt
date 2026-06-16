@@ -160,6 +160,7 @@ private fun ProviderContentState(
                     when (state.additionalBadge) {
                         ProviderState.AdditionalBadge.FCAWarningList -> FCABadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
+                        ProviderState.AdditionalBadge.BestDexRate -> BestDexRateItem(badgeModifier)
                         ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.Recommended -> RecommendedItem(badgeModifier)
                         ProviderState.AdditionalBadge.Empty -> Unit
@@ -395,6 +396,24 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResourceSafe(R.string.express_provider_best_rate),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.icon.accent,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun BestDexRateItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+            shape = TangemTheme.shapes.roundedCornersLarge,
+        ),
+    ) {
+        Text(
+            text = stringResourceSafe(R.string.express_provider_best_dex_rate),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),

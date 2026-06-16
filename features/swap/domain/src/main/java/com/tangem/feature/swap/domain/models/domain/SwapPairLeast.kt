@@ -63,6 +63,9 @@ enum class ExchangeProviderType(val providerName: String) {
     DEX_BRIDGE("DEX/Bridge"),
     ;
 
+    /** Returns true for DEX-based providers ([DEX] and [DEX_BRIDGE]). */
+    fun isDex(): Boolean = this == DEX || this == DEX_BRIDGE
+
     companion object {
         fun getSwapProviderTypes(): List<ExchangeProviderType> {
             return listOf(CEX, DEX, DEX_BRIDGE)
