@@ -189,10 +189,22 @@ abstract class BaseTestCase : TestCase(
                 "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
                 "ASSETS_DISCOVERY_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
-                "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
+                // Toggles released in 5.39+ — forced on so tests run against the actual build even when the
+                // app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < 5.39 would disable them).
+                "STAKING_ETH_ENABLED" to true,
+                "DYNAMIC_ADDRESSES_ENABLED" to true,
+                "SOLANA_TX_HISTORY_ENABLED" to true,
+                "SOLANA_SCALED_UI_AMOUNT_ENABLED" to true,
+                "SWAP_AB_ENABLED" to true,
                 "AND_15310_ADD_FUNDS_STAGE1" to true,
-                "APP_REDESIGN_ENABLED" to true,
+                "AND_15009_SWAP_PROVIDER_FILTER_ENABLED" to true,
+                "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
+                "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED" to true,
+                "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED" to true,
                 "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
+                "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
+                // Toggles released in 5.40
+                "APP_REDESIGN_ENABLED" to true,
             )
         )
     }

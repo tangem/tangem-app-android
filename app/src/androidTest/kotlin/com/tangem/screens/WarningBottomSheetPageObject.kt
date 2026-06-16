@@ -3,7 +3,6 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
-import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.WarningBottomSheetTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -31,27 +30,23 @@ class WarningBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsP
     }
 
     val okGotItButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_SECONDARY)
         hasText(getResourceString(R.string.warning_button_ok))
-        useUnmergedTree = true
     }
 
     val gotItButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_PRIMARY)
         hasText(getResourceString(R.string.common_got_it))
-        useUnmergedTree = true
     }
 
     val cancelButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_PRIMARY)
         hasText(getResourceString(R.string.common_cancel))
-        useUnmergedTree = true
     }
 
     val connectAnywayButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_SECONDARY)
         hasText(getResourceString(R.string.wc_alert_connect_anyway))
-        useUnmergedTree = true
     }
 }
 

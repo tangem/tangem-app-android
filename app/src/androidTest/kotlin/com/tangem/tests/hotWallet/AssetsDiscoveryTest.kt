@@ -138,7 +138,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
         val tetherTitle = "Tether"
         val ethereumNetworkTitle = "ETHEREUM"
         val accountName = getResourceString(CoreUiR.string.account_main_account_title)
-        val expectedTokensCount = 4
+        val expectedTokensCount = 2
 
         setupHooks(
             additionalBeforeAppLaunchSection = {

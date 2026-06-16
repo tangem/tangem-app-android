@@ -3,8 +3,8 @@ package com.tangem.tests.main
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.SwipeDirection
-import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
@@ -86,10 +86,10 @@ class MainScreenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Assert 'Add & Manage' button is displayed") {
-                onMainScreen { addAndManageButtonNode.assertIsDisplayed() }
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
             }
             step("Click 'Add & Manage' button") {
-                onMainScreen { addAndManageButtonNode.clickWithAssertion() }
+                onMainScreen { addAndManageButton().clickWithAssertion() }
             }
             step("Assert 'Organize tokens' option is not displayed (nothing to organize)") {
                 onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
