@@ -88,14 +88,12 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             }
             step("Click on 'Add' button in 'Add token' bottom sheet") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onAddTokenBottomSheet {
-                        addButton.performClick()
-                    }
-                    onAddTokenBottomSheet { laterButton.assertIsDisplayed() }
+                    onAddTokenBottomSheet { addButton.performClick() }
                 }
             }
-            step("Click on 'Later' button") {
-                onAddTokenBottomSheet { laterButton.performClick() }
+            step("Press 'Back' button") {
+                waitForIdle()
+                device.uiDevice.pressBack()
             }
             step("Press 'Back' button") {
                 waitForIdle()
@@ -201,8 +199,11 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Click 'More' button") {
-                onTokenDetailsTopBar { backButton.clickWithAssertion() }
+            step("Click on 'Back' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTokenDetailsTopBar { backButton.clickWithAssertion() }
+                    onMainScreen { screenContainer.assertIsDisplayed() }
+                }
             }
             step("Assert $TOTAL_BALANCE is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
