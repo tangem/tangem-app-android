@@ -4,4 +4,5 @@ interface TangemPayFeatureToggles {
     val isRedesignEnabled: Boolean
     val isCloseCardEnabled: Boolean
     val isRemoveAccountEnabled: Boolean
+    val isMultipleCardsEnabled: Boolean
 }
