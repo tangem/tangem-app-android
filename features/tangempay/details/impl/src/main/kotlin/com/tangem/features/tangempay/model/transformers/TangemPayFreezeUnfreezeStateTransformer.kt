@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.model.transformers
 
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.utils.transformer.Transformer

@@ -11,8 +11,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class SetNotificationsEnabledUseCaseTest {
 
@@ -20,7 +20,7 @@ class SetNotificationsEnabledUseCaseTest {
     private lateinit var walletsRepository: WalletsRepository
     private lateinit var accountsCRUDRepository: AccountsCRUDRepository
 
-    @Before
+    @BeforeEach
     fun setup() {
         walletsRepository = mockk()
         accountsCRUDRepository = mockk()

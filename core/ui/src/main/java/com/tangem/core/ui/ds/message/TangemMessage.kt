@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,9 +20,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import coil.compose.SubcomposeAsyncImage
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.CircleShimmer
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.ds.button.*
@@ -45,6 +50,25 @@ fun TangemMessage(
     modifier: Modifier = Modifier,
     contentColor: Color = TangemTheme.colors2.surface.level3,
 ) {
+    val isIconLeading = messageUM.onCloseClick != null ||
+        messageUM.iconPosition == TangemMessageIconPosition.Leading
+    val icon: (@Composable RowScope.() -> Unit)? = messageUM.iconUM?.let { iconUM ->
+        {
+            TangemIcon(
+                tangemIconUM = iconUM,
+                modifier = Modifier
+                    .align(
+                        if (messageUM.buttonsUM.isEmpty() && !isIconLeading) {
+                            Alignment.CenterVertically
+                        } else {
+                            Alignment.Top
+                        },
+                    )
+                    .size(messageUM.iconSize)
+                    .testTag(NotificationTestTags.ICON),
+            )
+        }
+    }
     TangemMessage(
         modifier = modifier
             .conditional(messageUM.onClick != null) {
@@ -54,22 +78,8 @@ fun TangemMessage(
         subtitle = messageUM.subtitle,
         messageEffect = messageUM.messageEffect,
         isCentered = messageUM.isCentered,
-        content = {
-            if (messageUM.iconUM != null) {
-                TangemIcon(
-                    tangemIconUM = messageUM.iconUM,
-                    modifier = Modifier
-                        .align(
-                            if (messageUM.buttonsUM.isEmpty()) {
-                                Alignment.CenterVertically
-                            } else {
-                                Alignment.Top
-                            },
-                        )
-                        .size(messageUM.iconSize),
-                )
-            }
-        },
+        leadingContent = if (isIconLeading) icon else null,
+        trailingContent = if (isIconLeading) null else icon,
         contentColor = contentColor,
         onCloseClick = messageUM.onCloseClick,
         buttons = {
@@ -87,8 +97,10 @@ fun TangemMessage(
  * Tangem message component that displays a notification based on the provided [NotificationConfig].
  * [Message](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8455-81318&m=dev)
  *
- * @param config   Configuration for the notification message.
- * @param modifier Modifier to be applied to the message component.
+ * @param config       Configuration for the notification message.
+ * @param modifier     Modifier to be applied to the message component.
+ * @param iconPosition Position of the icon relative to the texts. When [NotificationConfig.onCloseClick] is set,
+ * the icon is always placed at the leading position so it never overlaps the close button.
  *
  * @see NotificationConfig for more details.
  * @see com.tangem.core.ui.components.notifications.Notification for legacy component.
@@ -98,34 +110,41 @@ fun TangemMessage(
     config: NotificationConfig,
     modifier: Modifier = Modifier,
     contentColor: Color = TangemTheme.colors2.surface.level3,
+    iconPosition: TangemMessageIconPosition = TangemMessageIconPosition.Trailing,
 ) {
     val buttonState = config.buttonsState
+    val isIconLeading = config.onCloseClick != null || iconPosition == TangemMessageIconPosition.Leading
+    val icon: @Composable RowScope.() -> Unit = {
+        val iconTint = when (config.iconTint) {
+            NotificationConfig.IconTint.Unspecified -> null
+            NotificationConfig.IconTint.Accent -> TangemTheme.colors2.graphic.status.accent
+            NotificationConfig.IconTint.Attention -> TangemTheme.colors2.graphic.status.attention
+            NotificationConfig.IconTint.Warning -> TangemTheme.colors2.graphic.status.warning
+        }
+        val iconModifier = Modifier.size(config.iconSize).testTag(NotificationTestTags.ICON)
+        if (config.iconUrl != null) {
+            SubcomposeAsyncImage(
+                model = config.iconUrl,
+                contentDescription = null,
+                modifier = iconModifier.clip(CircleShape),
+                loading = {
+                    CircleShimmer(modifier = Modifier.matchParentSize())
+                },
+                error = {
+                    ResIcon(config = config, iconTint = iconTint, modifier = Modifier.matchParentSize())
+                },
+            )
+        } else {
+            ResIcon(config = config, iconTint = iconTint, modifier = iconModifier)
+        }
+    }
     TangemMessage(
         title = config.title,
         subtitle = config.subtitle,
         modifier = modifier,
-        content = {
-            val iconTint = when (config.iconTint) {
-                NotificationConfig.IconTint.Unspecified -> null
-                NotificationConfig.IconTint.Accent -> TangemTheme.colors2.graphic.status.accent
-                NotificationConfig.IconTint.Attention -> TangemTheme.colors2.graphic.status.attention
-                NotificationConfig.IconTint.Warning -> TangemTheme.colors2.graphic.status.warning
-            }
-            if (iconTint == null) {
-                Image(
-                    painter = painterResource(config.iconResId),
-                    contentDescription = null,
-                    modifier = Modifier.size(config.iconSize),
-                )
-            } else {
-                Icon(
-                    imageVector = ImageVector.vectorResource(config.iconResId),
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(config.iconSize),
-                )
-            }
-        },
+        onCloseClick = config.onCloseClick,
+        leadingContent = if (isIconLeading) icon else null,
+        trailingContent = if (isIconLeading) null else icon,
         contentColor = contentColor,
         buttons = if (buttonState != null) {
             {
@@ -141,13 +160,15 @@ fun TangemMessage(
  * Tangem message component that displays a message with optional title, subtitle, content, and buttons.
  * [Message](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8455-81318&m=dev)
  *
- * @param modifier      Modifier to be applied to the message component.
- * @param title         Optional title of the message.
- * @param subtitle      Optional subtitle of the message.
- * @param messageEffect Effect to be applied to the message background.
- * @param content       Optional composable content to be displayed alongside the title and subtitle.
- * @param buttons       Optional composable buttons to be displayed below the message.
- * @param isCentered    Flag indicating whether the content should be centered horizontally.
+ * @param modifier          Modifier to be applied to the message component.
+ * @param title             Optional title of the message.
+ * @param subtitle          Optional subtitle of the message.
+ * @param messageEffect     Effect to be applied to the message background.
+ * @param leadingContent    Optional composable content displayed before the title and subtitle. When [onCloseClick]
+ * is provided alongside it, the texts reserve trailing space so they never run under the close button.
+ * @param trailingContent   Optional composable content displayed after the title and subtitle.
+ * @param buttons           Optional composable buttons to be displayed below the message.
+ * @param isCentered        Flag indicating whether the content should be centered horizontally.
  */
 @Composable
 fun TangemMessage(
@@ -158,7 +179,8 @@ fun TangemMessage(
     onCloseClick: (() -> Unit)? = null,
     isCentered: Boolean = false,
     contentColor: Color = TangemTheme.colors2.surface.level3,
-    content: (@Composable RowScope.() -> Unit)? = null,
+    leadingContent: (@Composable RowScope.() -> Unit)? = null,
+    trailingContent: (@Composable RowScope.() -> Unit)? = null,
     buttons: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val alignment = if (isCentered) {
@@ -166,7 +188,7 @@ fun TangemMessage(
     } else {
         Alignment.Start
     }
-    Box(modifier = modifier) {
+    Box(modifier = modifier.testTag(NotificationTestTags.CONTAINER)) {
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -187,8 +209,10 @@ fun TangemMessage(
                 title = title,
                 subtitle = subtitle,
                 alignment = alignment,
-                content = content,
+                leadingContent = leadingContent,
+                content = trailingContent,
                 isCentered = isCentered,
+                hasCloseButton = onCloseClick != null,
             )
             if (buttons != null) {
                 Row(
@@ -221,6 +245,8 @@ private fun TangemMessageContent(
     subtitle: TextReference? = null,
     alignment: Alignment.Horizontal = Alignment.Start,
     isCentered: Boolean = false,
+    hasCloseButton: Boolean = false,
+    leadingContent: (@Composable RowScope.() -> Unit)? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val textAlign = if (isCentered) {
@@ -228,12 +254,24 @@ private fun TangemMessageContent(
     } else {
         TextAlign.Start
     }
+    // The close button is drawn over the top-end corner, so in the leading-content layout the texts
+    // reserve trailing space to never run under it; trailing-content layouts are kept untouched
+    val isCloseSpaceReserved = hasCloseButton && leadingContent != null && content == null
     Row(
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
         modifier = Modifier.padding(TangemTheme.dimens2.x1),
     ) {
+        leadingContent?.invoke(this)
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    if (isCloseSpaceReserved) {
+                        Modifier.padding(end = TangemTheme.dimens2.x5)
+                    } else {
+                        Modifier
+                    },
+                ),
             horizontalAlignment = alignment,
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
         ) {
@@ -244,6 +282,7 @@ private fun TangemMessageContent(
                     color = TangemTheme.colors2.text.neutral.primary,
                     maxLines = 1,
                     textAlign = textAlign,
+                    modifier = Modifier.testTag(NotificationTestTags.TITLE),
                 )
             }
             if (subtitle != null) {
@@ -252,10 +291,29 @@ private fun TangemMessageContent(
                     text = subtitle.resolveAnnotatedReference(),
                     style = TangemTheme.typography2.captionSemibold12,
                     color = TangemTheme.colors2.text.neutral.secondary,
+                    modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
                 )
             }
         }
         content?.invoke(this)
+    }
+}
+
+@Composable
+private fun ResIcon(config: NotificationConfig, iconTint: Color?, modifier: Modifier = Modifier) {
+    if (iconTint == null) {
+        Image(
+            painter = painterResource(config.iconResId),
+            contentDescription = null,
+            modifier = modifier,
+        )
+    } else {
+        Icon(
+            imageVector = ImageVector.vectorResource(config.iconResId),
+            contentDescription = null,
+            tint = iconTint,
+            modifier = modifier,
+        )
     }
 }
 
@@ -403,6 +461,37 @@ private class TangemMessagePreviewProvider : PreviewParameterProvider<TangemMess
                 isCentered = true,
                 onCloseClick = {},
             ),
+            TangemMessageUM(
+                id = "5",
+                title = stringReference("Title text"),
+                subtitle = stringReference("Subtext"),
+                messageEffect = TangemMessageEffect.None,
+                iconUM = TangemIconUM.Icon(R.drawable.ic_attention_default_24),
+                onCloseClick = {},
+            ),
+            TangemMessageUM(
+                id = "5-leading",
+                title = stringReference("Title text"),
+                subtitle = stringReference("Subtext"),
+                messageEffect = TangemMessageEffect.None,
+                iconUM = TangemIconUM.Icon(R.drawable.ic_attention_default_24),
+                iconPosition = TangemMessageIconPosition.Leading,
+            ),
+            TangemMessageUM(
+                id = "6",
+                title = stringReference("Invite friends. Earn 10 USDT."),
+                subtitle = stringReference("Share Tangem, give 10% OFF, and earn 10 USDT - until Jun 5"),
+                messageEffect = TangemMessageEffect.None,
+                iconUM = TangemIconUM.Icon(R.drawable.ic_tangem_24),
+                onCloseClick = {},
+                buttonsUM = persistentListOf(
+                    TangemMessageButtonUM(
+                        text = stringReference("Invite friends"),
+                        type = TangemButtonType.Secondary,
+                        onClick = {},
+                    ),
+                ),
+            ),
         )
 }
 // endregion
@@ -418,7 +507,7 @@ private fun TangemMessage2_Preview() {
             subtitle = stringReference("Subtext"),
             messageEffect = TangemMessageEffect.Magic,
             isCentered = false,
-            content = {
+            trailingContent = {
                 Box(
                     modifier = Modifier
                         .size(TangemTheme.dimens2.x7)
@@ -550,6 +639,17 @@ private class TangemMessageLegacyPreviewProvider : PreviewParameterProvider<Noti
             NotificationConfig(
                 subtitle = resourceReference(id = R.string.information_generated_with_ai),
                 iconResId = R.drawable.ic_magic_28,
+            ),
+            NotificationConfig(
+                title = TextReference.Str(value = "Invite friends. Earn 10 USDT."),
+                subtitle = TextReference.Str(value = "Share Tangem, give 10% OFF, and earn 10 USDT - until Jun 5"),
+                iconResId = R.drawable.img_attention_20,
+                iconSize = 36.dp,
+                buttonsState = ButtonsState.SecondaryButtonConfig(
+                    text = TextReference.Str(value = "Invite friends"),
+                    onClick = {},
+                ),
+                onCloseClick = {},
             ),
         )
 }

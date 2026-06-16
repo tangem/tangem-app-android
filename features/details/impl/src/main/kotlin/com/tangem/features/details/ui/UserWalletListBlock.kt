@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -34,6 +35,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.DetailsScreenTestTags
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.component.preview.PreviewUserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
@@ -69,7 +71,9 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
                     model = walletState,
                     reorderableListState = reorderableListState,
                     walletReorderUM = state.walletReorderUM,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DetailsScreenTestTags.USER_WALLET_ITEM),
                 )
             }
             item(key = "add_wallet_button") {

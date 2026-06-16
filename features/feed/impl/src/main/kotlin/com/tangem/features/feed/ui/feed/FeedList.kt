@@ -109,7 +109,9 @@ private fun FeedListContent(
 
         MarketBlock(
             marketChart = state.marketChartConfig.marketCharts[SortByTypeUM.Rating],
-            feedListCallbacks = state.feedListCallbacks,
+            onSeeAllClick = { state.feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
+            onItemClick = state.feedListCallbacks.onMarketItemClick,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
 
         promoBannersBlockComponent?.Content(
