@@ -206,6 +206,20 @@ fun BaseTestCase.openSendConfirmScreenViaNextButton() {
     }
 }
 
+fun BaseTestCase.openSendConfirmScreenViaContinueButton() {
+    step("Click on 'Continue' button") {
+        onSendAddressScreen {
+            addressesShimmer.assertIsNotDisplayed()
+            continueButton.assertIsDisplayed()
+            continueButton.assertIsEnabled()
+            continueButton.performClick()
+        }
+    }
+    step("Assert 'Send' button on 'Send confirm' screen is displayed") {
+        onSendConfirmScreen { sendButton.assertIsDisplayed() }
+    }
+}
+
 fun BaseTestCase.openSendSuccessScreenViaLongClickOnSendButton() {
     step("Long click on 'Send' button") {
         onSendConfirmScreen {
