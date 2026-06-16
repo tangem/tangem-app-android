@@ -1,7 +1,5 @@
 package com.tangem.features.feed.components.earn
 
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -11,9 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -39,7 +38,6 @@ import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.earn.EarnContent
-import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.serialization.Serializable
 
 internal class DefaultEarnComponent(
@@ -65,16 +63,6 @@ internal class DefaultEarnComponent(
             FeedSearchBar(
                 isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
                 feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier
-                    .drawBehind { drawRect(background) }
-                    .hazeEffectTangem {
-                        progressive = HazeProgressive.verticalGradient(
-                            startIntensity = .55f,
-                            endIntensity = 0f,
-                            preferPerformance = true,
-                            easing = EaseOut,
-                        )
-                    },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -82,10 +70,8 @@ internal class DefaultEarnComponent(
                         tint = TangemTheme.colors2.graphic.neutral.primary,
                         modifier = Modifier
                             .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
+                            .clip(CircleShape)
+                            .hazeEffectTangem { blurRadius = 8.dp }
                             .clickableSingle(
                                 onClick = state.onBackClick,
                                 enabled = bottomSheetState.value == BottomSheetState.EXPANDED,

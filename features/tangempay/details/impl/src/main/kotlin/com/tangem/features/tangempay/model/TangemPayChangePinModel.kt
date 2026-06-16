@@ -17,6 +17,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
 import com.tangem.features.tangempay.model.transformers.PinCodeChangeTransformer
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
@@ -55,11 +56,13 @@ internal class TangemPayChangePinModel @Inject constructor(
             uiState.update { it.copy(submitButtonLoading = true) }
             val result = try {
                 cardDetailsRepository.setPin(
-                    userWalletId = params.userWalletId,
+                    userWalletId = params.initialStatus.userWalletId,
                     pin = uiState.value.pinCode,
                 ).getOrNull()
             } catch (e: Exception) {
                 TangemLogger.e("Error", e)
+                uiState.update { it.copy(submitButtonLoading = false) }
+                uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
                 return@launch
             }
             uiState.update { it.copy(submitButtonLoading = false) }
@@ -76,7 +79,7 @@ internal class TangemPayChangePinModel @Inject constructor(
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,
                 null,
-                -> Unit // TODO: [REDACTED_TASK_KEY] - add error handling once the requirements arrive
+                -> uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
             }
         }
     }
