@@ -11,10 +11,8 @@ import com.tangem.datasource.local.onramp.paymentmethods.DefaultOnrampPaymentMet
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.DefaultOnrampQuotesStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
-import com.tangem.datasource.local.onramp.sepa.DefaultOnrampCurrentCountryByIPStore
-import com.tangem.datasource.local.onramp.sepa.DefaultOnrampSepaAvailabilityStore
-import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
-import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
+import com.tangem.datasource.local.onramp.country.DefaultOnrampCurrentCountryByIPStore
+import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,12 +51,6 @@ internal object OnrampStoreModule {
     @Singleton
     fun provideOnrampCurrencies(): OnrampCurrenciesStore {
         return DefaultOnrampCurrenciesStore(dataStore = RuntimeDataStore())
-    }
-
-    @Provides
-    @Singleton
-    fun provideOnrampSepaAvailableStore(): OnrampSepaAvailabilityStore {
-        return DefaultOnrampSepaAvailabilityStore(dataStore = RuntimeDataStore())
     }
 
     @Provides

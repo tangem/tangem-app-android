@@ -46,7 +46,7 @@ enum class AccountIconSize {
 @Composable
 fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
-        targetValue = size.boxSizeInDp(),
+        targetValue = size.toBoxSize(),
         animationSpec = animation(),
     )
     val boxShapeCornerSize by animateDpAsState(
@@ -84,7 +84,7 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
 @Composable
 fun PaymentAccountIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
-        targetValue = size.boxSizeInDp(),
+        targetValue = size.toBoxSize(),
         animationSpec = animation(),
     )
     val boxShapeCornerSize by animateDpAsState(
@@ -115,7 +115,7 @@ fun PaymentAccountIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
 @Composable
 fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
-        size.boxSizeInDp(),
+        size.toBoxSize(),
         animationSpec = animation(),
     )
     val boxShapeCornerSize by animateDpAsState(
@@ -163,7 +163,7 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.RedesignedDefault -> 20.dp
 }
 
-private fun AccountIconSize.boxSizeInDp(): Dp = when (this) {
+fun AccountIconSize.toBoxSize(): Dp = when (this) {
     AccountIconSize.Default -> 36.dp
     AccountIconSize.Large -> 88.dp
     AccountIconSize.Medium -> 28.dp

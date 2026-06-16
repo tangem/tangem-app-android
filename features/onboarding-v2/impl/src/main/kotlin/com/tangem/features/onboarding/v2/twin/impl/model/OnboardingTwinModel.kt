@@ -10,6 +10,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -175,7 +176,7 @@ internal class OnboardingTwinModel @Inject constructor(
                     }
 
                     analyticsEventHandler.send(
-                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                        event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
                             referralId = appsFlyerStore.get()?.refcode,
                         ),
