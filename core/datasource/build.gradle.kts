@@ -58,11 +58,6 @@ androidComponents {
         variant.sources.java?.addGeneratedSourceDirectory(taskProvider, GenerateEnvironmentConfigTask::outputDir)
     }
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Project */
@@ -94,18 +89,19 @@ dependencies {
     /** Coroutines */
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.coroutines.rx2)
-    implementation(deps.kotlin.datetime)
+    api(deps.kotlin.datetime)
+    api(deps.kotlin.serialization)
 
     /** Logging */
 
     /** Network */
-    implementation(deps.moshi)
+    api(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.adapters.ext)
-    implementation(deps.okHttp)
+    api(deps.okHttp)
     implementation(deps.okHttp.prettyLogging)
-    implementation(deps.retrofit)
+    api(deps.retrofit)
     implementation(deps.retrofit.moshi)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
@@ -124,11 +120,10 @@ dependencies {
     releaseImplementation(deps.chuckerStub)
 
     /** Local storages */
-    implementation(deps.androidx.datastore)
+    api(deps.androidx.datastore)
     implementation(deps.room.runtime)
     implementation(deps.room.ktx)
     ksp(deps.room.compiler)
 
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

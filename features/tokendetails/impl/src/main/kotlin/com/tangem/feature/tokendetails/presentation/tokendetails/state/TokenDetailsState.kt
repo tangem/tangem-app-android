@@ -15,4 +15,5 @@ internal data class TokenDetailsState(
     val pullToRefreshConfig: PullToRefreshConfig,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,
+    val quickTopUpBlock: QuickTopUpBlockUM? = null,
 )
