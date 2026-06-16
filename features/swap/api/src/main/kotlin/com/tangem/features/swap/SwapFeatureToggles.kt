@@ -9,4 +9,5 @@ interface SwapFeatureToggles {
     val isSwapRateExperienceEnabled: Boolean
     val isSwapPredefinedButtonsEnabled: Boolean
     val isExpressShareButtonEnabled: Boolean
+    val isSwapBestDexRateEnabled: Boolean
 }
