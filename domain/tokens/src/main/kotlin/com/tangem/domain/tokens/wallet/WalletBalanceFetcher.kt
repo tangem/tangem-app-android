@@ -13,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
@@ -173,6 +174,7 @@ class WalletBalanceFetcher internal constructor(
 
             // Fetch TangemPay separately — may run long-polling, so it must not block balance error checking
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
+                balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
                 paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
         }

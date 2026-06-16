@@ -11,6 +11,10 @@ android {
     namespace = "com.tangem.features.tangempay.onboarding.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Core */
     implementation(projects.core.analytics)
@@ -32,8 +36,14 @@ dependencies {
     implementation(projects.features.hotWallet.api)
 
     /** Domain */
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.visa)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.hotWallet)
+
+    /** Libs */
+    implementation(tangemDeps.hot.core)
 
     /** Data **/
     implementation(projects.data.visa)
@@ -52,4 +62,11 @@ dependencies {
     /** Other */
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
+
+    /** Test */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }

@@ -5,14 +5,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +30,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.provider.ProviderTypeFilterPicker
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.extensions.stringReference
@@ -40,9 +49,13 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     TangemModalBottomSheet<ChooseProviderBottomSheetConfig>(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
-        title = {
+        title = { content ->
             TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.express_choose_providers_title),
+                title = if (content.availableFilters.isNotEmpty()) {
+                    resourceReference(R.string.express_provider_for_swap)
+                } else {
+                    resourceReference(R.string.express_choose_providers_title)
+                },
                 endIconRes = R.drawable.ic_close_24,
                 onEndClick = config.onDismissRequest,
             )
@@ -56,16 +69,39 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
 @Suppress("LongMethod")
 @Composable
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = stringResourceSafe(R.string.express_choose_providers_subtitle),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
-            modifier = Modifier
-                .padding(bottom = 14.dp)
-                .padding(horizontal = TangemTheme.dimens.spacing56),
-            textAlign = TextAlign.Center,
-        )
+    val density = LocalDensity.current
+    var minHeight by remember { mutableStateOf(0.dp) }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .heightIn(min = minHeight)
+            .onSizeChanged { size ->
+                with(density) {
+                    val h = size.height.toDp()
+                    if (h > minHeight) minHeight = h
+                }
+            },
+    ) {
+        if (content.availableFilters.isNotEmpty()) {
+            ProviderTypeFilterPicker(
+                availableFilters = content.availableFilters,
+                selectedFilter = content.selectedFilter,
+                onFilterSelect = content.onFilterSelect,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+            )
+        } else {
+            Text(
+                text = stringResourceSafe(R.string.express_choose_providers_subtitle),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.secondary,
+                modifier = Modifier
+                    .padding(bottom = 14.dp)
+                    .padding(horizontal = TangemTheme.dimens.spacing56),
+                textAlign = TextAlign.Center,
+            )
+        }
         if (content.notification != null) {
             Notification(
                 config = content.notification.config,
@@ -160,6 +196,10 @@ private fun Preview_ChooseProviderBottomSheet() {
             subtitle = resourceReference(R.string.warning_express_providers_fca_warning_description),
         ),
         providers = providers,
+        allProviders = providers,
+        selectedFilter = ProviderFilterType.ALL,
+        availableFilters = persistentListOf(),
+        onFilterSelect = {},
     )
     TangemThemePreview {
         ChooseProviderBottomSheet(

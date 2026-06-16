@@ -472,6 +472,8 @@ val LocalMessageEffectAnimation = compositionLocalOf<MessageEffectAnimation> {
     error("No MessageEffectAnimation provided")
 }
 
+val LocalCanScrollBackward = compositionLocalOf { false }
+
 /**
  * Determines whether the dark theme should be used based on the given [AppThemeMode].
  *
