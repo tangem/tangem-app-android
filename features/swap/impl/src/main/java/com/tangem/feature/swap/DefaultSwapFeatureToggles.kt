@@ -47,4 +47,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_15489_EXPRESS_SHARE_BUTTON_ENABLED,
         )
+
+    override val isSwapBestDexRateEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_15715_SWAP_BEST_DEX_RATE_ENABLED,
+        ) && isSwapIntegratedApproveEnabled
 }

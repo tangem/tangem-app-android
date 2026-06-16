@@ -47,7 +47,7 @@ internal class SignUseCaseTest {
         val hash = byteArrayOf(1, 2, 3)
         val signature = byteArrayOf(9, 9)
 
-        every { cardSdkConfigRepository.getCommonSigner(any(), any()) } returns signer
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
         coEvery { walletManagersFacade.getOrCreateWalletManager(coldWallet.walletId, network) } returns walletManager
         coEvery { signer.sign(eq(hash), eq(walletManagerKey)) } returns CompletionResult.Success(signature)
 
@@ -68,7 +68,7 @@ internal class SignUseCaseTest {
         val walletManager: WalletManager = mockk { every { wallet } returns mockk { every { publicKey } returns walletManagerKey } }
         val error: TangemError = mockk()
 
-        every { cardSdkConfigRepository.getCommonSigner(any(), any()) } returns signer
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
         coEvery { walletManagersFacade.getOrCreateWalletManager(coldWallet.walletId, network) } returns walletManager
         coEvery { signer.sign(any<ByteArray>(), any()) } returns CompletionResult.Failure(error)
 
@@ -86,7 +86,7 @@ internal class SignUseCaseTest {
         val signer: TransactionSigner = mockk()
         val publicKeySlot = slot<Wallet.PublicKey>()
 
-        every { cardSdkConfigRepository.getCommonSigner(any(), any()) } returns signer
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
         coEvery { signer.sign(eq(hashes), capture(publicKeySlot)) } returns CompletionResult.Success(signatures)
 
         // Act
@@ -98,7 +98,7 @@ internal class SignUseCaseTest {
         assertThat(publicKeySlot.captured.seedKey).isEqualTo(publicKey)
         assertThat(publicKeySlot.captured.derivationType).isNull()
         // Card is not backed up (backupStatus == null) and not a twin, so its id is passed to the signer
-        verify(exactly = 1) { cardSdkConfigRepository.getCommonSigner(cardId = coldWallet.cardId, twinKey = null) }
+        verify(exactly = 1) { cardSdkConfigRepository.getCommonSigner(cardId = coldWallet.cardId, twinKey = null, any()) }
     }
 
     @Test
@@ -127,7 +127,7 @@ internal class SignUseCaseTest {
         val signer: TransactionSigner = mockk()
         val error: TangemError = mockk { every { message } returns "Signing canceled" }
 
-        every { cardSdkConfigRepository.getCommonSigner(any(), any()) } returns signer
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
         coEvery { signer.sign(any<List<ByteArray>>(), any()) } returns CompletionResult.Failure(error)
 
         // Act
@@ -147,7 +147,7 @@ internal class SignUseCaseTest {
 
         // Assert
         assertThat(result.getOrNull()).isEmpty()
-        verify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any()) }
+        verify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) }
         verify(exactly = 0) { getHotTransactionSigner(any()) }
     }
 }
