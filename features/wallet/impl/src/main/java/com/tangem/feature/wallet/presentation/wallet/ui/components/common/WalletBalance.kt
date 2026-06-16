@@ -134,6 +134,7 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
                         ).resolveReference(),
                         style = TangemTheme.typography2.bodyRegular14,
                         color = TangemTheme.colors2.text.neutral.tertiary,
+                        modifier = Modifier.testTag(MainScreenTestTags.SYNC_PROGRESS_TEXT),
                     )
                     CircularProgressIndicator(
                         modifier = Modifier.size(19.dp),
