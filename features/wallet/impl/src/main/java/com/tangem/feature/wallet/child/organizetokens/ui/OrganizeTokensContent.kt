@@ -96,6 +96,7 @@ internal fun OrganizeTokensContent(
                             onClick = { isShowDropdownMenu = true },
                             ghostModeProgress = 0f,
                         ),
+                        modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
                         type = TangemTopBarType.BottomSheet,
                     )
                     OrganizeDropDownMenu(
@@ -161,8 +162,7 @@ private fun TokenList(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .reorderable(reorderableListState)
-                .testTag(OrganizeTokensScreenTestTags.TOKENS_LAZY_LIST)
-                .hazeSourceTangem(zIndex = 1f),
+                .testTag(OrganizeTokensScreenTestTags.TOKENS_LAZY_LIST),
             state = reorderableListState.listState,
             contentPadding = listContentPadding,
         ) {
@@ -221,7 +221,7 @@ private fun LazyItemScope.DraggableItem(
 
         when (item) {
             is OrganizeRowItemUM.Network -> TangemHeaderRow(
-                modifier = modifierWithBackground,
+                modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.GROUP_TITLE_ITEM),
                 reorderableState = reorderableState,
                 headerRowUM = item.headerRowUM,
             )
@@ -231,7 +231,7 @@ private fun LazyItemScope.DraggableItem(
                 isBalanceHidden = isBalanceHidden,
             )
             is OrganizeRowItemUM.Token -> OrganizeTokenRow(
-                modifier = modifierWithBackground,
+                modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM),
                 tokenRowUM = item.tokenRowUM,
                 reorderableState = reorderableState,
                 isBalanceHidden = isBalanceHidden,
@@ -262,11 +262,15 @@ private fun BoxScope.BottomButtons(organizeTokensUM: OrganizeTokensUM) {
     ) {
         TangemButton(
             buttonUM = organizeTokensUM.cancelButton,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(OrganizeTokensScreenTestTags.CANCEL_BUTTON),
         )
         TangemButton(
             buttonUM = organizeTokensUM.applyButton,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
         )
     }
 }

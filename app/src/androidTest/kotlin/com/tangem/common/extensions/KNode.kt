@@ -11,6 +11,11 @@ fun KNode.clickWithAssertion() {
     performClick()
 }
 
+fun KNode.clickWhenEnabled() {
+    assertIsEnabled()
+    performClick()
+}
+
 fun KNode.assertTextContainsSafe(
     text: String,
     substring: Boolean = false,
