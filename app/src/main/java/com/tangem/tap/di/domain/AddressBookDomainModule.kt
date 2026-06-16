@@ -1,5 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.addressbook.crypto.AddressBookCipher
+import com.tangem.domain.addressbook.time.DefaultIsoTimestampProvider
+import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.addressbook.usecase.ValidateContactAddressUseCase
 import com.tangem.domain.addressbook.usecase.VerifyAddressEntriesUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
@@ -34,4 +37,12 @@ object AddressBookDomainModule {
     ): VerifyAddressEntriesUseCase {
         return VerifyAddressEntriesUseCase(verifyMessagesUseCase = verifyMessagesUseCase)
     }
+
+    @Provides
+    @Singleton
+    fun provideAddressBookCipher(): AddressBookCipher = AddressBookCipher()
+
+    @Provides
+    @Singleton
+    fun provideIsoTimestampProvider(): IsoTimestampProvider = DefaultIsoTimestampProvider()
 }
