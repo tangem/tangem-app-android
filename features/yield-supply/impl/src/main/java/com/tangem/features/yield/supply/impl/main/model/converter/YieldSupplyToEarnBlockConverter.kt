@@ -1,7 +1,9 @@
 package com.tangem.features.yield.supply.impl.main.model.converter
 
 import com.tangem.common.ui.earn.EarnBlockUM
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.converter.Converter
@@ -21,7 +23,25 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
         is YieldSupplyUM.Loading -> EarnBlockUM.Loading
     }
 
-    private fun buildAvailable(value: YieldSupplyUM.Available): EarnBlockUM.Content {
+    private fun buildAvailable(value: YieldSupplyUM.Available): EarnBlockUM = if (value.isBoostAvailable) {
+        buildBoostedPromo(value)
+    } else {
+        buildAvailableContent(value)
+    }
+
+    private fun buildBoostedPromo(value: YieldSupplyUM.Available): EarnBlockUM.Promo {
+        return EarnBlockUM.Promo(
+            type = EarnBlockUM.Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_yield_40),
+            title = combinedReference(value.title, stringReference("\n"), value.apyText),
+            subtitle = resourceReference(CoreResR.string.yield_apy_boost_banner_subtitle),
+            onPrimaryClick = value.onClick,
+            onSecondaryClick = value.onLearnMoreClick,
+        )
+    }
+
+    private fun buildAvailableContent(value: YieldSupplyUM.Available): EarnBlockUM.Content {
         return EarnBlockUM.Content(
             type = EarnBlockUM.Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
@@ -76,8 +96,8 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
     }
 
     private fun buildTitleIcon(value: YieldSupplyUM.Content): EarnBlockUM.TitleUM.IconUM? = when {
-        value.showWarningIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning)
-        value.showInfoIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info)
+        value.shouldShowWarningIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning)
+        value.shouldShowInfoIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info)
         else -> null
     }
 

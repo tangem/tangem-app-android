@@ -141,8 +141,8 @@
   <string name="tangempay_card_details_rename_card_invalid_description">Sono consentite solo lettere e numeri</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Caratteri non validi</string>
   <string name="tangempay_card_details_reveal_text">Rivela</string>
-  <string name="tangempay_card_details_show_details">Mostra dettagli</string>
-  <string name="tangempay_card_details_title">Dettagli carta</string>
+  <string name="tangempay_card_details_show_details">Dettagli</string>
+  <string name="tangempay_card_details_title">Dettagli</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Per favore riprova più tardi</string>
   <string name="tangempay_card_details_unfreeze_card">Sblocca carta</string>
   <string name="tangempay_card_details_withdraw">Ritiro</string>
@@ -159,10 +159,32 @@
   <string name="tangempay_card_page_daily_limit_success_title">Il limite è impostato</string>
   <string name="tangempay_card_page_daily_limit_title">Limite giornaliero</string>
   <string name="tangempay_card_page_settings_title">Impostazioni della carta</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="one">%d carta</item>
+    <item quantity="other">%d carte</item>
+  </plurals>
   <string name="tangempay_change_pin_code">Cambia codice PIN</string>
   <string name="tangempay_come_back_if_forget_pin">Torna all\'app se lo dimentichi.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Imposta un limite da %s a %s</string>
   <string name="tangempay_daily_limit_set_button">Imposta limiti</string>
+  <string name="tangempay_declined_reason_1">fondi insufficienti</string>
+  <string name="tangempay_declined_reason_10">limite di spesa della carta superato</string>
+  <string name="tangempay_declined_reason_11">verifica CVV2 non riuscita</string>
+  <string name="tangempay_declined_reason_12">data di scadenza errata</string>
+  <string name="tangempay_declined_reason_13">PIN errato</string>
+  <string name="tangempay_declined_reason_14">transazione non consentita</string>
+  <string name="tangempay_declined_reason_15">più di 25 pagamenti online in 2 giorni</string>
+  <string name="tangempay_declined_reason_16">sospetto attacco BIN da questo commerciante</string>
+  <string name="tangempay_declined_reason_17">errore tecnico, riprova</string>
+  <string name="tangempay_declined_reason_2">più di 2 pagamenti al distributore in 3 giorni</string>
+  <string name="tangempay_declined_reason_3">categoria commerciante ad alto rischio</string>
+  <string name="tangempay_declined_reason_4">transazione da un paese soggetto a restrizioni</string>
+  <string name="tangempay_declined_reason_5">e-commerce ad alto rischio</string>
+  <string name="tangempay_declined_reason_6">pagamento al distributore superiore a 150 $</string>
+  <string name="tangempay_declined_reason_7">categoria commerciante bloccata</string>
+  <string name="tangempay_declined_reason_8">commerçiante bloccato</string>
+  <string name="tangempay_declined_reason_9">carta bloccata</string>
+  <string name="tangempay_declined_reason_reason">Motivo</string>
   <string name="tangempay_digital_card">Virtuale</string>
   <string name="tangempay_failed_to_issue_card">Impossibile emettere la carta</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Si è verificato un errore tecnico, riprova cliccando il pulsante qui sotto</string>
@@ -243,7 +265,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_receive_body">Invia USDC Polygon all\'indirizzo del tuo account</string>
   <string name="tangempay_topup_receive_title">Da un altro wallet o exchange</string>
-  <string name="tangempay_topup_swap_body">Converti qualsiasi asset in USDC Polygon</string>
+  <string name="tangempay_topup_swap_body">Ricarichi il conto con qualsiasi token dal suo wallet</string>
   <string name="tangempay_topup_swap_title">Dal tuo Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC sulla Polygon</string>
   <string name="tangempay_withdrawal_note_description">I fondi degli acquisti rimborsati non verranno restituiti al tuo saldo on-chain Polygon né saranno disponibili per il prelievo, ma rimarranno sul saldo della tua carta per gli acquisti</string>
