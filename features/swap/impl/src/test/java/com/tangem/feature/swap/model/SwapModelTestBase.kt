@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
@@ -84,6 +85,7 @@ internal abstract class SwapModelTestBase {
     protected val swapTransferInteractor: SwapTransferInteractor = mockk(relaxed = true)
     protected val swapTransferStateBuilder: SwapTransferStateBuilder = mockk(relaxed = true)
     protected val urlOpener: UrlOpener = mockk(relaxed = true)
+    protected val shareManager: ShareManager = mockk(relaxed = true)
     protected val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk(relaxed = true)
     protected val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase =
         mockk(relaxed = true)
@@ -154,6 +156,7 @@ internal abstract class SwapModelTestBase {
         swapTransferInteractor = swapTransferInteractor,
         swapTransferStateBuilder = swapTransferStateBuilder,
         urlOpener = urlOpener,
+        shareManager = shareManager,
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         getPaymentAccountCryptoCurrencyStatusUseCase = getPaymentAccountCryptoCurrencyStatusUseCase,
         tangemPayWithdrawWithSwapUseCase = tangemPayWithdrawWithSwapUseCase,
