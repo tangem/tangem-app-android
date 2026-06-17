@@ -112,6 +112,7 @@
   <string name="address_book_discard">Descartar</string>
   <string name="address_book_edit_address">Editar endereço</string>
   <string name="address_book_enter_address">Insira o endereço</string>
+  <string name="address_book_invalid_address_error">Endereço inválido</string>
   <string name="address_book_keep_editing">Continue editando</string>
   <string name="address_book_new_contact">Novo contato</string>
   <string name="address_book_no_contacts">Ainda não há contatos.</string>
@@ -274,6 +275,7 @@
   <string name="common_attention">Atenção</string>
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>
+  <string name="common_backup_error">Erro de backup</string>
   <string name="common_balance">Saldo%s</string>
   <string name="common_balance_title">Saldo</string>
   <string name="common_biometric_authentication">autenticação biométrica</string>
@@ -646,6 +648,7 @@
   <string name="express_legal_two_placeholders">Ao utilizar a funcionalidade de troca, você concorda com os termos do provedor. %1$s e %2$s.</string>
   <string name="express_more_providers_soon">Mais fornecedores estarão disponíveis em breve.</string>
   <string name="express_provider">Fornecedor</string>
+  <string name="express_provider_best_dex_rate">Melhor taxa DEX</string>
   <string name="express_provider_best_rate">Melhor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertências da FCA</string>
   <string name="express_provider_fixed_rate_is_unavailable">A tarifa fixa não está disponível.</string>
@@ -658,6 +661,9 @@
   <string name="express_provider_permission_needed">Permissão necessária</string>
   <string name="express_provider_permission_needed_v2">É necessária permissão.</string>
   <string name="express_provider_recommended">Recomendado</string>
+  <string name="express_send_with_swap_not_supported_button">Trocar token</string>
+  <string name="express_send_with_swap_not_supported_text">Troque manualmente e depois envie para o destinatário.</string>
+  <string name="express_send_with_swap_not_supported_title">%s Não é compatível com Swap &amp; Send.</string>
   <string name="express_status_bought">Comprado %s</string>
   <string name="express_status_buying">Comprando %s</string>
   <string name="express_status_buying_active">Comprando %s...</string>
@@ -1511,6 +1517,8 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">As recompensas acumulam-se automaticamente no seu saldo de staking diariamente.</string>
+  <string name="staking_details_autocompound_funds_earned">Fundos obtidos: %s</string>
+  <string name="staking_details_autocompound_rewards_compounded">As recompensas são acumuladas e adicionadas ao seu saldo de staking.</string>
   <string name="staking_details_autocompound_rewards_earned">As recompensas são acumuladas no seu saldo de staking. Fundos ganhos: %s</string>
   <string name="staking_details_available">Disponível</string>
   <string name="staking_details_average_reward_rate">Taxa média de recompensa</string>
@@ -1711,6 +1719,7 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Não foi possível renomear o cartão.</string>
   <string name="tangem_pay_card_frozen">Cartão bloqueado</string>
   <string name="tangem_pay_card_payment">Pagamento com cartão</string>
+  <string name="tangem_pay_close_card_disabled_last_card">Você não pode fechar o último cartão.</string>
   <string name="tangem_pay_close_card_popup_description">O valor desaparecerá da conta de pagamento.</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Fechar cartão</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Voltar</string>
@@ -1890,12 +1899,12 @@
   <string name="tangempay_newonboard_Q4_title">Quais criptos posso gastar?</string>
   <string name="tangempay_newonboard_body">Gaste cripto em qualquer lugar — sem bancos, sem intermediários, sem exchanges. A força da autocustódia nos pagamentos do dia a dia.</string>
   <string name="tangempay_newonboard_bottomleft_body">Compre online e com Apple Pay</string>
-  <string name="tangempay_newonboard_bottomleft_title">Aceito no mundo todo</string>
+  <string name="tangempay_newonboard_bottomleft_title">No mundo todo</string>
   <string name="tangempay_newonboard_bottomright_body">Use no mundo todo</string>
   <string name="tangempay_newonboard_bottomright_title">Taxa FX de só 1%</string>
   <string name="tangempay_newonboard_title">Peça seu cartão Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">Pague o que vê</string>
-  <string name="tangempay_newonboard_topleft_title">Sem taxa de compra, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topleft_title">Sem taxa de compra\n1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topright_body">Sem surpresas</string>
   <string name="tangempay_newonboard_topright_title">$0 por mês, \n$0 de recarga</string>
   <string name="tangempay_onboarding_banner_description">Obtenha seu cartão virtual Visa Tangem grátis.</string>
@@ -1924,6 +1933,9 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Deposite USDC na conta de pagamento para cobrir a taxa de emissão.</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Não foi possível cobrir a taxa.</string>
   <string name="tangempay_reissue_card_title">Precisa de um novo cartão?</string>
+  <string name="tangempay_remove_account">Remover conta</string>
+  <string name="tangempay_remove_account_alert_description">O Tangem Pay será removido da tela principal e não aparecerá novamente, mesmo após a reinstalação do aplicativo.</string>
+  <string name="tangempay_remove_account_alert_title">Remover conta?</string>
   <string name="tangempay_service_unavailable_description">Estamos resolvendo um problema técnico. Por favor, tente novamente mais tarde.</string>
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
@@ -2368,6 +2380,7 @@
   <string name="wc_all_dapps_disconnected">Todos os dApps desconectados</string>
   <string name="wc_allow_to_spend">Permitir gastar</string>
   <string name="wc_approve_description">Ao aprovar, você permite que o dApp ou contrato inteligente use tokens em transações futuras.</string>
+  <string name="wc_change_address">Alterar endereço</string>
   <string name="wc_common_address">Endereço</string>
   <string name="wc_common_connect">Conectar</string>
   <string name="wc_common_loading">Carregando</string>
