@@ -21,6 +21,11 @@ class AddTokenBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractions
         hasText(getResourceString(R.string.common_add_token))
     }
 
+    val closeButton: KNode = child {
+        hasTestTag(BaseBottomSheetTestTags.CLOSE_BUTTON)
+        useUnmergedTree = true
+    }
+
     val addButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_add))

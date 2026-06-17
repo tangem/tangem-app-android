@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -42,6 +43,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.core.ui.res.*
+import com.tangem.core.ui.test.TokenActionsTestTags
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.PortfolioBadgeUM
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
@@ -120,7 +122,13 @@ private fun QuickActionsList(state: TokenActionsUM, modifier: Modifier = Modifie
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically(),
                 ) {
+                    val actionModifier = when (actionUM) {
+                        is QuickActionUM.V1.Buy, is QuickActionUM.V2.Buy ->
+                            Modifier.testTag(TokenActionsTestTags.BUY_ACTION)
+                        else -> Modifier
+                    }
                     TokenActionRow(
+                        modifier = actionModifier,
                         iconRes = actionUM.icon,
                         title = actionUM.title,
                         description = actionUM.description,

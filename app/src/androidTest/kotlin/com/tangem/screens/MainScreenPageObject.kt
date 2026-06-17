@@ -439,6 +439,14 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             .onAllNodes(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM), useUnmergedTree = true)
             .assertCountEquals(expectedCount)
     }
+
+    fun assertTokenExists(tokenTitle: String) {
+        lazyList.child<KNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(tokenTitle))
+            useUnmergedTree = true
+        }.assertIsDisplayed()
+    }
 }
 
 internal fun BaseTestCase.onMainScreen(function: MainScreenPageObject.() -> Unit) =

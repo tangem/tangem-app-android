@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -26,6 +27,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.test.AddFundsBottomSheetTestTags
 import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.commonfeatures.impl.R
@@ -198,7 +200,11 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
                 null
             },
             endContent = {
-                CircleIconButton(iconRes = R.drawable.ic_close_24, onClick = onCloseClick)
+                CircleIconButton(
+                    iconRes = R.drawable.ic_close_24,
+                    onClick = onCloseClick,
+                    modifier = Modifier.testTag(AddFundsBottomSheetTestTags.CLOSE_BUTTON),
+                )
             },
         )
     }
@@ -213,12 +219,12 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
     }
 
     @Composable
-    private fun CircleIconButton(iconRes: Int, onClick: () -> Unit) {
+    private fun CircleIconButton(iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
         Icon(
             imageVector = ImageVector.vectorResource(id = iconRes),
             contentDescription = null,
             tint = TangemTheme.colors2.graphic.neutral.primary,
-            modifier = Modifier
+            modifier = modifier
                 .size(TangemTheme.dimens2.x11)
                 .background(
                     color = TangemTheme.colors2.button.backgroundSecondary,
