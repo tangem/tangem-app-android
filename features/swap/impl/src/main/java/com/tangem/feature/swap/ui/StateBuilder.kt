@@ -91,6 +91,7 @@ internal class StateBuilder(
 
     fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
         return SwapStateHolder(
+            titleId = R.string.common_swap,
             sendCardData = getEmptyCardState(
                 isFromCard = true,
                 emptyAmountState = SwapState.EmptyAmountState(TextReference.EMPTY),
@@ -205,6 +206,7 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
+            titleId = R.string.common_swap,
             sendCardData = uiStateHolder.sendCardData.copy(
                 type = TransactionCardType.Inputtable(
                     onCurrencyChange = actions.onCurrencyChange,
@@ -1093,7 +1095,7 @@ internal class StateBuilder(
                 toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
-                onExploreButtonClick = onExploreClick,
+                navigationUM = swapSuccessNavigation(txUrl = txUrl, exploreClick = onExploreClick),
                 onStatusButtonClick = onStatusClick,
             ),
         )
@@ -1134,7 +1136,7 @@ internal class StateBuilder(
                 toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
-                onExploreButtonClick = onExploreClick,
+                navigationUM = swapSuccessNavigation(txUrl = txUrl, exploreClick = onExploreClick),
                 onStatusButtonClick = {},
             ),
         )
