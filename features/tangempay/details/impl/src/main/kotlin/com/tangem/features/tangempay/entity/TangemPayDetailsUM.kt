@@ -94,7 +94,8 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     data class Card(
         val lastDigits: String,
         val onClick: () -> Unit,
-        val isReissuing: Boolean,
+        val isReissuingOrClosing: Boolean,
+        val isIssuing: Boolean,
         val isFrozen: Boolean,
         val isEnabled: Boolean,
     )

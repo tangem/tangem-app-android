@@ -10,7 +10,9 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -23,7 +25,15 @@ internal class IssueAdditionalCardUseCaseTest {
 
     private val offersRepository: CustomerOffersRepository = mockk()
     private val orderRepository: CustomerOrderRepository = mockk()
-    private val useCase = IssueAdditionalCardUseCase(offersRepository, orderRepository)
+    private val issueCardRepository: TangemPayIssueCardRepository = mockk(relaxed = true)
+    private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase = mockk(relaxed = true)
+    private val useCase = IssueAdditionalCardUseCase(
+        customerOffersRepository = offersRepository,
+        customerOrderRepository = orderRepository,
+        issueCardRepository = issueCardRepository,
+        startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+        appCoroutineScope = TestAppCoroutineScope(),
+    )
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val spec = "SP_000004"
 
@@ -62,10 +72,9 @@ internal class IssueAdditionalCardUseCaseTest {
 
         val result = useCase(userWalletId)
 
-        val resultValue = result.getOrNull()
-        assertThat(resultValue?.order).isEqualTo(existing)
-        assertThat(resultValue?.offer).isEqualTo(offer)
+        assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, existing.id) }
     }
 
     @Test
@@ -118,7 +127,8 @@ internal class IssueAdditionalCardUseCaseTest {
 
         val result = useCase(userWalletId)
 
-        assertThat(result.getOrNull()?.order).isEqualTo(newOrder)
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, newOrder.id) }
     }
 
     private fun order(id: String, type: OrderType, status: OrderStatus): Order = Order(
