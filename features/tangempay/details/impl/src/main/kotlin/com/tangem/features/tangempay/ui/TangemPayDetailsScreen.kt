@@ -53,6 +53,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTransactionsComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
@@ -132,7 +133,11 @@ internal fun TangemPayDetailsScreen(
                     },
                 )
 
-                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuingOrClosing } == true) {
+                val hasReissuingCard = state.balanceBlockState.cardsBlockState?.cards?.fastAny { card ->
+                    card.cardState == TangemPayCardState.Reissuing
+                } == true
+
+                if (hasReissuingCard) {
                     item(
                         key = "REISSUE_MESSAGE",
                         content = {
@@ -314,6 +319,7 @@ private fun CardsBlockRow(
 
 @Composable
 private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modifier: Modifier = Modifier) {
+    val isCardInProcess = card.cardState == TangemPayCardState.Reissuing || card.cardState == TangemPayCardState.Closing
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
@@ -328,7 +334,7 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
                 .alpha(if (card.isEnabled) 1f else DISABLED_ALPHA)
                 .fillMaxSize(),
             painter = painterResource(
-                if (card.isReissuingOrClosing) {
+                if (isCardInProcess) {
                     R.drawable.img_visa_card_inactive_48_32
                 } else {
                     R.drawable.img_visa_card_48_32
@@ -336,7 +342,7 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
             ),
             contentDescription = null,
         )
-        if (!card.isReissuingOrClosing) {
+        if (!isCardInProcess) {
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -485,18 +491,16 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             onClick = {},
-                            isReissuingOrClosing = false,
                             isEnabled = false,
                             isFrozen = false,
-                            isIssuing = false,
+                            cardState = TangemPayCardState.Active,
                         ),
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
                             onClick = {},
-                            isReissuingOrClosing = false,
                             isEnabled = true,
                             isFrozen = false,
-                            isIssuing = false,
+                            cardState = TangemPayCardState.Active,
                         ),
                     ),
                     onAddCardClick = {},
@@ -525,10 +529,9 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             onClick = {},
-                            isReissuingOrClosing = true,
                             isFrozen = false,
                             isEnabled = true,
-                            isIssuing = false,
+                            cardState = TangemPayCardState.Reissuing,
                         ),
                     ),
                     onAddCardClick = {},

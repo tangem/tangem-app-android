@@ -12,7 +12,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
@@ -83,11 +82,9 @@ internal class TangemPayDetailsStateFactory(
                             TangemPayDetailsBalanceBlockState.Card(
                                 lastDigits = cardItem.lastDigits,
                                 onClick = { intents.onCardClick(cardItem.id) },
-                                isReissuingOrClosing = cardItem.state == TangemPayCardState.Reissuing ||
-                                    cardItem.state == TangemPayCardState.Closing,
                                 isEnabled = errorNotificationConfig == null,
                                 isFrozen = cardItem.isFrozen,
-                                isIssuing = cardItem.state == TangemPayCardState.Issuing,
+                                cardState = cardItem.state,
                             )
                         }
                         .toImmutableList(),

@@ -51,6 +51,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTransactionsComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
@@ -157,8 +158,17 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
         }
     }
+
+    val hasReissuingCard = state.balanceBlockState.cardsBlockState?.cards?.fastAny { card ->
+        card.cardState == TangemPayCardState.Reissuing
+    } == true
+
+    val hasIssuingCard = state.balanceBlockState.cardsBlockState?.cards?.fastAny { card ->
+        card.cardState == TangemPayCardState.Issuing
+    } == true
+
     when {
-        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuingOrClosing } == true -> {
+        hasReissuingCard -> {
             item("reissuingBannerBlock") {
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
@@ -167,7 +177,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                 )
             }
         }
-        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isIssuing } == true -> {
+        hasIssuingCard -> {
             item("issuingBannerBlock") {
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
@@ -351,7 +361,7 @@ private fun CardsBlock(
     ) {
         items(items = cardsBlockState.cards) { item ->
             TangemPayCardView(
-                isIssueInProgress = item.isIssuing || item.isReissuingOrClosing,
+                isIssueInProgress = item.cardState != TangemPayCardState.Active,
                 lastDigits = item.lastDigits,
                 onClick = item.onClick,
                 isEnabled = item.isEnabled,
