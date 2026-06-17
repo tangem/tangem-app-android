@@ -370,4 +370,32 @@ class DetailsTest : BaseTestCase() {
                 onReferralProgramScreen { participateButton.assertIsDisplayed() }
             }
         }
+
+    @AllureId("222")
+    @DisplayName("Details: ToS screen opening")
+    @Test
+    fun tosScreenOpeningTest() {
+        val tosUrl = "https://tangem.com/tangem_tos.html"
+
+        setupHooks().run {
+            step("Open 'Main screen'") {
+                openMainScreen()
+            }
+            step("Open wallet details") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Open 'ToS' screen") {
+                onDetailsScreen { toSButton.clickWithAssertion() }
+            }
+            step("Verify 'ToS' screen opened") {
+                onDisclaimerScreen {
+                    title.assertIsDisplayed()
+                    webView.assertIsDisplayed()
+                    webView.assertContentDescriptionContains(tosUrl, true)
+
+                }
+            }
+        }
+    }
+
 }
