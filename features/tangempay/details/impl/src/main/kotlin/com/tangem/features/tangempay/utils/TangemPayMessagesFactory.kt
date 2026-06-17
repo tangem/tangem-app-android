@@ -9,6 +9,7 @@ import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
 import com.tangem.core.ui.res.generated.icons.ic_sun_20
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
@@ -152,8 +153,9 @@ internal object TangemPayMessagesFactory {
     fun createMaximumCardsIssued(maxCards: Int): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
-                icon(R.drawable.img_attention_20) {
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
+                vector(Icons.ic_error_28) {
+                    type = MessageBottomSheetUM.Vector.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
                 }
                 title = resourceReference(R.string.tangempay_maximum_cards_issued_title)
                 body = resourceReference(
