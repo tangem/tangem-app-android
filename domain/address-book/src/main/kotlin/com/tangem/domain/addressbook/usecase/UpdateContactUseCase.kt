@@ -8,14 +8,16 @@ import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
+import com.tangem.domain.addressbook.time.IsoTimestampProvider
 
 /**
- * Updates an existing [Contact], preserving its contact id. The name is only format-checked —
- * uniqueness is not re-validated on update. Address entries must be prepared and validated before
- * calling this use case.
+
+ * format-checked — uniqueness is not re-validated on update. Address entries must be prepared and
+ * validated before calling this use case. [Contact.updatedAt] is restamped with the current time.
  */
 class UpdateContactUseCase(
     private val repository: AddressBookRepository,
+    private val timestampProvider: IsoTimestampProvider,
 ) {
 
     suspend operator fun invoke(
@@ -30,6 +32,7 @@ class UpdateContactUseCase(
         val updated = contact.copy(
             name = validName,
             addressEntries = addressEntries,
+            updatedAt = timestampProvider.now(),
         )
         repository.saveContact(updated)
         updated

@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -19,6 +20,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
+    implementation(deps.jodatime)
 
     // region Test libraries
     testImplementation(projects.test.core)
