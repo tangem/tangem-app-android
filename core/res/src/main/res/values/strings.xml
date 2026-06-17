@@ -701,7 +701,11 @@
   <string name="feedback_token_description_error">Coin description error</string>
   <string name="force_update_banner_message">Update the app to its latest version to ensure proper functionality</string>
   <string name="force_update_banner_title">Update needed</string>
+  <string name="force_update_brick_description">This version of the app is no longer supported and can\'t be updated on this device.</string>
+  <string name="force_update_brick_title">Update Unavailable</string>
   <string name="force_update_button">Update</string>
+  <string name="force_update_os_description">Your operating system is out of date. Please update it to continue using the app.</string>
+  <string name="force_update_os_title">Update Your OS</string>
   <string name="force_update_warning_message">Please update the app to its latest version to ensure proper functionality.</string>
   <string name="force_update_warning_title">Update required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
@@ -1922,7 +1926,7 @@
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
-  <string name="tangempay_payment_account_sync_needed">Payment account session expired</string>
+  <string name="tangempay_payment_account_sync_needed">Session expired</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_reissue_card_confirm">Replace card</string>
   <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
