@@ -122,6 +122,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             // [REDACTED_JIRA]
             Blockchain.Dischain,
             Blockchain.Polygon,
+            Blockchain.TON,
             -> this.currency
             else -> responseToken.symbol
         }
