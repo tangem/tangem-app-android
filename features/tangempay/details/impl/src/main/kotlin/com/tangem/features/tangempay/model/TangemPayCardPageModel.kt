@@ -51,10 +51,7 @@ import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsContro
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
-import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
-import com.tangem.features.tangempay.utils.cryptoCurrency
-import com.tangem.features.tangempay.utils.ifLoadedOrNull
-import com.tangem.features.tangempay.utils.userWalletId
+import com.tangem.features.tangempay.utils.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -439,21 +436,21 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onClickAddFunds() {
         bottomSheetNavigation.dismiss()
         modelScope.launch {
-            val balance = cardDetailsRepository.getCardBalance(userWalletId).getOrNull()
-            val depositAddress = balance?.depositAddress
-            if (balance == null || depositAddress == null) {
-                uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
-                return@launch
+            val balance = currentStatus.value.balanceOrNull()
+            if (balance == null) {
+                val message = TangemPayMessagesFactory.createErrorMessage(TangemPayDetailsErrorType.Receive)
+                uiMessageSender.send(message)
+            } else {
+                bottomSheetNavigation.activate(
+                    TangemPayCardNavigation.AddFunds(
+                        walletId = userWalletId,
+                        fiatBalance = balance.fiatBalance.availableBalance,
+                        cryptoBalance = balance.cryptoBalance.balance,
+                        depositAddress = balance.cryptoBalance.depositAddress,
+                        cryptoCurrency = cryptoCurrency,
+                    ),
+                )
             }
-            bottomSheetNavigation.activate(
-                TangemPayCardNavigation.AddFunds(
-                    walletId = userWalletId,
-                    fiatBalance = balance.fiatBalance,
-                    cryptoBalance = balance.cryptoBalance,
-                    depositAddress = depositAddress,
-                    cryptoCurrency = cryptoCurrency,
-                ),
-            )
         }.saveIn(addFundsJobHolder)
     }
 
