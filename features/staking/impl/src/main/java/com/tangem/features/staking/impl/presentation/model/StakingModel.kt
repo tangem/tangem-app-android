@@ -76,6 +76,7 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
+import com.tangem.features.staking.impl.presentation.state.helpers.GetEffectiveStakingFee
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoader
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
@@ -131,6 +132,7 @@ internal class StakingModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
+    private val getEffectiveStakingFee: GetEffectiveStakingFee,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
     private val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase,
@@ -945,9 +947,16 @@ internal class StakingModel @Inject constructor(
                 null
             }
 
+            val effectiveFee = getEffectiveStakingFee(
+                stakeKitFee = fee,
+                amount = amount,
+                userWallet = userWallet,
+                feeCurrencyStatus = feeStatus,
+            )
+
             val balanceAfterTransaction = calculateBalanceAfterTransaction(
                 amount = amount.orZero(),
-                fee = fee.orZero(),
+                fee = effectiveFee.orZero(),
                 reduceAmountBy = confirmationState?.reduceAmountBy.orZero(),
                 actionType = value.actionType,
             )
@@ -956,9 +965,12 @@ internal class StakingModel @Inject constructor(
                 currencyStatus = cryptoCurrencyStatus,
                 feeCurrencyStatus = feeCryptoCurrencyStatus,
                 amount = amount,
-                fee = fee,
+                fee = effectiveFee,
                 feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
             )
+
+            val hasRentWarning = currencyStatus.rentWarning != null
+
             stateController.update(
                 AddStakingNotificationsTransformer(
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
@@ -968,8 +980,8 @@ internal class StakingModel @Inject constructor(
                     currencyWarning = currencyWarning,
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
-                    feeError = feeError,
-                    stakingError = stakingError,
+                    feeError = if (hasRentWarning) null else feeError,
+                    stakingError = if (hasRentWarning) null else stakingError,
                     integration = integration,
                 ),
             )
