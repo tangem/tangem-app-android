@@ -57,7 +57,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
-        val card = status.cards.firstOrNull()
+        val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
         val errorNotificationConfig = when (status.error) {
             null -> null
             PaymentAccountStatusValue.Error.NotSynced -> createRenewSessionNotificationConfig()
@@ -75,10 +75,7 @@ internal class TangemPayDetailsStateFactory(
                 onRefresh = intents::onRefreshSwipe,
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
-                actionButtons = getActionButtonsConfig(
-                    isEnabled = errorNotificationConfig == null &&
-                        (card == null || card.frozenState == TangemPayCardFrozenState.Unfrozen),
-                ),
+                actionButtons = getActionButtonsConfig(isEnabled = errorNotificationConfig == null && hasUnfrozenCard),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .let { if (isMultipleCardsEnabled) it else it.take(1) }
@@ -86,9 +83,11 @@ internal class TangemPayDetailsStateFactory(
                             TangemPayDetailsBalanceBlockState.Card(
                                 lastDigits = cardItem.lastDigits,
                                 onClick = { intents.onCardClick(cardItem.id) },
-                                isReissuing = cardItem.state != TangemPayCardState.Active,
+                                isReissuingOrClosing = cardItem.state == TangemPayCardState.Reissuing ||
+                                    cardItem.state == TangemPayCardState.Closing,
                                 isEnabled = errorNotificationConfig == null,
                                 isFrozen = cardItem.isFrozen,
+                                isIssuing = cardItem.state == TangemPayCardState.Issuing,
                             )
                         }
                         .toImmutableList(),
