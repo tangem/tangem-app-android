@@ -44,8 +44,11 @@ data class OnrampItemResponse(
     val createdAt: String,
 
     /** Transaction last-update timestamp in ISO-8601 format */
+    // todo txHistory uncomment
+/*
     @Json(name = "updatedAt")
     val updatedAt: String,
+*/
     // endregion
 
     // region fromAsset (fiat) info
