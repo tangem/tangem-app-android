@@ -313,7 +313,8 @@ internal class ExpressHistoryRepositoryTest {
         refundNetwork = null,
         refundContractAddress = null,
         createdAt = "2026-06-01T00:00:00Z",
-        updatedAt = "2026-06-01T00:05:00Z",
+        // todo txHistory uncomment
+        // updatedAt = "2026-06-01T00:05:00Z",
         payTill = null,
         averageDuration = null,
         fromContractAddress = "0xfromContract",
@@ -337,7 +338,8 @@ internal class ExpressHistoryRepositoryTest {
         externalTxUrl = null,
         payoutHash = "payout-hash",
         createdAt = "2026-06-01T00:00:00Z",
-        updatedAt = "2026-06-01T00:05:00Z",
+        // todo txHistory uncomment
+        // updatedAt = "2026-06-01T00:05:00Z",
         fromCurrencyCode = "USD",
         fromAmount = "100.0",
         fromPrecision = 2,
