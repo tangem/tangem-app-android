@@ -12,6 +12,7 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -539,6 +540,7 @@ internal class SwapTransferStateBuilderTest {
             txUrl = txUrl,
             timestamp = timestamp,
             onExplorerClick = {},
+            onShareClick = {},
         )
 
         val success = requireNotNull(result.successState)
@@ -666,6 +668,7 @@ internal class SwapTransferStateBuilderTest {
             dataState = dataState,
             fee = null,
             onExploreClick = onExploreClick,
+            onShareClick = {},
         )
         val after = System.currentTimeMillis()
 
@@ -686,7 +689,7 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.toTokenFiatAmount).isEqualTo(expectedFiat)
         assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
         assertThat(success.toTokenIconState).isEqualTo(toIcon)
-        assertThat(success.onExploreButtonClick).isEqualTo(onExploreClick)
+        assertThat((success.navigationUM as NavigationUM.Content).primaryButton.onClick).isEqualTo(onExploreClick)
 
         val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
         val expectedIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
@@ -769,7 +772,20 @@ internal class SwapTransferStateBuilderTest {
         )
     }
 
+    @Test
+    fun `GIVEN swap title state WHEN updateTransferTitle THEN only titleId becomes transfer`() {
+        // Arrange
+        val uiState = baseStateHolder()
+
+        // Act
+        val result = sut.updateTransferTitle(uiState)
+
+        // Assert
+        assertThat(result).isEqualTo(uiState.copy(titleId = R.string.common_transfer))
+    }
+
     private fun baseStateHolder(): SwapStateHolder = SwapStateHolder(
+        titleId = R.string.common_swap,
         sendCardData = SwapCardState.SwapCardData(
             appCurrency = AppCurrency.Default,
             type = TransactionCardType.Inputtable(

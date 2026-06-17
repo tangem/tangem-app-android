@@ -83,7 +83,7 @@ private fun SwapTopBar(stateHolder: SwapStateHolder) {
     var shouldShowModeMenu by rememberSaveable { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxWidth()) {
         AppBarWithBackButtonAndIcon(
-            text = stringResourceSafe(R.string.common_swap),
+            text = stringResourceSafe(stateHolder.titleId),
             backIconRes = R.drawable.ic_close_24,
             iconRes = if (stateHolder.shouldShowAbMenu) R.drawable.ic_more_vertical_24 else null,
             onIconClick = if (stateHolder.shouldShowAbMenu) {
