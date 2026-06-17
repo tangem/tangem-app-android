@@ -41,7 +41,7 @@ private const val REISSUING_CARD_BG = 0xFF1E1E1E
 
 @Composable
 internal fun TangemPayCardView(
-    isReissuing: Boolean,
+    isIssueInProgress: Boolean,
     isEnabled: Boolean,
     lastDigits: String,
     onClick: () -> Unit,
@@ -55,7 +55,7 @@ internal fun TangemPayCardView(
                 width = TangemTheme.dimens2.x14,
             )
             .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
-        isReissuing = isReissuing,
+        isIssueInProgress = isIssueInProgress,
         isEnabled = isEnabled,
         onClick = onClick,
     ) {
@@ -71,7 +71,7 @@ internal fun TangemPayCardView(
                 modifier = Modifier.size(TangemTheme.dimens2.x3),
                 imageVector = when {
                     isFrozen -> Icons.ic_snowflake_16
-                    isReissuing -> Icons.ic_clock_12
+                    isIssueInProgress -> Icons.ic_clock_12
                     else -> Icons.ic_cloud_12_filled
                 },
                 tint = TangemTheme.colors3.icon.staticDark,
@@ -122,14 +122,14 @@ internal fun TangemPayAddCardView(onClick: () -> Unit, modifier: Modifier = Modi
 @Suppress("MagicNumber")
 @Composable
 private fun CardBackground(
-    isReissuing: Boolean,
+    isIssueInProgress: Boolean,
     isEnabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val bgColor = remember(isReissuing) {
-        if (isReissuing) {
+    val bgColor = remember(isIssueInProgress) {
+        if (isIssueInProgress) {
             Color(REISSUING_CARD_BG)
         } else {
             Color(DEFAULT_CARD_BG)
@@ -151,9 +151,9 @@ private fun CardBackground(
                     brush = Brush.radialGradient(
                         colors = listOf(
                             Color(
-                                if (isReissuing) 0xFFB0B4BC else 0xFF38587F,
+                                if (isIssueInProgress) 0xFFB0B4BC else 0xFF38587F,
                             ).copy(
-                                if (isReissuing) .1f else .41f,
+                                if (isIssueInProgress) .1f else .41f,
                             ),
                             Color.Transparent,
                         ),
@@ -183,7 +183,7 @@ private fun CardBackgroundPreview() {
                     height = TangemTheme.dimens2.x10,
                     width = TangemTheme.dimens2.x14,
                 ),
-                isReissuing = false,
+                isIssueInProgress = false,
                 onClick = {},
                 content = {},
                 isEnabled = true,
@@ -194,14 +194,14 @@ private fun CardBackgroundPreview() {
                     height = TangemTheme.dimens2.x10,
                     width = TangemTheme.dimens2.x14,
                 ),
-                isReissuing = true,
+                isIssueInProgress = true,
                 onClick = {},
                 content = {},
                 isEnabled = true,
             )
             SpacerH(TangemTheme.dimens2.x4)
             TangemPayCardView(
-                isReissuing = false,
+                isIssueInProgress = false,
                 onClick = {},
                 lastDigits = "1234",
                 isEnabled = true,
@@ -209,7 +209,7 @@ private fun CardBackgroundPreview() {
             )
             SpacerH(TangemTheme.dimens2.x4)
             TangemPayCardView(
-                isReissuing = true,
+                isIssueInProgress = true,
                 onClick = {},
                 lastDigits = "",
                 isEnabled = true,
@@ -218,7 +218,13 @@ private fun CardBackgroundPreview() {
             SpacerH(TangemTheme.dimens2.x4)
             TangemPayAddCardView(onClick = {})
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234", isEnabled = true, isFrozen = true)
+            TangemPayCardView(
+                isIssueInProgress = false,
+                onClick = {},
+                lastDigits = "1234",
+                isEnabled = true,
+                isFrozen = true,
+            )
         }
     }
 }

@@ -6,12 +6,15 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.Order
+import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.domain.pay.util.OrderResolver
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 /**
@@ -33,8 +36,11 @@ import java.util.UUID
 class IssueAdditionalCardUseCase(
     private val customerOffersRepository: CustomerOffersRepository,
     private val customerOrderRepository: CustomerOrderRepository,
+    private val issueCardRepository: TangemPayIssueCardRepository,
+    private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+    private val appCoroutineScope: AppCoroutineScope,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, Result> = either {
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, Unit> = either {
         val offer = catch(
             block = {
                 customerOffersRepository.getOffers(userWalletId)
@@ -61,20 +67,18 @@ class IssueAdditionalCardUseCase(
             idempotencyKey = UUID.randomUUID().toString(),
         ).bind()
 
-        Result(order = order, offer = offer)
+        issueCardRepository.storeIssueOrderId(userWalletId = userWalletId, orderId = order.id)
+
+        appCoroutineScope.launch {
+            startTangemPayOrderPollingUseCase(
+                order = TangemPayOrderInfo(orderId = order.id, orderStatus = order.status),
+                userWalletId = userWalletId,
+            )
+        }
     }
 
     private fun Raise<VisaApiError>.handleError(throwable: Throwable): Nothing {
         TangemLogger.e("Error in IssueAdditionalCardUseCase", throwable)
         raise(VisaApiError.Unspecified)
     }
-
-    /**
-     * Outcome of a successful run.
-     *
-
-     * @property offer the offer that authorised issuance, carried back so the caller can show pricing
-     *   without an extra round trip.
-     */
-    data class Result(val order: Order, val offer: Offer)
 }

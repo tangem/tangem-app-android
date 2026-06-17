@@ -132,7 +132,7 @@ internal fun TangemPayDetailsScreen(
                     },
                 )
 
-                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuing } == true) {
+                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuingOrClosing } == true) {
                     item(
                         key = "REISSUE_MESSAGE",
                         content = {
@@ -328,7 +328,7 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
                 .alpha(if (card.isEnabled) 1f else DISABLED_ALPHA)
                 .fillMaxSize(),
             painter = painterResource(
-                if (card.isReissuing) {
+                if (card.isReissuingOrClosing) {
                     R.drawable.img_visa_card_inactive_48_32
                 } else {
                     R.drawable.img_visa_card_48_32
@@ -336,7 +336,7 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
             ),
             contentDescription = null,
         )
-        if (!card.isReissuing) {
+        if (!card.isReissuingOrClosing) {
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -485,16 +485,18 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             onClick = {},
-                            isReissuing = false,
+                            isReissuingOrClosing = false,
                             isEnabled = false,
                             isFrozen = false,
+                            isIssuing = false,
                         ),
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
                             onClick = {},
-                            isReissuing = false,
+                            isReissuingOrClosing = false,
                             isEnabled = true,
                             isFrozen = false,
+                            isIssuing = false,
                         ),
                     ),
                     onAddCardClick = {},
@@ -523,9 +525,10 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             onClick = {},
-                            isReissuing = true,
+                            isReissuingOrClosing = true,
                             isFrozen = false,
                             isEnabled = true,
+                            isIssuing = false,
                         ),
                     ),
                     onAddCardClick = {},

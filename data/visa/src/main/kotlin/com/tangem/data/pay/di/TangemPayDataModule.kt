@@ -77,6 +77,10 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
+    fun bindIssueCardRepository(repository: DefaultIssueCardRepository): TangemPayIssueCardRepository
+
+    @Binds
+    @Singleton
     fun bindTangemPayCryptoCurrencyFactory(factory: DefaultTangemPayCurrencyFactory): TangemPayCurrencyFactory
 
     @Binds
@@ -269,8 +273,17 @@ internal interface TangemPayDataModule {
         fun provideIssueAdditionalCardUseCase(
             customerOffersRepository: CustomerOffersRepository,
             customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
         ): IssueAdditionalCardUseCase {
-            return IssueAdditionalCardUseCase(customerOffersRepository, customerOrderRepository)
+            return IssueAdditionalCardUseCase(
+                customerOffersRepository = customerOffersRepository,
+                customerOrderRepository = customerOrderRepository,
+                issueCardRepository = issueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
         }
     }
 }

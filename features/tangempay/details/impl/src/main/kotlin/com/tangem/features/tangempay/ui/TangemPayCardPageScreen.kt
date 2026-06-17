@@ -207,6 +207,12 @@ private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
                 subtitle = resourceReference(R.string.tangempay_card_page_closing_banner_description),
             )
         }
+        TangemPayCardState.Issuing -> cardPageItem(key = "Issuing") {
+            TangemPayReplacingCardBlock(
+                title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
+                subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+            )
+        }
     }
 }
 
