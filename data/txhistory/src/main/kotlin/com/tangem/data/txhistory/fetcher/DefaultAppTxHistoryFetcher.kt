@@ -4,6 +4,8 @@ import androidx.annotation.VisibleForTesting
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.cancelScope
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.defaultLaunchIn
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTrigger
+import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
+import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -12,12 +14,14 @@ import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.fetcher.WalletTxHistoryFetcher
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 internal class DefaultAppTxHistoryFetcher @Inject constructor(
     private val utils: TxHistoryFetcherUtils,
+    private val expressRepository: ExpressRepository,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val selectedWalletUseCase: GetSelectedWalletUseCase,
     private val walletTxHistoryFetcherFactory: DefaultWalletTxHistoryFetcher.Factory,
@@ -25,6 +29,9 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val fetchers = ConcurrentHashMap<UserWalletId, WalletTxHistoryFetcher>()
+
+    /** Wallets whose express providers were already loaded — to load them at most once per wallet. */
+    private val providersLoadedWallets = mutableSetOf<UserWalletId>()
 
     init {
         defaultLaunchIn(buildFlow())
@@ -50,7 +57,7 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
         selectedWalletUseCase.selectedFlow()
             .filter { wallet -> wallet.isMultiCurrency }
             // todo txhistory some init trigger?
-            .onEach { }
+            .onEach { wallet -> loadExpressProviders(wallet) }
             .launchIn(this)
 
         walletsFlow
@@ -69,6 +76,14 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
                 }
             }
             .collect {}
+    }
+
+    private fun ProducerScope<*>.loadExpressProviders(wallet: UserWallet) {
+        // Load once per wallet: `add` returns false if this walletId was already loaded.
+        if (!providersLoadedWallets.add(wallet.walletId)) return
+        flow { emit(expressRepository.getProviders(userWallet = wallet, filterProviderTypes = emptyList())) }
+            .retryThreeTimes()
+            .launchIn(this)
     }
 
     private fun Flow<Set<UserWalletId>>.createForNewWallets() = onEach { ids -> ids.createForNewWallets() }
