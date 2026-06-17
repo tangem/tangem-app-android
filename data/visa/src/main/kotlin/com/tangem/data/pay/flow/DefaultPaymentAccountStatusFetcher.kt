@@ -53,6 +53,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val singleQuoteSupplier: SingleQuoteStatusSupplier,
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val issueCardRepository: TangemPayIssueCardRepository,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -360,13 +361,17 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
         if (tangemPayCards.isEmpty()) return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
 
+        // Additional-card issuance: the backend omits the new card until it is provisioned, so surface a
+        // placeholder for every locally tracked in-flight issuance order alongside the real cards.
+        val issuingCards = buildIssuingCards(userWalletId)
+
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = customerId,
             depositAddress = cryptoBalance.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             fiatRate = fiatRate,
-            cards = tangemPayCards,
+            cards = tangemPayCards + issuingCards,
             balance = PaymentAccountStatusValue.Balance(
                 fiatBalance = fiatBalance,
                 cryptoBalance = cryptoBalance,
@@ -398,6 +403,37 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             TangemPayCardState.Active
         }
     }
+
+    /**
+     * Builds the issuing placeholder cards from locally tracked additional-card orders. Each order is
+     * re-checked against the backend; terminal orders are dropped (and forgotten) because the real card
+     * is now part of [CustomerInfo], while in-flight orders surface as an issuing placeholder card.
+     */
+    private suspend fun buildIssuingCards(userWalletId: UserWalletId): List<TangemPayCard> {
+        val orderIds = issueCardRepository.getIssueOrderIds(userWalletId)
+        return orderIds.mapNotNull { orderId ->
+            val order = cardDetailsRepository.getOrderInfo(userWalletId, orderId).getOrNull()
+            if (order != null && order.orderStatus.isTerminal) {
+                issueCardRepository.removeIssueOrderId(userWalletId, orderId)
+                null
+            } else {
+                issuingPlaceholderCard(orderId)
+            }
+        }
+    }
+
+    /** Placeholder card for an additional card that is still being issued (no backend card yet). */
+    private fun issuingPlaceholderCard(orderId: String): TangemPayCard = TangemPayCard(
+        id = orderId,
+        productInstanceId = orderId,
+        cardStatus = TangemPayCard.Status.INACTIVE,
+        hasPinCode = false,
+        displayName = null,
+        limit = null,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
+        lastDigits = "",
+        state = TangemPayCardState.Issuing,
+    )
 
     private suspend fun VisaApiError.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         return when (this) {

@@ -158,11 +158,20 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
         }
     }
     when {
-        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuing } == true -> {
+        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuingOrClosing } == true -> {
             item("reissuingBannerBlock") {
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_reissue_card_in_progress),
+                    subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                )
+            }
+        }
+        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isIssuing } == true -> {
+            item("issuingBannerBlock") {
+                TangemMessage(
+                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
                     subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
                 )
             }
@@ -342,7 +351,7 @@ private fun CardsBlock(
     ) {
         items(items = cardsBlockState.cards) { item ->
             TangemPayCardView(
-                isReissuing = item.isReissuing,
+                isIssueInProgress = item.isIssuing || item.isReissuingOrClosing,
                 lastDigits = item.lastDigits,
                 onClick = item.onClick,
                 isEnabled = item.isEnabled,
