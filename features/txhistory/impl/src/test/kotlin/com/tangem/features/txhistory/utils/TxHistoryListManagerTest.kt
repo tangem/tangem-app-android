@@ -5,6 +5,7 @@ import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.TxHistoryListBatchFlow
 import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
@@ -223,6 +224,12 @@ internal class TxHistoryListManagerTest {
             generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
             batchFetcher = fetcher,
         ).toBatchFlow().also { batchFlow = it }
+
+        override fun getExpressHistory(
+            userWalletId: UserWalletId,
+            currency: CryptoCurrency,
+            fromCreatedAtMillis: Long,
+        ) = emptyFlow<List<ExpressTx>>()
 
         fun loadedItemsCount(): Int = batchFlow.state.value.data.sumOf { batch -> batch.data.items.size }
 

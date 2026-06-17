@@ -13,10 +13,12 @@ android {
 dependencies {
     /** Project - Domain */
     implementation(projects.domain.core)
+    api(projects.domain.express.models)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.visa.models)
 
     /** Project - Other */
     implementation(projects.core.utils)

@@ -1,9 +1,18 @@
 package com.tangem.data.txhistory.repository
 
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.common.converter.ExpressProviderConverter
+import com.tangem.data.txhistory.repository.converter.ExpressStatusMapper
+import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
+import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.domain.express.models.ExpressAsset
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.TxHistoryListBatchFlow
 import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
@@ -17,17 +26,95 @@ import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.*
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import org.joda.time.format.ISODateTimeFormat
 import javax.inject.Inject
 
 internal class RefactoredTxHistoryRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val txHistoryItemsStore: TxHistoryItemsStore,
+    private val expressHistoryDao: ExpressHistoryDao,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TxHistoryRepositoryV2 {
 
     private val sdkPageConverter = SdkPageConverter()
+    private val expressProviderConverter = ExpressProviderConverter()
+    private val swapConverter = ExpressSwapConverter()
+    private val onrampConverter = ExpressOnrampConverter()
     private val TxHistoryListConfig.storeKey get() = TxHistoryItemsStore.Key(userWalletId, currency)
+
+    override fun getExpressHistory(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        fromCreatedAtMillis: Long,
+    ): Flow<List<ExpressTx>> = flow {
+        val network = currency.network
+        val rawNetwork = network.rawId
+        val contract = (currency as? CryptoCurrency.Token)?.contractAddress
+            ?: ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
+
+        // bound filters the window directly in SQL. Generated in the same UTC/'Z' shape as stored values.
+        val fromCreatedAtIso = DateTime(fromCreatedAtMillis, DateTimeZone.UTC)
+            .toString(ISODateTimeFormat.dateTimeNoMillis())
+
+        val address = walletManagersFacade.getDefaultAddress(userWalletId, network).orEmpty()
+
+        val flow = combine(
+            flow = expressHistoryDao.observeOutgoingSwaps(
+                ownerAddress = address,
+                network = rawNetwork,
+                contract = contract,
+                fromCreatedAtIso = fromCreatedAtIso,
+                activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
+            ).distinctUntilChanged(),
+            flow2 = expressHistoryDao.observeIncomingSwaps(
+                network = rawNetwork,
+                contract = contract,
+                fromCreatedAtIso = fromCreatedAtIso,
+                activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
+            ).distinctUntilChanged(),
+            flow3 = expressHistoryDao.observeIncomingOnramps(
+                ownerAddress = address,
+                network = rawNetwork,
+                contract = contract,
+                fromCreatedAtIso = fromCreatedAtIso,
+                activeStatuses = ExpressStatusMapper.activeOnrampStatuses,
+            ).distinctUntilChanged(),
+            flow4 = expressHistoryDao.getProvidersById().distinctUntilChanged(),
+            transform = { outgoingSwaps, incomingSwaps, onramps, providers ->
+                buildList<ExpressTx> {
+                    fun String.expressProvider() = providers[this]?.let(expressProviderConverter::convert)
+                    outgoingSwaps.forEach { entity ->
+                        val input = ExpressSwapConverter.Input(
+                            entity = entity,
+                            provider = entity.providerId.expressProvider(),
+                            isOutgoing = true,
+                        )
+                        add(swapConverter.convert(input))
+                    }
+                    incomingSwaps.forEach { entity ->
+                        val input = ExpressSwapConverter.Input(
+                            entity = entity,
+                            provider = entity.providerId.expressProvider(),
+                            isOutgoing = false,
+                        )
+                        add(swapConverter.convert(input))
+                    }
+                    onramps.forEach { entity ->
+                        val input = ExpressOnrampConverter.Input(entity, entity.providerId.expressProvider())
+                        add(onrampConverter.convert(input))
+                    }
+                }
+                    // An exchange row may satisfy both swap queries only in degenerate cases;
+                    // keep the outgoing interpretation (added first).
+                    .distinctBy { it.txId }
+            },
+        )
+        emitAll(flow)
+    }.flowOn(dispatchers.io)
 
     override fun getTxHistoryBatchFlow(batchSize: Int, context: TxHistoryListBatchingContext): TxHistoryListBatchFlow {
         return BatchListSource(
