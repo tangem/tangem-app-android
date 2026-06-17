@@ -79,8 +79,11 @@ data class ExchangeItemResponse(
     val createdAt: String,
 
     /** Transaction last-update timestamp in ISO-8601 format */
+    // todo txHistory uncomment
+/*
     @Json(name = "updatedAt")
     val updatedAt: String,
+*/
 
     /** Pay-in expiration timestamp in ISO-8601 format */
     @Json(name = "payTill")
