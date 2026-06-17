@@ -223,8 +223,8 @@
   <string name="tangempay_newonboard_bottomright_body">Usala ovunque</string>
   <string name="tangempay_newonboard_bottomright_title">Solo 1% di FX-fee</string>
   <string name="tangempay_newonboard_title">Ottieni la tua carta Tangem Pay</string>
-  <string name="tangempay_newonboard_topleft_body">Paga ciò che vedi</string>
-  <string name="tangempay_newonboard_topleft_title">Nessuna commissione sugli acquisti, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topleft_title">Nessuna commissione sugli acquisti</string>
   <string name="tangempay_newonboard_topright_body">Nessuna sorpresa</string>
   <string name="tangempay_newonboard_topright_title">$0 al mese, \n$0 di ricarica</string>
   <string name="tangempay_onboarding_banner_description">Ottieni la tua carta virtuale Tangem Visa gratuita</string>
