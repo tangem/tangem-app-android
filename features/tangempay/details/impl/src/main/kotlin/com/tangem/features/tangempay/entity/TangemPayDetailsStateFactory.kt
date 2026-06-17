@@ -128,7 +128,6 @@ internal class TangemPayDetailsStateFactory(
         title = resourceReference(R.string.tangempay_temporarily_unavailable),
         subtitle = resourceReference(R.string.tangempay_service_unreachable_try_later),
         iconResId = R.drawable.img_attention_20,
-        iconTint = NotificationConfig.IconTint.Attention,
     )
 
     private fun createAccountDeactivatedConfig() = NotificationConfig(
@@ -149,7 +148,6 @@ internal class TangemPayDetailsStateFactory(
         title = resourceReference(R.string.tangempay_sync_needed_title),
         subtitle = resourceReference(R.string.tangempay_sync_needed_body),
         iconResId = R.drawable.img_attention_20,
-        iconTint = NotificationConfig.IconTint.Attention,
         buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(R.string.tangempay_sync_needed_button),
             onClick = intents::onRenewSession,
