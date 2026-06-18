@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.utils
 
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.txhistory.model.identityKey
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
@@ -97,12 +98,3 @@ private val TxHistoryListState.hasContent: Boolean
     get() = status !is PaginationStatus.None &&
         status !is PaginationStatus.InitialLoading &&
         status !is PaginationStatus.InitialLoadingError
-
-/**
- * Cross-batch identity of a tx: `txHash` alone is not enough because gasless flows surface several
- * events under the same on-chain hash (e.g. `GaslessFee` + `Transfer`). Pinning the [TxInfo.type]
- * keeps those legitimate sibling events apart while still collapsing the same event seen twice —
- * e.g. an Unconfirmed copy injected via `addRecentTransactions` and a Confirmed copy that arrives
- * in a later API batch.
- */
-private fun TxInfo.identityKey(): String = "$txHash|$type"
