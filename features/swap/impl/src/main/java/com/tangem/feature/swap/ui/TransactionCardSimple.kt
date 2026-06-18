@@ -177,7 +177,7 @@ private fun SimpleTransactionCardEmpty(
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
                         .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                        .testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
+                        .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
                 )
             }
             SecondarySmallButton(
@@ -239,7 +239,7 @@ private fun SimpleTransactionCardLoading(modifier: Modifier = Modifier) {
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
                         .defaultMinSize(minHeight = 20.dp, minWidth = 40.dp)
-                        .testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
+                        .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
                 )
             }
             SecondarySmallButton(
