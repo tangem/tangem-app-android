@@ -8,10 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -23,8 +25,20 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.R
 
 internal val InterFamily = FontFamily(
-    Font(R.font.inter_regular),
-    Font(R.font.inter_italic, style = FontStyle.Italic),
+    interVariable(FontWeight.Normal),
+    interVariable(FontWeight.Medium),
+    interVariable(FontWeight.SemiBold),
+    interVariable(FontWeight.Normal, FontStyle.Italic),
+    interVariable(FontWeight.Medium, FontStyle.Italic),
+    interVariable(FontWeight.SemiBold, FontStyle.Italic),
+)
+
+@OptIn(ExperimentalTextApi::class)
+private fun interVariable(weight: FontWeight, style: FontStyle = FontStyle.Normal): Font = Font(
+    resId = if (style == FontStyle.Italic) R.font.inter_italic else R.font.inter_regular,
+    weight = weight,
+    style = style,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
 )
 
 @Suppress("LargeClass")
