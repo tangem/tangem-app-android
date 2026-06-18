@@ -70,9 +70,12 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
-        TangemPayCardDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
+        is TangemPayCardDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
+            params = TangemPayChangePinComponent.Params(
+                card = config.card,
+                userWalletId = params.initialStatus.userWalletId,
+            ),
         )
         TangemPayCardDetailsInnerRoute.ChangePINSuccess -> TangemPayChangePinSuccessComponent(
             appComponentContext = childByContext(
