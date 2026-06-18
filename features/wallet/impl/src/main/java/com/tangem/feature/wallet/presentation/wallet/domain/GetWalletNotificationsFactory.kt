@@ -255,9 +255,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
         addCloreMigrationNotification(userWallet, flattenCurrencies, clickIntents)
 
-        if (!userWallet.isMultiCurrency) {
-            addNoAccountWarning(cryptoCurrencyStatus = flattenCurrencies.firstOrNull())
-        }
+        addNoAccountWarning(cryptoCurrencyStatus = flattenCurrencies.firstOrNull())
 
         addIf(
             element = WalletNotificationUM.NumberOfSignedHashesIncorrect(
