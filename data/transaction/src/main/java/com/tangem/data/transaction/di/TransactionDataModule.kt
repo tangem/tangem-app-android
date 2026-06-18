@@ -96,7 +96,7 @@ internal object TransactionDataModule {
             gaslessTxServiceApiV2 = gaslessTxServiceApiV2,
             // Single master toggle for the whole gasless v2 protocol (+ yield-withdraw batch).
             isGaslessV2Enabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.AND_13688_GASLESS_YIELD_WITHDRAW_ENABLED,
+                toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
             coroutineDispatcherProvider = coroutineDispatcherProvider,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
