@@ -10,15 +10,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,9 +37,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefres
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.components.topFade
-import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
+import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds.message.TangemMessageEffect
@@ -179,7 +180,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
         else -> {
             if (state.errorNotificationConfig != null) {
                 item("errorSessionBannerBlock") {
-                    TangemMessage(
+                    ErrorMessage(
                         config = state.errorNotificationConfig,
                         modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     )
@@ -195,7 +196,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             }
             if (state.accountDeactivatedNotificationConfig != null) {
                 item("deactivationBannerBlock") {
-                    DeactivationBannerBlock(notificationConfig = state.accountDeactivatedNotificationConfig)
+                    ErrorMessage(state.accountDeactivatedNotificationConfig)
                 }
             }
         }
@@ -203,24 +204,47 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
 }
 
 @Composable
-private fun DeactivationBannerBlock(notificationConfig: NotificationConfig) {
-    val removeAccountButton = notificationConfig.buttonsState as? NotificationConfig.ButtonsState.SecondaryButtonConfig
+private fun ErrorMessage(config: NotificationConfig, modifier: Modifier = Modifier) {
+    val button = config.buttonsState
     TangemMessage(
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
-        title = notificationConfig.title,
-        subtitle = notificationConfig.subtitle,
-        messageEffect = TangemMessageEffect.Warning,
-        buttons = removeAccountButton?.let { button ->
+        modifier = modifier,
+        title = config.title,
+        subtitle = config.subtitle,
+        trailingContent = config.iconResId.takeIf { it != 0 }?.let { iconRes ->
             {
-                PrimaryInverseTangemButton(
-                    text = button.text,
-                    onClick = button.onClick,
-                    size = TangemButtonSize.X9,
-                    shape = TangemButtonShape.Rounded,
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = ImageVector.vectorResource(iconRes),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.primary,
+                )
+            }
+        },
+        buttons = (button as? NotificationConfig.ButtonsState.SecondaryButtonConfig)?.let {
+            {
+                val iconResId = button.iconResId
+                TangemButton(
+                    buttonUM = TangemButtonUM(
+                        text = button.text,
+                        onClick = button.onClick,
+                        iconPosition = TangemButtonIconPosition.End,
+                        tangemIconUM = if (iconResId != null) {
+                            TangemIconUM.Icon(
+                                iconRes = iconResId,
+                                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                            )
+                        } else {
+                            null
+                        },
+                        size = TangemButtonSize.X9,
+                        type = TangemButtonType.Primary,
+                        shape = TangemButtonShape.Rounded,
+                    ),
                     modifier = Modifier.weight(1f),
                 )
             }
         },
+        messageEffect = TangemMessageEffect.Warning,
     )
 }
 
