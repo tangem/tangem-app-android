@@ -1,5 +1,6 @@
-package com.tangem.domain.wallets.usecase
+package com.tangem.feature.wallet.presentation.wallet.domain
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.demo.models.DemoConfig
@@ -9,8 +10,10 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class HasSingleWalletSignedHashesUseCase(
+@ModelScoped
+class HasSingleWalletSignedHashesUseCase @Inject constructor(
     private val cardRepository: CardRepository,
     private val walletManagersFacade: WalletManagersFacade,
 ) {
@@ -25,16 +28,11 @@ class HasSingleWalletSignedHashesUseCase(
                     return@map false
                 }
 
-                val signedHashes = userWallet.scanResponse.card.wallets
-                    .firstOrNull()
-                    ?.totalSignedHashes
-                    ?: 0
-
                 return@map try {
                     walletManagersFacade.validateSignatureCount(
                         userWalletId = userWallet.walletId,
                         network = network,
-                        signedHashes = signedHashes,
+                        signedHashes = userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes ?: 0,
                     )
                         .fold(
                             ifLeft = { true },
