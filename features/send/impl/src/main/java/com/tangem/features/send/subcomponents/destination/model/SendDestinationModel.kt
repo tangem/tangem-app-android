@@ -2,6 +2,7 @@ package com.tangem.features.send.subcomponents.destination.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
@@ -12,12 +13,15 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -48,6 +52,7 @@ import com.tangem.features.send.subcomponents.destination.model.transformers.Sen
 import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationValidationStartedTransformer
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -58,6 +63,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
 @Stable
@@ -79,6 +85,9 @@ internal class SendDestinationModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
+    private val sendDestinationAlertFactory: SendDestinationAlertFactory,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -94,6 +103,8 @@ internal class SendDestinationModel @Inject constructor(
     private val senderAddresses = MutableStateFlow<List<CryptoCurrencyAddress>>(emptyList())
 
     private val validationJobHolder = JobHolder()
+
+    private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
         configDestinationNavigation()
@@ -288,17 +299,41 @@ internal class SendDestinationModel @Inject constructor(
         }
     }
 
+    private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
+        backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
+
+        return getBackupProblematicWalletForAddressUseCase(address)
+            .also { backupProblematicWalletCache.set(address to it) }
+    }
+
+    private fun contactBackupSupport(userWalletId: UserWalletId) {
+        modelScope.launch { sendBackupProblemEmailUseCase(userWalletId) }
+    }
+
     private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {
         modelScope.launch {
             _uiState.update(SendDestinationValidationStartedTransformer)
 
-            val addressValidationResult = validateWalletAddressUseCase(
+            var addressValidationResult = validateWalletAddressUseCase(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
                 address = address,
                 senderAddresses = senderAddresses.value,
                 allowSelfSend = params.isAllowSelfSend,
             )
+
+            if (addressValidationResult.isRight()) {
+                val problematicWalletId = resolveBackupProblematicWallet(address)
+                if (problematicWalletId != null) {
+                    addressValidationResult = AddressValidation.Error.RecipientWalletBackupError.left()
+                    if (type != null) {
+                        sendDestinationAlertFactory.showRecipientBackupErrorAlert(
+                            onContactSupport = { contactBackupSupport(problematicWalletId) },
+                        )
+                    }
+                }
+            }
+
             val memoValidationResult = validateWalletMemoUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,

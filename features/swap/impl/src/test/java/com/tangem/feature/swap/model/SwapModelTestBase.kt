@@ -16,8 +16,10 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -101,6 +103,8 @@ internal abstract class SwapModelTestBase {
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
     protected val setSwapUiModeUseCase: SetSwapUiModeUseCase = mockk(relaxed = true)
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
+    protected val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk(relaxed = true)
+    protected val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
 
     private val chooseTokenBridgeFactory: ChooseTokenBridge.Factory = mockk(relaxed = true)
     private val getUserCountryUseCase: GetUserCountryUseCase = mockk(relaxed = true)
@@ -171,6 +175,8 @@ internal abstract class SwapModelTestBase {
         getSwapUiModeUseCase = getSwapUiModeUseCase,
         setSwapUiModeUseCase = setSwapUiModeUseCase,
         calculateAmountUseCase = calculateAmountUseCase,
+        isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
     )
 
     // region builders

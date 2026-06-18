@@ -12,9 +12,12 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
@@ -23,9 +26,9 @@ import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")
 class TokenActionsHandler @AssistedInject constructor(
@@ -39,6 +42,8 @@ class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
     @Assisted private val coroutineScope: CoroutineScope,
     private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val messageSender: UiMessageSender,
 ) {
 
@@ -47,6 +52,8 @@ class TokenActionsHandler @AssistedInject constructor(
     }
 
     fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: CryptoCurrencyData) {
+        if (isTopUpBlockedByBackupError(action, cryptoCurrencyData.userWallet)) return
+
         onHandleQuickAction(
             HandledQuickAction(
                 action = action,
@@ -78,6 +85,21 @@ class TokenActionsHandler @AssistedInject constructor(
             TokenActionsBSContentUM.Action.Stake -> onStakeClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.YieldMode -> onYieldModeClick(cryptoCurrencyData)
         }
+    }
+
+    private fun isTopUpBlockedByBackupError(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
+        val isBlockedAction = action == TokenActionsBSContentUM.Action.Buy ||
+            action == TokenActionsBSContentUM.Action.Receive ||
+            action == TokenActionsBSContentUM.Action.Exchange
+        if (!isBlockedAction) return false
+        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+
+        messageSender.send(
+            Dialogs.backupErrorAddFundsDisabled(
+                onContactSupport = { coroutineScope.launch { sendBackupProblemEmailUseCase(userWallet.walletId) } },
+            ),
+        )
+        return true
     }
 
     private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {

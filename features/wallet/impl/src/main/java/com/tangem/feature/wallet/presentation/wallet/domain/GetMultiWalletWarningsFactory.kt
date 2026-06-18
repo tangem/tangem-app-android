@@ -13,6 +13,7 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
 import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
@@ -56,7 +57,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
-    private val backupValidator: BackupValidator,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
@@ -118,6 +119,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val isAddFundsBannerShown = isAddFundsBannerVisible(accountStatusList.totalFiatBalance)
 
                 buildList {
+                    addBackupErrorNotification(userWallet, clickIntents)
+
                     addUsedOutdatedDataNotification(accountStatusList.totalFiatBalance)
 
                     addAddFundsBanner(
@@ -126,7 +129,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         clickIntents = clickIntents,
                     )
 
-                    addCriticalNotifications(userWallet, clickIntents)
+                    addCriticalNotifications(userWallet)
 
                     addUpgradeHotWalletPromoNotification(
                         userWallet = userWallet,
@@ -270,20 +273,22 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addCriticalNotifications(
+    private fun MutableList<WalletNotification>.addBackupErrorNotification(
         userWallet: UserWallet,
         clickIntents: WalletClickIntents,
     ) {
+        addIf(
+            element = WalletNotification.Critical.BackupError { clickIntents.onBackupErrorClick() },
+            condition = isWalletBackupProblematicUseCase(userWallet),
+        )
+    }
+
+    private fun MutableList<WalletNotification>.addCriticalNotifications(userWallet: UserWallet) {
         if (userWallet !is UserWallet.Cold) {
             return
         }
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
-        addIf(
-            element = WalletNotification.Critical.BackupError { clickIntents.onBackupErrorClick() },
-            condition = !backupValidator.isValidBackupStatus(userWallet.scanResponse.card) || userWallet.hasBackupError,
-        )
-
         addIf(
             element = WalletNotification.Critical.DevCard,
             condition = !cardTypesResolver.isReleaseFirmwareType(),

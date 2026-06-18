@@ -17,4 +17,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.feedback.models)
+
+    /** Testing libraries */
+    testImplementation(projects.test.core)
 }

@@ -1,6 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.card.repository.CardRepository
@@ -31,6 +33,16 @@ internal object CardDomainModule {
     @Provides
     @Singleton
     fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig)
+
+    @Provides
+    @Singleton
+    fun provideBackupValidator(): BackupValidator = BackupValidator()
+
+    @Provides
+    @Singleton
+    fun provideIsWalletBackupProblematicUseCase(backupValidator: BackupValidator): IsWalletBackupProblematicUseCase {
+        return IsWalletBackupProblematicUseCase(backupValidator = backupValidator)
+    }
 
     @Provides
     @Singleton

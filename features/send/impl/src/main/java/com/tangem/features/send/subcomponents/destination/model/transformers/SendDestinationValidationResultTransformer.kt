@@ -24,14 +24,7 @@ internal class SendDestinationValidationResultTransformer(
         val isValidAddress = addressValidationResult.isRight()
         val isValidMemo = shouldDisableMemo || memoValidationResult.isRight()
 
-        val addressErrorText = addressValidationResult.mapLeft { error ->
-            when (error) {
-                is AddressValidation.Error.DataError,
-                AddressValidation.Error.InvalidAddress,
-                -> R.string.send_recipient_address_error
-                AddressValidation.Error.AddressInWallet -> R.string.send_error_address_same_as_wallet
-            }
-        }.leftOrNull()
+        val addressErrorText = resolveAddressErrorText()
 
         val blockchainAddress =
             (addressValidationResult.getOrNull() as? AddressValidation.Success.ValidNamedAddress)?.blockchainAddress
@@ -60,6 +53,16 @@ internal class SendDestinationValidationResultTransformer(
             isRecentHidden = isValidAddress,
         )
     }
+
+    private fun resolveAddressErrorText(): Int? = addressValidationResult.mapLeft { error ->
+        when (error) {
+            is AddressValidation.Error.DataError,
+            AddressValidation.Error.InvalidAddress,
+            -> R.string.send_recipient_address_error
+            AddressValidation.Error.AddressInWallet -> R.string.send_error_address_same_as_wallet
+            AddressValidation.Error.RecipientWalletBackupError -> R.string.warning_backup_error_add_funds_message
+        }
+    }.leftOrNull()
 
     private fun buildMemoField(
         memoField: DestinationTextFieldUM.RecipientMemo?,

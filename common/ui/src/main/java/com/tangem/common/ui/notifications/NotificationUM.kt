@@ -41,6 +41,15 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(R.string.send_notification_invalid_amount_text),
         )
 
+        data class DestinationBackupError(val onContactSupport: () -> Unit) : Error(
+            title = resourceReference(R.string.warning_backup_error_add_funds_title),
+            subtitle = resourceReference(R.string.warning_backup_error_add_funds_message),
+            buttonState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_contact_support),
+                onClick = onContactSupport,
+            ),
+        )
+
         data class MinimumAmountError(val amount: String) : Error(
             title = resourceReference(R.string.send_notification_invalid_amount_title),
             subtitle = resourceReference(

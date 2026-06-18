@@ -31,6 +31,8 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.offramp)
     implementation(projects.domain.demo)
+    implementation(projects.domain.card)
+    implementation(projects.domain.feedback)
 
     implementation(deps.lifecycle.compose)
     implementation(deps.compose.foundation)

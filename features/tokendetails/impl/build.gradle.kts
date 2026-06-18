@@ -68,6 +68,7 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.dynamicAddresses.models)
+    implementation(projects.domain.feedback)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)

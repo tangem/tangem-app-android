@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import android.content.Context
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import dagger.Module
@@ -35,5 +36,17 @@ internal object FeedbackDomainModule {
     @Singleton
     fun provideSaveBlockchainErrorUseCase(feedbackRepository: FeedbackRepository): SaveBlockchainErrorUseCase {
         return SaveBlockchainErrorUseCase(feedbackRepository = feedbackRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSendBackupProblemEmailUseCase(
+        getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+        sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    ): SendBackupProblemEmailUseCase {
+        return SendBackupProblemEmailUseCase(
+            getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
+            sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
+        )
     }
 }
