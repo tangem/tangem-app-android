@@ -53,9 +53,13 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         return real.getPin(userWalletId, cardId)
     }
 
-    override suspend fun setPin(userWalletId: UserWalletId, pin: String): Either<UniversalError, SetPinResult> {
+    override suspend fun setPin(
+        userWalletId: UserWalletId,
+        cardId: String,
+        pin: String,
+    ): Either<UniversalError, SetPinResult> {
         if (isMockMode) return SetPinResult.SUCCESS.right()
-        return real.setPin(userWalletId, pin)
+        return real.setPin(userWalletId, cardId, pin)
     }
 
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> =
