@@ -42,6 +42,7 @@ import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
@@ -51,6 +52,7 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(

@@ -11,4 +11,8 @@ class DefaultDesignFeatureToggles @Inject constructor(
 
     override val isRedesignEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.APP_REDESIGN_ENABLED)
+
+    override val isWarningsRefactoringEnabled: Boolean
+        get() = isRedesignEnabled &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_14829_WARNINGS_REFACTORING_ENABLED)
 }

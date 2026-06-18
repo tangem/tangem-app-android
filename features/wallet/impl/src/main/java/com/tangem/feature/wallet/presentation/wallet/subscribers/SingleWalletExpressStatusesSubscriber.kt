@@ -10,6 +10,7 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetExpressStatusesTransformer
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -18,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 @Suppress("LongParameterList")
 internal class SingleWalletExpressStatusesSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,

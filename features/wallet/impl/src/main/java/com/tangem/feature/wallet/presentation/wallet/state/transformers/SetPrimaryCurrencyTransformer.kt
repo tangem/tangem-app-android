@@ -9,9 +9,11 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletMarketPriceConverter
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 internal class SetPrimaryCurrencyTransformer(
     private val userWallet: UserWallet,
     private val status: CryptoCurrencyStatus,

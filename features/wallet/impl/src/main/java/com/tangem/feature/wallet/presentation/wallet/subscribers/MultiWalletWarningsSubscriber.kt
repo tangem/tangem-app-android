@@ -10,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 internal class MultiWalletWarningsSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val stateController: WalletStateController,
