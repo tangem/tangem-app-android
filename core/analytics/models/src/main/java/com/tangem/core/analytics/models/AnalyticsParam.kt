@@ -71,6 +71,7 @@ sealed class AnalyticsParam {
     @Serializable
     enum class ScreensSources(val value: String) {
         Settings("Settings"),
+        CardSettings("Card Settings"),
         Main("Main"),
         SignIn("Sign In"),
         Send("Send"),
