@@ -3,7 +3,6 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
-import com.tangem.core.ui.test.AddFundsBottomSheetTestTags
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.test.MarketsTestTags
@@ -38,7 +37,7 @@ class AddFundsBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractions
     }
 
     val closeButton: KNode = child {
-        hasTestTag(AddFundsBottomSheetTestTags.CLOSE_BUTTON)
+        hasTestTag(BaseBottomSheetTestTags.CLOSE_BUTTON)
         useUnmergedTree = true
     }
 
