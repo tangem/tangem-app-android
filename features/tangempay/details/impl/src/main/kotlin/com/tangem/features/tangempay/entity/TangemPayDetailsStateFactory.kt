@@ -95,8 +95,8 @@ internal class TangemPayDetailsStateFactory(
             addToWalletBlockState = null,
             errorNotificationConfig = when (status.error) {
                 null -> null
-                PaymentAccountStatusValue.Error.NotSynced -> createRenewSessionNotificationConfig()
-                else -> createAccountUnavailableConfig()
+                PaymentAccountStatusValue.Error.NotSynced -> createRenewSessionNotificationConfig(isRedesignEnabled)
+                else -> createAccountUnavailableConfig(isRedesignEnabled)
             },
             accountDeactivatedNotificationConfig = null,
         )
@@ -121,20 +121,20 @@ internal class TangemPayDetailsStateFactory(
             isBalanceHidden = false,
             addToWalletBlockState = null,
             errorNotificationConfig = null,
-            accountDeactivatedNotificationConfig = createAccountDeactivatedConfig(),
+            accountDeactivatedNotificationConfig = createAccountDeactivatedConfig(isRedesignEnabled),
         )
     }
 
-    private fun createAccountUnavailableConfig() = NotificationConfig(
+    private fun createAccountUnavailableConfig(isRedesignEnabled: Boolean) = NotificationConfig(
         title = resourceReference(R.string.tangempay_temporarily_unavailable),
         subtitle = resourceReference(R.string.tangempay_service_unreachable_try_later),
-        iconResId = R.drawable.img_attention_20,
+        iconResId = if (isRedesignEnabled) R.drawable.ic_alert_circle_24 else R.drawable.img_attention_20,
     )
 
-    private fun createAccountDeactivatedConfig() = NotificationConfig(
+    private fun createAccountDeactivatedConfig(isRedesignEnabled: Boolean) = NotificationConfig(
         title = resourceReference(R.string.tangempay_account_deactivated_message_title),
         subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
-        iconResId = R.drawable.img_attention_20,
+        iconResId = if (isRedesignEnabled) R.drawable.ic_alert_circle_24 else R.drawable.img_attention_20,
         buttonsState = if (isRemoveAccountEnabled) {
             NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.tangempay_remove_account),
@@ -145,13 +145,14 @@ internal class TangemPayDetailsStateFactory(
         },
     )
 
-    private fun createRenewSessionNotificationConfig() = NotificationConfig(
+    private fun createRenewSessionNotificationConfig(isRedesignEnabled: Boolean) = NotificationConfig(
         title = resourceReference(R.string.tangempay_sync_needed_title),
         subtitle = resourceReference(R.string.tangempay_sync_needed_body),
-        iconResId = R.drawable.img_attention_20,
+        iconResId = if (isRedesignEnabled) 0 else R.drawable.img_attention_20,
         buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(R.string.tangempay_sync_needed_button),
             onClick = intents::onRenewSession,
+            iconResId = R.drawable.ic_tangem_24,
         ),
     )
 
