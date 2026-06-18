@@ -78,14 +78,6 @@ interface TokenDetailsClickIntents {
 
     fun onYieldInfoClick()
 
-    // region Wallet card warnings
-
-    fun onSupportClick()
-
-    fun onCloseSignedHashesWarning()
-
-    // endregion Wallet card warnings
-
     // region Clore migration
     // TODO: Remove after 2025-04-01 when Clore migration ends ([REDACTED_TASK_KEY])
 
@@ -168,10 +160,6 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onTransactionClick(txHash: String) { /* no op */ }
 
     override fun onCloseRentInfoNotification() { /* no op */ }
-
-    override fun onSupportClick() { /* no op */ }
-
-    override fun onCloseSignedHashesWarning() { /* no op */ }
 
     override fun onRetryIncompleteTransactionClick() { /* no op */ }
 
