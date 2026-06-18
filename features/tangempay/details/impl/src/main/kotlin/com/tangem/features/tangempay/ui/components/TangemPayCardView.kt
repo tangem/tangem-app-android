@@ -38,6 +38,7 @@ import com.tangem.core.ui.test.TangemPayTestTags
 
 private const val DEFAULT_CARD_BG = 0xFF1C1F29
 private const val REISSUING_CARD_BG = 0xFF1E1E1E
+private const val DISABLED_ALPHA = 0.5f
 
 @Composable
 internal fun TangemPayCardView(
@@ -98,16 +99,17 @@ internal fun TangemPayCardView(
 }
 
 @Composable
-internal fun TangemPayAddCardView(onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TangemPayAddCardView(onClick: () -> Unit, isEnabled: Boolean, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
+            .alpha(if (isEnabled) 1f else DISABLED_ALPHA)
             .size(
                 height = TangemTheme.dimens2.x10,
                 width = TangemTheme.dimens2.x14,
             )
             .clip(RoundedCornerShape(6.dp))
             .background(TangemTheme.colors3.bg.opaque.primary)
-            .clickableSingle(onClick = onClick),
+            .clickableSingle(onClick = onClick, enabled = isEnabled),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -138,7 +140,7 @@ private fun CardBackground(
 
     Box(
         modifier = modifier
-            .alpha(if (isEnabled) 1f else 0.5f)
+            .alpha(if (isEnabled) 1f else DISABLED_ALPHA)
             .clip(RoundedCornerShape(6.dp))
             .drawBehind {
                 drawRect(bgColor)
@@ -216,7 +218,7 @@ private fun CardBackgroundPreview() {
                 isFrozen = false,
             )
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayAddCardView(onClick = {})
+            TangemPayAddCardView(onClick = {}, isEnabled = true)
             SpacerH(TangemTheme.dimens2.x4)
             TangemPayCardView(
                 isIssueInProgress = false,
