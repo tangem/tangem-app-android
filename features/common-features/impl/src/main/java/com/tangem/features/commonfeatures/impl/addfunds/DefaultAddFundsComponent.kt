@@ -21,7 +21,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
-import com.tangem.core.ui.test.AddFundsBottomSheetTestTags
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.commonfeatures.impl.addfunds.model.AddFundsModel
@@ -201,7 +201,7 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
             },
             endContent = {
                 TangemButton(
-                    modifier = Modifier.testTag(AddFundsBottomSheetTestTags.CLOSE_BUTTON),
+                    modifier = Modifier.testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
                     iconStart = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_close_24),
                     onClick = onCloseClick,
                     size = TangemButton.Size.X11,
