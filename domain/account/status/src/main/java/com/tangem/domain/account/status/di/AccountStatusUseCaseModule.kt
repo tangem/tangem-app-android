@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.express.ExpressServiceFetcher
@@ -24,6 +25,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -47,6 +49,20 @@ internal object AccountStatusUseCaseModule {
             userWalletsListRepository = userWalletsListRepository,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             singleAccountListSupplier = singleAccountListSupplier,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetBackupProblematicWalletForAddressUseCase(
+        getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
+        getUserWalletUseCase: GetUserWalletUseCase,
+        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    ): GetBackupProblematicWalletForAddressUseCase {
+        return GetBackupProblematicWalletForAddressUseCase(
+            getAccountCurrencyByAddressUseCase = getAccountCurrencyByAddressUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
+            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
         )
     }
 
