@@ -304,10 +304,11 @@ private fun CardsBlockRow(
             TangemPayCardItem(modifier = itemsModifier, card = card)
         }
         TangemIconButton(
-            modifier = itemsModifier,
+            modifier = itemsModifier.alpha(if (cardsBlockState.isAddCardEnabled) 1f else DISABLED_ALPHA),
             onClick = cardsBlockState.onAddCardClick,
             iconRes = R.drawable.ic_plus_24,
             shape = RoundedCornerShape(4.dp),
+            enabled = cardsBlockState.isAddCardEnabled,
         )
     }
 }
@@ -500,6 +501,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         ),
                     ),
                     onAddCardClick = {},
+                    isAddCardEnabled = true,
                 ),
             ),
             isBalanceHidden = false,
@@ -532,6 +534,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         ),
                     ),
                     onAddCardClick = {},
+                    isAddCardEnabled = true,
                 ),
             ),
             isBalanceHidden = false,
