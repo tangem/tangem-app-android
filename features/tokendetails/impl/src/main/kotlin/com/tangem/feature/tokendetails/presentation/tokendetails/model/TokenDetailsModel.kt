@@ -53,6 +53,8 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.models.StatusSource
@@ -159,6 +161,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
     private val openTrustlineUseCase: OpenTrustlineUseCase,
@@ -588,6 +592,7 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
+        if (isTopUpBlockedByBackupError()) return
 
         val status = cryptoCurrencyStatus ?: return
         modelScope.launch {
@@ -710,6 +715,7 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
+        if (isTopUpBlockedByBackupError()) return
 
         modelScope.launch {
             if (needShowYieldSupplyWarning()) {
@@ -824,6 +830,7 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
+        if (isTopUpBlockedByBackupError()) return
 
         modelScope.launch {
             if (checkYieldSupply && needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
@@ -1197,6 +1204,19 @@ internal class TokenDetailsModel @Inject constructor(
         dialogFactory.showError(text = unavailabilityReason.getUnavailabilityReasonText())
 
         return true
+    }
+
+    private fun isTopUpBlockedByBackupError(): Boolean {
+        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+
+        dialogFactory.showBackupError(onContactSupport = ::contactBackupSupport)
+        return true
+    }
+
+    private fun contactBackupSupport() {
+        modelScope.launch {
+            sendBackupProblemEmailUseCase(userWallet.walletId)
+        }
     }
 
     private fun openStaking() {
