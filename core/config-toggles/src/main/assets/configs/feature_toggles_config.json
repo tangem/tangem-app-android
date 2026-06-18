@@ -156,6 +156,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
     }
