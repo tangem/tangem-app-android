@@ -2,11 +2,14 @@ package com.tangem.features.feed.ui.market.detailed.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,6 +22,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.TooltipText
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -89,8 +93,19 @@ private fun InfoPointV1(infoPointUM: InfoPointUM, modifier: Modifier = Modifier)
 
 @Composable
 private fun InfoPointV2(infoPointUM: InfoPointUM, modifier: Modifier = Modifier) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
-        modifier = modifier.padding(vertical = TangemTheme.dimens.spacing8),
+        modifier = modifier
+            .conditional(
+                condition = infoPointUM.onInfoClick != null,
+                modifier = {
+                    clickable(
+                        interactionSource = interactionSource,
+                        onClick = { infoPointUM.onInfoClick?.invoke() },
+                    )
+                },
+            )
+            .padding(vertical = TangemTheme.dimens.spacing8),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {

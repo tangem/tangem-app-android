@@ -2,6 +2,7 @@ package com.tangem.features.feed.ui.market.detailed.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -81,7 +82,7 @@ private fun SecurityScoreBlockV1(state: SecurityScoreUM, modifier: Modifier = Mo
 @Composable
 private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Modifier) {
     TokenMarketInformationBlock(
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = state.onInfoClick),
         title = {
             TangemRowContainer(contentPadding = PaddingValues()) {
                 Text(
