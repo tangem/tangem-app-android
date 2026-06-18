@@ -11,4 +11,7 @@ internal class DefaultTxHistoryFeatureToggles @Inject constructor(
 
     override val isSolanaTxHistoryEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.SOLANA_TX_HISTORY_ENABLED)
+
+    override val isNewTxHistoryEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15767_NEW_TX_HISTORY_ENABLED)
 }

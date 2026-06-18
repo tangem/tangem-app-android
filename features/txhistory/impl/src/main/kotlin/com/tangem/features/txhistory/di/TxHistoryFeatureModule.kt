@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.di
 
+import com.tangem.features.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.DefaultTxHistoryComponent
 import com.tangem.features.txhistory.component.DefaultTxHistoryDetailsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -17,6 +18,10 @@ internal interface TxHistoryFeatureModule {
     @Binds
     @Singleton
     fun bindComponentFactory(factory: DefaultTxHistoryComponent.Factory): TxHistoryComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTxHistoryFeatureToggle(impl: DefaultTxHistoryFeatureToggles): TxHistoryFeatureToggles
 
     @Binds
     @Singleton
