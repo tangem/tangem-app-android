@@ -222,6 +222,14 @@ private fun TokenDetailsBody(
         item(key = "yield_supply_block") {
             yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x3))
         }
+        tokenDetailsUM.quickTopUpBlock?.let { quickTopUpBlock ->
+            item(key = "quick_top_up_block") {
+                QuickTopUpBlock(
+                    state = quickTopUpBlock,
+                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x0),
+                )
+            }
+        }
         if (balance is TokenDetailsBalanceBlockUM.Content && balance.isBalanceZero) {
             item(key = "zero_balance_actions") {
                 ZeroBalanceActionsBlock(
@@ -235,14 +243,6 @@ private fun TokenDetailsBody(
                 state = expressTransactionsToDisplay,
                 modifier = expressTransactionModifier,
             )
-        }
-        tokenDetailsUM.quickTopUpBlock?.let { quickTopUpBlock ->
-            item(key = "quick_top_up_block") {
-                QuickTopUpBlock(
-                    state = quickTopUpBlock,
-                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x0),
-                )
-            }
         }
         with(txHistoryComponent) {
             txHistoryContent(listState = listState, state = txHistoryState)
