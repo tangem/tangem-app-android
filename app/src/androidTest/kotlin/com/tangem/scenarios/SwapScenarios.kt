@@ -323,6 +323,7 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
         }
     }
     step("Click on 'Apply' button") {
+        waitForIdle()
         onSendFeeSelectorBottomSheet { applyButton.performClick() }
     }
 }
