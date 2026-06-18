@@ -25,4 +25,17 @@ internal class SendDestinationAlertFactory @Inject constructor(
             ),
         )
     }
+
+    fun showRecipientBackupErrorAlert(onContactSupport: () -> Unit) {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.warning_backup_error_add_funds_title),
+                message = resourceReference(id = R.string.warning_backup_error_add_funds_message),
+                firstAction = EventMessageAction(
+                    title = resourceReference(R.string.common_contact_support),
+                    onClick = onContactSupport,
+                ),
+            ),
+        )
+    }
 }
