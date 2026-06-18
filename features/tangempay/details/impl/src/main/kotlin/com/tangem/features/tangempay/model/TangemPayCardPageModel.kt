@@ -379,10 +379,10 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickChangePIN(isPinSet: Boolean) {
+        val card = selectedCard() ?: return
         if (!isPinSet) {
-            router.push(TangemPayCardDetailsInnerRoute.ChangePIN)
+            router.push(TangemPayCardDetailsInnerRoute.ChangePIN(card))
         } else {
-            val card = selectedCard() ?: return
             bottomSheetNavigation.activate(
                 TangemPayCardNavigation.ViewPinCode(
                     userWalletId = userWalletId,
@@ -551,7 +551,8 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onClickChangePin() {
         bottomSheetNavigation.dismiss()
-        router.push(TangemPayCardDetailsInnerRoute.ChangePIN)
+        val card = selectedCard() ?: return
+        router.push(TangemPayCardDetailsInnerRoute.ChangePIN(card))
     }
 
     override fun onDismissViewPin() {
