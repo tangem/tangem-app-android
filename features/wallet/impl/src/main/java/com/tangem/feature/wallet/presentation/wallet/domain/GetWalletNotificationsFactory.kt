@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
 import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
@@ -44,7 +45,7 @@ import javax.inject.Inject
 internal class GetWalletNotificationsFactory @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
-    private val backupValidator: BackupValidator,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
@@ -167,7 +168,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
             element = WalletNotificationUM.BackupError { clickIntents.onSupportClick() },
-            condition = !backupValidator.isValidBackupStatus(userWallet.scanResponse.card) || userWallet.hasBackupError,
+            condition = isWalletBackupProblematicUseCase(userWallet),
         )
 
         addIf(

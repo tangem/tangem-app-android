@@ -56,6 +56,7 @@ dependencies {
     implementation(projects.domain.express.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.card)
     implementation(projects.domain.visa)
     implementation(projects.domain.markets)
     implementation(projects.domain.swap)
