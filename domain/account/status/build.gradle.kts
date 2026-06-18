@@ -12,6 +12,7 @@ android {
 }
 dependencies {
     api(projects.domain.account)
+    api(projects.domain.card)
     api(projects.domain.core)
     api(projects.domain.common)
     api(projects.domain.express)
