@@ -13,7 +13,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -169,7 +168,7 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
     when (feeType) {
         FeeType.Market -> {
             step("Click on 'Market' item") {
-                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.performClick() }
+                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.clickWithAssertion() }
             }
             step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
                 onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
@@ -177,57 +176,12 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
         }
         FeeType.Fast -> {
             step("Click on 'Fast' item") {
-                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.performClick() }
+                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.clickWithAssertion() }
             }
             step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
                 onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
             }
         }
-    }
-}
-
-fun BaseTestCase.selectFeeTypeWithGasless(feeType: FeeType, selectedFeeAmount: String) {
-    step("Click on 'Select fee' icon") {
-        onSwapTokenScreen { selectFeeIcon.performClick() }
-    }
-
-    when (feeType) {
-        FeeType.Market -> selectMarketFee(selectedFeeAmount)
-        FeeType.Fast -> selectFastFee(selectedFeeAmount)
-    }
-}
-
-private fun BaseTestCase.selectMarketFee(selectedFeeAmount: String) {
-    step("Deselect current fee and select 'Market'") {
-        onSwapSelectNetworkFeeBottomSheet {
-            if (fastSelectorItem.isDisplayedSafely()) {
-                fastSelectorItem.performClick()
-            }
-            marketSelectorItem.performClick()
-        }
-    }
-    step("Click on 'Apply' button") {
-        onSwapSelectNetworkFeeBottomSheet { applyButton.performClick() }
-    }
-    step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
-        onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
-    }
-}
-
-private fun BaseTestCase.selectFastFee(selectedFeeAmount: String) {
-    step("Deselect current fee and select 'Fast'") {
-        onSwapSelectNetworkFeeBottomSheet {
-            if (marketSelectorItem.isDisplayedSafely()) {
-                marketSelectorItem.performClick()
-            }
-            fastSelectorItem.performClick()
-        }
-    }
-    step("Click on 'Apply' button") {
-        onSwapSelectNetworkFeeBottomSheet { applyButton.performClick() }
-    }
-    step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
-        onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
     }
 }
 

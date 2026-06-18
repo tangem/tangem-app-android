@@ -600,17 +600,23 @@ class SwapTokenScreenTest : BaseTestCase() {
         val feeAmount = "$"
         val scenarioName = "eth_network_balance"
         val scenarioState = "LessThanDollar"
+        val pairsScenarioName = "ethereum_from_pairs"
+        val pairsScenarioState = "DexProvider"
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(scenarioName)
+                resetWireMockScenarioState(pairsScenarioName)
             }
         ).run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+            step("Set WireMock scenario: '$pairsScenarioName' to state: $pairsScenarioState") {
+                setWireMockScenarioState(scenarioName = pairsScenarioName, state = pairsScenarioState)
             }
 
             step("Open 'Main Screen'") {
@@ -679,6 +685,8 @@ class SwapTokenScreenTest : BaseTestCase() {
         val marketFeeAmount = "$1."
         val scenarioName = "eth_fee_history"
         val scenarioState = "UnableToCoverFastFee"
+        val pairsScenarioName = "ethereum_from_pairs"
+        val pairsScenarioState = "DexProvider"
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
@@ -686,11 +694,15 @@ class SwapTokenScreenTest : BaseTestCase() {
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(scenarioName)
+                resetWireMockScenarioState(pairsScenarioName)
             }
         ).run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+            step("Set WireMock scenario: '$pairsScenarioName' to state: $pairsScenarioState") {
+                setWireMockScenarioState(scenarioName = pairsScenarioName, state = pairsScenarioState)
             }
 
             step("Open 'Main Screen'") {
@@ -728,7 +740,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Select '$fastFeeType' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeTypeWithGasless(feeType = FeeType.Fast, fastFeeAmount)
+                    selectFeeType(feeType = FeeType.Fast, selectedFeeAmount = fastFeeAmount)
                 }
             }
             step("Assert fee amount is equal to '$fastFeeType' fee:'$fastFeeAmount'") {
@@ -744,7 +756,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Select '$marketFeeType' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeTypeWithGasless(feeType = FeeType.Market, marketFeeAmount)
+                    selectFeeType(feeType = FeeType.Market, selectedFeeAmount = marketFeeAmount)
                 }
             }
             step("Assert 'Swap' button is enabled") {
