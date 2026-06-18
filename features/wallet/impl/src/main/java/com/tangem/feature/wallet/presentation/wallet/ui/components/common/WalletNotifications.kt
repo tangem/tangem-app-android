@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.ForceDarkTheme
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.WalletNotificationTestTags
 import com.tangem.feature.wallet.impl.R
@@ -64,6 +65,16 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                         iconTint = TangemTheme.colors.icon.accent,
                         subtitleColor = TangemTheme.colors.text.secondary,
+                    )
+                }
+                is WalletNotification.Critical.BackupError -> {
+                    Notification(
+                        config = item.config,
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        containerColor = TangemColorPalette.Amaranth_30,
+                        borderColor = TangemColorPalette.Amaranth,
+                        iconTint = TangemTheme.colors.icon.warning,
+                        subtitleColor = TangemTheme.colors.text.primary1,
                     )
                 }
                 is WalletNotification.CreateTangemPayAccount -> {
