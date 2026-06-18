@@ -1,36 +1,29 @@
 package com.tangem.features.commonfeatures.impl.addfunds
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
+import com.tangem.core.ui.components.bottomsheets.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
-import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.AddFundsBottomSheetTestTags
 import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
-import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addfunds.model.AddFundsModel
 import com.tangem.features.commonfeatures.impl.addfunds.model.uiSpec
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
@@ -195,15 +188,24 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
             title = route.uiSpec().title,
             type = TangemTopBarType.BottomSheet,
             startContent = if (canGoBack) {
-                { CircleIconButton(iconRes = CoreR.drawable.ic_arrow_back_28, onClick = onBackClick) }
+                {
+                    TangemButton(
+                        iconStart = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_arrow_back_28),
+                        onClick = onBackClick,
+                        size = TangemButton.Size.X11,
+                        variant = TangemButton.Variant.Material,
+                    )
+                }
             } else {
                 null
             },
             endContent = {
-                CircleIconButton(
-                    iconRes = R.drawable.ic_close_24,
-                    onClick = onCloseClick,
+                TangemButton(
                     modifier = Modifier.testTag(AddFundsBottomSheetTestTags.CLOSE_BUTTON),
+                    iconStart = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_close_24),
+                    onClick = onCloseClick,
+                    size = TangemButton.Size.X11,
+                    variant = TangemButton.Variant.Material,
                 )
             },
         )
@@ -216,23 +218,6 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
         } else {
             content()
         }
-    }
-
-    @Composable
-    private fun CircleIconButton(iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
-        Icon(
-            imageVector = ImageVector.vectorResource(id = iconRes),
-            contentDescription = null,
-            tint = TangemTheme.colors2.graphic.neutral.primary,
-            modifier = modifier
-                .size(TangemTheme.dimens2.x11)
-                .background(
-                    color = TangemTheme.colors2.button.backgroundSecondary,
-                    shape = CircleShape,
-                )
-                .clickableSingle(onClick = onClick)
-                .padding(TangemTheme.dimens2.x2),
-        )
     }
 
     @AssistedFactory
