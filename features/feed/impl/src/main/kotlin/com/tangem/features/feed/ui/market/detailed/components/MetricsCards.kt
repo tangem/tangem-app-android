@@ -41,6 +41,7 @@ import com.tangem.features.feed.ui.market.detailed.state.TrendingVolumeLiquidity
 @Composable
 internal fun MarketCapCard(item: InfoPointUMV2.MarketCap) {
     MetricsCard(
+        onClick = item.onInfoClick,
         modifier = Modifier
             .heightIn(104.dp)
             .fillMaxWidth(),
@@ -68,6 +69,7 @@ internal fun TradingVolumeCard(item: InfoPointUMV2.TradingVolume) {
         modifier = Modifier
             .heightIn(104.dp)
             .fillMaxWidth(),
+        onClick = item.onInfoClick,
         title = {
             Row {
                 MetricValueText(item.tradingValue)
@@ -113,6 +115,7 @@ internal fun MarketPositionCard(item: InfoPointUMV2.MarketPosition) {
         modifier = Modifier
             .heightIn(104.dp)
             .fillMaxWidth(),
+        onClick = item.onInfoClick,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 MarketPositionValue(position = item.position, ratingColor = ratingColor)
@@ -151,6 +154,7 @@ internal fun FDVCard(item: InfoPointUMV2.FullyDilutedValuation) {
         modifier = Modifier
             .heightIn(104.dp)
             .fillMaxWidth(),
+        onClick = item.onInfoClick,
         title = {
             if (item.fullyDilutedValuationChange24 != null) {
                 Row {
