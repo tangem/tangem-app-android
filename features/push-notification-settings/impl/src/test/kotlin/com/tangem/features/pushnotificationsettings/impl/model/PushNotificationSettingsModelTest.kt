@@ -286,14 +286,14 @@ class PushNotificationSettingsModelTest {
     }
 
     private fun allFalse() = WalletPushNotificationPreferences(
-        transactionAlerts = PushNotificationPreference(isEnabled = false, isVisible = true),
-        offersUpdates = PushNotificationPreference(isEnabled = false, isVisible = true),
-        priceAlerts = PushNotificationPreference(isEnabled = false, isVisible = true),
+        transactionAlerts = PushNotificationPreference(isEnabled = false),
+        offersUpdates = PushNotificationPreference(isEnabled = false),
+        priceAlerts = PushNotificationPreference(isEnabled = false),
     )
 
     private fun anyOn() = WalletPushNotificationPreferences(
-        transactionAlerts = PushNotificationPreference(isEnabled = true, isVisible = true),
-        offersUpdates = PushNotificationPreference(isEnabled = false, isVisible = true),
-        priceAlerts = PushNotificationPreference(isEnabled = false, isVisible = true),
+        transactionAlerts = PushNotificationPreference(isEnabled = true),
+        offersUpdates = PushNotificationPreference(isEnabled = false),
+        priceAlerts = PushNotificationPreference(isEnabled = false),
     )
 }
