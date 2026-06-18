@@ -189,6 +189,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val swapFiatAmount: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
     }
 
     val swapSelectTokenIcon: KNode = child {

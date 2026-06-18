@@ -62,6 +62,9 @@ When the user asks to **port** an iOS test to Android:
 
 ### Test class shape
 
+- **Test method names are camelCase and always end with `Test`** (e.g. `groupTokensTest()`,
+  `renameWalletTest()`). Never use `snake_case` and never the unit-test `GIVEN … WHEN … THEN …`
+  backtick phrasing — that GWT convention is for JVM unit tests only, not instrumentation tests.
 - **Scenario state setup goes in the test body**, not inside the open-the-feature helper. Each test
   starts with explicit `step("Set WireMock scenario '$name' to '$state'") { setWireMockScenarioState(name, state) }`
   calls, then calls a thin helper (e.g. `openTangemPay()`) that only opens the screen. Mirror the
