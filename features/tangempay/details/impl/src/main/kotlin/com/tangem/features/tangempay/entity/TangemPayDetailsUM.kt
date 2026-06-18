@@ -90,7 +90,12 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
-    data class CardsBlockState(val cards: ImmutableList<Card>, val onAddCardClick: () -> Unit)
+    data class CardsBlockState(
+        val cards: ImmutableList<Card>,
+        val onAddCardClick: () -> Unit,
+        val isAddCardEnabled: Boolean,
+    )
+
     data class Card(
         val lastDigits: String,
         val onClick: () -> Unit,

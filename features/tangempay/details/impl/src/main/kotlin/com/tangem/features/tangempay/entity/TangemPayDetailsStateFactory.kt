@@ -47,6 +47,7 @@ internal class TangemPayDetailsStateFactory(
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = persistentListOf(),
                     onAddCardClick = intents::onAddCardClick,
+                    isAddCardEnabled = false,
                 ),
             ),
             isBalanceHidden = false,
@@ -58,11 +59,6 @@ internal class TangemPayDetailsStateFactory(
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
         val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
-        val errorNotificationConfig = when (status.error) {
-            null -> null
-            PaymentAccountStatusValue.Error.NotSynced -> createRenewSessionNotificationConfig()
-            else -> createAccountUnavailableConfig()
-        }
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -75,7 +71,7 @@ internal class TangemPayDetailsStateFactory(
                 onRefresh = intents::onRefreshSwipe,
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
-                actionButtons = getActionButtonsConfig(isEnabled = errorNotificationConfig == null && hasUnfrozenCard),
+                actionButtons = getActionButtonsConfig(isEnabled = status.error == null && hasUnfrozenCard),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .let { if (isMultipleCardsEnabled) it else it.take(1) }
@@ -85,18 +81,23 @@ internal class TangemPayDetailsStateFactory(
                                 onClick = { intents.onCardClick(cardItem.id) },
                                 isReissuingOrClosing = cardItem.state == TangemPayCardState.Reissuing ||
                                     cardItem.state == TangemPayCardState.Closing,
-                                isEnabled = errorNotificationConfig == null,
+                                isEnabled = status.error == null,
                                 isFrozen = cardItem.isFrozen,
                                 isIssuing = cardItem.state == TangemPayCardState.Issuing,
                             )
                         }
                         .toImmutableList(),
                     onAddCardClick = intents::onAddCardClick,
+                    isAddCardEnabled = status.error == null,
                 ),
             ),
             isBalanceHidden = false,
             addToWalletBlockState = null,
-            errorNotificationConfig = errorNotificationConfig,
+            errorNotificationConfig = when (status.error) {
+                null -> null
+                PaymentAccountStatusValue.Error.NotSynced -> createRenewSessionNotificationConfig()
+                else -> createAccountUnavailableConfig()
+            },
             accountDeactivatedNotificationConfig = null,
         )
     }
