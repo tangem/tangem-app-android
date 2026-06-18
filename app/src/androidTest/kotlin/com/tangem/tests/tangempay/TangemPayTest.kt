@@ -6,9 +6,9 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
-import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.resetWireMockScenarioState
+import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.tangempay.*
@@ -23,7 +23,7 @@ class TangemPayTest : BaseTestCase() {
     @AllureId("4549")
     @DisplayName("Tangem Pay: change PIN code from card details")
     @Test
-    fun changePin_SetsNewPinCode_FromCardDetails() {
+    fun changePinSetsNewPinCodeFromCardDetailsTest() {
         val newPin = "5217"
         val pinSetupScenario = "tangem_pay_pin_setup"
         val pinNotSetState = "PinNotSet"
@@ -31,6 +31,7 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
+                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(pinSetupScenario, pinNotSetState)
             },
@@ -67,7 +68,7 @@ class TangemPayTest : BaseTestCase() {
     @AllureId("4969")
     @DisplayName("Tangem Pay: balance updates after transaction on payment account screen")
     @Test
-    fun balanceUpdatesAfterTransaction_OnPaymentAccountScreen() {
+    fun balanceUpdatesAfterTransactionOnPaymentAccountScreenTest() {
         val balanceScenario = "tangem_pay_balance_update"
         val initialState = "InitialBalance"
         val afterTransactionState = "AfterTransaction"
@@ -75,6 +76,7 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
+                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, initialState)
             },
@@ -90,7 +92,7 @@ class TangemPayTest : BaseTestCase() {
             step("Switch WireMock scenario '$balanceScenario' to '$afterTransactionState'") {
                 setWireMockScenarioState(balanceScenario, afterTransactionState)
             }
-            step("Pull to refresh") { pullToRefresh() }
+            step("Pull to refresh") { pullToRefreshTangemPay() }
             step("Assert updated balance contains '9'") {
                 onTangemPayMainScreen { balance.assertTextContainsSafe("9", substring = true) }
             }
@@ -100,7 +102,7 @@ class TangemPayTest : BaseTestCase() {
     @AllureId("4970")
     @DisplayName("Tangem Pay: new transaction appears after mocked charge")
     @Test
-    fun transactionList_NewTransactionAppears_AfterMockedCharge() {
+    fun transactionListNewTransactionAppearsAfterMockedChargeTest() {
         val historyScenario = "tangem_pay_transaction_history"
         val initialState = "InitialEmpty"
         val afterTransactionState = "AfterTransaction"
@@ -109,6 +111,7 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
+                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(historyScenario, initialState)
             },
@@ -126,7 +129,7 @@ class TangemPayTest : BaseTestCase() {
             step("Switch WireMock scenario '$historyScenario' to '$afterTransactionState'") {
                 setWireMockScenarioState(historyScenario, afterTransactionState)
             }
-            step("Pull to refresh") { pullToRefresh() }
+            step("Pull to refresh") { pullToRefreshTangemPay() }
             step("Assert transaction from '$merchantName' is displayed") {
                 onTangemPayMainScreen {
                     transactionRowWithText(merchantName).assertIsDisplayed()
@@ -138,12 +141,13 @@ class TangemPayTest : BaseTestCase() {
     @AllureId("4974")
     @DisplayName("Tangem Pay: reveal and copy card number, expiration and CVC")
     @Test
-    fun revealAndCopyCardDetails_NumberExpirationCVC() {
+    fun revealAndCopyCardDetailsNumberExpirationCVCTest() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val eligibilityState = "PaeraCustomer"
 
         setupHooks(
             additionalBeforeSection = {
+                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
             },
             additionalAfterSection = {
@@ -200,13 +204,14 @@ class TangemPayTest : BaseTestCase() {
     @AllureId("4971")
     @DisplayName("Tangem Pay: freeze card via confirmation sheet")
     @Test
-    fun freezeUnfreezeCard_TogglesCardState() {
+    fun freezeUnfreezeCardTogglesCardStateTest() {
         val freezeScenario = "tangem_pay_card_freeze"
         val startedState = "Started"
         val eligibilityState = "PaeraCustomer"
 
         setupHooks(
             additionalBeforeSection = {
+                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(freezeScenario, startedState)
             },
