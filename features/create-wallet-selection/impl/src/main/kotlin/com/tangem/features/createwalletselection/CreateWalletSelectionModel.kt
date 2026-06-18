@@ -100,7 +100,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onHardwareWalletClick() {
-        router.push(AppRoute.CreateHardwareWallet)
+        router.push(AppRoute.CreateHardwareWallet(source = AnalyticsParam.ScreensSources.AddNew))
     }
 
     private fun onBuyClick() {

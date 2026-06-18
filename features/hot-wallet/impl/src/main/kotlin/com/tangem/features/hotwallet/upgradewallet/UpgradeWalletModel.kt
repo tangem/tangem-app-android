@@ -117,7 +117,7 @@ internal class UpgradeWalletModel @Inject constructor(
             tangemSdkManager
                 .scanProduct(
                     shouldCheckIsAlreadyActivated = true,
-                    source = AnalyticsParam.ScreensSources.Upgrade,
+                    source = AnalyticsParam.ScreensSources.CreateWallet,
                 )
                 .doOnSuccess { scanResponse ->
                     checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {

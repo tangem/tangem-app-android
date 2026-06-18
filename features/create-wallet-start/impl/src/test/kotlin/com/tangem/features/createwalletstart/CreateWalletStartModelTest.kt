@@ -112,7 +112,7 @@ internal class CreateWalletStartModelTest {
         }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
                 shouldCheckIsAlreadyActivated = true,
                 cardId = null,
                 onProgressStateChange = any(),
@@ -141,7 +141,7 @@ internal class CreateWalletStartModelTest {
         }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
                 shouldCheckIsAlreadyActivated = true,
                 cardId = null,
                 onProgressStateChange = any(),
@@ -258,7 +258,7 @@ internal class CreateWalletStartModelTest {
         verify { cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = true) }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
                 shouldCheckIsAlreadyActivated = true,
                 cardId = null,
                 onProgressStateChange = any(),
