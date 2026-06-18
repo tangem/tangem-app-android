@@ -14,19 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.ds.button.*
@@ -35,6 +34,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.NotificationTestTags
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -337,7 +337,7 @@ private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
             isLoading = buttonState.shouldShowProgress,
             modifier = Modifier.weight(1f),
         )
-        is ButtonsState.SecondaryButtonConfig -> PrimaryInverseTangemButton(
+        is ButtonsState.SecondaryButtonConfig -> SecondaryTangemButton(
             text = buttonState.text,
             tangemIconUM = buttonState.iconResId?.let {
                 TangemIconUM.Icon(
