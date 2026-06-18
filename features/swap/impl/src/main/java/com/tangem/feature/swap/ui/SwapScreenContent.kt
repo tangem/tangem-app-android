@@ -14,12 +14,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -50,6 +53,9 @@ import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.receiveCard
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.sendCard
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
+
+private const val KEYBOARD_AUTOHIDE_DELAY_MS = 5_000L
 
 @Suppress("LongMethod")
 @Composable
@@ -140,7 +146,27 @@ internal fun SwapScreenContent(
                     )
                 }
             }
+
+            AutohideKeyboardEffect(
+                sendCardState = state.sendCardData,
+            )
         }
+    }
+}
+
+@Composable
+private fun AutohideKeyboardEffect(sendCardState: SwapCardState) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val swapCardData = sendCardState as? SwapCardState.SwapCardData
+
+    LaunchedEffect(swapCardData?.amountField?.value) {
+        if (swapCardData == null) return@LaunchedEffect
+
+        delay(KEYBOARD_AUTOHIDE_DELAY_MS)
+
+        focusManager.clearFocus()
+        keyboardController?.hide()
     }
 }
 
