@@ -360,7 +360,10 @@ private fun CardsBlock(
             SpacerW(TangemTheme.dimens2.x2)
         }
         item {
-            TangemPayAddCardView(onClick = cardsBlockState.onAddCardClick)
+            TangemPayAddCardView(
+                onClick = cardsBlockState.onAddCardClick,
+                isEnabled = cardsBlockState.isAddCardEnabled,
+            )
         }
     }
 }
