@@ -40,6 +40,7 @@ fun TangemIconButton(
     @DrawableRes iconRes: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     shape: RoundedCornerShape = RoundedCornerShape(24.dp),
     background: Color = TangemTheme.colors.button.secondary,
     iconTint: Color = TangemTheme.colors.icon.secondary,
@@ -52,7 +53,7 @@ fun TangemIconButton(
         modifier = modifier
             .size(24.dp)
             .clip(shape)
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick, enabled = enabled)
             .background(background)
             .padding(innerPadding),
     )
