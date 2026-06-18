@@ -387,7 +387,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    object CreateHardwareWallet : AppRoute(path = "/create_hardware_wallet")
+    data class CreateHardwareWallet(
+        val source: AnalyticsParam.ScreensSources,
+    ) : AppRoute(path = "/create_hardware_wallet")
 
     @Serializable
     data class CreateMobileWallet(
