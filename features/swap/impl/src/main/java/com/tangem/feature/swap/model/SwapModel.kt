@@ -35,6 +35,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
@@ -42,6 +43,7 @@ import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -49,6 +51,7 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -149,6 +152,8 @@ internal class SwapModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -471,6 +476,12 @@ internal class SwapModel @Inject constructor(
         val selectedUserWallet = result.wallet
         val selectedCurrencyStatus = result.currency
         val selectedAccount = result.account.account
+
+        if (!isFromDirection && isWalletBackupProblematicUseCase(selectedUserWallet)) {
+            router.pop()
+            showBackupErrorAlert(selectedUserWallet.walletId)
+            return
+        }
 
         val (fromSwapCurrencyStatus, toSwapCurrencyStatus) = if (isFromDirection) {
             SwapCurrencyStatus(
@@ -1858,6 +1869,14 @@ internal class SwapModel @Inject constructor(
                     title = resourceReference(id = R.string.common_ok),
                     onClick = {},
                 ),
+            ),
+        )
+    }
+
+    private fun showBackupErrorAlert(userWalletId: UserWalletId) {
+        messageSender.send(
+            Dialogs.backupErrorAddFundsDisabled(
+                onContactSupport = { modelScope.launch { sendBackupProblemEmailUseCase(userWalletId) } },
             ),
         )
     }
