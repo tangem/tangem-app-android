@@ -1,5 +1,6 @@
 package com.tangem.features.commonfeatures.impl.addfunds.model
 
+import androidx.compose.runtime.Immutable
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -267,6 +268,7 @@ internal class AddFundsModel @Inject constructor(
         routeStack.update { it + route }
     }
 
+    @Immutable
     sealed interface UiRoute {
         data object Loading : UiRoute
         data object ChooseToken : UiRoute
