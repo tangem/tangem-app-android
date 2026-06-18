@@ -63,10 +63,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.card.SetCardWasScannedUseCase
-import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
@@ -102,7 +98,6 @@ import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
-import com.tangem.feature.tokendetails.domain.GetWalletCardWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
@@ -128,7 +123,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.transform
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateStakingNotificationTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateNotificationsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateWalletCardWarningsTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
@@ -161,10 +155,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
-    private val getWalletCardWarningsUseCase: GetWalletCardWarningsUseCase,
-    private val setCardWasScannedUseCase: SetCardWasScannedUseCase,
-    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
@@ -433,20 +423,13 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
-            combine(
-                flow = getCurrencyWarningsUseCase(
-                    userWalletId = userWalletId,
-                    currencyStatus = cryptoCurrencyStatus,
-                    derivationPath = cryptoCurrency.network.derivationPath,
-                ),
-                flow2 = getWalletCardWarningsUseCase(
-                    userWallet = userWallet,
-                    network = cryptoCurrency.network,
-                ),
-                transform = ::Pair,
+            getCurrencyWarningsUseCase(
+                userWalletId = userWalletId,
+                currencyStatus = cryptoCurrencyStatus,
+                derivationPath = cryptoCurrency.network.derivationPath,
             )
                 .distinctUntilChanged()
-                .onEach { (warnings, cardWarnings) ->
+                .onEach { warnings ->
                     val updatedState = stateFactory.getStateWithNotifications(warnings)
                     notificationsAnalyticsSender.send(uiState.value, updatedState.notifications)
                     uiState.value = updatedState
@@ -454,12 +437,6 @@ internal class TokenDetailsModel @Inject constructor(
                     redesignStateController.update(
                         UpdateNotificationsTransformer(
                             warnings = warnings,
-                            clickIntents = this@TokenDetailsModel,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateWalletCardWarningsTransformer(
-                            walletCardWarnings = cardWarnings,
                             clickIntents = this@TokenDetailsModel,
                         ),
                     )
@@ -1030,21 +1007,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onCloseRentInfoNotification() {
         uiState.value = stateFactory.getStateWithRemovedRentNotification()
-    }
-
-    override fun onSupportClick() {
-        modelScope.launch {
-            val metaInfo = getWalletMetaInfoUseCase(userWalletId).getOrNull() ?: return@launch
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
-        }
-    }
-
-    override fun onCloseSignedHashesWarning() {
-        modelScope.launch {
-            (userWallet as? UserWallet.Cold)?.let { coldWallet ->
-                setCardWasScannedUseCase(cardId = coldWallet.cardId)
-            }
-        }
     }
 
     override fun onCopyAddress(): TextReference? {
