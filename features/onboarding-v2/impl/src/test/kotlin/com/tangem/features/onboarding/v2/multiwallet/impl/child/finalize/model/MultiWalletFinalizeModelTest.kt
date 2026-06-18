@@ -6,6 +6,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -97,6 +98,7 @@ internal class MultiWalletFinalizeModelTest {
         every { backupService.backupCardsBatchIds } returns listOf(NON_RING_BATCH_ID, NON_RING_BATCH_ID)
         every { backupService.currentState } returns BackupService.State.FinalizingPrimaryCard
         coEvery { onboardingRepository.saveUnfinishedFinalizeOnboarding(any()) } just Runs
+        every { backupValidator.isValidBackupStatus(any()) } returns true
     }
 
     @Test
@@ -427,9 +429,7 @@ internal class MultiWalletFinalizeModelTest {
                 startFromFinalize = OnboardingMultiWalletState.FinalizeStage.ScanBackupFirstCard,
             )
             every { backupService.currentState } returns BackupService.State.FinalizingBackupCard(index = 1)
-
-            mockkConstructor(BackupValidator::class)
-            every { anyConstructed<BackupValidator>().isValidBackupStatus(any()) } returns true
+            every { backupValidator.isValidBackupStatus(any()) } returns true
 
             val card: Card = mockk(relaxed = true)
             val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
@@ -453,8 +453,6 @@ internal class MultiWalletFinalizeModelTest {
             Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice2, state.step)
             Assertions.assertEquals("backup-2-cccc".lastMaskedExpected(), state.cardNumber)
             Assertions.assertTrue(events.contains(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded))
-
-            unmockkConstructor(BackupValidator::class)
         }
 
     private fun String.lastMaskedExpected(): String {

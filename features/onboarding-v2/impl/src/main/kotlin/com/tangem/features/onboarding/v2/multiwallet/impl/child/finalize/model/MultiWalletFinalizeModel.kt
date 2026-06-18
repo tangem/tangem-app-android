@@ -12,6 +12,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -212,7 +213,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    val backupValidator = BackupValidator()
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
                         hasWalletBackupError = true
                     }
