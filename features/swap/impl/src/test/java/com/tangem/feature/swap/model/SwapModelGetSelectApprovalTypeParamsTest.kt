@@ -2,6 +2,7 @@ package com.tangem.feature.swap.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
@@ -41,7 +42,7 @@ internal class SwapModelGetSelectApprovalTypeParamsTest : SwapModelTestBase() {
     @Test
     fun `GIVEN provider state is not QuotesLoadedState THEN returns null`() {
         val provider = swapProvider()
-        val notLoaded: SwapState.EmptyAmountState = mockk(relaxed = true)
+        val notLoaded = SwapState.EmptyAmountState(zeroAmountEquivalent = TextReference.EMPTY)
         val model = createModel()
         model.dataState = model.dataState.copy(
             fromSwapCurrencyStatus = swapCurrencyStatus(),

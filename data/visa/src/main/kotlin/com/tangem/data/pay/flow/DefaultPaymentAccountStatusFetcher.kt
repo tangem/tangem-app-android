@@ -40,6 +40,18 @@ import kotlin.time.Duration.Companion.minutes
 
 private const val TAG = "PaymentAccountStatusFetcher"
 
+/**
+ * Reorders cards to match [previousOrder] (by [TangemPayCard.id]), appending any card absent from it at the
+ * end while preserving the relative order among the new ones. Keeps the card layout stable when the backend
+ * reorders `productInstances` (e.g. after a rename bumps `updated_at`). Returns the receiver unchanged when
+ * [previousOrder] is empty (first load → backend order).
+ */
+internal fun List<TangemPayCard>.stableOrder(previousOrder: List<String>): List<TangemPayCard> {
+    if (previousOrder.isEmpty()) return this
+    val indexById = previousOrder.withIndex().associate { (index, id) -> id to index }
+    return sortedBy { indexById[it.id] ?: Int.MAX_VALUE }
+}
+
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
@@ -365,13 +377,18 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         // placeholder for every locally tracked in-flight issuance order alongside the real cards.
         val issuingCards = buildIssuingCards(userWalletId)
 
+        // Keep the card order stable across refetches: the backend orders `productInstances` by a mutable
+        // field (a rename bumps `updated_at`), which would otherwise make the renamed card jump. Anchor on
+        // the previously shown order and append newly seen cards at the end.
+        val orderedCards = tangemPayCards.stableOrder(previousRealCardOrder(userWalletId))
+
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = customerId,
             depositAddress = cryptoBalance.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             fiatRate = fiatRate,
-            cards = tangemPayCards + issuingCards,
+            cards = orderedCards + issuingCards,
             balance = PaymentAccountStatusValue.Balance(
                 fiatBalance = fiatBalance,
                 cryptoBalance = cryptoBalance,
@@ -379,6 +396,21 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             ),
             error = null,
         )
+    }
+
+    /**
+     * Order of real (product-instance-backed) cards from the previously stored status, used as the stable
+     * anchor for [stableOrder]. Issuing placeholders are excluded — they carry synthetic order ids and are
+     * always appended last. Empty on the first load (no prior [PaymentAccountStatusValue.Loaded]), which makes
+     * [stableOrder] fall back to the backend order.
+     */
+    private suspend fun previousRealCardOrder(userWalletId: UserWalletId): List<String> {
+        val previousValue = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value
+        return (previousValue as? PaymentAccountStatusValue.Loaded)
+            ?.cards
+            ?.filterNot { it.state == TangemPayCardState.Issuing }
+            ?.map { it.id }
+            .orEmpty()
     }
 
     private suspend fun getCardState(cardId: String, userWalletId: UserWalletId): TangemPayCardState {

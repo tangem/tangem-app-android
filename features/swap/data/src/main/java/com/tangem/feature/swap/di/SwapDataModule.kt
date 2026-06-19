@@ -13,6 +13,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
 import com.tangem.feature.swap.DefaultSwapRepository
@@ -45,6 +46,7 @@ internal class SwapDataModule {
         appPreferencesStore: AppPreferencesStore,
         rampStateManager: RampStateManager,
         expressHistoryDao: ExpressHistoryDao,
+        txHistoryFeatureToggles: TxHistoryFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -56,6 +58,7 @@ internal class SwapDataModule {
             appPreferencesStore = appPreferencesStore,
             rampStateManager = rampStateManager,
             expressHistoryDao = expressHistoryDao,
+            txHistoryFeatureToggles = txHistoryFeatureToggles,
         )
     }
 

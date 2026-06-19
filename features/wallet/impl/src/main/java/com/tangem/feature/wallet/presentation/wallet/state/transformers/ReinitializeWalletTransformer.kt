@@ -21,6 +21,7 @@ internal class ReinitializeWalletTransformer(
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val isAddFundsStage1Enabled: Boolean,
+    private val isManageFundsEnabled: Boolean,
 ) : WalletStateTransformer(userWalletId = userWallet.walletId) {
 
     private val walletLoadingStateFactory by lazy {
@@ -29,6 +30,7 @@ internal class ReinitializeWalletTransformer(
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
             isAddFundsStage1Enabled = isAddFundsStage1Enabled,
+            isManageFundsEnabled = isManageFundsEnabled,
         )
     }
 

@@ -22,6 +22,8 @@ interface TokenDetailsClickIntents {
 
     fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
+    fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
     fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason)
@@ -150,6 +152,8 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 

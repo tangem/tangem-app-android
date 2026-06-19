@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import kotlinx.collections.immutable.ImmutableList
 
 internal enum class CardDataType {
@@ -94,13 +95,13 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val cards: ImmutableList<Card>,
         val onAddCardClick: () -> Unit,
         val isAddCardEnabled: Boolean,
+        val progressBanner: CardsProgressBannerUM? = null,
     )
 
     data class Card(
         val lastDigits: String,
         val onClick: () -> Unit,
-        val isReissuingOrClosing: Boolean,
-        val isIssuing: Boolean,
+        val state: TangemPayCardUiState,
         val isFrozen: Boolean,
         val isEnabled: Boolean,
     )
@@ -110,3 +111,21 @@ internal data class AddToWalletBlockState(
     val onClick: () -> Unit,
     val onClickClose: () -> Unit,
 )
+
+internal enum class TangemPayCardUiState {
+    Active,
+    InProgress,
+}
+
+internal enum class CardsProgressBannerUM {
+    Issuing,
+    Reissuing,
+}
+
+internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) {
+    TangemPayCardState.Active -> TangemPayCardUiState.Active
+    TangemPayCardState.Issuing,
+    TangemPayCardState.Reissuing,
+    TangemPayCardState.Closing,
+    -> TangemPayCardUiState.InProgress
+}

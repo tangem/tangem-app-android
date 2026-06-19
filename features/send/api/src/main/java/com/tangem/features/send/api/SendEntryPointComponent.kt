@@ -10,6 +10,7 @@ interface SendEntryPointComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
+        val shouldStartWithSwap: Boolean = false,
     )
 
     interface Factory : ComponentFactory<Params, SendEntryPointComponent>

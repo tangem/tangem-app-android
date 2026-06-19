@@ -21,6 +21,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
     private val wallets: List<UserWallet>,
@@ -28,6 +29,7 @@ internal class InitializeWalletsTransformer(
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val isAddFundsStage1Enabled: Boolean,
+    private val isManageFundsEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -36,6 +38,7 @@ internal class InitializeWalletsTransformer(
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
             isAddFundsStage1Enabled = isAddFundsStage1Enabled,
+            isManageFundsEnabled = isManageFundsEnabled,
         )
     }
 
@@ -159,10 +162,16 @@ internal class InitializeWalletsTransformer(
             WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {})
         }
 
+        val lastButton = if (isManageFundsEnabled) {
+            WalletManageButton.Transfer(enabled = false, dimContent = false, onClick = {})
+        } else {
+            WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {})
+        }
+
         return persistentListOf(
             firstButton,
             WalletManageButton.Swap(enabled = false, dimContent = false, onClick = {}),
-            WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
+            lastButton,
         )
     }
 
@@ -190,12 +199,21 @@ internal class InitializeWalletsTransformer(
                     onClick = {},
                 ).buttonUM,
             )
-            add(
-                WalletActionButtons.Sell(
-                    isEnabled = false,
-                    onClick = {},
-                ).buttonUM,
-            )
+            if (isManageFundsEnabled) {
+                add(
+                    WalletActionButtons.Transfer(
+                        isEnabled = false,
+                        onClick = {},
+                    ).buttonUM,
+                )
+            } else {
+                add(
+                    WalletActionButtons.Sell(
+                        isEnabled = false,
+                        onClick = {},
+                    ).buttonUM,
+                )
+            }
         }.toPersistentList()
     }
 }
