@@ -59,6 +59,8 @@ internal class TangemPayDetailsStateFactory(
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
         val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
+        val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
+        val isAddCardEnabled = status.error == null && !hasIssuingCard
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -88,7 +90,7 @@ internal class TangemPayDetailsStateFactory(
                         }
                         .toImmutableList(),
                     onAddCardClick = intents::onAddCardClick,
-                    isAddCardEnabled = status.error == null,
+                    isAddCardEnabled = isAddCardEnabled,
                 ),
             ),
             isBalanceHidden = false,
