@@ -12,8 +12,6 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
 import com.tangem.feature.swap.DefaultSwapRepository
 import com.tangem.feature.swap.NoOpSwapFeedbackRepository

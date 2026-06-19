@@ -24,12 +24,10 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -39,7 +37,6 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
