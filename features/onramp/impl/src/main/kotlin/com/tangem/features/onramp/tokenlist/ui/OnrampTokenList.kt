@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
@@ -37,25 +36,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
-import com.tangem.features.onramp.swap.availablepairs.ui.swapMarketsListItems
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.ui.preview.PreviewTokenListUMProvider
 import kotlinx.collections.immutable.ImmutableList
-
-/**
- * Token list for swap - automatically switches between normal and search mode with markets
- *
- * @param state state
- *
- */
-internal fun LazyListScope.onrampSwapTokenList(state: TokenListUM) {
-    if (state.marketsState != null) {
-        onrampTokenListWithMarkets(state = state)
-    } else {
-        onrampTokenList(state = state)
-    }
-}
 
 /**
  * Token list - normal mode (without markets)
@@ -72,39 +56,6 @@ internal fun LazyListScope.onrampTokenList(state: TokenListUM) {
     tokensList(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
 
     tokensListData(state = state)
-}
-
-/**
- * Token list with markets - search mode
- *
- * @param state state
- */
-private fun LazyListScope.onrampTokenListWithMarkets(state: TokenListUM) {
-    val itemModifier = Modifier.padding(horizontal = 16.dp)
-
-    warningOrSearchBar(state = state, itemModifier = itemModifier)
-
-    // Check if user has any assets to show
-    val hasAssets = state.availableItems.isNotEmpty() ||
-        state.unavailableItems.isNotEmpty() ||
-        state.tokensListData.totalTokensCount != 0
-
-    if (hasAssets) {
-        assetsTitle(
-            count = state.tokensListData.totalTokensCount,
-            showCount = state.marketsState?.shouldAssetsCount == true,
-        )
-
-        tokensList(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
-
-        tokensList(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
-
-        tokensListData(state = state)
-
-        item { SpacerH32() }
-    }
-
-    state.marketsState?.let(::swapMarketsListItems)
 }
 
 private fun LazyListScope.warningOrSearchBar(state: TokenListUM, itemModifier: Modifier) {

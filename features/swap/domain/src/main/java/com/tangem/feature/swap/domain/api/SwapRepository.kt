@@ -16,14 +16,6 @@ interface SwapRepository {
         currencyList: List<CryptoCurrency>,
     ): PairsWithProviders
 
-    /** Express getPairs request variant without providers request */
-    suspend fun getPairsOnly(
-        userWallet: UserWallet,
-        initialCurrency: LeastTokenInfo,
-        currencyList: List<CryptoCurrency>,
-        isIgnoreExpress: Boolean = false,
-    ): PairsWithProviders
-
     suspend fun getExchangeStatus(
         userWallet: UserWallet?,
         userWalletId: UserWalletId,

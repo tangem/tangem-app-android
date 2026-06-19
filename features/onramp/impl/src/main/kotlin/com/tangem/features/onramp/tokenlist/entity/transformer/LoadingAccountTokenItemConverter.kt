@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.swap.availablepairs.entity.converters
+package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.account.TokensListPortfolioItemConverter
