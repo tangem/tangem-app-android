@@ -51,7 +51,11 @@ class TokenActionsHandler @AssistedInject constructor(
         add(TokenActionsBSContentUM.Action.Sell)
     }
 
-    fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: CryptoCurrencyData) {
+    fun handle(
+        action: TokenActionsBSContentUM.Action,
+        cryptoCurrencyData: CryptoCurrencyData,
+        context: TokenActionsContext = TokenActionsContext.Markets,
+    ) {
         if (isTopUpBlockedByBackupError(action, cryptoCurrencyData.userWallet)) return
 
         onHandleQuickAction(
@@ -59,25 +63,37 @@ class TokenActionsHandler @AssistedInject constructor(
                 action = action,
                 cryptoCurrencyData = cryptoCurrencyData,
             ),
-            when (action) {
-                TokenActionsBSContentUM.Action.Receive,
-                TokenActionsBSContentUM.Action.CopyAddress,
-                TokenActionsBSContentUM.Action.Sell,
-                -> false
-                TokenActionsBSContentUM.Action.Send,
-                TokenActionsBSContentUM.Action.Stake,
-                TokenActionsBSContentUM.Action.YieldMode,
-                TokenActionsBSContentUM.Action.Buy,
-                TokenActionsBSContentUM.Action.Exchange,
-                -> true
-            },
+            action.shouldDismissBottomSheet(),
         )
         val userWallet = cryptoCurrencyData.userWallet
         if (userWallet is UserWallet.Cold && handleDemoMode(action, userWallet)) return
 
+        dispatchAction(action, cryptoCurrencyData, context)
+    }
+
+    private fun TokenActionsBSContentUM.Action.shouldDismissBottomSheet(): Boolean = when (this) {
+        TokenActionsBSContentUM.Action.Receive,
+        TokenActionsBSContentUM.Action.CopyAddress,
+        TokenActionsBSContentUM.Action.Sell,
+        -> false
+        TokenActionsBSContentUM.Action.Send,
+        TokenActionsBSContentUM.Action.Stake,
+        TokenActionsBSContentUM.Action.YieldMode,
+        TokenActionsBSContentUM.Action.Buy,
+        TokenActionsBSContentUM.Action.Exchange,
+        TokenActionsBSContentUM.Action.SendWithSwap,
+        -> true
+    }
+
+    private fun dispatchAction(
+        action: TokenActionsBSContentUM.Action,
+        cryptoCurrencyData: CryptoCurrencyData,
+        context: TokenActionsContext,
+    ) {
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
-            TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData, context)
+            TokenActionsBSContentUM.Action.SendWithSwap -> onSwapAndSendClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Receive -> Unit
             TokenActionsBSContentUM.Action.CopyAddress -> onCopyAddress(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Sell -> onSellClick(cryptoCurrencyData)
@@ -155,12 +171,13 @@ class TokenActionsHandler @AssistedInject constructor(
         }
     }
 
-    private fun onExchangeClick(cryptoCurrencyData: CryptoCurrencyData) {
+    private fun onExchangeClick(cryptoCurrencyData: CryptoCurrencyData, context: TokenActionsContext) {
         router.push(
             AppRoute.Swap(
                 fromCryptoCurrency = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 screenSource = AnalyticsParam.ScreensSources.Markets.value,
+                fromCurrencyPosition = context.swapPosition,
             ),
         )
     }
@@ -171,6 +188,16 @@ class TokenActionsHandler @AssistedInject constructor(
             currency = cryptoCurrencyData.status.currency,
         )
         router.push(route)
+    }
+
+    private fun onSwapAndSendClick(cryptoCurrencyData: CryptoCurrencyData) {
+        router.push(
+            AppRoute.SendEntryPoint(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                currency = cryptoCurrencyData.status.currency,
+                shouldStartWithSwap = true,
+            ),
+        )
     }
 
     private fun onStakeClick(cryptoCurrencyData: CryptoCurrencyData) {

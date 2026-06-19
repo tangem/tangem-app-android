@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addfunds
+package com.tangem.features.commonfeatures.impl.managefunds
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,51 +22,56 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
-import com.tangem.features.commonfeatures.impl.addfunds.model.AddFundsModel
-import com.tangem.features.commonfeatures.impl.addfunds.model.uiSpec
+import com.tangem.features.commonfeatures.impl.managefunds.model.ManageFundsModel
+import com.tangem.features.commonfeatures.impl.managefunds.model.uiSpec
+import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import com.tangem.core.ui.R as CoreR
 
 @Suppress("LongParameterList")
-internal class DefaultAddFundsComponent @AssistedInject constructor(
+internal class DefaultManageFundsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted private val params: AddFundsComponent.Params,
+    @Assisted private val params: ManageFundsComponent.Params,
     chooseTokenComponentFactory: ChooseTokenComponent.Factory,
     tokenActionsComponentFactory: TokenActionsComponent.Factory,
     userPortfolioComponentFactory: UserPortfolioComponent.Factory,
     walletFeatureToggles: WalletFeatureToggles,
-) : AppComponentContext by appComponentContext, AddFundsComponent {
+) : AppComponentContext by appComponentContext, ManageFundsComponent {
 
-    private val model: AddFundsModel = getOrCreateModel(params)
+    private val model: ManageFundsModel = getOrCreateModel(params)
 
-    private val isCompactTokenActions: Boolean = params.launchMode is AddFundsComponent.LaunchMode.TokenActionsOnly
+    private val isCompactTokenActions: Boolean = params.launchMode is ManageFundsComponent.LaunchMode.TokenActionsOnly
 
     private val isAddFundsStage1Enabled: Boolean = walletFeatureToggles.isAddFundsStage1Enabled
 
     private val tokenActionsComponent: TokenActionsComponent by lazy {
         tokenActionsComponentFactory.create(
-            context = child(key = "addFundsTokenActions"),
+            context = child(key = "manageFundsTokenActions"),
             params = TokenActionsComponent.Params(
                 data = model.tokenActionsData,
                 callbacks = model,
                 bottomAction = model.currentBottomAction,
                 isRedesignForced = true,
                 isCompact = isCompactTokenActions,
+                context = when (model.flowType) {
+                    ManageFundsComponent.FlowType.AddFunds -> TokenActionsContext.AddFunds
+                    ManageFundsComponent.FlowType.Transfer -> TokenActionsContext.Transfer
+                },
             ),
         )
     }
 
     private val chooseTokenComponent: ChooseTokenComponent? by lazy {
-        (params.launchMode as? AddFundsComponent.LaunchMode.ChooseToken)?.let {
+        (params.launchMode as? ManageFundsComponent.LaunchMode.ChooseToken)?.let {
             chooseTokenComponentFactory.create(
-                context = child(key = "addFundsChooseToken"),
+                context = child(key = "manageFundsChooseToken"),
                 params = ChooseTokenComponent.Params(
                     bridge = model.chooseTokenBridge,
                 ),
@@ -76,7 +81,7 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
 
     private val userPortfolioComponent: UserPortfolioComponent by lazy {
         userPortfolioComponentFactory.create(
-            context = child(key = "addFundsUserPortfolio"),
+            context = child(key = "manageFundsUserPortfolio"),
             params = UserPortfolioComponent.Params(
                 uiState = model.userPortfolioStateController.uiState,
                 callbacks = object : UserPortfolioComponent.Callbacks {
@@ -94,8 +99,8 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
         val canGoBack by model.canGoBack.collectAsStateWithLifecycle()
 
         LaunchedEffect(route) {
-            if (route != AddFundsModel.UiRoute.UserPortfolio) return@LaunchedEffect
-            val mode = params.launchMode as? AddFundsComponent.LaunchMode.FilteredByRawId ?: return@LaunchedEffect
+            if (route != ManageFundsModel.UiRoute.UserPortfolio) return@LaunchedEffect
+            val mode = params.launchMode as? ManageFundsComponent.LaunchMode.FilteredByRawId ?: return@LaunchedEffect
             model.userPortfolioStateController.updateAndWaitNotNullState(
                 allAvailableData = model.buildAvailableToAddDataForChooser(),
                 rawCurrencyId = mode.rawCurrencyId,
@@ -111,10 +116,10 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
                     content = TangemBottomSheetConfigContent.Empty,
                 ),
                 type = when (params.launchMode) {
-                    is AddFundsComponent.LaunchMode.TokenActionsOnly -> TangemBottomSheetType.Modal
-                    is AddFundsComponent.LaunchMode.ChooseToken -> TangemBottomSheetType.Default
-                    is AddFundsComponent.LaunchMode.FilteredByRawId ->
-                        if (route is AddFundsModel.UiRoute.TokenActions) {
+                    is ManageFundsComponent.LaunchMode.TokenActionsOnly -> TangemBottomSheetType.Modal
+                    is ManageFundsComponent.LaunchMode.ChooseToken -> TangemBottomSheetType.Default
+                    is ManageFundsComponent.LaunchMode.FilteredByRawId ->
+                        if (route is ManageFundsModel.UiRoute.TokenActions) {
                             TangemBottomSheetType.Default
                         } else {
                             TangemBottomSheetType.Modal
@@ -122,7 +127,7 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
                 },
                 containerColor = TangemTheme.colors2.surface.level2,
                 title = {
-                    AddFundsBottomSheetTitle(
+                    ManageFundsBottomSheetTitle(
                         route = route,
                         canGoBack = canGoBack,
                         onBackClick = model::onBack,
@@ -131,7 +136,7 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
                 },
                 content = {
                     val animatedContentModifier =
-                        if (params.launchMode is AddFundsComponent.LaunchMode.ChooseToken) {
+                        if (params.launchMode is ManageFundsComponent.LaunchMode.ChooseToken) {
                             Modifier.fillMaxSize()
                         } else {
                             Modifier
@@ -139,11 +144,12 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
                     AnimatedContent(
                         targetState = route,
                         modifier = animatedContentModifier,
-                        label = "AddFundsContentAnimation",
+                        label = "ManageFundsContentAnimation",
                     ) { animatedRoute ->
-                        AddFundsRouteContent(
+                        ManageFundsRouteContent(
                             route = animatedRoute,
-                            shouldFillHeight = !isCompactTokenActions && animatedRoute.uiSpec().shouldFillHeight,
+                            shouldFillHeight = !isCompactTokenActions &&
+                                animatedRoute.uiSpec(model.flowType).shouldFillHeight,
                         )
                     }
                 },
@@ -152,8 +158,8 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
     }
 
     @Composable
-    private fun AddFundsRouteContent(route: AddFundsModel.UiRoute, shouldFillHeight: Boolean) {
-        val spec = route.uiSpec()
+    private fun ManageFundsRouteContent(route: ManageFundsModel.UiRoute, shouldFillHeight: Boolean) {
+        val spec = route.uiSpec(model.flowType)
         val horizontalPadding = if (spec.shouldApplyHorizontalPadding) {
             Modifier.padding(horizontal = TangemTheme.dimens2.x4)
         } else {
@@ -164,33 +170,33 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
     }
 
     @Composable
-    private fun RenderRoute(route: AddFundsModel.UiRoute, modifier: Modifier = Modifier) {
+    private fun RenderRoute(route: ManageFundsModel.UiRoute, modifier: Modifier = Modifier) {
         when (route) {
-            AddFundsModel.UiRoute.Loading -> Unit
-            AddFundsModel.UiRoute.ChooseToken -> chooseTokenComponent?.Content(modifier)
-            AddFundsModel.UiRoute.UserPortfolio -> CompositionLocalProvider(
+            ManageFundsModel.UiRoute.Loading -> Unit
+            ManageFundsModel.UiRoute.ChooseToken -> chooseTokenComponent?.Content(modifier)
+            ManageFundsModel.UiRoute.UserPortfolio -> CompositionLocalProvider(
                 LocalTangemBottomSheetContentBottomInset provides TangemTheme.dimens2.x4,
             ) {
                 userPortfolioComponent.Content(modifier)
             }
-            AddFundsModel.UiRoute.TokenActions -> tokenActionsComponent.Content(modifier)
+            ManageFundsModel.UiRoute.TokenActions -> tokenActionsComponent.Content(modifier)
         }
     }
 
     @Composable
-    private fun AddFundsBottomSheetTitle(
-        route: AddFundsModel.UiRoute,
+    private fun ManageFundsBottomSheetTitle(
+        route: ManageFundsModel.UiRoute,
         canGoBack: Boolean,
         onBackClick: () -> Unit,
         onCloseClick: () -> Unit,
     ) {
         TangemTopBar(
-            title = route.uiSpec().title,
+            title = route.uiSpec(model.flowType).title,
             type = TangemTopBarType.BottomSheet,
             startContent = if (canGoBack) {
                 {
                     TangemButton(
-                        iconStart = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_arrow_back_28),
+                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
                         onClick = onBackClick,
                         size = TangemButton.Size.X11,
                         variant = TangemButton.Variant.Material,
@@ -202,7 +208,7 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
             endContent = {
                 TangemButton(
                     modifier = Modifier.testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
-                    iconStart = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_close_24),
+                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                     onClick = onCloseClick,
                     size = TangemButton.Size.X11,
                     variant = TangemButton.Variant.Material,
@@ -221,7 +227,10 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : AddFundsComponent.Factory {
-        override fun create(context: AppComponentContext, params: AddFundsComponent.Params): DefaultAddFundsComponent
+    interface Factory : ManageFundsComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: ManageFundsComponent.Params,
+        ): DefaultManageFundsComponent
     }
 }

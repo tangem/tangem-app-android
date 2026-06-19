@@ -92,6 +92,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 cryptoData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = false,
+                context = params.context,
             ),
             bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {
@@ -124,6 +125,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 cryptoData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = true,
+                context = params.context,
             ),
             bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {

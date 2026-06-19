@@ -25,7 +25,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
@@ -70,7 +70,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
-    private val addFundsComponentFactory: AddFundsComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -191,10 +191,20 @@ internal class WalletComponent @AssistedInject constructor(
                     )
                 }
                 is WalletDialogConfig.AddFunds -> {
-                    addFundsComponentFactory.create(
+                    manageFundsComponentFactory.create(
                         context = childByContext(componentContext),
-                        params = AddFundsComponent.Params(
-                            launchMode = AddFundsComponent.LaunchMode.ChooseToken(dialogConfig.userWalletId),
+                        params = ManageFundsComponent.Params(
+                            launchMode = ManageFundsComponent.LaunchMode.ChooseToken(dialogConfig.userWalletId),
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.Transfer -> {
+                    manageFundsComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = ManageFundsComponent.Params(
+                            launchMode = ManageFundsComponent.LaunchMode.ChooseToken(dialogConfig.userWalletId),
+                            flowType = ManageFundsComponent.FlowType.Transfer,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
