@@ -33,7 +33,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.RectangleShimmer
@@ -132,7 +131,8 @@ internal fun TangemPayDetailsScreen(
                     },
                 )
 
-                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuingOrClosing } == true) {
+                val progressBanner = state.balanceBlockState.cardsBlockState?.progressBanner
+                if (progressBanner == CardsProgressBannerUM.Reissuing) {
                     item(
                         key = "REISSUE_MESSAGE",
                         content = {
@@ -315,6 +315,7 @@ private fun CardsBlockRow(
 
 @Composable
 private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modifier: Modifier = Modifier) {
+    val isCardInProcess = card.state == TangemPayCardUiState.InProgress
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
@@ -329,7 +330,7 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
                 .alpha(if (card.isEnabled) 1f else DISABLED_ALPHA)
                 .fillMaxSize(),
             painter = painterResource(
-                if (card.isReissuingOrClosing) {
+                if (isCardInProcess) {
                     R.drawable.img_visa_card_inactive_48_32
                 } else {
                     R.drawable.img_visa_card_48_32
@@ -337,7 +338,7 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
             ),
             contentDescription = null,
         )
-        if (!card.isReissuingOrClosing) {
+        if (!isCardInProcess) {
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -486,18 +487,16 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             onClick = {},
-                            isReissuingOrClosing = false,
                             isEnabled = false,
                             isFrozen = false,
-                            isIssuing = false,
+                            state = TangemPayCardUiState.Active,
                         ),
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
                             onClick = {},
-                            isReissuingOrClosing = false,
                             isEnabled = true,
                             isFrozen = false,
-                            isIssuing = false,
+                            state = TangemPayCardUiState.Active,
                         ),
                     ),
                     onAddCardClick = {},
@@ -527,14 +526,14 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             onClick = {},
-                            isReissuingOrClosing = true,
                             isFrozen = false,
                             isEnabled = true,
-                            isIssuing = false,
+                            state = TangemPayCardUiState.InProgress,
                         ),
                     ),
                     onAddCardClick = {},
                     isAddCardEnabled = true,
+                    progressBanner = CardsProgressBannerUM.Reissuing,
                 ),
             ),
             isBalanceHidden = false,
