@@ -88,6 +88,10 @@
         "version": "5.39"
     },
     {
+        "name": "TWI_1377_MANAGE_FUNDS",
+        "version": "5.40"
+    },
+    {
         "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
         "version": "5.39"
     },
