@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.swap.entity
+package com.tangem.features.onramp.tokenlist.entity
 
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
