@@ -98,6 +98,11 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
                 model.currentRoute.emit(stack.active.configuration)
             }
         }
+        if (params.shouldStartWithSwap) {
+            // Direct Swap&Send entry: replicate the canonical "send with swap" trigger so the receive-token
+            // selector opens like the regular Send -> Send&Swap flow (this was the less-broken behaviour).
+            model.onConvertToAnotherToken(lastAmount = "", isEnterInFiatSelected = false)
+        }
     }
 
     @Composable
