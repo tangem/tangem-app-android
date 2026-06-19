@@ -12,11 +12,11 @@ internal class OrderResolverTest {
     fun `selectActive filters by type and active status`() {
         val orders = listOf(
             order(id = "1", type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING, updatedAt = "2026-01-01"),
-            order(id = "2", type = OrderType.CARD_ISSUE, status = OrderStatus.PROCESSING, updatedAt = "2026-01-02"),
-            order(id = "3", type = OrderType.CARD_ISSUE, status = OrderStatus.COMPLETED, updatedAt = "2026-01-03"),
+            order(id = "2", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING, updatedAt = "2026-01-02"),
+            order(id = "3", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED, updatedAt = "2026-01-03"),
         )
 
-        val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE)
+        val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
         assertThat(result?.id).isEqualTo("2")
     }
@@ -24,11 +24,11 @@ internal class OrderResolverTest {
     @Test
     fun `selectActive picks the latest by updatedAt`() {
         val orders = listOf(
-            order(id = "old", type = OrderType.CARD_ISSUE, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
-            order(id = "new", type = OrderType.CARD_ISSUE, status = OrderStatus.PROCESSING, updatedAt = "2026-06-05"),
+            order(id = "old", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
+            order(id = "new", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING, updatedAt = "2026-06-05"),
         )
 
-        val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE)
+        val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
         assertThat(result?.id).isEqualTo("new")
     }
@@ -36,11 +36,11 @@ internal class OrderResolverTest {
     @Test
     fun `selectActive returns null when no active order of the type exists`() {
         val orders = listOf(
-            order(id = "1", type = OrderType.CARD_ISSUE, status = OrderStatus.COMPLETED, updatedAt = "2026-01-01"),
+            order(id = "1", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED, updatedAt = "2026-01-01"),
             order(id = "2", type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING, updatedAt = "2026-01-02"),
         )
 
-        val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE)
+        val result = OrderResolver.selectActive(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
         assertThat(result).isNull()
     }
@@ -91,11 +91,11 @@ internal class OrderResolverTest {
     @Test
     fun `selectLatest includes terminal orders`() {
         val orders = listOf(
-            order(id = "1", type = OrderType.CARD_ISSUE, status = OrderStatus.COMPLETED, updatedAt = "2026-01-05"),
-            order(id = "2", type = OrderType.CARD_ISSUE, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
+            order(id = "1", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED, updatedAt = "2026-01-05"),
+            order(id = "2", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
         )
 
-        val result = OrderResolver.selectLatest(orders = orders, type = OrderType.CARD_ISSUE)
+        val result = OrderResolver.selectLatest(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
 
         assertThat(result?.id).isEqualTo("1")
     }

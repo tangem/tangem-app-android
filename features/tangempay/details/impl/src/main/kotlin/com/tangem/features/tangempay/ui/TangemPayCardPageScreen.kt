@@ -97,8 +97,6 @@ private fun TangemPayCardPageScreen(
                 .fillMaxSize()
                 .padding(scaffoldPaddings),
             contentPadding = PaddingValues(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
                 bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
             ),
             verticalArrangement = Arrangement.spacedBy(if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16),
@@ -136,7 +134,10 @@ private fun TangemPayCardSwipePager(
 ) {
     when {
         controllers.isEmpty() -> Unit
-        controllers.size == 1 -> CardDetailsPage(controller = controllers.first(), modifier = modifier)
+        controllers.size == 1 -> CardDetailsPage(
+            controller = controllers.first(),
+            modifier = modifier.padding(horizontal = 16.dp),
+        )
         else -> {
             val initialPage = controllers.indexOfFirst { it.cardId == selectedCardId }.coerceAtLeast(0)
             val pagerState = rememberPagerState(initialPage = initialPage) { controllers.size }
@@ -328,7 +329,9 @@ private fun LazyListScope.cardPageItem(
             enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
             exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
         ) {
-            content()
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                content()
+            }
         }
     }
 }
@@ -340,7 +343,12 @@ private fun TangemPayCardPageScreenPreviewV1() {
     TangemThemePreview {
         TangemPayCardPageScreen(
             state = TangemPayCardPageUM.stub(),
-            cardSection = { TangemPayCard(state = previewCardDetailsState()) },
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
         )
     }
 }
@@ -371,7 +379,12 @@ private fun TangemPayCardPageScreenPreviewV2() {
         ) {
             TangemPayCardPageScreen(
                 state = TangemPayCardPageUM.stub(),
-                cardSection = { TangemPayCard(state = previewCardDetailsState()) },
+                cardSection = {
+                    TangemPayCard(
+                        state = previewCardDetailsState(),
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                },
             )
         }
     }

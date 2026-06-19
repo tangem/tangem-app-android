@@ -65,7 +65,11 @@ internal class IssueAdditionalCardUseCaseTest {
         coEvery {
             orderRepository.findOrders(
                 userWalletId,
-                types = setOf(OrderType.CARD_ISSUE_ADDITIONAL),
+                types = setOf(
+                    OrderType.CARD_ISSUE_ADDITIONAL,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                ),
                 statuses = emptySet(),
             )
         } returns listOf(existing).right()
@@ -83,7 +87,11 @@ internal class IssueAdditionalCardUseCaseTest {
         coEvery {
             orderRepository.findOrders(
                 userWalletId,
-                types = setOf(OrderType.CARD_ISSUE_ADDITIONAL),
+                types = setOf(
+                    OrderType.CARD_ISSUE_ADDITIONAL,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                ),
                 statuses = emptySet(),
             )
         } returns emptyList<Order>().right()
@@ -107,7 +115,11 @@ internal class IssueAdditionalCardUseCaseTest {
         coEvery {
             orderRepository.findOrders(
                 userWalletId,
-                types = setOf(OrderType.CARD_ISSUE_ADDITIONAL),
+                types = setOf(
+                    OrderType.CARD_ISSUE_ADDITIONAL,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                ),
                 statuses = emptySet(),
             )
         } returns emptyList<Order>().right()

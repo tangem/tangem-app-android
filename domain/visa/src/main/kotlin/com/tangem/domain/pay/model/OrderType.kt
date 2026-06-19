@@ -9,9 +9,9 @@ import com.tangem.domain.pay.model.OrderType.Companion.fromString
  * so the app never crashes on a new server-side type.
  */
 enum class OrderType(val wireValue: String) {
-    CARD_ISSUE("CARD_ISSUE_VIRTUAL_RAIN_KYC"),
     CARD_ISSUE_ADDITIONAL("CARD_ISSUE_ADDITIONAL"),
     CARD_ISSUE_VIRTUAL_RAIN_KYC_V2("CARD_ISSUE_VIRTUAL_RAIN_KYC_V2"),
+    CARD_ISSUE_VIRTUAL_RAIN_KYC("CARD_ISSUE_VIRTUAL_RAIN_KYC"),
     CARD_REISSUE("CARD_REISSUE"),
     CARD_FREEZE("CARD_FREEZE"),
     CARD_UNFREEZE("CARD_UNFREEZE"),

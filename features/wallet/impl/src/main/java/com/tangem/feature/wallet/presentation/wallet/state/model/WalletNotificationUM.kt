@@ -328,8 +328,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     isLoading = shouldShowProgress,
                 ),
             ),
-            messageEffect = TangemMessageEffect.Card,
-            isCentered = true,
+            messageEffect = TangemMessageEffect.Warning,
         ),
         type = WalletNotificationType.Warning,
     )
@@ -339,9 +338,10 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             id = "TangemPayUnreachable",
             title = resourceReference(id = R.string.tangempay_temporarily_unavailable),
             subtitle = resourceReference(id = R.string.tangempay_service_unreachable_try_later),
+            messageEffect = TangemMessageEffect.Warning,
             iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.status.attention },
+                iconRes = R.drawable.ic_alert_circle_24,
+                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
             ),
         ),
         type = WalletNotificationType.Warning,

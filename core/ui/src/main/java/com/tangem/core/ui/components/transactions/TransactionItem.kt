@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +26,8 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -201,9 +204,15 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             overflow = TextOverflow.Ellipsis,
             modifier = modifier,
         )
+        is ContentSubtitle.PlainAddress -> PlainAddressText(
+            subtitle = subtitle,
+            status = status,
+            modifier = modifier,
+        )
         is ContentSubtitle.ExternalAddress -> InlineImageSubtitle(
             template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.briefAddress),
             color = tertiary,
+            afterIconColor = if (isFailed) tertiary else primary,
             modifier = modifier,
         ) {
             IdentIcon(
@@ -254,6 +263,33 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             )
         }
     }
+}
+
+@Composable
+private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Status, modifier: Modifier = Modifier) {
+    val full = subtitle.text.resolveReference()
+    val highlightColor = if (status is Status.Failed) {
+        TangemTheme.colors2.text.neutral.tertiary
+    } else {
+        TangemTheme.colors2.text.neutral.primary
+    }
+    val text = remember(full, subtitle.highlight, highlightColor) {
+        buildAnnotatedString {
+            append(full)
+            val start = full.lastIndexOf(subtitle.highlight)
+            if (start >= 0) {
+                addStyle(SpanStyle(color = highlightColor), start, start + subtitle.highlight.length)
+            }
+        }
+    }
+    Text(
+        text = text,
+        color = TangemTheme.colors2.text.neutral.tertiary,
+        style = TangemTheme.typography2.captionMedium12,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier,
+    )
 }
 
 private fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
