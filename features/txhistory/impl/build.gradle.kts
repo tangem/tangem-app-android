@@ -9,6 +9,12 @@ plugins {
 
 android {
     namespace = "com.tangem.features.txhistory.impl"
+
+    packaging {
+        resources {
+            merges += "paymentrequest.proto"
+        }
+    }
 }
 dependencies {
     /* Project - API */
