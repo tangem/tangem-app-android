@@ -1,7 +1,8 @@
-package com.tangem.features.addressbook
+package com.tangem.features.addressbook.common
 
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 
 internal class DefaultAddressBookFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,

@@ -35,7 +35,7 @@ internal class ItemsBuilder @Inject constructor(
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
         if (isAddressBookAvailable) {
-            buildWalletConnectAddressBookBlock(isWalletConnectAvailable, userWalletId)
+            buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
         } else {
             buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         }
@@ -91,29 +91,29 @@ internal class ItemsBuilder @Inject constructor(
         }
     }
 
-    private fun MutableList<DetailsItemUM>.buildWalletConnectAddressBookBlock(
+    private fun MutableList<DetailsItemUM>.buildWalletActionBlock(
         isWalletConnectAvailable: Boolean,
         userWalletId: UserWalletId,
     ) {
-        val walletConnectAddressBookItems = buildList {
+        val walletActionItems = buildList {
             if (isWalletConnectAvailable) add(buildWalletConnectButton(userWalletId))
             add(buildAddressBookButton())
-        }
-        if (walletConnectAddressBookItems.isNotEmpty()) {
-            add(DetailsItemUM.WalletConnectAddressBookBlock(walletConnectAddressBookItems))
+        }.toImmutableList()
+        if (walletActionItems.isNotEmpty()) {
+            add(DetailsItemUM.WalletActionBlock(walletActionItems))
         }
     }
 
     private fun buildWalletConnectButton(
         userWalletId: UserWalletId,
-    ): DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect {
-        return DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect(
+    ): DetailsItemUM.WalletActionBlock.Item.WalletConnect {
+        return DetailsItemUM.WalletActionBlock.Item.WalletConnect(
             onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
         )
     }
 
-    private fun buildAddressBookButton(): DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook {
-        return DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook(
+    private fun buildAddressBookButton(): DetailsItemUM.WalletActionBlock.Item.AddressBook {
+        return DetailsItemUM.WalletActionBlock.Item.AddressBook(
             onClick = { router.push(AppRoute.AddressBook()) },
         )
     }

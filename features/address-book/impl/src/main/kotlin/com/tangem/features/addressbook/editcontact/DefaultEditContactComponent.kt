@@ -7,16 +7,16 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.editcontact.model.EditContactModel
 import com.tangem.features.addressbook.editcontact.ui.EditContactContent
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 
-internal class DefaultEditContactComponent @AssistedInject constructor(
-    @Assisted context: AppComponentContext,
-    @Assisted params: EditContactComponent.Params,
-) : EditContactComponent, AppComponentContext by context {
+internal class DefaultEditContactComponent(
+    appComponentContext: AppComponentContext,
+    params: Params,
+) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: EditContactModel = getOrCreateModel(params)
 
@@ -30,11 +30,10 @@ internal class DefaultEditContactComponent @AssistedInject constructor(
         BackHandler(onBack = state.onCloseClick)
     }
 
-    @AssistedFactory
-    interface Factory : EditContactComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: EditContactComponent.Params,
-        ): DefaultEditContactComponent
-    }
+    data class Params(
+        val contactId: ContactId?,
+        val predefinedAddress: ValidatedAddress? = null,
+        val onBackClick: () -> Unit,
+        val onAddAddressClick: () -> Unit,
+    )
 }
