@@ -166,6 +166,7 @@ private fun BottomSheetIconContainer(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier = Modifier) {
     val tint = when (icon.type) {
@@ -178,7 +179,9 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier 
 
     val backgroundColor = when (icon.backgroundType) {
         MessageBottomSheetUM.Icon.BackgroundType.Unspecified -> Color.Unspecified
-        MessageBottomSheetUM.Icon.BackgroundType.SameAsTint -> tint
+        MessageBottomSheetUM.Icon.BackgroundType.SameAsTint -> {
+            if (tint == Color.Unspecified) Color.Unspecified else tint.copy(alpha = 0.1f)
+        }
         MessageBottomSheetUM.Icon.BackgroundType.Accent -> TangemTheme.colors3.bg.status.infoSubtle
         MessageBottomSheetUM.Icon.BackgroundType.Informative -> TangemTheme.colors3.bg.status.infoSubtle
         MessageBottomSheetUM.Icon.BackgroundType.Attention -> TangemTheme.colors3.bg.status.warningSubtle
