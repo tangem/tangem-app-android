@@ -7,6 +7,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -269,6 +270,50 @@ internal class StateBuilderInitialStateTest {
             )
 
             assertThat(result.notifications).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN same coin on different wallets in transfer mode WHEN called THEN shouldShowMaxAmount is true`() {
+            // Arrange — same coin (shared network id) moved between two wallets => transfer mode
+            val sharedNetwork = buildSharedNetwork()
+            val walletA: UserWallet.Cold = mockk(relaxed = true) { every { walletId } returns UserWalletId("aabb") }
+            val walletB: UserWallet.Cold = mockk(relaxed = true) { every { walletId } returns UserWalletId("ccdd") }
+            val fromStatus = buildCoinSwapCurrencyStatus(walletA, sharedNetwork)
+            val toStatus = buildCoinSwapCurrencyStatus(walletB, sharedNetwork)
+            val transferState = SwapState.EmptyAmountState(
+                zeroAmountEquivalent = com.tangem.core.ui.extensions.stringReference("$0.00"),
+                isTransferMode = true,
+            )
+
+            // Act
+            val result = sut.createInitialReadyState(
+                uiStateHolder = baseState,
+                emptyAmountState = transferState,
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+            )
+
+            // Assert
+            assertThat(result.shouldShowMaxAmount).isTrue()
+        }
+
+        @Test
+        fun `GIVEN same-network coin swap not in transfer mode WHEN called THEN shouldShowMaxAmount is false`() {
+            // Arrange — same network coin pair, regular swap => MAX hidden to keep balance for the fee
+            val sharedNetwork = buildSharedNetwork()
+            val fromStatus = buildCoinSwapCurrencyStatus(userWallet, sharedNetwork)
+            val toStatus = buildCoinSwapCurrencyStatus(userWallet, sharedNetwork)
+
+            // Act
+            val result = sut.createInitialReadyState(
+                uiStateHolder = baseState,
+                emptyAmountState = emptyAmountState,
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+            )
+
+            // Assert
+            assertThat(result.shouldShowMaxAmount).isFalse()
         }
     }
 
@@ -562,6 +607,45 @@ internal fun buildSwapCurrencyStatus(
             every { currencySymbol } returns "ETH"
             every { rawId } returns "ethereum"
         }
+    }
+    val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
+        every { amount } returns java.math.BigDecimal("1.0")
+        every { fiatRate } returns java.math.BigDecimal("2000.00")
+        every { fiatAmount } returns java.math.BigDecimal("2000.00")
+    }
+    val cryptoCurrencyStatus = CryptoCurrencyStatus(currency = currency, value = statusValue)
+    return SwapCurrencyStatus(
+        userWallet = userWallet,
+        status = cryptoCurrencyStatus,
+        account = account,
+    )
+}
+
+/**
+ * A single [Network] mock whose [Network.id] resolves to one shared instance, so two currencies built from
+ * it compare equal on `network.id` — the condition that gates [StateBuilder.shouldShowMaxAmount].
+ */
+internal fun buildSharedNetwork(): Network = mockk(relaxed = true) {
+    every { id } returns mockk(relaxed = true)
+    every { name } returns "Ethereum"
+    every { currencySymbol } returns "ETH"
+    every { rawId } returns "ethereum"
+}
+
+/**
+ * Builds a [SwapCurrencyStatus] backed by a [CryptoCurrency.Coin] on the given [network]. Pass the same
+ * [network] instance to two calls to model the "same coin on different wallets" (transfer) case.
+ */
+internal fun buildCoinSwapCurrencyStatus(
+    userWallet: UserWallet,
+    network: Network,
+): SwapCurrencyStatus {
+    val account = Account.CryptoPortfolio.createMainAccount(userWallet.walletId)
+    val currency = mockk<CryptoCurrency.Coin>(relaxed = true) {
+        every { symbol } returns "ETH"
+        every { decimals } returns 18
+        every { name } returns "Ethereum"
+        every { this@mockk.network } returns network
     }
     val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
         every { amount } returns java.math.BigDecimal("1.0")

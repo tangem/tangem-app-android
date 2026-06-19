@@ -43,10 +43,10 @@ import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -541,6 +541,10 @@ internal class SwapModel @Inject constructor(
                         )
                     },
                 ),
+                isTransferMode = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                    fromSwapCurrency = fromSwapCurrencyStatus?.currency,
+                    toSwapCurrency = toSwapCurrencyStatus?.currency,
+                ),
             ),
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -622,6 +626,10 @@ internal class SwapModel @Inject constructor(
                                 fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
                             )
                         },
+                    ),
+                    isTransferMode = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                        fromSwapCurrency = newFromSwapCurrencyStatus?.currency,
+                        toSwapCurrency = newToSwapCurrencyStatus?.currency,
                     ),
                 ),
                 fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
@@ -740,6 +748,10 @@ internal class SwapModel @Inject constructor(
                             fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
                         )
                     },
+                ),
+                isTransferMode = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                    fromSwapCurrency = fromSwapCurrencyStatus.currency,
+                    toSwapCurrency = toSwapCurrencyStatus.currency,
                 ),
             ),
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
