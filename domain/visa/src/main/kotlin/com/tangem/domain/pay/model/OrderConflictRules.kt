@@ -66,8 +66,8 @@ object OrderConflictRules {
     }
 
     private fun OrderType.isIssuing(): Boolean {
-        return this == OrderType.CARD_ISSUE ||
-            this == OrderType.CARD_ISSUE_ADDITIONAL ||
+        return this == OrderType.CARD_ISSUE_ADDITIONAL ||
+            this == OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC ||
             this == OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2
     }
 
