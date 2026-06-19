@@ -22,7 +22,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
@@ -47,7 +47,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
-    private val addFundsComponentFactory: AddFundsComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     private val ratingComponentFactory: RatingComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
@@ -178,10 +178,10 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             dynamicAddressesDelegate = model.dynamicAddressesDelegate,
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
-        is TokenDetailsBottomSheetConfig.AddFunds -> addFundsComponentFactory.create(
+        is TokenDetailsBottomSheetConfig.AddFunds -> manageFundsComponentFactory.create(
             context = childByContext(componentContext),
-            params = AddFundsComponent.Params(
-                launchMode = AddFundsComponent.LaunchMode.TokenActionsOnly(
+            params = ManageFundsComponent.Params(
+                launchMode = ManageFundsComponent.LaunchMode.TokenActionsOnly(
                     userWalletId = route.userWalletId,
                     currency = route.currency,
                 ),
