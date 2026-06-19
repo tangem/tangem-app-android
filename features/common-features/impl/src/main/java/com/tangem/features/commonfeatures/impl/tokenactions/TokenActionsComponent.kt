@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
+import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.factory.ComponentFactory
@@ -79,6 +80,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
         val bottomAction: Flow<BottomAction> = flowOf(BottomAction.None),
         val isRedesignForced: Boolean = false,
         val isCompact: Boolean = false,
+        val context: TokenActionsContext = TokenActionsContext.Markets,
     )
 
     interface Callbacks {
