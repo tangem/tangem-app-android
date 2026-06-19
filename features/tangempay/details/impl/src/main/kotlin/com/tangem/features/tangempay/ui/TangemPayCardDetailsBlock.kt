@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -37,12 +39,14 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -60,9 +64,12 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.CardDataType
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
+import kotlin.math.roundToInt
 
 private const val TEXT_WIDTH_PADDING = 2
 private const val FREEZE_ANIMATION_DURATION_MS = 600
+private const val CARD_WIDTH_RATIO = 328f
+private const val CARD_HEIGHT_RATIO = 212f
 private val CustomCardBlockColor = Color(0x1F828282)
 private val CardBackgroundColor = Color(0xFF171A27)
 
@@ -86,9 +93,10 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
     CardBgWrapper(
         rotateCardY = rotateCardY,
         zAxisDistance = zAxisDistance,
+        shouldShowDetails = shouldShowDetails,
         modifier = modifier,
-    ) {
-        if (shouldShowDetails) {
+        front = { TangemPayCardDetailsHiddenBlock(state = state) },
+        back = {
             TangemPayCardDetailsShownBlock(
                 cardNumber = state.number,
                 expiry = state.expiry,
@@ -99,10 +107,8 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 onHideDetails = state.onClick,
                 modifier = Modifier.graphicsLayer { rotationY = 180f },
             )
-        } else {
-            TangemPayCardDetailsHiddenBlock(state = state)
-        }
-    }
+        },
+    )
 }
 
 @Suppress("LongMethod", "DestructuringDeclarationWithTooManyEntries")
@@ -111,7 +117,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
     Box(modifier = modifier.fillMaxSize()) {
         TangemPayCardBackground(
             modifier = Modifier
-                .fillMaxSize()
+                .matchParentSize()
                 .zIndex(0f),
             cardFrozenState = state.cardFrozenState,
         )
@@ -219,6 +225,7 @@ private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, m
             modifier = Modifier.fillMaxSize(),
             painter = painterResource(R.drawable.img_tangem_pay_visa),
             contentDescription = null,
+            contentScale = ContentScale.FillBounds,
         )
 
         if (isFrozen || freezeProgress > 0f) {
@@ -228,25 +235,27 @@ private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, m
                     .graphicsLayer { alpha = freezeProgress },
                 painter = painterResource(R.drawable.img_tangem_pay_visa_frozen),
                 contentDescription = null,
+                contentScale = ContentScale.Crop,
             )
         }
     }
 }
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LongMethod")
 @Composable
 private fun CardBgWrapper(
     rotateCardY: Float,
     zAxisDistance: Float,
+    shouldShowDetails: Boolean,
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
+    back: @Composable () -> Unit,
+    front: @Composable () -> Unit,
 ) {
     val isRedesignEnabled = LocalVisaRedesignEnabled.current
-    val shouldShowDetailsBg = rotateCardY > 90f && isRedesignEnabled
+    val shouldShowDetailsBg = shouldShowDetails && isRedesignEnabled
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(328f / 212f) // size of img_tangem_pay_visa
             .graphicsLayer {
                 rotationY = rotateCardY
                 cameraDistance = zAxisDistance
@@ -278,23 +287,76 @@ private fun CardBgWrapper(
                 },
             ),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            if (shouldShowDetailsBg) {
-                Image(
+        EqualHeightCardSides(
+            modifier = Modifier.fillMaxWidth(),
+            placeBackOnTop = shouldShowDetails,
+            front = {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .graphicsLayer {
-                            rotationY = rotateCardY
-                            cameraDistance = zAxisDistance
-                        },
-                    painter = painterResource(R.drawable.img_bg_card_details),
-                    contentDescription = null,
-                )
+                        .graphicsLayer { alpha = if (shouldShowDetails) 0f else 1f },
+                ) { front() }
+            },
+            back = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = if (shouldShowDetails) 1f else 0f },
+                ) {
+                    if (shouldShowDetailsBg) {
+                        Image(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .graphicsLayer {
+                                    rotationY = rotateCardY
+                                    cameraDistance = zAxisDistance
+                                },
+                            painter = painterResource(R.drawable.img_bg_card_details),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                    back()
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun EqualHeightCardSides(
+    placeBackOnTop: Boolean,
+    modifier: Modifier = Modifier,
+    back: @Composable () -> Unit,
+    front: @Composable () -> Unit,
+) {
+    SubcomposeLayout(modifier) { constraints ->
+        val width = constraints.maxWidth
+        val minHeight = if (width == Constraints.Infinity) {
+            0
+        } else {
+            (width * CARD_HEIGHT_RATIO / CARD_WIDTH_RATIO).roundToInt()
+        }
+
+        val naturalConstraints = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
+        val backNaturalHeight = subcompose(CardSide.BackMeasure, back)
+            .maxOfOrNull { it.measure(naturalConstraints).height } ?: 0
+        val finalHeight = maxOf(minHeight, backNaturalHeight)
+        val sizeConstraints = constraints.copy(minHeight = finalHeight, maxHeight = finalHeight)
+        val frontPlaceables = subcompose(CardSide.Front, front).map { it.measure(sizeConstraints) }
+        val backPlaceables = subcompose(CardSide.Back, back).map { it.measure(sizeConstraints) }
+        layout(width, finalHeight) {
+            val ordered = if (placeBackOnTop) {
+                frontPlaceables + backPlaceables
+            } else {
+                backPlaceables + frontPlaceables
             }
-            content()
+            ordered.forEach { it.place(0, 0) }
         }
     }
 }
+
+private enum class CardSide { BackMeasure, Front, Back }
 
 @Composable
 private fun CardTopBlock(modifier: Modifier = Modifier) {
@@ -488,7 +550,7 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
 
-@Suppress("MagicNumber", "LongParameterList")
+@Suppress("MagicNumber", "LongParameterList", "LongMethod")
 @Composable
 private fun TangemPayCardDetailsShownBlock(
     cardNumber: String,
@@ -538,6 +600,7 @@ private fun TangemPayCardDetailsShownBlock(
                 copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CVC,
             )
         }
+        SpacerH(8.dp)
         Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
