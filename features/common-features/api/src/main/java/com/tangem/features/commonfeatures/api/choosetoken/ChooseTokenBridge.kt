@@ -55,6 +55,13 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
             )
+            val Transfer = Settings(
+                title = resourceReference(R.string.common_transfer),
+                isShowMarketBlock = false,
+                isShowPaymentAccount = false,
+                isAppBarShown = false,
+                isShowSingleCurrencyWallets = true,
+            )
         }
     }
 
