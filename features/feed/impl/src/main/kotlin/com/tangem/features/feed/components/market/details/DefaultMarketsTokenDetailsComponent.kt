@@ -42,7 +42,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
@@ -66,7 +66,7 @@ internal class DefaultMarketsTokenDetailsComponent(
     portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     val params: Params,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
-    private val addFundsComponentFactory: AddFundsComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     // applying l2 compatibility
@@ -174,10 +174,10 @@ internal class DefaultMarketsTokenDetailsComponent(
         config: AddFundsSlotRoute,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent {
-        val launchMode = AddFundsComponent.LaunchMode.FilteredByRawId(rawCurrencyId = config.rawCurrencyId)
-        return addFundsComponentFactory.create(
+        val launchMode = ManageFundsComponent.LaunchMode.FilteredByRawId(rawCurrencyId = config.rawCurrencyId)
+        return manageFundsComponentFactory.create(
             context = childByContext(componentContext),
-            params = AddFundsComponent.Params(
+            params = ManageFundsComponent.Params(
                 launchMode = launchMode,
                 onDismiss = { model.addFundsSheetNavigation.dismiss() },
             ),
