@@ -1,11 +1,13 @@
 package com.tangem.lib.auth.session.internal
 
 import arrow.core.Either
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
 import com.tangem.datasource.api.auth.models.request.RegisterPayload
+import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -13,6 +15,7 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
 import com.tangem.lib.auth.session.SessionTokensStore
@@ -89,10 +92,16 @@ internal class DefaultDeviceRegistrar(
             raise(DeviceRegistrationError.SigningFailed(e))
         }
 
-        val registerResponse = authApi.register(RegisterApiRequest(payload = payload, signature = signature))
-        when (registerResponse) {
+        val registerResponse = authApi.registerDevice(RegisterApiRequest(payload = payload, signature = signature))
+        handleRegisterResponse(registerResponse)
+    }
+
+    private suspend fun Raise<DeviceRegistrationError>.handleRegisterResponse(
+        response: ApiResponse<TokenApiResponse>,
+    ) {
+        when (response) {
             is ApiResponse.Success -> {
-                val tokens = SessionTokensConverter.convertBack(registerResponse.data)
+                val tokens = SessionTokensConverter.convertBack(response.data)
                 try {
                     // Keep both writes inside one catch — if the second one fails, the flag stays
                     // `false` and the next launch retries cleanly. Worst case: tokens are persisted
@@ -106,10 +115,27 @@ internal class DefaultDeviceRegistrar(
                 TangemLogger.i("Device registered successfully")
             }
             is ApiResponse.Error -> {
-                val authError = errorConverter.convert(registerResponse.cause)
+                val authError = errorConverter.convert(response.cause)
+                if (authError is AuthError.Conflict) {
+                    // Device is already registered server-side (e.g. the local flag was lost on
+                    // reinstall). Persist the flag to stop retrying; session tokens will be minted
+                    // on demand via /authenticate.
+                    TangemLogger.i("Device already registered server-side (409) — marking as registered")
+                    markRegistered(onFailureLog = "Failed to persist device-registration flag after 409")
+                    return
+                }
                 TangemLogger.e("/register request failed: $authError")
                 raise(DeviceRegistrationError.Api(authError))
             }
+        }
+    }
+
+    private suspend fun Raise<DeviceRegistrationError>.markRegistered(onFailureLog: String) {
+        try {
+            appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = true)
+        } catch (e: Exception) {
+            TangemLogger.e(onFailureLog, e)
+            raise(DeviceRegistrationError.PersistenceFailed(e))
         }
     }
 }
