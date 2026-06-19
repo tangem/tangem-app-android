@@ -3,17 +3,18 @@ package com.tangem.features.feed.ui.utils
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.State
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import com.arkivanov.decompose.Child
-import com.arkivanov.decompose.FaultyDecomposeApi
-import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimation
-import com.arkivanov.decompose.extensions.compose.stack.animation.fade
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.*
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.features.feed.components.FeedEntryChildFactory
+import kotlin.math.abs
 
 private const val FEED_ENTRY_SLIDE_DURATION_MS = 300
+private const val FEED_ENTRY_FADE_DURATION_MS = 300
 
 internal typealias FeedEntryActiveChild =
     Child.Created<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>
@@ -21,18 +22,32 @@ internal typealias FeedEntryActiveChild =
 internal typealias FeedEntryChildStack =
     ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>
 
-@OptIn(FaultyDecomposeApi::class)
+// Single-child `stackAnimation` overload (-> SimpleStackAnimation), like the root content. Avoids the
+// 3-arg overload, which is @FaultyDecomposeApi and backed by a movableContentOf impl known to misbehave on
+// rapid transition interruptions (the "stuck content" bug). The selector sees only one child, so the fade vs
+// slide choice is per-screen: Search fades, everything else slides.
 internal fun contentFeedEntryStackAnimation(): StackAnimation<
     FeedEntryChildFactory.Child,
     ComposableModularBottomSheetContentComponent,
     > =
-    stackAnimation { to, from, _ ->
-        if (to.configuration.usesFadeStackTransition() || from.configuration.usesFadeStackTransition()) {
-            fade()
+    stackAnimation { child ->
+        if (child.configuration.usesFadeStackTransition()) {
+            feedContentFade()
         } else {
             slide()
         }
     }
+
+private fun feedContentFade(): StackAnimator = stackAnimator(
+    animationSpec = tween(FEED_ENTRY_FADE_DURATION_MS),
+) { factor, _, content ->
+    content(
+        Modifier.graphicsLayer {
+            alpha = 1f - abs(factor)
+            compositingStrategy = CompositingStrategy.ModulateAlpha
+        },
+    )
+}
 
 internal fun topBarFeedEntryAnimatedContentTransitionSpec(
     stackState: State<FeedEntryChildStack>,
