@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
@@ -174,8 +175,14 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class AddressBook(
-        val predefinedAddress: String? = null,
-    ) : AppRoute(path = "/address_book/predefinedAddress/$predefinedAddress")
+        val addressBookOpenMode: AddressBookOpenMode = AddressBookOpenMode.Default,
+    ) : AppRoute(
+        path = when (addressBookOpenMode) {
+            is AddressBookOpenMode.WithContactCreation ->
+                "/address_book/${addressBookOpenMode.address}-${addressBookOpenMode.networkId}"
+            AddressBookOpenMode.Default -> "/address_book"
+        },
+    )
 
     @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
