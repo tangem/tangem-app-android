@@ -12,6 +12,7 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
 import com.tangem.feature.swap.DefaultSwapRepository
 import com.tangem.feature.swap.NoOpSwapFeedbackRepository
@@ -41,6 +42,7 @@ internal class SwapDataModule {
         @NetworkMoshi moshi: Moshi,
         appPreferencesStore: AppPreferencesStore,
         expressHistoryDao: ExpressHistoryDao,
+        txHistoryFeatureToggles: TxHistoryFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -50,6 +52,7 @@ internal class SwapDataModule {
             moshi = moshi,
             appPreferencesStore = appPreferencesStore,
             expressHistoryDao = expressHistoryDao,
+            txHistoryFeatureToggles = txHistoryFeatureToggles,
         )
     }
 

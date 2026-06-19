@@ -566,6 +566,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
@@ -613,6 +614,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
     }
@@ -635,6 +637,7 @@ internal class WalletModel @Inject constructor(
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
                     isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                    isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
                 ),
             )
         }
@@ -650,6 +653,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
@@ -712,6 +716,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 

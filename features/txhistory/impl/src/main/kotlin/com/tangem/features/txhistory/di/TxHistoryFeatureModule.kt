@@ -1,6 +1,6 @@
 package com.tangem.features.txhistory.di
 
-import com.tangem.features.txhistory.TxHistoryFeatureToggles
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.DefaultTxHistoryComponent
 import com.tangem.features.txhistory.component.DefaultTxHistoryDetailsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
