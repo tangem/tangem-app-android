@@ -9,27 +9,30 @@ import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import java.util.UUID
 
 /**
  * Creates a new [Contact] with client-generated UUID v4 ids. The name must be valid and unique
 
- * the current time.
+ * the current time. Every address entry is signed with [userWallet]'s key before the contact is
+ * persisted, so only signed contacts are ever stored.
  */
 class CreateContactUseCase(
     private val repository: AddressBookRepository,
     private val validateContactName: ValidateContactNameUseCase,
+    private val signAddressEntries: SignAddressEntriesUseCase,
     private val timestampProvider: IsoTimestampProvider,
 ) {
 
     @Suppress("LongParameterList")
     suspend operator fun invoke(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         name: String,
         network: Network,
         addressEntries: List<AddressEntry>,
     ): Either<SaveContactError, Contact> = either {
+        val userWalletId = userWallet.walletId
         val validName = validateContactName(userWalletId, name)
             .mapLeft(SaveContactError::Name)
             .bind()
@@ -43,7 +46,10 @@ class CreateContactUseCase(
             updatedAt = now,
             addressEntries = addressEntries,
         )
-        repository.saveContact(contact)
-        contact
+        val signed = signAddressEntries(userWallet, contact)
+            .mapLeft(SaveContactError::Signing)
+            .bind()
+        repository.saveContact(signed)
+        signed
     }
 }

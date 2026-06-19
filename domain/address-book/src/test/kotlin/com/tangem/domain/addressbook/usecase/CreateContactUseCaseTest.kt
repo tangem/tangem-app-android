@@ -1,5 +1,7 @@
 package com.tangem.domain.addressbook.usecase
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
@@ -11,7 +13,9 @@ import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.error.SignHashesError
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,13 +36,16 @@ class CreateContactUseCaseTest {
     private val timestampProvider: IsoTimestampProvider = mockk {
         every { now() } returns expectedTimestamp
     }
+    private val signAddressEntries: SignAddressEntriesUseCase = mockk()
     private val useCase = CreateContactUseCase(
         repository = repository,
         validateContactName = ValidateContactNameUseCase(repository),
+        signAddressEntries = signAddressEntries,
         timestampProvider = timestampProvider,
     )
 
     private val walletId = UserWalletId("011")
+    private val userWallet: UserWallet = mockk { every { walletId } returns this@CreateContactUseCaseTest.walletId }
     private val networkRawId = Network.RawID("ethereum")
     private val networkId = Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
     private val network: Network = mockk { every { id } returns networkId }
@@ -53,19 +60,25 @@ class CreateContactUseCaseTest {
         ),
     )
 
+    private val signedEntries = listOf(addressEntries.first().copy(signature = "signed"))
+
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository)
+        clearMocks(repository, signAddressEntries)
+        // Sign returns the contact with signed entries; the persisted contact must be the signed one.
+        coEvery { signAddressEntries(eq(userWallet), any()) } answers {
+            secondArg<Contact>().copy(addressEntries = signedEntries).right()
+        }
     }
 
     @Test
-    fun `create generates ids and persists the contact`() = runTest {
+    fun `create generates ids and persists the signed contact`() = runTest {
         every { repository.getContacts(walletId) } returns flowOf(emptyList())
         val saved = slot<Contact>()
         coEvery { repository.saveContact(capture(saved)) } returns Unit
 
         val result = useCase(
-            userWalletId = walletId,
+            userWallet = userWallet,
             name = "Alice",
             network = network,
             addressEntries = addressEntries,
@@ -76,9 +89,25 @@ class CreateContactUseCaseTest {
         assertThat(contact!!.walletId).isEqualTo(walletId)
         assertThat(contact.name.value).isEqualTo("Alice")
         assertThat(contact.id.value).isNotEmpty()
-        assertThat(contact.addressEntries).isEqualTo(addressEntries)
+        assertThat(contact.addressEntries).isEqualTo(signedEntries)
         assertThat(contact.createdAt).isEqualTo(expectedTimestamp)
         assertThat(contact.updatedAt).isEqualTo(expectedTimestamp)
+    }
+
+    @Test
+    fun `signing failure fails without persisting`() = runTest {
+        every { repository.getContacts(walletId) } returns flowOf(emptyList())
+        coEvery { signAddressEntries(eq(userWallet), any()) } returns SignHashesError.NoSigningKey.left()
+
+        val result = useCase(
+            userWallet = userWallet,
+            name = "Alice",
+            network = network,
+            addressEntries = addressEntries,
+        )
+
+        assertThat(result.leftOrNull()).isEqualTo(SaveContactError.Signing(SignHashesError.NoSigningKey))
+        coVerify(exactly = 0) { repository.saveContact(any()) }
     }
 
     @Test
@@ -86,7 +115,7 @@ class CreateContactUseCaseTest {
         every { repository.getContacts(walletId) } returns flowOf(listOf(contact(name = "Alice")))
 
         val result = useCase(
-            userWalletId = walletId,
+            userWallet = userWallet,
             name = "alice",
             network = network,
             addressEntries = addressEntries,
@@ -102,7 +131,7 @@ class CreateContactUseCaseTest {
         every { repository.getContacts(walletId) } returns flowOf(emptyList())
 
         val result = useCase(
-            userWalletId = walletId,
+            userWallet = userWallet,
             name = "",
             network = network,
             addressEntries = addressEntries,
