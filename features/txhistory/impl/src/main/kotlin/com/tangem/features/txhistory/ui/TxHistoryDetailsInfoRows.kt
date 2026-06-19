@@ -20,6 +20,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.InfoRowUM
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Info-rows block of the transaction details card: a vertical list of DS3 [TangemRow]s (label on the leading side,
@@ -36,7 +38,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.InfoRowUM
  * @param modifier Modifier applied to the list container.
  */
 @Composable
-internal fun TxHistoryDetailsInfoRows(rows: List<InfoRowUM>, modifier: Modifier = Modifier) {
+internal fun TxHistoryDetailsInfoRows(rows: ImmutableList<InfoRowUM>, modifier: Modifier = Modifier) {
     if (rows.isEmpty()) return
     Column(
         modifier = modifier,
@@ -74,7 +76,7 @@ private fun TxHistoryDetailsInfoRowsPreview() {
         ) {
             // Multiple rows — dividers between rows, none after the last
             TxHistoryDetailsInfoRows(
-                rows = listOf(
+                rows = persistentListOf(
                     InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
                     InfoRowUM(label = stringReference("Rate"), value = stringReference("1 POL ≈ 0.36 USDT")),
                     InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
@@ -83,7 +85,7 @@ private fun TxHistoryDetailsInfoRowsPreview() {
             // Single row — no divider
             TxHistoryDetailsInfoRows(
                 modifier = Modifier.padding(top = 16.dp),
-                rows = listOf(
+                rows = persistentListOf(
                     InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
                 ),
             )
