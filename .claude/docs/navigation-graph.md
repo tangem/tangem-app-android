@@ -40,31 +40,31 @@ Complete navigation map of the app based on `AppRoute` sealed class and feature-
 | 30 | `OnrampSuccess` | `/onramp/success/{txId}` | Onramp success screen |
 | 31 | `BuyCrypto` | `/buy_crypto/{walletId}` | Buy crypto token selector |
 | 32 | `SellCrypto` | `/sell_crypto/{walletId}` | Sell crypto token selector |
-| 34 | `Onboarding` | `/onboarding_v2/{mode}` | Onboarding flow (v2) |
-| 35 | `Stories` | `/stories$storyId` | Stories / promotional content |
-| 36 | `NFT` | `/nft/{walletId}` | NFT collection list |
-| 37 | `NFTSend` | `/send/nft/{walletId}/{collection}/{assetId}` | Send NFT |
-| 38 | `CreateWalletSelection` | `/create_wallet_selection` | Choose wallet creation type |
-| 39 | `CreateWalletStart` | `/create_wallet_start` | Wallet creation intro (cold/hot) |
-| 40 | `CreateHardwareWallet` | `/create_hardware_wallet` | Create hardware wallet flow |
-| 41 | `CreateMobileWallet` | `/create_mobile_wallet` | Create mobile (hot) wallet |
-| 42 | `UpgradeWallet` | `/upgrade_wallet/{walletId}` | Upgrade hot wallet to hardware |
-| 43 | `AddExistingWallet` | `/add_existing_wallet` | Import existing wallet |
-| 44 | `WalletActivation` | `/wallet_activation/{walletId}` | Activate wallet post-creation |
-| 45 | `CreateWalletBackup` | `/create_wallet_backup/{walletId}` | Backup flow for created wallet |
-| 46 | `UpdateAccessCode` | `/update_access_code/{walletId}` | Change access code |
-| 47 | `ViewPhrase` | `/view_seed_phrase/{walletId}` | View recovery phrase |
-| 48 | `ForgetWallet` | `/forget_wallet/{walletId}` | Remove wallet from app |
-| 49 | `SendEntryPoint` | `/send_entry_point/{walletId}/{currencyId}` | Send entry with swap option |
-| 50 | `CreateAccount` | `/create_account/{walletId}` | Create new account |
-| 51 | `EditAccount` | `/edit_account/{accountId}` | Edit account |
-| 52 | `AccountDetails` | `/account_details/{accountId}` | Account details screen |
-| 53 | `ArchivedAccountList` | `/archived_account/{walletId}` | Archived accounts list |
-| 54 | `TangemPayDetails` | `/tangem_pay_details/{walletId}` | Tangem Pay card details |
-| 55 | `TangemPayOnboarding` | `/tangem_pay_onboarding/{mode}` | Tangem Pay onboarding |
-| 56 | `Kyc` | `/kyc` | KYC verification |
-| 57 | `YieldSupplyEntry` | `/yield_supply_entry/{walletId}/{symbol}` | Yield/supply entry point |
-| 58 | `NewsDetails` | `/news_details/{newsId}` | News article detail |
+| 33 | `Onboarding` | `/onboarding_v2/{mode}` | Onboarding flow (v2) |
+| 34 | `Stories` | `/stories$storyId` | Stories / promotional content |
+| 35 | `NFT` | `/nft/{walletId}` | NFT collection list |
+| 36 | `NFTSend` | `/send/nft/{walletId}/{collection}/{assetId}` | Send NFT |
+| 37 | `CreateWalletSelection` | `/create_wallet_selection` | Choose wallet creation type |
+| 38 | `CreateWalletStart` | `/create_wallet_start` | Wallet creation intro (cold/hot) |
+| 39 | `CreateHardwareWallet` | `/create_hardware_wallet` | Create hardware wallet flow |
+| 40 | `CreateMobileWallet` | `/create_mobile_wallet` | Create mobile (hot) wallet |
+| 41 | `UpgradeWallet` | `/upgrade_wallet/{walletId}` | Upgrade hot wallet to hardware |
+| 42 | `AddExistingWallet` | `/add_existing_wallet` | Import existing wallet |
+| 43 | `WalletActivation` | `/wallet_activation/{walletId}` | Activate wallet post-creation |
+| 44 | `CreateWalletBackup` | `/create_wallet_backup/{walletId}` | Backup flow for created wallet |
+| 45 | `UpdateAccessCode` | `/update_access_code/{walletId}` | Change access code |
+| 46 | `ViewPhrase` | `/view_seed_phrase/{walletId}` | View recovery phrase |
+| 47 | `ForgetWallet` | `/forget_wallet/{walletId}` | Remove wallet from app |
+| 48 | `SendEntryPoint` | `/send_entry_point/{walletId}/{currencyId}` | Send entry with swap option |
+| 49 | `CreateAccount` | `/create_account/{walletId}` | Create new account |
+| 50 | `EditAccount` | `/edit_account/{accountId}` | Edit account |
+| 51 | `AccountDetails` | `/account_details/{accountId}` | Account details screen |
+| 52 | `ArchivedAccountList` | `/archived_account/{walletId}` | Archived accounts list |
+| 53 | `TangemPayDetails` | `/tangem_pay_details/{walletId}` | Tangem Pay card details |
+| 54 | `TangemPayOnboarding` | `/tangem_pay_onboarding/{mode}` | Tangem Pay onboarding |
+| 55 | `Kyc` | `/kyc` | KYC verification |
+| 56 | `YieldSupplyEntry` | `/yield_supply_entry/{walletId}/{symbol}` | Yield/supply entry point |
+| 57 | `NewsDetails` | `/news_details/{newsId}` | News article detail |
 
 ## 2. Navigation Edges
 
@@ -268,10 +268,10 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 |--------|--------|---------|
 | `CurrencyDetails` | push | Navigate to fee token |
 
-### BuyCrypto / SellCrypto
-
+### Swap / BuyCrypto / SellCrypto
 | Target | Method | Trigger |
 |--------|--------|---------|
+| `Swap` | push | After token selection (Swap) |
 | `Onramp` | push | After token selection (BuyCrypto/SellCrypto) |
 
 ### Deep Link Handlers (push to AppRoute)
@@ -282,6 +282,7 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 | `SellRedirectDeepLinkHandler` | `Send` (with sell redirect params) |
 | `BuyDeepLinkHandler` | `BuyCrypto` |
 | `SellDeepLinkHandler` | `SellCrypto` |
+| `SwapDeepLinkHandler` | `Swap` |
 | `ReferralDeepLinkHandler` | Referral handling |
 | `WalletDeepLinkHandler` | Wallet handling |
 | `TokenDetailsDeepLinkHandler` | `CurrencyDetails` |
@@ -444,6 +445,7 @@ Transitions: `ManualBackupStart` → `ManualBackupPhrase` → `ManualBackupCheck
 | `redirect` | — | Buy redirect (no-op) |
 | `buy` | `BuyDeepLinkHandler` | `BuyCrypto` |
 | `sell` | `SellDeepLinkHandler` | `SellCrypto` |
+| `swap` | `SwapDeepLinkHandler` | `Swap` |
 | `referral` | `ReferralDeepLinkHandler` | Referral flow |
 | `main` | `WalletDeepLinkHandler` | Wallet screen |
 | `token` | `TokenDetailsDeepLinkHandler` | `CurrencyDetails` |
