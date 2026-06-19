@@ -10,7 +10,7 @@ internal class OrderConflictRulesTest {
 
     @Test
     fun `IssueCard is blocked by an active issue order`() {
-        val active = listOf(order(type = OrderType.CARD_ISSUE, status = OrderStatus.PROCESSING))
+        val active = listOf(order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING))
 
         val resolution = OrderConflictRules.resolve(OrderIntent.IssueCard, active)
 
@@ -104,7 +104,7 @@ internal class OrderConflictRulesTest {
         val active = listOf(
             order(type = OrderType.CARD_FREEZE, status = OrderStatus.PROCESSING, productInstanceId = cardA),
             order(type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING),
-            order(type = OrderType.CARD_ISSUE, status = OrderStatus.PROCESSING),
+            order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING),
         )
 
         val resolution = OrderConflictRules.resolve(OrderIntent.Rename(cardA), active)
@@ -115,8 +115,8 @@ internal class OrderConflictRulesTest {
     @Test
     fun `Terminal-status orders never block`() {
         val terminal = listOf(
-            order(type = OrderType.CARD_ISSUE, status = OrderStatus.COMPLETED),
-            order(type = OrderType.CARD_ISSUE, status = OrderStatus.CANCELED),
+            order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED),
+            order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.CANCELED),
         )
 
         val resolution = OrderConflictRules.resolve(OrderIntent.IssueCard, terminal)
