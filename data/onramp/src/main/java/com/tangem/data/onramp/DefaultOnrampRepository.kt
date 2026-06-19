@@ -26,11 +26,11 @@ import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
+import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
-import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
@@ -48,6 +48,7 @@ import com.tangem.domain.onramp.model.error.OnrampPairsError
 import com.tangem.domain.onramp.model.error.OnrampRedirectError
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -75,6 +76,7 @@ internal class DefaultOnrampRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : OnrampRepository {
 
@@ -165,7 +167,9 @@ internal class DefaultOnrampRepository(
         )
             .getOrThrow()
 
-        expressHistoryDao.upsertOnramps(listOf(response.toEntity(ownerAddress = response.payoutAddress)))
+        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+            expressHistoryDao.upsertOnramps(listOf(response.toEntity(ownerAddress = response.payoutAddress)))
+        }
 
         statusConverter.convert(response)
     }
