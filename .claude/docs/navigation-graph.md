@@ -40,7 +40,6 @@ Complete navigation map of the app based on `AppRoute` sealed class and feature-
 | 30 | `OnrampSuccess` | `/onramp/success/{txId}` | Onramp success screen |
 | 31 | `BuyCrypto` | `/buy_crypto/{walletId}` | Buy crypto token selector |
 | 32 | `SellCrypto` | `/sell_crypto/{walletId}` | Sell crypto token selector |
-| 33 | `SwapCrypto` | `/swap_crypto/{walletId}` | Swap crypto token selector |
 | 34 | `Onboarding` | `/onboarding_v2/{mode}` | Onboarding flow (v2) |
 | 35 | `Stories` | `/stories$storyId` | Stories / promotional content |
 | 36 | `NFT` | `/nft/{walletId}` | NFT collection list |
@@ -269,11 +268,10 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 |--------|--------|---------|
 | `CurrencyDetails` | push | Navigate to fee token |
 
-### SwapCrypto / BuyCrypto / SellCrypto
+### BuyCrypto / SellCrypto
 
 | Target | Method | Trigger |
 |--------|--------|---------|
-| `Swap` | push | After token selection (SwapCrypto) |
 | `Onramp` | push | After token selection (BuyCrypto/SellCrypto) |
 
 ### Deep Link Handlers (push to AppRoute)
@@ -284,7 +282,6 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 | `SellRedirectDeepLinkHandler` | `Send` (with sell redirect params) |
 | `BuyDeepLinkHandler` | `BuyCrypto` |
 | `SellDeepLinkHandler` | `SellCrypto` |
-| `SwapDeepLinkHandler` | `SwapCrypto` |
 | `ReferralDeepLinkHandler` | Referral handling |
 | `WalletDeepLinkHandler` | Wallet handling |
 | `TokenDetailsDeepLinkHandler` | `CurrencyDetails` |
@@ -447,7 +444,6 @@ Transitions: `ManualBackupStart` → `ManualBackupPhrase` → `ManualBackupCheck
 | `redirect` | — | Buy redirect (no-op) |
 | `buy` | `BuyDeepLinkHandler` | `BuyCrypto` |
 | `sell` | `SellDeepLinkHandler` | `SellCrypto` |
-| `swap` | `SwapDeepLinkHandler` | `SwapCrypto` |
 | `referral` | `ReferralDeepLinkHandler` | Referral flow |
 | `main` | `WalletDeepLinkHandler` | Wallet screen |
 | `token` | `TokenDetailsDeepLinkHandler` | `CurrencyDetails` |
