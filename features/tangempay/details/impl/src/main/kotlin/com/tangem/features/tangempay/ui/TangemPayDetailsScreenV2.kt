@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerW
@@ -56,6 +55,8 @@ import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTrans
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.CardsProgressBannerUM
+import com.tangem.features.tangempay.entity.TangemPayCardUiState
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarConfig
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
@@ -159,8 +160,20 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
         }
     }
-    when {
-        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuingOrClosing } == true -> {
+
+    if (state.errorNotificationConfig != null) {
+        item("errorSessionBannerBlock") {
+            ErrorMessage(
+                config = state.errorNotificationConfig,
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+            )
+        }
+    }
+
+    val progressBanner = state.balanceBlockState.cardsBlockState?.progressBanner
+
+    when (progressBanner) {
+        CardsProgressBannerUM.Reissuing -> {
             item("reissuingBannerBlock") {
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
@@ -169,7 +182,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                 )
             }
         }
-        state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isIssuing } == true -> {
+        CardsProgressBannerUM.Issuing -> {
             item("issuingBannerBlock") {
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
@@ -187,15 +200,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                 )
             }
         }
-        else -> {
-            if (state.errorNotificationConfig != null) {
-                item("errorSessionBannerBlock") {
-                    ErrorMessage(
-                        config = state.errorNotificationConfig,
-                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
-                    )
-                }
-            }
+        null -> {
             if (state.addToWalletBlockState != null) {
                 item("addToWalletBannerBlock") {
                     TangemPayAddToWalletBlock(
@@ -385,7 +390,7 @@ private fun CardsBlock(
     ) {
         items(items = cardsBlockState.cards) { item ->
             TangemPayCardView(
-                isIssueInProgress = item.isIssuing || item.isReissuingOrClosing,
+                isIssueInProgress = item.state != TangemPayCardUiState.Active,
                 lastDigits = item.lastDigits,
                 onClick = item.onClick,
                 isEnabled = item.isEnabled,
