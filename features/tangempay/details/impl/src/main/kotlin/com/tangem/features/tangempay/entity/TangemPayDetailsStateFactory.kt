@@ -11,6 +11,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
@@ -81,16 +82,15 @@ internal class TangemPayDetailsStateFactory(
                             TangemPayDetailsBalanceBlockState.Card(
                                 lastDigits = cardItem.lastDigits,
                                 onClick = { intents.onCardClick(cardItem.id) },
-                                isReissuingOrClosing = cardItem.state == TangemPayCardState.Reissuing ||
-                                    cardItem.state == TangemPayCardState.Closing,
                                 isEnabled = status.error == null,
                                 isFrozen = cardItem.isFrozen,
-                                isIssuing = cardItem.state == TangemPayCardState.Issuing,
+                                state = cardItem.state.toUiState(),
                             )
                         }
                         .toImmutableList(),
                     onAddCardClick = intents::onAddCardClick,
                     isAddCardEnabled = isAddCardEnabled,
+                    progressBanner = status.cards.resolveProgressBanner(),
                 ),
             ),
             isBalanceHidden = false,
@@ -102,6 +102,12 @@ internal class TangemPayDetailsStateFactory(
             },
             accountDeactivatedNotificationConfig = null,
         )
+    }
+
+    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? = when {
+        any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
+        any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
+        else -> null
     }
 
     fun getDeactivatedState(): TangemPayDetailsUM {
