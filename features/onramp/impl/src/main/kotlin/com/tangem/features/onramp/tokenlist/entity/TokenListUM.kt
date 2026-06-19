@@ -21,7 +21,7 @@ internal data class TokenListUM(
     val unavailableItems: ImmutableList<TokensListItemUM>,
     val tokensListData: TokenListUMData,
     val isBalanceHidden: Boolean,
-    val warning: NotificationUM? = null
+    val warning: NotificationUM? = null,
 )
 
 internal sealed interface TokenListUMData {
