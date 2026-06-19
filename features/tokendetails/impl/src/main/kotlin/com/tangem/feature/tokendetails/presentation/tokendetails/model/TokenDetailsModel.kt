@@ -599,6 +599,15 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onTransferClick() {
+        val amount = cryptoCurrencyStatus?.value?.amount
+        if (amount == null || amount.signum() <= 0) {
+            uiMessageSender.send(
+                message = SnackbarMessage(
+                    message = resourceReference(R.string.token_button_unavailability_reason_empty_balance_send),
+                ),
+            )
+            return
+        }
         bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
     }
 
@@ -830,6 +839,20 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.FROM, checkYieldSupply = true)
+    }
+
+    override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
+            return
+        }
+
+        appRouter.push(
+            AppRoute.SendEntryPoint(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+                shouldStartWithSwap = true,
+            ),
+        )
     }
 
     override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) {

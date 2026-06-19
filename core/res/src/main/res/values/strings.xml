@@ -332,6 +332,7 @@
   <string name="common_error">Error</string>
   <string name="common_estimated_fee">Top-up network fee</string>
   <string name="common_exchange">Swap</string>
+  <string name="common_send_with_swap">Send&amp;Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
@@ -1294,6 +1295,7 @@
   <string name="quick_action_sell_description">Sell crypto securely</string>
   <string name="quick_action_send_description">Send to another wallet</string>
   <string name="quick_action_swap_description">Between your portfolios</string>
+  <string name="quick_action_send_and_swap_description">Send with swap to another token</string>
   <string name="quick_top_up_chip_other">Other</string>
   <string name="quick_top_up_title">Quick top up</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>

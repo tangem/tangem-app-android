@@ -125,6 +125,12 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
+    override fun openTransfer(userWalletId: UserWalletId) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.Transfer(userWalletId = userWalletId),
+        )
+    }
+
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
     }

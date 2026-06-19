@@ -120,4 +120,7 @@ internal interface InnerWalletRouter {
 
     /** Open Add Funds screen */
     fun openAddFunds(userWalletId: UserWalletId)
+
+    /** Open Transfer screen */
+    fun openTransfer(userWalletId: UserWalletId)
 }
