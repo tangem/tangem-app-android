@@ -141,6 +141,7 @@ internal fun TangemPayDetailsScreenV2(
     expressTransactionsBottomSheetState?.content(null)
 }
 
+@Suppress("LongMethod")
 private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
     item("balanceBlock") {
         BalanceBlock(
@@ -174,6 +175,15 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
                     subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                    contentColor = TangemTheme.colors3.bg.opaque.secondary,
+                    leadingContent = {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
                 )
             }
         }
