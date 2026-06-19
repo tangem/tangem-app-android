@@ -12,6 +12,7 @@ import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.filterIf
 import com.tangem.utils.logging.TangemLogger
@@ -21,6 +22,7 @@ internal class DefaultExpressRepository(
     private val expressHistoryDao: ExpressHistoryDao,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : ExpressRepository {
 
     override suspend fun getProviders(
@@ -37,7 +39,9 @@ internal class DefaultExpressRepository(
                     ),
                 ).getOrThrow()
 
-                expressHistoryDao.upsertProviders(providers.map { it.toEntity() })
+                if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+                    expressHistoryDao.upsertProviders(providers.map { it.toEntity() })
+                }
 
                 providers.map(ExpressProviderConverter()::convert)
                     .filterIf(filterProviderTypes.isNotEmpty()) { it.type in filterProviderTypes }

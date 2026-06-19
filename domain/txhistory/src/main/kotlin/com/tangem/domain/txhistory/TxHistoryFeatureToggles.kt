@@ -1,4 +1,4 @@
-package com.tangem.features.txhistory
+package com.tangem.domain.txhistory
 
 interface TxHistoryFeatureToggles {
     val isSolanaTxHistoryEnabled: Boolean

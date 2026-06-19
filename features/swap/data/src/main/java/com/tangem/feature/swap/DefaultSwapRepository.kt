@@ -29,6 +29,7 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -55,6 +56,7 @@ internal class DefaultSwapRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val rampStateManager: RampStateManager,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : SwapRepository {
 
@@ -253,7 +255,9 @@ internal class DefaultSwapRepository(
                             .getOrThrow()
 
                         val entity = response.toEntity(ownerAddress = response.fromAddress.orEmpty())
-                        expressHistoryDao.upsertExchanges(listOf(entity))
+                        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+                            expressHistoryDao.upsertExchanges(listOf(entity))
+                        }
 
                         exchangeStatusConverter.convert(response)
                     },
