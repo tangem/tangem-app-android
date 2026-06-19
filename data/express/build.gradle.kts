@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.domain.express.models)
     implementation(projects.domain.express)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.txhistory)
     api(projects.domain.models)
 
     /** Other */
