@@ -39,22 +39,18 @@ internal class SwapDataModule {
         tangemExpressApi: TangemExpressApi,
         coroutineDispatcher: CoroutineDispatcherProvider,
         dataSignature: DataSignatureVerifier,
-        walletManagerFacade: WalletManagersFacade,
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
         appPreferencesStore: AppPreferencesStore,
-        rampStateManager: RampStateManager,
         expressHistoryDao: ExpressHistoryDao,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
             coroutineDispatcher = coroutineDispatcher,
-            walletManagersFacade = walletManagerFacade,
             errorsDataConverter = errorsDataConverter,
             dataSignatureVerifier = dataSignature,
             moshi = moshi,
             appPreferencesStore = appPreferencesStore,
-            rampStateManager = rampStateManager,
             expressHistoryDao = expressHistoryDao,
         )
     }
