@@ -55,8 +55,15 @@ sealed interface TransactionItemUM {
     /** Subtitle variants for [Content] rows. */
     @Immutable
     sealed interface ContentSubtitle {
-        /** Plain text — for types without a directly-displayable address (Operation, GaslessFee, ClaimRewards, etc.). */
+        /** Plain text — for types without a displayable address (Operation, GaslessFee, ClaimRewards, etc.). */
         data class Plain(val text: TextReference) : ContentSubtitle
+
+        /**
+         * Plain-text address subtitle without an identicon — renders "prefix: <address>", where [highlight]
+         * (a substring of the resolved [text]) is painted in the primary text color while the prefix stays
+         * tertiary. Used for contract / validator addresses, external swap addresses and yield "for: <address>".
+         */
+        data class PlainAddress(val text: TextReference, val highlight: String) : ContentSubtitle
 
         /**
          * External counterparty address — renders as "to/from: <identicon> <briefAddress>".
