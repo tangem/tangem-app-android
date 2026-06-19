@@ -36,6 +36,7 @@ internal class WalletLoadingStateFactory(
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val isAddFundsStage1Enabled: Boolean,
+    private val isManageFundsEnabled: Boolean,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -171,6 +172,20 @@ internal class WalletLoadingStateFactory(
             )
         }
 
+        val lastButton = if (isManageFundsEnabled) {
+            WalletManageButton.Transfer(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onTransferClick(userWallet.walletId) },
+            )
+        } else {
+            WalletManageButton.Sell(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
+            )
+        }
+
         return persistentListOf(
             firstButton,
             WalletManageButton.Swap(
@@ -178,11 +193,7 @@ internal class WalletLoadingStateFactory(
                 dimContent = false,
                 onClick = { clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId) },
             ),
-            WalletManageButton.Sell(
-                enabled = true,
-                dimContent = false,
-                onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
-            ),
+            lastButton,
         )
     }
 
@@ -205,14 +216,25 @@ internal class WalletLoadingStateFactory(
                     },
                 ).buttonUM,
             )
-            add(
-                WalletActionButtons.Sell(
-                    isEnabled = false,
-                    onClick = {
-                        clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId)
-                    },
-                ).buttonUM,
-            )
+            if (isManageFundsEnabled) {
+                add(
+                    WalletActionButtons.Transfer(
+                        isEnabled = false,
+                        onClick = {
+                            clickIntents.onTransferClick(userWalletId = userWallet.walletId)
+                        },
+                    ).buttonUM,
+                )
+            } else {
+                add(
+                    WalletActionButtons.Sell(
+                        isEnabled = false,
+                        onClick = {
+                            clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId)
+                        },
+                    ).buttonUM,
+                )
+            }
         }.toPersistentList()
     }
 
