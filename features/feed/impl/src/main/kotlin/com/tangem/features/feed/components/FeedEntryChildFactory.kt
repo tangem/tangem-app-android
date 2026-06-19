@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
@@ -29,7 +30,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
-    private val addFundsComponentFactory: com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) {
@@ -84,7 +85,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     portfolioBlockComponentFactory = portfolioBlockComponentFactory,
                     designFeatureToggles = designFeatureToggles,
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
-                    addFundsComponentFactory = addFundsComponentFactory,
+                    manageFundsComponentFactory = manageFundsComponentFactory,
                 )
             }
             is Child.TokenList -> {
