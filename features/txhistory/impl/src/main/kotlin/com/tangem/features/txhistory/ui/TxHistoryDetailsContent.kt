@@ -19,8 +19,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 internal fun TxHistoryDetailsContent(state: TxHistoryDetailsUM, modifier: Modifier = Modifier) {
     when (state) {
         is TxHistoryDetailsUM.SingleAsset -> SingleAssetContent(state = state, modifier = modifier)
-        // TODO([REDACTED_TASK_KEY]): two-asset (Swap / Onramp) body — out of scope for the single-asset amount block ticket.
-        is TxHistoryDetailsUM.TwoAssets -> TwoAssetsPlaceholder(state = state, modifier = modifier)
+        is TxHistoryDetailsUM.TwoAssets -> TwoAssetsContent(state = state, modifier = modifier)
     }
 }
 
@@ -41,6 +40,35 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        )
+    }
+}
+
+@Composable
+private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modifier = Modifier) {
+    val from = state.from
+    val to = state.to
+    Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+        if (from != null && to != null) {
+            TxHistoryDetailsTwoAssetsBlock(
+                from = from,
+                to = to,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp),
+            )
+        } else {
+            // TODO([REDACTED_TASK_KEY]): the converter cannot populate the swap legs yet (TxInfo exposes no two-leg / fiat /
+            //  provider data). Until those fields land, fall back to the header-only placeholder.
+            TwoAssetsPlaceholder(state = state)
+        }
+        // Express status plaque under the exchange block. The top gap is owned by the banner (inside its collapsing
+        // region), so only horizontal padding is applied here.
+        TxHistoryDetailsStatusBanner(
+            state = state.statusBanner,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
         )
     }
 }
