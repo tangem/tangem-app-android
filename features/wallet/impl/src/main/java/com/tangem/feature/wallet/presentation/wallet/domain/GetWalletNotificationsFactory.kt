@@ -254,8 +254,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
         addCloreMigrationNotification(userWallet, flattenCurrencies, clickIntents)
 
-        addNoAccountWarning(cryptoCurrencyStatus = flattenCurrencies.firstOrNull())
-
         addIf(
             element = WalletNotificationUM.NumberOfSignedHashesIncorrect(
                 onCloseClick = clickIntents::onCloseAlreadySignedHashesWarningClick,
@@ -291,19 +289,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             -> null
         }
         notification?.let(::add)
-    }
-
-    private fun MutableList<WalletNotificationUM>.addNoAccountWarning(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
-        val noAccountStatus = cryptoCurrencyStatus?.value as? CryptoCurrencyStatus.NoAccount
-        if (noAccountStatus != null) {
-            add(
-                element = WalletNotificationUM.NoAccount(
-                    network = cryptoCurrencyStatus.currency.name,
-                    amount = noAccountStatus.amountToCreateAccount.toString(),
-                    symbol = cryptoCurrencyStatus.currency.symbol,
-                ),
-            )
-        }
     }
 
     private fun MutableList<WalletNotificationUM>.addCloreMigrationNotification(
