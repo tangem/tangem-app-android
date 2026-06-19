@@ -35,7 +35,7 @@ internal class RestoreActiveOrdersUseCaseTest {
     @Test
     fun `returns the orders found by the repository`() = runTest {
         val orders = listOf(
-            order(id = "issue", type = OrderType.CARD_ISSUE, status = OrderStatus.PROCESSING),
+            order(id = "issue", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING),
             order(id = "withdraw", type = OrderType.WITHDRAW, status = OrderStatus.NEW),
         )
         coEvery { repository.findOrders(userWalletId, types = emptySet(), statuses = any()) } returns orders.right()
