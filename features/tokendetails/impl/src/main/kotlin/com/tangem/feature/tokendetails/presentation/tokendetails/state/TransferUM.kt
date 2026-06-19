@@ -21,6 +21,7 @@ internal sealed interface TransferUM : TangemBottomSheetConfigContent {
     data class Content(
         val send: Row?,
         val swap: Row?,
+        val swapAndSend: Row?,
         val sell: Row?,
     ) : TransferUM
 
