@@ -341,7 +341,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Transfer with non-User interaction WHEN convert THEN Plain subtitle`() {
+    fun `GIVEN Transfer with non-User interaction WHEN convert THEN PlainAddress subtitle`() {
         val tx = txInfo(
             type = TransactionType.Transfer,
             isOutgoing = true,
@@ -350,7 +350,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.subtitle).isInstanceOf(ContentSubtitle.Plain::class.java)
+        assertThat(result.subtitle).isInstanceOf(ContentSubtitle.PlainAddress::class.java)
         assertThat(result.title).isEqualTo(resRef(R.string.common_sent))
     }
 
@@ -575,7 +575,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
+        val subtitle = result.subtitle as ContentSubtitle.PlainAddress
         val res = subtitle.text as TextReference.Res
         assertThat(res.id).isEqualTo(R.string.transaction_history_contract_address)
     }
@@ -623,7 +623,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
+        val subtitle = result.subtitle as ContentSubtitle.PlainAddress
         val res = subtitle.text as TextReference.Res
         assertThat(res.id).isEqualTo(R.string.transaction_history_transaction_validator)
     }
