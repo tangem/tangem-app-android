@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addfunds.model
+package com.tangem.features.commonfeatures.impl.managefunds.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
@@ -19,14 +19,14 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddData
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddWallet
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
-import com.tangem.features.commonfeatures.impl.addfunds.analytics.AddFundsAnalyticsEvent
+import com.tangem.features.commonfeatures.impl.managefunds.analytics.ManageFundsAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -37,7 +37,7 @@ import javax.inject.Inject
 
 @ModelScoped
 @Suppress("LongParameterList")
-internal class AddFundsModel @Inject constructor(
+internal class ManageFundsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     userPortfolioStateControllerFactory: UserPortfolioStateController.Factory,
@@ -50,8 +50,9 @@ internal class AddFundsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model(), TokenActionsComponent.Callbacks {
 
-    private val params = paramsContainer.require<AddFundsComponent.Params>()
-    val launchMode: AddFundsComponent.LaunchMode = params.launchMode
+    private val params = paramsContainer.require<ManageFundsComponent.Params>()
+    val launchMode: ManageFundsComponent.LaunchMode = params.launchMode
+    val flowType: ManageFundsComponent.FlowType = params.flowType
 
     private val routeStack = MutableStateFlow(listOf<UiRoute>(UiRoute.Loading))
 
@@ -95,7 +96,10 @@ internal class AddFundsModel @Inject constructor(
     val chooseTokenBridge: ChooseTokenBridge by lazy {
         chooseTokenBridgeFactory.create(
             modelScope = modelScope,
-            settings = ChooseTokenBridge.Settings.AddFunds,
+            settings = when (flowType) {
+                ManageFundsComponent.FlowType.AddFunds -> ChooseTokenBridge.Settings.AddFunds
+                ManageFundsComponent.FlowType.Transfer -> ChooseTokenBridge.Settings.Transfer
+            },
             analyticsPayload = setOf(ChooseTokenAnalyticsPayload.ScreensSources(SCREEN_SOURCE)),
         )
     }
@@ -116,9 +120,9 @@ internal class AddFundsModel @Inject constructor(
 
     init {
         when (val mode = launchMode) {
-            is AddFundsComponent.LaunchMode.ChooseToken -> initChooseToken(mode)
-            is AddFundsComponent.LaunchMode.TokenActionsOnly -> initTokenActionsOnly(mode)
-            is AddFundsComponent.LaunchMode.FilteredByRawId -> initFilteredByRawId(mode)
+            is ManageFundsComponent.LaunchMode.ChooseToken -> initChooseToken(mode)
+            is ManageFundsComponent.LaunchMode.TokenActionsOnly -> initTokenActionsOnly(mode)
+            is ManageFundsComponent.LaunchMode.FilteredByRawId -> initFilteredByRawId(mode)
         }
     }
 
@@ -143,9 +147,9 @@ internal class AddFundsModel @Inject constructor(
 
     override fun onQuickActionClick(action: TokenActionsBSContentUM.Action, shouldDismiss: Boolean) {
         val event = when (action) {
-            TokenActionsBSContentUM.Action.Buy -> AddFundsAnalyticsEvent.ButtonBuy()
-            TokenActionsBSContentUM.Action.Exchange -> AddFundsAnalyticsEvent.ButtonSwap()
-            TokenActionsBSContentUM.Action.Receive -> AddFundsAnalyticsEvent.ButtonReceive()
+            TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
+            TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
+            TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
             else -> null
         }
         event?.let { analyticsEventHandler.send(it) }
@@ -168,10 +172,10 @@ internal class AddFundsModel @Inject constructor(
         )
     }
 
-    private fun initChooseToken(mode: AddFundsComponent.LaunchMode.ChooseToken) {
+    private fun initChooseToken(mode: ManageFundsComponent.LaunchMode.ChooseToken) {
         chooseTokenBridge.selectWalletTab(mode.userWalletId)
         analyticsEventHandler.send(
-            AddFundsAnalyticsEvent.MethodScreenOpened(source = AddFundsAnalyticsEvent.SOURCE_MAIN_SCREEN),
+            ManageFundsAnalyticsEvent.MethodScreenOpened(source = ManageFundsAnalyticsEvent.SOURCE_MAIN_SCREEN),
         )
         replaceRoot(UiRoute.ChooseToken)
         modelScope.launch {
@@ -182,7 +186,7 @@ internal class AddFundsModel @Inject constructor(
         }
     }
 
-    private fun initTokenActionsOnly(mode: AddFundsComponent.LaunchMode.TokenActionsOnly) {
+    private fun initTokenActionsOnly(mode: ManageFundsComponent.LaunchMode.TokenActionsOnly) {
         modelScope.launch {
             val wallet = getUserWalletUseCase.invokeFlow(mode.userWalletId)
                 .mapNotNull { it.getOrNull() }
@@ -206,7 +210,7 @@ internal class AddFundsModel @Inject constructor(
         }
     }
 
-    private fun initFilteredByRawId(mode: AddFundsComponent.LaunchMode.FilteredByRawId) {
+    private fun initFilteredByRawId(mode: ManageFundsComponent.LaunchMode.FilteredByRawId) {
         modelScope.launch {
             val entries = collectFilteredEntries(mode.rawCurrencyId)
             when (entries.size) {
