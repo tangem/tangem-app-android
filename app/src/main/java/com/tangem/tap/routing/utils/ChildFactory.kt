@@ -628,6 +628,7 @@ internal class ChildFactory @Inject constructor(
                     params = SendEntryPointComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
+                        shouldStartWithSwap = route.shouldStartWithSwap,
                     ),
                     componentFactory = sendEntryPointComponentFactory,
                 )

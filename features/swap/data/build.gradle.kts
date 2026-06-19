@@ -43,6 +43,7 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.express.models)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.txhistory)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
