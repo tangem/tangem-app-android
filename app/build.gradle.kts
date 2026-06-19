@@ -191,6 +191,7 @@ dependencies {
     implementation(projects.libs.tangemSdkApi)
 
     implementation(projects.data.account)
+    implementation(projects.data.addressBook)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
