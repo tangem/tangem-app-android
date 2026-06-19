@@ -8,10 +8,11 @@ import kotlinx.coroutines.flow.Flow
 /** Persistence port for the address book. The implementation is provided by the data layer. */
 interface AddressBookRepository {
 
+    /** Contacts for a single wallet. Each [Contact] keeps its own [Contact.walletId]. */
     fun getContacts(userWalletId: UserWalletId): Flow<List<Contact>>
 
-    /** Contacts across several wallets, flattened. Each [Contact] keeps its own [Contact.walletId]. */
-    fun getContacts(userWalletIds: Set<UserWalletId>): Flow<List<Contact>>
+    /** Contacts across all wallets (flattened). Each [Contact] keeps its own [Contact.walletId]. */
+    fun getAllContacts(): Flow<List<Contact>>
 
     suspend fun getContact(userWalletId: UserWalletId, name: String): Contact?
 

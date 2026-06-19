@@ -439,6 +439,7 @@ include(":domain:search")
 
 // region Data modules
 include(":data:account")
+include(":data:address-book")
 include(":data:app-currency")
 include(":data:app-theme")
 include(":data:balance-hiding")
