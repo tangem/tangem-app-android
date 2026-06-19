@@ -442,6 +442,7 @@ sealed class AppRoute(val path: String) : Route {
     data class SendEntryPoint(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val shouldStartWithSwap: Boolean = false,
     ) : AppRoute(
         path = "/send_entry_point/${userWalletId.stringValue}/${currency.id.value}?",
     )
