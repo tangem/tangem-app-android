@@ -4,6 +4,7 @@ import com.tangem.datasource.api.auth.models.request.AuthApiRequest
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
 import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
+import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -30,8 +31,7 @@ interface AuthApi {
      * session token pair. Called once per app install.
      */
     @POST("api/v1/auth/register")
-    @RequiresDpopProof
-    suspend fun register(@Body request: RegisterApiRequest): ApiResponse<TokenApiResponse>
+    suspend fun registerDevice(@Body request: RegisterApiRequest): ApiResponse<TokenApiResponse>
 
     /**
      * Request authentication nonce.
@@ -61,4 +61,23 @@ interface AuthApi {
     @POST("api/v1/auth/refresh")
     @RequiresDpopProof
     suspend fun refresh(@Body request: RefreshApiRequest): ApiResponse<TokenApiResponse>
+
+    /**
+     * Request wallet registration nonce.
+     *
+     * Generates a nonce bound to the device public key for the wallet registration flow.
+     */
+    @POST("api/v1/auth/nonce/wallet")
+    suspend fun requestWalletNonce(@Body request: NonceApiRequest): ApiResponse<NonceApiResponse>
+
+    /**
+     * Register a wallet.
+     *
+     * Binds a new wallet to an already-registered device. When a card signature is provided the
+     * wallet is bound as COLD (card-backed); otherwise it is registered as a MOBILE (hot) wallet.
+     * Returns refreshed session tokens reflecting the updated wallet list.
+     */
+    @POST("api/v1/auth/wallet")
+    @RequiresDpopProof
+    suspend fun registerWallet(@Body request: WalletRegistrationRequest): ApiResponse<TokenApiResponse>
 }
