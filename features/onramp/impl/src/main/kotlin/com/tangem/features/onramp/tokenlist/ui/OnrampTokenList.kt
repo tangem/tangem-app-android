@@ -3,24 +3,18 @@ package com.tangem.features.onramp.tokenlist.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
@@ -31,7 +25,6 @@ import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.conditional
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
@@ -108,30 +101,6 @@ private fun LazyListScope.searchBarItem(searchBarUM: SearchBarUM, modifier: Modi
             state = searchBarUM,
             colors = TangemSearchBarDefaults.secondaryTextFieldColors,
             modifier = modifier,
-        )
-    }
-}
-
-private fun LazyListScope.assetsTitle(count: Int, showCount: Boolean) {
-    item(key = "assets_title") {
-        Text(
-            text = buildAnnotatedString {
-                append(stringResourceSafe(R.string.swap_your_assets_title))
-                if (showCount) {
-                    withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
-                        append(" $count")
-                    }
-                }
-            },
-            style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing12,
-                ),
         )
     }
 }
