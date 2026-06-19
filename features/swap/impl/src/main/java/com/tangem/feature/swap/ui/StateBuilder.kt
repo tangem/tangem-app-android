@@ -153,10 +153,15 @@ internal class StateBuilder(
                 isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
                 onClick = { },
             ),
-            shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus?.currency, toSwapCurrencyStatus?.currency),
-            predefinedButtons = createPredefinedButtons(
+            shouldShowMaxAmount = shouldShowMaxAmount(
                 fromSwapCurrencyStatus?.currency,
                 toSwapCurrencyStatus?.currency,
+                emptyAmountState.isTransferMode,
+            ),
+            predefinedButtons = createPredefinedButtons(
+                fromToken = fromSwapCurrencyStatus?.currency,
+                toCurrency = toSwapCurrencyStatus?.currency,
+                isTransferMode = emptyAmountState.isTransferMode,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
@@ -244,6 +249,11 @@ internal class StateBuilder(
         toSwapCurrencyStatus: SwapCurrencyStatus?,
         shouldResetAmount: Boolean,
     ): SwapStateHolder {
+        val shouldShowMaxAmount = shouldShowMaxAmount(
+            fromSwapCurrencyStatus?.currency,
+            toSwapCurrencyStatus?.currency,
+            emptyAmountState.isTransferMode,
+        )
         return uiStateHolder.copy(
             sendCardData = uiStateHolder.sendCardData.updateCurrencyStatus(
                 swapCurrencyStatus = fromSwapCurrencyStatus,
@@ -267,10 +277,11 @@ internal class StateBuilder(
                 isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
                 onClick = { },
             ),
-            shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus?.currency, toSwapCurrencyStatus?.currency),
+            shouldShowMaxAmount = shouldShowMaxAmount,
             predefinedButtons = createPredefinedButtons(
-                fromSwapCurrencyStatus?.currency,
-                toSwapCurrencyStatus?.currency,
+                fromToken = fromSwapCurrencyStatus?.currency,
+                toCurrency = toSwapCurrencyStatus?.currency,
+                isTransferMode = emptyAmountState.isTransferMode,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
@@ -683,7 +694,12 @@ internal class StateBuilder(
         )
     }
 
-    private fun shouldShowMaxAmount(fromToken: CryptoCurrency?, toCurrency: CryptoCurrency?): Boolean {
+    private fun shouldShowMaxAmount(
+        fromToken: CryptoCurrency?,
+        toCurrency: CryptoCurrency?,
+        isTransferMode: Boolean = false,
+    ): Boolean {
+        if (isTransferMode) return true
         return !(fromToken is CryptoCurrency.Coin && fromToken.network.id == toCurrency?.network?.id)
     }
 
@@ -696,9 +712,10 @@ internal class StateBuilder(
     private fun createPredefinedButtons(
         fromToken: CryptoCurrency?,
         toCurrency: CryptoCurrency?,
+        isTransferMode: Boolean = false,
     ): ImmutableList<PredefinedPercentButtonUM> {
         if (!swapFeatureToggles.isSwapPredefinedButtonsEnabled) return persistentListOf()
-        val shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrency)
+        val shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrency, isTransferMode)
         return PredefinedPercentAmount.entries
             .filter { it != PredefinedPercentAmount.MAX || shouldShowMaxAmount }
             .map { percent ->
