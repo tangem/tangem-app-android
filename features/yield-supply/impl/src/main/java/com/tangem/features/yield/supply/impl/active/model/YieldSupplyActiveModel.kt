@@ -11,7 +11,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -74,7 +73,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
@@ -239,7 +237,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private fun loadBoostBlock() {
         if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
-        if (designFeatureToggles.isRedesignEnabled) return
         modelScope.launch(dispatchers.io) {
             val token = cryptoCurrency as? CryptoCurrency.Token ?: return@launch
             val cached = getYieldBoostStatusUseCase(userWalletId).getOrNull()
