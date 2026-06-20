@@ -25,8 +25,8 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.common.ui.FeeBlockSuccess
 import com.tangem.features.send.common.ui.state.ConfirmUM
-import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.send.ui.state.SendUM
 
 @Composable
 internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent: SendDestinationBlockComponent) {
