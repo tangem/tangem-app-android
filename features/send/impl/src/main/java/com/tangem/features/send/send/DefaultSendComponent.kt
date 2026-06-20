@@ -28,6 +28,9 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.account.derivationIndex
+import com.tangem.features.addressbook.AddressBookContactsBlockComponent
+import com.tangem.features.addressbook.AddressBookFeatureToggles
+import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.features.send.api.FeeSelectorBlockComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
@@ -52,12 +55,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendComponent.Params,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
+    private val contactsBlockFactory: AddressBookContactsBlockComponent.Factory,
+    private val addressSelectorFactory: AddressSelectorComponent.Factory,
+    private val addressBookFeatureToggles: AddressBookFeatureToggles,
 ) : SendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
@@ -176,6 +182,9 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 cryptoCurrency = params.currency,
                 callback = model,
             ),
+            addressBookFeatureToggles = addressBookFeatureToggles,
+            contactsBlockFactory = contactsBlockFactory,
+            addressSelectorFactory = addressSelectorFactory,
         )
 
     private fun getAmountComponent(factoryContext: AppComponentContext): ComposableContentComponent {
@@ -261,6 +270,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     cryptoCurrency = cryptoCurrencyStatus.currency,
                     blockClickEnableFlow = MutableStateFlow(true),
                     predefinedValues = model.predefinedValues,
+                    isAddContactAvailable = true,
                 ),
                 onResult = { },
                 onClick = {},
