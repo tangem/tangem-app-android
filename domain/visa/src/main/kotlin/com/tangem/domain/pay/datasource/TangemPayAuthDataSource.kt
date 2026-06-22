@@ -4,10 +4,13 @@ import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.VirtualAccountActivationData
 
 interface TangemPayAuthDataSource {
 
     suspend fun produceInitialCredentials(userWallet: UserWallet): Either<Throwable, TangemPayInitialCredentials>
+
+    suspend fun produceVirtualAccountData(userWallet: UserWallet): Either<Throwable, VirtualAccountActivationData>
 
     suspend fun getWithdrawalSignature(
         userWallet: UserWallet,

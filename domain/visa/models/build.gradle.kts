@@ -15,4 +15,7 @@ dependencies {
 
     /** Domain models */
     implementation(projects.domain.models)
+
+    /** Tangem libraries (derived public keys types for VA activation) */
+    implementation(tangemDeps.card.core)
 }

@@ -50,6 +50,7 @@ import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
+import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
 import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.tasks.visa.VisaCustomerWalletApproveTask
@@ -72,6 +73,7 @@ internal class DefaultTangemSdkManager(
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
+    private val tangemPayVirtualAccountTaskFactory: TangemPayGenerateVirtualAccountAddressTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
@@ -527,6 +529,24 @@ internal class DefaultTangemSdkManager(
             return@coroutineScope when (result) {
                 is CompletionResult.Failure<*> -> result.error.left()
                 is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
+            }
+        }
+    }
+
+    override suspend fun tangemPayProduceVirtualAccountData(
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, VirtualAccountActivationData> {
+        return coroutineScope {
+            val result = runTaskAsyncReturnOnMain(
+                runnable = tangemPayVirtualAccountTaskFactory.create(coroutineScope = this),
+                cardId = null,
+                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+                preflightReadFilter = preflightReadFilter,
+            )
+
+            return@coroutineScope when (result) {
+                is CompletionResult.Failure<*> -> result.error.left()
+                is CompletionResult.Success<VirtualAccountActivationData> -> result.data.right()
             }
         }
     }

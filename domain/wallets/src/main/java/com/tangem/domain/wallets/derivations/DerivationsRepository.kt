@@ -29,6 +29,14 @@ interface DerivationsRepository {
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Map<ByteArrayKey, ExtendedPublicKeysMap>
 
+    /**
+     * Merges already-derived [derivedKeys] into the wallet's stored derivations and persists it.
+     * Does NOT derive on the card (no NFC): use it to save a key that was obtained by a dedicated
+     * card task. Keyed by the seed wallet public key ([ByteArrayKey]).
+     */
+    @Throws
+    suspend fun storeDerivedKeys(userWalletId: UserWalletId, derivedKeys: Map<ByteArrayKey, ExtendedPublicKeysMap>)
+
     /** Returns already derived extended public keys for the given [seedKey] */
     suspend fun getExistingDerivedKeys(userWalletId: UserWalletId, seedKey: ByteArrayKey): ExtendedPublicKeysMap
 
