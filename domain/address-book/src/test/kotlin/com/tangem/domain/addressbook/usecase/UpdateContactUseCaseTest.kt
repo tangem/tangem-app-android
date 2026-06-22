@@ -69,7 +69,7 @@ class UpdateContactUseCaseTest {
 
     @Test
     fun `update preserves id and persists signed changes without checking uniqueness`() = runTest {
-        val existing = contact(name = "Alice")
+        val existing = contact(name = "Alice", iconColor = "TestColor")
         val saved = slot<Contact>()
         coEvery { repository.saveContact(capture(saved)) } returns Unit
 
@@ -77,6 +77,7 @@ class UpdateContactUseCaseTest {
             userWallet = userWallet,
             contact = existing,
             name = "Bob",
+            iconColor = "TestColor",
             addressEntries = updatedEntries,
         )
 
@@ -96,8 +97,9 @@ class UpdateContactUseCaseTest {
 
         val result = useCase(
             userWallet = userWallet,
-            contact = contact(name = "Alice"),
+            contact = contact(name = "Alice", iconColor = "TestColor"),
             name = "Bob",
+            iconColor = "TestColor",
             addressEntries = updatedEntries,
         )
 
@@ -109,8 +111,9 @@ class UpdateContactUseCaseTest {
     fun `invalid name fails without persisting`() = runTest {
         val result = useCase(
             userWallet = userWallet,
-            contact = contact(name = "Alice"),
+            contact = contact(name = "Alice", iconColor = "TestColor"),
             name = "",
+            iconColor = "TestColor",
             addressEntries = updatedEntries,
         )
 
@@ -119,10 +122,12 @@ class UpdateContactUseCaseTest {
         coVerify(exactly = 0) { repository.saveContact(any()) }
     }
 
-    private fun contact(name: String): Contact = Contact(
+    private fun contact(name: String, iconColor: String): Contact = Contact(
         id = ContactId("id-$name"),
         walletId = walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = iconColor,
         createdAt = originalTimestamp,
         updatedAt = originalTimestamp,
         addressEntries = listOf(

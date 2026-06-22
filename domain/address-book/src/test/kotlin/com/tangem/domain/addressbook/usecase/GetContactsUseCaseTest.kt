@@ -90,6 +90,8 @@ class GetContactsUseCaseTest {
         id = ContactId("id-$name"),
         walletId = UserWalletId("011"),
         name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = "KekColor",
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-01-01T00:00:00.000Z",
         addressEntries = listOf(
