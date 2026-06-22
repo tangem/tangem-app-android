@@ -9,16 +9,12 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -92,7 +88,10 @@ internal class TxHistoryModel @Inject constructor(
         )
             .map { (accountLists, modeEnabled, wallets) ->
                 TxHistoryLookupContext(
-                    ownAccountByAddress = buildOwnAccountAddressMap(accountLists),
+                    ownAccountByAddress = buildOwnAccountAddressMap(
+                        lists = accountLists,
+                        networkRawId = params.currency.network.id.rawId,
+                    ),
                     isAccountsModeEnabled = modeEnabled,
                     walletInfoById = wallets.associate { wallet ->
                         wallet.walletId to WalletInfo(
@@ -149,23 +148,6 @@ internal class TxHistoryModel @Inject constructor(
         loadTxInfo()
         subscribeToUpdateListener()
         subscribeOnCurrencyStatusUpdates()
-    }
-
-    private fun buildOwnAccountAddressMap(lists: List<AccountStatusList>): Map<String, Account.CryptoPortfolio> {
-        val networkRawId = params.currency.network.id.rawId
-        val map = mutableMapOf<String, Account.CryptoPortfolio>()
-        lists.forEach { accountList ->
-            accountList.accountStatuses
-                .filterCryptoPortfolio()
-                .forEach { status: AccountStatus.CryptoPortfolio ->
-                    status.flattenCurrencies().forEach { currencyStatus ->
-                        if (currencyStatus.currency.network.id.rawId != networkRawId) return@forEach
-                        val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
-                        map[address] = status.account
-                    }
-                }
-        }
-        return map
     }
 
     private fun subscribeToUiItemChanges() {
