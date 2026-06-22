@@ -25,10 +25,10 @@ class CreateContactUseCase(
     private val timestampProvider: IsoTimestampProvider,
 ) {
 
-    @Suppress("LongParameterList")
     suspend operator fun invoke(
         userWallet: UserWallet,
         name: String,
+        iconColor: String,
         network: Network,
         addressEntries: List<AddressEntry>,
     ): Either<SaveContactError, Contact> = either {
@@ -42,6 +42,8 @@ class CreateContactUseCase(
             id = ContactId(UUID.randomUUID().toString()),
             walletId = userWalletId,
             name = validName,
+            icon = "",
+            iconColor = iconColor,
             createdAt = now,
             updatedAt = now,
             addressEntries = addressEntries,
