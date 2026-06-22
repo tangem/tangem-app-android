@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -55,12 +57,7 @@ import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTrans
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.CardsProgressBannerUM
-import com.tangem.features.tangempay.entity.TangemPayCardUiState
-import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
-import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarConfig
-import com.tangem.features.tangempay.entity.TangemPayDetailsUM
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
+import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.ui.components.PayContextMenuBlock
 import com.tangem.features.tangempay.ui.components.TangemPayActionButton
 import com.tangem.features.tangempay.ui.components.TangemPayAddCardView
@@ -152,17 +149,20 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
     }
     state.balanceBlockState.cardsBlockState?.let { cardsState ->
         item("cardsBlock") {
+            SpacerH12()
             CardsBlock(cardsBlockState = cardsState)
         }
     }
     if (state.balanceBlockState.actionButtons.isNotEmpty()) {
         item("actionButtonsBlock") {
+            SpacerH24()
             ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
         }
     }
 
     if (state.errorNotificationConfig != null) {
         item("errorSessionBannerBlock") {
+            SpacerH12()
             ErrorMessage(
                 config = state.errorNotificationConfig,
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
@@ -175,6 +175,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
     when (progressBanner) {
         CardsProgressBannerUM.Reissuing -> {
             item("reissuingBannerBlock") {
+                SpacerH12()
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_reissue_card_in_progress),
@@ -184,6 +185,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
         }
         CardsProgressBannerUM.Issuing -> {
             item("issuingBannerBlock") {
+                SpacerH12()
                 TangemMessage(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
@@ -203,6 +205,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
         null -> {
             if (state.addToWalletBlockState != null) {
                 item("addToWalletBannerBlock") {
+                    SpacerH12()
                     TangemPayAddToWalletBlock(
                         state = state.addToWalletBlockState,
                         modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
@@ -211,7 +214,11 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             }
             if (state.accountDeactivatedNotificationConfig != null) {
                 item("deactivationBannerBlock") {
-                    ErrorMessage(state.accountDeactivatedNotificationConfig)
+                    SpacerH12()
+                    ErrorMessage(
+                        config = state.accountDeactivatedNotificationConfig,
+                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    )
                 }
             }
         }
@@ -384,7 +391,7 @@ private fun CardsBlock(
         state = rememberLazyListState(),
         contentPadding = PaddingValues(
             horizontal = TangemTheme.dimens2.x4,
-            vertical = TangemTheme.dimens2.x6,
+            vertical = TangemTheme.dimens2.x3,
         ),
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -415,7 +422,7 @@ private fun LazyItemScope.ActionBlock(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens2.x6),
+            .padding(vertical = TangemTheme.dimens2.x3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
