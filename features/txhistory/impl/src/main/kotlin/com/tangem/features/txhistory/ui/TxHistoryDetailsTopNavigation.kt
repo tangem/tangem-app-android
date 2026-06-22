@@ -58,7 +58,7 @@ internal fun TxHistoryDetailsTopNavigation(
     modifier: Modifier = Modifier,
 ) {
     TangemTopNavigation(
-        modifier = modifier.padding(top = 8.dp),
+        modifier = modifier,
         windowInsets = WindowInsets(0),
         blurBackground = false,
         startButton = { StatusActionIcon(iconRes = header.iconRes, status = header.status) },

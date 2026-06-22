@@ -44,6 +44,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.onramp.models)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)

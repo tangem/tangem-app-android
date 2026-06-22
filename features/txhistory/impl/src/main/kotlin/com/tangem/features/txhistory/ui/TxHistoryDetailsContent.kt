@@ -58,8 +58,7 @@ private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modi
                     .padding(start = 16.dp, end = 16.dp),
             )
         } else {
-            // TODO([REDACTED_TASK_KEY]): the converter cannot populate the swap legs yet (TxInfo exposes no two-leg / fiat /
-            //  provider data). Until those fields land, fall back to the header-only placeholder.
+            // Safety fallback for a future express variant that yields no asset legs — render the header-only card.
             TwoAssetsPlaceholder(state = state)
         }
         // Express status plaque under the exchange block. The top gap is owned by the banner (inside its collapsing
@@ -69,6 +68,13 @@ private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modi
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
+        )
+        // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
+        TxHistoryDetailsInfoRows(
+            rows = state.rows,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
         )
     }
 }
