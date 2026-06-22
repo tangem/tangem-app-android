@@ -8,7 +8,6 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
-import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -24,7 +23,6 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
@@ -160,9 +158,7 @@ internal class SendDestinationModel @Inject constructor(
             .onEach {
                 val content = uiState.value as? DestinationUM.Content ?: return@onEach
                 if (content.addressTextField.contactName != null) {
-                    _uiState.update(SendDestinationContactTransformer(contactName = null, contactIcon = null))
-                    _uiState.update(SendDestinationAddressTransformer(address = "", isPasted = false))
-                    validate(address = "", memo = content.memoTextField?.value)
+                    _uiState.update(SendDestinationContactTransformer(contact = null))
                 }
             }
             .launchIn(modelScope)
@@ -478,31 +474,18 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun recognizeContact(type: EnterAddressSource?, isValidAddress: Boolean, address: String) {
         if (type == null || type == EnterAddressSource.Contact) return
-        val recognized = if (isValidAddress) findContactByAddress(address) else null
-        _uiState.update(SendDestinationContactTransformer(recognized?.name, recognized?.icon))
+        val contact = if (isValidAddress) findContactByAddress(address) else null
+        _uiState.update(SendDestinationContactTransformer(contact))
     }
 
-    private fun findContactByAddress(address: String): RecognizedContact? {
+    private fun findContactByAddress(address: String): Contact? {
         val networkId = cryptoCurrency.network.rawId
-        contacts.value.forEach { contact ->
-            val isMatch = contact.addressEntries.any { entry ->
+        return contacts.value.firstOrNull { contact ->
+            contact.addressEntries.any { entry ->
                 entry.networkId.value == networkId && entry.address.equals(address, ignoreCase = true)
             }
-            if (isMatch) {
-                return RecognizedContact(
-                    name = contact.name.value,
-                    // TODO([REDACTED_TASK_KEY]): take the color from the domain Contact once the data layer stores it.
-                    icon = AccountIconUM.CryptoPortfolio(
-                        value = CryptoPortfolioIcon.Icon.Letter,
-                        color = CryptoPortfolioIcon.Color.Azure,
-                    ),
-                )
-            }
         }
-        return null
     }
-
-    private data class RecognizedContact(val name: String, val icon: AccountIconUM.CryptoPortfolio)
 
     private fun autoNextFromRecipient(type: EnterAddressSource, isValidAddress: Boolean, isValidMemo: Boolean) {
         if (type.isAutoNext && isValidAddress && isValidMemo) {
