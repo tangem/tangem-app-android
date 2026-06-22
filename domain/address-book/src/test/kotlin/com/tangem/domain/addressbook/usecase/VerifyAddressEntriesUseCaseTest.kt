@@ -152,6 +152,8 @@ class VerifyAddressEntriesUseCaseTest {
         id = ContactId("contact-1"),
         walletId = UserWalletId("011"),
         name = requireNotNull(ContactName("Alice").getOrNull()),
+        icon = "",
+        iconColor = "KekColor",
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-01-01T00:00:00.000Z",
         addressEntries = entries.toList(),

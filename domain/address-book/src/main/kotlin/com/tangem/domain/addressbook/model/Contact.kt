@@ -15,6 +15,8 @@ data class Contact(
     val id: ContactId,
     val walletId: UserWalletId,
     val name: ContactName,
+    val icon: String,
+    val iconColor: String,
     val createdAt: String,
     val updatedAt: String,
     val addressEntries: List<AddressEntry>,
