@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -58,7 +57,7 @@ internal fun TxHistoryDetailsTopNavigation(
     modifier: Modifier = Modifier,
 ) {
     TangemTopNavigation(
-        modifier = modifier.padding(top = 8.dp),
+        modifier = modifier,
         windowInsets = WindowInsets(0),
         blurBackground = false,
         startButton = { StatusActionIcon(iconRes = header.iconRes, status = header.status) },
