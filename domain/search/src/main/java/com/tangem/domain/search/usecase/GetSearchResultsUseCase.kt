@@ -4,11 +4,11 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.search.model.SearchResult
-import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.repository.SearchRepository
 import kotlinx.coroutines.flow.Flow
@@ -101,7 +101,7 @@ class GetSearchResultsUseCase(
         if (!shouldGroup) {
             return entries
                 .map { UserAssetSearchItem.Single(it) }
-                .sortedByDescending { it.entry.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO }
+                .sortedByDescending { it.fiatBalance() }
         }
 
         val grouped = entries.groupBy { entry ->
@@ -109,20 +109,27 @@ class GetSearchResultsUseCase(
             rawId?.value ?: "${entry.currencyStatus.currency.name}|${entry.currencyStatus.currency.symbol}"
         }
 
-        return grouped.map { (_, groupEntries) ->
-            val assetInfo = groupEntries.first()
-            UserAssetSearchItem.Grouped(
-                tokenName = assetInfo.currencyStatus.currency.name,
-                tokenSymbol = assetInfo.currencyStatus.currency.symbol,
-                tokenIconUrl = assetInfo.currencyStatus.currency.iconUrl,
-                entries = groupEntries,
-            )
-        }.sortedByDescending { item ->
-            when (item) {
-                is UserAssetSearchItem.Grouped ->
-                    item.entries.sumOf { it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO }
+        return grouped
+            .map { (_, groupEntries) ->
+                // Only assets with several matching instances are merged; a single instance stays Single.
+                if (groupEntries.size > 1) {
+                    val assetInfo = groupEntries.first()
+                    UserAssetSearchItem.Grouped(
+                        tokenName = assetInfo.currencyStatus.currency.name,
+                        tokenSymbol = assetInfo.currencyStatus.currency.symbol,
+                        tokenIconUrl = assetInfo.currencyStatus.currency.iconUrl,
+                        entries = groupEntries,
+                    )
+                } else {
+                    UserAssetSearchItem.Single(groupEntries.first())
+                }
             }
-        }
+            .sortedByDescending { it.fiatBalance() }
+    }
+
+    private fun UserAssetSearchItem.fiatBalance(): BigDecimal = when (this) {
+        is UserAssetSearchItem.Single -> entry.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO
+        is UserAssetSearchItem.Grouped -> entries.sumOf { it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO }
     }
 
     private fun extractMatchingAssets(
