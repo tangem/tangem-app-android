@@ -168,7 +168,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
-            element = WalletNotificationUM.BackupError { clickIntents.onSupportClick() },
+            element = WalletNotificationUM.BackupError { clickIntents.onBackupErrorClick() },
             condition = isWalletBackupProblematicUseCase(userWallet),
         )
 
