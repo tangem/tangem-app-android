@@ -80,6 +80,7 @@ class CreateContactUseCaseTest {
         val result = useCase(
             userWallet = userWallet,
             name = "Alice",
+            iconColor = "TestColor",
             network = network,
             addressEntries = addressEntries,
         )
@@ -102,6 +103,7 @@ class CreateContactUseCaseTest {
         val result = useCase(
             userWallet = userWallet,
             name = "Alice",
+            iconColor = "TestColor",
             network = network,
             addressEntries = addressEntries,
         )
@@ -112,11 +114,16 @@ class CreateContactUseCaseTest {
 
     @Test
     fun `duplicate name fails without persisting`() = runTest {
-        every { repository.getContacts(walletId) } returns flowOf(listOf(contact(name = "Alice")))
+        every { repository.getContacts(walletId) } returns flowOf(
+            listOf(
+                contact(name = "Alice", iconColor = "TestColor")
+            )
+        )
 
         val result = useCase(
             userWallet = userWallet,
             name = "alice",
+            iconColor = "TestColor",
             network = network,
             addressEntries = addressEntries,
         )
@@ -133,6 +140,7 @@ class CreateContactUseCaseTest {
         val result = useCase(
             userWallet = userWallet,
             name = "",
+            iconColor = "TestColor",
             network = network,
             addressEntries = addressEntries,
         )
@@ -142,10 +150,12 @@ class CreateContactUseCaseTest {
         coVerify(exactly = 0) { repository.saveContact(any()) }
     }
 
-    private fun contact(name: String): Contact = Contact(
+    private fun contact(name: String, iconColor: String): Contact = Contact(
         id = ContactId("id-$name"),
         walletId = walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = iconColor,
         createdAt = expectedTimestamp,
         updatedAt = expectedTimestamp,
         addressEntries = listOf(
