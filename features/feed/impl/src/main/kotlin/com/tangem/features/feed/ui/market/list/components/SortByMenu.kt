@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -40,6 +39,7 @@ internal fun SortByMenu(
             Column {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(238.dp)
@@ -50,7 +50,7 @@ internal fun SortByMenu(
                             },
                         )
                         .padding(
-                            vertical = TangemTheme.dimens2.x5,
+                            vertical = TangemTheme.dimens2.x2_5,
                             horizontal = TangemTheme.dimens2.x4,
                         ),
                 ) {
@@ -60,27 +60,30 @@ internal fun SortByMenu(
                         color = TangemTheme.colors2.text.neutral.primary,
                         maxLines = 1,
                     )
-                    if (sortMenuUM.selectedOption == sortType) {
-                        Box(
-                            modifier = Modifier
-                                .padding(TangemTheme.dimens2.x0_5)
-                                .size(TangemTheme.dimens2.x5)
-                                .background(
-                                    color = TangemTheme.colors2.graphic.neutral.primary,
-                                    shape = CircleShape,
-                                ),
-                        ) {
-                            Icon(
-                                painter = rememberVectorPainter(
-                                    ImageVector.vectorResource(R.drawable.ic_check_default_24),
-                                ),
-                                contentDescription = null,
-                                tint = TangemTheme.colors2.graphic.neutral.primaryInverted,
+                    Box(
+                        modifier = Modifier.size(TangemTheme.dimens2.x6),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (sortMenuUM.selectedOption == sortType) {
+                            Box(
                                 modifier = Modifier
-                                    .align(Alignment.Center)
                                     .padding(TangemTheme.dimens2.x0_5)
-                                    .size(TangemTheme.dimens2.x4),
-                            )
+                                    .size(TangemTheme.dimens2.x5)
+                                    .background(
+                                        color = TangemTheme.colors2.graphic.neutral.primary,
+                                        shape = CircleShape,
+                                    ),
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_check_default_24),
+                                    contentDescription = null,
+                                    tint = TangemTheme.colors2.graphic.neutral.primaryInverted,
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .padding(TangemTheme.dimens2.x0_5)
+                                        .size(TangemTheme.dimens2.x4),
+                                )
+                            }
                         }
                     }
                 }
