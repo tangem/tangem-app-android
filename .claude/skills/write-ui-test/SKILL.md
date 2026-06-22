@@ -139,8 +139,10 @@ Delete anything explaining WHAT a step does.
 ## Reference docs
 
 - **`reference/compose-traps.md`** — read when the screen uses `PullToRefreshBox`,
-  `TangemHoldToConfirmButton`, a Decompose model that fetches in `init {}`, or a hot-wallet import with
-  an access code. These have silent failure modes that look like passing tests.
+  `TangemHoldToConfirmButton`, a Decompose model that fetches in `init {}`, a hot-wallet import with
+  an access code, or a target inside a **LazyColumn/LazyRow that may be below the fold** (use a
+  `KLazyListNode` matcher that auto-scrolls — never a manual swipe). These have silent failure modes that
+  look like passing tests.
 - **`reference/running-and-debugging.md`** — read when building, installing, running tests (orchestrator
   vs. raw `am instrument`), running against a local WireMock, interpreting CLI/Allure output, using
   `@Ignore`, or driving WireMock scenarios.
