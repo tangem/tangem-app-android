@@ -36,8 +36,16 @@ internal class AddressBookCipherTest {
     fun `GIVEN multi-contact book WHEN encrypt then decrypt THEN original book is restored`() {
         // Arrange
         val book = addressBook(
-            contact("Alice", entry("addr-1", "0xabc", memo = "memo")),
-            contact("Bob", entry("addr-2", "0xdef", memo = null)),
+            contact(
+                name = "Alice",
+                iconColor = "TestColor1",
+                entries = arrayOf(entry("addr-1", "0xabc", memo = "memo")),
+            ),
+            contact(
+                name = "Bob",
+                iconColor = "TestColor2",
+                entries = arrayOf(entry("addr-2", "0xdef", memo = null)),
+            ),
         )
 
         // Act
@@ -64,7 +72,13 @@ internal class AddressBookCipherTest {
     @Test
     fun `GIVEN a book WHEN encrypt THEN blob metadata and field sizes match the spec`() {
         // Arrange
-        val book = addressBook(contact("Alice", entry("addr-1", "0xabc", memo = null)))
+        val book = addressBook(
+            contact(
+                name = "Alice",
+                iconColor = "TestColor",
+                entries = arrayOf(entry("addr-1", "0xabc", memo = null)),
+            )
+        )
 
         // Act
         val blob = cipher.encrypt(book, wallet, updatedAt).rightValue()
@@ -94,7 +108,13 @@ internal class AddressBookCipherTest {
     @Test
     fun `GIVEN same book encrypted twice WHEN compared THEN nonce differs but both decrypt to original`() {
         // Arrange
-        val book = addressBook(contact("Alice", entry("addr-1", "0xabc", memo = null)))
+        val book = addressBook(
+            contact(
+                name = "Alice",
+                iconColor = "TestColor",
+                entries = arrayOf(entry("addr-1", "0xabc", memo = null)),
+            )
+        )
 
         // Act
         val first = cipher.encrypt(book, wallet, updatedAt).rightValue()
@@ -222,10 +242,12 @@ internal class AddressBookCipherTest {
     private fun addressBook(walletId: UserWalletId): AddressBook =
         AddressBook(walletId = walletId, contacts = emptyList())
 
-    private fun contact(name: String, vararg entries: AddressEntry): Contact = Contact(
+    private fun contact(name: String, iconColor: String, vararg entries: AddressEntry): Contact = Contact(
         id = ContactId("contact-$name"),
         walletId = wallet.walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = iconColor,
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-05-22T09:00:00.000Z",
         addressEntries = entries.toList(),
