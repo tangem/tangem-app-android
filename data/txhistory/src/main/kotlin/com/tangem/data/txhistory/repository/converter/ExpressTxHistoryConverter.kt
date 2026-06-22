@@ -9,6 +9,7 @@ import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -26,7 +27,7 @@ import java.math.BigDecimal
 internal class ExpressSwapConverter : Converter<ExpressSwapConverter.Input, ExpressTx.Swap> {
 
     override fun convert(value: Input): ExpressTx.Swap = ExpressTx.Swap(
-        tx = convertExchangeTransaction(value.entity, value.provider),
+        tx = convertExchangeTransaction(value),
         isOutgoing = value.isOutgoing,
         txInfo = null,
     )
@@ -35,6 +36,8 @@ internal class ExpressSwapConverter : Converter<ExpressSwapConverter.Input, Expr
         val entity: ExpressExchangeEntity,
         val provider: ExpressProvider?,
         val isOutgoing: Boolean,
+        val fromCurrency: CryptoCurrency? = null,
+        val toCurrency: CryptoCurrency? = null,
     )
 }
 
@@ -59,32 +62,40 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                     id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
                     amount = (entity.to.actualAmount ?: entity.to.amount).toBigDecimalOrZero(),
                     decimals = entity.to.decimals,
+                    cryptoCurrency = value.toCurrency,
                 ),
             ),
             txInfo = null,
         )
     }
 
-    data class Input(val entity: ExpressOnrampEntity, val provider: ExpressProvider?)
+    data class Input(
+        val entity: ExpressOnrampEntity,
+        val provider: ExpressProvider?,
+        val toCurrency: CryptoCurrency? = null,
+    )
 }
 
-private fun convertExchangeTransaction(entity: ExpressExchangeEntity, provider: ExpressProvider?): ExchangeTransaction {
+private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): ExchangeTransaction {
+    val entity = value.entity
     return ExchangeTransaction(
         txId = entity.txId,
         status = ExpressExchangeStatus.fromRaw(entity.status),
         createdAtMillis = parseIsoMillis(entity.createdAt),
-        provider = provider,
+        provider = value.provider,
         payinHash = entity.payinHash,
         payoutHash = entity.payoutHash,
         fromAsset = ExpressTransactionAsset(
             id = ExpressAssetId(networkId = entity.from.network, contractAddress = entity.from.contractAddress),
             amount = entity.from.amount.toBigDecimalOrZero(),
             decimals = entity.from.decimals,
+            cryptoCurrency = value.fromCurrency,
         ),
         toAsset = ExpressTransactionAsset(
             id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
             amount = (entity.to.actualAmount ?: entity.to.amount).toBigDecimalOrZero(),
             decimals = entity.to.decimals,
+            cryptoCurrency = value.toCurrency,
         ),
     )
 }
