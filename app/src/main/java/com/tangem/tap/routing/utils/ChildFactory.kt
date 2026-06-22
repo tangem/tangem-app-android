@@ -71,7 +71,6 @@ internal class ChildFactory @Inject constructor(
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
     private val sellCryptoComponentFactory: SellCryptoComponent.Factory,
-    private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val newWelcomeComponentFactory: NewWelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
@@ -251,13 +250,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = SellCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = sellCryptoComponentFactory,
-                )
-            }
-            is AppRoute.SwapCrypto -> {
-                createComponentChild(
-                    context = context,
-                    params = SwapSelectTokensComponent.Params(userWalletId = route.userWalletId),
-                    componentFactory = swapSelectTokensComponentFactory,
                 )
             }
             is AppRoute.Onboarding -> {

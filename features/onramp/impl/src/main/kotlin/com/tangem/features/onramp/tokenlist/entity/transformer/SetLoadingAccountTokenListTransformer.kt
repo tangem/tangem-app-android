@@ -4,8 +4,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.onramp.swap.availablepairs.entity.converters.LoadingAccountTokenItemConverter
-import com.tangem.features.onramp.swap.availablepairs.entity.converters.LoadingTokenListItemConverter
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer

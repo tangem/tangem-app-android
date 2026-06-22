@@ -331,11 +331,6 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/sell_crypto/${userWalletId.stringValue}")
 
-    @Serializable
-    data class SwapCrypto(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
-
     /**
      * Onboarding V2
      * @property scanResponse scan response, determines onboarding route by the product type
