@@ -26,13 +26,34 @@ internal class BoostBlockStateTest {
     }
 
     @Test
-    fun `GIVEN qualificationEndDate less than a day away WHEN resolve THEN DaysLeft zero`() {
+    fun `GIVEN qualificationEndDate less than a day away WHEN resolve THEN DaysLeft one`() {
         val result = resolveBoostBlockState(
             qualificationEndDate = Instant.parse("2026-05-28T18:00:00Z"),
             now = now,
         )
 
-        assertThat(result).isEqualTo(BoostBlockState.DaysLeft(days = 0))
+        assertThat(result).isEqualTo(BoostBlockState.DaysLeft(days = 1))
+    }
+
+    @Test
+    fun `GIVEN qualificationEndDate just over a day away WHEN resolve THEN DaysLeft rounds up`() {
+        val result = resolveBoostBlockState(
+            // 1d 1h away — rounds up to 2
+            qualificationEndDate = Instant.parse("2026-05-29T01:00:00Z"),
+            now = now,
+        )
+
+        assertThat(result).isEqualTo(BoostBlockState.DaysLeft(days = 2))
+    }
+
+    @Test
+    fun `GIVEN qualificationEndDate exactly whole days away WHEN resolve THEN DaysLeft exact`() {
+        val result = resolveBoostBlockState(
+            qualificationEndDate = Instant.parse("2026-05-30T00:00:00Z"),
+            now = now,
+        )
+
+        assertThat(result).isEqualTo(BoostBlockState.DaysLeft(days = 2))
     }
 
     @Test

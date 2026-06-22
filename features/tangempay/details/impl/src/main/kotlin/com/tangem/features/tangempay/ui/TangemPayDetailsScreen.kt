@@ -45,6 +45,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefres
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -539,7 +540,16 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
             isBalanceHidden = false,
             addToWalletBlockState = null,
             accountDeactivatedNotificationConfig = null,
-            errorNotificationConfig = null,
+            errorNotificationConfig = NotificationConfig(
+                title = TextReference.Str("Error title"),
+                subtitle = TextReference.Str("Error subtitle"),
+                iconResId = R.drawable.ic_alert_circle_24,
+                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = TextReference.Str("Error btn text"),
+                    onClick = {},
+                    iconResId = R.drawable.ic_tangem_24,
+                ),
+            ),
         ),
     ),
 )

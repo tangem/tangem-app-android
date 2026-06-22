@@ -17,4 +17,7 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

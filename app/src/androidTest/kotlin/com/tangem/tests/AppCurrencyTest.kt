@@ -54,13 +54,22 @@ class AppCurrencyTest : BaseTestCase() {
             step("Click on currency '$targetCurrency'") {
                 onAppCurrencySelectorScreen { currencyItem(targetCurrency).performClick() }
             }
-            step("Press 'Back' button to return to 'Details' screen") {
+            step("Assert 'App settings' screen is open after currency selection") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onAppSettingsScreen { currencyButton.assertIsDisplayed() }
+                }
+            }
+            step("Return to 'Details' screen") {
                 waitForIdle()
                 device.uiDevice.pressBack()
             }
-            step("Press 'Back' button to return to 'Main' screen") {
-                waitForIdle()
-                device.uiDevice.pressBack()
+            step("Return to 'Main' screen via 'Back' button") {
+                onDetailsScreen { topAppBarBackButton.clickWithAssertion() }
+            }
+            step("Assert 'Main' screen is opened") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { screenContainer.assertIsDisplayed() }
+                }
             }
             step("Assert total balance contains '$targetSymbol' on 'Main' screen") {
                 // Balance re-loads in the new currency async after the switch — wait for the € equivalent.

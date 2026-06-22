@@ -6,7 +6,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -33,7 +32,6 @@ internal class YieldSupplyEntryModel @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
-    private val designFeatureToggles: DesignFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<YieldSupplyEntryComponent.Params>()
@@ -99,7 +97,6 @@ internal class YieldSupplyEntryModel @Inject constructor(
             YieldSupplyEntryRoute.Active(cryptoCurrency = token)
         } else {
             val isPromoEnabled = yieldSupplyFeatureToggles.isYieldPromoEnabled &&
-                !designFeatureToggles.isRedesignEnabled &&
                 isYieldBoostPromoEnabledForTokenUseCase(userWalletId, token).getOrElse { false }
             YieldSupplyEntryRoute.Promo(
                 cryptoCurrency = token,
