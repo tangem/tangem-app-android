@@ -4,9 +4,10 @@ import android.os.SystemClock
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import io.github.kakaocup.compose.node.core.BaseNode
 import io.github.kakaocup.compose.node.element.KNode
 
-fun KNode.clickWithAssertion() {
+fun BaseNode<*>.clickWithAssertion() {
     assertIsDisplayed()
     performClick()
 }
