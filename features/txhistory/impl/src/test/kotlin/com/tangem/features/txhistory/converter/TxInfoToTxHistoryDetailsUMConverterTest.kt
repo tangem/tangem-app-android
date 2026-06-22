@@ -103,6 +103,61 @@ internal class TxInfoToTxHistoryDetailsUMConverterTest {
     }
 
     @Test
+    fun `GIVEN unconfirmed Swap WHEN convert THEN info status banner with loader`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Swap, status = TxInfo.TransactionStatus.Unconfirmed)
+
+        // Act
+        val banner = (converter.convert(tx) as TxHistoryDetailsUM.TwoAssets).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Info,
+                title = resourceReference(R.string.express_exchange_status_receiving_active),
+                isLoading = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN confirmed Swap WHEN convert THEN success status banner without loader`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Swap, status = TxInfo.TransactionStatus.Confirmed)
+
+        // Act
+        val banner = (converter.convert(tx) as TxHistoryDetailsUM.TwoAssets).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Success,
+                title = resourceReference(R.string.express_exchange_status_exchanged),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN failed Swap WHEN convert THEN error status banner with refund subtitle`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Swap, status = TxInfo.TransactionStatus.Failed)
+
+        // Act
+        val banner = (converter.convert(tx) as TxHistoryDetailsUM.TwoAssets).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+                title = resourceReference(R.string.express_exchange_status_failed),
+                subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN incoming Transfer WHEN convert THEN amount block has plus sign and not failed`() {
         // Arrange
         val tx = txInfo(type = TransactionType.Transfer, isOutgoing = false)
