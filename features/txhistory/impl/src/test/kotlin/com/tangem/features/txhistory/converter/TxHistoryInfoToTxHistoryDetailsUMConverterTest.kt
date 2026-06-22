@@ -10,8 +10,12 @@ import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
+import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.tokens.model.Amount
@@ -94,9 +98,12 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
     )
 
     @Test
-    fun `GIVEN incoming confirmed Transfer WHEN convert THEN header has down icon, confirmed status, transferred title`() {
+    fun `GIVEN incoming confirmed external Transfer WHEN convert THEN header has down icon, confirmed status, received title`() {
         // Arrange
-        val tx = onChain(type = TransactionType.Transfer)
+        val tx = onChain(
+            type = TransactionType.Transfer,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
 
         // Act
         val header = converter.convert(tx).header
@@ -104,6 +111,64 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         // Assert
         assertThat(header.iconRes).isEqualTo(R.drawable.ic_arrow_down_24)
         assertThat(header.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
+        assertThat(header.title).isEqualTo(resourceReference(R.string.common_received))
+    }
+
+    @Test
+    fun `GIVEN outgoing external Transfer WHEN convert THEN sent title`() {
+        // Arrange
+        val tx = onChain(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val header = converter.convert(tx).header
+
+        // Assert
+        assertThat(header.title).isEqualTo(resourceReference(R.string.common_sent))
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer from own address WHEN convert THEN transferred title`() {
+        // Arrange — the counterparty is one of the user's own deposit addresses.
+        val ownConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            ownAddresses = setOf(USER_ADDRESS),
+        )
+        val tx = onChain(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val header = ownConverter.convert(tx).header
+
+        // Assert
+        assertThat(header.title).isEqualTo(resourceReference(R.string.common_transferred))
+    }
+
+    @Test
+    fun `GIVEN outgoing Transfer to own address WHEN convert THEN transferred title`() {
+        // Arrange
+        val ownConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            ownAddresses = setOf(USER_ADDRESS),
+        )
+        val tx = onChain(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val header = ownConverter.convert(tx).header
+
+        // Assert
         assertThat(header.title).isEqualTo(resourceReference(R.string.common_transferred))
     }
 
@@ -238,6 +303,35 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
+    @Test
+    fun `GIVEN tx with fee WHEN convert THEN single network-fee row`() {
+        // Arrange
+        val tx = onChain(
+            type = TransactionType.Transfer,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = (converter.convert(tx) as TxHistoryDetailsUM.SingleAsset).rows
+
+        // Assert
+        assertThat(rows).hasSize(1)
+        assertThat(rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
+        assertThat(rows.first().value.resolveString()).contains("ETH")
+    }
+
+    @Test
+    fun `GIVEN tx without fee WHEN convert THEN no rows`() {
+        // Arrange
+        val tx = onChain(type = TransactionType.Transfer, fee = null)
+
+        // Act
+        val rows = (converter.convert(tx) as TxHistoryDetailsUM.SingleAsset).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
     // endregion
 
     // region Express (swap / onramp)
@@ -253,7 +347,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
     }
 
     @Test
-    fun `GIVEN in-progress express swap WHEN convert THEN info status banner with loader`() {
+    fun `GIVEN exchanging express swap WHEN convert THEN info status banner with loader`() {
         // Act
         val swap = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging))
         val banner = (swap as TxHistoryDetailsUM.TwoAssets).statusBanner
@@ -262,10 +356,52 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
                 severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Info,
-                title = resourceReference(R.string.express_exchange_status_receiving_active),
+                title = resourceReference(R.string.express_exchange_status_exchanging_active),
                 isLoading = true,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN verifying express swap WHEN convert THEN warning status banner with verification subtitle`() {
+        // Act
+        val swap = converter.convert(expressSwap(status = ExpressExchangeStatus.Verifying))
+        val banner = (swap as TxHistoryDetailsUM.TwoAssets).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Warning,
+                title = resourceReference(R.string.express_exchange_status_verifying),
+                subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN finished express swap WHEN convert THEN success status banner`() {
+        // Act
+        val swap = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished))
+        val banner = (swap as TxHistoryDetailsUM.TwoAssets).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Success,
+                title = resourceReference(R.string.express_exchange_status_exchanged),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN unknown express swap WHEN convert THEN no status banner`() {
+        // Act
+        val swap = converter.convert(expressSwap(status = ExpressExchangeStatus.Unknown))
+
+        // Assert — nothing to surface, the plaque is hidden.
+        assertThat((swap as TxHistoryDetailsUM.TwoAssets).statusBanner).isNull()
     }
 
     @Test
@@ -286,6 +422,131 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
     }
 
     @Test
+    fun `GIVEN in-progress express swap WHEN convert THEN from is minus and to is approx, neither faded`() {
+        // Act
+        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.isFaded).isFalse()
+        // Receive amount is still an estimate while in flight: `~`, not `+`, and not struck through.
+        assertThat(result.to?.amount?.resolveString()).startsWith("~ ")
+        assertThat(result.to?.isFaded).isFalse()
+        // Counterparty (to) symbol comes from the resolved CryptoCurrency; the unresolved from leg falls back to network id.
+        assertThat(result.to?.currencyIcon).isNotNull()
+        assertThat(result.from?.currencyIcon).isNull()
+    }
+
+    @Test
+    fun `GIVEN finished express swap WHEN convert THEN to is plus and neither leg faded`() {
+        // Act
+        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.to?.amount?.resolveString()).startsWith("+ ")
+        assertThat(result.from?.isFaded).isFalse()
+        assertThat(result.to?.isFaded).isFalse()
+    }
+
+    @Test
+    fun `GIVEN failed express swap WHEN convert THEN both legs faded and signs dropped`() {
+        // Act
+        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Failed)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.isFaded).isTrue()
+        assertThat(result.to?.isFaded).isTrue()
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("+")
+    }
+
+    @Test
+    fun `GIVEN express swap with matched on-chain leg WHEN convert THEN network-fee row from leg`() {
+        // Arrange
+        val leg = onChain(
+            type = TransactionType.Swap,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished, txInfo = leg)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.rows).hasSize(1)
+        assertThat(result.rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
+    }
+
+    @Test
+    fun `GIVEN express swap with provider WHEN convert THEN provider row with its name and link icon`() {
+        // Act
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Finished, provider = provider(name = "Mercuryo")),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.rows).hasSize(1)
+        val providerRow = result.rows.first()
+        assertThat(providerRow.label).isEqualTo(resourceReference(R.string.express_provider))
+        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
+        assertThat(providerRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
+    }
+
+    @Test
+    fun `GIVEN express swap with provider and on-chain leg WHEN convert THEN provider row precedes network-fee row`() {
+        // Arrange
+        val leg = onChain(
+            type = TransactionType.Swap,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Finished, txInfo = leg, provider = provider(name = "Changelly")),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.rows.map { it.label }).containsExactly(
+            resourceReference(R.string.express_provider),
+            resourceReference(R.string.common_network_fee_title),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN finished express onramp WHEN convert THEN paid fiat is unsigned and topped-up crypto is plus`() {
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        // "You paid" fiat carries no icon and no sign — the exact amount paid.
+        assertThat(result.from?.currencyIcon).isNull()
+        assertThat(result.from?.amount?.resolveString()).contains("SEK")
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("+")
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("~")
+        // Topped-up crypto leg is settled: `+`, with an icon.
+        assertThat(result.to?.currencyIcon).isNotNull()
+        assertThat(result.to?.amount?.resolveString()).startsWith("+ ")
+        assertThat(result.to?.isFaded).isFalse()
+    }
+
+    @Test
+    fun `GIVEN in-progress express onramp WHEN convert THEN paid fiat is unsigned and top-up crypto is approx`() {
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Sending)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        // "You paid" stays unsigned regardless of status.
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("+")
+        assertThat(result.from?.amount?.resolveString()).doesNotContain("~")
+        assertThat(result.from?.isFaded).isFalse()
+        // Crypto to-be-received is an estimate while in flight: `~`, not struck through.
+        assertThat(result.to?.amount?.resolveString()).startsWith("~ ")
+        assertThat(result.to?.isFaded).isFalse()
+    }
+
+    @Test
     fun `GIVEN finished express onramp WHEN convert THEN TwoAssets with success banner`() {
         // Act
         val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished)) as TxHistoryDetailsUM.TwoAssets
@@ -295,10 +556,35 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         assertThat(result.statusBanner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
                 severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Success,
-                title = resourceReference(R.string.express_exchange_status_exchanged),
+                title = resourceReference(R.string.express_exchange_status_bought),
                 isLoading = false,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN verifying express onramp WHEN convert THEN warning status banner with verification subtitle`() {
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Verifying)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.statusBanner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Warning,
+                title = resourceReference(R.string.express_exchange_status_verifying),
+                subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN unknown express onramp WHEN convert THEN no status banner`() {
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Unknown)) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert — nothing to surface, the plaque is hidden.
+        assertThat(result.statusBanner).isNull()
     }
 
     // endregion
@@ -309,6 +595,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         status: TxInfo.TransactionStatus = TxInfo.TransactionStatus.Confirmed,
         amount: BigDecimal = BigDecimal.ONE,
         interactionAddressType: TxInfo.InteractionAddressType? = null,
+        fee: SdkAmount? = null,
     ): OnChainTx.BSDK = OnChainTx.BSDK(
         TxInfo(
             txHash = TX_HASH,
@@ -320,25 +607,49 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             status = status,
             type = type,
             amount = amount,
+            fee = fee,
         ),
     )
 
-    private fun expressSwap(status: ExpressExchangeStatus): ExpressTx.Swap = ExpressTx.Swap(
+    private fun provider(name: String): ExpressProvider = ExpressProvider(
+        providerId = "provider-1",
+        name = name,
+        type = ExpressProviderType.CEX,
+        imageLarge = "",
+        termsOfUse = null,
+        privacyPolicy = null,
+        slippage = null,
+    )
+
+    private fun expressSwap(
+        status: ExpressExchangeStatus,
+        isOutgoing: Boolean = true,
+        txInfo: OnChainTx? = null,
+        provider: ExpressProvider? = null,
+    ): ExpressTx.Swap = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "swap-1",
             status = status,
             createdAtMillis = TIMESTAMP,
-            provider = null,
+            provider = provider,
             payinHash = null,
             payoutHash = null,
             fromAsset = expressAsset(networkId = "ethereum", amount = BigDecimal("1.5"), decimals = 18),
-            toAsset = expressAsset(networkId = "bitcoin", amount = BigDecimal("0.001"), decimals = 8),
+            toAsset = expressAsset(
+                networkId = "bitcoin",
+                amount = BigDecimal("0.001"),
+                decimals = 8,
+                cryptoCurrency = currency,
+            ),
         ),
-        isOutgoing = true,
-        txInfo = null,
+        isOutgoing = isOutgoing,
+        txInfo = txInfo,
     )
 
-    private fun expressOnramp(status: ExpressOnrampStatus): ExpressTx.Onramp = ExpressTx.Onramp(
+    private fun expressOnramp(
+        status: ExpressOnrampStatus,
+        txInfo: OnChainTx? = null,
+    ): ExpressTx.Onramp = ExpressTx.Onramp(
         tx = OnrampTransaction(
             txId = "onramp-1",
             status = status,
@@ -351,16 +662,27 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
                 decimals = 2,
                 type = AmountType.FiatType(code = "SEK"),
             ),
-            toAsset = expressAsset(networkId = "bitcoin", amount = BigDecimal("0.006"), decimals = 8),
+            toAsset = expressAsset(
+                networkId = "bitcoin",
+                amount = BigDecimal("0.006"),
+                decimals = 8,
+                cryptoCurrency = currency,
+            ),
         ),
-        txInfo = null,
+        txInfo = txInfo,
     )
 
-    private fun expressAsset(networkId: String, amount: BigDecimal, decimals: Int): ExpressTransactionAsset =
+    private fun expressAsset(
+        networkId: String,
+        amount: BigDecimal,
+        decimals: Int,
+        cryptoCurrency: CryptoCurrency? = null,
+    ): ExpressTransactionAsset =
         ExpressTransactionAsset(
             id = ExpressAssetId(networkId = networkId, contractAddress = "0"),
             amount = amount,
             decimals = decimals,
+            cryptoCurrency = cryptoCurrency,
         )
 
     private fun TextReference.resolveString(): String = (this as TextReference.Str).value
