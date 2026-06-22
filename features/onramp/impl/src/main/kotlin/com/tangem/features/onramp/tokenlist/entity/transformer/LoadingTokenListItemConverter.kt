@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.swap.availablepairs.entity.converters
+package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
