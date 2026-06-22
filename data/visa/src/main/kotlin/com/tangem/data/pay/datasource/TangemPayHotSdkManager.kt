@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toMapKey
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.visa.VisaUtilities
@@ -14,11 +15,13 @@ import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.error.VisaCardScanError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.VirtualAccountActivationData
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.hot.sdk.model.UnlockHotWallet
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import javax.inject.Inject
 
 internal class TangemPayHotSdkManager @Inject constructor(
@@ -53,6 +56,34 @@ internal class TangemPayHotSdkManager @Inject constructor(
             TangemPayInitialCredentials(
                 customerWalletAddress = address,
                 authTokens = authTokens,
+            )
+        }
+
+    suspend fun produceVirtualAccountData(hotWallet: UserWallet.Hot): Either<Throwable, VirtualAccountActivationData> =
+        withUnlockedHotWallet(hotWallet) { unlockHotWallet ->
+            val response = tangemHotSdk.derivePublicKey(
+                unlockHotWallet = unlockHotWallet,
+                request = DeriveWalletRequest(
+                    requests = listOf(
+                        DeriveWalletRequest.Request(
+                            curve = VisaUtilities.curve,
+                            paths = listOf(VisaUtilities.virtualAccountDerivationPath),
+                        ),
+                    ),
+                ),
+            )
+            val curveResponse = response.responses.firstOrNull { it.curve == VisaUtilities.curve }
+                ?: raise(VisaActivationError.MissingWallet.tangemError)
+            val extendedPublicKey = curveResponse.publicKeys[VisaUtilities.virtualAccountDerivationPath]
+                ?: raise(VisaActivationError.MissingWallet.tangemError)
+
+            VirtualAccountActivationData(
+                address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey),
+                derivedKeys = mapOf(
+                    curveResponse.seedKey.publicKey.toMapKey() to ExtendedPublicKeysMap(
+                        mapOf(VisaUtilities.virtualAccountDerivationPath to extendedPublicKey),
+                    ),
+                ),
             )
         }
 
