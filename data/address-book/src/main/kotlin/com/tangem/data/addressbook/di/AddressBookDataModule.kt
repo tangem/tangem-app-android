@@ -11,7 +11,6 @@ import com.tangem.datasource.utils.KotlinxDataStoreSerializer
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,9 +65,4 @@ internal object AddressBookDataModule {
             dispatchers = dispatchers,
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideGetContactsUseCase(repository: AddressBookRepository): GetContactsUseCase =
-        GetContactsUseCase(repository)
 }
