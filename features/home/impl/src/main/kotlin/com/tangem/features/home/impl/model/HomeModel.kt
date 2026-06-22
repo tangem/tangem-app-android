@@ -34,6 +34,7 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.home.api.HomeComponent
+import com.tangem.features.home.api.HomeFeatureToggles
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
@@ -67,6 +68,7 @@ internal class HomeModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
+    private val homeFeatureToggles: HomeFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -77,6 +79,7 @@ internal class HomeModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         HomeUM(
             scanInProgress = false,
+            isStoriesContainerEnabled = homeFeatureToggles.isStoriesContainerEnabled,
             stories = getRestrictedStories().toImmutableList(),
             onShopClick = ::onShopClick,
             onSearchTokensClick = ::onSearchTokensClick,

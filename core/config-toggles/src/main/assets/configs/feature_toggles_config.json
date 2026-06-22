@@ -1,5 +1,9 @@
 [
     {
+        "name": "AND_15901_STORIES_CONTAINER_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "NEW_CARD_SCANNING_ENABLED",
         "version": "undefined"
     },
