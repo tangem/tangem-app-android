@@ -1798,7 +1798,7 @@ internal class SwapModel @Inject constructor(
                 isFiatValue = isFiat,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 minTxAmount = minTxAmount,
-                isPastedAmount = false,
+                isPastedAmount = true,
             )
         }
     }
