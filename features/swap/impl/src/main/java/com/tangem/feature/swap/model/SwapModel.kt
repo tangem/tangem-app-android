@@ -1834,12 +1834,8 @@ internal class SwapModel @Inject constructor(
             decimals = fromCurrency.status.currency.decimals,
             percent = percent,
         )
-        applyCryptoAmount(
-            SwapAmount(
-                value = newValue,
-                decimals = fromCurrency.status.currency.decimals,
-            ).formatToUIRepresentation(),
-        )
+
+        applyCryptoAmount(newValue.toPlainString())
     }
 
     private fun onReduceAmountClicked(newAmount: SwapAmount, reduceBalanceBy: BigDecimal = BigDecimal.ZERO) {
