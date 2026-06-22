@@ -126,7 +126,8 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .nestedScroll(nestedScrollConnection),
+                .nestedScroll(nestedScrollConnection)
+                .testTag(BuyTokenScreenTestTags.LAZY_LIST),
             state = lazyListState,
             contentPadding = WindowInsets.navigationBars.asPaddingValues(),
         ) {
