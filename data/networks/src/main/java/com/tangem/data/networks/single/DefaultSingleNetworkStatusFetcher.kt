@@ -21,6 +21,7 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
             params = MultiNetworkStatusFetcher.Params(
                 userWalletId = params.userWalletId,
                 networks = setOf(params.network),
+                extraTokens = params.extraTokens,
             ),
         )
     }
