@@ -9,18 +9,16 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
+import com.tangem.domain.models.wallet.UserWallet
 
-/**
-
- * format-checked — uniqueness is not re-validated on update. Address entries must be prepared and
- * validated before calling this use case. [Contact.updatedAt] is restamped with the current time.
- */
 class UpdateContactUseCase(
     private val repository: AddressBookRepository,
+    private val signAddressEntries: SignAddressEntriesUseCase,
     private val timestampProvider: IsoTimestampProvider,
 ) {
 
     suspend operator fun invoke(
+        userWallet: UserWallet,
         contact: Contact,
         name: String,
         addressEntries: List<AddressEntry>,
@@ -34,7 +32,10 @@ class UpdateContactUseCase(
             addressEntries = addressEntries,
             updatedAt = timestampProvider.now(),
         )
-        repository.saveContact(updated)
-        updated
+        val signed = signAddressEntries(userWallet, updated)
+            .mapLeft(SaveContactError::Signing)
+            .bind()
+        repository.saveContact(signed)
+        signed
     }
 }
