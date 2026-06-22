@@ -5,7 +5,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.common.routing.AppRouter
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -56,7 +55,6 @@ class YieldSupplyActiveModelBoostBlockTest {
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase = mockk(relaxed = true)
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk(relaxed = true)
-    private val designFeatureToggles: DesignFeatureToggles = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
     private val analyticsHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
@@ -86,7 +84,6 @@ class YieldSupplyActiveModelBoostBlockTest {
     @BeforeEach
     fun setUp() {
         every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns true
-        every { designFeatureToggles.isRedesignEnabled } returns false
         every { getUserWalletUseCase.invoke(userWalletId) } returns userWallet.right()
         every { singleAccountStatusListSupplier.invoke(userWalletId) } returns emptyFlow()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
@@ -112,7 +109,6 @@ class YieldSupplyActiveModelBoostBlockTest {
         yieldSupplyGetDustMinAmountUseCase = yieldSupplyGetDustMinAmountUseCase,
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
         yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
-        designFeatureToggles = designFeatureToggles,
         boostStoryPreloader = boostStoryPreloader,
     )
 
