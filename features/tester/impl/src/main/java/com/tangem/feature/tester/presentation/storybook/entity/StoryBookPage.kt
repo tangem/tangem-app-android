@@ -242,6 +242,7 @@ internal data class TangemTopNavigationStory(
     val endButton: EndButton,
     val endGroup: EndGroup,
     val useStatusBarInsets: Boolean,
+    val isFadeEnabled: Boolean,
     val isBlurEnabled: Boolean,
     val onContentAlignChange: (TangemTopNavigation.ContentAlign) -> Unit,
     val onBackgroundChange: (Background) -> Unit,
@@ -252,6 +253,7 @@ internal data class TangemTopNavigationStory(
     val onEndButtonChange: (EndButton) -> Unit,
     val onEndGroupChange: (EndGroup) -> Unit,
     val onStatusBarInsetsToggle: () -> Unit,
+    val onFadeToggle: () -> Unit,
     val onBlurToggle: () -> Unit,
 ) : DsStoryBookPage {
 

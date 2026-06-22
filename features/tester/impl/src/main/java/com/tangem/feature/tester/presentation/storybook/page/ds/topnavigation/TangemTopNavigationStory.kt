@@ -168,6 +168,7 @@ private fun ComponentPreview(state: TangemTopNavigationStory, statusBarDp: Dp, m
             modifier = Modifier.align(Alignment.TopCenter),
             contentAlign = state.contentAlign,
             windowInsets = if (state.useStatusBarInsets) WindowInsets(top = statusBarDp * 2) else WindowInsets(0),
+            fadeBackground = state.isFadeEnabled,
             startButton = if (state.hasBack) {
                 { TangemButton.Back(onClick = {}) }
             } else {
@@ -430,7 +431,8 @@ private fun Toggles(state: TangemTopNavigationStory) {
                 checked = state.useStatusBarInsets,
                 onToggle = state.onStatusBarInsetsToggle,
             )
-            ToggleRow(label = "blur (haze)", checked = state.isBlurEnabled, onToggle = state.onBlurToggle)
+            ToggleRow(label = "fade background", checked = state.isFadeEnabled, onToggle = state.onFadeToggle)
+            ToggleRow(label = "blur (haze, needs fade)", checked = state.isBlurEnabled, onToggle = state.onBlurToggle)
         }
     }
 }

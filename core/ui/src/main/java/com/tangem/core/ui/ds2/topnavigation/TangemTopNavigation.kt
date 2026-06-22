@@ -47,7 +47,12 @@ private enum class SlotId { Start, Content, Group, End }
  * @param contentAlign How [contentColumn] is aligned horizontally within the bar.
  * @param windowInsets Top inset applied above the row. Pass `WindowInsets(0)` inside a bottom
  *   sheet / modal.
- * @param blurBackground Whether the fade behind the row should blur the content below.
+ * @param fadeBackground When `true` (default) the soft top fade is drawn behind the row so content
+ *   scrolling underneath is masked. Pass `false` to drop the gradient entirely — e.g. when the row
+ *   sits on a solid colored surface such as a bottom sheet, where the fade would otherwise show as a
+ *   stray band.
+ * @param blurBackground Whether the fade behind the row should blur the content below. Has no effect
+ *   when [fadeBackground] is `false`.
  * @param startButton Leading slot. Typically a back button (see [TangemButton.Back]).
  * @param endButtonsGroup Optional pill-grouped secondary actions placed just before [endButton].
  * @param endButton Trailing slot. Typically a close button (see [TangemButton.Close]).
@@ -59,6 +64,7 @@ fun TangemTopNavigation(
     modifier: Modifier = Modifier,
     contentAlign: TangemTopNavigation.ContentAlign = TangemTopNavigation.ContentAlign.Start,
     windowInsets: WindowInsets = WindowInsets.statusBars,
+    fadeBackground: Boolean = true,
     blurBackground: Boolean = true,
     startButton: (@Composable () -> Unit)? = null,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
@@ -77,12 +83,14 @@ fun TangemTopNavigation(
     }
 
     Box(modifier) {
-        TangemFade(
-            modifier = Modifier.matchParentSize(),
-            position = TangemFade.Position.Top,
-            variant = TangemFade.Variant.Soft,
-            blur = blurBackground,
-        )
+        if (fadeBackground) {
+            TangemFade(
+                modifier = Modifier.matchParentSize(),
+                position = TangemFade.Position.Top,
+                variant = TangemFade.Variant.Soft,
+                blur = blurBackground,
+            )
+        }
 
         val groupSpacing = 8.dp
         Layout(

@@ -16,6 +16,7 @@ internal fun StateUpdater<TangemTopNavigationStory>.build(): TangemTopNavigation
         endButton = TangemTopNavigationStory.EndButton.Close,
         endGroup = TangemTopNavigationStory.EndGroup.None,
         useStatusBarInsets = true,
+        isFadeEnabled = true,
         isBlurEnabled = true,
         onContentAlignChange = { align ->
             updateStory { it.copy(contentAlign = align) }
@@ -43,6 +44,9 @@ internal fun StateUpdater<TangemTopNavigationStory>.build(): TangemTopNavigation
         },
         onStatusBarInsetsToggle = {
             updateStory { it.copy(useStatusBarInsets = !it.useStatusBarInsets) }
+        },
+        onFadeToggle = {
+            updateStory { it.copy(isFadeEnabled = !it.isFadeEnabled) }
         },
         onBlurToggle = {
             updateStory { it.copy(isBlurEnabled = !it.isBlurEnabled) }

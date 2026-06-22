@@ -48,8 +48,9 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
  * tint and the title color change between in-progress (brand/blue), confirmed (neutral) and failed (red). The icon
  * glyph itself is kept as-is on failure — only recolored.
  *
- * Hosted inside a modal bottom sheet, so [WindowInsets] is zeroed (no status-bar reservation) and the background blur
- * is disabled.
+ * Hosted inside a modal bottom sheet on a solid `colors3.bg.secondary` surface, so [WindowInsets] is zeroed (no
+ * status-bar reservation) and the top fade/blur background is disabled (`fadeBackground = false`) — otherwise the
+ * gradient would show as a stray band over the sheet.
  */
 @Composable
 internal fun TxHistoryDetailsTopNavigation(
@@ -60,7 +61,7 @@ internal fun TxHistoryDetailsTopNavigation(
     TangemTopNavigation(
         modifier = modifier.padding(top = 8.dp),
         windowInsets = WindowInsets(0),
-        blurBackground = false,
+        fadeBackground = false,
         startButton = { StatusActionIcon(iconRes = header.iconRes, status = header.status) },
         endButtonsGroup = {
             // Context menu. Click handling is intentionally not wired yet.
