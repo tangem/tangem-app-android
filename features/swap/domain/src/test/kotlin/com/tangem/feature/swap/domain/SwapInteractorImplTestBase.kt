@@ -62,6 +62,7 @@ internal open class SwapInteractorImplTestBase {
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher = mockk(relaxed = true)
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
+    protected val signAndBroadcastPsbtUseCase: SignAndBroadcastPsbtUseCase = mockk(relaxed = true)
     protected val createTransactionUseCase: CreateTransactionUseCase = mockk(relaxed = true)
     protected val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk(relaxed = true)
     protected val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase = mockk(relaxed = true)
@@ -99,6 +100,7 @@ internal open class SwapInteractorImplTestBase {
             allowPermissionsHandler = allowPermissionsHandler,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             sendTransactionUseCase = sendTransactionUseCase,
+            signAndBroadcastPsbtUseCase = signAndBroadcastPsbtUseCase,
             createTransactionUseCase = createTransactionUseCase,
             createTransferTransactionUseCase = createTransferTransactionUseCase,
             createTransactionExtrasUseCase = createTransactionExtrasUseCase,

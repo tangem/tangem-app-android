@@ -48,6 +48,7 @@ internal class DexSwapFeeCalculatorTest {
 
     private val ethNetwork = Blockchain.Ethereum.toNetworkId()
     private val solanaNetwork = Blockchain.Solana.toNetworkId()
+    private val bitcoinNetwork = Blockchain.Bitcoin.toNetworkId()
 
     private val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
     private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase = mockk(relaxed = true)
@@ -581,6 +582,54 @@ internal class DexSwapFeeCalculatorTest {
         // No fee is computed when the size guard trips
         coVerify(exactly = 0) {
             getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Bitcoin PSBT DEX path
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `Bitcoin DEX reads the PSBT fee from the wallet manager and skips the gas patch`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = bitcoinNetwork, isCoin = true)
+        val transaction = buildDex(txData = "cHNidP8B-base64-psbt", gas = null)
+
+        // 1_329 satoshi embedded in the PSBT → 0.00001329 BTC (8 decimals).
+        coEvery {
+            walletManagersFacade.getPsbtFee(any(), any(), psbtBase64 = "cHNidP8B-base64-psbt")
+        } returns BigDecimal("1329")
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        // getFee/getEthSpecificFee must NOT be used for Bitcoin — the fee comes from the PSBT.
+        coVerify(exactly = 0) {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        }
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(userWallet = any(), cryptoCurrency = any(), gasLimit = any())
+        }
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            val fee = (dexFeeResult.transactionFee as TransactionFeeResult.Loaded).fee
+            val btcFee = (fee as TransactionFee.Single).normal as Fee.Common
+            assertThat(btcFee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.00001329"))
+            assertThat(btcFee.amount.decimals).isEqualTo(8)
+            assertThat(dexFeeResult.gas).isNull()
+        }
+    }
+
+    @Test
+    fun `Bitcoin DEX returns Left UnknownError when the PSBT fee cannot be derived`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = bitcoinNetwork, isCoin = true)
+        val transaction = buildDex(txData = "cHNidP8B-base64-psbt", gas = null)
+
+        coEvery { walletManagersFacade.getPsbtFee(any(), any(), any()) } returns null
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        assertThat(result.isLeft()).isTrue()
+        result.onLeft { error ->
+            assertThat(error).isEqualTo(GetFeeError.UnknownError)
         }
     }
 
