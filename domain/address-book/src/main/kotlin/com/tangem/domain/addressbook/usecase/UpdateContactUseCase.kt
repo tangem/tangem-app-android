@@ -21,6 +21,7 @@ class UpdateContactUseCase(
         userWallet: UserWallet,
         contact: Contact,
         name: String,
+        iconColor: String,
         addressEntries: List<AddressEntry>,
     ): Either<SaveContactError, Contact> = either {
         val validName = ContactName(name)
@@ -29,6 +30,7 @@ class UpdateContactUseCase(
 
         val updated = contact.copy(
             name = validName,
+            iconColor = iconColor,
             addressEntries = addressEntries,
             updatedAt = timestampProvider.now(),
         )
