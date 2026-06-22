@@ -18,36 +18,30 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.features.addressbook.AddressBookContactsBlockComponent
-import com.tangem.features.addressbook.AddressBookFeatureToggles
-import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.SendContent
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.sendnft.model.NFTSendModel
 import com.tangem.features.send.sendnft.success.NFTSendSuccessComponent
-import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationComponent
-import com.tangem.features.send.impl.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
-@Suppress("LongParameterList")
 internal class DefaultNFTSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: NFTSendComponent.Params,
     private val nftSendConfirmComponentFactory: NFTSendConfirmComponent.Factory,
     private val nftSendSuccessComponentFactory: NFTSendSuccessComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val contactsBlockFactory: AddressBookContactsBlockComponent.Factory,
-    private val addressSelectorFactory: AddressSelectorComponent.Factory,
-    private val addressBookFeatureToggles: AddressBookFeatureToggles,
+    private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
 ) : NFTSendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
@@ -103,7 +97,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                             activeComponent.updateState(model.uiState.value)
                         }
                     }
-                    is DefaultSendDestinationComponent -> {
+                    is SendDestinationComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.AddressScreenOpened(
                                 categoryName = analyticsCategoryName,
@@ -138,9 +132,9 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         else -> getStubComponent()
     }
 
-    private fun getDestinationComponent(factoryContext: AppComponentContext): DefaultSendDestinationComponent =
-        DefaultSendDestinationComponent(
-            appComponentContext = factoryContext,
+    private fun getDestinationComponent(factoryContext: AppComponentContext): SendDestinationComponent =
+        sendDestinationComponentFactory.create(
+            context = factoryContext,
             params = SendDestinationComponentParams.DestinationParams(
                 state = model.uiState.value.destinationUM,
                 currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.Destination>(),
@@ -152,9 +146,6 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                 cryptoCurrency = model.cryptoCurrency,
                 callback = model,
             ),
-            addressBookFeatureToggles = addressBookFeatureToggles,
-            contactsBlockFactory = contactsBlockFactory,
-            addressSelectorFactory = addressSelectorFactory,
         )
 
     private fun getConfirmComponent(factoryContext: AppComponentContext) = nftSendConfirmComponentFactory.create(
