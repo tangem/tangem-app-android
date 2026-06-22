@@ -1,5 +1,7 @@
 package com.tangem.domain.addressbook.usecase
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
@@ -11,7 +13,9 @@ import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.error.SignHashesError
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,12 +36,15 @@ class UpdateContactUseCaseTest {
     private val timestampProvider: IsoTimestampProvider = mockk {
         every { now() } returns newTimestamp
     }
+    private val signAddressEntries: SignAddressEntriesUseCase = mockk()
     private val useCase = UpdateContactUseCase(
         repository = repository,
+        signAddressEntries = signAddressEntries,
         timestampProvider = timestampProvider,
     )
 
     private val walletId = UserWalletId("011")
+    private val userWallet: UserWallet = mockk { every { walletId } returns this@UpdateContactUseCaseTest.walletId }
     private val networkRawId = Network.RawID("ethereum")
 
     private val updatedEntries = listOf(
@@ -50,18 +57,24 @@ class UpdateContactUseCaseTest {
         ),
     )
 
+    private val signedEntries = listOf(updatedEntries.first().copy(signature = "signed"))
+
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository)
+        clearMocks(repository, signAddressEntries)
+        coEvery { signAddressEntries(eq(userWallet), any()) } answers {
+            secondArg<Contact>().copy(addressEntries = signedEntries).right()
+        }
     }
 
     @Test
-    fun `update preserves id and persists changes without checking uniqueness`() = runTest {
+    fun `update preserves id and persists signed changes without checking uniqueness`() = runTest {
         val existing = contact(name = "Alice")
         val saved = slot<Contact>()
         coEvery { repository.saveContact(capture(saved)) } returns Unit
 
         val result = useCase(
+            userWallet = userWallet,
             contact = existing,
             name = "Bob",
             addressEntries = updatedEntries,
@@ -71,15 +84,31 @@ class UpdateContactUseCaseTest {
         assertThat(contact).isEqualTo(saved.captured)
         assertThat(contact!!.id).isEqualTo(existing.id)
         assertThat(contact.name.value).isEqualTo("Bob")
-        assertThat(contact.addressEntries).isEqualTo(updatedEntries)
+        assertThat(contact.addressEntries).isEqualTo(signedEntries)
         assertThat(contact.createdAt).isEqualTo(originalTimestamp) // preserved
         assertThat(contact.updatedAt).isEqualTo(newTimestamp) // restamped
         coVerify(exactly = 0) { repository.getContacts(any<UserWalletId>()) }
     }
 
     @Test
+    fun `signing failure fails without persisting`() = runTest {
+        coEvery { signAddressEntries(eq(userWallet), any()) } returns SignHashesError.NoSigningKey.left()
+
+        val result = useCase(
+            userWallet = userWallet,
+            contact = contact(name = "Alice"),
+            name = "Bob",
+            addressEntries = updatedEntries,
+        )
+
+        assertThat(result.leftOrNull()).isEqualTo(SaveContactError.Signing(SignHashesError.NoSigningKey))
+        coVerify(exactly = 0) { repository.saveContact(any()) }
+    }
+
+    @Test
     fun `invalid name fails without persisting`() = runTest {
         val result = useCase(
+            userWallet = userWallet,
             contact = contact(name = "Alice"),
             name = "",
             addressEntries = updatedEntries,
