@@ -7,7 +7,9 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -19,7 +21,10 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.topbar.collapsing.entity.TangemCollapsingAppBarState
 import com.tangem.core.ui.ds.topbar.collapsing.entity.TopBarScrollDirection
 import com.tangem.core.ui.ds.topbar.collapsing.entity.rememberTangemCollapsingAppBarState
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.utils.toPx
+import kotlinx.coroutines.flow.drop
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
@@ -48,11 +53,43 @@ fun rememberTangemExitUntilCollapsedScrollBehavior(
         partialHeightLimit = partialCollapsedHeight.toPx(),
         isTopOverscrollEnabled = isTopOverscrollEnabled,
     )
+
+    SnapThresholdHapticEffect(state = topBarState)
+
     return exitUntilCollapsedScrollBehavior(
         state = topBarState,
         snapAnimationSpec = snapAnimationSpec,
         flingAnimationSpec = flingAnimationSpec,
     )
+}
+
+/**
+ * Provides a detent-style haptic feedback as the collapsing app bar crosses the threshold between its
+ * expanded and collapsed snap states
+ *
+ * @param state The state of the collapsing app bar to observe.
+ * @param snapThreshold The collapsed fraction (0f..1f) at which the haptic detent fires. Default is 0.5f,
+ *                      the midpoint between the collapse and expand snap thresholds.
+ */
+@Composable
+private fun SnapThresholdHapticEffect(
+    state: TangemCollapsingAppBarState,
+    @Suppress("MagicNumber") snapThreshold: Float = 0.5f,
+) {
+    val hapticManager = LocalHapticManager.current
+    LaunchedEffect(state, hapticManager, snapThreshold) {
+        snapshotFlow { state.collapsedFraction >= snapThreshold }
+            .drop(1) // skip the initial value so we only react to actual crossings
+            .collect { isPastThreshold ->
+                hapticManager.perform(
+                    if (isPastThreshold) {
+                        TangemHapticEffect.View.GestureThresholdActivate
+                    } else {
+                        TangemHapticEffect.View.GestureThresholdDeactivate
+                    },
+                )
+            }
+    }
 }
 
 /**
