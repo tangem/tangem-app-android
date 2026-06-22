@@ -21,7 +21,6 @@ import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
-import com.tangem.domain.wallets.extension.hasDerivation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -57,21 +56,9 @@ internal class DefaultVirtualAccountStatusFetcher @Inject constructor(
 
     private suspend fun getBalance(userWalletId: UserWalletId): Either<VirtualAccountStatusValue, BigDecimal> {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-
-        val hasVirtualAccountDerivation = userWallet.hasDerivation(
-            blockchain = VisaUtilities.visaBlockchain,
-            derivationPath = VisaUtilities.virtualAccountDerivationPath.rawPath,
-        )
-        if (!hasVirtualAccountDerivation) {
-            // TODO: Doston(VA) Derive will be implemented in  [REDACTED_TASK_KEY]
-            TangemLogger.withTag(TAG).d("Virtual account is not derived")
-            return VirtualAccountStatusValue.Error.NotSynced.left()
-        }
-
         val network = networkFactory.create(
             blockchain = VisaUtilities.visaBlockchain,
-            derivationPath =
-            Network.DerivationPath.Custom(VisaUtilities.virtualAccountDerivationPath.rawPath),
+            derivationPath = Network.DerivationPath.Custom(VisaUtilities.virtualAccountDerivationPath.rawPath),
             userWallet = userWallet,
         )
         if (network == null) {
