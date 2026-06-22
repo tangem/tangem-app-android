@@ -54,13 +54,13 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                 payoutHash = entity.payoutHash,
                 fromFiat = Amount(
                     currencySymbol = entity.fromCurrencyCode,
-                    value = entity.fromAmount.toBigDecimalOrZero(),
+                    value = entity.fromAmount.toScaledBigDecimal(entity.fromPrecision),
                     decimals = entity.fromPrecision,
                     type = AmountType.FiatType(code = entity.fromCurrencyCode),
                 ),
                 toAsset = ExpressTransactionAsset(
                     id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
-                    amount = (entity.to.actualAmount ?: entity.to.amount).toBigDecimalOrZero(),
+                    amount = (entity.to.actualAmount ?: entity.to.amount).toScaledBigDecimal(entity.to.decimals),
                     decimals = entity.to.decimals,
                     cryptoCurrency = value.toCurrency,
                 ),
@@ -87,13 +87,13 @@ private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): Excha
         payoutHash = entity.payoutHash,
         fromAsset = ExpressTransactionAsset(
             id = ExpressAssetId(networkId = entity.from.network, contractAddress = entity.from.contractAddress),
-            amount = entity.from.amount.toBigDecimalOrZero(),
+            amount = entity.from.amount.toScaledBigDecimal(entity.from.decimals),
             decimals = entity.from.decimals,
             cryptoCurrency = value.fromCurrency,
         ),
         toAsset = ExpressTransactionAsset(
             id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
-            amount = (entity.to.actualAmount ?: entity.to.amount).toBigDecimalOrZero(),
+            amount = (entity.to.actualAmount ?: entity.to.amount).toScaledBigDecimal(entity.to.decimals),
             decimals = entity.to.decimals,
             cryptoCurrency = value.toCurrency,
         ),
@@ -102,7 +102,12 @@ private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): Excha
 
 private fun parseIsoMillis(iso: String): Long = DateTime.parse(iso).millis
 
-private fun String?.toBigDecimalOrZero(): BigDecimal = this?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+/**
+ * Parses a raw minimal-unit amount string from the express backend and scales it to the human-readable
+ * value promised by [ExpressTransactionAsset.amount] (and the onramp fiat [Amount.value]).
+ */
+private fun String?.toScaledBigDecimal(decimals: Int): BigDecimal =
+    (this?.toBigDecimalOrNull() ?: BigDecimal.ZERO).movePointLeft(decimals)
 
 /**
  * Active (non-terminal) RAW status values passed to the DAO `observe…` queries so in-progress deals
