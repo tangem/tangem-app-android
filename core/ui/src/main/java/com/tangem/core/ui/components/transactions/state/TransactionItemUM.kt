@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.transactions.state
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 
@@ -37,6 +38,7 @@ sealed interface TransactionItemUM {
         val title: TextReference,
         val subtitle: ContentSubtitle,
         val timestamp: Long,
+        val warning: TextReference? = null,
     ) : TransactionItemUM {
 
         @Immutable
@@ -93,6 +95,19 @@ sealed interface TransactionItemUM {
             val direction: Direction,
             val walletName: String,
             val deviceIconUM: DeviceIconUM,
+        ) : ContentSubtitle
+
+        /**
+         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>". Used for express rows
+         * (swap counterparty currency / onramp fiat), e.g. "to: ◎ POL" or "from: 🇸🇪 SEK".
+         *
+         * @property icon resolved counterparty currency icon, rendered via `CurrencyIcon`. `null` when no icon
+         *   is available (e.g. onramp fiat carries no `CryptoCurrency`) — the ticker then renders without a leading icon.
+         */
+        data class Asset(
+            val direction: Direction,
+            val symbol: String,
+            val icon: CurrencyIconState?,
         ) : ContentSubtitle
 
         enum class Direction { TO, FROM }
