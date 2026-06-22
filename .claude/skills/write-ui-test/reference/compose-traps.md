@@ -95,6 +95,65 @@ fun walletNameValue(name: String) = child { withText(name); useUnmergedTree = tr
 fun walletNameValue(name: String) = child { hasText(name); useUnmergedTree = true }
 ```
 
+## LazyList item below the fold: plain `child { }` finds it but can't click it
+
+A `child { hasTestTag(ITEM); hasAnyDescendant(withText(name)) }` matcher resolves the semantics node
+even when the item is composed **off-screen** (LazyColumn keeps a few items past the viewport). But the
+node isn't displayed, so `clickWithAssertion()` (`assertIsDisplayed()` first) fails, or `performClick()`
+taps nothing. Symptom: the test passes when the item happens to be near the top and fails for items
+lower in the list — and a manual swipe "fixes" it. Do **not** patch with a swipe (flaky, the
+`clickableSingle` 500ms debounce can also eat fast programmatic clicks).
+
+**Whenever a target lives in a LazyColumn/LazyRow and might be below the fold, build a `KLazyListNode`
+matcher up front** — `childWith` scrolls the list to the item before returning it:
+
+```kotlin
+import com.tangem.common.utils.LazyListItemNode
+import com.tangem.core.ui.utils.LazyListItemPositionSemantics
+import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
+
+private val tokensList = KLazyListNode(
+    semanticsProvider = semanticsProvider,                 // primary-ctor param is in scope in initializers
+    viewBuilderAction = { hasTestTag(SomeScreenTestTags.LAZY_LIST) },   // the LazyColumn's OWN tag
+    itemTypeBuilder = { itemType(::LazyListItemNode) },
+    positionMatcher = { position -> SemanticsMatcher.expectValue(LazyListItemPositionSemantics, position) },
+)
+
+@OptIn(ExperimentalTestApi::class)
+fun tokenWithTitle(title: String): LazyListItemNode =
+    tokensList.childWith<LazyListItemNode> {
+        hasTestTag(SomeScreenTestTags.LAZY_LIST_ITEM)
+        hasText(title)
+        useUnmergedTree = true
+    }
+```
+
+Non-obvious points that bite:
+
+- **`childWith` searches the MERGED tree** (it scopes via the list's `viewBuilderAction`, whose
+  `useUnmergedTree` defaults to `false`). So match the item by `hasText(title)` — on a `MergeDescendants`
+  item the child texts aggregate onto the item node. `hasAnyDescendant(withText(...))` does **not** match
+  there. (`useUnmergedTree = true` on the item matcher is inert for the scroll/filter but harmless; keep
+  it to mirror existing page objects.)
+- **The list needs its OWN `testTag` on the `LazyColumn`.** If production tags only the *items* (e.g.
+  `MARKETS_TOKENS_LIST_ITEM`) and not the container, add a tag to the `LazyColumn` modifier in the
+  production composable. Reuse the screen's existing `…TestTags.LAZY_LIST` constant when one fits.
+- **Scope to the right list when several coexist.** Multiple LazyColumns with the same *item* tag can be
+  composed at once (e.g. the Add-Funds `ChooseTokenScreen` list AND the main-screen markets sheet, both
+  using `MARKETS_TOKENS_LIST_ITEM`). A bare top-level `child { hasTestTag(ITEM); … }` is then ambiguous
+  and may match the wrong screen. `childWith` (and `tokensList.child { … }`) scope through the container
+  tag via `onNode(LAZY_LIST)` / `hasAnyAncestor(LAZY_LIST)`, so they pick the intended list. Prefer a
+  unique container tag over hoping the item text is unique.
+- **`childWith` returns a `LazyListItemNode`, not a `KNode`.** `clickWithAssertion()` was a `KNode`
+  extension; it's been generalized to `fun BaseNode<*>.clickWithAssertion()` (in
+  `common/extensions/KNode.kt`) so it works on both. Both types extend `BaseNode`, and
+  `assertIsDisplayed()`/`performClick()` live on `BaseNode`.
+- `positionMatcher` is only used by `childAt(index)` / `hasLazyListItemPosition`. For `childWith`
+  (match-by-content) the items don't need to expose `LazyListItemPositionSemantics` — pass the matcher
+  anyway since the constructor requires it.
+
+Reference: `AddFundsBottomSheetPageObject.trendingTokenWithTitle` and `MainScreenPageObject` (`lazyList`).
+
 ## Decompose model lifecycle vs. data refresh
 
 Models (e.g. `TangemPayDetailsModel`) call data fetches from `init {}`, NOT on `ON_RESUME`. Returning

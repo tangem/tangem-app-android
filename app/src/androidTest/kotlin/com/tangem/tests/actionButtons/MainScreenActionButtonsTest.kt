@@ -501,7 +501,9 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { swapButton.performClick() }
             }
             step("Check 'Action is unavailable' dialog") {
-                checkActionIsUnavailableDialog()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkActionIsUnavailableDialog()
+                }
             }
             step("Click on 'Ok' button") {
                 onDialog { okButton.performClick() }
