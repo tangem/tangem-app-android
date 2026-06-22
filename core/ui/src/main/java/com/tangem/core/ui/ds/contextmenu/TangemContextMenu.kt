@@ -74,8 +74,9 @@ fun TangemContextMenu(
     }
 }
 
-private const val IN_TRANSITION_DURATION = 120
 private const val OUT_TRANSITION_DURATION = 75
+private const val ENTER_SPRING_DAMPING = 0.82f
+private const val ENTER_SPRING_STIFFNESS = 1100f
 
 @Suppress("ReusedModifierInstance", "MagicNumber")
 @Composable
@@ -91,10 +92,10 @@ private fun DropdownMenuContent(
     val scale by transition.animateFloat(
         transitionSpec = {
             if (false isTransitioningTo true) {
-                // Dismissed to expanded
-                tween(
-                    durationMillis = IN_TRANSITION_DURATION,
-                    easing = LinearOutSlowInEasing,
+                // Dismissed to expanded — springy iOS-like pop scaling up from the anchor.
+                spring(
+                    dampingRatio = ENTER_SPRING_DAMPING,
+                    stiffness = ENTER_SPRING_STIFFNESS,
                 )
             } else {
                 // Expanded to dismissed.
