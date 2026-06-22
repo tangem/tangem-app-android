@@ -195,10 +195,12 @@ internal class DefaultAddressBookRepositoryTest {
         assertThat(result).isEqualTo(bob)
     }
 
-    private fun createContact(id: String, name: String): Contact = Contact(
+    private fun createContact(id: String, name: String, iconColor: String = "KekColor"): Contact = Contact(
         id = ContactId(id),
         walletId = UserWalletId(WALLET_A),
         name = ContactName(name).getOrNull()!!,
+        icon = "",
+        iconColor = iconColor,
         createdAt = TIMESTAMP,
         updatedAt = TIMESTAMP,
         addressEntries = emptyList(),
