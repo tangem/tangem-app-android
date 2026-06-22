@@ -355,6 +355,24 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     }
 
     @Test
+    fun `GIVEN empty preferredTargets AND Exit action WHEN onAmountEnterClick THEN no alert sent`() = runTest {
+        every { stateController.value } returns initialUiState
+        every { initialUiState.actionType } returns StakingActionCommonType.Exit(partiallyUnstakeDisabled = false)
+        every { testYield.preferredValidators } returns emptyList()
+        every { messageSender.send(any()) } just Runs
+
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        model.onAmountEnterClick()
+        advanceUntilIdle()
+
+        verify(exactly = 0) { messageSender.send(any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN non-empty preferredTargets WHEN onAmountEnterClick THEN validator reset and onNextClick called`() =
         runTest {
             every { stateController.value } returns initialUiState
