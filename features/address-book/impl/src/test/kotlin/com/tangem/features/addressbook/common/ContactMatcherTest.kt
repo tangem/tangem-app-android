@@ -73,7 +73,7 @@ internal class ContactMatcherTest {
         assertThat(result.single().icon.color).isEqualTo(CryptoPortfolioIcon.Color.Azure)
     }
 
-    private fun contact(name: String, vararg entries: AddressEntry): Contact = Contact(
+    private fun contact(name: String, vararg entries: AddressEntry, iconColor: String = "Azure"): Contact = Contact(
         id = ContactId(name),
         walletId = UserWalletId(stringValue = "0001"),
         name = requireNotNull(ContactName(name).getOrNull()) { "invalid test name" },
