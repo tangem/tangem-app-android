@@ -2,14 +2,12 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
+import com.tangem.domain.addressbook.interactor.SaveContactInteractor
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.DefaultIsoTimestampProvider
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
-import com.tangem.domain.addressbook.usecase.CreateContactUseCase
 import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
-import com.tangem.domain.addressbook.usecase.SignAddressEntriesUseCase
-import com.tangem.domain.addressbook.usecase.UpdateContactUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactAddressUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -41,12 +39,6 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
-    fun provideSignAddressEntriesUseCase(signUseCase: SignUseCase): SignAddressEntriesUseCase {
-        return SignAddressEntriesUseCase(signUseCase = signUseCase)
-    }
-
-    @Provides
-    @Singleton
     fun provideValidateContactNameUseCase(repository: AddressBookRepository): ValidateContactNameUseCase {
         return ValidateContactNameUseCase(repository = repository)
     }
@@ -73,30 +65,16 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
-    fun provideCreateContactUseCase(
+    fun provideSaveContactInteractor(
         repository: AddressBookRepository,
         validateContactNameUseCase: ValidateContactNameUseCase,
-        signAddressEntriesUseCase: SignAddressEntriesUseCase,
+        signUseCase: SignUseCase,
         timestampProvider: IsoTimestampProvider,
-    ): CreateContactUseCase {
-        return CreateContactUseCase(
+    ): SaveContactInteractor {
+        return SaveContactInteractor(
             repository = repository,
             validateContactName = validateContactNameUseCase,
-            signAddressEntries = signAddressEntriesUseCase,
-            timestampProvider = timestampProvider,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideUpdateContactUseCase(
-        repository: AddressBookRepository,
-        signAddressEntriesUseCase: SignAddressEntriesUseCase,
-        timestampProvider: IsoTimestampProvider,
-    ): UpdateContactUseCase {
-        return UpdateContactUseCase(
-            repository = repository,
-            signAddressEntries = signAddressEntriesUseCase,
+            signUseCase = signUseCase,
             timestampProvider = timestampProvider,
         )
     }
