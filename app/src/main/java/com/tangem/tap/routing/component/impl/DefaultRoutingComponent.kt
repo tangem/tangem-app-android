@@ -32,6 +32,8 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
+import com.tangem.domain.appupdate.model.AppUpdateState
+import com.tangem.domain.appupdate.usecase.GetAppUpdateStateUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
@@ -44,6 +46,8 @@ import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
+import com.tangem.features.forceupdate.ForceUpdateContinuation
+import com.tangem.features.forceupdate.ForceUpdateFeatureToggles
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -64,6 +68,7 @@ import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.assisted.Assisted
@@ -103,6 +108,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val featureTogglesManager: FeatureTogglesManager,
     private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
+    private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
+    private val forceUpdateFeatureToggles: ForceUpdateFeatureToggles,
+    private val forceUpdateContinuation: ForceUpdateContinuation,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -175,38 +183,75 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private fun initializeInitialNavigation() {
         if (initialStack.isNullOrEmpty()) {
-            componentScope.launch {
-                val initialRoute = resolveInitialRoute()
-                if (rootDetectedWarningComponent.shouldShowWarning()) {
-                    launch(dispatchers.main) {
-                        rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
-                        router.replaceAll(initialRoute)
-                    }
-                } else {
-                    router.replaceAll(initialRoute)
-                }
-            }
+            componentScope.launch { resolveAndNavigate() }
         }
     }
 
-    private suspend fun resolveInitialRoute(): AppRoute {
+    private suspend fun resolveAndNavigate() {
+        // Initial navigation must never be blocked by the update check: any failure falls back to a normal startup.
+        val mode = runSuspendCatching { resolveAppUpdateMode() }
+            .onFailure { error -> TangemLogger.e("App update check failed, proceeding with normal startup", error) }
+            .getOrNull()
+
+        if (mode == null) {
+            navigateToStartRoute()
+            return
+        }
+
+        appRouterConfig.initializedState.value = true
+        router.replaceAll(AppRoute.ForceUpdate(mode = mode))
+        forceUpdateContinuation.awaitDismiss()
+        navigateToStartRoute()
+    }
+
+    private suspend fun resolveAppUpdateMode(): AppRoute.ForceUpdate.Mode? {
+        if (!forceUpdateFeatureToggles.isForceUpdateEnabled) return null
+
+        val mode = getAppUpdateStateUseCase.getCached().toForceUpdateModeOrNull()
+
+        // The force-update screen re-checks on open, so a one-shot refresh is only needed when no screen is shown.
+        if (mode == null) {
+            componentScope.launch { getAppUpdateStateUseCase.refresh() }
+        }
+
+        return mode
+    }
+
+    private suspend fun navigateToStartRoute() {
+        val initialRoute = resolveStartRoute()
+        onInitialRouteResolved(initialRoute)
+        if (rootDetectedWarningComponent.shouldShowWarning()) {
+            componentScope.launch(dispatchers.main) {
+                rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
+                router.replaceAll(initialRoute)
+            }
+        } else {
+            router.replaceAll(initialRoute)
+        }
+    }
+
+    private fun AppUpdateState.toForceUpdateModeOrNull(): AppRoute.ForceUpdate.Mode? = when (this) {
+        AppUpdateState.ForceUpdate -> AppRoute.ForceUpdate.Mode.Force
+        AppUpdateState.Brick -> AppRoute.ForceUpdate.Mode.Brick
+        AppUpdateState.OsTooOld -> AppRoute.ForceUpdate.Mode.OsTooOld
+        AppUpdateState.OptionalUpdate -> AppRoute.ForceUpdate.Mode.Optional
+        AppUpdateState.NoUpdate -> null
+    }
+
+    private suspend fun resolveStartRoute(): AppRoute {
         val userWallets = userWalletsListRepository.userWalletsSync()
 
         return when {
             userWallets.isEmpty() -> navigateForEmptyWallets()
-            userWallets.any { it.isLocked } -> {
-                AppRoute.Welcome(
-                    launchMode = launchMode,
-                )
-            }
-            else -> {
-                trackSignInEvent()
-                AppRoute.Wallet
-            }
-        }.also {
-            appRouterConfig.initializedState.value = true
-            checkForUnfinishedBackup()
+            userWallets.any { it.isLocked } -> AppRoute.Welcome(launchMode = launchMode)
+            else -> AppRoute.Wallet
         }
+    }
+
+    private suspend fun onInitialRouteResolved(route: AppRoute) {
+        appRouterConfig.initializedState.value = true
+        if (route is AppRoute.Wallet) trackSignInEvent()
+        checkForUnfinishedBackup()
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {

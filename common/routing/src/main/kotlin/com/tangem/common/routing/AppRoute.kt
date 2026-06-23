@@ -61,6 +61,15 @@ sealed class AppRoute(val path: String) : Route {
     data object Wallet : AppRoute(path = "/wallet")
 
     @Serializable
+    data class ForceUpdate(
+        val mode: Mode,
+    ) : AppRoute(path = "/force_update/$mode") {
+
+        @Serializable
+        enum class Mode { Force, Brick, OsTooOld, Optional }
+    }
+
+    @Serializable
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,

@@ -18,6 +18,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
+import com.tangem.features.forceupdate.ForceUpdateComponent
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
@@ -118,6 +119,7 @@ internal class ChildFactory @Inject constructor(
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val addressBookComponentFactory: AddressBookComponent.Factory,
+    private val forceUpdateComponentFactory: ForceUpdateComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -455,6 +457,19 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = walletComponentFactory,
+                )
+            }
+            is AppRoute.ForceUpdate -> {
+                val mode = when (route.mode) {
+                    AppRoute.ForceUpdate.Mode.Force -> ForceUpdateComponent.Mode.Force
+                    AppRoute.ForceUpdate.Mode.Brick -> ForceUpdateComponent.Mode.Brick
+                    AppRoute.ForceUpdate.Mode.OsTooOld -> ForceUpdateComponent.Mode.OsTooOld
+                    AppRoute.ForceUpdate.Mode.Optional -> ForceUpdateComponent.Mode.Optional
+                }
+                createComponentChild(
+                    context = context,
+                    params = ForceUpdateComponent.Params(mode = mode),
+                    componentFactory = forceUpdateComponentFactory,
                 )
             }
             is AppRoute.NFT ->
