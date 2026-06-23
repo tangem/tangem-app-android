@@ -7,5 +7,6 @@ plugins {
 dependencies {
     implementation(deps.moshi.adapters)
     implementation(deps.kotlin.serialization)
+    implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
 }
