@@ -10,14 +10,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.innerShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -232,15 +235,28 @@ enum class TangemMessageEffect(val isAnimatable: Boolean) {
             None -> if (isInDarkTheme) Color(0x1AFFFFFF) else Color.Transparent
         }
     }
+
+    /**
+     * Color of the inner shadow that glows inward evenly from every edge over the card body,
+     * or `null` when the effect doesn't have one. [None] uses a subtle white 15% highlight
+     * (Figma: inner shadow X0 Y0 blur 74 spread 0, #FFFFFF · 15%).
+     */
+    @Suppress("MagicNumber")
+    fun getInnerGlowColor(isInDarkTheme: Boolean): Color? = when (this) {
+        None -> if (isInDarkTheme) Color(0x26FFFFFF) else null
+        else -> null
+    }
 }
 
 /** Applies a message effect background to the [Modifier] based on the provided [messageEffect] and [radius] */
+@Suppress("LongMethod")
 @Composable
 fun Modifier.messageEffectBackground(messageEffect: TangemMessageEffect, radius: Dp, contentColor: Color): Modifier {
     val isInDarkTheme = LocalIsInDarkTheme.current
     val borderGradientColors = remember(messageEffect, isInDarkTheme) { messageEffect.getBorderGradient(isInDarkTheme) }
     val gradientColors = remember(messageEffect, isInDarkTheme) { messageEffect.getColorGradient(isInDarkTheme) }
     val gradientTint = remember(messageEffect, isInDarkTheme) { messageEffect.getGradientTint(isInDarkTheme) }
+    val innerGlowColor = remember(messageEffect, isInDarkTheme) { messageEffect.getInnerGlowColor(isInDarkTheme) }
 
     val angle by if (messageEffect.isAnimatable) {
         LocalMessageEffectAnimation.current.offsetState
@@ -293,13 +309,27 @@ fun Modifier.messageEffectBackground(messageEffect: TangemMessageEffect, radius:
                         blendMode = BlendMode.SrcIn,
                     )
                 }
-                drawRect(
-                    color = contentColor,
-                    topLeft = Offset(padding, padding),
-                    size = Size(size.width - 2 * padding, size.height - 2 * padding),
-                )
+                // None ignores contentColor — its body is the white-10% frosted haze, not a solid fill
+                if (messageEffect != TangemMessageEffect.None) {
+                    drawRect(
+                        color = contentColor,
+                        topLeft = Offset(padding, padding),
+                        size = Size(size.width - 2 * padding, size.height - 2 * padding),
+                    )
+                }
                 drawContent()
             }
+        }
+        .conditionalCompose(innerGlowColor != null) {
+            innerShadow(
+                shape = RoundedCornerShape(0.dp),
+                shadow = Shadow(
+                    radius = 10.dp,
+                    spread = 10.dp,
+                    color = innerGlowColor ?: Color.Transparent,
+                    offset = DpOffset(0.dp, 0.dp),
+                ),
+            )
         }
 }
 
