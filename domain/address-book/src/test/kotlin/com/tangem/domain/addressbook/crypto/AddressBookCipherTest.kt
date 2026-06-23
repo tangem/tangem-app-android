@@ -259,6 +259,7 @@ internal class AddressBookCipherTest {
         networkId = Network.RawID("ethereum"),
         memo = memo,
         signature = "",
+        networkName = "Ethereum",
     )
 
     private fun String.flipFirstHexNibble(): String = (if (first() == '0') '1' else '0') + substring(1)
