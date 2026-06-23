@@ -117,6 +117,9 @@ object PreferencesKeys {
 
     val IS_DEVICE_REGISTERED_KEY by lazy { booleanPreferencesKey(name = "isDeviceRegistered") }
 
+    /** Base64 `UserWalletId`s already registered with the Tangem Auth Service (`/auth/wallet`). */
+    val REGISTERED_WALLET_IDS_KEY by lazy { stringSetPreferencesKey(name = "registeredWalletIds") }
+
     val WAS_LOG_FILE_CLEARED by lazy { booleanPreferencesKey(name = "wasLogFileCleared") }
 
     val SEED_FIRST_NOTIFICATION_SHOW_TIME by lazy { longPreferencesKey("seedFirstNotificationTime") }
