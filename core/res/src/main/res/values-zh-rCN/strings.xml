@@ -1591,6 +1591,8 @@
   <string name="staking_title_stake">质押%s</string>
   <string name="staking_title_unstake">取消抵押 %s</string>
   <string name="staking_transaction_in_progress_text">交易正在处理中！区块链正在进行验证，这可能需要几分钟时间。</string>
+  <string name="staking_transaction_validation_unsafe">因安全检查问题，禁止质押%s </string>
+  <string name="staking_transaction_validation_warning">%s 质押行为可疑。请自行承担风险进行质押</string>
   <string name="staking_unbonding">解除绑定</string>
   <string name="staking_unlocked_locked">解锁</string>
   <string name="staking_unlocking">解锁</string>
@@ -1671,7 +1673,7 @@
   <string name="swapping_insufficient_funds_description">账户余额不足，无法完成此交易。请减少收款金额或增加余额。</string>
   <string name="swapping_permission_header">给予许可</string>
   <string name="swapping_rate_experience_title">请评价您与服务提供商的互动体验</string>
-  <string name="swapping_rate_feedback_placeholder">请输入您的反馈</string>
+  <string name="swapping_rate_feedback_placeholder">请输入您的反馈（可选）</string>
   <string name="swapping_rate_feedback_submit">发送反馈</string>
   <string name="swapping_rate_feedback_title">是什么影响了您的\n体验？</string>
   <string name="swapping_swap_action">兑换</string>
