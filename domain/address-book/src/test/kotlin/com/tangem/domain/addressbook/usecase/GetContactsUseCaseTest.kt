@@ -101,6 +101,7 @@ class GetContactsUseCaseTest {
                 networkId = Network.RawID("ethereum"),
                 memo = null,
                 signature = "sig",
+                networkName = "Ethereum",
             ),
         ),
     )

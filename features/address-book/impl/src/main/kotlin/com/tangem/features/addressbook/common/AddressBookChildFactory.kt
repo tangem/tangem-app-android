@@ -3,6 +3,7 @@ package com.tangem.features.addressbook.common
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
+import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
 import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
@@ -15,19 +16,23 @@ import javax.inject.Inject
  * Builds the child screens of the address book feature for a given [AddressBookRoute], wiring their callbacks to the
  * container's [AddressBookClickIntents]. Mirrors the `FeedEntryChildFactory` pattern used by the feed feature.
  */
-internal class AddressBookChildFactory @Inject constructor() {
+internal class AddressBookChildFactory @Inject constructor(
+    private val addressSelectorFactory: AddressSelectorComponent.Factory,
+) {
 
     fun createChild(
         route: AddressBookRoute,
         context: AppComponentContext,
         clickIntents: AddressBookClickIntents,
     ): ComposableContentComponent = when (route) {
-        AddressBookRoute.List -> DefaultAddressBookListComponent(
+        is AddressBookRoute.List -> DefaultAddressBookListComponent(
             appComponentContext = context,
             params = DefaultAddressBookListComponent.Params(
+                mode = route.mode,
                 onContactClick = { clickIntents.onContactClick(ContactId(it)) },
                 onAddContactClick = clickIntents::onAddContactClick,
             ),
+            addressSelectorFactory = addressSelectorFactory,
         )
         is AddressBookRoute.EditContact -> DefaultEditContactComponent(
             appComponentContext = context,
