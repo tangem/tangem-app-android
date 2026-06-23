@@ -9,7 +9,11 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -111,6 +115,28 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         coVerify(exactly = 3) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }
+
+    @Test
+    fun `GIVEN order already being polled WHEN invoke again for same order THEN returns false without a second poll`() =
+        runTest {
+            // Arrange — first poller never reaches a terminal status, so it keeps polling.
+            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+            coEvery { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) } returns
+                TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING).right()
+
+            // Act — start the first poller, let it register the order and park in its poll delay,
+            // then invoke again for the same order.
+            val firstPoller = launch { useCase(order, USER_WALLET_ID) }
+            runCurrent()
+            val secondResult = useCase(order, USER_WALLET_ID)
+
+            // Assert — the duplicate invoke is a no-op (no extra getOrderInfo, no status fetch).
+            assertThat(secondResult).isFalse()
+            coVerify(exactly = 1) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
+            coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+
+            firstPoller.cancel()
+        }
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
