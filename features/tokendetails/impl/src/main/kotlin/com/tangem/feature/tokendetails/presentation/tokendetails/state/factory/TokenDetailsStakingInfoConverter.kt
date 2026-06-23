@@ -15,6 +15,8 @@ import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
@@ -53,12 +55,20 @@ internal class TokenDetailsStakingInfoConverter(
             StakingAvailability.TemporaryUnavailable -> StakingBlockUM.TemporaryUnavailable
             StakingAvailability.Unavailable -> null
             is StakingAvailability.Full -> getStakedBlockOrNull(status)
-            is StakingAvailability.Available -> getStakingInfoBlock(status, state)
+            is StakingAvailability.Available -> getStakingInfoBlock(
+                status = status,
+                state = state,
+                isBetaMode = stakingAvailability.optionOrNull?.integrationId == StakingIntegrationID.P2PEthPool,
+            )
         }
     }
 
     @Suppress("CyclomaticComplexMethod")
-    private fun getStakingInfoBlock(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
+    private fun getStakingInfoBlock(
+        status: CryptoCurrencyStatus,
+        state: TokenDetailsState,
+        isBetaMode: Boolean,
+    ): StakingBlockUM? {
         val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
 
         val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
@@ -88,7 +98,12 @@ internal class TokenDetailsStakingInfoConverter(
         return when {
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
                 if (!hasPendingBalances) {
-                    getStakeAvailableState(stakingEntryInfo, iconState, isStakingButtonEnabled(status))
+                    getStakeAvailableState(
+                        stakingEntryInfo = stakingEntryInfo,
+                        iconState = iconState,
+                        isEnabled = isStakingButtonEnabled(status),
+                        isBetaMode = isBetaMode,
+                    )
                 } else {
                     getStakedBlockWithFiatAmount(status, pendingAmount, null)
                 }
@@ -165,6 +180,7 @@ internal class TokenDetailsStakingInfoConverter(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
         isEnabled: Boolean,
+        isBetaMode: Boolean,
     ): StakingBlockUM.StakeAvailable {
         return StakingBlockUM.StakeAvailable(
             titleText = resourceReference(id = R.string.token_details_staking_block_title),
@@ -175,6 +191,7 @@ internal class TokenDetailsStakingInfoConverter(
             iconState = iconState,
             isEnabled = isEnabled,
             onStakeClicked = clickIntents::onStakeBannerClick,
+            isBetaMode = isBetaMode,
         )
     }
 
@@ -205,6 +222,7 @@ internal class TokenDetailsStakingInfoConverter(
             ),
             rewardValue = getRewardText(status, stakingRewardAmount),
             onStakeClicked = clickIntents::onStakeBannerClick,
+            isBetaMode = status.value.stakingBalance is StakingBalance.Data.P2PEthPool,
         )
     }
 
