@@ -137,6 +137,7 @@ class SignAddressEntriesUseCaseTest {
         networkId = Network.RawID("ethereum"),
         memo = memo,
         signature = "",
+        networkName = "Ethereum",
     )
 
     private fun expectedHash(contact: Contact, entry: AddressEntry): ByteArray {
