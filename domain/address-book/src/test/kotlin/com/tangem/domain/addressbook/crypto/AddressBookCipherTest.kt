@@ -221,19 +221,41 @@ internal class AddressBookCipherTest {
         assertThat(result.leftValue()).isEqualTo(AddressBookCryptoError.NoWalletPublicKey)
     }
 
+    // region cross-platform vectors
+    // Shared known-answer vector, identical to iOS CommonAddressBookEncryptionServiceTests. Asserting the
+    // same bytes on both platforms guarantees a blob sealed on one opens on the other. Do not change these
+    // constants without changing the iOS suite in lockstep.
+
     @Test
-    fun `GIVEN fixed public key WHEN deriveAesKey THEN matches the locked HMAC-SHA256 vector`() {
-        // Arrange — independently computed: HMAC-SHA256(SHA-256([01,02,03,04]), "TokensSymmetricKey")
-        val publicKey = byteArrayOf(0x01, 0x02, 0x03, 0x04)
-        val expected = "da48094b89902e137ae73ae90acbd809af9ad4f648044c17e7ee6de73e96b0c2"
+    fun `GIVEN shared cross-platform public key WHEN deriveAesKey THEN matches the iOS vector`() {
+        // Arrange
+        val publicKey = VECTOR_PUBLIC_KEY_HEX.hexToBytes()
 
         // Act
         val aesKey = AddressBookKeyDerivation.deriveAesKey(publicKey)
 
         // Assert
         assertThat(aesKey).hasLength(AES_256_KEY_BYTES)
-        assertThat(aesKey.toHexString().lowercase()).isEqualTo(expected)
+        assertThat(aesKey.toHexString().lowercase()).isEqualTo(VECTOR_KEY_HEX)
     }
+
+    @Test
+    fun `GIVEN a blob sealed on the other platform WHEN decrypt with the derived key THEN restores the plaintext`() {
+        // Arrange — open the iOS-produced AES-256-GCM box with the key derived from the shared seed
+        val aesKey = AddressBookKeyDerivation.deriveAesKey(VECTOR_PUBLIC_KEY_HEX.hexToBytes())
+
+        // Act
+        val plaintext = aesGcmOpen(
+            key = aesKey,
+            nonce = VECTOR_NONCE_HEX.hexToBytes(),
+            ciphertext = VECTOR_CIPHERTEXT_HEX.hexToBytes(),
+            authTag = VECTOR_TAG_HEX.hexToBytes(),
+        )
+
+        // Assert
+        assertThat(plaintext.toString(Charsets.UTF_8)).isEqualTo(VECTOR_PLAINTEXT)
+    }
+    // endregion
 
     // region helpers
     private fun addressBook(vararg contacts: Contact): AddressBook =
@@ -263,6 +285,14 @@ internal class AddressBookCipherTest {
     )
 
     private fun String.flipFirstHexNibble(): String = (if (first() == '0') '1' else '0') + substring(1)
+
+    private fun String.hexToBytes(): ByteArray = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+
+    /** Raw AES-256-GCM open, mirroring [AddressBookCipher]'s transformation and tag size. */
+    private fun aesGcmOpen(key: ByteArray, nonce: ByteArray, ciphertext: ByteArray, authTag: ByteArray): ByteArray =
+        Cipher.getInstance("AES/GCM/NoPadding").apply {
+            init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(TAG_BITS, nonce))
+        }.doFinal(ciphertext + authTag)
 
     private fun <T> Either<AddressBookCryptoError, T>.rightValue(): T =
         getOrNull() ?: error("Expected Either.Right but was $this")
@@ -295,5 +325,13 @@ internal class AddressBookCipherTest {
         const val NONCE_HEX_LENGTH = NONCE_BYTES * 2
         const val TAG_HEX_LENGTH = TAG_BYTES * 2
         const val AES_256_KEY_BYTES = 32
+
+        // Shared cross-platform known-answer vector (see iOS CommonAddressBookEncryptionServiceTests).
+        const val VECTOR_PUBLIC_KEY_HEX = "0374d0f81f42ddfe34114d533e95e6ae5fe6ea271c96f1fa505199fdc365ae9720"
+        const val VECTOR_KEY_HEX = "59b85ce53fac0a8493d9d8d9c0d32adb5f586741dd8bbfd9348a3212e493730d"
+        const val VECTOR_NONCE_HEX = "000102030405060708090a0b"
+        const val VECTOR_CIPHERTEXT_HEX = "f4ee0f404e747b5b5cca730c44baf86ca3d8f6fbdf66ff2fe98d3b8f88cb23df7ff55b52205f32c8ab"
+        const val VECTOR_TAG_HEX = "6c4b71b27958f43afc6633850369a17a"
+        const val VECTOR_PLAINTEXT = "Tangem Address Book cross-platform vector"
     }
 }
