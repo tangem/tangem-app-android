@@ -41,7 +41,11 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
     val action = snackbarMessage.action
     val hasAction = actionLabel != null && action != null
 
-    var isTextOverflowing by remember { mutableStateOf(false) }
+    var isTextOverflowing by remember(
+        snackbarMessage.message,
+        snackbarMessage.startIconId,
+        hasAction,
+    ) { mutableStateOf(false) }
     val shape = if (isTextOverflowing) {
         RoundedCornerShape(TangemTheme.dimens2.x5)
     } else {
@@ -55,7 +59,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
             .clip(shape)
             .hazeEffectTangem()
             .sizeIn(minHeight = TangemTheme.dimens2.x11)
-            .padding(start = TangemTheme.dimens2.x5, end = TangemTheme.dimens2.x1)
+            .padding(start = TangemTheme.dimens2.x5, end = TangemTheme.dimens2.x3)
             .padding(vertical = TangemTheme.dimens2.x1),
         verticalArrangement = Arrangement.Center,
     ) {
@@ -81,7 +85,10 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = TangemTheme.typography.body2,
-                onTextLayout = { if (hasAction) isTextOverflowing = it.hasVisualOverflow },
+                onTextLayout = { layoutResult ->
+                    val isOverflowing = hasAction && layoutResult.hasVisualOverflow
+                    if (isTextOverflowing != isOverflowing) isTextOverflowing = isOverflowing
+                },
             )
 
             SpacerW(TangemTheme.dimens2.x4)

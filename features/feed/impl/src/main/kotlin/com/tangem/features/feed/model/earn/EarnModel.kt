@@ -8,7 +8,6 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,8 +21,8 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams.Companion.CategoryEarn
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
@@ -400,7 +399,6 @@ internal class EarnModel @Inject constructor(
                 onNetworkFilterClick = ::onNetworkFilterClick,
                 onTypeFilterClick = ::onTypeFilterClick,
                 onScroll = ::onMostlyUsedScrolled,
-                onSearchBarClicked = { params.onSearchClicked(AnalyticsParam.ScreensSources.Earn.value) },
             ),
         )
     }
