@@ -1,18 +1,17 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
+import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.DefaultIsoTimestampProvider
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.addressbook.usecase.CreateContactUseCase
 import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
-import com.tangem.domain.addressbook.usecase.GetVerifiedContactsUseCase
 import com.tangem.domain.addressbook.usecase.SignAddressEntriesUseCase
 import com.tangem.domain.addressbook.usecase.UpdateContactUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactAddressUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
-import com.tangem.domain.addressbook.usecase.VerifyAddressEntriesUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.transaction.usecase.SignUseCase
@@ -42,14 +41,6 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
-    fun provideVerifyAddressEntriesUseCase(
-        verifyMessagesUseCase: VerifySecp256k1MessagesUseCase,
-    ): VerifyAddressEntriesUseCase {
-        return VerifyAddressEntriesUseCase(verifyMessagesUseCase = verifyMessagesUseCase)
-    }
-
-    @Provides
-    @Singleton
     fun provideSignAddressEntriesUseCase(signUseCase: SignUseCase): SignAddressEntriesUseCase {
         return SignAddressEntriesUseCase(signUseCase = signUseCase)
     }
@@ -68,14 +59,14 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetVerifiedContactsUseCase(
+    fun provideGetVerifiedContactsInteractor(
         getContactsUseCase: GetContactsUseCase,
-        verifyAddressEntriesUseCase: VerifyAddressEntriesUseCase,
+        verifyMessagesUseCase: VerifySecp256k1MessagesUseCase,
         userWalletsListRepository: UserWalletsListRepository,
-    ): GetVerifiedContactsUseCase {
-        return GetVerifiedContactsUseCase(
+    ): GetVerifiedContactsInteractor {
+        return GetVerifiedContactsInteractor(
             getContacts = getContactsUseCase,
-            verifyAddressEntries = verifyAddressEntriesUseCase,
+            verifyMessages = verifyMessagesUseCase,
             userWalletsListRepository = userWalletsListRepository,
         )
     }
