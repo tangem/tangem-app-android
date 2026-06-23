@@ -5,9 +5,14 @@ import com.tangem.data.common.converter.ExpressProviderConverter
 import com.tangem.data.txhistory.repository.converter.ExpressStatusMapper
 import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
 import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
+import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
+import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
@@ -36,6 +41,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val txHistoryItemsStore: TxHistoryItemsStore,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val expressTransactionAssetFactory: ExpressTransactionAssetFactory,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TxHistoryRepositoryV2 {
@@ -85,36 +91,66 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             ).distinctUntilChanged(),
             flow4 = expressHistoryDao.getProvidersById().distinctUntilChanged(),
             transform = { outgoingSwaps, incomingSwaps, onramps, providers ->
-                buildList<ExpressTx> {
-                    fun String.expressProvider() = providers[this]?.let(expressProviderConverter::convert)
-                    outgoingSwaps.forEach { entity ->
-                        val input = ExpressSwapConverter.Input(
-                            entity = entity,
-                            provider = entity.providerId.expressProvider(),
-                            isOutgoing = true,
-                        )
-                        add(swapConverter.convert(input))
-                    }
-                    incomingSwaps.forEach { entity ->
-                        val input = ExpressSwapConverter.Input(
-                            entity = entity,
-                            provider = entity.providerId.expressProvider(),
-                            isOutgoing = false,
-                        )
-                        add(swapConverter.convert(input))
-                    }
-                    onramps.forEach { entity ->
-                        val input = ExpressOnrampConverter.Input(entity, entity.providerId.expressProvider())
-                        add(onrampConverter.convert(input))
-                    }
-                }
-                    // An exchange row may satisfy both swap queries only in degenerate cases;
-                    // keep the outgoing interpretation (added first).
-                    .distinctBy { it.txId }
+                buildExpressHistory(
+                    userWalletId = userWalletId,
+                    outgoingSwaps = outgoingSwaps,
+                    incomingSwaps = incomingSwaps,
+                    onramps = onramps,
+                    providers = providers,
+                )
             },
         )
         emitAll(flow)
     }.flowOn(dispatchers.io)
+
+    private suspend fun buildExpressHistory(
+        userWalletId: UserWalletId,
+        outgoingSwaps: List<ExpressExchangeEntity>,
+        incomingSwaps: List<ExpressExchangeEntity>,
+        onramps: List<ExpressOnrampEntity>,
+        providers: Map<String, ExpressProviderEntity>,
+    ): List<ExpressTx> {
+        val currencies = expressTransactionAssetFactory.create(
+            userWalletId = userWalletId,
+            outgoingSwaps = outgoingSwaps,
+            incomingSwaps = incomingSwaps,
+            onramps = onramps,
+        )
+        fun String.expressProvider() = providers[this]?.let(expressProviderConverter::convert)
+        return buildList {
+            outgoingSwaps.forEach { entity ->
+                val input = ExpressSwapConverter.Input(
+                    entity = entity,
+                    provider = entity.providerId.expressProvider(),
+                    isOutgoing = true,
+                    fromCurrency = currencies[entity.from.toAssetId()],
+                    toCurrency = currencies[entity.to.toAssetId()],
+                )
+                add(swapConverter.convert(input))
+            }
+            incomingSwaps.forEach { entity ->
+                val input = ExpressSwapConverter.Input(
+                    entity = entity,
+                    provider = entity.providerId.expressProvider(),
+                    isOutgoing = false,
+                    fromCurrency = currencies[entity.from.toAssetId()],
+                    toCurrency = currencies[entity.to.toAssetId()],
+                )
+                add(swapConverter.convert(input))
+            }
+            onramps.forEach { entity ->
+                val input = ExpressOnrampConverter.Input(
+                    entity = entity,
+                    provider = entity.providerId.expressProvider(),
+                    toCurrency = currencies[entity.to.toAssetId()],
+                )
+                add(onrampConverter.convert(input))
+            }
+        }
+            // An exchange row may satisfy both swap queries only in degenerate cases;
+            // keep the outgoing interpretation (added first).
+            .distinctBy { it.txId }
+    }
 
     override fun getTxHistoryBatchFlow(batchSize: Int, context: TxHistoryListBatchingContext): TxHistoryListBatchFlow {
         return BatchListSource(
