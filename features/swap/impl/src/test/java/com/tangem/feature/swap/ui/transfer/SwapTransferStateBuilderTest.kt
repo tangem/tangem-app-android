@@ -505,16 +505,18 @@ internal class SwapTransferStateBuilderTest {
 
     @Test
     fun `GIVEN dataState with from-to currencies WHEN createSuccessState THEN success holder is built in transfer mode with given fee and txUrl`() {
-        val amount = BigDecimal("1.5")
+        // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
+        val fromAmount = BigDecimal("2.0")
+        val toAmount = BigDecimal("1.5")
         val transferState = buildTransferState(
-            fromAmount = amount,
-            toAmount = amount,
+            fromAmount = fromAmount,
+            toAmount = toAmount,
             isAccountsMode = true,
         )
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            amount = amount.toPlainString(),
+            amount = fromAmount.toPlainString(),
             currentTransferState = transferState,
         )
         val feeValue = BigDecimal("0.001")
@@ -555,6 +557,26 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.rate).isEqualTo(TextReference.EMPTY)
         assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
         assertThat(success.toTokenIconState).isEqualTo(toIcon)
+
+        // from side reflects dataState.amount, to side reflects transferState.sendingAmount
+        assertThat(success.fromTokenAmount)
+            .isEqualTo(stringReference(fromAmount.format { crypto(symbol = "ETH", decimals = 18) }))
+        assertThat(success.toTokenAmount)
+            .isEqualTo(stringReference(toAmount.format { crypto(symbol = "ETH", decimals = 18) }))
+        assertThat(success.fromTokenFiatAmount).isEqualTo(
+            stringReference(
+                fromCurrencyStatus.status.value.fiatRate!!.multiply(fromAmount).format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+        )
+        assertThat(success.toTokenFiatAmount).isEqualTo(
+            stringReference(
+                toCurrencyStatus.status.value.fiatRate!!.multiply(toAmount).format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+        )
 
         val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
         val expectedIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
@@ -643,21 +665,30 @@ internal class SwapTransferStateBuilderTest {
 
     @Test
     fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {
-        val sendingAmount = BigDecimal("1.5")
+        // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
+        val fromAmount = BigDecimal("2.0")
+        val toAmount = BigDecimal("1.5")
         val transferState = buildTransferState(
-            fromAmount = sendingAmount,
-            toAmount = sendingAmount,
+            fromAmount = fromAmount,
+            toAmount = toAmount,
             isAccountsMode = true,
         )
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
+            amount = fromAmount.toPlainString(),
             currentTransferState = transferState,
         )
         val onExploreClick = {}
         val appCurrency = transferState.appCurrency
-        val expectedFiat = stringReference(
-            fromCurrencyStatus.status.value.fiatRate!!.multiply(sendingAmount).format {
+        // both fiat amounts use the from-currency rate (see createTangemPayWithdrawalSuccessState)
+        val expectedFromFiat = stringReference(
+            fromCurrencyStatus.status.value.fiatRate!!.multiply(fromAmount).format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            },
+        )
+        val expectedToFiat = stringReference(
+            fromCurrencyStatus.status.value.fiatRate!!.multiply(toAmount).format {
                 fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
             },
         )
@@ -683,10 +714,10 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.rate).isEqualTo(TextReference.EMPTY)
         assertThat(success.timestamp).isAtLeast(before)
         assertThat(success.timestamp).isAtMost(after)
-        assertThat(success.fromTokenAmount).isEqualTo(stringReference(sendingAmount.toString()))
-        assertThat(success.toTokenAmount).isEqualTo(stringReference(sendingAmount.toString()))
-        assertThat(success.fromTokenFiatAmount).isEqualTo(expectedFiat)
-        assertThat(success.toTokenFiatAmount).isEqualTo(expectedFiat)
+        assertThat(success.fromTokenAmount).isEqualTo(stringReference(fromAmount.toString()))
+        assertThat(success.toTokenAmount).isEqualTo(stringReference(toAmount.toString()))
+        assertThat(success.fromTokenFiatAmount).isEqualTo(expectedFromFiat)
+        assertThat(success.toTokenFiatAmount).isEqualTo(expectedToFiat)
         assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
         assertThat(success.toTokenIconState).isEqualTo(toIcon)
         assertThat((success.navigationUM as NavigationUM.Content).primaryButton.onClick).isEqualTo(onExploreClick)
@@ -768,7 +799,7 @@ internal class SwapTransferStateBuilderTest {
             isBalanceHidden = false,
             isAccountsMode = isAccountsMode,
             isFeeCoverage = false,
-            sendingAmount = fromAmount,
+            sendingAmount = toAmount,
         )
     }
 

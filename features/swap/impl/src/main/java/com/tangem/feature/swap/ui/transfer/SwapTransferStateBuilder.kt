@@ -431,14 +431,14 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val fromCurrency = fromSwapCurrencyStatus.currency
         val toCurrency = toSwapCurrencyStatus.currency
         val fromAmountText = amount.format { crypto(fromCurrency.symbol, fromCurrency.decimals) }
-        val toAmountText = amount.format { crypto(toCurrency.symbol, toCurrency.decimals) }
+        val toAmountText = transferState.sendingAmount.format { crypto(toCurrency.symbol, toCurrency.decimals) }
         val fromFiatAmount = getFormattedFiatAmount(
             appCurrency = transferState.appCurrency,
             amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(amount),
         )
         val toFiatAmount = getFormattedFiatAmount(
             appCurrency = transferState.appCurrency,
-            amount = toSwapCurrencyStatus.status.value.fiatRate?.multiply(amount),
+            amount = toSwapCurrencyStatus.status.value.fiatRate?.multiply(transferState.sendingAmount),
         )
 
         return uiState.copy(
@@ -488,11 +488,15 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val transferState = requireNotNull(dataState.currentTransferState)
-        val amountValue = transferState.sendingAmount
-
-        val fiatAmount = getFormattedFiatAmount(
+        val fromAmount = dataState.amount?.parseBigDecimalOrNull() ?: BigDecimal.ZERO
+        val toAmount = transferState.sendingAmount
+        val fromFiatAmount = getFormattedFiatAmount(
             appCurrency = transferState.appCurrency,
-            amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(amountValue),
+            amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount),
+        )
+        val toFiatAmount = getFormattedFiatAmount(
+            appCurrency = transferState.appCurrency,
+            amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount),
         )
 
         return uiState.copy(
@@ -516,10 +520,10 @@ internal class SwapTransferStateBuilder @Inject constructor(
                     isAccountsMode = transferState.isAccountsMode,
                     isFromCard = false,
                 ),
-                fromTokenAmount = stringReference(amountValue.toString()),
-                toTokenAmount = stringReference(amountValue.toString()),
-                fromTokenFiatAmount = fiatAmount,
-                toTokenFiatAmount = fiatAmount,
+                fromTokenAmount = stringReference(fromAmount.toString()),
+                toTokenAmount = stringReference(toAmount.toString()),
+                fromTokenFiatAmount = fromFiatAmount,
+                toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
                 navigationUM = swapSuccessNavigation(
