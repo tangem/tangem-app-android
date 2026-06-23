@@ -18,15 +18,14 @@ class GetContactsUseCase(
         }
         val normalizedQuery = query.trim()
         if (normalizedQuery.isEmpty()) return source
-        return source
-            .map { contacts ->
-                contacts.filter { contact ->
-                    val isNameContaining = contact.name.value.contains(other = normalizedQuery, ignoreCase = true)
-                    val isAddressContaining = contact.addressEntries.any { addressEntry ->
-                        addressEntry.address.contains(other = normalizedQuery, ignoreCase = true)
-                    }
-                    isNameContaining || isAddressContaining
-                }
-            }
+        return source.map { contacts -> contacts.filter { it.matches(normalizedQuery) } }
+    }
+
+    private fun Contact.matches(query: String): Boolean {
+        val isNameContaining = name.value.contains(other = query, ignoreCase = true)
+        val isAddressContaining = addressEntries.any { addressEntry ->
+            addressEntry.address.contains(other = query, ignoreCase = true)
+        }
+        return isNameContaining || isAddressContaining
     }
 }
