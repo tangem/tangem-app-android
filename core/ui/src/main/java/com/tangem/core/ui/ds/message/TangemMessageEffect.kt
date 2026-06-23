@@ -141,7 +141,6 @@ enum class TangemMessageEffect(val isAnimatable: Boolean) {
                 listOf(
                     HazeTint(
                         color = Color(0x4D7F7F7F),
-
                         blendMode = BlendMode.Luminosity,
                     ),
                     HazeTint(
@@ -287,6 +286,12 @@ fun Modifier.messageEffectBackground(messageEffect: TangemMessageEffect, radius:
                             blendMode = BlendMode.SrcIn,
                         )
                     }
+                } else {
+                    drawCircle(
+                        brush = brush,
+                        radius = size.width,
+                        blendMode = BlendMode.SrcIn,
+                    )
                 }
                 drawRect(
                     color = contentColor,
