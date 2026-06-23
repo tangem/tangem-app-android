@@ -13,8 +13,8 @@ fun BaseTestCase.checkSingleCurrencyMainScreen(cardTitle: String) {
     step("Assert 'Add funds' button is displayed") {
         onMainScreen { addFundsButton.assertIsDisplayed() }
     }
-    step("Assert 'Sell' button is displayed") {
-        onMainScreen { sellButton.assertIsDisplayed() }
+    step("Assert 'Transfer' button is displayed") {
+        onMainScreen { transferButton.assertIsDisplayed() }
     }
     step("Assert 'Swap' button is not displayed") {
         onMainScreen { swapButton.assertIsNotDisplayed() }
@@ -39,8 +39,8 @@ fun BaseTestCase.checkMultiCurrencyMainScreen(
     step("Assert 'Swap' button is displayed") {
         onMainScreen { swapButton.assertIsDisplayed() }
     }
-    step("Assert 'Sell' button is displayed") {
-        onMainScreen { sellButton.assertIsDisplayed() }
+    step("Assert 'Transfer' button is displayed") {
+        onMainScreen { transferButton.assertIsDisplayed() }
     }
     step("Assert 'Send' button is not displayed") {
         onMainScreen { sendButton.assertIsNotDisplayed() }
@@ -61,8 +61,8 @@ fun BaseTestCase.assertActionButtonsForMultiCurrencyWallet(isEnabled: Boolean = 
         step("Assert 'Swap' button is enabled") {
             onMainScreen { swapButton.assertIsEnabled() }
         }
-        step("Assert 'Sell' button is enabled") {
-            onMainScreen { sellButton.assertIsEnabled() }
+        step("Assert 'Transfer' button is enabled") {
+            onMainScreen { transferButton.assertIsEnabled() }
         }
     } else {
         step("Assert 'Add funds' button is not enabled") {
@@ -71,8 +71,8 @@ fun BaseTestCase.assertActionButtonsForMultiCurrencyWallet(isEnabled: Boolean = 
         step("Assert 'Swap' button is not enabled") {
             onMainScreen { swapButton.assertIsNotEnabled() }
         }
-        step("Assert 'Sell' button is not enabled") {
-            onMainScreen { sellButton.assertIsNotEnabled() }
+        step("Assert 'Transfer' button is not enabled") {
+            onMainScreen { transferButton.assertIsNotEnabled() }
         }
     }
 }
