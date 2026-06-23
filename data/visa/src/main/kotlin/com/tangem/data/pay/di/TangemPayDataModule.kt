@@ -255,10 +255,18 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideRestoreActiveOrdersUseCase(
+        fun provideRestoreActiveIssueOrdersUseCase(
             customerOrderRepository: CustomerOrderRepository,
-        ): RestoreActiveOrdersUseCase {
-            return RestoreActiveOrdersUseCase(customerOrderRepository)
+            issueCardRepository: TangemPayIssueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): RestoreActiveIssueOrdersUseCase {
+            return RestoreActiveIssueOrdersUseCase(
+                customerOrderRepository = customerOrderRepository,
+                issueCardRepository = issueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
         }
 
         @Provides
