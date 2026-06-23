@@ -33,6 +33,14 @@ object PreferencesKeys {
 
     val APP_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "launchCount") }
 
+    val LAST_OPTIONAL_UPDATE_SHOWN_VERSION_KEY by lazy {
+        stringPreferencesKey(name = "lastOptionalUpdateShownVersion")
+    }
+
+    val LAST_OPTIONAL_UPDATE_SHOWN_AT_KEY by lazy { longPreferencesKey(name = "lastOptionalUpdateShownAt") }
+
+    val CACHED_APP_VERSIONS_KEY by lazy { stringPreferencesKey(name = "cachedApplicationVersions") }
+
     val SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "showRatingDialogAtLaunchCount") }
 
     val FUNDS_FOUND_DATE_KEY by lazy { longPreferencesKey(name = "fundsFoundDate") }
