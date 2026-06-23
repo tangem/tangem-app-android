@@ -389,8 +389,11 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Add funds' button") {
                 onMainScreen { addFundsButton.performClick() }
             }
+            step("Click on '$tokenTitle'") {
+                onAddFundsBottomSheet { userTokenWithTitle(tokenTitle).clickWithAssertion() }
+            }
             step("Click on 'Buy' button in bottom sheet") {
-                onAddFundsBottomSheet { buyButton.clickWithAssertion() }
+                onGetTokenBottomSheet { buyButton.performClick() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 waitForIdle()
@@ -429,10 +432,10 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { addFundsButton.performClick() }
             }
             step("Assert 'Choose token' screen title is displayed") {
-                onChooseTokenScreen { topAppBarTitle.assertIsDisplayed() }
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
             }
             step("Assert token with title: '$tokenTitle' is displayed") {
-                onChooseTokenScreen { tokenWithTitle(tokenTitle).assertIsDisplayed() }
+                onChooseTokenBottomSheet { tokenWithTitle(tokenTitle).assertIsDisplayed() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
@@ -452,14 +455,14 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
             }
-            step("Assert 'Sell' button is displayed") {
-                onMainScreen { sellButton.assertIsDisplayed() }
+            step("Assert 'Transfer' button is displayed") {
+                onMainScreen { transferButton.assertIsDisplayed() }
             }
-            step("Click on 'Sell' button") {
-                onMainScreen { sellButton.performClick() }
+            step("Click on 'Transfer' button") {
+                onMainScreen { transferButton.performClick() }
             }
-            step("Assert 'Sell' token screen title is displayed") {
-                onSellScreen { title.assertIsDisplayed() }
+            step("Assert 'Choose token' title is displayed") {
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
             }
         }
     }
@@ -488,7 +491,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { addFundsButton.performClick() }
             }
             step("Assert 'Choose token' screen opens (Add funds is always available)") {
-                onChooseTokenScreen { topAppBarTitle.assertIsDisplayed() }
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
             }
             step("Press 'Back' to return to main screen") {
                 device.uiDevice.pressBack()
@@ -508,17 +511,14 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Ok' button") {
                 onDialog { okButton.performClick() }
             }
-            step("Assert 'Sell' button is displayed") {
-                onMainScreen { sellButton.assertIsDisplayed() }
+            step("Assert 'Transfer' button is displayed") {
+                onMainScreen { transferButton.assertIsDisplayed() }
             }
-            step("Click on 'Sell' button") {
-                onMainScreen { sellButton.performClick() }
+            step("Click on 'Transfer' button") {
+                onMainScreen { transferButton.performClick() }
             }
-            step("Check 'Action is unavailable' dialog") {
-                checkActionIsUnavailableDialog()
-            }
-            step("Click on 'Ok' button") {
-                onDialog { okButton.performClick() }
+            step("Assert 'Choose token' title is displayed") {
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
             }
         }
     }
@@ -548,7 +548,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { addFundsButton.performClick() }
             }
             step("Assert 'Choose token' screen opens (Add funds is always available)") {
-                onChooseTokenScreen { topAppBarTitle.assertIsDisplayed() }
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
             }
             step("Press 'Back' to return to main screen") {
                 device.uiDevice.pressBack()
@@ -566,17 +566,14 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Ok' button") {
                 onDialog { okButton.performClick() }
             }
-            step("Assert 'Sell' button is displayed") {
-                onMainScreen { sellButton.assertIsDisplayed() }
+            step("Assert 'Transfer' button is displayed") {
+                onMainScreen { transferButton.assertIsDisplayed() }
             }
-            step("Click on 'Sell' button") {
-                onMainScreen { sellButton.performClick() }
+            step("Click on 'Transfer' button") {
+                onMainScreen { transferButton.performClick() }
             }
-            step("Check 'Action is unavailable' dialog") {
-                checkActionIsUnavailableDialog()
-            }
-            step("Click on 'Ok' button") {
-                onDialog { okButton.performClick() }
+            step("Assert 'Choose token' title is displayed") {
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
             }
         }
     }
