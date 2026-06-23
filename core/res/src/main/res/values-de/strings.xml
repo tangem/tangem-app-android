@@ -102,6 +102,7 @@
     <item quantity="one">Adresse</item>
     <item quantity="other">Adressen</item>
   </plurals>
+  <string name="address_book_choose_address">Adresse auswählen</string>
   <string name="address_book_contact">Kontakt</string>
   <string name="address_book_contact_name">Name der Kontaktperson</string>
   <string name="address_book_copy_address">Adresse kopieren</string>
@@ -112,6 +113,7 @@
   <string name="address_book_discard">Verwerfen</string>
   <string name="address_book_edit_address">Adresse bearbeiten</string>
   <string name="address_book_enter_address">Adresse eingeben</string>
+  <string name="address_book_invalid_address_error">Ungültige Adresse</string>
   <string name="address_book_keep_editing">Weiter bearbeiten</string>
   <string name="address_book_new_contact">Neuer Kontakt</string>
   <string name="address_book_no_contacts">Noch keine Kontakte</string>
@@ -274,6 +276,7 @@
   <string name="common_attention">Achtung</string>
   <string name="common_available_networks">Verfügbare Netzwerke</string>
   <string name="common_backup">Sicherungskopie</string>
+  <string name="common_backup_error">Sicherungsfehler</string>
   <string name="common_balance">Bilanz: %s</string>
   <string name="common_balance_title">Saldo</string>
   <string name="common_biometric_authentication">biometrische Authentifizierung</string>
@@ -429,6 +432,7 @@
   <string name="common_send">Senden</string>
   <string name="common_send_colon">Senden:</string>
   <string name="common_send_tx_error">Absenden der Transaktion fehlgeschlagen</string>
+  <string name="common_send_with_swap">Senden &amp; Tauschen</string>
   <string name="common_sending">Senden</string>
   <string name="common_sent">Gesendet</string>
   <string name="common_server_unavailable">Der Server ist nicht verfügbar. Bitte versuche es später erneut.</string>
@@ -646,6 +650,7 @@
   <string name="express_legal_two_placeholders">Durch die Nutzung der Swap-Funktionalität erklärst du dich mit des Anbieters %1$s und %2$s einverstanden.</string>
   <string name="express_more_providers_soon">Weitere Anbieter folgen in Kürze</string>
   <string name="express_provider">Anbieter</string>
+  <string name="express_provider_best_dex_rate">Bester DEX-Kurs</string>
   <string name="express_provider_best_rate">Bester Preis</string>
   <string name="express_provider_fca_warning_list">Warnliste der FCA</string>
   <string name="express_provider_fixed_rate_is_unavailable">Der Festzins ist nicht verfügbar</string>
@@ -658,6 +663,9 @@
   <string name="express_provider_permission_needed">Erlaubnis erforderlich</string>
   <string name="express_provider_permission_needed_v2">Genehmigung erforderlich</string>
   <string name="express_provider_recommended">Empfohlen</string>
+  <string name="express_send_with_swap_not_supported_button">Tauschen</string>
+  <string name="express_send_with_swap_not_supported_text">Tauschen Sie es manuell aus und senden Sie es anschließend an den Empfänger.</string>
+  <string name="express_send_with_swap_not_supported_title">%s wird in Swap &amp; Send nicht unterstützt.</string>
   <string name="express_status_bought">Gekauft %s</string>
   <string name="express_status_buying">Kauf %s</string>
   <string name="express_status_buying_active">Kauf %s…</string>
@@ -692,9 +700,14 @@
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
+  <string name="force_update_action">Jetzt aktualisieren</string>
   <string name="force_update_banner_message">Aktualisiere die Anwendung auf die neueste Version, um die ordnungsgemäße Funktionalität zu gewährleisten</string>
   <string name="force_update_banner_title">Aktualisierung erforderlich</string>
+  <string name="force_update_brick_description">Diese Version der App wird nicht mehr unterstützt und kann auf diesem Gerät nicht aktualisiert werden.</string>
+  <string name="force_update_brick_title">Update nicht verfügbar</string>
   <string name="force_update_button">Update</string>
+  <string name="force_update_os_description">Ihr Betriebssystem ist veraltet. Bitte aktualisieren Sie es, um die App weiterhin nutzen zu können.</string>
+  <string name="force_update_os_title">Aktualisieren Sie Ihr Betriebssystem</string>
   <string name="force_update_warning_message">Bitte aktualisiere die Anwendung auf die neueste Version, um eine einwandfreie Funktion zu gewährleisten.</string>
   <string name="force_update_warning_title">Aktualisierung erforderlich</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Nicht genügend Mittel</string>
@@ -1281,6 +1294,7 @@
   <string name="quick_action_buy_description">Kreditkarte oder Bankkonto</string>
   <string name="quick_action_receive_description">Teilen deine Adresse oder dein QR-Code</string>
   <string name="quick_action_sell_description">Sicherer Verkauf von Kryptowährungen</string>
+  <string name="quick_action_send_and_swap_description">Senden Sie mit Tausch an ein anderes Token</string>
   <string name="quick_action_send_description">An eine andere Wallet senden</string>
   <string name="quick_action_swap_description">Zwischen deinen Portfolios</string>
   <string name="quick_top_up_chip_other">Andere</string>
@@ -1511,6 +1525,8 @@
   <string name="staking_details_apr">Effektiver Jahreszins</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
+  <string name="staking_details_autocompound_funds_earned">Erzielte Einnahmen: %s</string>
+  <string name="staking_details_autocompound_rewards_compounded">Die Prämien werden Ihrem Staking-Guthaben gutgeschrieben.</string>
   <string name="staking_details_autocompound_rewards_earned">Die Belohnungen werden auf Dein Stakingguthaben aufgezinst. Verdiente Gelder: %s</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
@@ -1613,6 +1629,8 @@
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Staking beenden %s</string>
   <string name="staking_transaction_in_progress_text">Die Transaktion wird bearbeitet! Derzeit findet eine Validierung in der Blockchain statt. Dies kann einige Minuten dauern.</string>
+  <string name="staking_transaction_validation_unsafe">%s Staking aufgrund von Sicherheitsüberprüfungen untersagt</string>
+  <string name="staking_transaction_validation_warning">%s Das Staking erscheint verdächtig. Bitte staken Sie auf eigenes Risiko.</string>
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unlocking">Entsperren</string>
@@ -1641,6 +1659,8 @@
   <string name="story_web3_title">Web 3.0-kompatibel</string>
   <string name="sui_not_enough_coin_for_fee_description">Zum Fortfahren ist eine eingehende Transaktion von mindestens %1$s erforderlich</string>
   <string name="sui_not_enough_coin_for_fee_title">Unzureichende Mittel</string>
+  <string name="support_chat_screen_title">Support-Chat</string>
+  <string name="support_chat_share_logs_button">App-Protokolle anhängen</string>
   <string name="support_chat_swap_prefilled_message">SWAP-Operationsdaten:\nAus: %1$s %2$s\nZu: %3$s %4$s\nVon %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Chat öffnen</string>
   <string name="support_selector_view_email_button">Mail öffnen</string>
@@ -1693,7 +1713,7 @@
   <string name="swapping_insufficient_funds_description">Nicht genügend Geldmittel, um diese Transaktion abzuschließen. Verringern Sie den zu erhaltenden Betrag oder fügen Sie weitere Mittel hinzu.</string>
   <string name="swapping_permission_header">Erlaubnis erteilen</string>
   <string name="swapping_rate_experience_title">Bewerten deine Erfahrung mit dem Anbieter</string>
-  <string name="swapping_rate_feedback_placeholder">Geben dein Feedback ein</string>
+  <string name="swapping_rate_feedback_placeholder">Geben dein Feedback</string>
   <string name="swapping_rate_feedback_submit">Feedback senden</string>
   <string name="swapping_rate_feedback_title">Was waren deine Erfahrungen?</string>
   <string name="swapping_swap_action">Tauschen</string>
@@ -1711,6 +1731,7 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Karte kann nicht umbenannt werden</string>
   <string name="tangem_pay_card_frozen">Karte eingefroren</string>
   <string name="tangem_pay_card_payment">Kartenzahlung</string>
+  <string name="tangem_pay_close_card_disabled_last_card">Die letzte Karte kann nicht geschlossen werden.</string>
   <string name="tangem_pay_close_card_popup_description">Es wird aus der App verschwinden</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Karte schließen</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Geh zurück</string>
@@ -1823,6 +1844,7 @@
   </plurals>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
+  <string name="tangempay_common_card">Karte</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Limit von %s bis %s festlegen</string>
   <string name="tangempay_daily_limit_set_button">Limits festlegen</string>
   <string name="tangempay_declined_reason_1">Unzureichendes Guthaben</string>
@@ -1924,6 +1946,9 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Zahlen Sie USDC auf das Zahlungskonto ein, um die Ausstellungsgebühr zu decken</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Gebühr kann nicht gedeckt werden</string>
   <string name="tangempay_reissue_card_title">Ihre Karte neu ausstellen?</string>
+  <string name="tangempay_remove_account">Konto löschen</string>
+  <string name="tangempay_remove_account_alert_description">Tangem Pay wird vom Hauptbildschirm entfernt und erscheint auch nach einer Neuinstallation der App nicht wieder.</string>
+  <string name="tangempay_remove_account_alert_title">Konto löschen?</string>
   <string name="tangempay_service_unavailable_description">Wir beheben ein technisches Problem. Bitte versuchen Sie es später erneut.</string>
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
@@ -2031,6 +2056,8 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Diese Aktion ist unumkehrbar. Du hast keinen Zugriff mehr auf die alte Wallet.</string>
   <string name="twins_scan_twin_with_number">Tippe auf die Doppelkarte oder Ring mit der Nummer %s und entferne sie erst am Ende des Vorgangs.</string>
+  <string name="tx_history_onramp_top_up">Aufladen</string>
+  <string name="tx_history_onramp_topped_up">Aufgeladen</string>
   <string name="unexpected_error_description">Bitte versuche es später noch einmal. Sollte das Problem weiterhin bestehen, wende Dich bitte an den Support.</string>
   <string name="unexpected_error_title">Etwas ist schiefgelaufen!</string>
   <string name="universal_error">Es ist ein Fehler aufgetreten. Fehlercode: %s. Bitte kontaktiere unseren Support.</string>
@@ -2062,6 +2089,8 @@
   <string name="user_wallet_list_rename_popup_title">Wallet umbenennen</string>
   <string name="user_wallet_list_unlock_all">Alle freischalten</string>
   <string name="user_wallet_list_unlock_all_with">Alle mit %s freischalten</string>
+  <string name="virtual_account_title">Virtuelles Konto</string>
+  <string name="virtual_account_transactions_empty">Noch keine Transaktionen. Beginnen Sie mit dem Einkaufen und sehen Sie sich hier den Verlauf an</string>
   <string name="visa_balance_limits_details_aml_verified">AML-geprüft</string>
   <string name="visa_balance_limits_details_available">Verfügbar</string>
   <string name="visa_balance_limits_details_blocked">Gesperrt</string>
@@ -2368,6 +2397,7 @@
   <string name="wc_all_dapps_disconnected">Alle dApps getrennt</string>
   <string name="wc_allow_to_spend">Erlaubnis auszugeben</string>
   <string name="wc_approve_description">Durch die Genehmigung erlaubst Du dApps oder Smart Contracts, Token in zukünftigen Transaktionen zu verwenden.</string>
+  <string name="wc_change_address">Adresse ändern</string>
   <string name="wc_common_address">Vertragsadresse</string>
   <string name="wc_common_connect">Verbinden</string>
   <string name="wc_common_loading">Laden</string>
