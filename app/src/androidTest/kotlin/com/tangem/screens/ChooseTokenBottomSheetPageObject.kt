@@ -20,14 +20,14 @@ import com.tangem.core.res.R as CoreResR
  * After the onramp redesign this is a [BaseBottomSheetTestTags.CONTAINER] bottom sheet
  * (centered title + close icon), not a full screen with a top app bar.
  */
-class ChooseTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<ChooseTokenPageObject>(
+class ChooseTokenBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<ChooseTokenBottomSheetPageObject>(
         semanticsProvider = semanticsProvider,
         viewBuilderAction = { hasTestTag(BaseBottomSheetTestTags.CONTAINER) },
     ) {
 
-    val topAppBarTitle: KNode = child {
-        hasText(getResourceString(CoreResR.string.common_add_funds))
+    val title: KNode = child {
+        hasText(getResourceString(CoreResR.string.common_choose_token))
         useUnmergedTree = true
     }
 
@@ -44,5 +44,5 @@ class ChooseTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 }
 
-internal fun BaseTestCase.onChooseTokenScreen(function: ChooseTokenPageObject.() -> Unit) =
+internal fun BaseTestCase.onChooseTokenBottomSheet(function: ChooseTokenBottomSheetPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
