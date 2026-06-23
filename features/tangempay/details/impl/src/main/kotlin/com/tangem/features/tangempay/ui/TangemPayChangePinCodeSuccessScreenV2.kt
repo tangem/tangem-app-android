@@ -19,6 +19,7 @@ internal fun TangemPayChangePinCodeSuccessScreenV2(onClose: () -> Unit, modifier
         onButtonClick = onClose,
         titleTestTag = TangemPayTestTags.PIN_SUCCESS_TITLE,
         subtitleTestTag = TangemPayTestTags.PIN_SUCCESS_DESCRIPTION,
+        buttonTestTag = TangemPayTestTags.PIN_DONE_BUTTON,
     )
 }
 

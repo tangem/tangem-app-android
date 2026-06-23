@@ -19,6 +19,7 @@ object TangemPayTestTags {
     const val CARD_DETAILS_COPY_CVC = "TANGEM_PAY_CARD_DETAILS_COPY_CVC"
 
     // Card management (card page settings)
+    const val SHOW_DETAILS_ROW = "TANGEM_PAY_SHOW_DETAILS_ROW"
     const val CHANGE_PIN_ROW = "TANGEM_PAY_CHANGE_PIN_ROW"
     const val FREEZE_CARD_ROW = "TANGEM_PAY_FREEZE_CARD_ROW"
     const val CARD_FROZEN_BADGE = "TANGEM_PAY_CARD_FROZEN_BADGE"

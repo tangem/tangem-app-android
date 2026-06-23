@@ -68,9 +68,9 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
-    val sellButton: KNode = child {
+    val transferButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasAnyDescendant(withText(getResourceString(R.string.common_sell)))
+        hasAnyDescendant(withText(getResourceString(R.string.common_transfer)))
         useUnmergedTree = true
     }
 

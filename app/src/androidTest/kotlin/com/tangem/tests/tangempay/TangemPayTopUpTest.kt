@@ -64,6 +64,7 @@ class TangemPayTopUpTest : BaseTestCase() {
                 onTangemPayMainScreen { balance.assertTextContainsSafe("10", substring = true) }
             }
             step("Click on 'Top Up' action chip") {
+                waitForIdle()
                 onTangemPayMainScreen { topUpButton.clickWithAssertion() }
             }
             step("Assert 'Add Funds' sheet is displayed") {

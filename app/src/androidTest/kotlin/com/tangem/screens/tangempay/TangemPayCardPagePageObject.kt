@@ -26,7 +26,7 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
     }
 
     val showDetailsButton: KNode = child {
-        hasTestTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON)
+        hasTestTag(TangemPayTestTags.SHOW_DETAILS_ROW)
         useUnmergedTree = true
     }
 

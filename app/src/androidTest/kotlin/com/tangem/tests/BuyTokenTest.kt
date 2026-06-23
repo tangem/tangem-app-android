@@ -44,8 +44,8 @@ class BuyTokenTest : BaseTestCase() {
                 onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onChooseTokenScreen {
-                    topAppBarTitle.assertIsDisplayed()
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
                     tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
             }
@@ -91,8 +91,8 @@ class BuyTokenTest : BaseTestCase() {
                 onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onChooseTokenScreen {
-                    topAppBarTitle.assertIsDisplayed()
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
                     tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
             }
@@ -165,8 +165,8 @@ class BuyTokenTest : BaseTestCase() {
                 onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onChooseTokenScreen {
-                    topAppBarTitle.assertIsDisplayed()
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
                     tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
             }
@@ -251,8 +251,8 @@ class BuyTokenTest : BaseTestCase() {
                 onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onChooseTokenScreen {
-                    topAppBarTitle.assertIsDisplayed()
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
                     tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
             }
@@ -336,8 +336,8 @@ class BuyTokenTest : BaseTestCase() {
                 onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onChooseTokenScreen {
-                    topAppBarTitle.assertIsDisplayed()
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
                     tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
             }
@@ -425,8 +425,8 @@ class BuyTokenTest : BaseTestCase() {
                 onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onChooseTokenScreen {
-                    topAppBarTitle.assertIsDisplayed()
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
                     tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
             }

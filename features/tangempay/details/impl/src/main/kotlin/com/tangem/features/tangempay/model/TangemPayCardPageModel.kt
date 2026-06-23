@@ -294,6 +294,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 title = TextReference.Res(R.string.tangempay_card_details_title),
                 onClick = ::onClickViewDetails,
                 iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+                testTag = TangemPayTestTags.SHOW_DETAILS_ROW,
             ),
             TangemPayCardPageSettingV2(
                 id = TangemPayCardPageSettingV2.Id.Freeze,
