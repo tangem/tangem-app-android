@@ -4,6 +4,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1322_FORCE_UPDATE_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "NEW_CARD_SCANNING_ENABLED",
         "version": "undefined"
     },
