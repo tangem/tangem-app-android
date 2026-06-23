@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -36,7 +37,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class AddStakingNotificationsTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -153,6 +154,7 @@ internal class AddStakingNotificationsTransformer(
             feeValue = feeValue,
         )
         addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
+        addTransactionValidationNotifications(confirmationState.transactionVerdict)
         addWarningNotifications(
             prevState = prevState,
             amountState = amountState,
@@ -184,6 +186,19 @@ internal class AddStakingNotificationsTransformer(
                 notification is StakingNotification.Warning.TransactionInProgress ||
                 notification is StakingNotification.Warning.InitializeTonAccount
         } && isActualSources
+
+    private fun MutableList<NotificationUM>.addTransactionValidationNotifications(
+        verdict: StakingTransactionVerdict?,
+    ) {
+        val token = cryptoCurrencyStatusProvider().currency.symbol
+        when (verdict) {
+            StakingTransactionVerdict.UNSAFE ->
+                add(StakingNotification.Error.TransactionValidationUnsafe(token = token))
+            StakingTransactionVerdict.WARNING ->
+                add(StakingNotification.Warning.TransactionValidationWarning(token = token))
+            StakingTransactionVerdict.SAFE, null -> Unit
+        }
+    }
 
     private fun MutableList<NotificationUM>.addStakingErrorNotifications(
         stakingError: StakingError?,

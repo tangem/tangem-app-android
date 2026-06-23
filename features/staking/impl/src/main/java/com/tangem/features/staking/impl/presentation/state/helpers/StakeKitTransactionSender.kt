@@ -9,7 +9,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.CheckStakingTransactionUseCase
 import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
+import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.GetStakingTransactionsUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
@@ -42,7 +44,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class StakeKitTransactionSender @AssistedInject constructor(
     private val stateController: StakingStateController,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
@@ -53,6 +55,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
+    private val checkStakingTransactionUseCase: CheckStakingTransactionUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: StakeKitIntegration,
@@ -61,6 +64,51 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
 
     private val balanceUpdater: StakingBalanceUpdater
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
+
+    private var cachedVerdict: StakingTransactionVerdict? = null
+
+    override suspend fun validate(): StakingTransactionVerdict {
+        val state = stateController.value
+        val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
+            ?: return StakingTransactionVerdict.SAFE
+        val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: return StakingTransactionVerdict.SAFE
+        val amountState = state.amountState as? AmountState.Data ?: return StakingTransactionVerdict.SAFE
+        val accountAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+            ?: return StakingTransactionVerdict.SAFE
+
+        var hasError = false
+        val onError: (StakingError) -> Unit = { hasError = true }
+
+        val stakingTransactions = getStakingTransactions(
+            state = state,
+            confirmationState = confirmationState,
+            onConstructError = onError,
+        )
+        if (hasError || stakingTransactions == null) return StakingTransactionVerdict.SAFE
+
+        val fullTransactionsData = getConstructedTransactions(
+            stakingTransactions = stakingTransactions,
+            fee = fee,
+            amount = amountState.amountTextField.cryptoAmount.value.orZero(),
+            onConstructError = onError,
+        )
+        if (hasError || fullTransactionsData.isNullOrEmpty()) return StakingTransactionVerdict.SAFE
+
+        var worst = StakingTransactionVerdict.SAFE
+        fullTransactionsData.forEach { item ->
+            val verdict = checkStakingTransactionUseCase(
+                network = item.stakeKitTransaction.network,
+                accountAddress = accountAddress,
+                unsignedTransaction = item.stakeKitTransaction.unsignedTransaction,
+                token = cryptoCurrencyStatus.currency.symbol,
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+                provider = STAKEKIT_PROVIDER,
+            )
+            worst = maxOf(worst, verdict)
+        }
+        cachedVerdict = worst
+        return worst
+    }
 
     override suspend fun send(callbacks: StakingTransactionSender.Callbacks) {
         constructAndSendTransactions(
@@ -102,6 +150,12 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
 
         if (fullTransactionsData.isNullOrEmpty()) {
             onConstructError(StakingError.DomainError("fullTransactionsData is null or empty"))
+            return
+        }
+
+        val verdict = cachedVerdict ?: validateConstructedTransactions(fullTransactionsData)
+        if (verdict == StakingTransactionVerdict.UNSAFE) {
+            onConstructError(StakingError.TransactionValidationFailed("Transaction blocked by security validation"))
             return
         }
 
@@ -224,6 +278,26 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         }
     }
 
+    private suspend fun validateConstructedTransactions(
+        transactions: List<FullTransactionData>,
+    ): StakingTransactionVerdict {
+        val accountAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+            ?: return StakingTransactionVerdict.UNSAFE
+        var worst = StakingTransactionVerdict.SAFE
+        transactions.forEach { item ->
+            val verdict = checkStakingTransactionUseCase(
+                network = item.stakeKitTransaction.network,
+                accountAddress = accountAddress,
+                unsignedTransaction = item.stakeKitTransaction.unsignedTransaction,
+                token = cryptoCurrencyStatus.currency.symbol,
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+                provider = STAKEKIT_PROVIDER,
+            )
+            worst = maxOf(worst, verdict)
+        }
+        return worst
+    }
+
     private suspend fun sendTransaction(
         fullTransactionsData: List<FullTransactionData>,
         onSendSuccess: (txUrl: String) -> Unit,
@@ -320,3 +394,5 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         ): StakeKitTransactionSender
     }
 }
+
+private const val STAKEKIT_PROVIDER = "StakeKit"

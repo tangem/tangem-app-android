@@ -8,6 +8,7 @@ import com.tangem.blockchain.extensions.formatHex
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
@@ -34,6 +35,8 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
 
     private val balanceUpdater: StakingBalanceUpdater
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
+
+    override suspend fun validate(): StakingTransactionVerdict = StakingTransactionVerdict.SAFE
 
     override suspend fun send(callbacks: StakingTransactionSender.Callbacks) {
         val params = transactionCreator.extractParams(cryptoCurrencyStatus)

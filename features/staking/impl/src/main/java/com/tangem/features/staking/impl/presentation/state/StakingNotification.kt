@@ -39,6 +39,11 @@ internal object StakingNotification {
             title = title,
             subtitle = subtitle,
         )
+
+        data class TransactionValidationUnsafe(val token: String) : Error(
+            title = resourceReference(R.string.common_error),
+            subtitle = resourceReference(R.string.staking_transaction_validation_unsafe, wrappedList(token)),
+        )
     }
 
     sealed class Warning(
@@ -61,6 +66,11 @@ internal object StakingNotification {
         data object LowStakedBalance : Warning(
             title = resourceReference(R.string.staking_notification_low_staked_balance_title),
             subtitle = resourceReference(R.string.staking_notification_low_staked_balance_text),
+        )
+
+        data class TransactionValidationWarning(val token: String) : Warning(
+            title = resourceReference(R.string.common_warning),
+            subtitle = resourceReference(R.string.staking_transaction_validation_warning, wrappedList(token)),
         )
 
         data class InitializeTonAccount(private val onInitializeClick: () -> Unit) : Info(
