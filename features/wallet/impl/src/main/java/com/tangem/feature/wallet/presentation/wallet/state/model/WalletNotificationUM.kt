@@ -355,10 +355,10 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             title = resourceReference(id = CoreResR.string.main_add_funds_promo_title),
             subtitle = resourceReference(id = CoreResR.string.main_add_funds_promo_description),
             iconUM = TangemIconUM.Icon(
-                iconRes = CoreUiR.drawable.ic_coins_swap_24,
-                tintReference = { TangemTheme.colors2.graphic.status.accent },
+                iconRes = CoreUiR.drawable.ic_swap_28,
+                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
             ),
-            messageEffect = TangemMessageEffect.None,
+            messageEffect = TangemMessageEffect.Magic,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = CoreResR.string.common_add_funds),
