@@ -1,3 +1,5 @@
+rootProject.name = "tangem-app-android"
+
 pluginManagement {
     repositories {
         gradlePluginPortal()

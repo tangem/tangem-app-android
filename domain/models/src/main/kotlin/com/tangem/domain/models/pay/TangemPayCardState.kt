@@ -26,6 +26,8 @@ enum class TangemPayCardState {
     Issuing,
     ;
 
+    fun isPendingState() = this == Reissuing || this == Closing || this == Issuing
+
     override fun toString() = when (this) {
         Active -> "Active"
         Reissuing -> "Reissuing"

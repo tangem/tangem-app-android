@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -21,8 +23,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -91,22 +97,58 @@ private fun TangemPayCardPageScreen(
             TangemTheme.colors.background.secondary
         },
     ) { scaffoldPaddings ->
+        TangemPayCardPageContent(
+            scaffoldPaddings = scaffoldPaddings,
+            state = state,
+            isRedesignEnabled = isRedesignEnabled,
+            cardSection = cardSection,
+        )
+    }
+}
+
+@Composable
+private fun TangemPayCardPageContent(
+    state: TangemPayCardPageUM,
+    scaffoldPaddings: PaddingValues,
+    isRedesignEnabled: Boolean,
+    cardSection: @Composable (() -> Unit),
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(scaffoldPaddings),
+    ) {
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+        val isCardInPendingState = state.cardState.isPendingState()
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(scaffoldPaddings),
+                .then(
+                    if (isCardInPendingState) {
+                        Modifier.wrapContentHeight(align = Alignment.Top)
+                    } else {
+                        Modifier.fillMaxHeight()
+                    },
+                ),
             contentPadding = PaddingValues(
-                bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
+                bottom = if (isCardInPendingState) {
+                    0.dp
+                } else {
+                    TangemTheme.dimens.spacing16 + bottomBarHeight
+                },
             ),
-            verticalArrangement = Arrangement.spacedBy(if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16),
+            verticalArrangement = Arrangement.spacedBy(
+                if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16,
+            ),
         ) {
             item(key = "Card") {
                 Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
                     cardSection()
                 }
             }
-            if (isRedesignEnabled && state.settingsV2.isNotEmpty() && state.cardState == TangemPayCardState.Active) {
+            if (isRedesignEnabled &&
+                state.settingsV2.isNotEmpty() &&
+                state.cardState == TangemPayCardState.Active
+            ) {
                 cardPageItem("Settings buttons") {
                     TangemPayCardPageSettingsButtonsBlock(
                         modifier = Modifier.fillMaxWidth(),
@@ -115,6 +157,16 @@ private fun TangemPayCardPageScreen(
                 }
             }
             cardState(state)
+        }
+        if (isCardInPendingState) {
+            val description = getPendingStateDescription(state.cardState)
+            PendingCardStateContent(
+                description = description,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = TangemTheme.dimens.spacing48)
+                    .padding(bottom = bottomBarHeight),
+            )
         }
     }
 }
@@ -199,21 +251,11 @@ private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
                 TangemPayCardPageSettingsBlock(settings = state.settings)
             }
         }
-        TangemPayCardState.Reissuing -> cardPageItem(key = "Reissue") {
-            TangemPayReplacingCardBlock()
-        }
-        TangemPayCardState.Closing -> cardPageItem(key = "Closing") {
-            TangemPayReplacingCardBlock(
-                title = resourceReference(R.string.tangempay_card_page_closing_banner_title),
-                subtitle = resourceReference(R.string.tangempay_card_page_closing_banner_description),
-            )
-        }
-        TangemPayCardState.Issuing -> cardPageItem(key = "Issuing") {
-            TangemPayReplacingCardBlock(
-                title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
-                subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
-            )
-        }
+        /** see [PendingCardStateContent] */
+        TangemPayCardState.Reissuing,
+        TangemPayCardState.Closing,
+        TangemPayCardState.Issuing,
+        -> Unit
     }
 }
 
@@ -336,6 +378,61 @@ private fun LazyListScope.cardPageItem(
     }
 }
 
+@Composable
+private fun PendingCardStateContent(description: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(
+            TangemTheme.dimens.spacing12,
+            alignment = Alignment.CenterVertically,
+        ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(TangemTheme.colors3.bg.opaque.primary)
+                .padding(TangemTheme.dimens.spacing10)
+                .size(TangemTheme.dimens.size20),
+            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.secondary,
+        )
+        Text(
+            text = description,
+            textAlign = TextAlign.Center,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography.caption2,
+        )
+    }
+}
+
+@Composable
+private fun getPendingStateDescription(state: TangemPayCardState): String {
+    val textFragments = when (state) {
+        TangemPayCardState.Issuing -> {
+            listOf(
+                resourceReference(R.string.tangempay_issuing_new_digital_card_title),
+                resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+            )
+        }
+        TangemPayCardState.Reissuing -> {
+            listOf(
+                resourceReference(R.string.tangempay_reissue_card_in_progress),
+                resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+            )
+        }
+        TangemPayCardState.Closing -> {
+            listOf(
+                resourceReference(R.string.tangempay_card_page_closing_banner_title),
+                resourceReference(R.string.tangempay_card_page_closing_banner_description),
+            )
+        }
+        else -> emptyList()
+    }.map { it.resolveReference() }
+    return textFragments.joinToString(". ")
+}
+
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -387,5 +484,17 @@ private fun TangemPayCardPageScreenPreviewV2() {
                 },
             )
         }
+    }
+}
+
+@Preview(name = "Light")
+@Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PendingCardStateContentPreview() {
+    TangemThemePreviewRedesign {
+        PendingCardStateContent(
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+            description = getPendingStateDescription(TangemPayCardState.Issuing),
+        )
     }
 }
