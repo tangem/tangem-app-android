@@ -83,14 +83,14 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         assertThat(result.getOrNull()).isInstanceOf(GaslessFeePlan.TokenPay::class.java)
     }
 
-    // ─── Case 2: yield-active always withdraws the FEE (value.amount is module balance, not liquid) ──
+    // ─── Case 2: yield-active with no liquid → the whole fee is withdrawn from the module ──
 
     @Test
-    fun `yield active withdraws fee amount and never treats value_amount as liquid`() = runTest {
+    fun `yield active with no liquid withdraws the whole fee`() = runTest {
         val decimals = 6
-        // Regression: for a yield token CryptoCurrencyStatus.value.amount is the balance held INSIDE the
-        // module (effectiveBalanceOf), NOT liquid on the EOA. Even though it exceeds the fee, the fee must
-        // still be withdrawn — the plan must never short-circuit to TokenPay while yield is active.
+        // value.amount is effectiveBalance = liquid(EOA) + effectiveProtocolBalance. Here total == module
+        // balance (20), so liquid is 0 and the entire fee must be withdrawn from the module — the plan must
+        // not short-circuit to TokenPay.
         // withdraw == feeAmount, CEILING-rounded: 10000000.5 → 10000001 (floor would give 10000000).
         val feeAmount = BigDecimal("10.0000005")
         val moduleBalance = BigDecimal("20")
@@ -101,7 +101,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         val floorAmount = feeAmount.movePointRight(decimals).toBigInteger() // 10000000
         assertThat(expectedWithdrawAmount).isGreaterThan(floorAmount)
 
-        // value.amount is set ABOVE the fee on purpose to prove it is NOT treated as liquid (no TokenPay).
+        // value.amount == module balance → liquid is 0, so the fee cannot be paid from the EOA (no TokenPay).
         val tokenStatus = tokenStatus(plainBalance = moduleBalance, decimals = decimals)
         val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
         val mockCallData = mockk<SmartContractCallData>(relaxed = true)
@@ -239,7 +239,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `createPartialWithdrawCallData throws UpgradeUnavailableException returns ModuleUpdateUnavailable`() = runTest {
-        val tokenStatus = tokenStatus(plainBalance = BigDecimal("1"), decimals = 6)
+        // total(10) covers the fee(5) and liquid(0) does not, so the flow reaches the module withdraw.
+        val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6)
         val tokenFee = tokenFee(feeAmount = BigDecimal("5"), decimals = 6)
 
         coEvery {
@@ -266,12 +267,13 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `plain plus yield insufficient returns NotEnoughFunds`() = runTest {
-        val tokenStatus = tokenStatus(plainBalance = BigDecimal("1"), decimals = 6)
+        // total(6) = liquid(1) + module(5) < fee(10) → not enough funds anywhere.
+        val tokenStatus = tokenStatus(plainBalance = BigDecimal("6"), decimals = 6)
         val tokenFee = tokenFee(feeAmount = BigDecimal("10"), decimals = 6)
 
         coEvery {
             gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
-        } returns BigDecimal("5") // 1 + 5 = 6 < 10
+        } returns BigDecimal("5") // liquid 1 + module 5 = 6 < 10
 
         val result = useCase(
             userWallet = mockUserWallet,
@@ -289,7 +291,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `createPartialWithdrawCallData throws VersionIndeterminateException returns ModuleUpdateUnavailable`() = runTest {
-        val tokenStatus = tokenStatus(plainBalance = BigDecimal("1"), decimals = 6)
+        // total(10) covers the fee(5) and liquid(0) does not, so the flow reaches the module withdraw.
+        val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6)
         val tokenFee = tokenFee(feeAmount = BigDecimal("5"), decimals = 6)
 
         coEvery {
@@ -310,6 +313,84 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
         assertThat(result.isLeft()).isTrue()
         assertThat(result.leftOrNull()).isInstanceOf(GetFeeError.GaslessError.ModuleUpdateUnavailable::class.java)
+    }
+
+    // ─── Case 7: liquid EOA balance covers most of send+fee, protocol alone does not ──────────────
+
+    @Test
+    fun `GIVEN liquid covers send but protocol alone does not WHEN yield active THEN TokenPayWithYieldWithdraw`() =
+        runTest {
+            // value.amount is effectiveBalance (liquid EOA + effectiveProtocolBalance). The user sends 3.00 of
+            // 3.585624 total. The yield module (effectiveProtocolBalance) holds only 0.6, the rest (2.985624)
+            // is liquid on the EOA. required = send(3.00) + fee(0.05) = 3.05 < total(3.585624), so funds ARE
+            // sufficient. The old check compared the module balance (0.6) against required and wrongly raised
+            // NotEnoughFunds.
+            val decimals = 6
+            val totalBalance = BigDecimal("3.585624")
+            val moduleBalance = BigDecimal("0.6")
+            val feeAmount = BigDecimal("0.05")
+            val sendAmount = BigDecimal("3.00")
+            // module.send consumes EOA liquid first, leaving 0 for the fee, so the whole fee must be withdrawn.
+            val expectedWithdrawAmount = feeAmount
+                .movePointRight(decimals)
+                .setScale(0, RoundingMode.CEILING)
+                .toBigInteger()
+
+            val tokenStatus = tokenStatus(plainBalance = totalBalance, decimals = decimals)
+            val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
+            val mockCallData = mockk<SmartContractCallData>(relaxed = true)
+
+            coEvery {
+                gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+            } returns moduleBalance
+            coEvery {
+                gaslessYieldRepository.createPartialWithdrawCallData(mockUserWalletId, any(), any())
+            } returns mockCallData
+            coEvery {
+                gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any())
+            } returns "0xmodule"
+
+            // Act
+            val result = useCase(
+                userWallet = mockUserWallet,
+                tokenStatus = tokenStatus,
+                tokenFee = tokenFee,
+                isYieldActive = true,
+                sendAmountInFeeToken = sendAmount,
+            )
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
+            assertThat(plan).isNotNull()
+            assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
+        }
+
+    // ─── Case 8: liquid EOA balance alone covers send + fee → no withdraw needed ───────────────────
+
+    @Test
+    fun `GIVEN liquid covers send plus fee WHEN yield active THEN TokenPay without withdraw`() = runTest {
+        // Arrange — liquid = total(10) - module(2) = 8, which already covers required = send(3) + fee(1) = 4.
+        // The EOA holds enough after the main send to settle the fee, so no yield withdraw is needed.
+        val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6)
+        val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = 6)
+
+        coEvery {
+            gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+        } returns BigDecimal("2")
+
+        // Act
+        val result = useCase(
+            userWallet = mockUserWallet,
+            tokenStatus = tokenStatus,
+            tokenFee = tokenFee,
+            isYieldActive = true,
+            sendAmountInFeeToken = BigDecimal("3"),
+        )
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isInstanceOf(GaslessFeePlan.TokenPay::class.java)
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────────

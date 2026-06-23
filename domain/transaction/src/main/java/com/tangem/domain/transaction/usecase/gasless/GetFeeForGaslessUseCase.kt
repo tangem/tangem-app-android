@@ -177,22 +177,20 @@ class GetFeeForGaslessUseCase(
         /**
          * Yield-aware candidate selection:
          * a token is eligible if it is a supported gasless token AND
-         * (plain balance > 0 OR has an active yield position).
-         * Sorted by (plain + effectiveProtocolBalance) descending to maximise chances of covering the fee.
+         * (total balance > 0 OR has an active yield position).
+         * Sorted by total balance descending to maximise chances of covering the fee. For a yield token
+         * value.amount is already effectiveBalance (liquid EOA + effectiveProtocolBalance), so it must NOT
+         * be summed with effectiveProtocolBalance again — that would double-count the module portion.
          */
         val candidates = networkCurrenciesStatuses
             .asSequence()
             .filter { it.currency is CryptoCurrency.Token }
             .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
             .filter { status ->
-                val plain = status.value.amount ?: BigDecimal.ZERO
-                plain > BigDecimal.ZERO || isYieldWithdrawEnabled && status.value.yieldSupplyStatus?.isActive == true
+                val total = status.value.amount ?: BigDecimal.ZERO
+                total > BigDecimal.ZERO || isYieldWithdrawEnabled && status.value.yieldSupplyStatus?.isActive == true
             }
-            .sortedByDescending { status ->
-                val plain = status.value.amount ?: BigDecimal.ZERO
-                val yieldBal = status.value.yieldSupplyStatus?.effectiveProtocolBalance ?: BigDecimal.ZERO
-                plain + yieldBal
-            }
+            .sortedByDescending { status -> status.value.amount ?: BigDecimal.ZERO }
 
         val tokenForPayFeeStatus = candidates.firstOrNull() ?: raise(GaslessError.NoSupportedTokensFound)
 

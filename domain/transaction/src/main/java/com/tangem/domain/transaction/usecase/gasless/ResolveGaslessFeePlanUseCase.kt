@@ -34,10 +34,10 @@ class ResolveGaslessFeePlanUseCase(
 
         val feeAmount = tokenFee.amount.value
             ?: raise(GaslessError.DataError(IllegalStateException("token fee amount is null")))
-        val plainBalance = tokenStatus.value.amount ?: BigDecimal.ZERO
+        val totalBalance = tokenStatus.value.amount ?: BigDecimal.ZERO
         val required = feeAmount + sendAmountInFeeToken
         if (!isYieldActive) {
-            return@either if (plainBalance >= required) {
+            return@either if (totalBalance >= required) {
                 GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
             } else {
                 raise(GaslessError.NotEnoughFunds)
@@ -47,10 +47,16 @@ class ResolveGaslessFeePlanUseCase(
         val moduleBalance = gaslessYieldRepository
             .getEffectiveProtocolBalance(userWallet.walletId, token) ?: BigDecimal.ZERO
 
-        // The module must hold enough for both the main send and the fee withdraw.
-        if (moduleBalance < required) raise(GaslessError.NotEnoughFunds)
+        // Liquid balance already on the EOA = total - what is held inside the yield module.
+        val liquidBalance = (totalBalance - moduleBalance).coerceAtLeast(BigDecimal.ZERO)
+        if (liquidBalance >= required) {
+            return@either GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
+        }
 
-        val withdrawAmountDecimal = feeAmount
+        if (totalBalance < required) raise(GaslessError.NotEnoughFunds)
+
+        val liquidLeftForFee = (liquidBalance - sendAmountInFeeToken).coerceAtLeast(BigDecimal.ZERO)
+        val withdrawAmountDecimal = (feeAmount - liquidLeftForFee).coerceAtLeast(BigDecimal.ZERO)
 
         val withdrawCallData = catch(
             block = {
