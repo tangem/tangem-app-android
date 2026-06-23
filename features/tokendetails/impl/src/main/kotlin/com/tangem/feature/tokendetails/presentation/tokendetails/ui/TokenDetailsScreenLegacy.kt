@@ -22,6 +22,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
@@ -162,10 +163,12 @@ internal fun TokenDetailsScreenLegacy(
 
                 state.quickTopUpBlock?.let { quickTopUpBlock ->
                     item(key = "quick_top_up_block") {
-                        QuickTopUpBlock(
-                            state = quickTopUpBlock,
-                            modifier = itemModifier,
-                        )
+                        TangemThemeRedesign {
+                            QuickTopUpBlock(
+                                state = quickTopUpBlock,
+                                modifier = itemModifier,
+                            )
+                        }
                     }
                 }
 
