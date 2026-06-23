@@ -7,12 +7,14 @@ import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.finisher.AndroidAppFinisher
 import com.tangem.tap.common.settings.IntentSettingsManager
 import com.tangem.tap.common.share.IntentShareManager
 import com.tangem.tap.common.url.CustomTabsUrlOpener
+import com.tangem.tap.common.url.DefaultAppStoreOpener
 import com.tangem.tap.core.DefaultAppCoroutineScope
 import com.tangem.tap.data.DefaultAppInfoProvider
 import com.tangem.utils.info.AppInfoProvider
@@ -34,6 +36,10 @@ internal interface UtilsModule {
     @Binds
     @Singleton
     fun bindAppInfoProvider(impl: DefaultAppInfoProvider): AppInfoProvider
+
+    @Binds
+    @Singleton
+    fun bindAppStoreOpener(impl: DefaultAppStoreOpener): AppStoreOpener
 
     companion object {
 
