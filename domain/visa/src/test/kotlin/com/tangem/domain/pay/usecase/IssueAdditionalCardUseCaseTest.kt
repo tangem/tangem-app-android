@@ -67,10 +67,11 @@ internal class IssueAdditionalCardUseCaseTest {
                 userWalletId,
                 types = setOf(
                     OrderType.CARD_ISSUE_ADDITIONAL,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
                 ),
-                statuses = emptySet(),
+                statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
         } returns listOf(existing).right()
 
@@ -89,10 +90,11 @@ internal class IssueAdditionalCardUseCaseTest {
                 userWalletId,
                 types = setOf(
                     OrderType.CARD_ISSUE_ADDITIONAL,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
                 ),
-                statuses = emptySet(),
+                statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
         } returns emptyList<Order>().right()
         coEvery {
@@ -117,10 +119,11 @@ internal class IssueAdditionalCardUseCaseTest {
                 userWalletId,
                 types = setOf(
                     OrderType.CARD_ISSUE_ADDITIONAL,
+                    OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
                 ),
-                statuses = emptySet(),
+                statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
         } returns emptyList<Order>().right()
         val newOrder = order(

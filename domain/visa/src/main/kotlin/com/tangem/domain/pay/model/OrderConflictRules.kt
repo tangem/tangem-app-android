@@ -49,7 +49,7 @@ object OrderConflictRules {
     private fun blocks(intent: OrderIntent, order: Order): Boolean {
         if (!order.isActive) return false
         return when (intent) {
-            OrderIntent.IssueCard -> order.type.isIssuing()
+            OrderIntent.IssueCard -> order.type.isIssuing
             OrderIntent.Withdraw -> order.type == OrderType.WITHDRAW
             is OrderIntent.Freeze -> sameProductInstance(order, intent.productInstanceId) &&
                 order.type.isFreezeOrReissue()
@@ -65,15 +65,7 @@ object OrderConflictRules {
         return order.productInstanceId == productInstanceId
     }
 
-    private fun OrderType.isIssuing(): Boolean {
-        return this == OrderType.CARD_ISSUE_ADDITIONAL ||
-            this == OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC ||
-            this == OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2
-    }
-
     private fun OrderType.isFreezeOrReissue(): Boolean {
-        return this == OrderType.CARD_FREEZE ||
-            this == OrderType.CARD_UNFREEZE ||
-            this == OrderType.CARD_REISSUE
+        return this.isFreezingUnfreezing || this.isReissuing
     }
 }
