@@ -18,6 +18,7 @@ internal sealed interface StakingBlockUM {
         val cryptoAmount: BigDecimal?,
         val fiatAmount: BigDecimal?,
         val onStakeClicked: () -> Unit,
+        val isBetaMode: Boolean = false,
     ) : StakingBlockUM
 
     data class StakeAvailable(
@@ -26,5 +27,6 @@ internal sealed interface StakingBlockUM {
         val subtitleText: TextReference,
         val isEnabled: Boolean,
         val onStakeClicked: () -> Unit,
+        val isBetaMode: Boolean = false,
     ) : StakingBlockUM
 }
