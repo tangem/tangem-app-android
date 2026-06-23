@@ -75,6 +75,7 @@ class ValidateContactNameUseCaseTest {
                 networkId = Network.RawID("ethereum"),
                 memo = null,
                 signature = "sig",
+                networkName = "Ethereum",
             ),
         ),
     )

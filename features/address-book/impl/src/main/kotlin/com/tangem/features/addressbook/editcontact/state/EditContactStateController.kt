@@ -12,19 +12,17 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @ModelScoped
 internal class EditContactStateController @Inject constructor() {
 
-    private val mutableUiState: MutableStateFlow<EditContactUM> = MutableStateFlow(value = getInitialState())
-
-    val uiState: StateFlow<EditContactUM> get() = mutableUiState.asStateFlow()
+    val uiState: StateFlow<EditContactUM>
+        field = MutableStateFlow(value = getInitialState())
 
     fun update(transformer: Transformer<EditContactUM>) {
-        mutableUiState.update(function = transformer::transform)
+        uiState.update(function = transformer::transform)
     }
 
     private fun getInitialState(): EditContactUM {

@@ -180,6 +180,7 @@ sealed class AppRoute(val path: String) : Route {
         path = when (addressBookOpenMode) {
             is AddressBookOpenMode.WithContactCreation ->
                 "/address_book/${addressBookOpenMode.address}-${addressBookOpenMode.networkId}"
+            is AddressBookOpenMode.ContactSelection -> "/address_book/select/${addressBookOpenMode.networkId}"
             AddressBookOpenMode.Default -> "/address_book"
         },
     )

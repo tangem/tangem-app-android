@@ -1,6 +1,7 @@
 package com.tangem.features.addressbook.list.state.transformers
 
 import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
+import com.tangem.features.addressbook.list.ui.state.ContentMode
 import com.tangem.utils.transformer.Transformer
 
 /**
@@ -13,7 +14,9 @@ internal class UpdateAddressBookListInitialStateTransformer(
     override fun transform(prevState: AddressBookListUM): AddressBookListUM {
         return when (prevState) {
             is AddressBookListUM.Empty -> prevState.copy(onAddClick = onAddContactClick)
-            is AddressBookListUM.AddressList -> prevState
+            is AddressBookListUM.Content -> prevState.copy(
+                contentMode = ContentMode.Default(onAddClick = onAddContactClick),
+            )
         }
     }
 }

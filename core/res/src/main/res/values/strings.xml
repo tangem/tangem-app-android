@@ -102,6 +102,7 @@
     <item quantity="one">%d address</item>
     <item quantity="other">%d addresses</item>
   </plurals>
+  <string name="address_book_choose_address">Choose address</string>
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Contact name</string>
   <string name="address_book_copy_address">Copy address</string>

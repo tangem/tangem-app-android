@@ -165,6 +165,7 @@ class VerifyAddressEntriesUseCaseTest {
         networkId = Network.RawID("ethereum"),
         memo = memo,
         signature = signature,
+        networkName = "Ethereum",
     )
 
     private fun expectedPayload(contact: Contact, entry: AddressEntry): String =

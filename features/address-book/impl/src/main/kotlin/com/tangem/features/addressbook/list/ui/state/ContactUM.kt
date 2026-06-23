@@ -1,11 +1,13 @@
 package com.tangem.features.addressbook.list.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.AccountIconUM
 
-/** UI model of a single address-book contact row. Holds only what the list needs to render — no domain types. */
 @Immutable
 internal data class ContactUM(
     val id: String,
     val name: String,
-    val addressCount: Int,
+    val icon: AccountIconUM.CryptoPortfolio,
+    val networkAddressCount: Int,
+    val onClick: () -> Unit,
 )

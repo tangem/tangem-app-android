@@ -96,9 +96,12 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
     }
 
     private fun initialStack(): List<AddressBookRoute> = when (val mode = params.addressBookOpenMode) {
-        AddressBookOpenMode.Default -> listOf(AddressBookRoute.List)
+        AddressBookOpenMode.Default -> listOf(AddressBookRoute.List())
+        is AddressBookOpenMode.ContactSelection -> listOf(
+            AddressBookRoute.List(mode = AddressBookRoute.ListMode.Selector(networkId = mode.networkId)),
+        )
         is AddressBookOpenMode.WithContactCreation -> listOf(
-            AddressBookRoute.List,
+            AddressBookRoute.List(),
             // Address + network are already known, so open the new contact with that address attached — no AddAddress.
             AddressBookRoute.EditContact(
                 predefinedAddress = mode.address,

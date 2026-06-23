@@ -3,13 +3,7 @@ package com.tangem.domain.addressbook.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.addressbook.model.AddressEntriesVerification
-import com.tangem.domain.addressbook.model.AddressEntry
-import com.tangem.domain.addressbook.model.AddressEntryId
-import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.ContactId
-import com.tangem.domain.addressbook.model.ContactName
-import com.tangem.domain.addressbook.model.VerifiedContact
+import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -103,6 +97,7 @@ class GetVerifiedContactsUseCaseTest {
         networkId = Network.RawID("ethereum"),
         memo = null,
         signature = "sig-$id",
+        networkName = "Ethereum",
     )
 
     private fun contact(name: String, entries: List<AddressEntry>): Contact = Contact(

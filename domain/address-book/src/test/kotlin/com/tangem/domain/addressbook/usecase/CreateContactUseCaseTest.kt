@@ -5,23 +5,14 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
-import com.tangem.domain.addressbook.model.AddressEntry
-import com.tangem.domain.addressbook.model.AddressEntryId
-import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.ContactId
-import com.tangem.domain.addressbook.model.ContactName
+import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.SignHashesError
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -57,6 +48,7 @@ class CreateContactUseCaseTest {
             networkId = networkRawId,
             memo = "memo",
             signature = "sig",
+            networkName = "Ethereum",
         ),
     )
 
@@ -165,6 +157,7 @@ class CreateContactUseCaseTest {
                 networkId = networkRawId,
                 memo = null,
                 signature = "sig",
+                networkName = "Ethereum",
             ),
         ),
     )

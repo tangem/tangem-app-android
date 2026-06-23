@@ -11,19 +11,17 @@ import com.tangem.features.addressbook.addaddress.ui.state.AddressFieldUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @ModelScoped
 internal class AddAddressStateController @Inject constructor() {
 
-    private val mutableUiState: MutableStateFlow<AddAddressUM> = MutableStateFlow(value = getInitialState())
-
-    val uiState: StateFlow<AddAddressUM> get() = mutableUiState.asStateFlow()
+    val uiState: StateFlow<AddAddressUM>
+        field = MutableStateFlow(value = getInitialState())
 
     fun update(transformer: Transformer<AddAddressUM>) {
-        mutableUiState.update(function = transformer::transform)
+        uiState.update(function = transformer::transform)
     }
 
     private fun getInitialState(): AddAddressUM = AddAddressUM(

@@ -14,4 +14,13 @@ sealed interface AddressBookOpenMode {
         val address: String,
         val networkId: String,
     ) : AddressBookOpenMode
+
+    /**
+     * Opened from the Send flow to pick a recipient. The list is filtered by [networkId] (the current send network),
+     * and the chosen contact's address is delivered back via `ContactSelectionTrigger` rather than navigation.
+     */
+    @Serializable
+    data class ContactSelection(
+        val networkId: String,
+    ) : AddressBookOpenMode
 }
