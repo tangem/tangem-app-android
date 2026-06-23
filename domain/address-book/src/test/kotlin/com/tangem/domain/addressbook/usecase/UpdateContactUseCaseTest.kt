@@ -54,6 +54,7 @@ class UpdateContactUseCaseTest {
             networkId = networkRawId,
             memo = "memo",
             signature = "sig2",
+            networkName = "Ethereum",
         ),
     )
 
@@ -137,6 +138,7 @@ class UpdateContactUseCaseTest {
                 networkId = networkRawId,
                 memo = null,
                 signature = "sig",
+                networkName = "Ethereum",
             ),
         ),
     )
