@@ -1,10 +1,14 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
+import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
+import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
@@ -241,5 +245,23 @@ internal object StakingDomainModule {
     @Singleton
     fun provideStakingApyFlowUseCase(stakingRepository: StakingRepository): StakingAvailabilityListUseCase {
         return StakingAvailabilityListUseCase(stakingRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCheckStakingTransactionUseCase(
+        blockAidVerifier: BlockAidVerifier,
+        recognizer: StakingTransactionRecognizer,
+        requestFactory: StakingBlockAidRequestFactory,
+        stakingFeatureToggles: StakingFeatureToggles,
+        analyticsEventHandler: AnalyticsEventHandler,
+    ): CheckStakingTransactionUseCase {
+        return CheckStakingTransactionUseCase(
+            blockAidVerifier = blockAidVerifier,
+            recognizer = recognizer,
+            requestFactory = requestFactory,
+            stakingFeatureToggles = stakingFeatureToggles,
+            analyticsEventHandler = analyticsEventHandler,
+        )
     }
 }

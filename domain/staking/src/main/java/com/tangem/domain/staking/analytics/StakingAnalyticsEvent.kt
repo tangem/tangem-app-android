@@ -194,6 +194,23 @@ sealed class StakingAnalyticsEvent(
             AnalyticsParam.ERROR_MESSAGE to "Maximum amount: $maxAmount",
         ),
     )
+
+    data class ScamVerification(
+        val token: String,
+        val blockchain: String,
+        val provider: String,
+        val blockaid: String,
+        val mobileCheck: String,
+    ) : StakingAnalyticsEvent(
+        event = "Scam verification",
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.BLOCKCHAIN to blockchain,
+            AnalyticsParam.PROVIDER to provider,
+            "Blockaid" to blockaid,
+            "Mobile_check" to mobileCheck,
+        ),
+    )
 }
 
 enum class StakeScreenSource {

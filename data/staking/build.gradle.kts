@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.domain.card)
     implementation(projects.domain.models)
+    implementation(projects.domain.blockaid.models)
 
     /** Feature Api modules */
     implementation(projects.features.staking.api)
@@ -50,6 +51,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    implementation(deps.cbor)
     implementation(deps.firebase.crashlytics)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)

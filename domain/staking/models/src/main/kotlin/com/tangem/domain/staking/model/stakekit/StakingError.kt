@@ -35,6 +35,8 @@ sealed class StakingError {
     // endregion
 
     data class DomainError(val message: String?) : StakingError()
+
+    data class TransactionValidationFailed(val description: String?) : StakingError()
 }
 
 sealed class StakingErrors {
