@@ -52,16 +52,16 @@ interface TangemTechApi {
         @Body userTokens: UserTokensResponse,
     ): ApiResponse<Unit>
 
-    @GET("/v1/wallets/{wallet_id}/notification-preferences")
+    @GET("/api/v1/notification-preferences/{wallet_id}")
     suspend fun getPushNotificationPreferences(
         @Path("wallet_id") walletId: String,
     ): ApiResponse<PushNotificationPreferencesResponse>
 
-    @PUT("/v1/wallets/{wallet_id}/notification-preferences")
+    @PUT("/api/v1/notification-preferences/{wallet_id}")
     suspend fun updatePushNotificationPreferences(
         @Path("wallet_id") walletId: String,
         @Body body: PushNotificationPreferencesBody,
-    ): ApiResponse<Unit>
+    ): ApiResponse<PushNotificationPreferencesResponse>
 
     // region Referral
     /** Returns referral status by [walletId] */
