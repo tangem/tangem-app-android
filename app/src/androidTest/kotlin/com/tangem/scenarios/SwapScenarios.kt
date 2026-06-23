@@ -13,6 +13,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -183,6 +184,25 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
             }
         }
     }
+}
+
+fun BaseTestCase.selectFeeTypeAndReadFee(feeType: FeeType): String {
+    step("Click on 'Select fee' icon") {
+        onSwapTokenScreen { selectFeeIcon.performClick() }
+    }
+    step("Click on '$feeType' item") {
+        onSwapSelectNetworkFeeBottomSheet {
+            when (feeType) {
+                FeeType.Market -> marketSelectorItem.clickWithAssertion()
+                FeeType.Fast -> fastSelectorItem.clickWithAssertion()
+            }
+        }
+    }
+    var fee = ""
+    step("Read displayed '$feeType' fee amount") {
+        onSwapTokenScreen { fee = feeAmount.extractText() }
+    }
+    return fee
 }
 
 fun BaseTestCase.chackUnableToCoverFeeNotification(networkName: String, currencySymbol: String) {
