@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +28,6 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -108,45 +108,119 @@ fun TangemSegmentedPicker(
             segmentHeight = segmentHeight.value,
             separatorWidth = SEPARATOR_WIDTH,
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            items.fastForEachIndexed { index, item ->
-                Segment(
-                    item = item,
-                    index = index,
-                    isFixed = isFixed,
-                    minSegmentWidth = minSegmentWidth,
-                    selectedIndex = selectedIndex,
-                    onClick = { onClick(item) },
-                    modifier = Modifier
-                        .onGloballyPositioned {
-                            with(density) {
-                                itemsWidths[index] = it.size.width.toDp()
-                                segmentHeight.value = it.size.height.toDp().coerceAtLeast(segmentHeight.value)
-                            }
-                        },
-                )
-
-                if (index != items.lastIndex) {
-                    val selected by selectedIndex
-                    val alpha by animateFloatAsState(
-                        targetValue = if (selected == index || selected == index + 1) 0f else 1f,
-                        animationSpec = tween(durationMillis = 300),
-                        label = "separatorAlpha",
+        SegmentsRow(
+            isFixed = isFixed,
+            minSegmentWidth = minSegmentWidth,
+            segmentCount = items.size,
+            content = {
+                items.fastForEachIndexed { index, item ->
+                    Segment(
+                        item = item,
+                        index = index,
+                        minSegmentWidth = minSegmentWidth,
+                        selectedIndex = selectedIndex,
+                        onClick = { onClick(item) },
+                        modifier = Modifier
+                            .onGloballyPositioned {
+                                with(density) {
+                                    itemsWidths[index] = it.size.width.toDp()
+                                    segmentHeight.value = it.size.height.toDp().coerceAtLeast(segmentHeight.value)
+                                }
+                            },
                     )
 
-                    Box(
-                        Modifier
-                            .alpha(alpha)
-                            .width(SEPARATOR_WIDTH)
-                            .height(20.dp)
-                            .background(
-                                color = TangemTheme.colors2.border.neutral.tertiary.copy(alpha = 0.1f),
-                            ),
-                    )
+                    if (index != items.lastIndex) {
+                        Separator(index = index, selectedIndex = selectedIndex)
+                    }
+                }
+            },
+        )
+    }
+}
+
+/**
+ * Lays out segments (with the inter-segment separators interleaved) in a single row.
+ *
+ * - When [isFixed] is `true` and the parent width is bounded, every segment is sized to at least its
+ *   content width, and the remaining free space is distributed equally between segments — so the row
+ *   fills the full width without clipping any segment's text.
+ * - Otherwise segments wrap their content.
+ *
+ * Children must be supplied as `segment, separator, segment, separator, … , segment` (even indices are
+ * segments, odd indices are separators).
+ */
+@Composable
+private fun SegmentsRow(
+    isFixed: Boolean,
+    minSegmentWidth: Dp,
+    segmentCount: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Layout(modifier = modifier, content = content) { measurables, constraints ->
+        val segMeasurables = measurables.filterIndexed { i, _ -> i % 2 == 0 }
+        val sepMeasurables = measurables.filterIndexed { i, _ -> i % 2 == 1 }
+
+        val sepPlaceables = sepMeasurables.map { it.measure(constraints.copy(minWidth = 0)) }
+        val totalSeparators = sepPlaceables.sumOf { it.width }
+
+        val minPx = if (minSegmentWidth != Dp.Unspecified) minSegmentWidth.roundToPx() else 0
+        val baseWidths = segMeasurables.map { maxOf(it.maxIntrinsicWidth(constraints.maxHeight), minPx) }
+
+        val widths = if (isFixed && constraints.hasBoundedWidth) {
+            val leftover = constraints.maxWidth - baseWidths.sum() - totalSeparators
+            if (leftover > 0) {
+                val extra = leftover / segmentCount
+                val remainder = leftover % segmentCount
+                baseWidths.mapIndexed { i, w -> w + extra + if (i < remainder) 1 else 0 }
+            } else {
+                baseWidths
+            }
+        } else {
+            baseWidths
+        }
+
+        val segPlaceables = segMeasurables.mapIndexed { i, m ->
+            m.measure(constraints.copy(minWidth = widths[i], maxWidth = widths[i]))
+        }
+
+        val layoutWidth = (widths.sum() + totalSeparators)
+            .coerceIn(constraints.minWidth, constraints.maxWidth)
+        val layoutHeight = (segPlaceables + sepPlaceables).maxOf { it.height }
+            .coerceIn(constraints.minHeight, constraints.maxHeight)
+
+        layout(layoutWidth, layoutHeight) {
+            var x = 0
+            segPlaceables.forEachIndexed { i, seg ->
+                seg.placeRelative(x, (layoutHeight - seg.height) / 2)
+                x += seg.width
+                sepPlaceables.getOrNull(i)?.let { sep ->
+                    sep.placeRelative(x, (layoutHeight - sep.height) / 2)
+                    x += sep.width
                 }
             }
         }
     }
+}
+
+@Composable
+private fun Separator(index: Int, selectedIndex: MutableState<Int>) {
+    val selected by selectedIndex
+    val alpha by animateFloatAsState(
+        targetValue = if (selected == index || selected == index + 1) 0f else 1f,
+        animationSpec = tween(durationMillis = 300),
+        label = "separatorAlpha",
+    )
+
+    Box(
+        Modifier
+            .alpha(alpha)
+            .width(SEPARATOR_WIDTH)
+            .height(20.dp)
+            .background(
+                color = TangemTheme.colors2.border.neutral.tertiary.copy(alpha = 0.1f),
+            ),
+    )
 }
 
 private val SEPARATOR_WIDTH = 0.5.dp
@@ -199,10 +273,9 @@ private fun SegmentSelection(
 }
 
 @Composable
-private fun RowScope.Segment(
+private fun Segment(
     item: TangemSegmentUM,
     index: Int,
-    isFixed: Boolean,
     selectedIndex: MutableState<Int>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -211,9 +284,6 @@ private fun RowScope.Segment(
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = minSegmentWidth)
-            .conditional(isFixed) {
-                weight(1f)
-            }
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
