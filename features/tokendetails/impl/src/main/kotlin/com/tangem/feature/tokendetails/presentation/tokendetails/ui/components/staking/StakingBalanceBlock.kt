@@ -40,10 +40,8 @@ internal fun StakingBalanceBlock(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
             modifier = Modifier.weight(1f),
         ) {
-            Text(
-                text = stringResourceSafe(R.string.staking_native),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+            StakingBalanceTitleRow(
+                isBetaMode = state.isBetaMode,
                 modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing2),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
@@ -81,6 +79,32 @@ internal fun StakingBalanceBlock(
             tint = TangemTheme.colors.icon.informative,
             modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_CHEVRON_ICON),
         )
+    }
+}
+
+@Composable
+private fun StakingBalanceTitleRow(isBetaMode: Boolean, modifier: Modifier = Modifier) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        modifier = modifier,
+    ) {
+        Text(
+            text = stringResourceSafe(R.string.staking_native),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+        if (isBetaMode) {
+            Text(
+                text = StringsSigns.DOT,
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+            Text(
+                text = stringResourceSafe(R.string.beta_mode_warning_title),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
     }
 }
 
