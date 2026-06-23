@@ -24,12 +24,15 @@ import com.tangem.lib.auth.nonce.internal.DisabledAuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
 import com.tangem.lib.auth.session.internal.DefaultDeviceRegistrar
 import com.tangem.lib.auth.session.internal.DefaultSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DefaultSessionTokensStore
+import com.tangem.lib.auth.session.internal.DefaultWalletRegistrar
 import com.tangem.lib.auth.session.internal.DisabledDeviceRegistrar
 import com.tangem.lib.auth.session.internal.DisabledSessionTokenRefresher
+import com.tangem.lib.auth.session.internal.DisabledWalletRegistrar
 import com.tangem.lib.auth.session.internal.DisabledSessionTokensStore
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -184,6 +187,33 @@ internal object AuthModule {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledDeviceRegistrar
 
         return DefaultDeviceRegistrar(
+            authApi = authApi,
+            store = store,
+            deviceKeyManager = deviceKeyManager,
+            nonceDecryptor = nonceDecryptor,
+            signedRequestPayload = signedRequestPayload,
+            errorConverter = errorConverter,
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideWalletRegistrar(
+        authFeatureToggles: AuthFeatureToggles,
+        authApi: AuthApi,
+        store: SessionTokensStore,
+        deviceKeyManager: DeviceKeyManager,
+        nonceDecryptor: AuthNonceDecryptor,
+        signedRequestPayload: SignedRequestPayload,
+        errorConverter: AuthErrorConverter,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WalletRegistrar {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledWalletRegistrar
+
+        return DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
             deviceKeyManager = deviceKeyManager,

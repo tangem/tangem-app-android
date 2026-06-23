@@ -43,7 +43,7 @@ class SignedRequestPayloadTest {
     }
 
     @Test
-    fun `canonicalize produces newline-separated representation in the documented field order`() {
+    fun `canonicalize produces colon-separated representation in the documented field order`() {
         val metadata = DeviceMetadata(
             deviceModel = "Pixel 8",
             os = "Android",
@@ -62,19 +62,9 @@ class SignedRequestPayloadTest {
 
         val bytes = signedRequestPayload.canonicalize(payload)
 
+        // Must match the backend's `:`-joined canonicalisation byte-for-byte.
         assertThat(bytes.toString(Charsets.UTF_8)).isEqualTo(
-            """
-            pub
-            nonce-1
-            attestation
-            Pixel 8
-            Android
-            14
-            5.40.0
-            Tangem/5.40.0 (Pixel 8; Android 14)
-            en-US
-            Europe/Moscow
-            """.trimIndent(),
+            "pub:nonce-1:attestation:Pixel 8:Android:14:5.40.0:Tangem/5.40.0 (Pixel 8; Android 14):en-US:Europe/Moscow",
         )
     }
 
@@ -98,9 +88,9 @@ class SignedRequestPayloadTest {
 
         val bytes = signedRequestPayload.canonicalize(payload)
 
-        // The null attestationToken collapses to an empty slot between `nonce` and `deviceModel`.
+        // The null attestationToken collapses to an empty segment between `nonce` and `deviceModel`.
         assertThat(bytes.toString(Charsets.UTF_8)).isEqualTo(
-            "pub\nnonce-1\n\nPixel 8\nAndroid\n14\n5.40.0\nTangem/5.40.0 (Pixel 8; Android 14)\nen-US\nEurope/Moscow",
+            "pub:nonce-1::Pixel 8:Android:14:5.40.0:Tangem/5.40.0 (Pixel 8; Android 14):en-US:Europe/Moscow",
         )
     }
 

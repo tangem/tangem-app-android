@@ -47,9 +47,11 @@ internal class SignedRequestPayload @Inject constructor(
     )
 
     /**
-     * Stable, newline-separated representation of the signed payload. Backend treats the bytes
-     * opaquely; must stay aligned with the server-side canonicalisation. Field order matches the
-     * declaration order of [RegisterPayload] / [AuthenticationPayload] and [DeviceMetadata].
+     * Stable, colon-separated representation of the signed payload. Must stay byte-for-byte aligned
+     * with the server-side canonicalisation (`RegistrationService` / `AuthenticationService`):
+     * fields joined with `:` in this exact order, with a missing `attestationToken` collapsing to
+     * an empty segment, and no trailing separator. The server verifies via `SHA256withECDSA` over
+     * these UTF-8 bytes.
      */
     private fun canonicalize(
         devicePublicKey: String,
@@ -57,15 +59,15 @@ internal class SignedRequestPayload @Inject constructor(
         attestationToken: String?,
         metadata: DeviceMetadata,
     ): ByteArray = buildString {
-        append(devicePublicKey).append('\n')
-        append(nonce).append('\n')
-        append(attestationToken.orEmpty()).append('\n')
-        append(metadata.deviceModel).append('\n')
-        append(metadata.os).append('\n')
-        append(metadata.osVersion).append('\n')
-        append(metadata.appVersion).append('\n')
-        append(metadata.userAgent).append('\n')
-        append(metadata.locale).append('\n')
+        append(devicePublicKey).append(':')
+        append(nonce).append(':')
+        append(attestationToken.orEmpty()).append(':')
+        append(metadata.deviceModel).append(':')
+        append(metadata.os).append(':')
+        append(metadata.osVersion).append(':')
+        append(metadata.appVersion).append(':')
+        append(metadata.userAgent).append(':')
+        append(metadata.locale).append(':')
         append(metadata.timezone)
     }.toByteArray(Charsets.UTF_8)
 }
