@@ -27,35 +27,6 @@ class AppTransfersTest : BaseTestCase() {
     private val storiesScenario = "stories_first_time_swap_v2"
     private val storiesErrorState = "Error"
 
-    private fun BaseTestCase.assertTransferReady() {
-        step("Assert action button label is 'Transfer'") {
-            composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                runCatching { onSwapTokenScreen { transferButton.assertIsDisplayed() } }.isSuccess
-            }
-        }
-        step("Assert provider block is not displayed") {
-            onSwapTokenScreen { providersBlock.assertIsNotDisplayed() }
-        }
-    }
-
-    private fun BaseTestCase.inputAmount(amount: String) {
-        step("Input amount '$amount'") {
-            waitForIdle()
-            onSwapTokenScreen {
-                textInput.clickWithAssertion()
-                textInput.performTextReplacement(amount)
-            }
-        }
-    }
-
-    private fun BaseTestCase.waitForFeeDisplayed() {
-        step("Assert fee amount is displayed") {
-            composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                runCatching { onSwapTokenScreen { feeAmount.assertIsDisplayed() } }.isSuccess
-            }
-        }
-    }
-
     @AllureId("9838")
     @DisplayName("App transfers: identical pair switches to Transfer mode")
     @Test
@@ -84,9 +55,9 @@ class AppTransfersTest : BaseTestCase() {
             }
 
             step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
-            inputAmount(amount)
-            assertTransferReady()
-            waitForFeeDisplayed()
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
         }
     }
 
@@ -154,12 +125,12 @@ class AppTransfersTest : BaseTestCase() {
             }
 
             step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
-            inputAmount(amount)
-            waitForFeeDisplayed()
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
             step("Click on 'Swap tokens' (reverse) button") {
                 onSwapTokenScreen { replaceTokensButton.performClick() }
             }
-            assertTransferReady()
+            step("Assert Transfer mode is ready") { assertTransferReady() }
         }
     }
 
@@ -197,11 +168,11 @@ class AppTransfersTest : BaseTestCase() {
             step("Click on 'Max' amount button") {
                 onSwapTokenScreen { maxAmountButton.performClick() }
             }
-            waitForFeeDisplayed()
-            assertTransferReady()
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
             step("Assert 'Transfer' button is enabled") {
-                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching { onSwapTokenScreen { transferButton.assertIsEnabled() } }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { transferButton.assertIsEnabled() }
                 }
             }
         }
@@ -235,11 +206,11 @@ class AppTransfersTest : BaseTestCase() {
             }
 
             step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
-            inputAmount(aboveBalanceAmount)
+            step("Enter amount '$aboveBalanceAmount'") { inputAmount(aboveBalanceAmount) }
             // Above-balance recalculates the fee forever (Compose never idles), so assert the "Insufficient funds" title, not button state.
             step("Assert 'Insufficient funds' is displayed") {
-                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching { onSwapTokenScreen { insufficientFundsErrorTitle.assertIsDisplayed() } }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { insufficientFundsErrorTitle.assertIsDisplayed() }
                 }
             }
         }
@@ -273,28 +244,27 @@ class AppTransfersTest : BaseTestCase() {
             }
 
             step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
-            inputAmount(amount)
-            waitForFeeDisplayed()
-            assertTransferReady()
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
 
             var marketFee = ""
             step("Read displayed 'Market' fee amount") {
                 onSwapTokenScreen { marketFee = feeAmount.extractText() }
             }
             step("Open 'Network fee' selector via 'Select fee' icon") {
-                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching { onSwapTokenScreen { selectFeeIcon.performClick() } }
-                    runCatching { onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() } }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { selectFeeIcon.performClick() }
+                    onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
                 }
             }
             step("Click on 'Fast' fee option") {
                 onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.clickWithAssertion() }
             }
             step("Assert fee amount changed from Market fee") {
-                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching {
-                        onSwapTokenScreen { feeAmount.assertIsDisplayed() }
-                    }.isSuccess && onSwapTokenScreenFeeDiffers(marketFee)
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { feeAmount.assertIsDisplayed() }
+                    check(swapFeeDiffersFrom(marketFee)) { "Network fee did not change from '$marketFee'" }
                 }
             }
         }
@@ -336,9 +306,9 @@ class AppTransfersTest : BaseTestCase() {
             step("Open Swap in Transfer mode for '$token'") {
                 openSwapInTransferMode(token, mockContent = Wallet2WithDerivationsMockContent)
             }
-            inputAmount(amount)
-            assertTransferReady()
-            waitForFeeDisplayed()
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
         }
     }
 
@@ -373,9 +343,9 @@ class AppTransfersTest : BaseTestCase() {
             }
 
             step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
-            inputAmount(amount)
-            assertTransferReady()
-            waitForFeeDisplayed()
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
         }
     }
 
@@ -425,14 +395,12 @@ class AppTransfersTest : BaseTestCase() {
             }
 
             step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
-            inputAmount(amount)
+            step("Enter amount '$amount'") { inputAmount(amount) }
             step("Assert 'Insufficient $feeCoinName to cover network fee' notification is displayed") {
-                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching {
-                        onSwapTokenScreen {
-                            insufficientFeeForTransferNotificationTitle(feeCoinName).assertIsDisplayed()
-                        }
-                    }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen {
+                        insufficientFeeForTransferNotificationTitle(feeCoinName).assertIsDisplayed()
+                    }
                 }
             }
         }
@@ -477,19 +445,13 @@ class AppTransfersTest : BaseTestCase() {
                 onSwapSelectTokenScreen { searchBarBlock.performTextReplacement(polygonQuery) }
             }
             step("Assert '$polygonReceiveName' is displayed") {
-                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching { onSwapSelectTokenScreen { tokenWithName(polygonReceiveName).assertIsDisplayed() } }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapSelectTokenScreen { tokenWithName(polygonReceiveName).assertIsDisplayed() }
                 }
             }
             step("Assert '$ethereumToken' is not displayed") {
                 onSwapSelectTokenScreen { tokenWithName(ethereumToken).assertIsNotDisplayed() }
             }
         }
-    }
-
-    private fun BaseTestCase.onSwapTokenScreenFeeDiffers(previousFee: String): Boolean {
-        var current = ""
-        onSwapTokenScreen { current = feeAmount.extractText() }
-        return current.isNotEmpty() && current != previousFee
     }
 }
