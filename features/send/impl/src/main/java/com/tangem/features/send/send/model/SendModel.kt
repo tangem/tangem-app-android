@@ -41,13 +41,15 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.entity.isFromMainScreenQr
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponent
+import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -58,8 +60,6 @@ import com.tangem.features.send.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.features.send.subcomponents.amount.SendAmountComponent
-import com.tangem.features.send.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
