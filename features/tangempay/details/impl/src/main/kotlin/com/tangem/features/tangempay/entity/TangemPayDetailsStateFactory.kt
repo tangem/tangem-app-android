@@ -10,7 +10,6 @@ import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -18,6 +17,8 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
+import com.tangem.features.tangempay.utils.hasWithdrawableAmount
+import com.tangem.features.tangempay.utils.isFresh
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -60,11 +61,12 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
-        val isFresh = status.source == StatusSource.ACTUAL && status.error == null
+        val isFresh = status.isFresh
         val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
         val isAddCardEnabled = isFresh && !hasIssuingCard
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
+        val hasWithdrawableBalance = status.balance.hasWithdrawableAmount
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -77,7 +79,10 @@ internal class TangemPayDetailsStateFactory(
                 onRefresh = intents::onRefreshSwipe,
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
-                actionButtons = getActionButtonsConfig(isEnabled = areActionButtonsEnabled),
+                actionButtons = getActionButtonsConfig(
+                    isAddFundsEnabled = areActionButtonsEnabled,
+                    isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
+                ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .let { if (isMultipleCardsEnabled) it else it.take(1) }
@@ -113,7 +118,7 @@ internal class TangemPayDetailsStateFactory(
         else -> null
     }
 
-    fun getDeactivatedState(): TangemPayDetailsUM {
+    fun getDeactivatedState(hasWithdrawableBalance: Boolean): TangemPayDetailsUM {
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -126,7 +131,10 @@ internal class TangemPayDetailsStateFactory(
                 onRefresh = intents::onRefreshSwipe,
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
-                actionButtons = getActionButtonsConfig(isEnabled = true),
+                actionButtons = getActionButtonsConfig(
+                    isAddFundsEnabled = true,
+                    isWithdrawEnabled = hasWithdrawableBalance,
+                ),
                 cardsBlockState = null,
             ),
             isBalanceHidden = false,
@@ -256,23 +264,32 @@ internal class TangemPayDetailsStateFactory(
         )
     }
 
-    private fun getActionButtonsConfig(isEnabled: Boolean): ImmutableList<ActionButtonConfig> {
+    fun getActionButtonsConfig(
+        isAddFundsEnabled: Boolean,
+        isWithdrawEnabled: Boolean,
+    ): ImmutableList<TangemPayActionButtonUM> {
         return persistentListOf(
-            ActionButtonConfig(
-                text = resourceReference(id = R.string.tangempay_card_details_add_funds),
-                iconResId = if (isRedesignEnabled) {
-                    R.drawable.ic_arrow_down_24
-                } else {
-                    R.drawable.ic_plus_24
-                },
-                onClick = intents::onClickAddFunds,
-                isEnabled = isEnabled,
+            TangemPayActionButtonUM(
+                action = TangemPayAction.AddFunds,
+                config = ActionButtonConfig(
+                    text = resourceReference(id = R.string.tangempay_card_details_add_funds),
+                    iconResId = if (isRedesignEnabled) {
+                        R.drawable.ic_arrow_down_24
+                    } else {
+                        R.drawable.ic_plus_24
+                    },
+                    onClick = intents::onClickAddFunds,
+                    isEnabled = isAddFundsEnabled,
+                ),
             ),
-            ActionButtonConfig(
-                text = resourceReference(id = R.string.tangempay_card_details_withdraw),
-                iconResId = R.drawable.ic_arrow_up_24,
-                onClick = intents::onClickWithdraw,
-                isEnabled = isEnabled,
+            TangemPayActionButtonUM(
+                action = TangemPayAction.Withdraw,
+                config = ActionButtonConfig(
+                    text = resourceReference(id = R.string.tangempay_card_details_withdraw),
+                    iconResId = R.drawable.ic_arrow_up_24,
+                    onClick = intents::onClickWithdraw,
+                    isEnabled = isWithdrawEnabled,
+                ),
             ),
         )
     }
