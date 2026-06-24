@@ -22,6 +22,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
 
     private val factory = CryptoCurrencyFactory(excludedBlockchains = ExcludedBlockchains())
 
+    val bitcoin by lazy { createCoin(Blockchain.Bitcoin) }
     val cardano by lazy { createCoin(blockchain = Blockchain.Cardano) }
     val chia by lazy { createCoin(Blockchain.Chia) }
     val ethereum by lazy { createCoin(Blockchain.Ethereum) }
