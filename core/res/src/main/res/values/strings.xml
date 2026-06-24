@@ -352,6 +352,7 @@
   <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
+  <string name="common_go_to_verification">Go to verification</string>
   <string name="common_got_it">Got it</string>
   <string name="common_hide">Hide</string>
   <string name="common_hold_to">Hold to %s</string>
@@ -410,6 +411,7 @@
   <string name="common_privacy_policy">Privacy Policy</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
+  <string name="common_rate">Rate</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_received">Received</string>

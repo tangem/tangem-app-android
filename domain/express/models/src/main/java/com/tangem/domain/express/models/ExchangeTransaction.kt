@@ -13,6 +13,8 @@ package com.tangem.domain.express.models
  * @property payoutHash On-chain hash of the payout (to-side) leg, if known.
  * @property fromAsset The asset sent.
  * @property toAsset The asset received.
+ * @property externalTxUrl The provider's page for this deal (tracking / refund / KYC); `null` when the provider
+ *  supplies none (CEX only).
  */
 data class ExchangeTransaction(
     val txId: String,
@@ -23,4 +25,5 @@ data class ExchangeTransaction(
     val payoutHash: String?,
     val fromAsset: ExpressTransactionAsset,
     val toAsset: ExpressTransactionAsset,
+    val externalTxUrl: String? = null,
 )

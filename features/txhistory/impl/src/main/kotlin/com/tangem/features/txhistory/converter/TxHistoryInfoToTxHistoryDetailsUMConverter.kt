@@ -11,10 +11,12 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressTransactionAsset
+import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -35,6 +37,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Converts a [TxHistoryInfo] row to a [TxHistoryDetailsUM] for the in-app transaction details card.
@@ -47,6 +50,8 @@ import java.math.BigDecimal
 internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onCopyAddress: (String) -> Unit,
+    /** Opens the provider's page for an express deal — wired to the bottom "Go to provider" / "Go to verification" CTA. */
+    private val onGoToProvider: (String) -> Unit,
     /** Own deposit addresses for this currency's network — used to label own-transfers as "Transfer". */
     private val ownAddresses: Set<String> = emptySet(),
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
@@ -159,7 +164,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
                 isFaded = status is Status.Failed,
             ),
             statusBanner = swap.tx.status.toStatusBannerUM(),
-            rows = swap.toInfoRows(),
+            rows = swap.toInfoRows(onProviderClick = swap.providerClick(), rateRow = swap.tx.swapRateRow()),
+            providerButton = providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel()),
         )
     }
 
@@ -185,7 +191,24 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
                 isFaded = status is Status.Failed,
             ),
             statusBanner = onramp.tx.status.toStatusBannerUM(),
-            rows = onramp.toInfoRows(),
+            rows = onramp.toInfoRows(onProviderClick = onramp.providerClick(), rateRow = onramp.tx.onrampRateRow()),
+            providerButton = providerButton(onramp.externalTxUrl, onramp.tx.status.providerButtonLabel()),
+        )
+    }
+
+    /** Opens the deal's provider page on tap; `null` when the deal has no provider link. */
+    private fun ExpressTx.providerClick(): (() -> Unit)? = externalTxUrl?.let { url -> { onGoToProvider(url) } }
+
+    /**
+     * Builds the bottom "Go to provider" / "Go to verification" CTA. Present only when the deal is on a
+     * provider-actionable terminal ([label] resolved from the status) **and** carries a provider link ([url]); either
+     * being absent drops the button (`null`).
+     */
+    private fun providerButton(url: String?, @StringRes label: Int?): TxHistoryDetailsUM.ProviderButtonUM? {
+        if (url == null || label == null) return null
+        return TxHistoryDetailsUM.ProviderButtonUM(
+            text = resourceReference(label),
+            onClick = { onGoToProvider(url) },
         )
     }
 
@@ -285,6 +308,32 @@ private fun ExpressOnrampStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBan
     ExpressOnrampStatus.Unknown -> null
 }
 
+/**
+ * Label of the bottom CTA for an express swap, or `null` for statuses that need no provider action. The KYC
+ * [Verifying][ExpressExchangeStatus.Verifying] state sends the user to verification; the failure terminals send them
+ * to the provider (to track / refund). Mirrors the failed/verification banners (the existing express block uses the
+ * same per-tx link for both).
+ */
+@StringRes
+private fun ExpressExchangeStatus.providerButtonLabel(): Int? = when (this) {
+    ExpressExchangeStatus.Verifying -> R.string.common_go_to_verification
+    ExpressExchangeStatus.Failed,
+    ExpressExchangeStatus.TxFailed,
+    ExpressExchangeStatus.Expired,
+    -> R.string.common_go_to_provider
+    else -> null
+}
+
+/** Label of the bottom CTA for an express onramp, or `null` for statuses that need no provider action. */
+@StringRes
+private fun ExpressOnrampStatus.providerButtonLabel(): Int? = when (this) {
+    ExpressOnrampStatus.Verifying -> R.string.common_go_to_verification
+    ExpressOnrampStatus.Failed,
+    ExpressOnrampStatus.Expired,
+    -> R.string.common_go_to_provider
+    else -> null
+}
+
 private fun loadingBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
     severity = Severity.Info,
     title = resourceReference(title),
@@ -333,26 +382,34 @@ private fun Status.statusAwareTitle(@StringRes pending: Int, @StringRes confirme
 
 // endregion
 
-// region Info rows (network fee)
+// region Info rows (provider / rate / network fee)
 
 /** Detail rows of an on-chain tx: the network-fee row when a fee with a value is present (rate is not surfaced). */
 private fun TxInfo.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = listOfNotNull(feeRow()).toImmutableList()
 
 /**
- * Detail rows of an express op: the [provider] row (its name) followed by the network-fee row from the matched on-chain
- * leg. The provider row is dropped while the provider is unresolved; the fee row while no on-chain leg / fee is present.
- * (Rate is not surfaced yet — no data.)
+ * Detail rows of an express op, in order: the [provider] row (its name), the effective-[rateRow] row, then the
+ * network-fee row from the matched on-chain leg. Each is dropped when its data is absent — the provider while it is
+ * unresolved, the rate while an amount is missing / non-positive (see [swapRateRow] / [onrampRateRow]), the fee while
+ * no on-chain leg / fee is present.
  */
-private fun ExpressTx.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
-    provider?.let { add(it.providerRow()) }
+private fun ExpressTx.toInfoRows(
+    onProviderClick: (() -> Unit)?,
+    rateRow: TxHistoryDetailsUM.InfoRowUM?,
+): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
+    provider?.let { add(it.providerRow(onProviderClick)) }
+    rateRow?.let { add(it) }
     addAll(txInfo.toInfoRows())
 }.toImmutableList()
 
-private fun ExpressProvider.providerRow(): TxHistoryDetailsUM.InfoRowUM = TxHistoryDetailsUM.InfoRowUM(
-    label = resourceReference(R.string.express_provider),
-    value = stringReference(name),
-    trailingIconRes = R.drawable.ic_arrow_top_right_24,
-)
+private fun ExpressProvider.providerRow(onClick: (() -> Unit)?): TxHistoryDetailsUM.InfoRowUM =
+    TxHistoryDetailsUM.InfoRowUM(
+        label = resourceReference(R.string.express_provider),
+        value = stringReference(name),
+        // The arrow link affordance is shown only when the row opens the provider page.
+        trailingIconRes = onClick?.let { R.drawable.ic_arrow_top_right_24 },
+        onClick = onClick,
+    )
 
 /** Detail rows pulled from the matched on-chain leg of an express op; empty while the leg has not loaded. */
 private fun OnChainTx?.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
@@ -368,6 +425,71 @@ private fun TxInfo.feeRow(): TxHistoryDetailsUM.InfoRowUM? {
         ),
     )
 }
+
+// endregion
+
+// region Rate row
+
+private const val RATE_MAX_DECIMALS = 8
+private const val RATE_IF_ZERO_DECIMALS = 2
+
+/**
+ * Effective swap rate row `1 {from} ≈ {x} {to}`, computed on the fly as `x = toAmount / fromAmount` (`toAmount` is
+ * already the actual-or-expected payout — the data layer coalesces `actualAmount ?: amount`). Hidden (`null`) when an
+ * amount is missing or non-positive — there is then no rate to show and division by zero is avoided.
+ */
+private fun ExchangeTransaction.swapRateRow(): TxHistoryDetailsUM.InfoRowUM? {
+    val fromAmount = fromAsset.amount.takeIfPositive() ?: return null
+    val toAmount = toAsset.amount.takeIfPositive() ?: return null
+    val rate = toAmount.divide(fromAmount, rateScale(toAsset.decimals), RoundingMode.HALF_UP)
+    val baseSymbol = fromAsset.cryptoCurrency?.symbol ?: fromAsset.id.networkId
+    val quoteSymbol = toAsset.cryptoCurrency?.symbol ?: toAsset.id.networkId
+    val value = rateText(
+        base = oneOf(baseSymbol),
+        quote = rate.format { crypto(symbol = quoteSymbol, decimals = toAsset.decimals, ignoreSymbolPosition = true) },
+    )
+    return rateRowUM(value)
+}
+
+/**
+ * Effective onramp rate row `1 {crypto} ≈ {x} {fiat}`, computed on the fly as `x = fiatPaid / cryptoReceived`. The API's
+ * nominal `rate` / `rate_usd` are intentionally ignored to avoid UI drift from hidden fees. Hidden (`null`) when an
+ * amount is missing or non-positive.
+ */
+private fun OnrampTransaction.onrampRateRow(): TxHistoryDetailsUM.InfoRowUM? {
+    val fiatPaid = fromFiat.value.takeIfPositive() ?: return null
+    val cryptoReceived = toAsset.amount.takeIfPositive() ?: return null
+    // Divide at full precision; the fiat formatter then rounds the rate to the currency's display scale.
+    val rate = fiatPaid.divide(cryptoReceived, RATE_MAX_DECIMALS, RoundingMode.HALF_UP)
+    val cryptoSymbol = toAsset.cryptoCurrency?.symbol ?: toAsset.id.networkId
+    val fiatCode = (fromFiat.type as? AmountType.FiatType)?.code ?: fromFiat.currencySymbol
+    val value = rateText(
+        base = oneOf(cryptoSymbol),
+        quote = rate.format { fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = fromFiat.currencySymbol) },
+    )
+    return rateRowUM(value)
+}
+
+private fun rateRowUM(value: String): TxHistoryDetailsUM.InfoRowUM = TxHistoryDetailsUM.InfoRowUM(
+    label = resourceReference(R.string.common_rate),
+    value = stringReference(value),
+)
+
+/** Division scale: the quote's decimals, capped at [RATE_MAX_DECIMALS]; a zero-decimal quote still shows two. */
+private fun rateScale(quoteDecimals: Int): Int =
+    (if (quoteDecimals == 0) RATE_IF_ZERO_DECIMALS else quoteDecimals).coerceAtMost(RATE_MAX_DECIMALS)
+
+/**
+ * Leading `1 {symbol}` of the rate, e.g. `1 POL` — number-first, matching the amount legs (the crypto formatter forces a
+ * two-decimal minimum, so the literal `1` is built directly rather than via [crypto]).
+ */
+private fun oneOf(symbol: String): String = "1${StringsSigns.NON_BREAKING_SPACE}$symbol"
+
+private fun rateText(base: String, quote: String): String {
+    return "${base.trim()} ${StringsSigns.APPROXIMATE} ${quote.trim()}"
+}
+
+private fun BigDecimal?.takeIfPositive(): BigDecimal? = this?.takeIf { it > BigDecimal.ZERO }
 
 // endregion
 

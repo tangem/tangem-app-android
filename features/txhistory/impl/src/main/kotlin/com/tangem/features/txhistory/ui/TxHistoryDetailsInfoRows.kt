@@ -54,7 +54,8 @@ internal fun TxHistoryDetailsInfoRows(rows: ImmutableList<InfoRowUM>, modifier: 
         rows.forEachIndexed { index, row ->
             TangemRow(
                 divider = index < lastIndex,
-                contentLead = TangemRowContentLead.Start,
+                contentLead = TangemRowContentLead.End,
+                onClick = row.onClick,
                 titleSlot = { TangemRowText(text = row.label, role = TangemRowTextRole.Title) },
                 valueSlot = {
                     Row(

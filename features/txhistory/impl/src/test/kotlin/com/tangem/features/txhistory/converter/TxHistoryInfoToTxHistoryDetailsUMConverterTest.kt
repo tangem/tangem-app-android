@@ -40,13 +40,17 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
 
     private val currency = MockCryptoCurrencyFactory().ethereum
     private val copiedAddresses = mutableListOf<String>()
+    private val openedUrls = mutableListOf<String>()
     private val converter = TxHistoryInfoToTxHistoryDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
+        onGoToProvider = openedUrls::add,
     )
 
     @BeforeEach
     fun setUp() {
+        copiedAddresses.clear()
+        openedUrls.clear()
         // The header subtitle formats the date via DateTimeFormatters -> DateFormat.getBestDateTimePattern,
         // which is an Android stub on the JVM. Mirror the DateTimeFormattersTest mock so convert() runs.
         mockkStatic(DateFormat::class)
@@ -136,6 +140,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         val ownConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = currency,
             onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
             ownAddresses = setOf(USER_ADDRESS),
         )
         val tx = onChain(
@@ -157,6 +162,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         val ownConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = currency,
             onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
             ownAddresses = setOf(USER_ADDRESS),
         )
         val tx = onChain(
@@ -472,24 +478,49 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         // Act
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished, txInfo = leg)) as TxHistoryDetailsUM.TwoAssets
 
-        // Assert
-        assertThat(result.rows).hasSize(1)
-        assertThat(result.rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
+        // Assert — no provider in the fixture, so rate then the on-chain leg's network fee.
+        assertThat(result.rows.map { it.label }).containsExactly(
+            resourceReference(R.string.common_rate),
+            resourceReference(R.string.common_network_fee_title),
+        ).inOrder()
     }
 
     @Test
-    fun `GIVEN express swap with provider WHEN convert THEN provider row with its name and link icon`() {
+    fun `GIVEN express swap with provider and url WHEN convert THEN provider row links to the url`() {
         // Act
+        val result = converter.convert(
+            expressSwap(
+                status = ExpressExchangeStatus.Finished,
+                provider = provider(name = "Mercuryo"),
+                externalTxUrl = EXTERNAL_URL,
+            ),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert — provider then rate (no on-chain leg, so no fee row).
+        assertThat(result.rows.map { it.label }).containsExactly(
+            resourceReference(R.string.express_provider),
+            resourceReference(R.string.common_rate),
+        ).inOrder()
+        val providerRow = result.rows.first()
+        assertThat(providerRow.label).isEqualTo(resourceReference(R.string.express_provider))
+        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
+        assertThat(providerRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
+        providerRow.onClick?.invoke()
+        assertThat(openedUrls).containsExactly(EXTERNAL_URL)
+    }
+
+    @Test
+    fun `GIVEN express swap with provider but no url WHEN convert THEN provider row has no link`() {
+        // Act — the provider supplies no link (e.g. DEX), so the row is plain text.
         val result = converter.convert(
             expressSwap(status = ExpressExchangeStatus.Finished, provider = provider(name = "Mercuryo")),
         ) as TxHistoryDetailsUM.TwoAssets
 
         // Assert
-        assertThat(result.rows).hasSize(1)
         val providerRow = result.rows.first()
-        assertThat(providerRow.label).isEqualTo(resourceReference(R.string.express_provider))
         assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
-        assertThat(providerRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
+        assertThat(providerRow.trailingIconRes).isNull()
+        assertThat(providerRow.onClick).isNull()
     }
 
     @Test
@@ -508,8 +539,59 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         // Assert
         assertThat(result.rows.map { it.label }).containsExactly(
             resourceReference(R.string.express_provider),
+            resourceReference(R.string.common_rate),
             resourceReference(R.string.common_network_fee_title),
         ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN express swap with both amounts WHEN convert THEN rate row 1 from approx to follows provider`() {
+        // Act — no on-chain leg, so the rows are provider then rate.
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Finished, provider = provider(name = "Changelly")),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.rows.map { it.label }).containsExactly(
+            resourceReference(R.string.express_provider),
+            resourceReference(R.string.common_rate),
+        ).inOrder()
+        val rate = result.rows[1].value.resolveString()
+        // 0.001 BTC / 1.5 ETH ≈ 0.00066667; base falls back to the unresolved from-leg network id, quote to ETH.
+        assertThat(rate).startsWith("1")
+        assertThat(rate).contains("≈")
+        assertThat(rate).contains("ethereum")
+        assertThat(rate).contains("ETH")
+    }
+
+    @Test
+    fun `GIVEN express swap with non-positive amount WHEN convert THEN no rate row`() {
+        // Arrange — a zero pay-in makes the rate undefined; the row is dropped (division-by-zero guard).
+        val base = expressSwap(status = ExpressExchangeStatus.Finished, provider = provider(name = "Changelly"))
+        val swap = base.copy(tx = base.tx.copy(fromAsset = base.tx.fromAsset.copy(amount = BigDecimal.ZERO)))
+
+        // Act
+        val result = converter.convert(swap) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert — only the provider row remains.
+        assertThat(result.rows.map { it.label }).containsExactly(resourceReference(R.string.express_provider))
+    }
+
+    @Test
+    fun `GIVEN express onramp with both amounts WHEN convert THEN rate row 1 crypto approx fiat`() {
+        // Act
+        val result = converter.convert(
+            expressOnramp(status = ExpressOnrampStatus.Finished),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert — onramp has no provider in the fixture, so the only row is the rate.
+        assertThat(result.rows.map { it.label }).containsExactly(resourceReference(R.string.common_rate))
+        val rate = result.rows.first().value.resolveString()
+        // 100 SEK / 0.006 BTC ≈ 16,666.67 SEK; base is the resolved crypto symbol.
+        assertThat(rate).startsWith("1")
+        assertThat(rate).contains("≈")
+        assertThat(rate).contains("ETH")
+        assertThat(rate).contains("SEK")
     }
 
     @Test
@@ -587,6 +669,67 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         assertThat(result.statusBanner).isNull()
     }
 
+    @Test
+    fun `GIVEN failed express swap with url WHEN convert THEN go-to-provider button opening the url`() {
+        // Act
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Failed, externalTxUrl = EXTERNAL_URL),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        val button = result.providerButton
+        assertThat(button?.text).isEqualTo(resourceReference(R.string.common_go_to_provider))
+        button?.onClick?.invoke()
+        assertThat(openedUrls).containsExactly(EXTERNAL_URL)
+    }
+
+    @Test
+    fun `GIVEN verifying express swap with url WHEN convert THEN go-to-verification button`() {
+        // Act
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Verifying, externalTxUrl = EXTERNAL_URL),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.providerButton?.text).isEqualTo(resourceReference(R.string.common_go_to_verification))
+    }
+
+    @Test
+    fun `GIVEN verifying express onramp with url WHEN convert THEN go-to-verification button opening the url`() {
+        // Act
+        val result = converter.convert(
+            expressOnramp(status = ExpressOnrampStatus.Verifying, externalTxUrl = EXTERNAL_URL),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        val button = result.providerButton
+        assertThat(button?.text).isEqualTo(resourceReference(R.string.common_go_to_verification))
+        button?.onClick?.invoke()
+        assertThat(openedUrls).containsExactly(EXTERNAL_URL)
+    }
+
+    @Test
+    fun `GIVEN failed express swap without url WHEN convert THEN no provider button`() {
+        // Act — the provider supplies no link (e.g. DEX), so there is nowhere to send the user.
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Failed, externalTxUrl = null),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.providerButton).isNull()
+    }
+
+    @Test
+    fun `GIVEN finished express swap with url WHEN convert THEN no provider button`() {
+        // Act — a settled success needs no provider action even when a link exists.
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Finished, externalTxUrl = EXTERNAL_URL),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.providerButton).isNull()
+    }
+
     // endregion
 
     private fun onChain(
@@ -626,6 +769,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         isOutgoing: Boolean = true,
         txInfo: OnChainTx? = null,
         provider: ExpressProvider? = null,
+        externalTxUrl: String? = null,
     ): ExpressTx.Swap = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "swap-1",
@@ -641,6 +785,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
                 decimals = 8,
                 cryptoCurrency = currency,
             ),
+            externalTxUrl = externalTxUrl,
         ),
         isOutgoing = isOutgoing,
         txInfo = txInfo,
@@ -649,6 +794,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
     private fun expressOnramp(
         status: ExpressOnrampStatus,
         txInfo: OnChainTx? = null,
+        externalTxUrl: String? = null,
     ): ExpressTx.Onramp = ExpressTx.Onramp(
         tx = OnrampTransaction(
             txId = "onramp-1",
@@ -656,6 +802,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             createdAtMillis = TIMESTAMP,
             provider = null,
             payoutHash = null,
+            externalTxUrl = externalTxUrl,
             fromFiat = Amount(
                 currencySymbol = "SEK",
                 value = BigDecimal("100"),
@@ -692,5 +839,6 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         const val TIMESTAMP = 1_700_000_000_000L
         const val USER_ADDRESS = "0x1234567890abcdef1234"
         const val VALIDATOR_ADDRESS = "0xvalidator"
+        const val EXTERNAL_URL = "https://provider.example/tx/swap-1"
     }
 }
