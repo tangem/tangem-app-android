@@ -1,7 +1,7 @@
 package com.tangem.features.send.feeselector.di
 
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.FeeSelectorComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadListener
