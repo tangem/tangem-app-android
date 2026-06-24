@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.transactions.state
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 
@@ -22,12 +23,13 @@ sealed interface TransactionItemUM {
     /**
      * Content state.
      *
-     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded
+     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
+     *                          `null` hides the numeric value while [currencySymbol] still shows.
      * @property currencySymbol currency symbol shown alongside [amount], e.g. "BTC", "USDT"
      */
     data class Content(
         override val txHash: String,
-        val amount: String,
+        val amount: String?,
         val currencySymbol: String,
         val time: String,
         val status: Status,
@@ -37,6 +39,7 @@ sealed interface TransactionItemUM {
         val title: TextReference,
         val subtitle: ContentSubtitle,
         val timestamp: Long,
+        val warning: TextReference? = null,
     ) : TransactionItemUM {
 
         @Immutable
@@ -93,6 +96,19 @@ sealed interface TransactionItemUM {
             val direction: Direction,
             val walletName: String,
             val deviceIconUM: DeviceIconUM,
+        ) : ContentSubtitle
+
+        /**
+         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>". Used for express rows
+         * (swap counterparty currency / onramp fiat), e.g. "to: ◎ POL" or "from: 🇸🇪 SEK".
+         *
+         * @property icon resolved counterparty currency icon, rendered via `CurrencyIcon`. `null` when no icon
+         *   is available (e.g. onramp fiat carries no `CryptoCurrency`) — the ticker then renders without a leading icon.
+         */
+        data class Asset(
+            val direction: Direction,
+            val symbol: String,
+            val icon: CurrencyIconState?,
         ) : ContentSubtitle
 
         enum class Direction { TO, FROM }
