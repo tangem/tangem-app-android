@@ -86,14 +86,14 @@ class BuyTest : BaseTestCase() {
     }
 
     @AllureId("3613")
-    @DisplayName("On-ramp Buy: S2C card hasn't Buy and Sell options")
+    @DisplayName("On-ramp Buy: S2C card doesn't have Buy and Sell options")
     @Test
     fun buyAndSellIsNotAvailableForS2CCardTest() {
         setupHooks().run {
             step("Open 'Main' screen") {
                 openMainScreen(productType = ProductType.Start2Coin)
             }
-            step("Verify 'Add funds' button is display") {
+            step("Verify 'Add funds' button is displayed") {
                 onMainScreen { addFundsButton.assertIsDisplayed() }
             }
             step("Verify Buy/Sell action buttons are hidden") {
