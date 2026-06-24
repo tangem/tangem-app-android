@@ -111,7 +111,7 @@ private fun TangemPayCardPageContent(
     state: TangemPayCardPageUM,
     scaffoldPaddings: PaddingValues,
     isRedesignEnabled: Boolean,
-    cardSection: @Composable (() -> Unit),
+    cardSection: @Composable () -> Unit,
 ) {
     Column(
         modifier = Modifier
