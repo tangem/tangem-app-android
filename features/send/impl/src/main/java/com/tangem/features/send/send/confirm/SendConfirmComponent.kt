@@ -16,13 +16,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.SendNotificationsComponent
-import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.params.FeeSelectorParams
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
@@ -107,7 +106,7 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
-            notificationData = NotificationData(
+            notificationData = SendNotificationsComponent.Params.NotificationData(
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = model.confirmData.enteredMemo,
                 amountValue = model.confirmData.enteredAmount.orZero(),
