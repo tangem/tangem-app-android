@@ -189,8 +189,12 @@ abstract class BaseTestCase : TestCase(
                 "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
                 "ASSETS_DISCOVERY_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
-                // Toggles released in 5.39+ — forced on so tests run against the actual build even when the
-                // app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < 5.39 would disable them).
+                // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
+                // build even when the app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < x.xx would
+                // disable them). On the releases/6.0 branch every toggle with version <= 6.0 ships enabled.
+                // 5.37
+                "HEDERA_ERC20_ENABLED" to true,
+                // 5.39
                 "STAKING_ETH_ENABLED" to true,
                 "DYNAMIC_ADDRESSES_ENABLED" to true,
                 "SOLANA_TX_HISTORY_ENABLED" to true,
@@ -203,8 +207,22 @@ abstract class BaseTestCase : TestCase(
                 "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED" to true,
                 "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
                 "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
-                // Toggles released in 5.40
+                // 5.39.2
+                "AND_15154_YIELD_PROMO_ENABLED" to true,
+                // 5.40
+                "TWI_1377_MANAGE_FUNDS" to true,
+                // 6.0
                 "APP_REDESIGN_ENABLED" to true,
+                "TWI_1326_YIELD_MODE_SWAP_ENABLED" to true,
+                "AND_15207_SWAP_SWITCH_TO_TRANSFER_ENABLED" to true,
+                "AND_15120_SWAP_INTEGRATED_APPROVE" to true,
+                "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED" to true,
+                "AND_15258_QUICK_TOP_UP_ENABLED" to true,
+                "AND_15368_VISA_PAY_REDESIGN" to true,
+                "AND_15364_VISA_PAY_CARD_CLOSE" to true,
+                "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED" to true,
+                "AND_15235_VISA_MULTIPLE_CARDS" to true,
+                "AND_15715_SWAP_BEST_DEX_RATE_ENABLED" to true,
             )
         )
     }
