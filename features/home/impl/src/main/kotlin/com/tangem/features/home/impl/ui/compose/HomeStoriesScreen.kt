@@ -50,7 +50,7 @@ internal fun HomeStoriesScreen(state: HomeUM, modifier: Modifier = Modifier) {
         StoriesContainer(
             modifier = Modifier.fillMaxSize(),
             config = state.storiesConfig,
-            isPauseStories = state.scanInProgress,
+            isPauseStories = state.isScanInProgress,
         ) { story, isPaused ->
             Column(
                 modifier = Modifier
