@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -42,7 +42,6 @@ fun TangemButton(
     size: TangemButtonSize = TangemButtonSize.Default,
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
     textStyle: TextStyle = TangemTheme.typography.button,
-    shape: Shape = size.toShape(),
     iconPadding: Dp = size.toIconPadding(),
     animateContentChange: Boolean = false,
 ) {
@@ -57,7 +56,7 @@ fun TangemButton(
         },
         enabled = enabled,
         elevation = elevation,
-        shape = shape,
+        shape = CircleShape,
         colors = colors,
         contentPadding = size.toContentPadding(icon = icon),
     ) {
