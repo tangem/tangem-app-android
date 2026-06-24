@@ -68,26 +68,34 @@ internal sealed interface DisplayNameState {
     }
 }
 
+internal enum class TangemPayAction { AddFunds, Withdraw }
+
+@Immutable
+internal data class TangemPayActionButtonUM(
+    val action: TangemPayAction,
+    val config: ActionButtonConfig,
+)
+
 @Immutable
 internal sealed class TangemPayDetailsBalanceBlockState {
 
-    abstract val actionButtons: ImmutableList<ActionButtonConfig>
+    abstract val actionButtons: ImmutableList<TangemPayActionButtonUM>
     abstract val cardsBlockState: CardsBlockState?
 
     data class Loading(
-        override val actionButtons: ImmutableList<ActionButtonConfig>,
+        override val actionButtons: ImmutableList<TangemPayActionButtonUM>,
         override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Content(
-        override val actionButtons: ImmutableList<ActionButtonConfig>,
+        override val actionButtons: ImmutableList<TangemPayActionButtonUM>,
         override val cardsBlockState: CardsBlockState?,
         val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Error(
-        override val actionButtons: ImmutableList<ActionButtonConfig>,
+        override val actionButtons: ImmutableList<TangemPayActionButtonUM>,
         override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
