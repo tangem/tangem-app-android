@@ -154,62 +154,32 @@ Non-obvious points that bite:
 
 Reference: `AddFundsBottomSheetPageObject.trendingTokenWithTitle` and `MainScreenPageObject` (`lazyList`).
 
-## Main-screen Markets bottom sheet swallows touch-based auto-scroll
+## Touch auto-scroll gets hijacked by a nested-scroll container (e.g. a bottom sheet)
 
-The main screen hosts a Material3 Markets bottom sheet (nested scroll, like `PullToRefreshBox` above).
-Kakao's **touch-based** auto-scroll — fired when a target is below the fold (an account card, the
-"Generate addresses" button) — is handed to the sheet via nested scroll and **expands it over the
-list**; the next click then lands on a market token (you end up on an unrelated token's details, e.g.
-TRON). Symptoms: `autoscroll did not help` / "3 click attempts", or the test navigates somewhere random.
+When a screen hosts a nested-scroll container (a Material3 bottom sheet, `PullToRefreshBox`), Kakao's
+**touch-based** auto-scroll toward a below-the-fold target can be consumed by that container instead —
+expanding the sheet over the content, so the next click lands on the wrong element.
 
-- **Scroll with semantics, not touch:** `onNode(SCREEN_CONTAINER).performScrollToNode(matcher)` issues a
-  `ScrollToIndex` semantics action that does NOT engage the sheet's nested scroll. (See
-  `MainScreenPageObject.scrollToAccount`.)
-- **Do NOT `device.pressBack()` to collapse the expanded sheet** on the root main screen — back exits the
-  app. The sheet's `BackHandler` only collapses when its `currentValue == Expanded`, which races the
-  press, so back frequently falls through to the activity and quits to the launcher.
-- **Best: avoid the trigger** — keep total fiat > 0 (a price quote for the token, see
-  `swap-transfer-accounts.md`) so the empty-wallet banner doesn't push the list under the sheet's peek in
-  the first place.
+- **Scroll with semantics, not touch:** `onNode(CONTAINER).performScrollToNode(matcher)` issues a
+  `ScrollToIndex` action that does NOT engage nested scroll.
+- **Don't `device.pressBack()` to collapse the sheet** on a root screen — its `BackHandler` only fires
+  when already expanded, races the press, and back often falls through and quits the app.
 
-## A screen with a perpetual animation keeps Compose non-idle → idle-synced actions flake
+## A perpetually animating screen keeps Compose non-idle → idle-synced actions flake
 
-**General principle.** Espresso/Kakao/Compose-test actions block on Compose reaching *idle* before they
-act. A screen that animates forever — an auto-advancing stories/onboarding carousel, a looping shimmer, a
-spinner that never stops — never goes idle, so `clickWithAssertion()`, `assertIsDisplayed()`, and Kakao
-waits on it fail intermittently (`… is not displayed`, or `ComposeNotIdleException`). The fix is to **get
-rid of the non-idle screen**, not to out-wait it.
+Kakao/Compose-test actions block on Compose reaching *idle* first. A screen that animates forever — an
+auto-advancing stories/onboarding carousel, a looping shimmer, a never-ending spinner — never idles, so
+`clickWithAssertion()` / `assertIsDisplayed()` on it flake (`… is not displayed`, or
+`ComposeNotIdleException`). **Remove the screen at its source rather than out-waiting it:** most are gated
+by a feature toggle or a mock response — flip it off so the screen never renders. If it's server-driven,
+set the toggle **before app launch** (config is fetched at startup), not mid-test. (Example: the swap
+stories are disabled via their WireMock scenario, then opened with `storiesExist = false`.)
 
-**Polling the animated node does NOT fix it** — two attempts that look right but aren't:
-- `composeTestRule.waitUntilAtLeastOneExists(hasTestTag(TAG), …)` polls the **merged** tree (it has no
-  `useUnmergedTree` option). If the target is a `clickable` element inside a `mergeDescendants` container
-  (common for tap-to-advance surfaces), its tag lives **only in the unmerged tree** → the wait never
-  matches → full-timeout on every run.
-- `waitUntil { runCatching { onScreen { node.assertIsDisplayed() } }.isSuccess }` reads the unmerged tree
-  (good) but Kakao's `assertIsDisplayed` *itself* blocks on idle, and the screen never idles → each probe
-  hangs → the outer `waitUntil` times out too.
-
-**Fix: remove the animated screen at the source.** Most such screens are gated by a feature toggle or a
-mock response — flip it off so the screen never renders, instead of interacting with it. When the toggle
-is server-driven, set it **before app launch** (`additionalBeforeAppLaunchSection`, which runs before
-`ActivityScenario.launch`) since the config is usually fetched at startup; setting it mid-test is too late.
-
-**Concrete instance (verify against current source — names drift):** the first-time *swap stories* are
-controlled by the WireMock scenario `stories_first_time_swap_v2`. Its `Error` state returns 500, so the
-screen never shows, and `openSwapScreen(…, storiesExist = false)` skips the close entirely:
-
-```kotlin
-setupHooks(
-    additionalBeforeAppLaunchSection = { setWireMockScenarioState("stories_first_time_swap_v2", "Error") },
-    additionalAfterSection = { resetWireMockScenarioState("stories_first_time_swap_v2") },
-).run {
-    openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
-}
-```
-
-`SwapStoriesTest` uses this for every flow that isn't specifically testing stories. Only keep
-`storiesExist = true` + `clickWithAssertion()` when the animated screen itself is the subject under test
-(then accept that you're synchronizing against an animation and budget a longer, existence-based wait).
+**Polling the animated node does NOT rescue it** — two false fixes:
+- `waitUntilAtLeastOneExists(hasTestTag(TAG))` polls the **merged** tree (no `useUnmergedTree` option); a
+  `clickable` node inside a `mergeDescendants` container exists only in the *unmerged* tree → never matches.
+- `waitUntil { runCatching { node.assertIsDisplayed() }.isSuccess }` reads the unmerged tree but
+  `assertIsDisplayed` itself blocks on idle, which never comes → the outer wait times out too.
 
 ## Decompose model lifecycle vs. data refresh
 
