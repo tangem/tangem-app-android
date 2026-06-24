@@ -85,7 +85,7 @@ internal class HomeModel @Inject constructor(
     private fun createInitialState(): HomeUM {
         val initialStories = getRestrictedStories().toImmutableList()
         return HomeUM(
-            scanInProgress = false,
+            isScanInProgress = false,
             isStoriesContainerEnabled = homeFeatureToggles.isStoriesContainerEnabled,
             stories = initialStories,
             storiesConfig = HomeStoriesConfig(stories = initialStories),
@@ -204,7 +204,7 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun setLoading(isLoading: Boolean) {
-        uiState.update { it.copy(scanInProgress = isLoading) }
+        uiState.update { it.copy(isScanInProgress = isLoading) }
     }
 
     private fun handleScanError(error: TangemError) {
