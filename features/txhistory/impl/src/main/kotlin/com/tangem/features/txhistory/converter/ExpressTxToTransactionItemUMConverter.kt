@@ -12,10 +12,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
-import com.tangem.domain.express.models.ExpressExchangeStatus
-import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -30,8 +29,8 @@ import java.math.BigDecimal
  * express statuses collapse into the three [Status] buckets (those drive title/icon/amount colors in the row UI).
  *
  * The counterparty ticker symbol+icon come from the resolved [ExpressTransactionAsset.cryptoCurrency] (swap);
- * onramp shows the real fiat code with no icon yet (fiat carries no `CryptoCurrency`). The row click opens the
- * explorer.
+ * onramp shows the real fiat code with no icon yet (fiat carries no `CryptoCurrency`). The row click routes through
+ * [TxHistoryUiActions.onTransactionClick] (express rows open the in-app details sheet).
  */
 internal class ExpressTxToTransactionItemUMConverter(
     private val currency: CryptoCurrency,
@@ -39,6 +38,8 @@ internal class ExpressTxToTransactionItemUMConverter(
 ) : Converter<ExpressTx, TransactionItemUM> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
+    private val exchangeStatusConverter = ExpressExchangeStatusToUiStatusConverter()
+    private val onrampStatusConverter = ExpressOnrampStatusToUiStatusConverter()
 
     override fun convert(value: ExpressTx): TransactionItemUM = when (value) {
         is ExpressTx.Swap -> swapContent(value)
@@ -46,7 +47,7 @@ internal class ExpressTxToTransactionItemUMConverter(
     }
 
     private fun swapContent(swap: ExpressTx.Swap): TransactionItemUM.Content {
-        val status = swap.tx.status.toUiStatus()
+        val status = exchangeStatusConverter.convert(swap.tx.status)
         val viewedAmount = if (swap.isOutgoing) swap.tx.fromAsset.amount else swap.tx.toAsset.amount
         val counterparty = if (swap.isOutgoing) swap.tx.toAsset else swap.tx.fromAsset
         val prefix = when {
@@ -72,7 +73,7 @@ internal class ExpressTxToTransactionItemUMConverter(
     }
 
     private fun onrampContent(onramp: ExpressTx.Onramp): TransactionItemUM.Content {
-        val status = onramp.tx.status.toUiStatus()
+        val status = onrampStatusConverter.convert(onramp.tx.status)
         val prefix = when {
             status is Status.Failed -> ""
             status is Status.Confirmed -> StringsSigns.PLUS
@@ -107,15 +108,15 @@ internal class ExpressTxToTransactionItemUMConverter(
         subtitle: ContentSubtitle,
         warning: TextReference?,
     ): TransactionItemUM.Content {
-        val explorerHash = tx.matchHash ?: tx.txId
+        // Row identity (Compose key): the on-chain leg's hash when matched, else the express txId stands in.
         return TransactionItemUM.Content(
-            txHash = explorerHash,
+            txHash = tx.explorerHash ?: tx.txId,
             amount = amount,
             currencySymbol = currency.symbol,
             time = tx.timestampMillis.toTimeFormat(),
             status = status,
             direction = direction,
-            onClick = { txHistoryUiActions.openTxInExplorer(explorerHash) },
+            onClick = { txHistoryUiActions.onTransactionClick(tx) },
             iconRes = iconRes,
             title = title,
             subtitle = subtitle,
@@ -143,49 +144,3 @@ internal class ExpressTxToTransactionItemUMConverter(
         )
     }
 }
-
-// region Status mapping
-
-/**
- * Collapses the typed swap status into a UI [Status] bucket: the single success state ([Finished][Confirmed]),
- * the failure/return states ([Failed]/[TxFailed]/[Refunded]/[Expired]/[Unknown]) → Failed, everything in flight
- * (incl. [Verifying] and [Paused]) → Unconfirmed.
- */
-private fun ExpressExchangeStatus.toUiStatus(): Status = when (this) {
-    ExpressExchangeStatus.Finished -> Status.Confirmed
-    ExpressExchangeStatus.Failed,
-    ExpressExchangeStatus.TxFailed,
-    ExpressExchangeStatus.Refunded,
-    ExpressExchangeStatus.Expired,
-    ExpressExchangeStatus.Unknown,
-    -> Status.Failed
-    ExpressExchangeStatus.Preview,
-    ExpressExchangeStatus.Created,
-    ExpressExchangeStatus.ExchangeTxSent,
-    ExpressExchangeStatus.Waiting,
-    ExpressExchangeStatus.WaitingTxHash,
-    ExpressExchangeStatus.Confirming,
-    ExpressExchangeStatus.Exchanging,
-    ExpressExchangeStatus.Sending,
-    ExpressExchangeStatus.Verifying,
-    ExpressExchangeStatus.Paused,
-    -> Status.Unconfirmed
-}
-
-private fun ExpressOnrampStatus.toUiStatus(): Status = when (this) {
-    ExpressOnrampStatus.Finished -> Status.Confirmed
-    ExpressOnrampStatus.Failed,
-    ExpressOnrampStatus.Expired,
-    ExpressOnrampStatus.Unknown,
-    -> Status.Failed
-    ExpressOnrampStatus.Created,
-    ExpressOnrampStatus.WaitingForPayment,
-    ExpressOnrampStatus.PaymentProcessing,
-    ExpressOnrampStatus.Verifying,
-    ExpressOnrampStatus.Paid,
-    ExpressOnrampStatus.Sending,
-    ExpressOnrampStatus.Paused,
-    -> Status.Unconfirmed
-}
-
-// endregion

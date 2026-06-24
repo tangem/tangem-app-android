@@ -20,7 +20,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
+import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -211,6 +215,7 @@ internal class TxHistoryModel @Inject constructor(
                 currency = params.currency,
                 txHistoryUiActions = this,
             ),
+            txHistoryUiActions = this,
         )
 
         val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
@@ -361,4 +366,20 @@ internal class TxHistoryModel @Inject constructor(
             ifRight = { urlOpener.openUrl(url = it) },
         )
     }
+
+    override fun onTransactionClick(item: TxHistoryInfo) {
+        // manager is non-null only under the new tx-history toggle; on the legacy path every tap falls to the explorer.
+        val manager = historyTxListManager
+        if (manager != null && item.opensInAppDetails()) {
+            params.onTxDetailsRequested(manager.txHistoryInfoFlow(item))
+        } else {
+            item.explorerHash?.let(::openTxInExplorer)
+        }
+    }
+}
+
+/** On-chain transfers/swaps and every express op open the in-app details sheet; everything else goes to the explorer. */
+private fun TxHistoryInfo.opensInAppDetails(): Boolean = when (this) {
+    is ExpressTx -> true
+    is OnChainTx.BSDK -> txInfo.type is TxInfo.TransactionType.Transfer || txInfo.type is TxInfo.TransactionType.Swap
 }
