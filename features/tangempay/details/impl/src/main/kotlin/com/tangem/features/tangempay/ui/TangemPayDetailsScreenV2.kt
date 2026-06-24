@@ -52,6 +52,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTransactionsComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
@@ -428,6 +429,7 @@ private fun LazyItemScope.ActionBlock(
     ) {
         actionButtons.fastForEach { actionConfig ->
             TangemPayActionButton(
+                modifier = Modifier.testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
                 iconRes = actionConfig.iconResId,
                 onClick = actionConfig.onClick,
                 isEnabled = actionConfig.isEnabled,

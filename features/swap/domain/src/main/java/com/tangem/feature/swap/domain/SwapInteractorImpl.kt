@@ -13,7 +13,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -63,6 +62,8 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
@@ -81,6 +82,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val signAndBroadcastPsbtUseCase: SignAndBroadcastPsbtUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
@@ -685,28 +687,59 @@ internal class SwapInteractorImpl @Inject constructor(
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                 )
             }
-            ResolvedFlow.DexLike -> {
-                val networkId = fromSwapCurrencyStatus.currency.network.rawId
-                if (isSolana(networkId)) {
-                    onSwapSolanaDex(
-                        provider = swapProvider,
-                        swapData = requireNotNull(swapData),
-                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
-                        amountToSwap = amountToSwap,
-                    )
-                } else {
-                    if (fee == null) return SwapTransactionState.Error.UnknownError
-                    onSwapDex(
-                        provider = swapProvider,
-                        swapData = requireNotNull(swapData),
-                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
-                        swapFee = fee,
-                        amountToSwap = amountToSwap,
-                        integratedApproval = integratedApproval,
-                    )
-                }
+            ResolvedFlow.DexLike -> onSwapDexLike(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                swapProvider = swapProvider,
+                swapData = requireNotNull(swapData),
+                amountToSwap = amountToSwap,
+                fee = fee,
+                integratedApproval = integratedApproval,
+            )
+        }
+    }
+
+    /**
+     * Dispatches a DEX-like swap by from-network: Solana (compiled tx) and Bitcoin (PSBT) get their
+     * own signing paths; everything else goes through the EVM [onSwapDex] (which requires a [fee]).
+     */
+    @Suppress("LongParameterList")
+    private suspend fun onSwapDexLike(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        swapProvider: SwapProvider,
+        swapData: SwapDataModel,
+        amountToSwap: String,
+        fee: SwapFee?,
+        integratedApproval: IntegratedApprovalData?,
+    ): SwapTransactionState {
+        val networkId = fromSwapCurrencyStatus.currency.network.rawId
+        return when {
+            isSolana(networkId) -> onSwapSolanaDex(
+                provider = swapProvider,
+                swapData = swapData,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                amountToSwap = amountToSwap,
+            )
+            isBitcoin(networkId) -> onSwapBitcoinPsbt(
+                provider = swapProvider,
+                swapData = swapData,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                amountToSwap = amountToSwap,
+            )
+            else -> {
+                if (fee == null) return SwapTransactionState.Error.UnknownError
+                onSwapDex(
+                    provider = swapProvider,
+                    swapData = swapData,
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    swapFee = fee,
+                    amountToSwap = amountToSwap,
+                    integratedApproval = integratedApproval,
+                )
             }
         }
     }
@@ -1039,6 +1072,44 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = amount,
             txData = compiledTransaction,
             payInAddress = swapData.transaction.txTo,
+        )
+    }
+
+    /**
+     * Bitcoin DEX swap: the provider returns an almost-complete transaction as a Base64 PSBT in
+     * `txData`. We derive our inputs, sign and broadcast it ourselves (see [SignAndBroadcastPsbtUseCase]),
+     * then reuse the shared DEX success path. No fee handling: the fee is already embedded in the PSBT.
+     */
+    private suspend fun onSwapBitcoinPsbt(
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        amountToSwap: String,
+    ): SwapTransactionState {
+        val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val psbtBase64 = requireNotNull(dexTransaction?.txData) { "txData is null" }
+        val amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
+
+        val result = signAndBroadcastPsbtUseCase(
+            psbtBase64 = psbtBase64,
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            network = fromSwapCurrencyStatus.currency.network,
+        )
+        return result.fold(
+            ifRight = { txHash ->
+                finalizeDexSwapSuccess(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    provider = provider,
+                    swapData = swapData,
+                    amount = amount,
+                    txHash = txHash,
+                    payInAddress = swapData.transaction.txTo,
+                )
+            },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
         )
     }
 
@@ -2281,10 +2352,6 @@ internal class SwapInteractorImpl @Inject constructor(
             TangemLogger.e("Failed to get quotes: ${e.message.orEmpty()}", e)
             emptySet()
         }
-    }
-
-    private fun isSolana(networkId: String): Boolean {
-        return networkId == Blockchain.Solana.toNetworkId()
     }
 
     private fun getPayoutAddress(txData: TransactionData.Uncompiled): String {
