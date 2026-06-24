@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "442ac578743a8b624777711cf49c77e2",
+    "identityHash": "55f2651d215126dd0465b9c711165cba",
     "entities": [
       {
         "tableName": "express_provider",
@@ -474,11 +474,88 @@
             "address"
           ]
         }
+      },
+      {
+        "tableName": "onramp_country",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`code` TEXT NOT NULL, `name` TEXT NOT NULL, `image` TEXT NOT NULL, `alpha3` TEXT NOT NULL, `continent` TEXT NOT NULL, `onramp_available` INTEGER NOT NULL, `currency_name` TEXT NOT NULL, `currency_code` TEXT NOT NULL, `currency_image` TEXT, `currency_precision` INTEGER NOT NULL, `currency_unit` TEXT NOT NULL, PRIMARY KEY(`code`))",
+        "fields": [
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "image",
+            "columnName": "image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alpha3",
+            "columnName": "alpha3",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "continent",
+            "columnName": "continent",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "onrampAvailable",
+            "columnName": "onramp_available",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.name",
+            "columnName": "currency_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.code",
+            "columnName": "currency_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.image",
+            "columnName": "currency_image",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "defaultCurrency.precision",
+            "columnName": "currency_precision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.unit",
+            "columnName": "currency_unit",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "code"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '442ac578743a8b624777711cf49c77e2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55f2651d215126dd0465b9c711165cba')"
     ]
   }
 }
