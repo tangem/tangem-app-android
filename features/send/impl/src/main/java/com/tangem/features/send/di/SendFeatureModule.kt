@@ -5,7 +5,7 @@ import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.send.api.SendFeatureToggles
-import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.entrypoint.DefaultSendEntryPointComponent
 import com.tangem.features.send.send.DefaultSendComponent
 import com.tangem.features.send.sendnft.DefaultNFTSendComponent

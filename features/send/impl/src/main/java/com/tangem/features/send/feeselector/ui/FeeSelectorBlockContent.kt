@@ -46,11 +46,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.features.send.api.entity.FeeExtraInfo
-import com.tangem.features.send.api.entity.FeeFiatRateUM
-import com.tangem.features.send.api.entity.FeeItem
-import com.tangem.features.send.api.entity.FeeNonce
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeFiatRateUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.impl.R
 import com.tangem.utils.extensions.isSingleItem
 import kotlinx.collections.immutable.persistentListOf

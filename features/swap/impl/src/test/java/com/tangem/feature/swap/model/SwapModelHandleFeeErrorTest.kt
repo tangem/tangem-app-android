@@ -6,7 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import io.mockk.coVerify
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi

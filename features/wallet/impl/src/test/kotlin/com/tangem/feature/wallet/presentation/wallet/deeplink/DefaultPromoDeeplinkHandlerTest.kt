@@ -82,7 +82,6 @@ class DefaultPromoDeeplinkHandlerTest {
         every { analyticsEventHandler.send(any()) } returns Unit
         messages = mutableListOf()
         every { uiMessageSender.send(capture(messages)) } just runs
-
     }
 
     @Test
@@ -499,13 +498,21 @@ class DefaultPromoDeeplinkHandlerTest {
             )
             coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard, btcStatusCustom))
 
-            val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCustom)
-            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
+            val btcCoinCustom =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCustom)
+            val btcCoinCard =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(
                 btcCoinCustom,
                 btcCoinCard,
             )
-            coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcustom", promoCode) } returns Either.Right("ok")
+            coEvery {
+                activateBitcoinPromocodeUseCase.invoke(
+                    any(),
+                    "bc1qcustom",
+                    promoCode
+                )
+            } returns Either.Right("ok")
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
@@ -556,7 +563,8 @@ class DefaultPromoDeeplinkHandlerTest {
             )
             coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard, btcStatusCustom))
 
-            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
+            val btcCoinCard =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
 
             coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcard", promoCode) } returns Either.Right("ok")
@@ -643,7 +651,7 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(),any(), any()) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any(), any()) }
 
             verify(
                 exactly = 1,
@@ -673,8 +681,10 @@ class DefaultPromoDeeplinkHandlerTest {
             )
             coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard))
 
-            val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCustom)
-            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
+            val btcCoinCustom =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCustom)
+            val btcCoinCard =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(
                 btcCoinCustom,
                 btcCoinCard,
@@ -732,7 +742,8 @@ class DefaultPromoDeeplinkHandlerTest {
             )
             coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCustom))
 
-            val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
+            val btcCoinCard =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCard)
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
@@ -787,7 +798,8 @@ class DefaultPromoDeeplinkHandlerTest {
             )
             coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatusCard))
 
-            val btcCoinCustom = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCustom)
+            val btcCoinCustom =
+                buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), derivationPath = dpCustom)
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCustom)
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)

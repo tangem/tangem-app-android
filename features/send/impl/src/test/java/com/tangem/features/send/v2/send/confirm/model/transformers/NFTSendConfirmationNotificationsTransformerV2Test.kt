@@ -10,12 +10,12 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.features.send.api.entity.CustomFeeFieldUM
-import com.tangem.features.send.api.entity.FeeExtraInfo
-import com.tangem.features.send.api.entity.FeeFiatRateUM
-import com.tangem.features.send.api.entity.FeeItem
-import com.tangem.features.send.api.entity.FeeNonce
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.CustomFeeFieldUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeFiatRateUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformerV2
 import io.mockk.mockk
@@ -381,7 +381,7 @@ class NFTSendConfirmationNotificationsTransformerV2Test {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = false,
                 isTronToken = false,
-                feeCryptoCurrencyStatus = cryptoCurrencyStatus
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),

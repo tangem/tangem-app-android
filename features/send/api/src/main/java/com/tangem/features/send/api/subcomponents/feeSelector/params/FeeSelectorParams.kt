@@ -1,4 +1,4 @@
-package com.tangem.features.send.api.params
+package com.tangem.features.send.api.subcomponents.feeSelector.params
 
 import arrow.core.Either
 import com.tangem.blockchain.common.transaction.Fee
@@ -9,8 +9,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 
 sealed class FeeSelectorParams {
     abstract val state: FeeSelectorUM

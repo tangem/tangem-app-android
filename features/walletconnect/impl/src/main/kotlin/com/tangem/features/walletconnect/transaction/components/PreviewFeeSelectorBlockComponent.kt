@@ -17,8 +17,8 @@ import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.impl.R
 
 internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {

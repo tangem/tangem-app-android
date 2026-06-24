@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.send.api.entity.CustomFeeFieldUM
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.CustomFeeFieldUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.subcomponents.fee.model.converters.custom.bitcoin.BitcoinCustomFeeConverter
 import com.tangem.features.send.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter

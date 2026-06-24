@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.common.ui.tapHelp
 import com.tangem.features.send.send.ui.state.SendUM
