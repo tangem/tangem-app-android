@@ -1,0 +1,280 @@
+{
+  "hubs": [
+    "domain:models",
+    "domain:core",
+    "domain:app-currency",
+    "domain:settings",
+    "domain:balance-hiding",
+    "domain:feedback",
+    "domain:demo"
+  ],
+  "groups": {
+    "shell": {
+      "label": "app shell",
+      "color": "#5A6677",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.07
+      }
+    },
+    "entry": {
+      "label": "entry",
+      "color": "#7DA2FF",
+      "anchor": {
+        "x": 0.18,
+        "y": 0.24
+      }
+    },
+    "onboarding": {
+      "label": "onboarding",
+      "color": "#34D8C4",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.24
+      }
+    },
+    "wallet": {
+      "label": "wallet",
+      "color": "#E8A33D",
+      "anchor": {
+        "x": 0.82,
+        "y": 0.24
+      }
+    },
+    "portfolio": {
+      "label": "portfolio",
+      "color": "#B69CFF",
+      "anchor": {
+        "x": 0.18,
+        "y": 0.52
+      }
+    },
+    "tokenaction": {
+      "label": "token actions",
+      "color": "#FF8F6B",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.52
+      }
+    },
+    "markets": {
+      "label": "markets / news",
+      "color": "#5BD08A",
+      "anchor": {
+        "x": 0.82,
+        "y": 0.52
+      }
+    },
+    "settings": {
+      "label": "settings",
+      "color": "#9AA7B8",
+      "anchor": {
+        "x": 0.18,
+        "y": 0.8
+      }
+    },
+    "tangempay": {
+      "label": "tangem pay",
+      "color": "#F2C14E",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.8
+      }
+    },
+    "misc": {
+      "label": "misc",
+      "color": "#C7CFDA",
+      "anchor": {
+        "x": 0.82,
+        "y": 0.8
+      }
+    }
+  },
+  "groupOrder": [
+    "shell",
+    "entry",
+    "onboarding",
+    "wallet",
+    "portfolio",
+    "tokenaction",
+    "markets",
+    "settings",
+    "tangempay",
+    "misc"
+  ],
+  "defaultGroup": "misc",
+  "defaultOwner": "app",
+  "screenGroups": {
+    "Initial": "entry",
+    "Home": "entry",
+    "Welcome": "entry",
+    "Disclaimer": "entry",
+    "CreateWalletSelection": "onboarding",
+    "CreateWalletStart": "onboarding",
+    "CreateHardwareWallet": "onboarding",
+    "CreateMobileWallet": "onboarding",
+    "AddExistingWallet": "onboarding",
+    "Onboarding": "onboarding",
+    "CreateWalletBackup": "onboarding",
+    "WalletBackup": "onboarding",
+    "WalletHardwareBackup": "onboarding",
+    "UpgradeWallet": "onboarding",
+    "WalletActivation": "onboarding",
+    "AccessCodeRecovery": "onboarding",
+    "UpdateAccessCode": "onboarding",
+    "ViewPhrase": "onboarding",
+    "Wallet": "wallet",
+    "Stories": "wallet",
+    "NFT": "wallet",
+    "NFTSend": "wallet",
+    "PushNotification": "wallet",
+    "PushNotificationSettings": "wallet",
+    "CurrencyDetails": "portfolio",
+    "ManageTokens": "portfolio",
+    "ChooseManagedTokens": "portfolio",
+    "CreateAccount": "portfolio",
+    "EditAccount": "portfolio",
+    "AccountDetails": "portfolio",
+    "ArchivedAccountList": "portfolio",
+    "Send": "tokenaction",
+    "SendEntryPoint": "tokenaction",
+    "Swap": "tokenaction",
+    "SwapCrypto": "tokenaction",
+    "Onramp": "tokenaction",
+    "OnrampSuccess": "tokenaction",
+    "BuyCrypto": "tokenaction",
+    "SellCrypto": "tokenaction",
+    "Staking": "tokenaction",
+    "YieldSupplyEntry": "tokenaction",
+    "Earn": "tokenaction",
+    "Markets": "markets",
+    "MarketsTokenDetails": "markets",
+    "News": "markets",
+    "NewsDetails": "markets",
+    "Details": "settings",
+    "DetailsSecurity": "settings",
+    "CardSettings": "settings",
+    "AppSettings": "settings",
+    "ResetToFactory": "settings",
+    "WalletSettings": "settings",
+    "ForgetWallet": "settings",
+    "AppCurrencySelector": "settings",
+    "ReferralProgram": "settings",
+    "AddressBook": "settings",
+    "WalletConnectSessions": "settings",
+    "TangemPayDetails": "tangempay",
+    "TangemPayHotWalletOnboarding": "tangempay",
+    "TangemPayOnboarding": "tangempay",
+    "Kyc": "tangempay",
+    "QrScanning": "misc",
+    "Usedesk": "misc",
+    "Survey": "misc"
+  },
+  "screenOwners": {
+    "Initial": "app",
+    "Home": "features:home",
+    "Welcome": "features:welcome",
+    "Disclaimer": "features:disclaimer",
+    "Wallet": "features:wallet",
+    "CurrencyDetails": "features:tokendetails",
+    "Send": "features:send",
+    "Details": "features:details",
+    "DetailsSecurity": "features:details",
+    "Usedesk": "features:usedesk",
+    "CardSettings": "features:details",
+    "AppSettings": "features:details",
+    "ResetToFactory": "features:details",
+    "AccessCodeRecovery": "features:onboarding-v2",
+    "ManageTokens": "features:manage-tokens",
+    "ChooseManagedTokens": "features:manage-tokens",
+    "WalletConnectSessions": "features:walletconnect",
+    "AddressBook": "features:address-book",
+    "QrScanning": "features:qr-scanning",
+    "ReferralProgram": "features:referral",
+    "Swap": "features:swap",
+    "AppCurrencySelector": "features:wallet-settings",
+    "Staking": "features:staking",
+    "PushNotification": "features:push-notifications",
+    "WalletSettings": "features:wallet-settings",
+    "PushNotificationSettings": "features:push-notification-settings",
+    "WalletBackup": "features:onboarding-v2",
+    "WalletHardwareBackup": "features:onboarding-v2",
+    "Markets": "features:markets",
+    "MarketsTokenDetails": "features:markets",
+    "Onramp": "features:onramp",
+    "OnrampSuccess": "features:onramp",
+    "BuyCrypto": "features:onramp",
+    "SellCrypto": "features:onramp",
+    "SwapCrypto": "features:swap-v2",
+    "Onboarding": "features:onboarding-v2",
+    "Stories": "features:stories",
+    "NFT": "features:nft",
+    "NFTSend": "features:nft",
+    "CreateWalletSelection": "features:create-wallet-selection",
+    "CreateWalletStart": "features:create-wallet-start",
+    "CreateHardwareWallet": "features:onboarding-v2",
+    "CreateMobileWallet": "features:hot-wallet",
+    "UpgradeWallet": "features:hot-wallet",
+    "AddExistingWallet": "features:onboarding-v2",
+    "WalletActivation": "features:tangempay",
+    "CreateWalletBackup": "features:onboarding-v2",
+    "UpdateAccessCode": "features:onboarding-v2",
+    "ViewPhrase": "features:onboarding-v2",
+    "ForgetWallet": "features:wallet-settings",
+    "SendEntryPoint": "features:send",
+    "CreateAccount": "features:account",
+    "EditAccount": "features:account",
+    "AccountDetails": "features:account",
+    "ArchivedAccountList": "features:account",
+    "TangemPayDetails": "features:tangempay",
+    "TangemPayHotWalletOnboarding": "features:tangempay",
+    "TangemPayOnboarding": "features:tangempay",
+    "Kyc": "features:kyc",
+    "Survey": "features:survey",
+    "YieldSupplyEntry": "features:yield-supply",
+    "NewsDetails": "features:feed",
+    "News": "features:feed",
+    "Earn": "features:feed"
+  },
+  "teams": [
+    {
+      "id": "grow",
+      "name": "Grow",
+      "color": "#FF6FD8",
+      "roots": [
+        "features:approval",
+        "features:onramp",
+        "features:send",
+        "features:staking",
+        "features:swap",
+        "features:swap-v2",
+        "features:yield-supply",
+        "domain:express",
+        "domain:offramp",
+        "domain:onramp",
+        "domain:staking",
+        "domain:swap",
+        "domain:yield-supply",
+        "domain:transaction",
+        "data:express",
+        "data:onramp",
+        "data:staking",
+        "data:swap",
+        "data:yield-supply"
+      ],
+      "screens": [
+        "Send",
+        "Swap",
+        "Staking",
+        "Onramp",
+        "OnrampSuccess",
+        "BuyCrypto",
+        "SellCrypto",
+        "SwapCrypto",
+        "NFTSend",
+        "SendEntryPoint",
+        "YieldSupplyEntry"
+      ]
+    }
+  ]
+}

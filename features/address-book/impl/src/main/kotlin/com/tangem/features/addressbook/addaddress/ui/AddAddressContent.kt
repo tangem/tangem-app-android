@@ -3,14 +3,15 @@ package com.tangem.features.addressbook.addaddress.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.ds.button.PrimaryTangemButton
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -20,9 +21,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.addressbook.addaddress.contract.AddAddressUM
-import com.tangem.features.addressbook.addaddress.contract.AddressFieldUM
-import kotlinx.collections.immutable.persistentListOf
+import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM
+import com.tangem.features.addressbook.addaddress.ui.state.AddressFieldUM
 
 @Composable
 internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifier) {
@@ -34,7 +34,6 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemTopBar(
-            modifier = Modifier.statusBarsPadding(),
             title = resourceReference(R.string.address_book_add_address),
             startContent = {
                 TangemButton(
@@ -47,14 +46,23 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
         )
 
         RecipientRow(
+            modifier = Modifier.padding(horizontal = 16.dp),
             addressField = state.addressField,
             onValueChange = state.onAddressChange,
             onAddressClear = state.onAddressClear,
             onQrClick = state.onQrClick,
             onPasteClick = state.onPasteClick,
         )
-        SpacerH12()
-        NetworkBlock(state.chosenNetworkStateUM)
+        SpacerH(20.dp)
+        NetworkBlock(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .fillMaxWidth()
+                .background(color = TangemTheme.colors3.bg.secondary),
+            chosenNetworkStateUM = state.chosenNetworkStateUM,
+            onNetworkSelectClick = state.onNetworkClick,
+        )
         PrimaryButton(state.buttonUM)
     }
 }
@@ -62,13 +70,15 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
 @Composable
 private fun ColumnScope.PrimaryButton(buttonUM: TangemButtonUM) {
     Spacer(modifier = Modifier.weight(1f))
-
-    PrimaryTangemButton(
+    TangemButton(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-        buttonUM = buttonUM,
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        onClick = buttonUM.onClick,
+        isEnabled = buttonUM.isEnabled,
+        isLoading = buttonUM.isLoading,
+        size = TangemButton.Size.X12,
+        text = buttonUM.text,
     )
 }
 
@@ -84,7 +94,6 @@ private fun Preview_AddAddressContent() {
                     placeholder = resourceReference(R.string.address_book_enter_address),
                     label = resourceReference(R.string.common_address),
                 ),
-                availableNetworks = persistentListOf(),
                 buttonUM = TangemButtonUM(
                     text = TextReference.Res(R.string.address_book_add_address),
                     type = TangemButtonType.Primary,
@@ -97,6 +106,7 @@ private fun Preview_AddAddressContent() {
                 onPasteClick = {},
                 onQrClick = {},
                 onBackClick = {},
+                onNetworkClick = {},
             ),
         )
     }

@@ -10,6 +10,10 @@ android {
 
 dependencies {
 
+    /* Project - Common */
+    api(projects.common.routing)
+    implementation(projects.common.ui)
+
     /* Project - Domain */
     implementation(projects.domain.models)
 
@@ -19,4 +23,7 @@ dependencies {
 
     /* Compose */
     implementation(deps.compose.runtime)
+
+    /** Other */
+    implementation(deps.kotlin.immutable.collections)
 }

@@ -12,9 +12,7 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
 import com.tangem.feature.swap.DefaultSwapRepository
 import com.tangem.feature.swap.NoOpSwapFeedbackRepository
@@ -40,23 +38,19 @@ internal class SwapDataModule {
         tangemExpressApi: TangemExpressApi,
         coroutineDispatcher: CoroutineDispatcherProvider,
         dataSignature: DataSignatureVerifier,
-        walletManagerFacade: WalletManagersFacade,
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
         appPreferencesStore: AppPreferencesStore,
-        rampStateManager: RampStateManager,
         expressHistoryDao: ExpressHistoryDao,
         txHistoryFeatureToggles: TxHistoryFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
             coroutineDispatcher = coroutineDispatcher,
-            walletManagersFacade = walletManagerFacade,
             errorsDataConverter = errorsDataConverter,
             dataSignatureVerifier = dataSignature,
             moshi = moshi,
             appPreferencesStore = appPreferencesStore,
-            rampStateManager = rampStateManager,
             expressHistoryDao = expressHistoryDao,
             txHistoryFeatureToggles = txHistoryFeatureToggles,
         )

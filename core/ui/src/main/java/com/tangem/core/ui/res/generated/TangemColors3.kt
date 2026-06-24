@@ -19,6 +19,7 @@ class TangemColors3 internal constructor(
     val border: Border,
     val overlay: Overlay,
     val interaction: Interaction,
+    val glow: Glow,
     val material: Material,
 ) {
 
@@ -135,6 +136,7 @@ class TangemColors3 internal constructor(
             orange: Color,
             yellow: Color,
             green: Color,
+            neutral: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
@@ -148,6 +150,8 @@ class TangemColors3 internal constructor(
                 private set
             var green by mutableStateOf(green)
                 private set
+            var neutral by mutableStateOf(neutral)
+                private set
 
             fun update(other: Accent) {
                 blue = other.blue
@@ -156,6 +160,7 @@ class TangemColors3 internal constructor(
                 orange = other.orange
                 yellow = other.yellow
                 green = other.green
+                neutral = other.neutral
             }
         }
 
@@ -264,6 +269,7 @@ class TangemColors3 internal constructor(
             orange: Color,
             yellow: Color,
             green: Color,
+            neutral: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
@@ -277,6 +283,8 @@ class TangemColors3 internal constructor(
                 private set
             var green by mutableStateOf(green)
                 private set
+            var neutral by mutableStateOf(neutral)
+                private set
 
             fun update(other: Accent) {
                 blue = other.blue
@@ -285,6 +293,7 @@ class TangemColors3 internal constructor(
                 orange = other.orange
                 yellow = other.yellow
                 green = other.green
+                neutral = other.neutral
             }
         }
 
@@ -361,6 +370,7 @@ class TangemColors3 internal constructor(
             orange: Color,
             yellow: Color,
             green: Color,
+            neutral: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
@@ -374,6 +384,8 @@ class TangemColors3 internal constructor(
                 private set
             var green by mutableStateOf(green)
                 private set
+            var neutral by mutableStateOf(neutral)
+                private set
 
             fun update(other: Accent) {
                 blue = other.blue
@@ -382,6 +394,7 @@ class TangemColors3 internal constructor(
                 orange = other.orange
                 yellow = other.yellow
                 green = other.green
+                neutral = other.neutral
             }
         }
 
@@ -485,6 +498,7 @@ class TangemColors3 internal constructor(
             orange: Color,
             yellow: Color,
             green: Color,
+            neutral: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
@@ -498,6 +512,8 @@ class TangemColors3 internal constructor(
                 private set
             var green by mutableStateOf(green)
                 private set
+            var neutral by mutableStateOf(neutral)
+                private set
 
             fun update(other: Accent) {
                 blue = other.blue
@@ -506,6 +522,7 @@ class TangemColors3 internal constructor(
                 orange = other.orange
                 yellow = other.yellow
                 green = other.green
+                neutral = other.neutral
             }
         }
 
@@ -534,28 +551,30 @@ class TangemColors3 internal constructor(
 
     @Stable
     class Interaction internal constructor(
-        pressStaticLight: Color,
-        pressStaticDark: Color,
         val press: Press,
         val focusRing: FocusRing,
     ) {
-        var pressStaticLight by mutableStateOf(pressStaticLight)
-            private set
-        var pressStaticDark by mutableStateOf(pressStaticDark)
-            private set
 
         @Stable
         class Press internal constructor(
             default: Color,
+            staticLight: Color,
+            staticDark: Color,
             inverse: Color,
         ) {
             var default by mutableStateOf(default)
+                private set
+            var staticLight by mutableStateOf(staticLight)
+                private set
+            var staticDark by mutableStateOf(staticDark)
                 private set
             var inverse by mutableStateOf(inverse)
                 private set
 
             fun update(other: Press) {
                 default = other.default
+                staticLight = other.staticLight
+                staticDark = other.staticDark
                 inverse = other.inverse
             }
         }
@@ -577,10 +596,316 @@ class TangemColors3 internal constructor(
         }
 
         fun update(other: Interaction) {
-            pressStaticLight = other.pressStaticLight
-            pressStaticDark = other.pressStaticDark
             press.update(other.press)
             focusRing.update(other.focusRing)
+        }
+    }
+
+    @Stable
+    class Glow internal constructor(
+        val magic: Magic,
+        val magicBlend: MagicBlend,
+        val success: Success,
+        val error: Error,
+        val warning: Warning,
+        val info: Info,
+    ) {
+
+        @Stable
+        class Magic internal constructor(
+            step1: Color,
+            step2: Color,
+            step3: Color,
+            step4: Color,
+            step5: Color,
+            step6: Color,
+            step7: Color,
+            step8: Color,
+            step9: Color,
+            step10: Color,
+        ) {
+            var step1 by mutableStateOf(step1)
+                private set
+            var step2 by mutableStateOf(step2)
+                private set
+            var step3 by mutableStateOf(step3)
+                private set
+            var step4 by mutableStateOf(step4)
+                private set
+            var step5 by mutableStateOf(step5)
+                private set
+            var step6 by mutableStateOf(step6)
+                private set
+            var step7 by mutableStateOf(step7)
+                private set
+            var step8 by mutableStateOf(step8)
+                private set
+            var step9 by mutableStateOf(step9)
+                private set
+            var step10 by mutableStateOf(step10)
+                private set
+
+            fun update(other: Magic) {
+                step1 = other.step1
+                step2 = other.step2
+                step3 = other.step3
+                step4 = other.step4
+                step5 = other.step5
+                step6 = other.step6
+                step7 = other.step7
+                step8 = other.step8
+                step9 = other.step9
+                step10 = other.step10
+            }
+        }
+
+        @Stable
+        class MagicBlend internal constructor(
+            step1: Color,
+            step2: Color,
+            step3: Color,
+            step4: Color,
+            step5: Color,
+            step6: Color,
+            step7: Color,
+            step8: Color,
+            step9: Color,
+            step10: Color,
+        ) {
+            var step1 by mutableStateOf(step1)
+                private set
+            var step2 by mutableStateOf(step2)
+                private set
+            var step3 by mutableStateOf(step3)
+                private set
+            var step4 by mutableStateOf(step4)
+                private set
+            var step5 by mutableStateOf(step5)
+                private set
+            var step6 by mutableStateOf(step6)
+                private set
+            var step7 by mutableStateOf(step7)
+                private set
+            var step8 by mutableStateOf(step8)
+                private set
+            var step9 by mutableStateOf(step9)
+                private set
+            var step10 by mutableStateOf(step10)
+                private set
+
+            fun update(other: MagicBlend) {
+                step1 = other.step1
+                step2 = other.step2
+                step3 = other.step3
+                step4 = other.step4
+                step5 = other.step5
+                step6 = other.step6
+                step7 = other.step7
+                step8 = other.step8
+                step9 = other.step9
+                step10 = other.step10
+            }
+        }
+
+        @Stable
+        class Success internal constructor(
+            step1: Color,
+            step2: Color,
+            step3: Color,
+            step4: Color,
+            step5: Color,
+            step6: Color,
+            step7: Color,
+            step8: Color,
+            step9: Color,
+            step10: Color,
+        ) {
+            var step1 by mutableStateOf(step1)
+                private set
+            var step2 by mutableStateOf(step2)
+                private set
+            var step3 by mutableStateOf(step3)
+                private set
+            var step4 by mutableStateOf(step4)
+                private set
+            var step5 by mutableStateOf(step5)
+                private set
+            var step6 by mutableStateOf(step6)
+                private set
+            var step7 by mutableStateOf(step7)
+                private set
+            var step8 by mutableStateOf(step8)
+                private set
+            var step9 by mutableStateOf(step9)
+                private set
+            var step10 by mutableStateOf(step10)
+                private set
+
+            fun update(other: Success) {
+                step1 = other.step1
+                step2 = other.step2
+                step3 = other.step3
+                step4 = other.step4
+                step5 = other.step5
+                step6 = other.step6
+                step7 = other.step7
+                step8 = other.step8
+                step9 = other.step9
+                step10 = other.step10
+            }
+        }
+
+        @Stable
+        class Error internal constructor(
+            step1: Color,
+            step2: Color,
+            step3: Color,
+            step4: Color,
+            step5: Color,
+            step6: Color,
+            step7: Color,
+            step8: Color,
+            step9: Color,
+            step10: Color,
+        ) {
+            var step1 by mutableStateOf(step1)
+                private set
+            var step2 by mutableStateOf(step2)
+                private set
+            var step3 by mutableStateOf(step3)
+                private set
+            var step4 by mutableStateOf(step4)
+                private set
+            var step5 by mutableStateOf(step5)
+                private set
+            var step6 by mutableStateOf(step6)
+                private set
+            var step7 by mutableStateOf(step7)
+                private set
+            var step8 by mutableStateOf(step8)
+                private set
+            var step9 by mutableStateOf(step9)
+                private set
+            var step10 by mutableStateOf(step10)
+                private set
+
+            fun update(other: Error) {
+                step1 = other.step1
+                step2 = other.step2
+                step3 = other.step3
+                step4 = other.step4
+                step5 = other.step5
+                step6 = other.step6
+                step7 = other.step7
+                step8 = other.step8
+                step9 = other.step9
+                step10 = other.step10
+            }
+        }
+
+        @Stable
+        class Warning internal constructor(
+            step1: Color,
+            step2: Color,
+            step3: Color,
+            step4: Color,
+            step5: Color,
+            step6: Color,
+            step7: Color,
+            step8: Color,
+            step9: Color,
+            step10: Color,
+        ) {
+            var step1 by mutableStateOf(step1)
+                private set
+            var step2 by mutableStateOf(step2)
+                private set
+            var step3 by mutableStateOf(step3)
+                private set
+            var step4 by mutableStateOf(step4)
+                private set
+            var step5 by mutableStateOf(step5)
+                private set
+            var step6 by mutableStateOf(step6)
+                private set
+            var step7 by mutableStateOf(step7)
+                private set
+            var step8 by mutableStateOf(step8)
+                private set
+            var step9 by mutableStateOf(step9)
+                private set
+            var step10 by mutableStateOf(step10)
+                private set
+
+            fun update(other: Warning) {
+                step1 = other.step1
+                step2 = other.step2
+                step3 = other.step3
+                step4 = other.step4
+                step5 = other.step5
+                step6 = other.step6
+                step7 = other.step7
+                step8 = other.step8
+                step9 = other.step9
+                step10 = other.step10
+            }
+        }
+
+        @Stable
+        class Info internal constructor(
+            step1: Color,
+            step2: Color,
+            step3: Color,
+            step4: Color,
+            step5: Color,
+            step6: Color,
+            step7: Color,
+            step8: Color,
+            step9: Color,
+            step10: Color,
+        ) {
+            var step1 by mutableStateOf(step1)
+                private set
+            var step2 by mutableStateOf(step2)
+                private set
+            var step3 by mutableStateOf(step3)
+                private set
+            var step4 by mutableStateOf(step4)
+                private set
+            var step5 by mutableStateOf(step5)
+                private set
+            var step6 by mutableStateOf(step6)
+                private set
+            var step7 by mutableStateOf(step7)
+                private set
+            var step8 by mutableStateOf(step8)
+                private set
+            var step9 by mutableStateOf(step9)
+                private set
+            var step10 by mutableStateOf(step10)
+                private set
+
+            fun update(other: Info) {
+                step1 = other.step1
+                step2 = other.step2
+                step3 = other.step3
+                step4 = other.step4
+                step5 = other.step5
+                step6 = other.step6
+                step7 = other.step7
+                step8 = other.step8
+                step9 = other.step9
+                step10 = other.step10
+            }
+        }
+
+        fun update(other: Glow) {
+            magic.update(other.magic)
+            magicBlend.update(other.magicBlend)
+            success.update(other.success)
+            error.update(other.error)
+            warning.update(other.warning)
+            info.update(other.info)
         }
     }
 
@@ -709,6 +1034,7 @@ class TangemColors3 internal constructor(
         border.update(other.border)
         overlay.update(other.overlay)
         interaction.update(other.interaction)
+        glow.update(other.glow)
         material.update(other.material)
     }
 }

@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -14,7 +15,6 @@ import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.BeforeEach
@@ -29,14 +29,16 @@ internal class DefaultAppTxHistoryFetcherTest {
     private val selectedWalletUseCase: GetSelectedWalletUseCase = mockk()
     private val walletFetcherFactory: DefaultWalletTxHistoryFetcher.Factory = mockk()
     private val expressRepository: ExpressRepository = mockk()
+    private val onrampRepository: OnrampRepository = mockk()
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
     @BeforeEach
     fun setup() {
-        clearMocks(getWalletsUseCase, selectedWalletUseCase, walletFetcherFactory, expressRepository)
+        clearMocks(getWalletsUseCase, selectedWalletUseCase, walletFetcherFactory, expressRepository, onrampRepository)
         every { selectedWalletUseCase.selectedFlow() } returns emptyFlow()
         coEvery { expressRepository.getProviders(any(), any()) } returns emptyList()
+        coEvery { onrampRepository.fetchCountries(any()) } returns emptyList()
     }
 
     @Test
@@ -147,15 +149,16 @@ internal class DefaultAppTxHistoryFetcherTest {
     }
 
     @Test
-    fun `loads express providers when selected wallet is multi-currency`() = runTest {
+    fun `loads express providers and onramp countries for the first wallet on init`() = runTest {
         // Arrange
         val utils = createUtils()
-        every { getWalletsUseCase.invokeAsMap(any(), any()) } returns MutableStateFlow(linkedMapOf())
         val wallet = mockk<UserWallet.Cold>(relaxed = true) {
             every { isMultiCurrency } returns true
             every { walletId } returns WALLET_ID_1
         }
-        every { selectedWalletUseCase.selectedFlow() } returns flowOf(wallet)
+        every { getWalletsUseCase.invokeAsMap(any(), any()) } returns
+            MutableStateFlow(linkedMapOf(WALLET_ID_1 to wallet))
+        every { walletFetcherFactory.create(WALLET_ID_1) } returns relaxedWalletFetcher()
 
         // Act
         createFetcher(utils)
@@ -163,48 +166,40 @@ internal class DefaultAppTxHistoryFetcherTest {
 
         // Assert
         coVerify(exactly = 1) { expressRepository.getProviders(wallet, emptyList()) }
+        coVerify(exactly = 1) { onrampRepository.fetchCountries(wallet) }
     }
 
     @Test
-    fun `loads express providers only once per wallet`() = runTest {
+    fun `does not load express data when there are no wallets`() = runTest {
         // Arrange
         val utils = createUtils()
         every { getWalletsUseCase.invokeAsMap(any(), any()) } returns MutableStateFlow(linkedMapOf())
-        val wallet = mockk<UserWallet.Cold>(relaxed = true) {
-            every { isMultiCurrency } returns true
-            every { walletId } returns WALLET_ID_1
-        }
-        // Same wallet selected several times.
-        every { selectedWalletUseCase.selectedFlow() } returns flowOf(wallet, wallet, wallet)
 
         // Act
         createFetcher(utils)
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { expressRepository.getProviders(wallet, emptyList()) }
+        coVerify(inverse = true) { expressRepository.getProviders(any(), any()) }
+        coVerify(inverse = true) { onrampRepository.fetchCountries(any()) }
     }
 
     @Test
     fun `provider loading failure does not break the wallet pipeline`() = runTest {
         // Arrange
         val utils = createUtils()
-        val walletsFlow = MutableStateFlow(linkedMapOf<UserWalletId, UserWallet>())
-        every { getWalletsUseCase.invokeAsMap(any(), any()) } returns walletsFlow
         val wallet = mockk<UserWallet.Cold>(relaxed = true) {
             every { isMultiCurrency } returns true
             every { walletId } returns WALLET_ID_1
         }
-        every { selectedWalletUseCase.selectedFlow() } returns flowOf(wallet)
+        every { getWalletsUseCase.invokeAsMap(any(), any()) } returns
+            MutableStateFlow(linkedMapOf(WALLET_ID_1 to wallet))
         coEvery { expressRepository.getProviders(any(), any()) } throws RuntimeException("boom")
         val walletFetcher1 = relaxedWalletFetcher()
         every { walletFetcherFactory.create(WALLET_ID_1) } returns walletFetcher1
 
-        val fetcher = createFetcher(utils)
-        advanceUntilIdle()
-
         // Act — the provider error is swallowed, so the wallet pipeline must keep working.
-        walletsFlow.value = linkedMapOf(WALLET_ID_1 to mockk())
+        val fetcher = createFetcher(utils)
         advanceUntilIdle()
 
         // Assert
@@ -220,6 +215,7 @@ internal class DefaultAppTxHistoryFetcherTest {
     private fun createFetcher(utils: DefaultTxHistoryFetcherUtils) = DefaultAppTxHistoryFetcher(
         utils = utils,
         expressRepository = expressRepository,
+        onrampRepository = onrampRepository,
         getWalletsUseCase = getWalletsUseCase,
         selectedWalletUseCase = selectedWalletUseCase,
         walletTxHistoryFetcherFactory = walletFetcherFactory,

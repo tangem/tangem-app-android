@@ -12,8 +12,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.send.api.FeeSelectorComponent
-import com.tangem.features.send.api.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.feeselector.component.extended.FeeExtendedSelectorComponent
 import com.tangem.features.send.feeselector.component.speed.FeeSpeedSelectorComponent

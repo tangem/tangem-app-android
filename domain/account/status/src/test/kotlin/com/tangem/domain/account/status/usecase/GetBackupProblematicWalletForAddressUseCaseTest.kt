@@ -9,7 +9,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrency
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery

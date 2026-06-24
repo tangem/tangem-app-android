@@ -5,10 +5,10 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class PushNotificationPreferencesBody(
-    @Json(name = "transactionAlerts")
-    val areTransactionAlertsEnabled: Boolean,
-    @Json(name = "offersUpdates")
-    val areOffersUpdatesEnabled: Boolean,
-    @Json(name = "priceAlerts")
+    @Json(name = "transactionEventsEnabled")
+    val areTransactionEventsEnabled: Boolean,
+    @Json(name = "offerUpdatesEnabled")
+    val areOfferUpdatesEnabled: Boolean,
+    @Json(name = "priceAlertsEnabled")
     val arePriceAlertsEnabled: Boolean,
 )
