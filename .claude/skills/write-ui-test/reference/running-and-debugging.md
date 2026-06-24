@@ -100,45 +100,28 @@ curl -s http://localhost:8081/__admin/requests/unmatched | jq '.requests[] | "\(
 (harness/emulator) for the hang. A non-empty list names exactly which mapping (or scenario state) the
 local instance is missing.
 
-## The app's own log lives in `files/log.txt`, NOT logcat
+## When the UI fails silently, the cause is usually app-side — two places to look
 
-The mocked build routes `TangemLogger` to a **file** via `FileLogWriter`, so `adb logcat | grep …`
-finds nothing of the app's own logs. When a screen fails silently — fee shows "—", a banner never
-appears, an action button stays disabled — *and* WireMock shows everything matched, the real reason is
-almost always in the app log:
+A screen failing silently with correct locators (fee shows "—", a banner never appears, a button stays
+disabled) is usually missing mock *data* or an app-side gate, not a test bug. Two diagnostics find it:
 
-```bash
-adb exec-out run-as com.tangem.wallet.mocked cat files/log.txt | grep -iE "loadFee|getFee|No native|Error|DataError"
-```
+- **The app's own log is in `files/log.txt`, not logcat** — the mocked build routes `TangemLogger` to a
+  file, so `adb logcat` shows nothing. Fastest path to a root cause (e.g. it surfaced
+  `IllegalStateException: No native currency found` → a native coin missing from the mock):
+  ```bash
+  adb exec-out run-as <pkg> cat files/log.txt | grep -iE "Error|Exception|<feature>"
+  ```
+- **The WireMock journal separates "mock missing" from "app never asked"** —
+  `/__admin/requests/unmatched` finds missing mappings, but if `unmatched=0` *and* the expected request
+  is also absent from the full log (`/__admin/requests`), the app never issued it (a data/state gate) →
+  fix the mock data or the app, not the mappings.
 
-This is the single fastest way to find app-side root causes. It's what pinpointed a transfer-fee failure
-to `loadFee[transfer]: DataError(... IllegalStateException: No native currency found ...)` — i.e. a
-missing native coin in the mock, invisible from the UI and from the WireMock journal alone.
+## "UiAutomationService already registered" — retry, it's not a failure
 
-## WireMock journal: "mock missing" vs "the app never asked"
-
-`/__admin/requests/unmatched` finds *missing* mappings. But when a feature silently doesn't happen (a fee
-that never computes, a banner that never shows), also inspect the **full** request log — the app may not
-be issuing the request at all (an app-side data gate), which is a different problem than a missing mock
-and is NOT fixable by adding mappings:
-
-```bash
-curl -s "http://localhost:8081/__admin/requests?limit=500" \
-  | jq -r '.requests[].request | "\(.method) \(.url)"' | sort -u
-# For RPC providers, also break down by method:
-curl -s "http://localhost:8081/__admin/requests?limit=500" \
-  | jq -r '.requests[].request.body' | grep -oE '"method":"[^"]+"' | sort | uniq -c
-```
-
-`unmatched=0` **and** the expected request absent → the app never asked (data/state gate, e.g. a coin
-missing from the portfolio) → fix the mock *data* or app, not the mappings.
-
-## "UiAutomationService already registered" = back-to-back runs; retry
-
-Rapid consecutive `am instrument` invocations sometimes fail instantly with
-`IllegalStateException: UiAutomationService … already registered!`. It's an instrumentation-teardown
-race between runs, not a test failure — just retry. (The orchestrator/CI spaces runs out and avoids it.)
-When scripting many manual runs, retry-on-this-string rather than counting it as a failure.
+Back-to-back `am instrument` runs sometimes fail instantly with `UiAutomationService … already
+registered!` — a teardown race between runs, not a test failure. Retry. (The orchestrator avoids it by
+spacing runs — another reason to confirm a flaky-looking suite via the orchestrator, not raw
+`am instrument`.)
 
 ## Classify the result — Allure noise vs. real failure
 
