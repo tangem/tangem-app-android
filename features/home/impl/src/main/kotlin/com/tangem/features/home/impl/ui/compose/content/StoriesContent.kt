@@ -26,7 +26,7 @@ import com.tangem.features.home.impl.ui.compose.StoriesTextAnimation
 import com.tangem.core.ui.R
 
 @Composable
-fun StoriesRevolutionaryWallet() {
+internal fun StoriesRevolutionaryWallet() {
     SplitContent(
         topContent = {
             TopContent(
@@ -45,7 +45,7 @@ fun StoriesRevolutionaryWallet() {
 }
 
 @Composable
-fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
+internal fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
@@ -64,7 +64,7 @@ fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
 }
 
 @Composable
-fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
+internal fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
@@ -80,7 +80,7 @@ fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
 }
 
 @Composable
-fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
+internal fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
@@ -96,7 +96,7 @@ fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
 }
 
 @Composable
-fun StoriesWalletForEveryone(stepDuration: Int) {
+internal fun StoriesWalletForEveryone(stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
@@ -127,8 +127,7 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
 @Composable
 private fun SplitContent(topContent: @Composable () -> Unit, bottomContent: @Composable () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
     ) {
@@ -140,16 +139,11 @@ private fun SplitContent(topContent: @Composable () -> Unit, bottomContent: @Com
 @Composable
 private fun TopContent(titleText: String, subtitleText: String) {
     SpacerH(TangemTheme.dimens.spacing36)
-    StoriesTitleText(
-        text = titleText,
-    )
+    StoriesTitleText(text = titleText)
     SpacerH16()
-    StoriesSubtitleText(
-        subtitleText = subtitleText,
-    )
+    StoriesSubtitleText(subtitleText = subtitleText)
 }
 
-@Suppress("MagicNumber")
 @Composable
 private fun StoriesTitleText(text: String) {
     StoriesTextAnimation(
@@ -157,8 +151,7 @@ private fun StoriesTitleText(text: String) {
         slideInDelay = 150,
     ) { modifier ->
         Text(
-            modifier = modifier
-                .padding(start = 40.dp, end = 40.dp),
+            modifier = modifier.padding(horizontal = 40.dp),
             text = text,
             style = TangemTheme.typography.head,
             color = TangemColorPalette.White,
@@ -167,7 +160,6 @@ private fun StoriesTitleText(text: String) {
     }
 }
 
-@Suppress("MagicNumber")
 @Composable
 private fun StoriesSubtitleText(subtitleText: String) {
     StoriesTextAnimation(
@@ -175,8 +167,7 @@ private fun StoriesSubtitleText(subtitleText: String) {
         slideInDelay = 400,
     ) { modifier ->
         Text(
-            modifier = modifier
-                .padding(start = 40.dp, end = 40.dp),
+            modifier = modifier.padding(horizontal = 40.dp),
             text = subtitleText,
             style = TangemTheme.typography.body1,
             color = TangemColorPalette.Dark1,
