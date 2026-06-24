@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -59,9 +60,11 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
+        val isFresh = status.source == StatusSource.ACTUAL && status.error == null
         val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
-        val isAddCardEnabled = status.error == null && !hasIssuingCard
+        val isAddCardEnabled = isFresh && !hasIssuingCard
+        val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -74,7 +77,7 @@ internal class TangemPayDetailsStateFactory(
                 onRefresh = intents::onRefreshSwipe,
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
-                actionButtons = getActionButtonsConfig(isEnabled = status.error == null && hasUnfrozenCard),
+                actionButtons = getActionButtonsConfig(isEnabled = areActionButtonsEnabled),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .let { if (isMultipleCardsEnabled) it else it.take(1) }
