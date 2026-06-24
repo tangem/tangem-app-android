@@ -35,7 +35,17 @@ data class CustomerMeResponse(
         @Json(name = "display_name") val displayName: String?,
         @Json(name = "actual_card_limit") val actualCardLimit: CardLimit?,
         @Json(name = "admin_card_limit") val adminCardLimit: CardLimit?,
+        @Json(name = "product_specification_data_type") val specificationDataType: SpecificationDataType,
     ) {
+        @JsonClass(generateAdapter = false)
+        enum class SpecificationDataType {
+            @Json(name = "ACCOUNT")
+            ACCOUNT,
+
+            @Json(name = "CARD")
+            CARD,
+        }
+
         @JsonClass(generateAdapter = false)
         enum class Status {
             @Json(name = "NEW")
