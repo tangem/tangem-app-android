@@ -9,16 +9,21 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH12
@@ -107,6 +112,15 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        delay(FOCUS_REQUEST_DELAY_MS)
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
     val fieldShape = RoundedCornerShape(TangemTheme.dimens.radius14)
     val colors = TextFieldDefaults.colors().copy(
         focusedContainerColor = TangemTheme.colors.field.focused,
@@ -124,7 +138,8 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
         onValueChange = onValueChange,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size48),
+            .heightIn(min = TangemTheme.dimens.size48)
+            .focusRequester(focusRequester),
         textStyle = TangemTheme.typography.body1.copy(color = TangemTheme.colors.text.primary1),
         cursorBrush = SolidColor(TangemTheme.colors.icon.primary1),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -157,3 +172,5 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
         },
     )
 }
+
+private const val FOCUS_REQUEST_DELAY_MS = 300L
