@@ -853,7 +853,6 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
-        if (isTopUpBlockedByBackupError()) return
 
         modelScope.launch {
             if (checkYieldSupply && needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
