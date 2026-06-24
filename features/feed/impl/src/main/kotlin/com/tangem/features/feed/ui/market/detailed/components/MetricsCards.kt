@@ -311,9 +311,9 @@ private fun RatingChangeIndicator(change: MarketRatingChange24H) {
     when (change) {
         is MarketRatingChange24H.Up -> RatingChangeContent(
             iconRes = R.drawable.ic_arrow_up_8,
-            iconTint = TangemTheme.colors2.markers.iconGreen,
+            iconTint = TangemTheme.colors2.markers.iconBlue,
             changeValue = change.changeValue.toString(),
-            textColor = TangemTheme.colors2.text.status.positive,
+            textColor = TangemTheme.colors2.text.status.accent,
         )
         is MarketRatingChange24H.Down -> RatingChangeContent(
             iconRes = R.drawable.ic_arrow_down_8,
