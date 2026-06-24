@@ -161,8 +161,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.Plain(resRef(R.string.transaction_history_earned_from_stake)),
         )
-        assertThat(result.amount.startsWith(StringsSigns.PLUS)).isFalse()
-        assertThat(result.amount.startsWith(StringsSigns.MINUS)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS)).isFalse()
     }
 
     @Test
@@ -514,7 +514,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount.startsWith(StringsSigns.MINUS)).isTrue()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS)).isTrue()
     }
 
     @Test
@@ -528,7 +528,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount.startsWith(StringsSigns.PLUS)).isTrue()
+        assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isTrue()
     }
 
     @Test
@@ -543,8 +543,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount.startsWith(StringsSigns.MINUS)).isFalse()
-        assertThat(result.amount.startsWith(StringsSigns.PLUS)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isFalse()
     }
 
     @Test
@@ -558,8 +558,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount.startsWith(StringsSigns.MINUS)).isFalse()
-        assertThat(result.amount.startsWith(StringsSigns.PLUS)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isFalse()
     }
 
     // endregion
