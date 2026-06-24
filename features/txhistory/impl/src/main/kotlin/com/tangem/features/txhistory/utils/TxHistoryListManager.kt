@@ -120,16 +120,6 @@ internal class TxHistoryListManager(
         )
     }
 
-    fun txInfoFlow(txHash: String, type: TxInfo.TransactionType): Flow<TxInfo> = state
-        .map { st ->
-            st.rawBatches.asSequence()
-                .flatMap { it.data.items }
-                .firstOrNull { it.txHash == txHash && it.type == type }
-        }
-        .filterNotNull()
-        .distinctUntilChanged()
-        .flowOn(dispatchers.default)
-
     private fun updateState(
         batchListState: BatchListState<Int, PaginationWrapper<TxInfo>>,
         lookupContext: TxHistoryLookupContext?,
