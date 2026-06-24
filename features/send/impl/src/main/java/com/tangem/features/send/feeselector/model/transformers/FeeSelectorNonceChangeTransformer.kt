@@ -1,7 +1,7 @@
 package com.tangem.features.send.feeselector.model.transformers
 
-import com.tangem.features.send.api.entity.FeeNonce
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.utils.transformer.Transformer
 
 internal class FeeSelectorNonceChangeTransformer(
