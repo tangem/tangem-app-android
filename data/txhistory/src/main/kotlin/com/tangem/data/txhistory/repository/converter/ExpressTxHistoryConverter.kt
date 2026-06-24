@@ -10,6 +10,7 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -64,6 +65,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                     decimals = entity.to.decimals,
                     cryptoCurrency = value.toCurrency,
                 ),
+                country = value.country,
             ),
             txInfo = null,
         )
@@ -73,6 +75,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
         val entity: ExpressOnrampEntity,
         val provider: ExpressProvider?,
         val toCurrency: CryptoCurrency? = null,
+        val country: OnrampCountry? = null,
     )
 }
 
