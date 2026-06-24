@@ -1542,6 +1542,7 @@
   <string name="staking_enabled">Staking habilitado</string>
   <string name="staking_error_no_validators_message">No hay validadores disponibles en este momento. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="staking_error_no_validators_title">Staking no disponible</string>
+  <string name="staking_error_unavailable_region">Staking no está disponible en tu región.</string>
   <string name="staking_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que usted está autorizando el uso de su token para el staking.</string>
   <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
@@ -1621,6 +1622,8 @@
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Unstaking de %s</string>
   <string name="staking_transaction_in_progress_text">¡La transacción se está procesando! La validación está en curso en la cadena de bloques. Esto puede tardar unos minutos.</string>
+  <string name="staking_transaction_validation_unsafe">%s Prohibido el staking debido a controles de seguridad</string>
+  <string name="staking_transaction_validation_warning">%s staking sospechoso. Por favor, realice el staking bajo su propia responsabilidad.</string>
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unlocking">Desbloqueando</string>
@@ -1701,7 +1704,7 @@
   <string name="swapping_insufficient_funds_description">No hay fondos suficientes para completar esta transacción. Reduzca el importe a recibir o añada más fondos.</string>
   <string name="swapping_permission_header">Dar autorización</string>
   <string name="swapping_rate_experience_title">Valore su experiencia con el proveedor</string>
-  <string name="swapping_rate_feedback_placeholder">Escriba sus comentarios</string>
+  <string name="swapping_rate_feedback_placeholder">Escriba sus comentarios (opcional)</string>
   <string name="swapping_rate_feedback_submit">Enviar comentarios</string>
   <string name="swapping_rate_feedback_title">¿Qué influyó en su \nexperiencia?</string>
   <string name="swapping_swap_action">Intercambiar</string>
