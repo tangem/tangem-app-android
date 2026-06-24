@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.SpacerH8
@@ -36,7 +37,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 @Composable
-internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = Modifier) {
+internal fun PromoBannersBlock(state: PromoBannersBlockUM, horizontalItemPadding: Dp, modifier: Modifier = Modifier) {
     if (state.banners.isEmpty()) return
 
     val containerColor = bannerContainerColor(state.placeholder)
@@ -51,13 +52,14 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = 
         SingleBanner(
             banner = banner,
             containerColor = containerColor,
-            modifier = modifier,
+            modifier = modifier.padding(horizontal = horizontalItemPadding),
         )
     } else {
         key(state.userWalletId) {
             BannersCarousel(
                 state = state,
                 containerColor = containerColor,
+                horizontalPadding = horizontalItemPadding,
                 modifier = modifier,
             )
         }
@@ -109,7 +111,12 @@ private fun SingleBanner(banner: PromoBannerNotificationUM, containerColor: Colo
 }
 
 @Composable
-private fun BannersCarousel(state: PromoBannersBlockUM, containerColor: Color, modifier: Modifier = Modifier) {
+private fun BannersCarousel(
+    state: PromoBannersBlockUM,
+    containerColor: Color,
+    horizontalPadding: Dp,
+    modifier: Modifier = Modifier,
+) {
     val pagerState = rememberPagerState(
         initialPage = state.initialPage,
         pageCount = { state.banners.size },
@@ -139,6 +146,7 @@ private fun BannersCarousel(state: PromoBannersBlockUM, containerColor: Color, m
             banners = state.banners,
             pagerState = pagerState,
             containerColor = containerColor,
+            horizontalPadding = horizontalPadding,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -163,6 +171,7 @@ private fun SmoothHeightPager(
     banners: List<PromoBannerNotificationUM>,
     pagerState: PagerState,
     containerColor: Color,
+    horizontalPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
     SubcomposeLayout(modifier = modifier) { constraints ->
@@ -206,6 +215,7 @@ private fun SmoothHeightPager(
             ) { page ->
                 val banner = banners.getOrNull(page) ?: return@HorizontalPager
                 BannerNotification(
+                    modifier = Modifier.padding(horizontal = horizontalPadding),
                     config = banner.config,
                     containerColor = containerColor,
                 )
@@ -253,7 +263,11 @@ private fun previewState(bannerCount: Int) = PromoBannersBlockUM(
 @Composable
 private fun Preview_PromoBannersBlock_Legacy() {
     TangemThemePreview {
-        PromoBannersBlock(state = previewState(bannerCount = 2), modifier = Modifier.padding(16.dp))
+        PromoBannersBlock(
+            state = previewState(bannerCount = 2),
+            horizontalItemPadding = 12.dp,
+            modifier = Modifier.padding(vertical = 16.dp),
+        )
     }
 }
 
@@ -262,7 +276,11 @@ private fun Preview_PromoBannersBlock_Legacy() {
 @Composable
 private fun Preview_PromoBannersBlock_Redesign() {
     TangemThemePreviewRedesign {
-        PromoBannersBlock(state = previewState(bannerCount = 2), modifier = Modifier.padding(16.dp))
+        PromoBannersBlock(
+            state = previewState(bannerCount = 2),
+            modifier = Modifier.padding(vertical = 16.dp),
+            horizontalItemPadding = 12.dp,
+        )
     }
 }
 // endregion

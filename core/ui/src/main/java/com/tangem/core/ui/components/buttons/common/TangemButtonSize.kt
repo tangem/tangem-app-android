@@ -3,7 +3,6 @@ package com.tangem.core.ui.components.buttons.common
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
@@ -30,19 +29,6 @@ internal fun TangemButtonSize.toHeightDp(): Dp = when (this) {
     -> TangemTheme.dimens.size36
     TangemButtonSize.WideAction -> TangemTheme.dimens.size40
     TangemButtonSize.Small -> 24.dp
-}
-
-@Composable
-@ReadOnlyComposable
-internal fun TangemButtonSize.toShape(): Shape = when (this) {
-    TangemButtonSize.Default -> TangemTheme.shapes.roundedCornersXMedium
-    TangemButtonSize.WideAction -> TangemTheme.shapes.roundedCornersMedium
-    TangemButtonSize.Text -> TangemTheme.shapes.roundedCornersSmall
-    TangemButtonSize.Selector -> TangemTheme.shapes.roundedCornersSmall
-    TangemButtonSize.Action -> TangemTheme.shapes.roundedCornersMedium
-    TangemButtonSize.TwoLines -> TangemTheme.shapes.roundedCornersXMedium
-    TangemButtonSize.RoundedAction -> TangemTheme.shapes.roundedCornersLarge
-    TangemButtonSize.Small -> TangemTheme.shapes.roundedCornersXMedium
 }
 
 @Composable

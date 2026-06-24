@@ -295,11 +295,14 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
+        val promoBannersBlockComponentContentComponent = ComposableContentComponent { promoModifier ->
+            promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 12.dp)
+        }
 
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
                 state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponent,
+                promoBannersBlockComponent = promoBannersBlockComponentContentComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
                 virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->
@@ -316,7 +319,7 @@ internal class WalletComponent @AssistedInject constructor(
         } else {
             WalletScreen(
                 state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponent,
+                promoBannersBlockComponent = promoBannersBlockComponentContentComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
                 virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->

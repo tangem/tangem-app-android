@@ -67,7 +67,7 @@ internal fun WalletListContent(
 
         promoBannersBlockComponent?.let { component ->
             item(key = "PromoBannersBlock") {
-                component.Content(modifier = itemModifier)
+                component.Content(modifier = Modifier.padding(top = TangemTheme.dimens2.x3))
             }
         }
 

@@ -29,6 +29,7 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(Regex(pattern = ":features:feed:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:manage-tokens:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:txhistory:api\$")) || // provides Composable function
+            contains(Regex(pattern = ":features:promo-banners:api\$")) || // provides Composable function
             contains(Regex(pattern = ":impl\$"))
     }
 
