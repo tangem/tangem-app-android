@@ -154,6 +154,63 @@ Non-obvious points that bite:
 
 Reference: `AddFundsBottomSheetPageObject.trendingTokenWithTitle` and `MainScreenPageObject` (`lazyList`).
 
+## Main-screen Markets bottom sheet swallows touch-based auto-scroll
+
+The main screen hosts a Material3 Markets bottom sheet (nested scroll, like `PullToRefreshBox` above).
+Kakao's **touch-based** auto-scroll — fired when a target is below the fold (an account card, the
+"Generate addresses" button) — is handed to the sheet via nested scroll and **expands it over the
+list**; the next click then lands on a market token (you end up on an unrelated token's details, e.g.
+TRON). Symptoms: `autoscroll did not help` / "3 click attempts", or the test navigates somewhere random.
+
+- **Scroll with semantics, not touch:** `onNode(SCREEN_CONTAINER).performScrollToNode(matcher)` issues a
+  `ScrollToIndex` semantics action that does NOT engage the sheet's nested scroll. (See
+  `MainScreenPageObject.scrollToAccount`.)
+- **Do NOT `device.pressBack()` to collapse the expanded sheet** on the root main screen — back exits the
+  app. The sheet's `BackHandler` only collapses when its `currentValue == Expanded`, which races the
+  press, so back frequently falls through to the activity and quits to the launcher.
+- **Best: avoid the trigger** — keep total fiat > 0 (a price quote for the token, see
+  `swap-transfer-accounts.md`) so the empty-wallet banner doesn't push the list under the sheet's peek in
+  the first place.
+
+## A screen with a perpetual animation keeps Compose non-idle → idle-synced actions flake
+
+**General principle.** Espresso/Kakao/Compose-test actions block on Compose reaching *idle* before they
+act. A screen that animates forever — an auto-advancing stories/onboarding carousel, a looping shimmer, a
+spinner that never stops — never goes idle, so `clickWithAssertion()`, `assertIsDisplayed()`, and Kakao
+waits on it fail intermittently (`… is not displayed`, or `ComposeNotIdleException`). The fix is to **get
+rid of the non-idle screen**, not to out-wait it.
+
+**Polling the animated node does NOT fix it** — two attempts that look right but aren't:
+- `composeTestRule.waitUntilAtLeastOneExists(hasTestTag(TAG), …)` polls the **merged** tree (it has no
+  `useUnmergedTree` option). If the target is a `clickable` element inside a `mergeDescendants` container
+  (common for tap-to-advance surfaces), its tag lives **only in the unmerged tree** → the wait never
+  matches → full-timeout on every run.
+- `waitUntil { runCatching { onScreen { node.assertIsDisplayed() } }.isSuccess }` reads the unmerged tree
+  (good) but Kakao's `assertIsDisplayed` *itself* blocks on idle, and the screen never idles → each probe
+  hangs → the outer `waitUntil` times out too.
+
+**Fix: remove the animated screen at the source.** Most such screens are gated by a feature toggle or a
+mock response — flip it off so the screen never renders, instead of interacting with it. When the toggle
+is server-driven, set it **before app launch** (`additionalBeforeAppLaunchSection`, which runs before
+`ActivityScenario.launch`) since the config is usually fetched at startup; setting it mid-test is too late.
+
+**Concrete instance (verify against current source — names drift):** the first-time *swap stories* are
+controlled by the WireMock scenario `stories_first_time_swap_v2`. Its `Error` state returns 500, so the
+screen never shows, and `openSwapScreen(…, storiesExist = false)` skips the close entirely:
+
+```kotlin
+setupHooks(
+    additionalBeforeAppLaunchSection = { setWireMockScenarioState("stories_first_time_swap_v2", "Error") },
+    additionalAfterSection = { resetWireMockScenarioState("stories_first_time_swap_v2") },
+).run {
+    openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+}
+```
+
+`SwapStoriesTest` uses this for every flow that isn't specifically testing stories. Only keep
+`storiesExist = true` + `clickWithAssertion()` when the animated screen itself is the subject under test
+(then accept that you're synchronizing against an animation and budget a longer, existence-based wait).
+
 ## Decompose model lifecycle vs. data refresh
 
 Models (e.g. `TangemPayDetailsModel`) call data fetches from `init {}`, NOT on `ON_RESUME`. Returning

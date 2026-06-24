@@ -100,6 +100,46 @@ curl -s http://localhost:8081/__admin/requests/unmatched | jq '.requests[] | "\(
 (harness/emulator) for the hang. A non-empty list names exactly which mapping (or scenario state) the
 local instance is missing.
 
+## The app's own log lives in `files/log.txt`, NOT logcat
+
+The mocked build routes `TangemLogger` to a **file** via `FileLogWriter`, so `adb logcat | grep …`
+finds nothing of the app's own logs. When a screen fails silently — fee shows "—", a banner never
+appears, an action button stays disabled — *and* WireMock shows everything matched, the real reason is
+almost always in the app log:
+
+```bash
+adb exec-out run-as com.tangem.wallet.mocked cat files/log.txt | grep -iE "loadFee|getFee|No native|Error|DataError"
+```
+
+This is the single fastest way to find app-side root causes. It's what pinpointed a transfer-fee failure
+to `loadFee[transfer]: DataError(... IllegalStateException: No native currency found ...)` — i.e. a
+missing native coin in the mock, invisible from the UI and from the WireMock journal alone.
+
+## WireMock journal: "mock missing" vs "the app never asked"
+
+`/__admin/requests/unmatched` finds *missing* mappings. But when a feature silently doesn't happen (a fee
+that never computes, a banner that never shows), also inspect the **full** request log — the app may not
+be issuing the request at all (an app-side data gate), which is a different problem than a missing mock
+and is NOT fixable by adding mappings:
+
+```bash
+curl -s "http://localhost:8081/__admin/requests?limit=500" \
+  | jq -r '.requests[].request | "\(.method) \(.url)"' | sort -u
+# For RPC providers, also break down by method:
+curl -s "http://localhost:8081/__admin/requests?limit=500" \
+  | jq -r '.requests[].request.body' | grep -oE '"method":"[^"]+"' | sort | uniq -c
+```
+
+`unmatched=0` **and** the expected request absent → the app never asked (data/state gate, e.g. a coin
+missing from the portfolio) → fix the mock *data* or app, not the mappings.
+
+## "UiAutomationService already registered" = back-to-back runs; retry
+
+Rapid consecutive `am instrument` invocations sometimes fail instantly with
+`IllegalStateException: UiAutomationService … already registered!`. It's an instrumentation-teardown
+race between runs, not a test failure — just retry. (The orchestrator/CI spaces runs out and avoids it.)
+When scripting many manual runs, retry-on-this-string rather than counting it as a failure.
+
 ## Classify the result — Allure noise vs. real failure
 
 After `pm clear`, `/data/user/0/<pkg>/files/original_screenshots` doesn't exist →
