@@ -11,6 +11,7 @@ import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertVisibility
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
@@ -18,6 +19,7 @@ import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.screens.*
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 import com.tangem.common.ui.R as CommonUiR
@@ -258,6 +260,56 @@ fun BaseTestCase.checkSwapWarning(
                 swapButton.assertIsEnabled()
             }
         }
+}
+
+/** Opens Swap for [tokenName] in [fromAccountName] and picks it again in [toAccountName] to enter Transfer mode; needs a two-accounts-same-token mock. */
+fun BaseTestCase.openSwapInTransferMode(
+    tokenName: String,
+    fromAccountName: String = "Account 1",
+    toAccountName: String = "Account 2",
+    mockContent: MockContent? = null,
+) {
+    step("Open 'Main' screen") {
+        openMainScreen(mockContent = mockContent)
+    }
+    step("Synchronize addresses") {
+        synchronizeAddresses()
+    }
+    step("Scroll '$fromAccountName' into view (semantics, not touch — avoids the Markets sheet)") {
+        onMainScreen { scrollToAccount(fromAccountName) }
+    }
+    step("Expand account '$fromAccountName' and reveal token '$tokenName'") {
+        onMainScreen {
+            findAccountSectionByName(fromAccountName).clickAndWaitFor(
+                rule = composeTestRule,
+                expectedCondition = {
+                    onMainScreen { findTokenInAnyAccountByName(tokenName).assertIsDisplayed() }
+                },
+            )
+        }
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+    }
+    step("Open 'Swap' screen") {
+        openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+    }
+    step("Choose identical receive token '$tokenName' from '$toAccountName'") {
+        chooseIdenticalReceiveToken(tokenName = tokenName, receiveAccountName = toAccountName)
+    }
+}
+
+/** Picks the identical [tokenName] in [receiveAccountName]; the receive list collapses the other account, so its header is expanded first. */
+fun BaseTestCase.chooseIdenticalReceiveToken(tokenName: String, receiveAccountName: String) {
+    step("Click on 'Choose token' button") {
+        onSwapTokenScreen { chooseTokenButton.performClick() }
+    }
+    step("Expand account '$receiveAccountName' in receive selector") {
+        onSwapSelectTokenScreen { tokenWithName(receiveAccountName).performClick() }
+    }
+    step("Click on token with name '$tokenName'") {
+        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
 }
 
 fun BaseTestCase.chooseReceiveToken(tokenName: String) {
