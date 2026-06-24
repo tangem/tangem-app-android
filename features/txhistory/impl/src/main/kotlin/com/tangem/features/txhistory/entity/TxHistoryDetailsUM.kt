@@ -14,7 +14,7 @@ import kotlinx.collections.immutable.ImmutableList
  * UI model for the in-app transaction details ("Operation") card.
  *
  * One model for all transaction types; the layout family is chosen from the transaction type by
- * `TxInfoToTxHistoryDetailsUMConverter`:
+ * `TxHistoryInfoToTxHistoryDetailsUMConverter`:
  * - [SingleAsset] — Receive / Send / Transfer
  * - [TwoAssets] — Swap / Onramp
  */
@@ -131,7 +131,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
      * and whether copy is offered. Only the [CounterpartyAvatar.Address] kind is currently produced by
-     * [com.tangem.features.txhistory.converter.TxInfoToTxHistoryDetailsUMConverter]; the own-account / own-wallet
+     * [com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter]; the own-account / own-wallet
      * avatars are populated in a follow-up, once the detail model assembles the same address->owner lookup the list
      * uses (`TxHistoryLookupContext`).
      *
