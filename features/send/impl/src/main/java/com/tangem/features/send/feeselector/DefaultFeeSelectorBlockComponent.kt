@@ -12,10 +12,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.conditional
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.FeeSelectorComponent
-import com.tangem.features.send.api.entity.FeeSelectorUM
-import com.tangem.features.send.api.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.feeselector.model.FeeSelectorBlockModel
 import com.tangem.features.send.feeselector.ui.FeeSelectorBlockContent
 import com.tangem.utils.extensions.isSingleItem

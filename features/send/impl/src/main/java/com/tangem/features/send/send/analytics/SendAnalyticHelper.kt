@@ -8,8 +8,8 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCa
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.send.api.entity.FeeNonce
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.send.ui.state.SendUM
