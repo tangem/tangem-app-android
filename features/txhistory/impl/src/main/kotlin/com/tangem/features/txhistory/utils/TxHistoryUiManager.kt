@@ -8,11 +8,14 @@ import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMC
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
+@Deprecated("Remove with toggle [TxHistoryFeatureToggles.isNewTxHistoryEnabled]. Used only by TxHistoryListManager.")
+@RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
 internal class TxHistoryUiManager(
     private val state: MutableStateFlow<TxHistoryListState>,
 ) {
