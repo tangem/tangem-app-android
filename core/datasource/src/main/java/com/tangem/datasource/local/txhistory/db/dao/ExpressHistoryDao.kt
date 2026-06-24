@@ -8,6 +8,7 @@ import androidx.room.Query
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCountryEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,11 +23,18 @@ interface ExpressHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertOnramps(items: List<ExpressOnrampEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertCountries(items: List<OnrampCountryEntity>)
+
     /**
      * All persisted providers keyed by [ExpressProviderEntity.id]
      */
     @Query("SELECT * FROM express_provider")
     fun getProvidersById(): Flow<Map<@MapColumn(columnName = "id") String, ExpressProviderEntity>>
+
+    /** All persisted onramp countries keyed by [OnrampCountryEntity.code]. */
+    @Query("SELECT * FROM onramp_country")
+    fun getCountriesByCode(): Flow<Map<@MapColumn(columnName = "code") String, OnrampCountryEntity>>
 
     /**
      * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is stored under this
