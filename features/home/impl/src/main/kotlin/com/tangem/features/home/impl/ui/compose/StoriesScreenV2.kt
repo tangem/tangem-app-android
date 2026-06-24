@@ -63,7 +63,7 @@ internal fun StoriesScreenV2(state: HomeUM, onGetStartedClick: () -> Unit, modif
             storiesSize = state.stories.lastIndex,
             currentStoryIndex = currentStoryIndex,
             currentStory = currentStory,
-            isScanInProgress = state.scanInProgress,
+            isScanInProgress = state.isScanInProgress,
             onGoToPreviousStory = goToPreviousStory,
             onGoToNextStory = goToNextStory,
             onGetStartedClick = onGetStartedClick,
