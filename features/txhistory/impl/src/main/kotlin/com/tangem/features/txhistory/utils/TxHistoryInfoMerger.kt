@@ -1,7 +1,5 @@
 package com.tangem.features.txhistory.utils
 
-import com.tangem.domain.express.models.ExpressExchangeStatus
-import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
@@ -49,49 +47,5 @@ private fun ExpressTx.withMatchedTxInfo(txInfo: TxInfo): ExpressTx {
     return when (this) {
         is ExpressTx.Swap -> copy(txInfo = matched)
         is ExpressTx.Onramp -> copy(txInfo = matched)
-    }
-}
-
-/**
- * Synthesizes a [TxInfo] view of an express op so it can be rendered by the existing
- * [com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter]. Rendered as a
- * [TxInfo.TransactionType.Swap] for now (onramp included). The amount is the viewed-currency leg.
- */
-internal fun ExpressTx.toSyntheticTxInfo(): TxInfo {
-    val viewedAmount = when (this) {
-        is ExpressTx.Swap -> if (isOutgoing) tx.fromAsset.amount else tx.toAsset.amount
-        is ExpressTx.Onramp -> tx.toAsset.amount
-    }
-    val isOutgoing = when (this) {
-        is ExpressTx.Swap -> this.isOutgoing
-        is ExpressTx.Onramp -> false
-    }
-    return TxInfo(
-        // matchHash is the on-chain hash (== the matched leg's hash, enables the explorer link); else txId.
-        txHash = matchHash ?: txId,
-        timestampInMillis = timestampMillis,
-        isOutgoing = isOutgoing,
-        destinationType = TxInfo.DestinationType.Single(TxInfo.AddressType.User(address = "")),
-        sourceType = TxInfo.SourceType.Single(address = ""),
-        interactionAddressType = null,
-        status = toTransactionStatus(),
-        type = TxInfo.TransactionType.Swap,
-        amount = viewedAmount,
-    )
-}
-
-/**
- * Maps the typed express status to the on-chain-shaped [TxInfo.TransactionStatus] used by the UI:
- * the single success state (`Finished`) → Confirmed, any other terminal state → Failed, in-progress → Unconfirmed.
- */
-private fun ExpressTx.toTransactionStatus(): TxInfo.TransactionStatus {
-    val isFinished = when (this) {
-        is ExpressTx.Swap -> tx.status == ExpressExchangeStatus.Finished
-        is ExpressTx.Onramp -> tx.status == ExpressOnrampStatus.Finished
-    }
-    return when {
-        isFinished -> TxInfo.TransactionStatus.Confirmed
-        isTerminal -> TxInfo.TransactionStatus.Failed
-        else -> TxInfo.TransactionStatus.Unconfirmed
     }
 }

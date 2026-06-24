@@ -28,6 +28,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
@@ -39,6 +40,7 @@ import com.tangem.features.txhistory.utils.HistoryTxListManager
 import com.tangem.features.txhistory.utils.TxHistoryListManager
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
@@ -100,9 +102,11 @@ internal class TxHistoryModel @Inject constructor(
         emptyFlow()
     }
 
+    @RemoveWithToggle("APP_REDESIGN_ENABLED")
     private val legacyTxHistoryItemConverter =
         TxHistoryItemToTransactionStateConverter(currency = params.currency, txHistoryUiActions = this)
 
+    @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
     private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
         TxHistoryListManager(
             repository = repository,
@@ -193,7 +197,6 @@ internal class TxHistoryModel @Inject constructor(
         }
     }
 
-    // Temporary: express rows are mapped to UI via a synthesized TxInfo (see ExpressTx.toSyntheticTxInfo).
     private fun buildUiItems(
         merged: List<TxHistoryInfo>,
         lookup: TxHistoryLookupContext,
@@ -203,6 +206,10 @@ internal class TxHistoryModel @Inject constructor(
                 currency = params.currency,
                 txHistoryUiActions = this,
                 lookupContext = lookup,
+            ),
+            expressConverter = ExpressTxToTransactionItemUMConverter(
+                currency = params.currency,
+                txHistoryUiActions = this,
             ),
         )
 
