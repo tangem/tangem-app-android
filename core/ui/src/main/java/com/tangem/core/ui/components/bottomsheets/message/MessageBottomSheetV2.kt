@@ -178,7 +178,7 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier 
     }
 
     val backgroundColor = when (icon.backgroundType) {
-        MessageBottomSheetUM.Icon.BackgroundType.Unspecified -> Color.Unspecified
+        MessageBottomSheetUM.Icon.BackgroundType.Unspecified -> TangemTheme.colors3.bg.tertiary
         MessageBottomSheetUM.Icon.BackgroundType.SameAsTint -> {
             if (tint == Color.Unspecified) Color.Unspecified else tint.copy(alpha = 0.1f)
         }
@@ -217,7 +217,7 @@ private fun BottomSheetVector(vector: MessageBottomSheetUM.Vector, modifier: Mod
     }
 
     val backgroundColor = when (vector.backgroundType) {
-        MessageBottomSheetUM.Vector.BackgroundType.Unspecified -> Color.Unspecified
+        MessageBottomSheetUM.Vector.BackgroundType.Unspecified -> TangemTheme.colors3.bg.tertiary
         MessageBottomSheetUM.Vector.BackgroundType.SameAsTint -> tint
         MessageBottomSheetUM.Vector.BackgroundType.Accent -> TangemTheme.colors3.bg.status.infoSubtle
         MessageBottomSheetUM.Vector.BackgroundType.Informative -> TangemTheme.colors3.bg.status.infoSubtle

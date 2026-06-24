@@ -200,7 +200,7 @@ fun TangemMessage(
         )
         Column(
             horizontalAlignment = alignment,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
             modifier = Modifier
                 .padding(TangemTheme.dimens2.x3)
                 .fillMaxWidth(),
