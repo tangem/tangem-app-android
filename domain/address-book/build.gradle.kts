@@ -14,6 +14,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
 
+    implementation(projects.domain.common)
     implementation(projects.domain.transaction)
     implementation(projects.domain.tokens)
 

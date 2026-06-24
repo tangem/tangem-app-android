@@ -12,7 +12,6 @@ import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.error.ValidateMemoError
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationValidationResultTransformer
 import com.tangem.features.send.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
