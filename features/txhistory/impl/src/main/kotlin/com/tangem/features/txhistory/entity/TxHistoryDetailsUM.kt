@@ -38,9 +38,10 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * [from] ("You send") → [to] ("You receive") exchange block. Both are nullable: when a leg cannot be built (e.g. a
      * future express variant with no asset data) the card falls back to a header-only placeholder. [statusBanner] is
-     * the express status plaque under the block, `null` until status is known. [rows] carries the provider row (its
-     * name) followed by the network-fee row pulled from the matched on-chain leg (`ExpressTx.txInfo`); each is dropped
-     * when its data is unavailable (rate is not surfaced yet — no data).
+     * the express status plaque under the block, `null` until status is known. [rows] carries, in order, the provider
+     * row (its name), the effective-rate row, and the network-fee row pulled from the matched on-chain leg
+     * (`ExpressTx.txInfo`); each is dropped when its data is unavailable. [providerButton] is the bottom "Go to
+     * provider" / "Go to verification" CTA, `null` unless the deal is on a provider-actionable terminal with a link.
      */
     data class TwoAssets(
         override val header: HeaderUM,
@@ -48,6 +49,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val to: AssetUM? = null,
         val statusBanner: StatusBannerUM? = null,
         val rows: ImmutableList<InfoRowUM> = persistentListOf(),
+        val providerButton: ProviderButtonUM? = null,
     ) : TxHistoryDetailsUM
 
     /**
@@ -68,6 +70,19 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         /** Visual severity of the [StatusBannerUM] — selects the background tint and the text/icon color. */
         enum class Severity { Info, Success, Error, Warning }
     }
+
+    /**
+     * Bottom call-to-action of the two-asset card, shown only on the provider-actionable terminals of an express deal
+     * (failed / expired → "Go to provider"; KYC verification → "Go to verification") and only when the deal carries a
+     * provider link. [onClick] opens that link (`ExpressTx.externalTxUrl`).
+     *
+     * @property text Button label ("Go to provider" / "Go to verification").
+     * @property onClick Opens the provider's page for this deal.
+     */
+    data class ProviderButtonUM(
+        val text: TextReference,
+        val onClick: () -> Unit,
+    )
 
     /**
      * One side of the two-asset block: the [label] over the signed [amount], with the [currencyIcon] on the trailing
@@ -133,11 +148,14 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * [trailingIconRes] is an optional glyph drawn after the [value] (e.g. the arrow-up-right link affordance on the
      * provider row); `null` leaves the trailing slot text-only.
+     *
+     * [onClick] makes the row tappable (e.g. the provider row opens the provider page); `null` makes it non-interactive.
      */
     data class InfoRowUM(
         val label: TextReference,
         val value: TextReference,
         @DrawableRes val trailingIconRes: Int? = null,
+        val onClick: (() -> Unit)? = null,
     )
 
     /**
