@@ -115,7 +115,7 @@ internal class DefaultOnrampRepository(
     override suspend fun fetchCountries(userWallet: UserWallet): List<OnrampCountry> = withContext(dispatchers.io) {
         if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext emptyList()
 
-        val result = onrampApi.getCountries(
+        val response = onrampApi.getCountries(
             userWalletId = userWallet.walletId.stringValue,
             refCode = ExpressUtils.getRefCode(
                 userWallet = userWallet,
@@ -123,8 +123,12 @@ internal class DefaultOnrampRepository(
             ),
         )
             .getOrThrow()
-            .map(countryConverter::convert)
 
+        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+            expressHistoryDao.upsertCountries(response.map { it.toEntity() })
+        }
+
+        val result = response.map(countryConverter::convert)
         countriesStore.store(COUNTRIES_KEY, result)
 
         result
