@@ -6,7 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.CircularProgressIndicator
@@ -229,19 +229,14 @@ private fun TangemButtonIcon(tangemIconUM: TangemIconUM?, isVisible: Boolean, si
 /**
  * Defines the shape of the Tangem button.
  */
+@Deprecated("All buttons are rounded by design")
 enum class TangemButtonShape {
     Default,
     Rounded,
     ;
 
-    @ReadOnlyComposable
-    @Composable
-    internal fun toShape(size: TangemButtonSize) = RoundedCornerShape(
-        when (this) {
-            Default -> size.toShapeRadius()
-            Rounded -> 100.dp
-        },
-    )
+    @Suppress("UnusedParameter")
+    internal fun toShape(size: TangemButtonSize) = CircleShape
 }
 
 /**
@@ -307,18 +302,6 @@ enum class TangemButtonSize {
         X12,
         X15,
         -> TangemTheme.dimens2.x7
-    }
-
-    @ReadOnlyComposable
-    @Composable
-    internal fun toShapeRadius() = when (this) {
-        X7,
-        X8,
-        X9,
-        X10,
-        -> TangemTheme.dimens2.x2
-        X12 -> TangemTheme.dimens2.x3
-        X15 -> TangemTheme.dimens2.x4
     }
 
     @ReadOnlyComposable
