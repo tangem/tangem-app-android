@@ -11,11 +11,23 @@ android {
 }
 
 dependencies {
+    /** Core */
+    implementation(projects.core.decompose)
+    implementation(projects.core.error)
+    implementation(projects.core.ui)
+    implementation(projects.core.utils)
+
+    /** Common */
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
+
     /** Api */
     implementation(projects.features.virtualAccounts.onboarding.api)
 
-    /** Core modules */
-    implementation(projects.core.configToggles)
+    /** Domain */
+    implementation(projects.domain.common)
+    implementation(projects.domain.models)
+    implementation(projects.domain.visa)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -27,4 +39,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Other */
+    implementation(deps.arrow.core)
 }
