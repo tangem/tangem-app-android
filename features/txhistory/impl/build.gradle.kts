@@ -67,6 +67,7 @@ dependencies {
 
     /* Tests */
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.onramp.models)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
