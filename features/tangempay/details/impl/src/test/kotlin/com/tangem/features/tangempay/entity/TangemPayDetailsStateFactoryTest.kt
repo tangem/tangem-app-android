@@ -57,7 +57,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
     @ParameterizedTest
     @MethodSource("provideButtonStateCases")
-    fun `GIVEN status source WHEN getLoadedState THEN buttons enabled only for actual data without error`(
+    fun `GIVEN status source WHEN getLoadedState THEN action buttons gated by freshness but card tile only by error`(
         case: ButtonStateCase,
     ) {
         // Arrange
@@ -71,6 +71,10 @@ internal class TangemPayDetailsStateFactoryTest {
         val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.isEnabled }
         assertThat(actionButtonsEnabled).containsExactly(case.expectedEnabled, case.expectedEnabled)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isEqualTo(case.expectedEnabled)
+        // The card tile is intentionally NOT source-gated: it stays clickable on stale data as long as
+        // there is no error, so the user can still view the card details offline (which self-gate actions).
+        assertThat(state.balanceBlockState.cardsBlockState?.cards?.single()?.isEnabled)
+            .isEqualTo(case.expectedCardEnabled)
     }
 
     @Test
@@ -114,28 +118,46 @@ internal class TangemPayDetailsStateFactoryTest {
         val source: StatusSource,
         val error: PaymentAccountStatusValue.Error?,
         val expectedEnabled: Boolean,
+        val expectedCardEnabled: Boolean,
     )
 
     private companion object {
         @JvmStatic
         fun provideButtonStateCases() = listOf(
-            // Fresh data from the network -> actions allowed.
-            ButtonStateCase(source = StatusSource.ACTUAL, error = null, expectedEnabled = true),
-            // Cache restored from disk before a refresh confirms it -> actions blocked.
-            ButtonStateCase(source = StatusSource.CACHE, error = null, expectedEnabled = false),
-            // Internet unavailable, only cache left ([REDACTED_TASK_KEY] case 1) -> actions blocked.
-            ButtonStateCase(source = StatusSource.ONLY_CACHE, error = null, expectedEnabled = false),
-            // Expired refresh token, only cache left ([REDACTED_TASK_KEY] case 2) -> actions blocked.
+            // Fresh data from the network -> actions allowed, card tile clickable.
+            ButtonStateCase(
+                source = StatusSource.ACTUAL,
+                error = null,
+                expectedEnabled = true,
+                expectedCardEnabled = true,
+            ),
+            // Cache restored from disk before a refresh confirms it -> actions blocked, card tile clickable.
+            ButtonStateCase(
+                source = StatusSource.CACHE,
+                error = null,
+                expectedEnabled = false,
+                expectedCardEnabled = true,
+            ),
+            // Internet unavailable, only cache left ([REDACTED_TASK_KEY] case 1) -> actions blocked, card tile clickable.
+            ButtonStateCase(
+                source = StatusSource.ONLY_CACHE,
+                error = null,
+                expectedEnabled = false,
+                expectedCardEnabled = true,
+            ),
+            // Expired refresh token, only cache left ([REDACTED_TASK_KEY] case 2) -> everything blocked by the error.
             ButtonStateCase(
                 source = StatusSource.ONLY_CACHE,
                 error = PaymentAccountStatusValue.Error.NotSynced,
                 expectedEnabled = false,
+                expectedCardEnabled = false,
             ),
-            // Transient error overlaid on actual data -> actions blocked.
+            // Transient error overlaid on actual data -> everything blocked by the error.
             ButtonStateCase(
                 source = StatusSource.ACTUAL,
                 error = PaymentAccountStatusValue.Error.Unavailable,
                 expectedEnabled = false,
+                expectedCardEnabled = false,
             ),
         )
     }
