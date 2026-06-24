@@ -6,6 +6,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOffersRepository
@@ -56,11 +57,8 @@ class IssueAdditionalCardUseCase(
                 customerOrderRepository
                     .findOrders(
                         userWalletId = userWalletId,
-                        types = setOf(
-                            offer.data.orderType,
-                            OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
-                            OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
-                        ),
+                        types = setOf(offer.data.orderType) + OrderType.issueCardTypes,
+                        statuses = OrderStatus.activeStatuses,
                     )
                     .bind()
             },
