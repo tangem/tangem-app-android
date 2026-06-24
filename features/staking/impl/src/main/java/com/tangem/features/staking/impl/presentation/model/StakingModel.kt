@@ -619,10 +619,11 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onAmountEnterClick() {
-        if (integration.preferredTargets.isEmpty()) {
+        val actionType = uiState.value.actionType
+        if (actionType !is StakingActionCommonType.Exit && integration.preferredTargets.isEmpty()) {
             messageSender.send(StakingAlertUM.noAvailableValidators())
         } else {
-            if (uiState.value.actionType is StakingActionCommonType.Enter) {
+            if (actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
                     ValidatorSelectChangeTransformer(
                         selectedTarget = null,
