@@ -435,4 +435,35 @@ enum class FeeType {
     Fast
 }
 
+fun BaseTestCase.inputAmount(amount: String) {
+    // No waitForIdle(): the transfer screen recalculates the fee continuously and never reaches idle.
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onSwapTokenScreen { textInput.assertIsDisplayed() } }.isSuccess
+    }
+    onSwapTokenScreen {
+        textInput.clickWithAssertion()
+        textInput.performTextReplacement(amount)
+    }
+}
+
+// composeTestRule.waitUntil rather than flakySafely — the latter is unavailable in extensions on BaseTestCase.
+fun BaseTestCase.assertTransferReady() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onSwapTokenScreen { transferButton.assertIsDisplayed() } }.isSuccess
+    }
+    onSwapTokenScreen { providersBlock.assertIsNotDisplayed() }
+}
+
+fun BaseTestCase.waitForFeeDisplayed() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onSwapTokenScreen { feeAmount.assertIsDisplayed() } }.isSuccess
+    }
+}
+
+fun BaseTestCase.swapFeeDiffersFrom(previousFee: String): Boolean {
+    var current = ""
+    onSwapTokenScreen { current = feeAmount.extractText() }
+    return current.isNotEmpty() && current != previousFee
+}
+
 

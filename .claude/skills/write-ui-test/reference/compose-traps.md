@@ -170,16 +170,17 @@ expanding the sheet over the content, so the next click lands on the wrong eleme
 Kakao/Compose-test actions block on Compose reaching *idle* first. A screen that animates forever — an
 auto-advancing stories/onboarding carousel, a looping shimmer, a never-ending spinner — never idles, so
 `clickWithAssertion()` / `assertIsDisplayed()` on it flake (`… is not displayed`, or
-`ComposeNotIdleException`). **Remove the screen at its source rather than out-waiting it:** most are gated
-by a feature toggle or a mock response — flip it off so the screen never renders. If it's server-driven,
-set the toggle **before app launch** (config is fetched at startup), not mid-test. (Example: the swap
-stories are disabled via their WireMock scenario, then opened with `storiesExist = false`.)
+`ComposeNotIdleException`). **First rule out a degraded emulator** (see running-and-debugging) — a
+slow-*loading* screen on a tired emulator throws the identical exception but is fixed by a cold-boot, not
+by changing the test. Only treat it as a *truly* infinite animation if it reproduces on a fresh emulator.
 
-**Polling the animated node does NOT rescue it** — two false fixes:
-- `waitUntilAtLeastOneExists(hasTestTag(TAG))` polls the **merged** tree (no `useUnmergedTree` option); a
-  `clickable` node inside a `mergeDescendants` container exists only in the *unmerged* tree → never matches.
-- `waitUntil { runCatching { node.assertIsDisplayed() }.isSuccess }` reads the unmerged tree but
-  `assertIsDisplayed` itself blocks on idle, which never comes → the outer wait times out too.
+For a genuinely infinite animation, **remove the screen at its source rather than out-waiting it:** most
+are gated by a feature toggle or a mock response — flip it off so the screen never renders. If it's
+server-driven, set the toggle **before app launch** (config is fetched at startup), not mid-test.
+(Example: the swap first-time stories are disabled via their WireMock scenario, then opened with
+`storiesExist = false`.) Note that `waitUntilAtLeastOneExists(hasTestTag(TAG))` polls the **merged** tree
+(no `useUnmergedTree` option), so a `clickable` node inside a `mergeDescendants` container — which exists
+only in the *unmerged* tree — will never match it; poll through the page object instead.
 
 ## Decompose model lifecycle vs. data refresh
 

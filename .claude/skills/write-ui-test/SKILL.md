@@ -74,6 +74,10 @@ When the user asks to **port** an iOS test to Android:
   strings inside `step(...)`.
 - **Each click is its own** `step("Click on '$x' button")`. Combining clicks into one step hides which
   click failed in the Allure report.
+- **No reusable step-helpers as private functions in the test class.** A sequence reused across tests
+  (e.g. `enterAmount`, `assertReady`) goes in a `scenarios/` file as a `BaseTestCase` extension, not as a
+  private method on the test class — reviewers reject the latter. The test body then calls it wrapped in a
+  `step(...)` like any scenario.
 - **Every scenario call in the test body is wrapped in its own `step("…")`**, even though the scenario
   itself contains inner `step(...)`s — the outer step names the flow in the Allure tree, the inner ones
   detail it (nested steps are expected). `step(...)` (Allure) is callable anywhere, including inside
@@ -121,13 +125,20 @@ Scenario files orchestrate flows; they must not define page objects or duplicate
 
 ### Waits and synchronization
 
-- **Manual polls are banned** (`onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()` in a loop). Use:
-  - `composeTestRule.waitUntilAtLeastOneExists(matcher, timeoutMillis)` — wait for one thing to appear.
-  - `composeTestRule.waitUntil(timeout) { runCatching { someAssertion() }.isSuccess }` — wait until an
-    action no longer throws.
-  - `composeTestRule.waitUntil(timeout) { matcherA exists || matcherB exists }` — the either/or case.
-- **`flakySafely(timeout)`** (Kaspresso) is reachable only from `TestCase` subclasses, NOT from
-  extension functions on `BaseTestCase`. In extension code use the `waitUntil` variants above.
+- **Manual polls are banned** (`onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()` in a loop) — even
+  if a bot reviewer suggests one.
+- **Default in the test body: `flakySafely(TIMEOUT) { assertion }`** — the codebase idiom (hundreds of
+  uses); reviewers prefer it over `composeTestRule.waitUntil { runCatching { … }.isSuccess }`.
+- **`ComposeNotIdleException` / `AppNotIdleException` ("busy for ~60s") is usually a sick emulator, not
+  your test.** After many back-to-back local runs the emulator degrades (you may even see a "System UI
+  isn't responding" ANR), and idle-synced ops (`flakySafely`, `waitForIdle()`, Kakao actions) start
+  timing out *anywhere* data is loading — different test each run. Before concluding a test is flaky or
+  that a screen "never idles", **cold-boot a fresh emulator** (`emulator -avd … -no-snapshot -wipe-data
+  -memory 4096 -cores 2`) and re-run. A suite that flaked across runs on a tired emulator can be a clean
+  10/10 on a fresh one (verified on this exact suite). Don't rewrite waits to work around emulator rot.
+- **In scenario / `BaseTestCase`-extension code, `flakySafely` is NOT available** regardless — use the
+  same `composeTestRule.waitUntil` fallback (or `waitUntilAtLeastOneExists(matcher, timeout)` to wait for
+  appearance, `{ a exists || b exists }` for either/or).
 
 ### Comment hygiene
 
