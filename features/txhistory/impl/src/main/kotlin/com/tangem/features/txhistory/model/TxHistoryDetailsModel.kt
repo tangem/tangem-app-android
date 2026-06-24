@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
@@ -25,6 +26,7 @@ import javax.inject.Inject
 internal class TxHistoryDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
+    private val urlOpener: UrlOpener,
     multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -43,6 +45,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
             onCopyAddress = ::onCopyAddress,
+            onGoToProvider = urlOpener::openUrl,
             ownAddresses = ownAddresses,
         ).convert(txInfo)
     }
