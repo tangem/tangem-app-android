@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -256,7 +257,7 @@ private fun TangemMessageContent(
     }
     // The close button is drawn over the top-end corner, so in the leading-content layout the texts
     // reserve trailing space to never run under it; trailing-content layouts are kept untouched
-    val isCloseSpaceReserved = hasCloseButton && leadingContent != null && content == null
+    val isCloseSpaceReserved = hasCloseButton && content == null
     Row(
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
         modifier = Modifier.padding(TangemTheme.dimens2.x1),
@@ -280,7 +281,8 @@ private fun TangemMessageContent(
                     text = title.resolveAnnotatedReference(),
                     style = TangemTheme.typography2.bodySemibold16,
                     color = TangemTheme.colors2.text.neutral.primary,
-                    maxLines = 1,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     textAlign = textAlign,
                     modifier = Modifier.testTag(NotificationTestTags.TITLE),
                 )
