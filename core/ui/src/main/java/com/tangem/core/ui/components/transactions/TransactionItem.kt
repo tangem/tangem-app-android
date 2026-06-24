@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,6 +33,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction
@@ -70,55 +73,92 @@ fun TransactionItem(state: TransactionItemUM, isBalanceHidden: Boolean, modifier
 
 @Composable
 private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    val rowModifier = modifier
-        .fillMaxWidth()
-        .clickable(onClick = state.onClick)
-        .testTag(TransactionHistoryItemTestTags.ITEM)
-
-    TangemRowContainer(
-        modifier = rowModifier,
-        contentPadding = PaddingValues(
-            horizontal = TangemTheme.dimens2.x4,
-            vertical = TangemTheme.dimens2.x3,
-        ),
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = state.onClick)
+            .testTag(TransactionHistoryItemTestTags.ITEM),
     ) {
-        StatusCircle(
-            iconRes = state.iconRes,
-            status = state.status,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = TangemTheme.dimens2.x3)
-                .size(TangemTheme.dimens2.x10)
-                .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
+        TangemRowContainer(
+            contentPadding = PaddingValues(
+                horizontal = TangemTheme.dimens2.x4,
+                vertical = TangemTheme.dimens2.x3,
+            ),
+        ) {
+            StatusCircle(
+                iconRes = state.iconRes,
+                status = state.status,
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.HEAD)
+                    .padding(end = TangemTheme.dimens2.x3)
+                    .size(TangemTheme.dimens2.x10)
+                    .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
+            )
+            TitleText(
+                title = state.title,
+                status = state.status,
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.START_TOP)
+                    .testTag(TransactionHistoryItemTestTags.TITLE),
+            )
+            SubtitleText(
+                subtitle = state.subtitle,
+                status = state.status,
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.START_BOTTOM)
+                    .padding(top = TangemTheme.dimens2.x0_5),
+            )
+            state.amount?.let { amount ->
+                AmountText(
+                    amount = amount,
+                    status = state.status,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = Modifier
+                        .layoutId(TangemRowLayoutId.END_TOP)
+                        .testTag(TransactionHistoryItemTestTags.AMOUNT),
+                )
+            }
+            CurrencyText(
+                symbol = state.currencySymbol,
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.END_BOTTOM)
+                    .padding(top = TangemTheme.dimens2.x0_5)
+                    .testTag(TransactionHistoryItemTestTags.CURRENCY),
+            )
+        }
+        state.warning?.let { warning ->
+            WarningLine(
+                warning = warning,
+                modifier = Modifier.padding(
+                    start = TangemTheme.dimens2.x4,
+                    end = TangemTheme.dimens2.x4,
+                    bottom = TangemTheme.dimens2.x3,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
+    val attention = TangemTheme.colors2.text.status.attention
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_alert_triangle_20),
+            contentDescription = null,
+            tint = attention,
+            modifier = Modifier.size(TangemTheme.dimens2.x5),
         )
-        TitleText(
-            title = state.title,
-            status = state.status,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.START_TOP)
-                .testTag(TransactionHistoryItemTestTags.TITLE),
-        )
-        SubtitleText(
-            subtitle = state.subtitle,
-            status = state.status,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .padding(top = TangemTheme.dimens2.x0_5),
-        )
-        AmountText(
-            amount = state.amount,
-            status = state.status,
-            isBalanceHidden = isBalanceHidden,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.END_TOP)
-                .testTag(TransactionHistoryItemTestTags.AMOUNT),
-        )
-        CurrencyText(
-            symbol = state.currencySymbol,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.END_BOTTOM)
-                .padding(top = TangemTheme.dimens2.x0_5)
-                .testTag(TransactionHistoryItemTestTags.CURRENCY),
+        Text(
+            text = warning.resolveReference(),
+            color = attention,
+            style = TangemTheme.typography2.captionMedium12,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -261,6 +301,21 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 state = subtitle.deviceIconUM,
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+        is ContentSubtitle.Asset -> InlineImageSubtitle(
+            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.symbol),
+            color = tertiary,
+            afterIconColor = if (isFailed) tertiary else primary,
+            modifier = modifier,
+        ) {
+            subtitle.icon?.let { iconState ->
+                CurrencyIcon(
+                    state = iconState,
+                    shouldDisplayNetwork = false,
+                    withFixedSize = false,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }
@@ -485,6 +540,75 @@ private fun Preview_TransactionItem_Swap() {
                     title = "Swapping failed",
                     subtitle = "to: POL",
                     amount = "350.00",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_Express() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                TransactionItemUM.Content(
+                    txHash = "exp-swap-u",
+                    amount = "-390.00",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Unconfirmed,
+                    direction = Direction.OUTGOING,
+                    onClick = {},
+                    iconRes = R.drawable.ic_exchange_vertical_24,
+                    title = stringReference("Swapping"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.TO,
+                        symbol = "POL",
+                        icon = CurrencyIconState.CoinIcon(
+                            url = null,
+                            fallbackResId = R.drawable.ic_custom_token_44,
+                            isGrayscale = false,
+                            shouldShowCustomBadge = false,
+                        ),
+                    ),
+                    timestamp = 0L,
+                    warning = stringReference("KYC verification required by provider"),
+                ),
+                TransactionItemUM.Content(
+                    txHash = "exp-onramp-c",
+                    amount = "+0.006339",
+                    currencySymbol = "BTC",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    iconRes = R.drawable.ic_tangem_card_24,
+                    title = stringReference("Topped up"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.FROM,
+                        symbol = "SEK",
+                        icon = null,
+                    ),
+                    timestamp = 0L,
+                ),
+                TransactionItemUM.Content(
+                    txHash = "exp-onramp-f",
+                    amount = "0.006339",
+                    currencySymbol = "BTC",
+                    time = "",
+                    status = Status.Failed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    iconRes = R.drawable.ic_tangem_card_24,
+                    title = stringReference("Top up failed"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.FROM,
+                        symbol = "SEK",
+                        icon = null,
+                    ),
+                    timestamp = 0L,
                 ),
             ),
         )
