@@ -145,11 +145,5 @@ Delete anything explaining WHAT a step does.
   look like passing tests.
 - **`reference/running-and-debugging.md`** — read when building, installing, running tests (orchestrator
   vs. raw `am instrument`), running against a local WireMock, interpreting CLI/Allure output, using
-  `@Ignore`, or driving WireMock scenarios. Includes **how to read the app's own log (`files/log.txt`,
-  not logcat)** and using the WireMock request journal to tell "mock missing" from "app never asked" —
-  the two techniques that find app-side root causes when the UI fails silently.
-- **`reference/swap-transfer-accounts.md`** — read for any **swap, transfer-mode (same-token swap), or
-  multi-account ("accounts mode")** test. Covers how the accounts main screen / receive selector are
-  navigated, and the four mock prerequisites a token needs to be swappable/transferable (native coin for
-  the fee, a price quote so fiat≠0, exchange-enabled assets, and a V3 derivation card for segwit `m/84'`
-  coins) — each missing one fails like a locator bug but is really missing mock data.
+  `@Ignore`, or driving WireMock scenarios. Includes how to find app-side root causes when the UI fails
+  silently (the app log in `files/log.txt`, and the WireMock journal).
