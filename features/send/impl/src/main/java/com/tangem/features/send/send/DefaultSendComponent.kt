@@ -30,6 +30,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponent
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -41,14 +43,12 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.success.SendConfirmSuccessComponent
-import com.tangem.features.send.subcomponents.amount.SendAmountComponent
-import com.tangem.features.send.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.subcomponents.amount.DefaultSendAmountComponent
 import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationBlockComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -57,6 +57,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendComponent.Params,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val amountComponentFactory: SendAmountComponent.Factory,
     private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
     private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
 ) : SendComponent, AppComponentContext by appComponentContext {
@@ -113,7 +114,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                             activeComponent.updateState(model.uiState.value)
                         }
                     }
-                    is SendAmountComponent -> {
+                    is DefaultSendAmountComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.AmountScreenOpened(
                                 categoryName = model.analyticCategoryName,
@@ -180,11 +181,11 @@ internal class DefaultSendComponent @AssistedInject constructor(
         )
 
     private fun getAmountComponent(factoryContext: AppComponentContext): ComposableContentComponent {
-        return SendAmountComponent(
-            appComponentContext = factoryContext,
+        return amountComponentFactory.create(
+            context = factoryContext,
             params = SendAmountComponentParams.AmountParams(
                 state = model.uiState.value.amountUM,
-                currentRoute = model.currentRoute.asStateFlow(),
+                currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 appCurrency = model.appCurrency,

@@ -24,8 +24,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.PromoCodeActivationResult
-import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
 import com.tangem.domain.wallets.usecase.BindRefcodeWithWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase

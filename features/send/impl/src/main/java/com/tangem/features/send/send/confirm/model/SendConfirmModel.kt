@@ -45,6 +45,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
@@ -69,7 +70,6 @@ import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSendi
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.features.send.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString

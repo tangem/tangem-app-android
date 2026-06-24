@@ -8,18 +8,22 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.subcomponents.amount.SendAmountBlockComponent
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.subcomponents.amount.model.SendAmountModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-internal class SendAmountBlockComponent(
-    appComponentContext: AppComponentContext,
-    private val params: SendAmountComponentParams.AmountBlockParams,
-    val onResult: (AmountState) -> Unit,
-    val onClick: () -> Unit,
-) : ComposableContentComponent, AppComponentContext by appComponentContext {
+internal class DefaultSendAmountBlockComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted private val params: SendAmountComponentParams.AmountBlockParams,
+    @Assisted val onResult: (AmountState) -> Unit,
+    @Assisted val onClick: () -> Unit,
+) : SendAmountBlockComponent, AppComponentContext by appComponentContext {
 
     private val model: SendAmountModel = getOrCreateModel(params = params)
 
@@ -29,7 +33,7 @@ internal class SendAmountBlockComponent(
         }.launchIn(componentScope)
     }
 
-    fun updateState(amountUM: AmountState) = model.updateState(amountUM)
+    override fun updateState(amountUM: AmountState) = model.updateState(amountUM)
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -43,5 +47,15 @@ internal class SendAmountBlockComponent(
             onClick = onClick,
             modifier = modifier,
         )
+    }
+
+    @AssistedFactory
+    interface Factory : SendAmountBlockComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: SendAmountComponentParams.AmountBlockParams,
+            onClick: () -> Unit,
+            onResult: (AmountState) -> Unit,
+        ): DefaultSendAmountBlockComponent
     }
 }

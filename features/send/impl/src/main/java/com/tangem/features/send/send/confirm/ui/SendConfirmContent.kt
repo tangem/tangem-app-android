@@ -18,7 +18,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockCo
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.common.ui.tapHelp
 import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.features.send.subcomponents.amount.SendAmountBlockComponent
+import com.tangem.features.send.subcomponents.amount.DefaultSendAmountBlockComponent
 import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.subcomponents.notifications
 import com.tangem.features.send.subcomponents.notifications.DefaultSendNotificationsComponent
@@ -31,7 +31,7 @@ private const val BLOCKS_KEY = "BLOCKS_KEY"
 internal fun SendConfirmContent(
     sendUM: SendUM,
     destinationBlockComponent: DefaultSendDestinationBlockComponent,
-    amountBlockComponent: SendAmountBlockComponent,
+    amountBlockComponent: DefaultSendAmountBlockComponent,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
     notificationsComponent: DefaultSendNotificationsComponent,
     notificationsUM: ImmutableList<NotificationUM>,
@@ -73,7 +73,7 @@ internal fun SendConfirmContent(
 
 private fun LazyListScope.blocks(
     destinationBlockComponent: DefaultSendDestinationBlockComponent,
-    amountBlockComponent: SendAmountBlockComponent,
+    amountBlockComponent: DefaultSendAmountBlockComponent,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
 ) {
     item(key = BLOCKS_KEY) {

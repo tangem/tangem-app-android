@@ -1,4 +1,4 @@
-package com.tangem.features.send.subcomponents.amount
+package com.tangem.features.send.api.subcomponents.amount
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -9,10 +9,10 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.common.CommonSendRoute
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-internal sealed class SendAmountComponentParams {
+sealed class SendAmountComponentParams {
 
     abstract val state: AmountState
     abstract val analyticsCategoryName: String
@@ -39,7 +39,7 @@ internal sealed class SendAmountComponentParams {
         override val accountFlow: StateFlow<Account?>,
         override val isAccountModeFlow: StateFlow<Boolean>,
         val callback: SendAmountComponent.ModelCallback,
-        val currentRoute: StateFlow<CommonSendRoute>,
+        val currentRoute: Flow<AmountRoute>,
     ) : SendAmountComponentParams()
 
     data class AmountBlockParams(
