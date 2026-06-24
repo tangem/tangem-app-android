@@ -157,13 +157,13 @@ internal class HomeModelTest {
         // Act + Assert — loading on
         progressSlot.captured.invoke(true)
         advanceUntilIdle()
-        assertThat(model.uiState.value.scanInProgress).isTrue()
+        assertThat(model.uiState.value.isScanInProgress).isTrue()
         assertThat(model.uiState.value.storiesConfig).isSameInstanceAs(initialConfig)
 
         // Act + Assert — loading off
         progressSlot.captured.invoke(false)
         advanceUntilIdle()
-        assertThat(model.uiState.value.scanInProgress).isFalse()
+        assertThat(model.uiState.value.isScanInProgress).isFalse()
         assertThat(model.uiState.value.storiesConfig).isSameInstanceAs(initialConfig)
 
         model.onDestroy()
