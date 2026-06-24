@@ -7,7 +7,7 @@ import com.tangem.domain.addressbook.model.Contact
  * Builds the canonical bytes that are signed for a single [AddressEntry]:
  * `address + networkId + memo + contactId + name`.
  *
- * Shared by [SignAddressEntriesUseCase] (which hashes and signs it) and `GetVerifiedContactsInteractor`
+ * Shared by `SaveContactInteractor` (which hashes and signs it) and `GetVerifiedContactsInteractor`
  * (which verifies the signature against it), so the signed and verified payloads can never diverge.
  */
 internal fun buildAddressEntryPayload(contact: Contact, entry: AddressEntry): ByteArray {
