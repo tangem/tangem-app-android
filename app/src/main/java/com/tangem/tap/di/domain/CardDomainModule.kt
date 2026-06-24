@@ -57,18 +57,6 @@ internal object CardDomainModule {
 
     @Provides
     @Singleton
-    fun provideHasSingleWalletSignedHashesUseCase(
-        cardRepository: CardRepository,
-        walletManagersFacade: WalletManagersFacade,
-    ): HasSingleWalletSignedHashesUseCase {
-        return HasSingleWalletSignedHashesUseCase(
-            cardRepository = cardRepository,
-            walletManagersFacade = walletManagersFacade,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideGetExtendedPublicKeyForCurrencyUseCase(
         derivationsRepository: DerivationsRepository,
         walletManagersFacade: WalletManagersFacade,

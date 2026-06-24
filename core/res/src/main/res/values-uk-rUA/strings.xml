@@ -1593,6 +1593,7 @@
   <string name="staking_enabled">Стейкінг увімкнено</string>
   <string name="staking_error_no_validators_message">Наразі немає вільних валідаторів. Повторіть спробу пізніше.</string>
   <string name="staking_error_no_validators_title">Стейкінг недоступний</string>
+  <string name="staking_error_unavailable_region">Стейкінг недоступний у вашому регіоні</string>
   <string name="staking_give_permission_fee_footer">Комісія за схвалення токену, щоб верифікувати, що саме ви дозволяєте використання токена для стейкінгу.</string>
   <string name="staking_legal">Використовуючи функцію стейкінгу, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="staking_locked">Заблоковано</string>
@@ -1672,6 +1673,8 @@
   <string name="staking_title_stake">Застейкати %s</string>
   <string name="staking_title_unstake">Зняти зі стейкінгу %s</string>
   <string name="staking_transaction_in_progress_text">Транзакція обробляється! Наразі триває перевірка в блокчейні. Це може зайняти кілька хвилин.</string>
+  <string name="staking_transaction_validation_unsafe">%s стейкінг заборонено за результатами перевірок безпеки</string>
+  <string name="staking_transaction_validation_warning">%s стейкінг викликає сумніви. Будь ласка, стейкайте на свій страх і ризик</string>
   <string name="staking_unbonding">Розблокування</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
   <string name="staking_unlocking">Розблокування</string>
@@ -1700,6 +1703,8 @@
   <string name="story_web3_title">Web 3.0 сумісність</string>
   <string name="sui_not_enough_coin_for_fee_description">Для відправки потрібна вхідна транзакція на суму не менше %1$s</string>
   <string name="sui_not_enough_coin_for_fee_title">Недостатньо коштів</string>
+  <string name="support_chat_screen_title">Чат підтримки</string>
+  <string name="support_chat_share_logs_button">Прикріпити логи</string>
   <string name="support_chat_swap_prefilled_message">Дані про операцію обміну:\nЗвідки: %1$s %2$s\nКуди: %3$s %4$s\nЧерез: %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Відкрити чат</string>
   <string name="support_selector_view_email_button">Відкрити пошту</string>
@@ -1752,7 +1757,7 @@
   <string name="swapping_insufficient_funds_description">Недостатньо коштів для завершення транзакції. Зменште суму отримання або додайте більше коштів</string>
   <string name="swapping_permission_header">Надати дозвіл</string>
   <string name="swapping_rate_experience_title">Оцініть ваш досвід взаємодії з провайдером</string>
-  <string name="swapping_rate_feedback_placeholder">Напишіть ваш відгук</string>
+  <string name="swapping_rate_feedback_placeholder">Залиште відгук (необов\'язково)</string>
   <string name="swapping_rate_feedback_submit">Надіслати відгук</string>
   <string name="swapping_rate_feedback_title">Що вплинуло на вашу оцінку?</string>
   <string name="swapping_swap_action">Обміняти</string>

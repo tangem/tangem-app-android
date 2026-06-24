@@ -295,7 +295,7 @@ class CreateAndSendGaslessTransactionUseCase(
     private suspend fun getEIP7702DataForGasless(
         gaslessDataProvider: EthereumGaslessDataProvider,
     ): EIP7702AuthorizationData {
-        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData()) {
+        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = false)) {
             is Result.Failure -> throw dataResult.error
             is Result.Success -> dataResult.data
         }

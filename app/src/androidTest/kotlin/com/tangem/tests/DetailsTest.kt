@@ -306,8 +306,8 @@ class DetailsTest : BaseTestCase() {
                 step("Assert 'Buy' button is not displayed") {
                     buyButton.assertIsNotDisplayed()
                 }
-                step("Assert 'Sell' button is not displayed") {
-                    sellButton.assertIsNotDisplayed()
+                step("Assert 'Transfer' button is not displayed") {
+                    transferButton.assertIsNotDisplayed()
                 }
                 step("Assert 'Swap' button is not displayed") {
                     swapButton.assertIsNotDisplayed()

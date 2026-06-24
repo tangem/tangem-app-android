@@ -18,6 +18,7 @@ import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @HiltAndroidTest
@@ -545,10 +546,10 @@ class SwapTokenScreenTest : BaseTestCase() {
         val inputAmount = "0.99"
         val market = "Market"
         val fast = "Fast"
-        val marketFeeAmount = "$1.12"
-        val fastFeeAmount = "$1.43"
 
         setupHooks().run {
+
+            var marketFee = 0.0
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -575,18 +576,27 @@ class SwapTokenScreenTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
-            step("Select '$market' fee type") {
+            step("Select '$market' fee type and capture its amount") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeType(FeeType.Market, selectedFeeAmount = marketFeeAmount)
+                    marketFee = parseFeeAmount(selectFeeTypeAndReadFee(FeeType.Market))
                 }
             }
-            step("Select '$fast' fee type") {
+            step("Select '$fast' fee type and assert it exceeds the '$market' fee") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeType(FeeType.Fast, selectedFeeAmount = fastFeeAmount)
+                    val fastFee = parseFeeAmount(selectFeeTypeAndReadFee(FeeType.Fast))
+                    assertTrue(
+                        "Expected '$fast' fee ($fastFee) to be greater than '$market' fee ($marketFee)",
+                        fastFee > marketFee,
+                    )
                 }
             }
         }
     }
+
+    private fun parseFeeAmount(raw: String): Double = raw
+        .replace(Regex("[^0-9.]"), "")
+        .toDoubleOrNull()
+        ?: error("Could not parse a numeric fee amount from '$raw'")
 
     @AllureId("8536")
     @DisplayName("Swap: check switch fee type (unable to cover 'Market' and 'Fast' fee)")

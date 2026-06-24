@@ -20,7 +20,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.wallets.usecase.HasSingleWalletSignedHashesUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
@@ -255,10 +254,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
         addCloreMigrationNotification(userWallet, flattenCurrencies, clickIntents)
 
-        if (!userWallet.isMultiCurrency) {
-            addNoAccountWarning(cryptoCurrencyStatus = flattenCurrencies.firstOrNull())
-        }
-
         addIf(
             element = WalletNotificationUM.NumberOfSignedHashesIncorrect(
                 onCloseClick = clickIntents::onCloseAlreadySignedHashesWarningClick,
@@ -294,19 +289,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             -> null
         }
         notification?.let(::add)
-    }
-
-    private fun MutableList<WalletNotificationUM>.addNoAccountWarning(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
-        val noAccountStatus = cryptoCurrencyStatus?.value as? CryptoCurrencyStatus.NoAccount
-        if (noAccountStatus != null) {
-            add(
-                element = WalletNotificationUM.NoAccount(
-                    network = cryptoCurrencyStatus.currency.name,
-                    amount = noAccountStatus.amountToCreateAccount.toString(),
-                    symbol = cryptoCurrencyStatus.currency.symbol,
-                ),
-            )
-        }
     }
 
     private fun MutableList<WalletNotificationUM>.addCloreMigrationNotification(

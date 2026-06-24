@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
@@ -29,8 +30,7 @@ class UpdateTopBarMenuTransformerTest {
     private val coldWallet: UserWallet.Cold = mockk(relaxed = true)
     private val hotWallet: UserWallet.Hot = mockk(relaxed = true)
     private val cardTypesResolver: CardTypesResolver = mockk(relaxed = true)
-    private val onGenerateExtendedKey: () -> Unit = mockk(relaxed = true)
-    private val onHideClick: () -> Unit = mockk(relaxed = true)
+    private val clickIntents: TokenDetailsClickIntents = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -77,8 +77,8 @@ class UpdateTopBarMenuTransformerTest {
         assertThat(result.topAppBarUM.menuItems).hasSize(1)
 
         result.topAppBarUM.menuItems.single().onClick()
-        verify(exactly = 1) { onHideClick.invoke() }
-        verify(exactly = 0) { onGenerateExtendedKey.invoke() }
+        verify(exactly = 1) { clickIntents.onHideClick() }
+        verify(exactly = 0) { clickIntents.onGenerateExtendedKey() }
     }
 
     @Test
@@ -170,6 +170,48 @@ class UpdateTopBarMenuTransformerTest {
     }
 
     @Test
+    fun `GIVEN dynamic addresses available WHEN transform THEN dynamic addresses item is shown first`() {
+        // GIVEN
+        every { cardTypesResolver.isSingleWalletWithToken() } returns false
+        val transformer = createTransformer(
+            userWallet = coldWallet,
+            hasDerivations = false,
+            isXPubSupported = false,
+            isDynamicAddressesAvailable = true,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN — Dynamic addresses item first, Hide token second
+        assertThat(result.topAppBarUM.menuItems).hasSize(2)
+
+        result.topAppBarUM.menuItems.first().onClick()
+        verify(exactly = 1) { clickIntents.onDynamicAddressesClick() }
+    }
+
+    @Test
+    fun `GIVEN dynamic addresses unavailable WHEN transform THEN dynamic addresses item is hidden`() {
+        // GIVEN
+        every { cardTypesResolver.isSingleWalletWithToken() } returns false
+        val transformer = createTransformer(
+            userWallet = coldWallet,
+            hasDerivations = false,
+            isXPubSupported = false,
+            isDynamicAddressesAvailable = false,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN — only Hide token
+        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+
+        result.topAppBarUM.menuItems.single().onClick()
+        verify(exactly = 0) { clickIntents.onDynamicAddressesClick() }
+    }
+
+    @Test
     fun `GIVEN callbacks WHEN menu items invoked THEN callbacks are dispatched`() {
         // GIVEN
         every { cardTypesResolver.isSingleWalletWithToken() } returns false
@@ -177,6 +219,7 @@ class UpdateTopBarMenuTransformerTest {
             userWallet = coldWallet,
             hasDerivations = true,
             isXPubSupported = true,
+            isDynamicAddressesAvailable = true,
         )
 
         // WHEN
@@ -184,20 +227,22 @@ class UpdateTopBarMenuTransformerTest {
         result.topAppBarUM.menuItems.forEach { it.onClick() }
 
         // THEN
-        verify(exactly = 1) { onGenerateExtendedKey.invoke() }
-        verify(exactly = 1) { onHideClick.invoke() }
+        verify(exactly = 1) { clickIntents.onDynamicAddressesClick() }
+        verify(exactly = 1) { clickIntents.onGenerateExtendedKey() }
+        verify(exactly = 1) { clickIntents.onHideClick() }
     }
 
     private fun createTransformer(
         userWallet: UserWallet,
         hasDerivations: Boolean,
         isXPubSupported: Boolean,
+        isDynamicAddressesAvailable: Boolean = false,
     ) = UpdateTopBarMenuTransformer(
         userWallet = userWallet,
         hasDerivations = hasDerivations,
-        isXPubSupported = isXPubSupported,
-        onGenerateExtendedKey = onGenerateExtendedKey,
-        onHideClick = onHideClick,
+        isXpubSupported = isXPubSupported,
+        isDynamicAddressesAvailable = isDynamicAddressesAvailable,
+        clickIntents = clickIntents,
     )
 
     private fun initialState(): TokenDetailsUM = TokenDetailsUM(

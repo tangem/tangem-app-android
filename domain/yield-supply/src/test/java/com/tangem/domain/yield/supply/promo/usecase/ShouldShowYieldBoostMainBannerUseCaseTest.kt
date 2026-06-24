@@ -5,11 +5,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldBoostPromo
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
 import com.tangem.domain.yield.supply.promo.YieldPromoRepository
+import io.mockk.Deregisterable
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.registerInstanceFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -23,9 +26,21 @@ class ShouldShowYieldBoostMainBannerUseCaseTest {
     private val contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     private val networkRawId = "ethereum"
 
+    // Stub concrete instances of the sealed return types so MockK doesn't subclass them while recording coEvery
+    // (Objenesis on a JVM-sealed type throws InstantiationError flakily under full-suite CI runs).
+    private val instanceFactories = mutableListOf<Deregisterable>()
+
     @BeforeEach
     fun setUp() {
+        instanceFactories += registerInstanceFactory { YieldBoostPromo.None }
+        instanceFactories += registerInstanceFactory { YieldBoostStatus.NotStarted }
         useCase = ShouldShowYieldBoostMainBannerUseCase(repository = repository)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        instanceFactories.forEach { it.deregister() }
+        instanceFactories.clear()
     }
 
     @Test

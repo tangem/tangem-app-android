@@ -76,7 +76,7 @@ fun BigDecimalFiatFormat.defaultAmount(): BigDecimalFormat = BigDecimalFormat { 
             )
         }
     } else {
-        formatter.format(value)
+        formatter.format(value.zeroIfRoundsToZero(FIAT_MARKET_DEFAULT_DIGITS))
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 }
@@ -94,7 +94,7 @@ fun BigDecimalFiatFormatStyled.defaultAmount(spanStyleReference: SpanStyleRefere
     val formattingAmount = if (value.isLessThanThreshold()) {
         FIAT_FORMAT_THRESHOLD
     } else {
-        value
+        value.zeroIfRoundsToZero(FIAT_MARKET_DEFAULT_DIGITS)
     }
 
     val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
@@ -272,6 +272,9 @@ fun BigDecimalFiatFormat.optionalDecimals(): BigDecimalFormat = BigDecimalFormat
 // == Helpers ==
 
 private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
+
+private fun BigDecimal.zeroIfRoundsToZero(scale: Int): BigDecimal =
+    if (setScale(scale, RoundingMode.HALF_UP).signum() == 0) BigDecimal.ZERO else this
 
 /**
  * Returns amount with correct scale

@@ -27,6 +27,15 @@ internal class OrderConflictRulesTest {
     }
 
     @Test
+    fun `IssueCard is blocked by an active plain virtual-card issue order`() {
+        val active = listOf(order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN, status = OrderStatus.PROCESSING))
+
+        val resolution = OrderConflictRules.resolve(OrderIntent.IssueCard, active)
+
+        assertThat(resolution).isInstanceOf(ConflictResolution.Blocked::class.java)
+    }
+
+    @Test
     fun `IssueCard is allowed when only withdraw is active`() {
         val active = listOf(order(type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING))
 

@@ -333,7 +333,6 @@
   <string name="common_error">Error</string>
   <string name="common_estimated_fee">Top-up network fee</string>
   <string name="common_exchange">Swap</string>
-  <string name="common_send_with_swap">Send&amp;Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
@@ -433,6 +432,7 @@
   <string name="common_send">Send</string>
   <string name="common_send_colon">Send:</string>
   <string name="common_send_tx_error">Failed to send transaction</string>
+  <string name="common_send_with_swap">Send&amp;Swap</string>
   <string name="common_sending">Sending</string>
   <string name="common_sent">Sent</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
@@ -701,6 +701,7 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
+  <string name="force_update_action">Update now</string>
   <string name="force_update_banner_message">Update the app to its latest version to ensure proper functionality</string>
   <string name="force_update_banner_title">Update needed</string>
   <string name="force_update_brick_description">This version of the app is no longer supported and can\'t be updated on this device.</string>
@@ -1294,9 +1295,9 @@
   <string name="quick_action_buy_description">Credit card or bank account</string>
   <string name="quick_action_receive_description">Share your address or QR-code</string>
   <string name="quick_action_sell_description">Sell crypto securely</string>
+  <string name="quick_action_send_and_swap_description">Send with swap to another token</string>
   <string name="quick_action_send_description">Send to another wallet</string>
   <string name="quick_action_swap_description">Between your portfolios</string>
-  <string name="quick_action_send_and_swap_description">Send with swap to another token</string>
   <string name="quick_top_up_chip_other">Other</string>
   <string name="quick_top_up_title">Quick top up</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
@@ -1550,6 +1551,7 @@
   <string name="staking_enabled">Staking enabled</string>
   <string name="staking_error_no_validators_message">No available validators at the moment. Please try again later.</string>
   <string name="staking_error_no_validators_title">Staking Unavailable</string>
+  <string name="staking_error_unavailable_region">Staking is unavailable in your region</string>
   <string name="staking_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the staking.</string>
   <string name="staking_legal">By using staking functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="staking_locked">Locked</string>
@@ -1629,6 +1631,8 @@
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Unstake %s</string>
   <string name="staking_transaction_in_progress_text">The transaction is being processed! Validation is currently underway in the blockchain. This may take a few minutes.</string>
+  <string name="staking_transaction_validation_unsafe">%s staking prohibited due to security checks</string>
+  <string name="staking_transaction_validation_warning">%s staking suspicious. Please stake at your own risk</string>
   <string name="staking_unbonding">Unbonding</string>
   <string name="staking_unlocked_locked">Unlock</string>
   <string name="staking_unlocking">Unlocking</string>
@@ -1657,6 +1661,8 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="support_chat_screen_title">Support chat</string>
+  <string name="support_chat_share_logs_button">Attach app logs</string>
   <string name="support_chat_swap_prefilled_message">SWAP operation data:\nFrom: %1$s %2$s\nTo: %3$s %4$s\nBy %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Open chat</string>
   <string name="support_selector_view_email_button">Open mail</string>
@@ -1709,7 +1715,7 @@
   <string name="swapping_insufficient_funds_description">Not enough funds to complete this transaction. Reduce the amount to receive or add more funds.</string>
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_rate_experience_title">Rate your experience with provider</string>
-  <string name="swapping_rate_feedback_placeholder">Type your feedback</string>
+  <string name="swapping_rate_feedback_placeholder">Type your feedback(optional)</string>
   <string name="swapping_rate_feedback_submit">Send feedback</string>
   <string name="swapping_rate_feedback_title">What affected your \nexperience?</string>
   <string name="swapping_swap_action">Swap</string>
@@ -1840,6 +1846,7 @@
   </plurals>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
+  <string name="tangempay_common_card">Card</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>
   <string name="tangempay_daily_limit_set_button">Set limits</string>
   <string name="tangempay_declined_reason_1">insufficient funds</string>
@@ -1957,7 +1964,7 @@
   <string name="tangempay_sync_needed_button">Renew session</string>
   <string name="tangempay_sync_needed_title">Payment account session expired</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
-  <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unavailable</string>
+  <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
@@ -2084,6 +2091,8 @@
   <string name="user_wallet_list_rename_popup_title">Rename wallet</string>
   <string name="user_wallet_list_unlock_all">Unlock all</string>
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
+  <string name="virtual_account_title">Virtual account</string>
+  <string name="virtual_account_transactions_empty">No transactions yet. Start spending and see history here</string>
   <string name="visa_balance_limits_details_aml_verified">AML verifired</string>
   <string name="visa_balance_limits_details_available">Available</string>
   <string name="visa_balance_limits_details_blocked">Blocked</string>

@@ -40,7 +40,6 @@ import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.extensions.orZero
@@ -107,7 +106,7 @@ class SwapTransferInteractorImpl @Inject constructor(
             fee = warningsFee,
             feeCurrencyBalanceAfterTransaction = null,
         )
-        val (isFeeCoverage, sendingAmount) = getCoverageState(
+        val coverageState = getCoverageState(
             fromTokenInfo = fromTokenInfo,
             userWallet = userWallet,
             fee = fee,
@@ -130,8 +129,9 @@ class SwapTransferInteractorImpl @Inject constructor(
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
             isAccountsMode = isAccountsMode,
-            isFeeCoverage = isFeeCoverage,
-            sendingAmount = sendingAmount,
+            isFeeCoverage = coverageState.isFeeCoverage,
+            sendingAmount = coverageState.sendingAmount,
+            isSendingAmountLoading = coverageState.isSendingAmountLoading,
             currencyCheck = currencyCheck,
         )
     }
@@ -155,7 +155,7 @@ class SwapTransferInteractorImpl @Inject constructor(
         userWallet: UserWallet,
         fee: Fee?,
         currencyCheck: CryptoCurrencyCheck,
-    ): Pair<Boolean, BigDecimal> {
+    ): CoverageState {
         val swapCurrencyStatus = fromTokenInfo.swapCurrencyStatus
         val isAmountSubtractAvailable = isAmountSubtractAvailable(
             userWalletId = userWallet.walletId,
@@ -173,15 +173,28 @@ class SwapTransferInteractorImpl @Inject constructor(
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy,
         )
-        val sendingAmount = checkAndCalculateSubtractedAmount(
-            isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = fromTokenInfo.swapCurrencyStatus.status,
-            amountValue = amount.value,
-            feeValue = feeValue,
-            reduceAmountBy = reduceAmountBy,
+        // When fee coverage applies, the entered amount can't be sent together with the fee, so the
+        // sent (and therefore received) amount is the entered amount reduced by the fee. This tracks the
+        // input: as the user edits the amount, the received amount changes with it.
+        val sendingAmount = if (isFeeCoverage) {
+            (amount.value - feeValue).coerceAtLeast(BigDecimal.ZERO)
+        } else {
+            amount.value
+        }
+        // While subtraction is possible but the fee has not loaded yet, the final received amount
+        // (entered - fee) is unknown, so it must be shown as loading instead of the un-subtracted value.
+        return CoverageState(
+            isFeeCoverage = isFeeCoverage,
+            sendingAmount = sendingAmount,
+            isSendingAmountLoading = fee == null && isAmountSubtractAvailable,
         )
-        return isFeeCoverage to sendingAmount
     }
+
+    private data class CoverageState(
+        val isFeeCoverage: Boolean,
+        val sendingAmount: BigDecimal,
+        val isSendingAmountLoading: Boolean,
+    )
 
     private suspend fun isAmountSubtractAvailable(
         userWalletId: UserWalletId,

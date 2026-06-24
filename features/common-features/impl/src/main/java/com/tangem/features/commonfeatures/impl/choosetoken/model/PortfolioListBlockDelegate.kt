@@ -40,6 +40,8 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
 
     private val onTokenItemClick: Channel<Pair<AccountStatus, CryptoCurrencyStatus>> = Channel()
 
+    private val isOnlyMultiCurrency: Boolean get() = !featureSettings.isShowSingleCurrencyWallets
+
     val onTokenChosen: Channel<ChooseTokenResult> = Channel()
     val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean> =
         MutableStateFlow { _, _ -> true }
@@ -53,7 +55,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
             multiAccountStatusListSupplier.invokeAsMap()
 
         val allWalletsFlow: StateFlow<LinkedHashMap<UserWalletId, UserWallet>> =
-            getWalletsUseCase.invokeAsMap().stateIn(this)
+            getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = isOnlyMultiCurrency).stateIn(this)
 
         onTokenItemClick.receiveAsFlow()
             .onEach { (account, currencyStatus) ->

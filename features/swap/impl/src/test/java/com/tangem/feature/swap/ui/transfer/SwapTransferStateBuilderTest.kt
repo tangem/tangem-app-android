@@ -22,6 +22,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
@@ -372,6 +373,123 @@ internal class SwapTransferStateBuilderTest {
         }
 
     @Test
+    fun `GIVEN fee coverage reduces amount WHEN createTransferState THEN receive card shows reduced sendingAmount`() =
+        runTest {
+            // entered 1.5, but fee coverage reduces the received (sending) amount to 1.3
+            val sendingAmount = BigDecimal("1.3")
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1.5"),
+                toAmount = sendingAmount,
+                isAccountsMode = false,
+                isFeeCoverage = true,
+            )
+
+            val result = sut.createTransferState(
+                actions = actions,
+                transferState = transferState,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = mockk(relaxed = true),
+            )
+
+            val sendCard = result.sendCardData as SwapCardState.SwapCardData
+            val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
+            val expectedFiat = stringReference(
+                toCurrencyStatus.status.value.fiatRate!!.multiply(sendingAmount).format {
+                    fiat(fiatCurrencyCode = AppCurrency.Default.code, fiatCurrencySymbol = AppCurrency.Default.symbol)
+                },
+            )
+            // the "from" card keeps the user's typed value, the receive card shows the reduced amount + its fiat
+            assertThat(sendCard.amountField?.value).isEqualTo(initialAmountValue)
+            assertThat(receiveCard.amountField?.value).isEqualTo(
+                sendingAmount.parseBigDecimal(transferState.toTokenInfo.tokenAmount.decimals),
+            )
+            assertThat(receiveCard.amountEquivalent).isEqualTo(expectedFiat)
+        }
+
+    @Test
+    fun `GIVEN sendingAmount loading WHEN createTransferState THEN receive card amount and fiat shimmer`() =
+        runTest {
+            // fee not loaded yet → reduced amount unknown → receive card shimmers (null amount + null fiat)
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1.5"),
+                toAmount = BigDecimal("1.5"),
+                isAccountsMode = false,
+                isSendingAmountLoading = true,
+            )
+
+            val result = sut.createTransferState(
+                actions = actions,
+                transferState = transferState,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = null,
+            )
+
+            val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
+            assertThat(receiveCard.amountField).isNull()
+            assertThat(receiveCard.amountEquivalent).isNull()
+        }
+
+    @Test
+    fun `GIVEN sendingAmount loading but insufficient balance WHEN createTransferState THEN receive card shows amount not shimmer`() =
+        runTest {
+            // Insufficient balance → fee coverage can't apply, so there is no reduction to wait for.
+            // The receive card must show the amount instead of shimmering.
+            val amount = BigDecimal("99")
+            val transferState = buildTransferState(
+                fromAmount = amount,
+                toAmount = amount,
+                isAccountsMode = false,
+                isInsufficientBalance = true,
+                isSendingAmountLoading = true,
+            )
+
+            val result = sut.createTransferState(
+                actions = actions,
+                transferState = transferState,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = null,
+            )
+
+            val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
+            assertThat(receiveCard.amountField?.value).isEqualTo(
+                amount.parseBigDecimal(transferState.toTokenInfo.tokenAmount.decimals),
+            )
+            assertThat(receiveCard.amountEquivalent).isNotNull()
+        }
+
+    @Test
+    fun `GIVEN reduced sendingAmount WHEN updateTransferButtonEnableState THEN receive card is rebuilt to reduced amount`() =
+        runTest {
+            // After the fee resolves, sendingAmount is reduced; the refresh path must rebuild the receive card
+            // so it no longer shows the stale full amount.
+            val sendingAmount = BigDecimal("1.3")
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1.5"),
+                toAmount = sendingAmount,
+                isAccountsMode = false,
+                isFeeCoverage = true,
+            )
+
+            val result = sut.updateTransferButtonEnableState(
+                dataState = SwapProcessDataState(),
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = mockk(relaxed = true),
+                isTangemPayWithdrawal = false,
+            )
+
+            val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
+            assertThat(receiveCard.amountField?.value).isEqualTo(
+                sendingAmount.parseBigDecimal(transferState.toTokenInfo.tokenAmount.decimals),
+            )
+        }
+
+    @Test
     fun `GIVEN Tron fee WHEN updateTransferButtonEnableState THEN transferFooter uses Tron token fee sending text`() =
         runTest {
             val fromAmount = BigDecimal("1")
@@ -505,16 +623,18 @@ internal class SwapTransferStateBuilderTest {
 
     @Test
     fun `GIVEN dataState with from-to currencies WHEN createSuccessState THEN success holder is built in transfer mode with given fee and txUrl`() {
-        val amount = BigDecimal("1.5")
+        // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
+        val fromAmount = BigDecimal("2.0")
+        val toAmount = BigDecimal("1.5")
         val transferState = buildTransferState(
-            fromAmount = amount,
-            toAmount = amount,
+            fromAmount = fromAmount,
+            toAmount = toAmount,
             isAccountsMode = true,
         )
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            amount = amount.toPlainString(),
+            amount = fromAmount.toPlainString(),
             currentTransferState = transferState,
         )
         val feeValue = BigDecimal("0.001")
@@ -555,6 +675,26 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.rate).isEqualTo(TextReference.EMPTY)
         assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
         assertThat(success.toTokenIconState).isEqualTo(toIcon)
+
+        // from side reflects dataState.amount, to side reflects transferState.sendingAmount
+        assertThat(success.fromTokenAmount)
+            .isEqualTo(stringReference(fromAmount.format { crypto(symbol = "ETH", decimals = 18) }))
+        assertThat(success.toTokenAmount)
+            .isEqualTo(stringReference(toAmount.format { crypto(symbol = "ETH", decimals = 18) }))
+        assertThat(success.fromTokenFiatAmount).isEqualTo(
+            stringReference(
+                fromCurrencyStatus.status.value.fiatRate!!.multiply(fromAmount).format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+        )
+        assertThat(success.toTokenFiatAmount).isEqualTo(
+            stringReference(
+                toCurrencyStatus.status.value.fiatRate!!.multiply(toAmount).format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+        )
 
         val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
         val expectedIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
@@ -643,21 +783,30 @@ internal class SwapTransferStateBuilderTest {
 
     @Test
     fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {
-        val sendingAmount = BigDecimal("1.5")
+        // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
+        val fromAmount = BigDecimal("2.0")
+        val toAmount = BigDecimal("1.5")
         val transferState = buildTransferState(
-            fromAmount = sendingAmount,
-            toAmount = sendingAmount,
+            fromAmount = fromAmount,
+            toAmount = toAmount,
             isAccountsMode = true,
         )
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
+            amount = fromAmount.toPlainString(),
             currentTransferState = transferState,
         )
         val onExploreClick = {}
         val appCurrency = transferState.appCurrency
-        val expectedFiat = stringReference(
-            fromCurrencyStatus.status.value.fiatRate!!.multiply(sendingAmount).format {
+        // both fiat amounts use the from-currency rate (see createTangemPayWithdrawalSuccessState)
+        val expectedFromFiat = stringReference(
+            fromCurrencyStatus.status.value.fiatRate!!.multiply(fromAmount).format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            },
+        )
+        val expectedToFiat = stringReference(
+            fromCurrencyStatus.status.value.fiatRate!!.multiply(toAmount).format {
                 fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
             },
         )
@@ -683,10 +832,10 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.rate).isEqualTo(TextReference.EMPTY)
         assertThat(success.timestamp).isAtLeast(before)
         assertThat(success.timestamp).isAtMost(after)
-        assertThat(success.fromTokenAmount).isEqualTo(stringReference(sendingAmount.toString()))
-        assertThat(success.toTokenAmount).isEqualTo(stringReference(sendingAmount.toString()))
-        assertThat(success.fromTokenFiatAmount).isEqualTo(expectedFiat)
-        assertThat(success.toTokenFiatAmount).isEqualTo(expectedFiat)
+        assertThat(success.fromTokenAmount).isEqualTo(stringReference(fromAmount.toString()))
+        assertThat(success.toTokenAmount).isEqualTo(stringReference(toAmount.toString()))
+        assertThat(success.fromTokenFiatAmount).isEqualTo(expectedFromFiat)
+        assertThat(success.toTokenFiatAmount).isEqualTo(expectedToFiat)
         assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
         assertThat(success.toTokenIconState).isEqualTo(toIcon)
         assertThat((success.navigationUM as NavigationUM.Content).primaryButton.onClick).isEqualTo(onExploreClick)
@@ -716,8 +865,12 @@ internal class SwapTransferStateBuilderTest {
     ) {
         val sendCard = result.sendCardData as SwapCardState.SwapCardData
         val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
+        // The "from" card preserves the user's typed value; the receive card shows the (possibly
+        // fee-reduced) sendingAmount formatted with the receive token's decimals.
         assertThat(sendCard.amountField?.value).isEqualTo(initialAmountValue)
-        assertThat(receiveCard.amountField?.value).isEqualTo(initialAmountValue)
+        assertThat(receiveCard.amountField?.value).isEqualTo(
+            transferState.sendingAmount.parseBigDecimal(transferState.toTokenInfo.tokenAmount.decimals),
+        )
         assertThat(sendCard.currencyIconState).isEqualTo(fromIcon)
         assertThat(receiveCard.currencyIconState).isEqualTo(toIcon)
         assertThat(sendCard.isBalanceHidden).isEqualTo(transferState.isBalanceHidden)
@@ -747,6 +900,8 @@ internal class SwapTransferStateBuilderTest {
         toAmount: BigDecimal,
         isAccountsMode: Boolean,
         isInsufficientBalance: Boolean = false,
+        isFeeCoverage: Boolean = false,
+        isSendingAmountLoading: Boolean = false,
     ): SwapState.Transfer {
         val fromInfo = TokenSwapInfo(
             tokenAmount = SwapAmount(value = fromAmount, decimals = fromCurrencyStatus.currency.decimals),
@@ -767,8 +922,9 @@ internal class SwapTransferStateBuilderTest {
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
             isAccountsMode = isAccountsMode,
-            isFeeCoverage = false,
-            sendingAmount = fromAmount,
+            isFeeCoverage = isFeeCoverage,
+            sendingAmount = toAmount,
+            isSendingAmountLoading = isSendingAmountLoading,
         )
     }
 

@@ -3,6 +3,7 @@ package com.tangem.tests.tangempay
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
@@ -53,11 +54,10 @@ class TangemPayTest : BaseTestCase() {
             step("Enter PIN '$newPin'") {
                 onTangemPayChangePinScreen { inputField.performTextInput(newPin) }
             }
-            step("Click on 'Submit' button") {
-                onTangemPayChangePinScreen { submitButton.performClick() }
-            }
-            step("Assert success screen is displayed") {
-                onTangemPayChangePinScreen { successTitle.assertIsDisplayed() }
+            step("Assert success screen title is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayChangePinScreen { successTitle.assertIsDisplayed() }
+                }
             }
             step("Click on 'Done' button") {
                 onTangemPayChangePinScreen { doneButton.clickWithAssertion() }
@@ -156,9 +156,11 @@ class TangemPayTest : BaseTestCase() {
         ).run {
             openTangemPay()
             step("Click on card button") {
+                waitForIdle()
                 onTangemPayMainScreen { cardButton.clickWithAssertion() }
             }
             step("Click on 'Show details' button") {
+                waitForIdle()
                 onTangemPayCardPageScreen { showDetailsButton.clickWithAssertion() }
             }
             step("Assert number, expiration and CVC values are visible") {

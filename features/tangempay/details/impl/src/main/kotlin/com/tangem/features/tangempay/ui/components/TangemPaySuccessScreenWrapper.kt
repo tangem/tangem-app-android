@@ -40,6 +40,7 @@ internal fun TangemPaySuccessScreenWrapper(
     fadeColor: Color = Color(DEFAULT_FADE_COLOR),
     titleTestTag: String? = null,
     subtitleTestTag: String? = null,
+    buttonTestTag: String? = null,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         Box(
@@ -90,7 +91,8 @@ internal fun TangemPaySuccessScreenWrapper(
             TangemButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = TangemTheme.dimens2.x3),
+                    .padding(vertical = TangemTheme.dimens2.x3)
+                    .then(buttonTestTag?.let { Modifier.testTag(it) } ?: Modifier),
                 onClick = onButtonClick,
                 size = TangemButton.Size.X12,
                 text = buttonText,

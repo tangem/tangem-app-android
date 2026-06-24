@@ -373,7 +373,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
-        if (isTopUpBlockedByBackupError(accountId.userWalletId)) return
 
         modelScope.launch(dispatchers.main) {
             if (needShowYieldSupplyWarning(cryptoCurrencyStatus)) {
@@ -462,7 +461,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
-        if (isTopUpBlockedByBackupError(userWalletId)) return
         if (!isMultiWalletTokensLoaded()) return
 
         modelScope.launch {

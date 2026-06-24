@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
@@ -32,6 +33,7 @@ import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUs
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -55,7 +57,7 @@ import java.math.BigInteger
  *
  * @see DexFeeResult for the returned shape.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class DexSwapFeeCalculator(
     private val getFeeUseCase: GetFeeUseCase,
     private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase,
@@ -79,54 +81,115 @@ class DexSwapFeeCalculator(
             ?.movePointLeft(nativeCoinDecimals)
             ?: BigDecimal.ZERO
 
-        if (isSolana(networkRawId)) {
-            val transactionBytes = Base64.decode(transaction.txData, Base64.NO_WRAP)
-            val formattedHash = getFormattedHash(transactionBytes)
-
-            // TODO Update after new firmware [REDACTED_JIRA]
-            if (formattedHash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES &&
-                fromSwapCurrencyStatus.userWallet is UserWallet.Cold
-            ) {
-                raise(GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError)
-            }
-
-            val solanaFee = getFeeDataForSolanaDexSwap(
+        when {
+            isBitcoin(networkRawId) -> calculateBitcoinFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                transactionBytes = transactionBytes,
-            )
-            DexFeeResult(
-                transactionFee = TransactionFeeResult.Loaded(solanaFee),
+                transaction = transaction,
+                nativeCoinDecimals = nativeCoinDecimals,
                 otherNativeFee = otherNativeFee,
-                gas = null,
             )
-        } else {
-            val rawFeeResult = getFeeDataForDexSwap(
+            isSolana(networkRawId) -> calculateSolanaFee(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                transaction = transaction,
+                otherNativeFee = otherNativeFee,
+            )
+            else -> calculateEvmFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 selectedToken = selectedToken,
                 permissionState = permissionState,
-            ).bind()
-            // Apply the 12% bump on EVM, mirroring SwapInteractorImpl.loadFeeForDex.
-            // The original cast `(fee as TransactionFeeResult.Loaded)` only holds when
-            // selectedToken == null; we defensively support LoadedExtended too so the calculator
-            // also handles the gasless-token DEX branch (currently unreachable from production
-            // callers, kept for symmetry with the CEX calculator).
-            val patched: TransactionFeeResult = when (rawFeeResult) {
-                is TransactionFeeResult.Loaded ->
-                    TransactionFeeResult.Loaded(patchEthGasLimitForSwap(rawFeeResult.fee))
-                is TransactionFeeResult.LoadedExtended ->
-                    TransactionFeeResult.LoadedExtended(
-                        rawFeeResult.fee.copy(
-                            transactionFee = patchEthGasLimitForSwap(rawFeeResult.fee.transactionFee),
-                        ),
-                    )
-            }
-            DexFeeResult(
-                transactionFee = patched,
                 otherNativeFee = otherNativeFee,
-                gas = transaction.gas,
             )
         }
+    }
+
+    /**
+     * Bitcoin swaps arrive as a ready-made PSBT whose miner fee is implied by
+     * sum(inputs) - sum(outputs); a single provider-fixed tier with no gas bump.
+     */
+    private suspend fun Raise<GetFeeError>.calculateBitcoinFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        nativeCoinDecimals: Int,
+        otherNativeFee: BigDecimal,
+    ): DexFeeResult {
+        val network = fromSwapCurrencyStatus.currency.network
+        val feeSatoshi = walletManagersFacade.getPsbtFee(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = network,
+            psbtBase64 = transaction.txData,
+        ) ?: raise(GetFeeError.UnknownError)
+        val feeAmount = Amount(
+            currencySymbol = network.currencySymbol,
+            value = feeSatoshi.movePointLeft(nativeCoinDecimals),
+            decimals = nativeCoinDecimals,
+        )
+        return DexFeeResult(
+            transactionFee = TransactionFeeResult.Loaded(TransactionFee.Single(normal = Fee.Common(feeAmount))),
+            otherNativeFee = otherNativeFee,
+            gas = null,
+        )
+    }
+
+    private suspend fun Raise<GetFeeError>.calculateSolanaFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        otherNativeFee: BigDecimal,
+    ): DexFeeResult {
+        val transactionBytes = Base64.decode(transaction.txData, Base64.NO_WRAP)
+        val formattedHash = getFormattedHash(transactionBytes)
+
+        // TODO Update after new firmware [REDACTED_JIRA]
+        if (formattedHash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES &&
+            fromSwapCurrencyStatus.userWallet is UserWallet.Cold
+        ) {
+            raise(GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError)
+        }
+
+        val solanaFee = getFeeDataForSolanaDexSwap(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            transactionBytes = transactionBytes,
+        )
+        return DexFeeResult(
+            transactionFee = TransactionFeeResult.Loaded(solanaFee),
+            otherNativeFee = otherNativeFee,
+            gas = null,
+        )
+    }
+
+    private suspend fun Raise<GetFeeError>.calculateEvmFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        selectedToken: CryptoCurrencyStatus?,
+        permissionState: PermissionDataState,
+        otherNativeFee: BigDecimal,
+    ): DexFeeResult {
+        val rawFeeResult = getFeeDataForDexSwap(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            transaction = transaction,
+            selectedToken = selectedToken,
+            permissionState = permissionState,
+        ).bind()
+        // Apply the 12% bump on EVM, mirroring SwapInteractorImpl.loadFeeForDex.
+        // The original cast `(fee as TransactionFeeResult.Loaded)` only holds when
+        // selectedToken == null; we defensively support LoadedExtended too so the calculator
+        // also handles the gasless-token DEX branch (currently unreachable from production
+        // callers, kept for symmetry with the CEX calculator).
+        val patched: TransactionFeeResult = when (rawFeeResult) {
+            is TransactionFeeResult.Loaded ->
+                TransactionFeeResult.Loaded(patchEthGasLimitForSwap(rawFeeResult.fee))
+            is TransactionFeeResult.LoadedExtended ->
+                TransactionFeeResult.LoadedExtended(
+                    rawFeeResult.fee.copy(
+                        transactionFee = patchEthGasLimitForSwap(rawFeeResult.fee.transactionFee),
+                    ),
+                )
+        }
+        return DexFeeResult(
+            transactionFee = patched,
+            otherNativeFee = otherNativeFee,
+            gas = transaction.gas,
+        )
     }
 
     /**

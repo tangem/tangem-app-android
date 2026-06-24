@@ -105,8 +105,7 @@ class TokenActionsHandler @AssistedInject constructor(
 
     private fun isTopUpBlockedByBackupError(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
         val isBlockedAction = action == TokenActionsBSContentUM.Action.Buy ||
-            action == TokenActionsBSContentUM.Action.Receive ||
-            action == TokenActionsBSContentUM.Action.Exchange
+            action == TokenActionsBSContentUM.Action.Receive
         if (!isBlockedAction) return false
         if (!isWalletBackupProblematicUseCase(userWallet)) return false
 
