@@ -1,4 +1,4 @@
-package com.tangem.features.send.api.entity
+package com.tangem.features.send.api.subcomponents.feeSelector.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.Amount
