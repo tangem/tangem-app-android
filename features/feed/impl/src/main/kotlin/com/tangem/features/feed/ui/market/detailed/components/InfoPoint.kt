@@ -128,7 +128,7 @@ private fun InfoPointV2(infoPointUM: InfoPointUM, modifier: Modifier = Modifier)
                         },
                     ),
                     tint = when (infoPointUM.change) {
-                        InfoPointUM.ChangeType.UP -> TangemTheme.colors2.markers.iconGreen
+                        InfoPointUM.ChangeType.UP -> TangemTheme.colors2.markers.iconBlue
                         InfoPointUM.ChangeType.DOWN -> TangemTheme.colors2.markers.iconRed
                     },
                     contentDescription = null,
