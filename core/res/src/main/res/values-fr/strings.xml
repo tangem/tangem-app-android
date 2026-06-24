@@ -1500,6 +1500,8 @@
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">déstaker %s</string>
   <string name="staking_transaction_in_progress_text">La transaction est en cours de traitement ! La validation est actuellement en cours dans la blockchain. Cela peut prendre quelques minutes.</string>
+  <string name="staking_transaction_validation_unsafe">%s staking interdit en raison de contrôles de sécurité</string>
+  <string name="staking_transaction_validation_warning">%s staking suspicieux. Continuez à vos propres risques.</string>
   <string name="staking_unbonding">Dissociation</string>
   <string name="staking_unlocked_locked">Débloquer</string>
   <string name="staking_unlocking">Déverrouillage</string>
@@ -1528,6 +1530,8 @@
   <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
   <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
+  <string name="support_chat_screen_title">Discussion avec le support</string>
+  <string name="support_chat_share_logs_button">Joindre les logs de l\'application</string>
   <string name="support_chat_swap_prefilled_message">Données du SWAP :\nDepuis :%1$s%2$s\nVers :%3$s%4$s\nPar :%5$s-%6$s</string>
   <string name="support_selector_view_chat_button">Accéder au chat</string>
   <string name="support_selector_view_email_button">Ouvrir un email</string>

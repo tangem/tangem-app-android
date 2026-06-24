@@ -307,7 +307,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         preselectedNetworkId: String? = null,
     ): DefaultEarnComponent.Params = DefaultEarnComponent.Params(
         onBackClick = onBack,
-        onSearchClicked = clickIntents::openSearch,
         preselectedEarnType = preselectedEarnType,
         preselectedNetworkId = preselectedNetworkId,
     )

@@ -43,10 +43,10 @@ import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -101,7 +101,6 @@ import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.ui.transfer.SwapTransferStateBuilder
-import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.GiveApprovalEntryComponent
@@ -541,6 +540,10 @@ internal class SwapModel @Inject constructor(
                         )
                     },
                 ),
+                isTransferMode = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                    fromSwapCurrency = fromSwapCurrencyStatus?.currency,
+                    toSwapCurrency = toSwapCurrencyStatus?.currency,
+                ),
             ),
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -622,6 +625,10 @@ internal class SwapModel @Inject constructor(
                                 fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
                             )
                         },
+                    ),
+                    isTransferMode = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                        fromSwapCurrency = newFromSwapCurrencyStatus?.currency,
+                        toSwapCurrency = newToSwapCurrencyStatus?.currency,
                     ),
                 ),
                 fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
@@ -740,6 +747,10 @@ internal class SwapModel @Inject constructor(
                             fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
                         )
                     },
+                ),
+                isTransferMode = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                    fromSwapCurrency = fromSwapCurrencyStatus.currency,
+                    toSwapCurrency = toSwapCurrencyStatus.currency,
                 ),
             ),
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1697,17 +1708,19 @@ internal class SwapModel @Inject constructor(
      * value is converted to the active input currency for display, while quotes still use crypto.
      */
     private fun applyCryptoAmount(
-        cryptoValue: String,
+        cryptoAmount: SwapAmount,
         forceQuotesUpdate: Boolean = false,
         reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
     ) {
+        val cryptoValue = cryptoAmount.value.parseBigDecimal(cryptoAmount.decimals)
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
         val fiatRate = fromSwapCurrencyStatus?.status?.value?.fiatRate
         val fieldValue = if (fromSwapCurrencyStatus != null && isFiatInput.value && fiatRate != null) {
-            cryptoValue.toFiatFromCrypto(fiatRate)
+            cryptoAmount.value.toFiatFromCrypto(fiatRate)
         } else {
             cryptoValue
         }
+
         updateAmount(
             cryptoValue = cryptoValue,
             fieldValue = fieldValue,
@@ -1806,7 +1819,7 @@ internal class SwapModel @Inject constructor(
     private fun onMaxAmountClicked() {
         dataState.fromSwapCurrencyStatus?.let { fromCurrency ->
             val balance = swapInteractor.getTokenBalance(fromCurrency.status)
-            applyCryptoAmount(balance.formatToUIRepresentation())
+            applyCryptoAmount(balance)
         }
     }
 
@@ -1822,17 +1835,13 @@ internal class SwapModel @Inject constructor(
             decimals = fromCurrency.status.currency.decimals,
             percent = percent,
         )
-        applyCryptoAmount(
-            SwapAmount(
-                value = newValue,
-                decimals = fromCurrency.status.currency.decimals,
-            ).formatToUIRepresentation(),
-        )
+
+        applyCryptoAmount(SwapAmount(newValue, fromCurrency.status.currency.decimals))
     }
 
     private fun onReduceAmountClicked(newAmount: SwapAmount, reduceBalanceBy: BigDecimal = BigDecimal.ZERO) {
         applyCryptoAmount(
-            cryptoValue = newAmount.formatToUIRepresentation(),
+            cryptoAmount = newAmount,
             forceQuotesUpdate = true,
             reduceBalanceBy = reduceBalanceBy,
         )
@@ -1850,8 +1859,13 @@ internal class SwapModel @Inject constructor(
             .parseBigDecimal(cryptoDecimals)
     }
 
+    private fun BigDecimal.toFiatFromCrypto(fiatRate: BigDecimal): String {
+        return multiply(fiatRate)
+            .parseBigDecimal(FIAT_DECIMALS)
+    }
+
     private fun String.toFiatFromCrypto(fiatRate: BigDecimal): String {
-        return parseToBigDecimal(FIAT_DECIMALS)
+        return (parseBigDecimalOrNull() ?: BigDecimal.ZERO)
             .multiply(fiatRate)
             .parseBigDecimal(FIAT_DECIMALS)
     }
