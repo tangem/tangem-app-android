@@ -190,11 +190,13 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemTypography3.current
 
+    @Deprecated("Use plain dp")
     val dimens: TangemDimens
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemDimens.current
 
+    @Deprecated("Use plain dp")
     val dimens2: TangemDimens2
         @Composable
         @ReadOnlyComposable
