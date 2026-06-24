@@ -65,10 +65,10 @@ internal class ItemsBuilderTest {
             "support",
         ).inOrder()
 
-        val block = result.first() as DetailsItemUM.WalletConnectAddressBookBlock
+        val block = result.first() as DetailsItemUM.WalletActionBlock
         assertThat(block.items.map { it::class.java }).containsExactly(
-            DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect::class.java,
-            DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook::class.java,
+            DetailsItemUM.WalletActionBlock.Item.WalletConnect::class.java,
+            DetailsItemUM.WalletActionBlock.Item.AddressBook::class.java,
         ).inOrder()
     }
 
@@ -86,9 +86,9 @@ internal class ItemsBuilderTest {
             "support",
         ).inOrder()
 
-        val block = result.first() as DetailsItemUM.WalletConnectAddressBookBlock
+        val block = result.first() as DetailsItemUM.WalletActionBlock
         assertThat(block.items.map { it::class.java }).containsExactly(
-            DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook::class.java,
+            DetailsItemUM.WalletActionBlock.Item.AddressBook::class.java,
         )
     }
 
@@ -109,9 +109,9 @@ internal class ItemsBuilderTest {
     fun `GIVEN combined block walletConnect item WHEN clicked THEN router pushes WalletConnectSessions`() {
         // Arrange
         val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
-        val block = result.first() as DetailsItemUM.WalletConnectAddressBookBlock
+        val block = result.first() as DetailsItemUM.WalletActionBlock
         val walletConnect = block.items
-            .filterIsInstance<DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect>()
+            .filterIsInstance<DetailsItemUM.WalletActionBlock.Item.WalletConnect>()
             .single()
 
         // Act
@@ -125,9 +125,9 @@ internal class ItemsBuilderTest {
     fun `GIVEN combined block addressBook item WHEN clicked THEN router pushes AddressBook`() {
         // Arrange
         val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
-        val block = result.first() as DetailsItemUM.WalletConnectAddressBookBlock
+        val block = result.first() as DetailsItemUM.WalletActionBlock
         val addressBook = block.items
-            .filterIsInstance<DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook>()
+            .filterIsInstance<DetailsItemUM.WalletActionBlock.Item.AddressBook>()
             .single()
 
         // Act
