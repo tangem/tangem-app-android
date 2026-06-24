@@ -89,8 +89,9 @@ internal class TxInfoToTxHistoryDetailsUMConverter(
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         currencyIcon = iconStateConverter.convert(currency),
         amount = stringReference(signedAmount(currency)),
-        // TODO: TxInfo has no fiat amount yet — placeholder until the fiat field is added to TxInfo.
-        fiatAmount = stringReference("\$0.00"),
+        // TODO: TxInfo has no fiat amount yet — empty until the fiat field is added to TxInfo; a hardcoded
+        //  placeholder would show a misleading value.
+        fiatAmount = TextReference.EMPTY,
         isFailed = status is TxInfo.TransactionStatus.Failed,
     )
 
