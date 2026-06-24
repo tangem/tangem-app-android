@@ -128,6 +128,7 @@ import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -232,6 +233,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
+    val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },

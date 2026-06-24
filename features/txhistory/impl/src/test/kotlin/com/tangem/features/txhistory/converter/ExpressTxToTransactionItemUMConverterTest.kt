@@ -196,21 +196,19 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN matched on-chain leg WHEN row clicked THEN opens explorer by match hash`() {
-        val result = converter.convert(
-            createSwap(status = ExpressExchangeStatus.Waiting, matchHash = "0xhash", isOutgoing = true),
-        ) as TransactionItemUM.Content
+    fun `GIVEN express row WHEN row clicked THEN opens in-app details for that tx`() {
+        val swap = createSwap(status = ExpressExchangeStatus.Waiting, isOutgoing = true)
+        val result = converter.convert(swap) as TransactionItemUM.Content
 
         result.onClick()
 
-        verify { txHistoryUiActions.openTxInExplorer("0xhash") }
+        verify { txHistoryUiActions.onTransactionClick(swap) }
     }
 
     // endregion
 
     private fun createSwap(
         status: ExpressExchangeStatus,
-        matchHash: String? = null,
         isOutgoing: Boolean = true,
         fromAmount: BigDecimal? = BigDecimal("1.5"),
         toAmount: BigDecimal? = BigDecimal("0.001"),
@@ -220,8 +218,8 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             status = status,
             createdAtMillis = 100,
             provider = null,
-            payinHash = matchHash.takeIf { isOutgoing },
-            payoutHash = matchHash.takeUnless { isOutgoing },
+            payinHash = null,
+            payoutHash = null,
             fromAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "eth", contractAddress = "0"),
                 amount = fromAmount,
