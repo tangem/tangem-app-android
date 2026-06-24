@@ -27,7 +27,9 @@ import com.tangem.features.home.impl.ui.state.Stories
 import kotlin.math.max
 import com.tangem.core.ui.R
 import com.tangem.features.home.impl.ui.state.HomeUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
+@RemoveWithToggle("AND_15901_STORIES_CONTAINER_ENABLED")
 @Composable
 internal fun StoriesScreenV2(state: HomeUM, onGetStartedClick: () -> Unit, modifier: Modifier = Modifier) {
     var currentStory by remember { mutableStateOf(state.firstStory) }
@@ -61,7 +63,7 @@ internal fun StoriesScreenV2(state: HomeUM, onGetStartedClick: () -> Unit, modif
             storiesSize = state.stories.lastIndex,
             currentStoryIndex = currentStoryIndex,
             currentStory = currentStory,
-            isScanInProgress = state.scanInProgress,
+            isScanInProgress = state.isScanInProgress,
             onGoToPreviousStory = goToPreviousStory,
             onGoToNextStory = goToNextStory,
             onGetStartedClick = onGetStartedClick,

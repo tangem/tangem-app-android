@@ -26,8 +26,8 @@ import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
-import com.tangem.features.onramp.swap.entity.AccountCurrencyUM
+import com.tangem.features.onramp.tokenlist.entity.AccountAvailabilityUM
+import com.tangem.features.onramp.tokenlist.entity.AccountCurrencyUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.*
 import com.tangem.features.onramp.tokenlist.entity.transformer.SetLoadingAccountTokenListTransformer

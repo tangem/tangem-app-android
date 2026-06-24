@@ -9,13 +9,13 @@ import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmoun
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -29,19 +29,21 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.entity.isFromMainScreenQr
+import com.tangem.features.send.api.subcomponents.amount.AmountRoute
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceListener
+import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateListener
 import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents.SelectedCurrencyType
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.common.CommonSendRoute
-import com.tangem.features.send.subcomponents.amount.SendAmountComponentParams
-import com.tangem.features.send.subcomponents.amount.SendAmountReduceListener
-import com.tangem.features.send.subcomponents.amount.SendAmountUpdateListener
 import com.tangem.features.send.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -271,13 +273,17 @@ internal class SendAmountModel @Inject constructor(
 
     override fun onConvertToAnotherToken() {
         val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
-        if (amountParams.currentRoute.value.isEditMode) {
-            sendAmountAlertFactory.showResetSendingAlert {
-                params.callback.resetSendNavigation()
+        modelScope.launch {
+            var isEditMode = false
+            amountParams.currentRoute.collect { route -> isEditMode = route.isEditMode }
+            if (isEditMode) {
+                sendAmountAlertFactory.showResetSendingAlert {
+                    params.callback.resetSendNavigation()
+                    confirmConvertToToken()
+                }
+            } else {
                 confirmConvertToToken()
             }
-        } else {
-            confirmConvertToToken()
         }
     }
 
@@ -361,7 +367,9 @@ internal class SendAmountModel @Inject constructor(
         val params = params as? SendAmountComponentParams.AmountParams ?: return
         combine(
             flow = uiState,
-            flow2 = params.currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
+            // Filter on the public AmountRoute interface (not the internal CommonSendRoute.Amount) so an
+            // external host (e.g. staking) that supplies its own AmountRoute is not silently dropped here.
+            flow2 = params.currentRoute.filterIsInstance<AmountRoute>(),
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
             setSendWithSwapAvailability()
