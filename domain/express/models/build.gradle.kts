@@ -9,4 +9,5 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.onramp.models)
 }
