@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object VirtualAccountDetailsModule {
+internal object VirtualAccountMainModule {
 
     @Provides
     @Singleton
