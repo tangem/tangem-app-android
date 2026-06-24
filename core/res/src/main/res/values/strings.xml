@@ -418,6 +418,7 @@
   <string name="common_privacy_policy">Privacy Policy</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
+  <string name="common_rate">Rate</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_received">Received</string>

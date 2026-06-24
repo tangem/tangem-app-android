@@ -66,6 +66,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                     cryptoCurrency = value.toCurrency,
                 ),
                 country = value.country,
+                externalTxUrl = entity.externalTxUrl,
             ),
             txInfo = null,
         )
@@ -100,6 +101,7 @@ private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): Excha
             decimals = entity.to.decimals,
             cryptoCurrency = value.toCurrency,
         ),
+        externalTxUrl = entity.externalTxUrl,
     )
 }
 
