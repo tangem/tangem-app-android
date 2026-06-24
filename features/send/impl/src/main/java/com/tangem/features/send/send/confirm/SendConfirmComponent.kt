@@ -27,8 +27,8 @@ import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.confirm.ui.SendConfirmContent
 import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.features.send.subcomponents.amount.SendAmountBlockComponent
-import com.tangem.features.send.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.subcomponents.amount.DefaultSendAmountBlockComponent
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
@@ -60,7 +60,7 @@ internal class SendConfirmComponent(
             onClick = model::showEditDestination,
         )
 
-    private val amountBlockComponent = SendAmountBlockComponent(
+    private val amountBlockComponent = DefaultSendAmountBlockComponent(
         appComponentContext = child("sendConfirmAmountBlock"),
         params = SendAmountComponentParams.AmountBlockParams(
             state = model.uiState.value.amountUM,
