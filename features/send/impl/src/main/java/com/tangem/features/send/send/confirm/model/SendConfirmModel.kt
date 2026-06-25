@@ -10,7 +10,6 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -160,7 +159,6 @@ internal class SendConfirmModel @Inject constructor(
 
     init {
         updateAmountSubtractAvailability()
-        configConfirmNavigation()
         subscribeOnNotificationsUpdateTrigger()
         subscribeOnCheckFeeResultUpdates()
         initialState()
@@ -301,6 +299,17 @@ internal class SendConfirmModel @Inject constructor(
             analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Send))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
         }
+    }
+
+    fun onBackClick() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.CloseButtonClicked(
+                categoryName = analyticsCategoryName,
+                source = SendScreenSource.Confirm,
+                isFromSummary = true,
+                isValid = uiState.value.confirmUM.isPrimaryButtonEnabled,
+            ),
+        )
     }
 
     private fun initialState() {
@@ -543,58 +552,7 @@ internal class SendConfirmModel @Inject constructor(
         return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }
 
-    @Suppress("LongMethod")
-    private fun configConfirmNavigation() {
-        combine(
-            flow = uiState,
-            flow2 = params.currentRoute,
-            transform = { state, route -> state to route },
-        ).filter {
-            it.second is CommonSendRoute.Confirm
-        }.onEach { (state, _) ->
-            val confirmUM = state.confirmUM
-            params.callback.onResult(
-                state.copy(
-                    navigationUM = NavigationUM.Content(
-                        source = CommonSendRoute.Confirm.javaClass.simpleName,
-                        title = resourceReference(id = R.string.common_send),
-                        subtitle = null,
-                        backIconRes = when (confirmUM) {
-                            is ConfirmUM.Success -> R.drawable.ic_close_24
-                            else -> R.drawable.ic_back_24
-                        },
-                        backIconClick = {
-                            analyticsEventHandler.send(
-                                CommonSendAnalyticEvents.CloseButtonClicked(
-                                    categoryName = analyticsCategoryName,
-                                    source = SendScreenSource.Confirm,
-                                    isFromSummary = true,
-                                    isValid = confirmUM.isPrimaryButtonEnabled,
-                                ),
-                            )
-                            router.pop()
-                        },
-                        primaryButton = primaryButtonUM(),
-                        prevButton = null,
-                        secondaryPairButtonsUM = (
-                            NavigationButton(
-                                textReference = resourceReference(R.string.common_explore),
-                                iconRes = R.drawable.ic_web_24,
-                                onClick = ::onExploreClick,
-                            ) to NavigationButton(
-                                textReference = resourceReference(R.string.common_share),
-                                iconRes = R.drawable.ic_share_24,
-                                onClick = ::onShareClick,
-                            )
-                            ).takeIf { confirmUM is ConfirmUM.Success },
-                    ),
-                ),
-            )
-        }.launchIn(modelScope)
-    }
-
-    private fun primaryButtonUM(): NavigationButton {
-        val confirmUM = uiState.value.confirmUM
+    fun primaryButtonUM(confirmUM: ConfirmUM): NavigationButton {
         val isContent = confirmUM is ConfirmUM.Content
         val isReadyToSend = isContent && !confirmUM.isSending
         val isHoldToConfirm = userWallet.isHotWallet && isContent

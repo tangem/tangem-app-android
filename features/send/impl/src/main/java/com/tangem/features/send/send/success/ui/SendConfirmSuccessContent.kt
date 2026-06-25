@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
-import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
 import com.tangem.core.ui.components.Fade
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
@@ -63,14 +62,6 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
                     backgroundColor = TangemTheme.colors.background.tertiary,
                 )
             }
-            NavigationButtonsBlockV2(
-                navigationUM = sendUM.navigationUM,
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp,
-                ),
-            )
         }
     }
 }

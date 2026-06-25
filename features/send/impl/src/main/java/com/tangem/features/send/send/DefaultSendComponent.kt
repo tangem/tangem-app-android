@@ -1,15 +1,9 @@
 package com.tangem.features.send.send
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -17,49 +11,45 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
+import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.subcomponents.amount.AmountRoute
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
 import com.tangem.features.send.common.CommonSendRoute
-import com.tangem.features.send.common.ui.SendContent
+import com.tangem.features.send.common.ui.SendModularContent
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.success.SendConfirmSuccessComponent
-import com.tangem.features.send.subcomponents.amount.DefaultSendAmountComponent
-import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationBlockComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.launch
 
-@Suppress("LargeClass")
+@Suppress("LongParameterList")
 internal class DefaultSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendComponent.Params,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val amountComponentFactory: SendAmountComponent.Factory,
+    private val destinationComponentFactory: SendDestinationComponent.Factory,
+    private val sendConfirmSuccessComponent: SendConfirmSuccessComponent.Factory,
     private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
-    private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
 ) : SendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
@@ -93,48 +83,45 @@ internal class DefaultSendComponent @AssistedInject constructor(
             lifecycle = lifecycle,
             mode = ObserveLifecycleMode.CREATE_DESTROY,
         ) { stack ->
-            componentScope.launch {
-                when (val activeComponent = stack.active.instance) {
-                    is SendConfirmComponent -> {
-                        val fromCurrency = params.currency
-                        val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
-                            .takeIf { model.isAccountModeFlow.value }
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.ConfirmationScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                                sendBlockchain = fromCurrency.network.name,
-                                sendToken = fromCurrency.symbol,
-                                fromDerivationIndex = fromDerivationIndex,
-                                toDerivationIndex = null,
-                                type = model.consumeEntryType(),
-                            ),
-                        )
-                        if (model.currentRoute.value.isEditMode) {
-                            activeComponent.updateState(model.uiState.value)
-                        }
-                    }
-                    is DefaultSendAmountComponent -> {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AmountScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                                type = model.consumeEntryType(),
-                            ),
-                        )
-                        activeComponent.updateState(model.uiState.value.amountUM)
-                    }
-                    is SendDestinationComponent -> {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AddressScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                            ),
-                        )
-                        activeComponent.updateState(model.uiState.value.destinationUM)
+            when (val activeComponent = stack.active.instance) {
+                is SendConfirmComponent -> {
+                    val fromCurrency = params.currency
+                    val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
+                        .takeIf { model.isAccountModeFlow.value }
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.ConfirmationScreenOpened(
+                            categoryName = model.analyticCategoryName,
+                            source = model.analyticsSendSource,
+                            sendBlockchain = fromCurrency.network.name,
+                            sendToken = fromCurrency.symbol,
+                            fromDerivationIndex = fromDerivationIndex,
+                            toDerivationIndex = null,
+                            type = model.consumeEntryType(),
+                        ),
+                    )
+                    if (childStack.value.active.configuration.isEditMode) {
+                        activeComponent.updateState(model.uiState.value)
                     }
                 }
-                model.currentRoute.emit(stack.active.configuration)
+                is SendAmountComponent -> {
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.AmountScreenOpened(
+                            categoryName = model.analyticCategoryName,
+                            source = model.analyticsSendSource,
+                            type = model.consumeEntryType(),
+                        ),
+                    )
+                    activeComponent.updateState(model.uiState.value.amountUM)
+                }
+                is SendDestinationComponent -> {
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.AddressScreenOpened(
+                            categoryName = model.analyticCategoryName,
+                            source = model.analyticsSendSource,
+                        ),
+                    )
+                    activeComponent.updateState(model.uiState.value.destinationUM)
+                }
             }
         }
     }
@@ -142,34 +129,31 @@ internal class DefaultSendComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by childStack.subscribeAsState()
-        val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(
-            onBack = {
-                (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
-            },
-        )
-        SendContent(
-            navigationUM = state.navigationUM,
-            confirmUM = state.confirmUM,
-            stackState = stackState,
-        )
+        BackHandler(onBack = ::onChildBack)
+        SendModularContent(stackState = stackState)
     }
 
-    private fun createChild(route: CommonSendRoute, factoryContext: AppComponentContext) = when (route) {
-        CommonSendRoute.Empty -> getStubComponent()
-        is CommonSendRoute.Destination -> getDestinationComponent(factoryContext)
-        is CommonSendRoute.Amount -> getAmountComponent(factoryContext)
+    private fun createChild(
+        route: CommonSendRoute,
+        factoryContext: AppComponentContext,
+    ): ComposableModularContentComponent = when (route) {
+        CommonSendRoute.Empty -> ComposableModularContentComponent.EMPTY
+        is CommonSendRoute.Destination -> getDestinationComponent(route, factoryContext)
+        is CommonSendRoute.Amount -> getAmountComponent(route, factoryContext)
         is CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
         is CommonSendRoute.ConfirmSuccess -> getConfirmSuccessComponent(factoryContext)
     }
 
-    private fun getDestinationComponent(factoryContext: AppComponentContext): SendDestinationComponent =
-        sendDestinationComponentFactory.create(
+    private fun getDestinationComponent(
+        route: DestinationRoute,
+        factoryContext: AppComponentContext,
+    ): ComposableModularContentComponent {
+        return destinationComponentFactory.create(
             context = factoryContext,
             params = SendDestinationComponentParams.DestinationParams(
                 state = model.uiState.value.destinationUM,
-                currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
+                route = route,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 analyticsSendSource = model.analyticsSendSource,
@@ -179,13 +163,17 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 callback = model,
             ),
         )
+    }
 
-    private fun getAmountComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getAmountComponent(
+        route: AmountRoute,
+        factoryContext: AppComponentContext,
+    ): ComposableModularContentComponent {
         return amountComponentFactory.create(
             context = factoryContext,
             params = SendAmountComponentParams.AmountParams(
                 state = model.uiState.value.amountUM,
-                currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
+                route = route,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 appCurrency = model.appCurrency,
@@ -201,7 +189,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
         )
     }
 
-    private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableModularContentComponent {
         return if (model.isAvailableForSend) {
             val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
             val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
@@ -210,7 +198,6 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 params = SendConfirmComponent.Params(
                     state = model.uiState.value,
                     userWallet = model.userWallet,
-                    currentRoute = model.currentRoute,
                     isBalanceHidingFlow = model.isBalanceHiddenFlow,
                     analyticsCategoryName = model.analyticCategoryName,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -233,79 +220,43 @@ internal class DefaultSendComponent @AssistedInject constructor(
             )
         } else {
             model.showAlertError()
-            getStubComponent()
+            ComposableModularContentComponent.EMPTY
         }
     }
 
-    private fun getConfirmSuccessComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getConfirmSuccessComponent(factoryContext: AppComponentContext): ComposableModularContentComponent {
         val state = model.uiState.value
         val sendAmount = (state.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
         val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
         val txUrl = (state.confirmUM as? ConfirmUM.Success)?.txUrl
-        val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
 
         if (sendAmount == null ||
             destinationAddress == null ||
             txUrl == null
         ) {
             model.showAlertError()
-            return getStubComponent()
+            return ComposableModularContentComponent.EMPTY
         }
 
-        val destinationBlockComponent =
-            DefaultSendDestinationBlockComponent(
-                appComponentContext = child("sendConfirmDestinationBlock"),
-                params = SendDestinationComponentParams.DestinationBlockParams(
-                    state = model.uiState.value.destinationUM,
-                    analyticsCategoryName = model.analyticCategoryName,
-                    analyticsSendSource = model.analyticsSendSource,
-                    userWalletId = model.userWallet.walletId,
-                    cryptoCurrency = cryptoCurrencyStatus.currency,
-                    blockClickEnableFlow = MutableStateFlow(true),
-                    predefinedValues = model.predefinedValues,
-                    isAddContactAvailable = true,
-                ),
-                onResult = { },
-                onClick = {},
-            )
-
-        return SendConfirmSuccessComponent(
+        return sendConfirmSuccessComponent.create(
             appComponentContext = factoryContext,
             params = SendConfirmSuccessComponent.Params(
                 sendUMFlow = model.uiState,
-                destinationBlockComponent = destinationBlockComponent,
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.currency,
+                predefinedValues = model.predefinedValues,
                 analyticsCategoryName = model.analyticCategoryName,
-                currentRoute = model.currentRoute,
                 txUrl = txUrl,
                 callback = model,
             ),
         )
     }
 
-    private fun getStubComponent() = StubComponent()
-
-    class StubComponent : ComposableContentComponent {
-        @Composable
-        override fun Content(modifier: Modifier) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
-                    color = TangemTheme.colors.icon.primary1,
-                    strokeWidth = TangemTheme.dimens.size2,
-                )
-            }
-        }
-    }
-
     private fun onChildBack() {
         val isEmptyRoute = childStack.value.active.configuration == CommonSendRoute.Empty
         val isEmptyStack = childStack.value.backStack.isEmpty()
         val isSuccess = model.uiState.value.confirmUM is ConfirmUM.Success
-        val isStubComponent = childStack.value.active.instance is StubComponent
+        val isStubComponent = childStack.value.active.instance == EmptyComposableBottomSheetComponent
         val isSendingInProgress = (model.uiState.value.confirmUM as? ConfirmUM.Content)?.isSending == true
 
         val isPopSend = isEmptyRoute || isEmptyStack || isSuccess || isStubComponent
