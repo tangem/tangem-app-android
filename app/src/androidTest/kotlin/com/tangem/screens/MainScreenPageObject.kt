@@ -102,6 +102,15 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
+    /** Scrolls to [accountName] via ScrollToIndex semantics, not a touch swipe — a bottom-edge drag is stolen by the Markets sheet's nested scroll. */
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToAccount(accountName: String) {
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(
+                withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and hasAnyDescendant(withText(accountName)),
+            )
+    }
+
     val restoringProgressText: KNode = child {
         hasTestTag(MainScreenTestTags.SYNC_PROGRESS_TEXT)
         useUnmergedTree = true
