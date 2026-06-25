@@ -3,7 +3,9 @@ package com.tangem.features.addressbook.addaddress.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,26 +46,44 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
                 )
             },
         )
-
-        RecipientRow(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            addressField = state.addressField,
-            onValueChange = state.onAddressChange,
-            onAddressClear = state.onAddressClear,
-            onQrClick = state.onQrClick,
-            onPasteClick = state.onPasteClick,
-        )
-        SpacerH(20.dp)
-        NetworkBlock(
+        BoxWithConstraints(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(16.dp))
                 .fillMaxWidth()
-                .background(color = TangemTheme.colors3.bg.secondary),
-            chosenNetworkStateUM = state.chosenNetworkStateUM,
-            onNetworkSelectClick = state.onNetworkClick,
-        )
-        PrimaryButton(state.buttonUM)
+                .weight(1f),
+        ) {
+            val minContentHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .heightIn(min = minContentHeight)
+                        .imePadding(),
+                ) {
+                    RecipientRow(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        addressField = state.addressField,
+                        onValueChange = state.onAddressChange,
+                        onAddressClear = state.onAddressClear,
+                        onQrClick = state.onQrClick,
+                        onPasteClick = state.onPasteClick,
+                    )
+                    SpacerH(20.dp)
+                    NetworkBlock(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .fillMaxWidth()
+                            .background(color = TangemTheme.colors3.bg.secondary),
+                        chosenNetworkStateUM = state.chosenNetworkStateUM,
+                        onNetworkSelectClick = state.onNetworkClick,
+                    )
+                    PrimaryButton(state.buttonUM)
+                }
+            }
+        }
     }
 }
 
