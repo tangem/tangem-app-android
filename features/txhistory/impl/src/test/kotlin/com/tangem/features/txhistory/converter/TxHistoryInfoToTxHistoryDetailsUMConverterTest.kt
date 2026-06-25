@@ -5,10 +5,18 @@ import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
+import com.tangem.core.ui.res.generated.icons.ic_share_android_24
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -128,7 +136,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         val header = converter.convert(tx).header
 
         // Assert
-        assertThat(header.iconRes).isEqualTo(R.drawable.ic_arrow_down_24)
+        assertThat(header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
         assertThat(header.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
         assertThat(header.title).isEqualTo(resourceReference(R.string.common_received))
     }
@@ -202,7 +210,81 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         val header = converter.convert(tx).header
 
         // Assert
-        assertThat(header.iconRes).isEqualTo(R.drawable.ic_exchange_vertical_24)
+        assertThat(header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20))
+    }
+
+    @Test
+    fun `GIVEN menu callbacks WHEN convert THEN header menu has copy-id, share and explore rows wired`() {
+        // Arrange
+        var copiedTxId = false
+        var shared = false
+        var explored = false
+        val menuConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
+            onCopyTxId = { copiedTxId = true },
+            onShare = { shared = true },
+            onExplore = { explored = true },
+        )
+
+        // Act
+        val menu = menuConverter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(3)
+        assertThat(menu[0].icon).isEqualTo(Icons.ic_copy_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+        assertThat(menu[1].icon).isEqualTo(Icons.ic_share_android_24)
+        assertThat(menu[1].title).isEqualTo(resourceReference(R.string.common_share))
+        assertThat(menu[2].icon).isEqualTo(Icons.ic_globe_24)
+        assertThat(menu[2].title).isEqualTo(resourceReference(R.string.common_explore))
+
+        menu[0].onClick()
+        menu[1].onClick()
+        menu[2].onClick()
+        assertThat(copiedTxId).isTrue()
+        assertThat(shared).isTrue()
+        assertThat(explored).isTrue()
+    }
+
+    @Test
+    fun `GIVEN no share and explore callbacks WHEN convert THEN header menu drops the share and explore rows`() {
+        // Arrange — onShare/onExplore are null (e.g. an express op with no on-chain leg to share or open yet).
+        val menuConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
+            onCopyTxId = {},
+            onShare = null,
+            onExplore = null,
+        )
+
+        // Act
+        val menu = menuConverter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+    }
+
+    @Test
+    fun `GIVEN no menu callbacks WHEN convert THEN header menu is empty`() {
+        // Arrange — every menu action is absent (e.g. a blank tx id with no on-chain leg to share or open).
+        val menuConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
+            onCopyTxId = null,
+            onShare = null,
+            onExplore = null,
+        )
+
+        // Act
+        val menu = menuConverter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).isEmpty()
     }
 
     @Test
@@ -364,7 +446,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
 
         // Assert
         assertThat(result).isInstanceOf(TxHistoryDetailsUM.TwoAssets::class.java)
-        assertThat(result.header.iconRes).isEqualTo(R.drawable.ic_exchange_vertical_24)
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20))
     }
 
     @Test
@@ -649,7 +731,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished)) as TxHistoryDetailsUM.TwoAssets
 
         // Assert
-        assertThat(result.header.iconRes).isEqualTo(R.drawable.ic_tangem_card_24)
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_card_20))
         assertThat(result.statusBanner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
                 severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Success,

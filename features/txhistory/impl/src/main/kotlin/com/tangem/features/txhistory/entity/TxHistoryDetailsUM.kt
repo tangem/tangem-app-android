@@ -3,9 +3,11 @@ package com.tangem.features.txhistory.entity
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -208,11 +210,26 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /**
      * Shared bottom-sheet top bar. The icon glyph and [title] text come from the transaction type; [status] drives
      * the three visual states (in-progress / confirmed / failed) — recoloring the icon circle and the title.
+     *
+     * [menu] is the header's overflow context-menu content; empty leaves the trailing menu button inert.
      */
     data class HeaderUM(
-        @DrawableRes val iconRes: Int,
+        val icon: TxIcon,
         val status: TransactionItemUM.Content.Status,
         val title: TextReference,
         val subtitle: TextReference,
+        val menu: ImmutableList<MenuItemUM> = persistentListOf(),
+    )
+
+    /**
+     * One row of the header's overflow context menu: a leading [icon] glyph and a [title] label. [isDestructive]
+     * renders the row in the error color (e.g. a remove action); [onClick] runs the action and is expected to also
+     * dismiss the menu at the call site.
+     */
+    data class MenuItemUM(
+        val icon: ImageVector,
+        val title: TextReference,
+        val isDestructive: Boolean = false,
+        val onClick: () -> Unit,
     )
 }
