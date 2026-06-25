@@ -10,9 +10,15 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -65,10 +71,11 @@ private fun TxHistoryDetailsModalBottomSheetContentTwoAssetsPreview() {
 /** Fully-populated single-asset state exercising every sub-view: header, amount block, counterparty and info rows. */
 private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     header = TxHistoryDetailsUM.HeaderUM(
-        iconRes = R.drawable.ic_arrow_up_24,
+        icon = TxIcon.Vector(Icons.ic_arrow_up_20),
         status = Status.Confirmed,
         title = stringReference("Sent"),
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
     ),
     amountBlock = TxHistoryDetailsUM.AmountBlockUM(
         currencyIcon = CurrencyIconState.CoinIcon(
@@ -97,10 +104,11 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
 /** Failed swap exercising the two-asset body: both legs, the error status banner, provider link row and the CTA. */
 private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
     header = TxHistoryDetailsUM.HeaderUM(
-        iconRes = R.drawable.ic_exchange_vertical_24,
+        icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
         status = Status.Failed,
         title = stringReference("Swap"),
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
     ),
     from = TxHistoryDetailsUM.AssetUM(
         label = stringReference("You send"),
@@ -143,6 +151,20 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
     ),
     providerButton = TxHistoryDetailsUM.ProviderButtonUM(
         text = stringReference("Go to provider"),
+        onClick = {},
+    ),
+)
+
+/** Sample header `•••` menu used by the previews. */
+private fun previewMenu() = persistentListOf(
+    TxHistoryDetailsUM.MenuItemUM(
+        icon = Icons.ic_copy_24,
+        title = stringReference("Transaction ID"),
+        onClick = {},
+    ),
+    TxHistoryDetailsUM.MenuItemUM(
+        icon = Icons.ic_globe_24,
+        title = stringReference("Explore"),
         onClick = {},
     ),
 )
