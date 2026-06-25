@@ -9,6 +9,8 @@ import kotlinx.collections.immutable.toImmutableList
 /** Builds the Send contacts block from the network-matching contacts; an empty result hides the block. */
 internal class UpdateContactsBlockStateTransformer(
     private val matched: List<MatchedContact>,
+    private val walletNamesById: Map<String, String>,
+    private val shouldShowWalletName: Boolean,
     private val onSeeAllClick: () -> Unit,
     private val onContactClick: (MatchedContact) -> Unit,
 ) : Transformer<ContactsBlockUM> {
@@ -29,9 +31,11 @@ internal class UpdateContactsBlockStateTransformer(
 
     private fun MatchedContact.toRowUM(): ContactUM = ContactUM(
         id = contactId,
+        walletId = walletId,
         name = name,
         icon = icon,
         networkAddressCount = entries.size,
+        walletName = if (shouldShowWalletName) walletNamesById[walletId] else null,
         onClick = { onContactClick(this) },
     )
 

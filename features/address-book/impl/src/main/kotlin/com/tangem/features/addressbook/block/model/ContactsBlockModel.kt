@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookContactsBlockComponent
 import com.tangem.features.addressbook.block.state.ContactsBlockStateController
 import com.tangem.features.addressbook.block.state.transformers.UpdateContactsBlockStateTransformer
@@ -11,11 +12,7 @@ import com.tangem.features.addressbook.block.ui.state.ContactsBlockUM
 import com.tangem.features.addressbook.common.ContactMatcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -25,6 +22,7 @@ internal class ContactsBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val stateController: ContactsBlockStateController,
     getContactsUseCase: GetContactsUseCase,
+    getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<AddressBookContactsBlockComponent.Params>()
@@ -32,13 +30,19 @@ internal class ContactsBlockModel @Inject constructor(
     val state: StateFlow<ContactsBlockUM> get() = stateController.uiState
 
     init {
-        params.queryFlow
-            .flatMapLatest { query -> getContactsUseCase(query = query, userWalletId = params.userWalletId) }
-            .onEach { contacts ->
+        combine(
+            params.queryFlow.flatMapLatest { query ->
+                getContactsUseCase(query = query, userWalletId = null)
+            },
+            getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true),
+        ) { contacts, wallets -> contacts to wallets.values.toList() }
+            .onEach { (contacts, wallets) ->
                 val matched = ContactMatcher.match(contacts = contacts, networkId = params.network.rawId)
                 stateController.update(
                     UpdateContactsBlockStateTransformer(
                         matched = matched,
+                        walletNamesById = wallets.associate { it.walletId.stringValue to it.name },
+                        shouldShowWalletName = matched.mapTo(HashSet()) { it.walletId }.size > 1,
                         onSeeAllClick = params.onSeeAllClick,
                         onContactClick = params.onContactClick,
                     ),

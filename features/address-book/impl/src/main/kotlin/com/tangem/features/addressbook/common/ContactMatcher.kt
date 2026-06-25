@@ -12,8 +12,6 @@ import kotlinx.collections.immutable.toImmutableList
  */
 internal object ContactMatcher {
 
-    private val DEFAULT_ICON_COLOR = CryptoPortfolioIcon.Color.Azure
-
     fun match(contacts: List<Contact>, networkId: String): List<MatchedContact> {
         return contacts.mapNotNull { contact ->
             val entries = contact.addressEntries.filter { it.networkId.value == networkId }
@@ -21,11 +19,9 @@ internal object ContactMatcher {
 
             MatchedContact(
                 contactId = contact.id.value,
+                walletId = contact.walletId.stringValue,
                 name = contact.name.value,
-                icon = AccountIconUM.CryptoPortfolio(
-                    value = CryptoPortfolioIcon.Icon.Letter,
-                    color = contact.resolveIconColor(),
-                ),
+                icon = contact.toAvatarIcon(),
                 networkId = networkId,
                 entries = entries.map { entry ->
                     MatchedContact.ContactAddress(
@@ -38,6 +34,10 @@ internal object ContactMatcher {
         }
     }
 
-    private fun Contact.resolveIconColor(): CryptoPortfolioIcon.Color =
-        CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == iconColor } ?: DEFAULT_ICON_COLOR
+    /** Builds the contact avatar from the domain [Contact.icon] / [Contact.iconColor] (enum names), with fallbacks. */
+    private fun Contact.toAvatarIcon(): AccountIconUM.CryptoPortfolio = AccountIconUM.CryptoPortfolio(
+        value = CryptoPortfolioIcon.Icon.entries.firstOrNull { it.name == icon } ?: CryptoPortfolioIcon.Icon.Letter,
+        color = CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == iconColor }
+            ?: CryptoPortfolioIcon.Color.Azure,
+    )
 }

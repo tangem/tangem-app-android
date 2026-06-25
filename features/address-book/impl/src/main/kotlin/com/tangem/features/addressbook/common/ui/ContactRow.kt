@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.list.ui.state.ContactUM
+import com.tangem.utils.StringsSigns
 
 @Composable
 internal fun ContactRow(contact: ContactUM) {
@@ -33,12 +34,14 @@ internal fun ContactRow(contact: ContactUM) {
             )
         },
         subtitleSlot = {
+            val addresses = pluralStringResourceSafe(
+                R.plurals.address_book_addresses,
+                contact.networkAddressCount,
+                contact.networkAddressCount,
+            )
             TangemRowText(
-                text = pluralStringResourceSafe(
-                    R.plurals.address_book_addresses,
-                    contact.networkAddressCount,
-                    contact.networkAddressCount,
-                ),
+                text = contact.walletName?.let { walletName -> "$addresses ${StringsSigns.DOT} $walletName" }
+                    ?: addresses,
                 role = TangemRowTextRole.Subtitle,
             )
         },
@@ -52,11 +55,13 @@ private fun Preview_ContactRow() {
         ContactRow(
             ContactUM(
                 id = "1",
+                walletId = "00",
                 name = "Binance",
                 icon = AccountIconUM.CryptoPortfolio(
                     value = CryptoPortfolioIcon.Icon.Letter,
                     color = CryptoPortfolioIcon.Color.Azure,
                 ),
+                walletName = "Wallet 1",
                 networkAddressCount = 1,
                 onClick = {},
             ),

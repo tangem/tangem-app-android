@@ -74,6 +74,7 @@ private fun Preview_ContactsBlock() {
                 contacts = persistentListOf(
                     ContactUM(
                         id = "1",
+                        walletId = "00",
                         name = "Binance",
                         icon = AccountIconUM.CryptoPortfolio(
                             value = CryptoPortfolioIcon.Icon.Letter,
@@ -84,6 +85,7 @@ private fun Preview_ContactsBlock() {
                     ),
                     ContactUM(
                         id = "2",
+                        walletId = "01",
                         name = "Alice",
                         icon = AccountIconUM.CryptoPortfolio(
                             value = CryptoPortfolioIcon.Icon.Letter,
