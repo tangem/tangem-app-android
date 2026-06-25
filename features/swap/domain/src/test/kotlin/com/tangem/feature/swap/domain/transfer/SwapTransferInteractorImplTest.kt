@@ -299,7 +299,7 @@ internal class SwapTransferInteractorImplTest {
             } returns true.right()
 
             // entered amount = full balance → balance < amount + fee, balance > fee, balance >= amount
-            // → isFeeCoverage = true, sendingAmount = balance - fee
+            // → isFeeCoverage = true, sendingAmount = entered - fee (== balance - fee at max)
             val result = sut.updateTransfer(
                 fromSwapCurrencyStatus = fromCurrencyStatus,
                 toSwapCurrencyStatus = toCurrencyStatus,
@@ -310,6 +310,113 @@ internal class SwapTransferInteractorImplTest {
 
             assertThat(result.isFeeCoverage).isTrue()
             assertThat(result.sendingAmount).isEqualTo(balance - feeValue)
+            assertThat(result.isSendingAmountLoading).isFalse()
+        }
+
+    @Test
+    fun `GIVEN subtract available and sub-max amount in coverage zone WHEN updateTransfer THEN sendingAmount is entered minus fee`() =
+        runTest {
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val balance = BigDecimal("1.5")
+            val feeValue = BigDecimal("0.2")
+            // entered is below the balance but still within one fee of it → coverage applies, yet the
+            // received amount must track the entered amount (entered - fee), not clamp to balance - fee.
+            val enteredAmount = BigDecimal("1.45")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = balance,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val fee: Fee = mockk(relaxed = true) {
+                every { amount.value } returns feeValue
+            }
+            every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            } returns buildCurrencyCheck()
+            coEvery {
+                isAmountSubtractAvailableUseCase(any(), any(), any())
+            } returns true.right()
+
+            val result = sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = enteredAmount.toPlainString(),
+                feePaidCurrencyStatus = null,
+                fee = fee,
+            ) as SwapState.Transfer
+
+            assertThat(result.isFeeCoverage).isTrue()
+            assertThat(result.sendingAmount).isEqualTo(enteredAmount - feeValue)
+            // it must NOT clamp to balance - fee
+            assertThat(result.sendingAmount).isNotEqualTo(balance - feeValue)
+        }
+
+    @Test
+    fun `GIVEN subtract available but fee not loaded yet WHEN updateTransfer THEN isSendingAmountLoading is true`() =
+        runTest {
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val balance = BigDecimal("1.5")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = balance,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            } returns buildCurrencyCheck()
+            coEvery {
+                isAmountSubtractAvailableUseCase(any(), any(), any())
+            } returns true.right()
+
+            // subtraction is possible but the fee has not loaded yet (fee = null) → the received amount
+            // depends on the fee, so it can't be known yet and must be reported as loading.
+            val result = sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = balance.toPlainString(),
+                feePaidCurrencyStatus = null,
+                fee = null,
+            ) as SwapState.Transfer
+
+            assertThat(result.isSendingAmountLoading).isTrue()
         }
 
     // endregion
