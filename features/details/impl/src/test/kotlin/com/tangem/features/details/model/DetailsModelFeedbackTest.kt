@@ -34,7 +34,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
         // Act
         val model = createModel(this)
         advanceUntilIdle()
-        onEmailSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
         advanceUntilIdle()
 
         // Assert
@@ -54,7 +54,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
 
         val model = createModel(this)
         advanceUntilIdle()
-        onEmailSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
         advanceUntilIdle()
 
         verify { analyticsEventHandler.send(any<Basic.ButtonSupport>()) }
@@ -73,7 +73,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
 
         val model = createModel(this)
         advanceUntilIdle()
-        onEmailSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
         advanceUntilIdle()
 
         val bsConfig = model.state.value.selectFeedbackEmailTypeBSConfig
@@ -93,7 +93,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
 
         val model = createModel(this)
         advanceUntilIdle()
-        onEmailSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
         advanceUntilIdle()
 
         coVerify(exactly = 0) { sendFeedbackEmailUseCase(any()) }
@@ -183,7 +183,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
 
         currentModel = createModel(this)
         advanceUntilIdle()
-        onEmailSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
         advanceUntilIdle()
 
         return currentModel.state.value.selectFeedbackEmailTypeBSConfig.content as SelectEmailFeedbackTypeBS
