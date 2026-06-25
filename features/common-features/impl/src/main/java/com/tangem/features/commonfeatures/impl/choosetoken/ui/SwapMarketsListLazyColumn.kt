@@ -2,6 +2,8 @@ package com.tangem.features.commonfeatures.impl.choosetoken.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,10 +16,12 @@ import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketCategoriesUM
 import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketState
 
 internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
@@ -26,16 +30,21 @@ internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
         Text(
             text = buildAnnotatedString {
                 append(state.marketsTitle.resolveReference())
-                if (totalCount != null) {
+                if (totalCount != null && state.shouldAssetsCount) {
                     withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
                         append(" $totalCount")
                     }
                 }
             },
-            style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography2.headingSemibold20,
+            color = TangemTheme.colors2.text.neutral.primary,
             modifier = Modifier.fillMaxWidth().padding(horizontal = TangemTheme.dimens.spacing16),
         )
+    }
+    state.categories?.let { categories ->
+        item(key = "market_categories") {
+            MarketCategoriesRow(categories = categories)
+        }
     }
     when (state) {
         is SwapMarketState.Loading -> {
@@ -69,10 +78,35 @@ internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
                     modifier = Modifier.roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = state.items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.action,
+                        backgroundColor = TangemTheme.colors.background.primary,
                     ),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MarketCategoriesRow(categories: SwapMarketCategoriesUM, modifier: Modifier = Modifier) {
+    LazyRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                top = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing8,
+            ),
+        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        items(
+            items = categories.items,
+            key = { category -> category.name },
+        ) { category ->
+            TangemTab(
+                text = category.title,
+                isChecked = category == categories.selected,
+                onCheckedChange = { categories.onCategoryClick(category) },
+            )
         }
     }
 }

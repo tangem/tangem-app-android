@@ -67,7 +67,10 @@ fun TangemTab(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
             )
-            .padding(all = TangemTheme.dimens2.x3),
+            .padding(
+                vertical = TangemTheme.dimens2.x2,
+                horizontal = TangemTheme.dimens2.x3,
+            ),
     ) {
         Text(
             text = text.resolveReference(),

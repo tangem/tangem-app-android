@@ -153,7 +153,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
                         )
 
                         if (state.marketsBlock != null) {
-                            item("markets_title_spacer") { SpacerH(height = 20.dp) }
+                            item("markets_title_spacer") { SpacerH(height = 40.dp) }
                             swapMarketsListItems(state.marketsBlock)
                         }
                     }
@@ -206,9 +206,9 @@ private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapM
 private fun LazyListScope.assetsTitle() {
     item(key = "assets_title") {
         Text(
-            text = stringResourceSafe(R.string.swap_your_assets_title),
-            style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
+            style = TangemTheme.typography2.headingSemibold20,
+            color = TangemTheme.colors2.text.neutral.primary,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -224,7 +224,7 @@ private fun LazyListScope.walletListItem(walletList: WalletListUM) {
     if (walletList.items.isEmpty()) return
     item("wallet_list") {
         LazyRow(
-            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
@@ -249,7 +249,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(percent = 50))
             .background(backgroundColor)
             .clickable(onClick = state.onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -259,7 +259,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
         Text(
             text = state.text.resolveReference(),
             color = buttonTextColor,
-            style = TangemTheme.typography.button,
+            style = TangemTheme.typography2.bodySemibold16,
         )
 
         val count = state.count
