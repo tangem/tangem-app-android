@@ -16,6 +16,7 @@ import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
 private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
+private const val VIRTUAL_ACCOUNT_ITEM_ID = "get_virtual_account"
 
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
@@ -69,6 +70,30 @@ internal class ItemsBuilder @Inject constructor(
         return items.map { block ->
             if (block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }) {
                 block.copy(items = block.items.filter { it.id != TANGEM_PAY_ITEM_ID }.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
+    fun addVirtualAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block.id == "shop" && block is DetailsItemUM.Basic) {
+                val newItems = block
+                    .items
+                    .toMutableList()
+                    .apply { add(getVirtualAccountItem(onClick = onClick)) }
+                block.copy(items = newItems.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
+    fun removeVirtualAccountItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == VIRTUAL_ACCOUNT_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != VIRTUAL_ACCOUNT_ITEM_ID }.toImmutableList())
             } else {
                 block
             }
@@ -169,6 +194,15 @@ internal class ItemsBuilder @Inject constructor(
         id = TANGEM_PAY_ITEM_ID,
         block = BlockUM(
             text = resourceReference(R.string.tangempay_get_tangem_pay),
+            iconRes = R.drawable.ic_tangem_pay_24,
+            onClick = onClick,
+        ),
+    )
+
+    private fun getVirtualAccountItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = VIRTUAL_ACCOUNT_ITEM_ID,
+        block = BlockUM(
+            text = resourceReference(R.string.virtual_account_title),
             iconRes = R.drawable.ic_tangem_pay_24,
             onClick = onClick,
         ),

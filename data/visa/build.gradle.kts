@@ -34,6 +34,7 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.visa)
+    implementation(projects.domain.virtualAccount)
     implementation(projects.domain.card)
     implementation(projects.domain.wallets)
     implementation(projects.domain.legacy)
