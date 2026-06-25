@@ -7,11 +7,15 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle.Direction as SubtitleDirection
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_card_20
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
@@ -63,11 +67,11 @@ internal class ExpressTxToTransactionItemUMConverter(
             status = status,
             amount = formatAmount(viewedAmount, prefix),
             direction = if (swap.isOutgoing) RowDirection.OUTGOING else RowDirection.INCOMING,
-            iconRes = R.drawable.ic_exchange_vertical_24,
+            icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
             title = swapTitle(status),
             subtitle = ContentSubtitle.Asset(
                 direction = if (swap.isOutgoing) SubtitleDirection.TO else SubtitleDirection.FROM,
-                symbol = counterparty.cryptoCurrency?.symbol ?: counterparty.id.networkId,
+                symbol = counterparty.displaySymbol,
                 icon = counterparty.cryptoCurrency?.let(iconStateConverter::convert),
             ),
             warning = swapWarning(swap),
@@ -86,7 +90,7 @@ internal class ExpressTxToTransactionItemUMConverter(
             status = status,
             amount = formatAmount(onramp.tx.toAsset.amount, prefix),
             direction = RowDirection.INCOMING,
-            iconRes = R.drawable.ic_tangem_card_24,
+            icon = TxIcon.Vector(Icons.ic_card_20),
             title = onrampTitle(status),
             subtitle = ContentSubtitle.Asset(
                 direction = SubtitleDirection.FROM,
@@ -106,7 +110,7 @@ internal class ExpressTxToTransactionItemUMConverter(
         status: Status,
         amount: String?,
         direction: RowDirection,
-        iconRes: Int,
+        icon: TxIcon,
         title: TextReference,
         subtitle: ContentSubtitle,
         warning: TextReference?,
@@ -120,7 +124,7 @@ internal class ExpressTxToTransactionItemUMConverter(
             status = status,
             direction = direction,
             onClick = { txHistoryUiActions.onTransactionClick(tx) },
-            iconRes = iconRes,
+            icon = icon,
             title = title,
             subtitle = subtitle,
             timestamp = tx.timestampMillis,
