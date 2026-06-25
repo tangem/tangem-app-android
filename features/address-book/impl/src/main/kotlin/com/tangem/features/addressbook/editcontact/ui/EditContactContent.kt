@@ -49,6 +49,7 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
         modifier = modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors3.bg.primary)
+            .imePadding()
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -216,7 +217,7 @@ private fun ContactColor(colors: EditContactUM.Colors) {
         FlowRow(
             maxItemsInEachRow = 6,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Center,
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             colors.list.fastForEach { color ->
