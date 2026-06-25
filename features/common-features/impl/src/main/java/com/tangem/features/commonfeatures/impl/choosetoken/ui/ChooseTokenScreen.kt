@@ -331,7 +331,13 @@ private fun LazyListScope.emptyTokensList(modifier: Modifier = Modifier) {
     item("EmptyTokensList") {
         Box(
             modifier = modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(
+                    color = if (LocalRedesignEnabled.current) {
+                        TangemTheme.colors2.surface.level2
+                    } else {
+                        TangemTheme.colors.background.secondary
+                    },
+                )
                 .fillParentMaxSize(),
         ) {
             Column(modifier = Modifier.align(Alignment.Center)) {
@@ -362,7 +368,13 @@ private fun LazyListScope.tokensNotFound(modifier: Modifier = Modifier) {
     item("TokensNotFound") {
         Box(
             modifier = modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(
+                    color = if (LocalRedesignEnabled.current) {
+                        TangemTheme.colors2.surface.level2
+                    } else {
+                        TangemTheme.colors.background.secondary
+                    },
+                )
                 .fillParentMaxSize(),
         ) {
             Text(
