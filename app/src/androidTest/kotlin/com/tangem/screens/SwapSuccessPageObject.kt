@@ -20,6 +20,13 @@ class SwapSuccessPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    // App Transfers reuses the swap success screen; in transfer mode its title is "Transfer in progress".
+    val transferInProgressTitle: KNode = child {
+        hasTestTag(TransactionSuccessScreenTestTags.TITLE)
+        hasText(getResourceString(R.string.transfer_in_progress_title))
+        useUnmergedTree = true
+    }
+
     val closeButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.common_close)))
