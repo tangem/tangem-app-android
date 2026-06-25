@@ -1,10 +1,10 @@
 package com.tangem.features.swap.v2.impl.sendviaswap.model
 
 import arrow.core.getOrElse
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -20,9 +20,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
@@ -61,7 +61,6 @@ internal class SendWithSwapModel @Inject constructor(
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
     val analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.SendWithSwap
     val initialRoute = SendWithSwapRoute.Amount(false)
-    val currentRoute = MutableStateFlow<SendWithSwapRoute>(initialRoute)
 
     var userWallet: UserWallet by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
@@ -108,14 +107,8 @@ internal class SendWithSwapModel @Inject constructor(
         uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM) {
-        if (currentRoute.value == route) {
-            uiState.value = sendWithSwapUM
-        }
-    }
-
-    override fun onNavigationResult(navigationUM: NavigationUM) {
-        uiState.update { it.copy(navigationUM = navigationUM) }
+    override fun onResult(sendWithSwapUM: SendWithSwapUM) {
+        uiState.value = sendWithSwapUM
     }
 
     override fun onSeparatorClick(lastAmount: String, isEnterInFiatSelected: Boolean) {
@@ -129,7 +122,6 @@ internal class SendWithSwapModel @Inject constructor(
                 destinationUM = DestinationUM.Empty(),
                 feeSelectorUM = FeeSelectorUM.Loading,
                 confirmUM = ConfirmUM.Empty,
-                navigationUM = NavigationUM.Empty,
             )
         }
         if (resetNavigation) {
@@ -137,17 +129,17 @@ internal class SendWithSwapModel @Inject constructor(
         }
     }
 
-    override fun onBackClick() = router.pop()
+    override fun onBackClick(currentRoute: Route) = router.pop()
 
-    override fun onNextClick() {
-        if (currentRoute.value.isEditMode) {
-            onBackClick()
+    override fun onNextClick(currentRoute: Route) {
+        if ((currentRoute as? SendWithSwapRoute)?.isEditMode == true) {
+            onBackClick(currentRoute)
         } else {
-            when (currentRoute.value) {
+            when (currentRoute) {
                 is SendWithSwapRoute.Amount -> router.push(SendWithSwapRoute.Destination(isEditMode = false))
                 is SendWithSwapRoute.Destination -> router.push(SendWithSwapRoute.Confirm)
                 SendWithSwapRoute.Confirm -> router.push(SendWithSwapRoute.Success)
-                SendWithSwapRoute.Success -> onBackClick()
+                SendWithSwapRoute.Success -> onBackClick(currentRoute)
             }
         }
     }
@@ -171,7 +163,7 @@ internal class SendWithSwapModel @Inject constructor(
                             )
                         }
                     },
-                    popBack = ::onBackClick,
+                    popBack = router::pop,
                 )
             },
         )
@@ -189,7 +181,6 @@ internal class SendWithSwapModel @Inject constructor(
             destinationUM = DestinationUM.Empty(),
             feeSelectorUM = FeeSelectorUM.Loading,
             confirmUM = ConfirmUM.Empty,
-            navigationUM = NavigationUM.Empty,
         )
     }
 
