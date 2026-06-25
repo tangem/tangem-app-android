@@ -3,6 +3,7 @@ package com.tangem.tests.addFunds
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddTokenBottomSheet
@@ -80,6 +81,26 @@ class BuyTest : BaseTestCase() {
             }
             step("Verify token $token in Wallet list") {
                 onAddFundsBottomSheet { userTokenWithTitle(token).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("3613")
+    @DisplayName("On-ramp Buy: S2C card doesn't have Buy and Sell options")
+    @Test
+    fun buyAndSellIsNotAvailableForS2CCardTest() {
+        setupHooks().run {
+            step("Open 'Main' screen") {
+                openMainScreen(productType = ProductType.Start2Coin)
+            }
+            step("Verify 'Add funds' button is displayed") {
+                onMainScreen { addFundsButton.assertIsDisplayed() }
+            }
+            step("Verify Buy/Sell action buttons are hidden") {
+                onMainScreen {
+                    buyButton.assertDoesNotExist()
+                    sellButton.assertDoesNotExist()
+                }
             }
         }
     }
