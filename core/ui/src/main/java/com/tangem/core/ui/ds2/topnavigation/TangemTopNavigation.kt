@@ -96,16 +96,15 @@ fun TangemTopNavigation(
                     end = 16.dp,
                 ),
             content = {
-                // Each optional slot caches its last non-null content so the spring exit transition
-                // still has something to render after the caller flips it back to `null`.
                 val displayedStart = rememberLastNonNull(startButton)
-                AnimatedVisibility(
-                    modifier = Modifier.layoutId(SlotId.Start),
-                    visible = startButton != null,
-                    enter = slotEnter,
-                    exit = slotExit,
-                ) {
-                    displayedStart?.invoke()
+                Box(modifier = Modifier.layoutId(SlotId.Start)) {
+                    AnimatedVisibility(
+                        visible = startButton != null,
+                        enter = slotEnter,
+                        exit = slotExit,
+                    ) {
+                        displayedStart?.invoke()
+                    }
                 }
 
                 Column(
@@ -121,30 +120,32 @@ fun TangemTopNavigation(
                 }
 
                 val displayedGroup = rememberLastNonNull(endButtonsGroup)
-                AnimatedVisibility(
-                    modifier = Modifier.layoutId(SlotId.Group),
-                    visible = endButtonsGroup != null,
-                    enter = slotEnter,
-                    exit = slotExit,
-                ) {
-                    displayedGroup?.let { group ->
-                        TangemSurface(isMaterial = true, shape = CircleShape) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                content = group,
-                            )
+                Box(modifier = Modifier.layoutId(SlotId.Group)) {
+                    AnimatedVisibility(
+                        visible = endButtonsGroup != null,
+                        enter = slotEnter,
+                        exit = slotExit,
+                    ) {
+                        displayedGroup?.let { group ->
+                            TangemSurface(isMaterial = true, shape = CircleShape) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    content = group,
+                                )
+                            }
                         }
                     }
                 }
 
                 val displayedEnd = rememberLastNonNull(endButton)
-                AnimatedVisibility(
-                    modifier = Modifier.layoutId(SlotId.End),
-                    visible = endButton != null,
-                    enter = slotEnter,
-                    exit = slotExit,
-                ) {
-                    displayedEnd?.invoke()
+                Box(modifier = Modifier.layoutId(SlotId.End)) {
+                    AnimatedVisibility(
+                        visible = endButton != null,
+                        enter = slotEnter,
+                        exit = slotExit,
+                    ) {
+                        displayedEnd?.invoke()
+                    }
                 }
             },
         ) { measurables, constraints ->

@@ -533,7 +533,7 @@ internal class TokenDetailsModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).getOrElse { false }
 
-            val isSupported = isXPUBSupported()
+            val isSupported = isXpubSupported()
             val isDynamicAddressesAvailable = isSupported &&
                 isDynamicAddressesAvailableUseCase(userWallet, cryptoCurrency)
 
@@ -546,7 +546,7 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    private suspend fun isXPUBSupported(): Boolean {
+    private suspend fun isXpubSupported(): Boolean {
         return isXpubSupportedUseCase(userWalletId = userWalletId, network = cryptoCurrency.network)
     }
 
@@ -853,7 +853,6 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
-        if (isTopUpBlockedByBackupError()) return
 
         modelScope.launch {
             if (checkYieldSupply && needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
@@ -1438,15 +1437,17 @@ internal class TokenDetailsModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).getOrElse { false }
 
-            val isSupported = isXPUBSupported()
+            val isXpubSupported = isXpubSupported()
+            val isDynamicAddressesAvailable = isXpubSupported &&
+                isDynamicAddressesAvailableUseCase(userWallet, cryptoCurrency)
 
             redesignStateController.update(
                 UpdateTopBarMenuTransformer(
                     userWallet = userWallet,
                     hasDerivations = hasDerivations,
-                    isXPubSupported = isSupported,
-                    onGenerateExtendedKey = ::onGenerateExtendedKey,
-                    onHideClick = ::onHideClick,
+                    isXpubSupported = isXpubSupported,
+                    isDynamicAddressesAvailable = isDynamicAddressesAvailable,
+                    clickIntents = this@TokenDetailsModel,
                 ),
             )
         }

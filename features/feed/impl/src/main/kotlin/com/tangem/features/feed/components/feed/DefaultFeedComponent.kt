@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
@@ -17,6 +18,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
@@ -84,7 +86,9 @@ internal class DefaultFeedComponent(
         FeedList(
             modifier = modifier,
             state = state,
-            promoBannersBlockComponent = promoBannersBlockComponent,
+            promoBannersBlockComponent = ComposableContentComponent { promoModifier ->
+                promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 16.dp)
+            },
             contentPadding = contentPadding,
         )
         bottomSheet.child?.instance?.BottomSheet()

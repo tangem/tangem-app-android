@@ -33,6 +33,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPre
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.CurrencyIcon
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.utils.StringsSigns
 
 /**
  * Token staking block
@@ -99,12 +100,26 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
             )
             SpacerW8()
             Column {
-                Text(
-                    text = state.titleText.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.subtitle2,
-                    modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_SERVICE_TITLE),
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
+                    Text(
+                        text = state.titleText.resolveReference(),
+                        color = TangemTheme.colors.text.primary1,
+                        style = TangemTheme.typography.subtitle2,
+                        modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_SERVICE_TITLE),
+                    )
+                    if (state.isBetaMode) {
+                        Text(
+                            text = StringsSigns.DOT,
+                            color = TangemTheme.colors.text.primary1,
+                            style = TangemTheme.typography.subtitle2,
+                        )
+                        Text(
+                            text = stringResourceSafe(R.string.beta_mode_warning_title),
+                            color = TangemTheme.colors.text.primary1,
+                            style = TangemTheme.typography.subtitle2,
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
 
