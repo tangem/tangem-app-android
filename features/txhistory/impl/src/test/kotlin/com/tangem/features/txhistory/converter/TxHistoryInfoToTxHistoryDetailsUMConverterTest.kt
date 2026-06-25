@@ -191,6 +191,80 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
     }
 
     @Test
+    fun `GIVEN menu callbacks WHEN convert THEN header menu has copy-id, share and explore rows wired`() {
+        // Arrange
+        var copiedTxId = false
+        var shared = false
+        var explored = false
+        val menuConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
+            onCopyTxId = { copiedTxId = true },
+            onShare = { shared = true },
+            onExplore = { explored = true },
+        )
+
+        // Act
+        val menu = menuConverter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(3)
+        assertThat(menu[0].iconRes).isEqualTo(R.drawable.ic_copy_new_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+        assertThat(menu[1].iconRes).isEqualTo(R.drawable.ic_share_new_24)
+        assertThat(menu[1].title).isEqualTo(resourceReference(R.string.common_share))
+        assertThat(menu[2].iconRes).isEqualTo(R.drawable.ic_explore_24)
+        assertThat(menu[2].title).isEqualTo(resourceReference(R.string.common_explore))
+
+        menu[0].onClick()
+        menu[1].onClick()
+        menu[2].onClick()
+        assertThat(copiedTxId).isTrue()
+        assertThat(shared).isTrue()
+        assertThat(explored).isTrue()
+    }
+
+    @Test
+    fun `GIVEN no share and explore callbacks WHEN convert THEN header menu drops the share and explore rows`() {
+        // Arrange — onShare/onExplore are null (e.g. an express op with no on-chain leg to share or open yet).
+        val menuConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
+            onCopyTxId = {},
+            onShare = null,
+            onExplore = null,
+        )
+
+        // Act
+        val menu = menuConverter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+    }
+
+    @Test
+    fun `GIVEN no menu callbacks WHEN convert THEN header menu is empty`() {
+        // Arrange — every menu action is absent (e.g. a blank tx id with no on-chain leg to share or open).
+        val menuConverter = TxHistoryInfoToTxHistoryDetailsUMConverter(
+            currency = currency,
+            onCopyAddress = copiedAddresses::add,
+            onGoToProvider = openedUrls::add,
+            onCopyTxId = null,
+            onShare = null,
+            onExplore = null,
+        )
+
+        // Act
+        val menu = menuConverter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).isEmpty()
+    }
+
+    @Test
     fun `GIVEN incoming Transfer WHEN convert THEN amount block has plus sign and not failed`() {
         // Arrange
         val tx = onChain(type = TransactionType.Transfer, isOutgoing = false)

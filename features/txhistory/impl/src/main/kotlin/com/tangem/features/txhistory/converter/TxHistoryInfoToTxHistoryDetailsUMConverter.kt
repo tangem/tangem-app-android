@@ -52,6 +52,12 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     private val onCopyAddress: (String) -> Unit,
     /** Opens the provider's page for an express deal — wired to the bottom "Go to provider" / "Go to verification" CTA. */
     private val onGoToProvider: (String) -> Unit,
+    /** Copies the transaction id to the clipboard — wired to the header menu's "Transaction ID" row; `null` drops it. */
+    private val onCopyTxId: (() -> Unit)? = null,
+    /** Shares the transaction's explorer URL; `null` drops the "Share" row (nothing on-chain to share yet). */
+    private val onShare: (() -> Unit)? = null,
+    /** Opens the transaction in the blockchain explorer; `null` drops the "Explore" row (nothing on-chain to open yet). */
+    private val onExplore: (() -> Unit)? = null,
     /** Own deposit addresses for this currency's network — used to label own-transfers as "Transfer". */
     private val ownAddresses: Set<String> = emptySet(),
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
@@ -86,7 +92,44 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         status = status.toUiStatus(),
         title = headerTitle(),
         subtitle = headerSubtitle(timestampInMillis),
+        menu = buildMenu(),
     )
+
+    /**
+     * Header overflow context menu, shared by all transaction types. Each row is dropped when its action is absent:
+     * "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped when [onShare] is
+     * `null`) and "Explore" (dropped when [onExplore] is `null`). An empty list leaves the header with no "•••" button.
+     * Repeat / Hide are not part of this iteration.
+     */
+    private fun buildMenu(): ImmutableList<TxHistoryDetailsUM.MenuItemUM> = buildList {
+        onCopyTxId?.let { copy ->
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    iconRes = R.drawable.ic_copy_new_24,
+                    title = resourceReference(R.string.common_transaction_id),
+                    onClick = copy,
+                ),
+            )
+        }
+        onShare?.let { share ->
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    iconRes = R.drawable.ic_share_new_24,
+                    title = resourceReference(R.string.common_share),
+                    onClick = share,
+                ),
+            )
+        }
+        onExplore?.let { explore ->
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    iconRes = R.drawable.ic_explore_24,
+                    title = resourceReference(R.string.common_explore),
+                    onClick = explore,
+                ),
+            )
+        }
+    }.toImmutableList()
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         currencyIcon = iconStateConverter.convert(currency),
@@ -152,6 +195,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
                 status = status,
                 title = status.statusAwareTitle(R.string.common_swapping, R.string.common_swapped),
                 subtitle = headerSubtitle(swap.timestampMillis),
+                menu = buildMenu(),
             ),
             from = swap.tx.fromAsset.toAssetUM(
                 label = resourceReference(R.string.swapping_from_title_v2),
@@ -180,6 +224,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
                     R.string.tx_history_onramp_topped_up,
                 ),
                 subtitle = headerSubtitle(onramp.timestampMillis),
+                menu = buildMenu(),
             ),
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 label = resourceReference(R.string.swapping_from_title_v2),

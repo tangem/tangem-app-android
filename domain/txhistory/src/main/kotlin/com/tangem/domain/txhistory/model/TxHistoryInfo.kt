@@ -74,6 +74,13 @@ inline val TxHistoryInfo.explorerHash: String?
         is ExpressTx -> matchHash
     }
 
+/** Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal id otherwise. */
+inline val TxHistoryInfo.idToCopy: String
+    get() = when (this) {
+        is OnChainTx.BSDK -> txInfo.txHash
+        is ExpressTx -> txId
+    }
+
 /**
  * A history row backed by an express operation. It is a thin wrapper over the standalone express
  * model ([ExchangeTransaction] / [OnrampTransaction]), adding only the history-view concerns:

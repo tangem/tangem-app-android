@@ -200,11 +200,26 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /**
      * Shared bottom-sheet top bar. The icon glyph and [title] text come from the transaction type; [status] drives
      * the three visual states (in-progress / confirmed / failed) — recoloring the icon circle and the title.
+     *
+     * [menu] is the header's overflow context-menu content; empty leaves the trailing menu button inert.
      */
     data class HeaderUM(
         @DrawableRes val iconRes: Int,
         val status: TransactionItemUM.Content.Status,
         val title: TextReference,
         val subtitle: TextReference,
+        val menu: ImmutableList<MenuItemUM> = persistentListOf(),
+    )
+
+    /**
+     * One row of the header's overflow context menu: a leading [iconRes] glyph and a [title] label. [isDestructive]
+     * renders the row in the error color (e.g. a remove action); [onClick] runs the action and is expected to also
+     * dismiss the menu at the call site.
+     */
+    data class MenuItemUM(
+        @DrawableRes val iconRes: Int,
+        val title: TextReference,
+        val isDestructive: Boolean = false,
+        val onClick: () -> Unit,
     )
 }

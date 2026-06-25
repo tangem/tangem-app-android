@@ -69,6 +69,7 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         status = Status.Confirmed,
         title = stringReference("Sent"),
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
     ),
     amountBlock = TxHistoryDetailsUM.AmountBlockUM(
         currencyIcon = CurrencyIconState.CoinIcon(
@@ -101,6 +102,7 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
         status = Status.Failed,
         title = stringReference("Swap"),
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
     ),
     from = TxHistoryDetailsUM.AssetUM(
         label = stringReference("You send"),
@@ -143,6 +145,20 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
     ),
     providerButton = TxHistoryDetailsUM.ProviderButtonUM(
         text = stringReference("Go to provider"),
+        onClick = {},
+    ),
+)
+
+/** Sample header `•••` menu used by the previews. */
+private fun previewMenu() = persistentListOf(
+    TxHistoryDetailsUM.MenuItemUM(
+        iconRes = R.drawable.ic_copy_24,
+        title = stringReference("Transaction ID"),
+        onClick = {},
+    ),
+    TxHistoryDetailsUM.MenuItemUM(
+        iconRes = R.drawable.ic_explore_20,
+        title = stringReference("Explore"),
         onClick = {},
     ),
 )
