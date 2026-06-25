@@ -76,6 +76,7 @@ internal fun DetailsScreen(
     }
 
     SelectFeedbackEmailTypeBottomSheet(state.selectFeedbackEmailTypeBSConfig)
+    SelectContactSupportTypeBottomSheet(state.selectContactSupportTypeBSConfig)
 }
 
 @Composable
