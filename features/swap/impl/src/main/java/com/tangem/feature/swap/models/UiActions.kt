@@ -34,4 +34,5 @@ internal data class UiActions(
     val onReceiveCardWarningClick: () -> Unit,
     val onSwapUIModeChange: (SwapUIMode) -> Unit,
     val onSwapTypeMenuOpened: () -> Unit,
+    val onTronBannerShown: () -> Unit,
 )
