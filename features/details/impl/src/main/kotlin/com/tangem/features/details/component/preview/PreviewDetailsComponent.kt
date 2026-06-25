@@ -30,11 +30,9 @@ internal class PreviewDetailsComponent : DetailsComponent {
         ).buildAll(
             isWalletConnectAvailable = true,
             isAddressBookAvailable = true,
-            isSupportChatAvailable = true,
             hasAnyMobileWallet = true,
             userWalletId = UserWalletId(""),
-            onSupportEmailClick = {},
-            onSupportChatClick = {},
+            onSupportClick = {},
             onBuyClick = {},
         )
     }
@@ -48,6 +46,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
         items = previewBlocks,
         footer = previewFooter,
         selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig.Empty,
+        selectContactSupportTypeBSConfig = TangemBottomSheetConfig.Empty,
         popBack = { /* no-op */ },
     )
 
