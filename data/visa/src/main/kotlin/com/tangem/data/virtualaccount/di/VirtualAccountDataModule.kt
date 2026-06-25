@@ -18,8 +18,13 @@ import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusProducer
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.virtualaccount.repository.VirtualAccountActivationRepository
 import com.tangem.domain.virtualaccount.usecase.ActivateVirtualAccountUseCase
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountSuitableWalletsUseCase
+import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -93,6 +98,27 @@ internal interface VirtualAccountDataModule {
             repository: VirtualAccountActivationRepository,
         ): ActivateVirtualAccountUseCase {
             return ActivateVirtualAccountUseCase(repository = repository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideGetVirtualAccountSuitableWalletsUseCase(
+            userWalletsListRepository: UserWalletsListRepository,
+        ): GetVirtualAccountSuitableWalletsUseCase {
+            return GetVirtualAccountSuitableWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
+        }
+
+        @Provides
+        fun provideGetVirtualAccountEligibilityUseCase(
+            getVirtualAccountSuitableWalletsUseCase: GetVirtualAccountSuitableWalletsUseCase,
+            onboardingRepository: OnboardingRepository,
+            deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
+        ): GetVirtualAccountEligibilityUseCase {
+            return GetVirtualAccountEligibilityUseCase(
+                getVirtualAccountSuitableWalletsUseCase = getVirtualAccountSuitableWalletsUseCase,
+                onboardingRepository = onboardingRepository,
+                deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+            )
         }
     }
 }
