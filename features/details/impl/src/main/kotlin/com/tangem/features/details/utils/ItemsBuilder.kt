@@ -27,11 +27,9 @@ internal class ItemsBuilder @Inject constructor(
     fun buildAll(
         isWalletConnectAvailable: Boolean,
         isAddressBookAvailable: Boolean,
-        isSupportChatAvailable: Boolean,
         hasAnyMobileWallet: Boolean,
         userWalletId: UserWalletId,
-        onSupportEmailClick: () -> Unit,
-        onSupportChatClick: () -> Unit,
+        onSupportClick: () -> Unit,
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
         if (isAddressBookAvailable) {
@@ -50,11 +48,7 @@ internal class ItemsBuilder @Inject constructor(
 
         buildShopBlock(onBuyClick).let(::add)
         buildSettingsBlock().let(::add)
-        buildSupportBlock(
-            onSupportEmailClick = onSupportEmailClick,
-            onSupportChatClick = onSupportChatClick,
-            isSupportChatAvailable = isSupportChatAvailable,
-        ).let(::add)
+        buildSupportBlock(onSupportClick = onSupportClick).let(::add)
     }.toImmutableList()
 
     fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
@@ -148,32 +142,17 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList(),
     )
 
-    private fun buildSupportBlock(
-        onSupportEmailClick: () -> Unit,
-        onSupportChatClick: () -> Unit,
-        isSupportChatAvailable: Boolean,
-    ): DetailsItemUM = DetailsItemUM.Basic(
+    private fun buildSupportBlock(onSupportClick: () -> Unit): DetailsItemUM = DetailsItemUM.Basic(
         id = "support",
         items = buildList {
             DetailsItemUM.Basic.Item(
-                id = "support_email",
+                id = "contact_support",
                 block = BlockUM(
                     text = resourceReference(R.string.common_contact_support),
                     iconRes = R.drawable.ic_comment_24,
-                    onClick = onSupportEmailClick,
+                    onClick = onSupportClick,
                 ),
             ).let(::add)
-
-            if (isSupportChatAvailable) {
-                DetailsItemUM.Basic.Item(
-                    id = "support_chat",
-                    block = BlockUM(
-                        text = resourceReference(R.string.details_row_title_contact_to_support_chat),
-                        iconRes = R.drawable.ic_chat_24,
-                        onClick = onSupportChatClick,
-                    ),
-                ).let(::add)
-            }
 
             DetailsItemUM.Basic.Item(
                 id = "disclaimer",
