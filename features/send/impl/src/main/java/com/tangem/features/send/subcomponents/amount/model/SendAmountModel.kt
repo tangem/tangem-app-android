@@ -10,8 +10,6 @@ import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -29,14 +27,12 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.entity.isFromMainScreenQr
-import com.tangem.features.send.api.subcomponents.amount.AmountRoute
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceListener
 import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateListener
 import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents.SelectedCurrencyType
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
-import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
@@ -84,7 +80,6 @@ internal class SendAmountModel @Inject constructor(
     private var maxAmountBoundary: EnterAmountBoundary by Delegates.notNull()
 
     init {
-        configAmountNavigation()
         initAppCurrency()
         subscribeOnCryptoCurrencyStatusFlow()
         subscribeOnAmountReduceByTriggerUpdates()
@@ -104,6 +99,7 @@ internal class SendAmountModel @Inject constructor(
                     },
                     ifRight = { wallet ->
                         userWallet = wallet
+                        setSendWithSwapAvailability()
                     },
                 )
             }.launchIn(modelScope)
@@ -274,9 +270,7 @@ internal class SendAmountModel @Inject constructor(
     override fun onConvertToAnotherToken() {
         val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
         modelScope.launch {
-            var isEditMode = false
-            amountParams.currentRoute.collect { route -> isEditMode = route.isEditMode }
-            if (isEditMode) {
+            if (amountParams.route.isEditMode) {
                 sendAmountAlertFactory.showResetSendingAlert {
                     params.callback.resetSendNavigation()
                     confirmConvertToToken()
@@ -361,44 +355,6 @@ internal class SendAmountModel @Inject constructor(
             amountUM = uiState.value,
             isResetPredefined = predefinedAmount != enteredAmount,
         )
-    }
-
-    private fun configAmountNavigation() {
-        val params = params as? SendAmountComponentParams.AmountParams ?: return
-        combine(
-            flow = uiState,
-            // Filter on the public AmountRoute interface (not the internal CommonSendRoute.Amount) so an
-            // external host (e.g. staking) that supplies its own AmountRoute is not silently dropped here.
-            flow2 = params.currentRoute.filterIsInstance<AmountRoute>(),
-            transform = { state, route -> state to route },
-        ).onEach { (state, route) ->
-            setSendWithSwapAvailability()
-            params.callback.onNavigationResult(
-                NavigationUM.Content(
-                    source = CommonSendRoute.Amount::class.java.simpleName,
-                    title = resourceReference(R.string.send_amount_label),
-                    subtitle = null,
-                    backIconRes = if (route.isEditMode) {
-                        R.drawable.ic_back_24
-                    } else {
-                        R.drawable.ic_close_24
-                    },
-                    backIconClick = params.callback::onBackClick,
-                    primaryButton = NavigationButton(
-                        textReference = if (route.isEditMode) {
-                            resourceReference(R.string.common_continue)
-                        } else {
-                            resourceReference(R.string.common_next)
-                        },
-                        isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = {
-                            onAmountNext()
-                            params.callback.onNextClick()
-                        },
-                    ),
-                ),
-            )
-        }.launchIn(modelScope)
     }
 
     private fun setSendWithSwapAvailability() {
