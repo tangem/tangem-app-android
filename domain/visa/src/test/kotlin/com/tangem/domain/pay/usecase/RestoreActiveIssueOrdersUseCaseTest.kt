@@ -34,7 +34,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
     @Test
     fun `GIVEN active issue orders WHEN invoke THEN each order is stored and polled`() = runTest {
         // Arrange
-        val first = order(id = "first", type = OrderType.CARD_ISSUE_ADDITIONAL, status = OrderStatus.NEW)
+        val first = order(id = "first", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN, status = OrderStatus.NEW)
         val second = order(id = "second", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING)
         coEvery {
             orderRepository.findOrders(
@@ -78,7 +78,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
     @Test
     fun `GIVEN a terminal order leaks through WHEN invoke THEN it is filtered out`() = runTest {
         // Arrange
-        val completed = order(id = "done", type = OrderType.CARD_ISSUE_ADDITIONAL, status = OrderStatus.COMPLETED)
+        val completed = order(id = "done", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN, status = OrderStatus.COMPLETED)
         coEvery {
             orderRepository.findOrders(userWalletId, types = ISSUE_ORDER_TYPES, statuses = ACTIVE_STATUSES)
         } returns listOf(completed).right()
