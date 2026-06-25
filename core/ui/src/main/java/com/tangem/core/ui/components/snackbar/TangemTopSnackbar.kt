@@ -11,9 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW
@@ -37,6 +39,10 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 @Suppress("LongMethod")
 @Composable
 fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Modifier) {
+    val density = LocalDensity.current
+    val fixedFontScaleDensity = remember(density) {
+        Density(density = density.density, fontScale = 1f)
+    }
     val actionLabel = snackbarMessage.actionLabel
     val action = snackbarMessage.action
     val hasAction = actionLabel != null && action != null
@@ -46,12 +52,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
         snackbarMessage.startIconId,
         hasAction,
     ) { mutableStateOf(false) }
-    val shape = if (isTextOverflowing) {
-        RoundedCornerShape(TangemTheme.dimens2.x5)
-    } else {
-        TangemTheme.shapes.roundedCornersXLarge
-    }
-
+    val shape = RoundedCornerShape(24.dp)
     Column(
         modifier = modifier
             .shadow(elevation = TangemTheme.dimens.elevation4, shape = shape, clip = false)
@@ -59,8 +60,8 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
             .clip(shape)
             .hazeEffectTangem()
             .sizeIn(minHeight = TangemTheme.dimens2.x11)
-            .padding(start = TangemTheme.dimens2.x5, end = TangemTheme.dimens2.x3)
-            .padding(vertical = TangemTheme.dimens2.x1),
+            .padding(start = TangemTheme.dimens2.x4, end = TangemTheme.dimens2.x3)
+            .padding(vertical = TangemTheme.dimens2.x2),
         verticalArrangement = Arrangement.Center,
     ) {
         Row(
@@ -78,18 +79,20 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                 SpacerW(TangemTheme.dimens2.x2)
             }
 
-            Text(
-                text = snackbarMessage.message.resolveReference(),
-                modifier = Modifier.weight(1f, fill = false),
-                color = TangemTheme.colors.text.secondary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = TangemTheme.typography.body2,
-                onTextLayout = { layoutResult ->
-                    val isOverflowing = hasAction && layoutResult.hasVisualOverflow
-                    if (isTextOverflowing != isOverflowing) isTextOverflowing = isOverflowing
-                },
-            )
+            CompositionLocalProvider(LocalDensity provides fixedFontScaleDensity) {
+                Text(
+                    text = snackbarMessage.message.resolveReference(),
+                    modifier = Modifier.weight(1f, fill = false),
+                    color = TangemTheme.colors2.text.neutral.secondary,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                    style = TangemTheme.typography2.captionMedium13,
+                    onTextLayout = { layoutResult ->
+                        val isOverflowing = hasAction && layoutResult.hasVisualOverflow
+                        if (isTextOverflowing != isOverflowing) isTextOverflowing = isOverflowing
+                    },
+                )
+            }
 
             SpacerW(TangemTheme.dimens2.x4)
 
@@ -177,6 +180,7 @@ private fun Preview_TangemTopSnackbar_NoAction() {
             )
             TangemTopSnackbar(
                 snackbarMessage = SnackbarMessage(
+                    startIconId = R.drawable.ic_eye_off_outline_24,
                     message = stringReference(
                         "Operation completed long long text that should be truncated with ellipsis at the end",
                     ),
