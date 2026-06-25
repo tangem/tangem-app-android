@@ -100,6 +100,29 @@ curl -s http://localhost:8081/__admin/requests/unmatched | jq '.requests[] | "\(
 (harness/emulator) for the hang. A non-empty list names exactly which mapping (or scenario state) the
 local instance is missing.
 
+## When the UI fails silently, the cause is usually app-side — two places to look
+
+A screen failing silently with correct locators (fee shows "—", a banner never appears, a button stays
+disabled) is usually missing mock *data* or an app-side gate, not a test bug. Two diagnostics find it:
+
+- **The app's own log is in `files/log.txt`, not logcat** — the mocked build routes `TangemLogger` to a
+  file, so `adb logcat` shows nothing. Fastest path to a root cause (e.g. it surfaced
+  `IllegalStateException: No native currency found` → a native coin missing from the mock):
+  ```bash
+  adb exec-out run-as <pkg> cat files/log.txt | grep -iE "Error|Exception|<feature>"
+  ```
+- **The WireMock journal separates "mock missing" from "app never asked"** —
+  `/__admin/requests/unmatched` finds missing mappings, but if `unmatched=0` *and* the expected request
+  is also absent from the full log (`/__admin/requests`), the app never issued it (a data/state gate) →
+  fix the mock data or the app, not the mappings.
+
+## "UiAutomationService already registered" — retry, it's not a failure
+
+Back-to-back `am instrument` runs sometimes fail instantly with `UiAutomationService … already
+registered!` — a teardown race between runs, not a test failure. Retry. (The orchestrator avoids it by
+spacing runs — another reason to confirm a flaky-looking suite via the orchestrator, not raw
+`am instrument`.)
+
 ## Classify the result — Allure noise vs. real failure
 
 After `pm clear`, `/data/user/0/<pkg>/files/original_screenshots` doesn't exist →
