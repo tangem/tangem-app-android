@@ -12,6 +12,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 data class MatchedContact(
     val contactId: String,
+    val walletId: String,
     val name: String,
     val icon: AccountIconUM.CryptoPortfolio,
     val networkId: String,

@@ -38,7 +38,6 @@ internal class DefaultSendDestinationComponent @AssistedInject constructor(
             contactsBlockFactory.create(
                 context = child("send_contacts_block"),
                 params = AddressBookContactsBlockComponent.Params(
-                    userWalletId = params.userWalletId,
                     network = params.cryptoCurrency.network,
                     queryFlow = model.addressQuery,
                     onContactClick = model::onContactClick,
