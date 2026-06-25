@@ -6,10 +6,17 @@ import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
@@ -85,7 +92,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx = tx,
         uiStatus = uiStatus,
         title = stringReference(type.name),
-        iconRes = tx.directionalIcon(),
+        icon = tx.directionalIcon(),
         subtitle = tx.extractAddressSubtitle(),
     )
 
@@ -94,7 +101,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             tx = tx,
             uiStatus = uiStatus,
             title = tx.statusAwareTitle(R.string.common_swapping, R.string.common_swapped),
-            iconRes = tx.directionalIcon(),
+            icon = tx.directionalIcon(),
             subtitle = tx.extractAddressSubtitle(),
         )
 
@@ -129,7 +136,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             tx = tx,
             uiStatus = uiStatus,
             title = title,
-            iconRes = tx.directionalIcon(),
+            icon = tx.directionalIcon(),
             subtitle = subtitle,
         )
     }
@@ -142,7 +149,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
                 pending = R.string.transaction_history_claiming_reward,
                 confirmed = R.string.transaction_history_staking_reward,
             ),
-            iconRes = R.drawable.ic_transaction_history_claim_rewards_24,
+            icon = TxIcon.Res(R.drawable.ic_transaction_history_claim_rewards_24),
             subtitle = ContentSubtitle.Plain(resourceReference(R.string.transaction_history_earned_from_stake)),
         )
 
@@ -154,7 +161,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx = tx,
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_topup),
-        iconRes = tx.directionalIcon(),
+        icon = tx.directionalIcon(),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
@@ -166,7 +173,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx = tx,
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_deploy_contract),
-        iconRes = R.drawable.ic_doc_24,
+        icon = TxIcon.Vector(Icons.ic_document_20),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
@@ -178,7 +185,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx = tx,
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_initialize),
-        iconRes = R.drawable.ic_gear_24,
+        icon = TxIcon.Res(R.drawable.ic_gear_24),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
@@ -190,7 +197,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx = tx,
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_reactivate),
-        iconRes = R.drawable.ic_refresh_24,
+        icon = TxIcon.Vector(Icons.ic_arrow_refresh_20),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
@@ -206,7 +213,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         } else {
             resourceReference(R.string.common_transfer)
         },
-        iconRes = tx.directionalIcon(),
+        icon = tx.directionalIcon(),
         subtitle = tx.yieldSupplySubtitle(currency, type),
         hideAmount = currency is CryptoCurrency.Token && !tx.isOutgoing,
     )
@@ -218,7 +225,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx = tx,
         uiStatus = uiStatus,
         title = resourceReference(R.string.transaction_history_operation),
-        iconRes = tx.directionalIcon(),
+        icon = tx.directionalIcon(),
         subtitle = tx.extractAddressSubtitle(),
     )
 
@@ -227,7 +234,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             tx = tx,
             uiStatus = uiStatus,
             title = resourceReference(R.string.gasless_transaction_fee),
-            iconRes = tx.directionalIcon(),
+            icon = tx.directionalIcon(),
             subtitle = tx.extractAddressSubtitle(),
         )
 
@@ -235,7 +242,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
         title: TextReference,
-        iconRes: Int,
+        icon: TxIcon,
         subtitle: ContentSubtitle,
         hideAmount: Boolean = false,
     ): TransactionItemUM.Content = TransactionItemUM.Content(
@@ -245,7 +252,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         time = tx.timestampInMillis.toTimeFormat(),
         status = uiStatus,
         direction = tx.extractDirection(),
-        iconRes = if (uiStatus is TransactionItemUM.Content.Status.Failed) R.drawable.ic_close_24 else iconRes,
+        icon = if (uiStatus is TransactionItemUM.Content.Status.Failed) TxIcon.Vector(Icons.ic_cross_20) else icon,
         title = title,
         subtitle = subtitle,
         timestamp = tx.timestampInMillis,
@@ -379,31 +386,15 @@ private fun TxInfo.directionalAddressRes(): Int = if (isOutgoing) {
 
 // endregion
 
-// region Labels
-
-private fun TxInfo.statusAwareTitle(@StringRes pending: Int, @StringRes confirmed: Int): TextReference = when (status) {
-    is TxInfo.TransactionStatus.Failed ->
-        resourceReference(R.string.common_action_failed, wrappedList(resourceReference(pending)))
-    is TxInfo.TransactionStatus.Unconfirmed -> resourceReference(pending)
-    is TxInfo.TransactionStatus.Confirmed -> resourceReference(confirmed)
-}
-
-// endregion
-
 // region Misc
 
-private fun TxInfo.directionalIcon(): Int = if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
+private fun TxInfo.directionalIcon(): TxIcon =
+    TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
 
 private fun TxInfo.extractDirection(): TransactionItemUM.Content.Direction = if (isOutgoing) {
     TransactionItemUM.Content.Direction.OUTGOING
 } else {
     TransactionItemUM.Content.Direction.INCOMING
-}
-
-private fun TxInfo.TransactionStatus.toUiStatus(): TransactionItemUM.Content.Status = when (this) {
-    TxInfo.TransactionStatus.Confirmed -> TransactionItemUM.Content.Status.Confirmed
-    TxInfo.TransactionStatus.Failed -> TransactionItemUM.Content.Status.Failed
-    TxInfo.TransactionStatus.Unconfirmed -> TransactionItemUM.Content.Status.Unconfirmed
 }
 
 // endregion
