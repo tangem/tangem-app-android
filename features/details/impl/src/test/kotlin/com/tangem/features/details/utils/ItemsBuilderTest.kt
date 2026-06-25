@@ -192,7 +192,6 @@ internal class ItemsBuilderTest {
         val result = buildAll(
             isWalletConnectAvailable = false,
             isAddressBookAvailable = false,
-            isSupportChatAvailable = false,
             hasAnyMobileWallet = false,
         )
 
@@ -209,7 +208,7 @@ internal class ItemsBuilderTest {
         assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet")
 
         val support = result.single { it.id == "support" } as DetailsItemUM.Basic
-        assertThat(support.items.map { it.id }).containsExactly("support_email", "disclaimer").inOrder()
+        assertThat(support.items.map { it.id }).containsExactly("contact_support", "disclaimer").inOrder()
     }
 
     @Test
@@ -254,16 +253,13 @@ internal class ItemsBuilderTest {
     private fun buildAll(
         isWalletConnectAvailable: Boolean = false,
         isAddressBookAvailable: Boolean = false,
-        isSupportChatAvailable: Boolean = false,
         hasAnyMobileWallet: Boolean = false,
     ): ImmutableList<DetailsItemUM> = itemsBuilder.buildAll(
         isWalletConnectAvailable = isWalletConnectAvailable,
         isAddressBookAvailable = isAddressBookAvailable,
-        isSupportChatAvailable = isSupportChatAvailable,
         hasAnyMobileWallet = hasAnyMobileWallet,
         userWalletId = USER_WALLET_ID,
-        onSupportEmailClick = {},
-        onSupportChatClick = {},
+        onSupportClick = {},
         onBuyClick = {},
     )
 
