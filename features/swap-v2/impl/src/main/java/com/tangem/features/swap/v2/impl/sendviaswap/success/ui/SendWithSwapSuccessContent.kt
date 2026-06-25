@@ -21,9 +21,6 @@ import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
-import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.components.Fade
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -45,27 +42,24 @@ import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapDataTransactionModel
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
-import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
-import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
-import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 @Composable
 internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
-    if (sendWithSwapUM.navigationUM !is NavigationUM.Content) return
-
     Column {
         Box(
             modifier = Modifier
@@ -82,14 +76,6 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
                 backgroundColor = TangemTheme.colors.background.tertiary,
             )
         }
-        NavigationButtonsBlockV2(
-            navigationUM = sendWithSwapUM.navigationUM,
-            modifier = Modifier.padding(
-                start = 16.dp,
-                end = 16.dp,
-                bottom = 16.dp,
-            ),
-        )
     }
 }
 
@@ -456,31 +442,6 @@ private fun SendWithSwapSuccessContent_Preview() {
                         feeFiatRateUM = null,
                         feeNonce = FeeNonce.None,
                         isPrimaryButtonEnabled = false,
-                    ),
-                ),
-                navigationUM = NavigationUM.Content(
-                    source = SendWithSwapRoute.Success.javaClass.simpleName,
-                    title = TextReference.EMPTY,
-                    subtitle = null,
-                    backIconRes = R.drawable.ic_close_24,
-                    backIconClick = {},
-                    additionalIconRes = null,
-                    additionalIconClick = null,
-                    primaryButton = NavigationButton(
-                        textReference = resourceReference(R.string.common_close),
-                        isEnabled = true,
-                        onClick = {},
-                    ),
-                    secondaryPairButtonsUM = NavigationButton(
-                        textReference = resourceReference(R.string.common_explore),
-                        iconRes = R.drawable.ic_web_24,
-                        isEnabled = true,
-                        onClick = {},
-                    ) to NavigationButton(
-                        textReference = resourceReference(R.string.common_share),
-                        iconRes = R.drawable.ic_share_24,
-                        isEnabled = true,
-                        onClick = {},
                     ),
                 ),
             ),

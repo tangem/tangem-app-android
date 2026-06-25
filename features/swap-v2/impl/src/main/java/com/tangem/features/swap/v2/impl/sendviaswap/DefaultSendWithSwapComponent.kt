@@ -4,21 +4,18 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
@@ -41,7 +38,6 @@ import com.tangem.features.swap.v2.impl.sendviaswap.ui.SendWithSwapContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
 internal class DefaultSendWithSwapComponent @AssistedInject constructor(
@@ -50,7 +46,6 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
     private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
     private val confirmComponentFactory: SendWithSwapConfirmComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val urlOpener: UrlOpener,
 ) : SendWithSwapComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<SendWithSwapRoute>()
@@ -99,7 +94,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendWithSwapConfirmComponent -> {
-                        if (model.currentRoute.value.isEditMode) {
+                        if (stack.active.configuration.isEditMode) {
                             activeComponent.updateState(model.uiState.value)
                         }
                         // Re-sync destination from parent on Confirm entry, bypassing the edit-mode gate ([REDACTED_TASK_KEY]).
@@ -120,7 +115,6 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         )
                     }
                 }
-                model.currentRoute.emit(stack.active.configuration)
             }
         }
     }
@@ -128,35 +122,33 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by childStack.subscribeAsState()
-        val state by model.uiState.collectAsStateWithLifecycle()
 
         BackHandler(
-            onBack = {
-                (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
-            },
+            onBack = ::onChildBack,
         )
+
         SendWithSwapContent(
-            navigationUM = state.navigationUM,
-            confirmUM = state.confirmUM,
             stackState = stackState,
-            onLinkClick = urlOpener::openUrl,
         )
     }
 
     private fun createChild(route: SendWithSwapRoute, childContext: AppComponentContext) = when (route) {
-        is SendWithSwapRoute.Amount -> getAmountComponent(factoryContext = childContext)
-        is SendWithSwapRoute.Destination -> getDestinationComponent(factoryContext = childContext)
+        is SendWithSwapRoute.Amount -> getAmountComponent(route, factoryContext = childContext)
+        is SendWithSwapRoute.Destination -> getDestinationComponent(route = route, factoryContext = childContext)
         is SendWithSwapRoute.Confirm -> getConfirmComponent(factoryContext = childContext)
         is SendWithSwapRoute.Success -> getSuccessComponent(factoryContext = childContext)
     }
 
-    private fun getAmountComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getAmountComponent(
+        route: SendWithSwapRoute.Amount,
+        factoryContext: AppComponentContext,
+    ): ComposableModularContentComponent {
         return SwapAmountComponent(
             appComponentContext = factoryContext,
             params = SwapAmountComponentParams.AmountParams(
                 amountUM = model.uiState.value.amountUM,
                 title = resourceReference(R.string.common_send),
-                currentRoute = model.currentRoute,
+                route = route,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
@@ -172,17 +164,20 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
         )
     }
 
-    private fun getDestinationComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getDestinationComponent(
+        route: DestinationRoute,
+        factoryContext: AppComponentContext,
+    ): ComposableModularContentComponent {
         val amountContentUM = model.uiState.value.amountUM as? SwapAmountUM.Content
-            ?: return ComposableContentComponent.EMPTY
+            ?: return ComposableModularContentComponent.EMPTY
         val secondaryCryptoCurrency = amountContentUM.secondaryCryptoCurrencyStatus?.currency
-            ?: return ComposableContentComponent.EMPTY
+            ?: return ComposableModularContentComponent.EMPTY
 
         return sendDestinationComponentFactory.create(
             context = factoryContext,
             params = SendDestinationComponentParams.DestinationParams(
                 state = model.uiState.value.destinationUM,
-                currentRoute = model.currentRoute.filterIsInstance<DestinationRoute>(),
+                route = route,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
                 analyticsSendSource = model.analyticsSendSource,
@@ -195,12 +190,11 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
         )
     }
 
-    private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableModularContentComponent {
         return confirmComponentFactory.create(
             appComponentContext = factoryContext,
             params = SendWithSwapConfirmComponent.Params(
                 sendWithSwapUM = model.uiState.value,
-                currentRoute = model.currentRoute.filterIsInstance<SendWithSwapRoute.Confirm>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 appCurrency = model.appCurrency,
                 userWallet = model.userWallet,
@@ -216,12 +210,11 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
         )
     }
 
-    private fun getSuccessComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+    private fun getSuccessComponent(factoryContext: AppComponentContext): ComposableModularContentComponent {
         return SendWithSwapSuccessComponent(
             appComponentContext = factoryContext,
             params = SendWithSwapSuccessComponent.Params(
                 sendWithSwapUMFlow = model.uiState,
-                currentRoute = model.currentRoute.filterIsInstance<SendWithSwapRoute.Success>(),
                 callback = model,
                 analyticsCategoryName = model.analyticCategoryName,
             ),

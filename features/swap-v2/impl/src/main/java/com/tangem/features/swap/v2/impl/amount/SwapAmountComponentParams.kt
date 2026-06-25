@@ -10,7 +10,6 @@ import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 internal sealed class SwapAmountComponentParams {
@@ -41,7 +40,7 @@ internal sealed class SwapAmountComponentParams {
         override val isAccountModeFlow: StateFlow<Boolean>,
         val title: TextReference,
         val callback: SwapAmountComponent.ModelCallback,
-        val currentRoute: Flow<SendWithSwapRoute>,
+        val route: SendWithSwapRoute,
     ) : SwapAmountComponentParams()
 
     data class AmountBlockParams(

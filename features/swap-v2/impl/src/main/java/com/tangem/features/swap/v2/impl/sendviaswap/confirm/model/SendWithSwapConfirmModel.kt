@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -38,14 +37,14 @@ import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
-import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.api.SwapFeatureToggles
@@ -176,7 +175,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     init {
         updateAmountSubtractAvailability()
-        configConfirmNavigation()
         initialState()
         subscribeOnNotificationUpdates()
         subscribeOnTapHelpUpdates()
@@ -383,6 +381,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                             swapDataModel = data,
                         ),
                     )
+                    params.callback.onResult(uiState.value)
                     router.replaceAll(SendWithSwapRoute.Success)
                 },
                 expressOperationType = ExpressOperationType.SEND_WITH_SWAP,
@@ -582,49 +581,29 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
-    private fun configConfirmNavigation() {
-        combine(
-            flow = uiState,
-            flow2 = params.currentRoute,
-            transform = { state, route -> state to route },
-        ).filter {
-            it.second is SendWithSwapRoute.Confirm
-        }.onEach { (state, _) ->
-            val confirmUM = state.confirmUM
-            val isContent = confirmUM is ConfirmUM.Content
-            val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
-            val isHoldToConfirm = params.userWallet.isHotWallet && isContent
-            params.callback.onResult(
-                route = SendWithSwapRoute.Confirm,
-                sendWithSwapUM = state.copy(
-                    navigationUM = NavigationUM.Content(
-                        source = SendWithSwapRoute.Confirm.javaClass.simpleName,
-                        title = resourceReference(id = R.string.send_with_swap_confirm_title),
-                        subtitle = null,
-                        backIconRes = R.drawable.ic_back_24,
-                        backIconClick = router::pop,
-                        primaryButton = NavigationButton(
-                            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
-                            iconRes = walletInterationIcon(params.userWallet),
-                            isIconVisible = isReadyToSend && !isHoldToConfirm,
-                            isHapticClick = isReadyToSend,
-                            isHoldToConfirm = isHoldToConfirm,
-                            isEnabled = confirmUM.isPrimaryButtonEnabled,
-                            onClick = {
-                                when (confirmUM) {
-                                    is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
-                                        return@NavigationButton
-                                    } else {
-                                        onSendClick()
-                                    }
-                                    else -> return@NavigationButton
-                                }
-                            },
-                        ),
-                    ),
-                ),
-            )
-        }.launchIn(modelScope)
+    fun primaryButtonUM(confirmUM: ConfirmUM): NavigationButton {
+        val isContent = confirmUM is ConfirmUM.Content
+        val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
+        val isHoldToConfirm = params.userWallet.isHotWallet && isContent
+
+        return NavigationButton(
+            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
+            iconRes = walletInterationIcon(params.userWallet),
+            isIconVisible = isReadyToSend && !isHoldToConfirm,
+            isHapticClick = isReadyToSend,
+            isHoldToConfirm = isHoldToConfirm,
+            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            onClick = {
+                when (confirmUM) {
+                    is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
+                        return@NavigationButton
+                    } else {
+                        onSendClick()
+                    }
+                    else -> return@NavigationButton
+                }
+            },
+        )
     }
 
     private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {

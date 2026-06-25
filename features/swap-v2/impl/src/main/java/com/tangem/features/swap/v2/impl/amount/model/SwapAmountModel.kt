@@ -8,14 +8,11 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -40,7 +37,6 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
-import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
@@ -54,7 +50,6 @@ import com.tangem.features.swap.v2.impl.amount.model.transformers.*
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
-import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents.NoticeFixedRate.toAnalyticsRateType
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -125,7 +120,6 @@ internal class SwapAmountModel @Inject constructor(
     private val amountAnalyticsSender = SwapAmountAnalyticsSender(analyticsEventHandler)
 
     private var autoUpdateSubscriberJob: Job? = null
-    private var navigationJob: Job? = null
 
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
@@ -156,7 +150,6 @@ internal class SwapAmountModel @Inject constructor(
         } else {
             QUOTES_UPDATE_DELAY
         }
-        configAmountNavigation()
         quoteTaskScheduler.scheduleTask(
             scope = modelScope,
             task = loadQuotesTask(initialDelay = initialDelay),
@@ -167,7 +160,6 @@ internal class SwapAmountModel @Inject constructor(
     fun onStop() {
         quoteTaskScheduler.cancelTask()
         autoUpdateSubscriberJob?.cancel()
-        navigationJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -325,7 +317,7 @@ internal class SwapAmountModel @Inject constructor(
             val isShowSendViaSwapNotification = shouldShowNotificationUseCase(
                 NotificationId.SendViaSwapTokenSelectorNotification.key,
             )
-            val isEditMode = amountParams.currentRoute.firstOrNull()?.isEditMode == true
+            val isEditMode = amountParams.route.isEditMode
             val selectedCurrency = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus?.currency
             appRouter.push(
                 AppRoute.ChooseManagedTokens(
@@ -354,7 +346,7 @@ internal class SwapAmountModel @Inject constructor(
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
 
         modelScope.launch {
-            if (amountParams.currentRoute.firstOrNull()?.isEditMode == true) {
+            if (amountParams.route.isEditMode) {
                 swapAmountAlertFactory.showCloseSendWithSwapAlert {
                     params.callback.resetSendWithSwapNavigation(resetNavigation = true)
                     confirmSendWithSwapClose()
@@ -932,42 +924,6 @@ internal class SwapAmountModel @Inject constructor(
             },
             popBack = appRouter::pop,
         )
-    }
-
-    private fun configAmountNavigation() {
-        val params = params as? SwapAmountComponentParams.AmountParams ?: return
-        navigationJob?.cancel()
-        navigationJob = combine(
-            flow = uiState,
-            flow2 = params.currentRoute,
-            transform = { state, route -> state to route },
-        ).filter { (_, route) -> route is SendWithSwapRoute.Amount }.onEach { (state, route) ->
-            params.callback.onNavigationResult(
-                NavigationUM.Content(
-                    source = SendWithSwapRoute.Amount::class.java.simpleName,
-                    title = resourceReference(R.string.common_amount),
-                    subtitle = null,
-                    backIconRes = if (route.isEditMode) {
-                        R.drawable.ic_back_24
-                    } else {
-                        R.drawable.ic_close_24
-                    },
-                    backIconClick = params.callback::onBackClick,
-                    primaryButton = NavigationButton(
-                        textReference = if (route.isEditMode) {
-                            resourceReference(R.string.common_continue)
-                        } else {
-                            resourceReference(R.string.common_next)
-                        },
-                        isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = {
-                            onAmountNext()
-                            params.callback.onNextClick()
-                        },
-                    ),
-                ),
-            )
-        }.launchIn(modelScope)
     }
 
     private companion object {
