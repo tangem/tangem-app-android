@@ -53,4 +53,6 @@ interface SwapTransferInteractor {
         cryptoAmount: BigDecimal,
         toSwapCurrencyStatus: SwapCurrencyStatus,
     ): Either<SendTransactionError, WithdrawalResult>
+
+    suspend fun incrementTronTokenFeeShowCount(cryptoCurrencyStatus: CryptoCurrencyStatus?)
 }
