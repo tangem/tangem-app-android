@@ -24,6 +24,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookFeatureToggles
@@ -31,6 +32,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
+import com.tangem.features.details.entity.SelectContactSupportTypeBS
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
@@ -71,6 +73,8 @@ internal class DetailsModel @Inject constructor(
 
     private val params: DetailsComponent.Params = paramsContainer.require()
 
+    private val isUsedeskEnabled = feedbackFeatureToggles.isUsedeskEnabled
+
     private val items: MutableStateFlow<ImmutableList<DetailsItemUM>>
 
     val state: MutableStateFlow<DetailsUM>
@@ -89,11 +93,9 @@ internal class DetailsModel @Inject constructor(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
                 isAddressBookAvailable = addressBookFeatureToggles.isAddressBookEnabled,
-                isSupportChatAvailable = feedbackFeatureToggles.isUsedeskEnabled,
                 hasAnyMobileWallet = getWalletsUseCase.invokeSync().any { it is UserWallet.Hot },
                 userWalletId = params.userWalletId,
-                onSupportEmailClick = ::sendFeedback,
-                onSupportChatClick = ::openUseDesk,
+                onSupportClick = ::onContactSupportClick,
                 onBuyClick = ::onBuyClick,
             ),
         )
@@ -108,6 +110,7 @@ internal class DetailsModel @Inject constructor(
                     appVersion = getAppVersion(),
                 ),
                 selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig.Empty,
+                selectContactSupportTypeBSConfig = TangemBottomSheetConfig.Empty,
                 popBack = router::pop,
             ),
         )
@@ -156,6 +159,46 @@ internal class DetailsModel @Inject constructor(
 
             analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Settings))
             sendFeedbackEmailUseCase(feedbackType)
+        }
+    }
+
+    private fun onContactSupportClick() {
+        // Offer the mail/chat choice only when the chat is available; otherwise open mail directly.
+        if (isUsedeskEnabled) {
+            showContactSupportChooserBS()
+        } else {
+            sendFeedback()
+        }
+    }
+
+    private fun showContactSupportChooserBS() {
+        state.update { current ->
+            current.copy(
+                selectContactSupportTypeBSConfig = TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = ::hideContactSupportChooserBS,
+                    content = SelectContactSupportTypeBS(
+                        onOptionClick = { option ->
+                            hideContactSupportChooserBS()
+                            when (option) {
+                                SelectContactSupportTypeBS.Option.Mail -> sendFeedback()
+                                SelectContactSupportTypeBS.Option.Chat -> {
+                                    analyticsEventHandler.send(Settings.ButtonOpenChat())
+                                    openUseDesk()
+                                }
+                            }
+                        },
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun hideContactSupportChooserBS() {
+        state.update { current ->
+            current.copy(
+                selectContactSupportTypeBSConfig = current.selectContactSupportTypeBSConfig.copy(isShown = false),
+            )
         }
     }
 
