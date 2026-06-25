@@ -1,5 +1,6 @@
 package com.tangem.domain.models.wallet
 
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -119,3 +120,9 @@ val UserWallet.isLocked
 
 inline val UserWallet.isHotWallet get() = this is UserWallet.Hot
 inline val UserWallet.isColdWallet get() = this is UserWallet.Cold
+
+val UserWallet.isTangemPayCompatible: Boolean
+    get() = when (this) {
+        is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
+        is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
+    }
