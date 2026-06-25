@@ -251,5 +251,10 @@ internal object SwapNotificationUM {
                 onClick = onApproveClick,
             ),
         )
+
+        data object TronTokenFee : Info(
+            title = resourceReference(R.string.tron_will_be_send_token_fee_title),
+            subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
+        )
     }
 }
