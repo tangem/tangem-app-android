@@ -6,13 +6,21 @@ import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
+import com.tangem.core.ui.res.generated.icons.ic_share_android_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -24,7 +32,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.tokens.model.Amount
-import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -57,6 +64,9 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onCopyAddress: (String) -> Unit,
     private val onGoToProvider: (String) -> Unit,
+    private val onCopyTxId: (() -> Unit)? = null,
+    private val onShare: (() -> Unit)? = null,
+    private val onExplore: (() -> Unit)? = null,
     private val lookup: TxHistoryLookupContext = TxHistoryLookupContext(
         ownAccountByNetwork = emptyMap(),
         isAccountsModeEnabled = false,
@@ -94,11 +104,48 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     )
 
     private fun TxInfo.toHeaderUM(): TxHistoryDetailsUM.HeaderUM = TxHistoryDetailsUM.HeaderUM(
-        iconRes = headerIcon(),
+        icon = headerIcon(),
         status = status.toUiStatus(),
         title = headerTitle(),
         subtitle = headerSubtitle(timestampInMillis),
+        menu = buildMenu(),
     )
+
+    /**
+     * Header overflow context menu, shared by all transaction types. Each row is dropped when its action is absent:
+     * "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped when [onShare] is
+     * `null`) and "Explore" (dropped when [onExplore] is `null`). An empty list leaves the header with no "•••" button.
+     * Repeat / Hide are not part of this iteration.
+     */
+    private fun buildMenu(): ImmutableList<TxHistoryDetailsUM.MenuItemUM> = buildList {
+        onCopyTxId?.let { copy ->
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    icon = Icons.ic_copy_24,
+                    title = resourceReference(R.string.common_transaction_id),
+                    onClick = copy,
+                ),
+            )
+        }
+        onShare?.let { share ->
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    icon = Icons.ic_share_android_24,
+                    title = resourceReference(R.string.common_share),
+                    onClick = share,
+                ),
+            )
+        }
+        onExplore?.let { explore ->
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    icon = Icons.ic_globe_24,
+                    title = resourceReference(R.string.common_explore),
+                    onClick = explore,
+                ),
+            )
+        }
+    }.toImmutableList()
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         currencyIcon = iconStateConverter.convert(currency),
@@ -163,10 +210,11 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         val toOwner = resolveLegOwner(swap.tx.payoutAddress, swap.tx.toAsset.cryptoCurrency)
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
-                iconRes = R.drawable.ic_exchange_vertical_24,
+                icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                 status = status,
                 title = status.statusAwareTitle(R.string.common_swapping, R.string.common_swapped),
                 subtitle = headerSubtitle(swap.timestampMillis),
+                menu = buildMenu(),
             ),
             from = swap.tx.fromAsset.toAssetUM(
                 label = ownerLabel(fromOwner, fallback = R.string.swapping_from_title_v2, owned = R.string.common_from),
@@ -191,13 +239,14 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         val toOwner = resolveLegOwner(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
-                iconRes = R.drawable.ic_tangem_card_24,
+                icon = TxIcon.Vector(Icons.ic_card_20),
                 status = status,
                 title = status.statusAwareTitle(
                     R.string.tx_history_onramp_top_up,
                     R.string.tx_history_onramp_topped_up,
                 ),
                 subtitle = headerSubtitle(onramp.timestampMillis),
+                menu = buildMenu(),
             ),
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
@@ -269,7 +318,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         sign: String,
         isFaded: Boolean,
     ): TxHistoryDetailsUM.AssetUM {
-        val symbol = cryptoCurrency?.symbol ?: id.networkId
+        val symbol = displaySymbol
         val formatted = amount.format { crypto(
             symbol = symbol,
             decimals = decimals,
@@ -289,7 +338,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
      * nor the `~` estimate — so only the value is shown. Fiat has no `CryptoCurrency`, so it also has no icon.
      */
     private fun Amount.toFiatAssetUM(label: TextReference, isFaded: Boolean): TxHistoryDetailsUM.AssetUM {
-        val code = (type as? AmountType.FiatType)?.code ?: currencySymbol
+        val code = fiatCode
         val formatted = (value ?: BigDecimal.ZERO)
             .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol) }
         return TxHistoryDetailsUM.AssetUM(
@@ -421,12 +470,6 @@ private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
     isLoading = false,
 )
 
-private fun Status.statusAwareTitle(@StringRes pending: Int, @StringRes confirmed: Int): TextReference = when (this) {
-    is Status.Failed -> resourceReference(R.string.common_action_failed, wrappedList(resourceReference(pending)))
-    is Status.Unconfirmed -> resourceReference(pending)
-    is Status.Confirmed -> resourceReference(confirmed)
-}
-
 // endregion
 
 // region Info rows (provider / rate / network fee)
@@ -489,8 +532,8 @@ private fun ExchangeTransaction.swapRateRow(): TxHistoryDetailsUM.InfoRowUM? {
     val fromAmount = fromAsset.amount.takeIfPositive() ?: return null
     val toAmount = toAsset.amount.takeIfPositive() ?: return null
     val rate = toAmount.divide(fromAmount, rateScale(toAsset.decimals), RoundingMode.HALF_UP)
-    val baseSymbol = fromAsset.cryptoCurrency?.symbol ?: fromAsset.id.networkId
-    val quoteSymbol = toAsset.cryptoCurrency?.symbol ?: toAsset.id.networkId
+    val baseSymbol = fromAsset.displaySymbol
+    val quoteSymbol = toAsset.displaySymbol
     val value = rateText(
         base = oneOf(baseSymbol),
         quote = rate.format { crypto(symbol = quoteSymbol, decimals = toAsset.decimals, ignoreSymbolPosition = true) },
@@ -508,8 +551,8 @@ private fun OnrampTransaction.onrampRateRow(): TxHistoryDetailsUM.InfoRowUM? {
     val cryptoReceived = toAsset.amount.takeIfPositive() ?: return null
     // Divide at full precision; the fiat formatter then rounds the rate to the currency's display scale.
     val rate = fiatPaid.divide(cryptoReceived, RATE_MAX_DECIMALS, RoundingMode.HALF_UP)
-    val cryptoSymbol = toAsset.cryptoCurrency?.symbol ?: toAsset.id.networkId
-    val fiatCode = (fromFiat.type as? AmountType.FiatType)?.code ?: fromFiat.currencySymbol
+    val cryptoSymbol = toAsset.displaySymbol
+    val fiatCode = fromFiat.fiatCode
     val value = rateText(
         base = oneOf(cryptoSymbol),
         quote = rate.format { fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = fromFiat.currencySymbol) },
@@ -576,9 +619,9 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
 // region Header building helpers
 
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
-private fun TxInfo.headerIcon(): Int = when (type) {
-    is TransactionType.Swap -> R.drawable.ic_exchange_vertical_24
-    else -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
+private fun TxInfo.headerIcon(): TxIcon = when (type) {
+    is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
+    else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
 }
 
 private fun headerSubtitle(timestampMillis: Long): TextReference {
@@ -586,19 +629,6 @@ private fun headerSubtitle(timestampMillis: Long): TextReference {
     val date = DateTimeFormatters.dateMMMdYYYY.print(dateTime)
     val time = DateTimeFormatters.timeFormatter.print(dateTime)
     return stringReference("$date, $time")
-}
-
-private fun TxInfo.statusAwareTitle(@StringRes pending: Int, @StringRes confirmed: Int): TextReference = when (status) {
-    is TxInfo.TransactionStatus.Failed ->
-        resourceReference(R.string.common_action_failed, wrappedList(resourceReference(pending)))
-    is TxInfo.TransactionStatus.Unconfirmed -> resourceReference(pending)
-    is TxInfo.TransactionStatus.Confirmed -> resourceReference(confirmed)
-}
-
-private fun TxInfo.TransactionStatus.toUiStatus(): Status = when (this) {
-    TxInfo.TransactionStatus.Confirmed -> Status.Confirmed
-    TxInfo.TransactionStatus.Failed -> Status.Failed
-    TxInfo.TransactionStatus.Unconfirmed -> Status.Unconfirmed
 }
 
 // endregion

@@ -3,8 +3,15 @@ package com.tangem.features.txhistory.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
+import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -78,7 +85,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(TextReference.Str("Mint NFT"))
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_arrow_down_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
     }
 
     @Test
@@ -119,7 +126,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(result.title).isEqualTo(
             resRef(R.string.common_action_failed, listOf(resRef(R.string.common_swapping))),
         )
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_close_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_cross_20))
     }
 
     @Test
@@ -193,7 +200,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_sent))
         assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.OUTGOING)
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_arrow_up_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
         val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
         assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
@@ -242,7 +249,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_received))
         assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.INCOMING)
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_arrow_down_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
         val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
     }
@@ -436,7 +443,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_deploy_contract))
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_doc_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
     }
 
     @Test
@@ -446,7 +453,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_initialize))
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_gear_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Res(R.drawable.ic_gear_24))
     }
 
     @Test
@@ -456,7 +463,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_reactivate))
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_refresh_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_refresh_20))
     }
 
     @Test
@@ -655,7 +662,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.iconRes).isEqualTo(R.drawable.ic_close_24)
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_cross_20))
     }
 
     @Test

@@ -40,6 +40,8 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
+import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.components.transactions.state.asImageVector
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
@@ -50,6 +52,12 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 
 @Composable
@@ -86,7 +94,7 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
             ),
         ) {
             StatusCircle(
-                iconRes = state.iconRes,
+                icon = state.icon,
                 status = state.status,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.HEAD)
@@ -166,7 +174,7 @@ private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
 // region Status circle
 
 @Composable
-private fun StatusCircle(iconRes: Int, status: Status, modifier: Modifier = Modifier) {
+private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
             color = status.backgroundColor,
@@ -174,7 +182,7 @@ private fun StatusCircle(iconRes: Int, status: Status, modifier: Modifier = Modi
         ),
     ) {
         Icon(
-            painter = painterResource(iconRes),
+            imageVector = icon.asImageVector(),
             contentDescription = null,
             tint = status.iconTint,
             modifier = Modifier
@@ -396,7 +404,7 @@ private fun String.stripLeadingSign(): String = when {
 @Suppress("LongParameterList")
 private fun previewContent(
     txHash: String,
-    iconRes: Int,
+    icon: TxIcon,
     direction: Direction,
     status: Status,
     title: String,
@@ -411,7 +419,7 @@ private fun previewContent(
     status = status,
     direction = direction,
     onClick = {},
-    iconRes = iconRes,
+    icon = icon,
     title = stringReference(title),
     subtitle = ContentSubtitle.Plain(stringReference(subtitle)),
     timestamp = 0L,
@@ -438,7 +446,7 @@ private fun Preview_TransactionItem_Receive() {
             items = listOf(
                 previewContent(
                     txHash = "rcv-c",
-                    iconRes = R.drawable.ic_arrow_down_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_down_20),
                     direction = Direction.INCOMING,
                     status = Status.Confirmed,
                     title = "Received",
@@ -447,7 +455,7 @@ private fun Preview_TransactionItem_Receive() {
                 ),
                 previewContent(
                     txHash = "rcv-u",
-                    iconRes = R.drawable.ic_arrow_down_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_down_20),
                     direction = Direction.INCOMING,
                     status = Status.Unconfirmed,
                     title = "Receiving",
@@ -456,7 +464,7 @@ private fun Preview_TransactionItem_Receive() {
                 ),
                 previewContent(
                     txHash = "rcv-f",
-                    iconRes = R.drawable.ic_close_24,
+                    icon = TxIcon.Vector(Icons.ic_cross_20),
                     direction = Direction.INCOMING,
                     status = Status.Failed,
                     title = "Receiving failed",
@@ -477,7 +485,7 @@ private fun Preview_TransactionItem_Send() {
             items = listOf(
                 previewContent(
                     txHash = "snd-c",
-                    iconRes = R.drawable.ic_arrow_up_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_up_20),
                     direction = Direction.OUTGOING,
                     status = Status.Confirmed,
                     title = "Sent",
@@ -486,7 +494,7 @@ private fun Preview_TransactionItem_Send() {
                 ),
                 previewContent(
                     txHash = "snd-u",
-                    iconRes = R.drawable.ic_arrow_up_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_up_20),
                     direction = Direction.OUTGOING,
                     status = Status.Unconfirmed,
                     title = "Sending",
@@ -495,7 +503,7 @@ private fun Preview_TransactionItem_Send() {
                 ),
                 previewContent(
                     txHash = "snd-f",
-                    iconRes = R.drawable.ic_close_24,
+                    icon = TxIcon.Vector(Icons.ic_cross_20),
                     direction = Direction.OUTGOING,
                     status = Status.Failed,
                     title = "Sending failed",
@@ -516,7 +524,7 @@ private fun Preview_TransactionItem_Swap() {
             items = listOf(
                 previewContent(
                     txHash = "swp-c",
-                    iconRes = R.drawable.ic_exchange_vertical_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     direction = Direction.INCOMING,
                     status = Status.Confirmed,
                     title = "Swapped",
@@ -525,7 +533,7 @@ private fun Preview_TransactionItem_Swap() {
                 ),
                 previewContent(
                     txHash = "swp-u",
-                    iconRes = R.drawable.ic_exchange_vertical_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     direction = Direction.INCOMING,
                     status = Status.Unconfirmed,
                     title = "Swapping",
@@ -534,7 +542,7 @@ private fun Preview_TransactionItem_Swap() {
                 ),
                 previewContent(
                     txHash = "swp-f",
-                    iconRes = R.drawable.ic_close_24,
+                    icon = TxIcon.Vector(Icons.ic_cross_20),
                     direction = Direction.INCOMING,
                     status = Status.Failed,
                     title = "Swapping failed",
@@ -561,7 +569,7 @@ private fun Preview_TransactionItem_Express() {
                     status = Status.Unconfirmed,
                     direction = Direction.OUTGOING,
                     onClick = {},
-                    iconRes = R.drawable.ic_exchange_vertical_24,
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapping"),
                     subtitle = ContentSubtitle.Asset(
                         direction = ContentSubtitle.Direction.TO,
@@ -584,7 +592,7 @@ private fun Preview_TransactionItem_Express() {
                     status = Status.Confirmed,
                     direction = Direction.INCOMING,
                     onClick = {},
-                    iconRes = R.drawable.ic_tangem_card_24,
+                    icon = TxIcon.Vector(Icons.ic_card_20),
                     title = stringReference("Topped up"),
                     subtitle = ContentSubtitle.Asset(
                         direction = ContentSubtitle.Direction.FROM,
@@ -601,7 +609,7 @@ private fun Preview_TransactionItem_Express() {
                     status = Status.Failed,
                     direction = Direction.INCOMING,
                     onClick = {},
-                    iconRes = R.drawable.ic_tangem_card_24,
+                    icon = TxIcon.Vector(Icons.ic_card_20),
                     title = stringReference("Top up failed"),
                     subtitle = ContentSubtitle.Asset(
                         direction = ContentSubtitle.Direction.FROM,
