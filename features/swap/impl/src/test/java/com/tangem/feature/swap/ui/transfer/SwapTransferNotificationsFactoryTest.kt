@@ -12,9 +12,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
+import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import io.mockk.every
 import io.mockk.mockk
@@ -27,6 +29,8 @@ import java.math.BigDecimal
 internal class SwapTransferNotificationsFactoryTest {
 
     private val sut = SwapTransferNotificationsFactory()
+
+    private val actions: UiActions = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId(stringValue = "deadbeef")
     private val coldWallet: UserWallet.Cold = mockk(relaxed = true) {
@@ -41,9 +45,8 @@ internal class SwapTransferNotificationsFactoryTest {
             transferState = transferState,
             feeCryptoCurrencyStatus = null,
             fee = null,
-            onReduceByAmount = { _, _ -> },
-            onReduceToAmount = {},
-            onBuyClick = {},
+            actions = actions,
+            getFeeError = null,
         )
 
         assertThat(result).isEmpty()
@@ -64,9 +67,8 @@ internal class SwapTransferNotificationsFactoryTest {
             transferState = transferState,
             feeCryptoCurrencyStatus = null,
             fee = null,
-            onReduceByAmount = { _, _ -> },
-            onReduceToAmount = {},
-            onBuyClick = {},
+            actions = actions,
+            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Solana.RentInfo>()).hasSize(1)
@@ -91,9 +93,8 @@ internal class SwapTransferNotificationsFactoryTest {
                 transferState = transferState,
                 feeCryptoCurrencyStatus = null,
                 fee = fee,
-                onReduceByAmount = { _, _ -> },
-                onReduceToAmount = {},
-                onBuyClick = {},
+                actions = actions,
+                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Error.ExistentialDeposit>()).hasSize(1)
@@ -114,9 +115,8 @@ internal class SwapTransferNotificationsFactoryTest {
             transferState = transferState,
             feeCryptoCurrencyStatus = null,
             fee = null,
-            onReduceByAmount = { _, _ -> },
-            onReduceToAmount = {},
-            onBuyClick = {},
+            actions = actions,
+            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Error.MinimumAmountError>()).hasSize(1)
@@ -133,9 +133,8 @@ internal class SwapTransferNotificationsFactoryTest {
                 transferState = transferState,
                 feeCryptoCurrencyStatus = null,
                 fee = null,
-                onReduceByAmount = { _, _ -> },
-                onReduceToAmount = {},
-                onBuyClick = {},
+                actions = actions,
+                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Cardano.MinAdaValueCharged>()).hasSize(1)
@@ -157,9 +156,8 @@ internal class SwapTransferNotificationsFactoryTest {
             transferState = transferState,
             feeCryptoCurrencyStatus = null,
             fee = null,
-            onReduceByAmount = { _, _ -> },
-            onReduceToAmount = {},
-            onBuyClick = {},
+            actions = actions,
+            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Warning.FeeCoverageNotification>()).hasSize(1)
@@ -180,9 +178,8 @@ internal class SwapTransferNotificationsFactoryTest {
                 transferState = transferState,
                 feeCryptoCurrencyStatus = null,
                 fee = null,
-                onReduceByAmount = { _, _ -> },
-                onReduceToAmount = {},
-                onBuyClick = {},
+                actions = actions,
+                getFeeError = null,
             )
 
             val reserve = result.filterIsInstance<SwapNotificationUM.Warning.NeedReserveToCreateAccount>()
@@ -204,9 +201,8 @@ internal class SwapTransferNotificationsFactoryTest {
             transferState = transferState,
             feeCryptoCurrencyStatus = null,
             fee = null,
-            onReduceByAmount = { _, _ -> },
-            onReduceToAmount = {},
-            onBuyClick = {},
+            actions = actions,
+            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<SwapNotificationUM.Warning.ReduceAmount>()).hasSize(1)
@@ -226,13 +222,145 @@ internal class SwapTransferNotificationsFactoryTest {
             transferState = transferState,
             feeCryptoCurrencyStatus = null,
             fee = null,
-            onReduceByAmount = { _, _ -> },
-            onReduceToAmount = {},
-            onBuyClick = {},
+            actions = actions,
+            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Error.TokenExceedsBalance>()).hasSize(1)
     }
+
+    @Test
+    fun `GIVEN Tron token and show count within limit WHEN getNotifications THEN Tron network fees Info is added`() =
+        runTest {
+            val transferState = buildTransferState(
+                fromTokenInfo = buildTokenInfo(
+                    swapCurrencyStatus = buildTronTokenStatus(),
+                    amount = BigDecimal("10"),
+                ),
+                tronFeeNotificationShowCount = TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT,
+            )
+
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = null,
+                fee = null,
+                actions = actions,
+                getFeeError = null,
+            )
+
+            assertThat(result.filterIsInstance<SwapNotificationUM.Info.TronTokenFee>()).hasSize(1)
+        }
+
+    @Test
+    fun `GIVEN Tron token but show count exceeds limit WHEN getNotifications THEN no Tron network fees Info`() =
+        runTest {
+            val transferState = buildTransferState(
+                fromTokenInfo = buildTokenInfo(
+                    swapCurrencyStatus = buildTronTokenStatus(),
+                    amount = BigDecimal("10"),
+                ),
+                tronFeeNotificationShowCount = TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT + 1,
+            )
+
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = null,
+                fee = null,
+                actions = actions,
+                getFeeError = null,
+            )
+
+            assertThat(result.filterIsInstance<SwapNotificationUM.Info.TronTokenFee>()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN Tron coin (not token) WHEN getNotifications THEN no Tron network fees Info`() = runTest {
+        val transferState = buildTransferState(
+            fromTokenInfo = buildTokenInfo(
+                swapCurrencyStatus = buildCoinStatus(rawNetworkId = "tron"),
+                amount = BigDecimal("10"),
+            ),
+            tronFeeNotificationShowCount = 0,
+        )
+
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeCryptoCurrencyStatus = null,
+            fee = null,
+            actions = actions,
+            getFeeError = null,
+        )
+
+        assertThat(result.filterIsInstance<SwapNotificationUM.Info.TronTokenFee>()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN UnknownError fee error and fee currency status WHEN getNotifications THEN NetworkFeeUnreachable is added`() =
+        runTest {
+            val transferState = buildTransferState()
+            val feeCryptoCurrencyStatus = buildCoinStatus().status
+
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                fee = null,
+                actions = actions,
+                getFeeError = GetFeeError.UnknownError,
+            )
+
+            assertThat(result.filterIsInstance<NotificationUM.Warning.NetworkFeeUnreachable>()).hasSize(1)
+        }
+
+    @Test
+    fun `GIVEN TronActivationError fee error and fee currency status WHEN getNotifications THEN TronAccountNotActivated is added`() =
+        runTest {
+            val transferState = buildTransferState()
+            val feeCryptoCurrencyStatus = buildCoinStatus().status
+
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                fee = null,
+                actions = actions,
+                getFeeError = GetFeeError.BlockchainErrors.TronActivationError,
+            )
+
+            val notifications = result.filterIsInstance<NotificationUM.Warning.TronAccountNotActivated>()
+            assertThat(notifications).hasSize(1)
+            assertThat(notifications.first().tokenName).isEqualTo(feeCryptoCurrencyStatus.currency.name)
+        }
+
+    @Test
+    fun `GIVEN fee error but null fee currency status WHEN getNotifications THEN no fee unreachable notification`() =
+        runTest {
+            val transferState = buildTransferState()
+
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = null,
+                fee = null,
+                actions = actions,
+                getFeeError = GetFeeError.UnknownError,
+            )
+
+            assertThat(result.filterIsInstance<NotificationUM.Warning.NetworkFeeUnreachable>()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN null fee error and fee currency status WHEN getNotifications THEN no fee unreachable notification`() =
+        runTest {
+            val transferState = buildTransferState()
+
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = buildCoinStatus().status,
+                fee = null,
+                actions = actions,
+                getFeeError = null,
+            )
+
+            assertThat(result.filterIsInstance<NotificationUM.Warning.NetworkFeeUnreachable>()).isEmpty()
+        }
 
     @Suppress("LongParameterList")
     private fun buildTransferState(
@@ -244,6 +372,7 @@ internal class SwapTransferNotificationsFactoryTest {
         minAdaValue: BigDecimal? = null,
         isFeeCoverage: Boolean = false,
         sendingAmount: BigDecimal = fromTokenInfo.tokenAmount.value,
+        tronFeeNotificationShowCount: Int = 0,
     ): SwapState.Transfer = SwapState.Transfer(
         userWallet = coldWallet,
         fromTokenInfo = fromTokenInfo,
@@ -255,6 +384,7 @@ internal class SwapTransferNotificationsFactoryTest {
         isAccountsMode = false,
         isFeeCoverage = isFeeCoverage,
         sendingAmount = sendingAmount,
+        tronFeeNotificationShowCount = tronFeeNotificationShowCount,
         currencyCheck = currencyCheck,
         validationResult = validationResult,
         minAdaValue = minAdaValue,
@@ -325,5 +455,32 @@ internal class SwapTransferNotificationsFactoryTest {
             every { symbol } returns "TST"
             every { decimals } returns 18
         }
+    }
+
+    private fun buildTronTokenStatus(): SwapCurrencyStatus {
+        val token = mockk<CryptoCurrency.Token>(relaxed = true) {
+            every { id } returns mockk(relaxed = true)
+            every { network } returns mockk(relaxed = true) {
+                every { rawId } returns "tron"
+                every { name } returns "Tron"
+            }
+            every { name } returns "Tether"
+            every { symbol } returns "USDT"
+            every { decimals } returns 6
+        }
+        val statusValue: CryptoCurrencyStatus.Loaded = mockk(relaxed = true) {
+            every { amount } returns BigDecimal("100")
+            every { fiatRate } returns BigDecimal.ONE
+            every { fiatAmount } returns BigDecimal("100")
+        }
+        return SwapCurrencyStatus(
+            userWallet = coldWallet,
+            status = CryptoCurrencyStatus(currency = token, value = statusValue),
+            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+        )
+    }
+
+    private companion object {
+        const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
     }
 }
