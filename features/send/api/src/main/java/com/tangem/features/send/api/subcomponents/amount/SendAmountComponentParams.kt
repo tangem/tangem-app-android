@@ -9,7 +9,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 sealed class SendAmountComponentParams {
@@ -39,7 +38,7 @@ sealed class SendAmountComponentParams {
         override val accountFlow: StateFlow<Account?>,
         override val isAccountModeFlow: StateFlow<Boolean>,
         val callback: SendAmountComponent.ModelCallback,
-        val currentRoute: Flow<AmountRoute>,
+        val route: AmountRoute,
     ) : SendAmountComponentParams()
 
     data class AmountBlockParams(
