@@ -134,6 +134,7 @@ private fun Preview_AddressSelectorList() {
         AddressSelectorList(
             contact = MatchedContact(
                 contactId = "1",
+                walletId = "00",
                 name = "Binance",
                 icon = AccountIconUM.CryptoPortfolio(
                     value = CryptoPortfolioIcon.Icon.Letter,
