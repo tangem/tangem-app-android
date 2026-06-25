@@ -48,22 +48,22 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `GIVEN AND_15718_STAKING_TRANSACTION_VALIDATION enabled WHEN isTransactionValidationEnabled THEN true`() {
+    fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION enabled WHEN isTransactionValidationEnabled THEN true`() {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15718_STAKING_TRANSACTION_VALIDATION) } returns true
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION) } returns true
 
         // Act & Assert
         assertThat(toggles.isTransactionValidationEnabled).isTrue()
-        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15718_STAKING_TRANSACTION_VALIDATION) }
+        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION) }
     }
 
     @Test
-    fun `GIVEN AND_15718_STAKING_TRANSACTION_VALIDATION disabled WHEN isTransactionValidationEnabled THEN false`() {
+    fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION disabled WHEN isTransactionValidationEnabled THEN false`() {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15718_STAKING_TRANSACTION_VALIDATION) } returns false
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION) } returns false
 
         // Act & Assert
         assertThat(toggles.isTransactionValidationEnabled).isFalse()
-        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15718_STAKING_TRANSACTION_VALIDATION) }
+        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION) }
     }
 }
