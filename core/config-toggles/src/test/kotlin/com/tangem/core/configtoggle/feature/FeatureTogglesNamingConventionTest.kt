@@ -50,7 +50,6 @@ internal class FeatureTogglesNamingConventionTest {
             "SOLANA_TX_HISTORY_ENABLED",
             "STAKING_ETH_ENABLED",
             "SWAP_AB_ENABLED",
-            "USEDESK_ENABLED",
             "VIRTUAL_ACCOUNTS_ENABLED",
             "VISA_ONBOARDING_ENABLED",
             "WALLET_CONNECT_BITCOIN_ENABLED",
