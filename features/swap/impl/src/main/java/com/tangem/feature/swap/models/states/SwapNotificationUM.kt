@@ -149,6 +149,28 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data class TokenAssociationRequired(
+            val onAssociateClick: () -> Unit,
+        ) : Warning(
+            title = resourceReference(R.string.warning_hedera_missing_token_association_title),
+            subtitle = resourceReference(R.string.warning_receive_blocked_hedera_token_association_required_message),
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_hedera_missing_token_association_button_title),
+                onClick = onAssociateClick,
+            ),
+        )
+
+        data class TokenTrustlineRequired(
+            val onAssociateClick: () -> Unit,
+        ) : Warning(
+            title = resourceReference(R.string.warning_token_trustline_title),
+            subtitle = resourceReference(R.string.warning_receive_blocked_token_trustline_required_message),
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_token_trustline_button_title),
+                onClick = onAssociateClick,
+            ),
+        )
+
         data class NeedReserveToCreateAccount(
             val receiveAmount: String,
             val receiveToken: String,
