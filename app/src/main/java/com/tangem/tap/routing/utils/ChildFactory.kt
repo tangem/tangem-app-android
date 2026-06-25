@@ -487,10 +487,12 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = feedEntryComponentFactory,
                 )
             }
-            is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
+            is AppRoute.Usedesk -> {
                 createComponentChild(
                     context = context,
-                    params = UsedeskComponent.Params(),
+                    params = UsedeskComponent.Params(
+                        userWalletId = route.walletMetaInfo.userWalletId?.stringValue,
+                    ),
                     componentFactory = usedeskComponentFactory,
                 )
             }
