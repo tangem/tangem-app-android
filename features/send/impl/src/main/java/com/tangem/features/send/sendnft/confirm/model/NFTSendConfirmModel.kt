@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -32,28 +31,28 @@ import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
-import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
-import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.SendBalanceUpdater
 import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.sendnft.analytics.NFTSendAnalyticHelper
 import com.tangem.features.send.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.sendnft.confirm.model.transformers.NFTSendConfirmInitialStateTransformer
 import com.tangem.features.send.sendnft.confirm.model.transformers.NFTSendConfirmSendingStateTransformer
 import com.tangem.features.send.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.logging.TangemLogger
@@ -122,7 +121,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     private var sendIdleTimer: Long = 0L
 
     init {
-        configConfirmNavigation()
         subscribeOnNotificationsUpdateTrigger()
         subscribeOnCheckFeeResultUpdates()
         subscribeOnTapHelpUpdates()
@@ -371,54 +369,18 @@ internal class NFTSendConfirmModel @Inject constructor(
         }
     }
 
-    private fun configConfirmNavigation() {
-        combine(
-            flow = uiState,
-            flow2 = params.currentRoute,
-            transform = { state, route -> state to route },
-        ).onEach { (state, _) ->
-            val confirmUM = state.confirmUM
-            params.callback.onResult(
-                state.copy(
-                    navigationUM = NavigationUM.Content(
-                        source = CommonSendRoute.Confirm.javaClass.simpleName,
-                        title = resourceReference(R.string.nft_send),
-                        subtitle = null,
-                        backIconRes = when (confirmUM) {
-                            is ConfirmUM.Success -> R.drawable.ic_close_24
-                            else -> R.drawable.ic_back_24
-                        },
-                        backIconClick = {
-                            analyticsEventHandler.send(
-                                CommonSendAnalyticEvents.CloseButtonClicked(
-                                    categoryName = analyticsCategoryName,
-                                    source = SendScreenSource.Confirm,
-                                    isFromSummary = true,
-                                    isValid = confirmUM.isPrimaryButtonEnabled,
-                                ),
-                            )
-                            router.pop()
-                        },
-                        primaryButton = primaryButtonUM(),
-                        prevButton = null,
-                        secondaryPairButtonsUM = (
-                            NavigationButton(
-                                textReference = resourceReference(R.string.common_explore),
-                                iconRes = R.drawable.ic_web_24,
-                                onClick = ::onExploreClick,
-                            ) to NavigationButton(
-                                textReference = resourceReference(R.string.common_share),
-                                iconRes = R.drawable.ic_share_24,
-                                onClick = ::onShareClick,
-                            )
-                            ).takeUnless { (confirmUM as? ConfirmUM.Success)?.txUrl.isNullOrBlank() },
-                    ),
-                ),
-            )
-        }.launchIn(modelScope)
+    fun onBackClick() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.CloseButtonClicked(
+                categoryName = analyticsCategoryName,
+                source = SendScreenSource.Confirm,
+                isFromSummary = true,
+                isValid = uiState.value.confirmUM.isPrimaryButtonEnabled,
+            ),
+        )
     }
 
-    private fun primaryButtonUM(): NavigationButton {
+    fun primaryButtonUM(): NavigationButton {
         val confirmUM = uiState.value.confirmUM
         val isContent = confirmUM is ConfirmUM.Content
         val isReadyToSend = isContent && !confirmUM.isSending
