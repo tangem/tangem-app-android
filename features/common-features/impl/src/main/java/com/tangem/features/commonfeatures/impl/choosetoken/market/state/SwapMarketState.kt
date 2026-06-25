@@ -13,6 +13,8 @@ internal sealed class SwapMarketState {
     abstract val marketsTitle: TextReference
     abstract val shouldAssetsCount: Boolean
 
+    open val categories: SwapMarketCategoriesUM? = null
+
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
         val total: Int,
@@ -21,17 +23,20 @@ internal sealed class SwapMarketState {
         val visibleIdsChanged: (List<CryptoCurrency.RawID>) -> Unit,
         override val marketsTitle: TextReference,
         override val shouldAssetsCount: Boolean,
+        override val categories: SwapMarketCategoriesUM? = null,
     ) : SwapMarketState()
 
     data class Loading(
         override val marketsTitle: TextReference,
         override val shouldAssetsCount: Boolean,
+        override val categories: SwapMarketCategoriesUM? = null,
     ) : SwapMarketState()
 
     data class LoadingError(
         val onRetryClicked: () -> Unit,
         override val marketsTitle: TextReference,
         override val shouldAssetsCount: Boolean,
+        override val categories: SwapMarketCategoriesUM? = null,
     ) : SwapMarketState()
 
     data object SearchNothingFound : SwapMarketState() {
@@ -40,11 +45,6 @@ internal sealed class SwapMarketState {
     }
 
     companion object {
-        val DefaultLoading
-            get() = Loading(
-                marketsTitle = TextReference.Res(R.string.feed_trending_now),
-                shouldAssetsCount = false,
-            )
         val SearchLoading
             get() = Loading(
                 marketsTitle = TextReference.Res(R.string.markets_common_title),
