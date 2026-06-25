@@ -823,6 +823,7 @@ internal class SwapModel @Inject constructor(
                     uiStateHolder = uiState,
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
                     fee = selectedFee,
+                    feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
                 )
                 when {
                     uiState.successState != null -> Unit
@@ -867,9 +868,10 @@ internal class SwapModel @Inject constructor(
                 transferState = refreshed,
                 actions = actions,
                 uiStateHolder = uiState,
-                feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
+                feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatus ?: dataState.feePaidCryptoCurrency,
                 fee = fee,
                 isTangemPayWithdrawal = isTangemPayWithdrawal(),
+                feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
             )
         }
     }
@@ -2125,6 +2127,7 @@ internal class SwapModel @Inject constructor(
             },
             onSwapUIModeChange = ::onSwapUIModeChange,
             onSwapTypeMenuOpened = ::onSwapTypeMenuOpened,
+            onTronBannerShown = ::incrementTronTokenFeeShowCount,
         )
     }
 
@@ -2150,6 +2153,16 @@ internal class SwapModel @Inject constructor(
                 receiveBlockchain = toCurrency?.network?.name,
             ),
         )
+    }
+
+    private fun incrementTronTokenFeeShowCount() {
+        // Fired once per banner appearance from the UI (tied to the banner's composition lifecycle),
+        // so the show-count advances per appearance rather than on every transfer-state rebuild.
+        modelScope.launch {
+            swapTransferInteractor.incrementTronTokenFeeShowCount(
+                cryptoCurrencyStatus = dataState.fromSwapCurrencyStatus?.status,
+            )
+        }
     }
 
     private fun selectWalletInSelector(
