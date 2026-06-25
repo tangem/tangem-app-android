@@ -6,7 +6,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 sealed class SendDestinationComponentParams {
@@ -26,7 +25,7 @@ sealed class SendDestinationComponentParams {
         override val userWalletId: UserWalletId,
         val title: TextReference,
         val isBalanceHidingFlow: StateFlow<Boolean>,
-        val currentRoute: Flow<DestinationRoute>,
+        val route: DestinationRoute,
         val callback: SendDestinationComponent.ModelCallback,
         override val isAllowSelfSend: Boolean = false,
     ) : SendDestinationComponentParams()

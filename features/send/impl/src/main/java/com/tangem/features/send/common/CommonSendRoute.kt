@@ -16,7 +16,7 @@ internal sealed class CommonSendRoute : Route {
 
     @Serializable
     data object Confirm : CommonSendRoute() {
-        override val isEditMode: Boolean = true
+        override val isEditMode: Boolean = false
     }
 
     @Serializable

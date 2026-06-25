@@ -8,14 +8,11 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
-import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -49,8 +46,6 @@ import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.common.CommonSendRoute
-import com.tangem.features.send.impl.R
 import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
 import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
@@ -142,7 +137,6 @@ internal class SendDestinationModel @Inject constructor(
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
-        configDestinationNavigation()
         subscribeOnQRScannerResult()
         initialState()
         resetContactOnEdit()
@@ -153,15 +147,12 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun resetContactOnEdit() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
-        params.currentRoute
-            .filter { it.isEditMode }
-            .onEach {
-                val content = uiState.value as? DestinationUM.Content ?: return@onEach
-                if (content.addressTextField.contactName != null) {
-                    _uiState.update(SendDestinationContactTransformer(contact = null))
-                }
+        if (params.route.isEditMode) {
+            val content = uiState.value as? DestinationUM.Content ?: return
+            if (content.addressTextField.contactName != null) {
+                _uiState.update(SendDestinationContactTransformer(contact = null))
             }
-            .launchIn(modelScope)
+        }
     }
 
     fun onContactClick(contact: MatchedContact) {
@@ -259,7 +250,23 @@ internal class SendDestinationModel @Inject constructor(
         )
     }
 
-    private fun saveResult() {
+    fun onBackClick() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        if (!params.route.isEditMode) {
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.CloseButtonClicked(
+                    categoryName = params.analyticsCategoryName,
+                    source = SendScreenSource.Address,
+                    isFromSummary = false,
+                    isValid = uiState.value.isPrimaryButtonEnabled,
+                ),
+            )
+            saveResult()
+        }
+        params.callback.onBackClick(params.route)
+    }
+
+    fun saveResult() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
         params.callback.onDestinationResult(uiState.value)
     }
@@ -490,58 +497,8 @@ internal class SendDestinationModel @Inject constructor(
     private fun autoNextFromRecipient(type: EnterAddressSource, isValidAddress: Boolean, isValidMemo: Boolean) {
         if (type.isAutoNext && isValidAddress && isValidMemo) {
             saveResult()
-            (params as? SendDestinationComponentParams.DestinationParams)?.callback?.onNextClick()
+            (params as? SendDestinationComponentParams.DestinationParams)?.callback?.onNextClick(params.route)
         }
-    }
-
-    @Suppress("LongMethod")
-    private fun configDestinationNavigation() {
-        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
-        combine(
-            flow = uiState,
-            flow2 = params.currentRoute,
-            transform = { state, route -> state to route },
-        ).onEach { (state, route) ->
-            params.callback.onNavigationResult(
-                NavigationUM.Content(
-                    source = CommonSendRoute.Destination::class.java.simpleName,
-                    title = params.title,
-                    subtitle = null,
-                    backIconRes = if (route.isEditMode) {
-                        R.drawable.ic_back_24
-                    } else {
-                        R.drawable.ic_close_24
-                    },
-                    backIconClick = {
-                        if (!route.isEditMode) {
-                            analyticsEventHandler.send(
-                                CommonSendAnalyticEvents.CloseButtonClicked(
-                                    categoryName = params.analyticsCategoryName,
-                                    source = SendScreenSource.Address,
-                                    isFromSummary = false,
-                                    isValid = state.isPrimaryButtonEnabled,
-                                ),
-                            )
-                            saveResult()
-                        }
-                        params.callback.onBackClick()
-                    },
-                    primaryButton = NavigationButton(
-                        textReference = if (route.isEditMode) {
-                            resourceReference(R.string.common_continue)
-                        } else {
-                            resourceReference(R.string.common_next)
-                        },
-                        isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = {
-                            saveResult()
-                            params.callback.onNextClick()
-                        },
-                    ),
-                    secondaryPairButtonsUM = null,
-                ),
-            )
-        }.launchIn(modelScope)
     }
 
     private companion object {
