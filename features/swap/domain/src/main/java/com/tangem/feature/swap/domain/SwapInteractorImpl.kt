@@ -46,6 +46,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AllowanceInfo
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -207,12 +208,14 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         pairs: List<SwapPairLeast>,
     ): List<SwapProvider> {
-        val requirements = getAssetRequirementsUseCase.invoke(
+        val fromRequirements = getAssetRequirementsUseCase.invoke(
             fromSwapCurrencyStatus.userWalletId,
             fromSwapCurrencyStatus.currency,
         ).getOrNull()
 
-        if (!rampStateManager.checkAssetRequirements(requirements)) {
+        val isToFulfilled = getUnfulfilledReceiveRequirement(toSwapCurrencyStatus) == null
+
+        if (!rampStateManager.checkAssetRequirements(fromRequirements) || !isToFulfilled) {
             return emptyList()
         }
 
@@ -221,6 +224,17 @@ internal class SwapInteractorImpl @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             pairs = pairs,
         )
+    }
+
+    override suspend fun getUnfulfilledReceiveRequirement(
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): AssetRequirementsCondition? {
+        val requirements = getAssetRequirementsUseCase.invoke(
+            toSwapCurrencyStatus.userWalletId,
+            toSwapCurrencyStatus.currency,
+        ).getOrNull()
+
+        return requirements?.takeUnless { rampStateManager.checkAssetRequirements(it) }
     }
 
     override suspend fun findBestQuote(
