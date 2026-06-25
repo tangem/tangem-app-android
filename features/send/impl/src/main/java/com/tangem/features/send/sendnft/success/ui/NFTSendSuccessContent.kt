@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
 import com.tangem.core.ui.components.Fade
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
@@ -23,8 +22,8 @@ import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.common.ui.FeeBlockSuccess
 import com.tangem.features.send.common.ui.state.ConfirmUM
-import com.tangem.features.send.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.sendnft.ui.state.NFTSendUM
 import kotlinx.coroutines.delay
 
 @Composable
@@ -52,30 +51,20 @@ internal fun NFTSendSuccessContent(
         label = "Animate success content",
         modifier = modifier,
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .background(TangemTheme.colors.background.tertiary),
-            ) {
-                SuccessContent(
-                    nftSendUM = nftSendUM,
-                    nftDetailsBlockComponent = nftDetailsBlockComponent,
-                    destinationBlockComponent = destinationBlockComponent,
-                    modifier = Modifier.fillMaxHeight(),
-                )
-                Fade(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    backgroundColor = TangemTheme.colors.background.tertiary,
-                )
-            }
-            NavigationButtonsBlockV2(
-                navigationUM = nftSendUM.navigationUM,
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp,
-                ),
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors.background.tertiary),
+        ) {
+            SuccessContent(
+                nftSendUM = nftSendUM,
+                nftDetailsBlockComponent = nftDetailsBlockComponent,
+                destinationBlockComponent = destinationBlockComponent,
+                modifier = Modifier.fillMaxHeight(),
+            )
+            Fade(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                backgroundColor = TangemTheme.colors.background.tertiary,
             )
         }
     }
