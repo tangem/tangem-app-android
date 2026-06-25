@@ -32,7 +32,7 @@ internal class DefaultCustomerOffersRepositoryTest {
                 fee = CustomerOffersResponse.Fee(amount = BigDecimal("1.00"), currency = "USD"),
                 data = CustomerOffersResponse.Data(
                     specificationName = "SP_000004",
-                    orderType = "CARD_ISSUE_ADDITIONAL",
+                    orderType = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
                 ),
             ),
         ),

@@ -33,12 +33,10 @@ enum class OrderType(val wireValue: String) {
     companion object {
 
         /**
-         * All order types that represent issuing a card: the first virtual card (and its KYC
-         * variants) and an additional card. Used both to filter `findOrders` and to detect
-         * issue-card conflicts.
+         * All order types that represent issuing a card: the virtual card and its KYC variants.
+         * Used both to filter `findOrders` and to detect issue-card conflicts.
          */
         val issueCardTypes = setOf(
-            CARD_ISSUE_ADDITIONAL,
             CARD_ISSUE_VIRTUAL_RAIN,
             CARD_ISSUE_VIRTUAL_RAIN_KYC,
             CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
