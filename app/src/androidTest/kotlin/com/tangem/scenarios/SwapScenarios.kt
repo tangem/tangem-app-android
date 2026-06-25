@@ -11,6 +11,7 @@ import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertVisibility
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
@@ -315,10 +316,25 @@ fun BaseTestCase.openSwapInTransferModeWithHotWallet(
     }
 }
 
-// Mirrors iOS: enter Swap via the main action button (source auto-selected) — avoids the account list under the Markets promo.
 private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountName: String) {
-    step("Open 'Swap' for '$tokenName' from '$fromAccountName' via the main 'Swap' button") {
-        openSwapScreen(from = SwapEntryPoint.MainScreen, storiesExist = false)
+    step("Scroll '$fromAccountName' into view (semantics, not touch — avoids the Markets sheet)") {
+        onMainScreen { scrollToAccount(fromAccountName) }
+    }
+    step("Expand account '$fromAccountName' and reveal token '$tokenName'") {
+        onMainScreen {
+            findAccountSectionByName(fromAccountName).clickAndWaitFor(
+                rule = composeTestRule,
+                expectedCondition = {
+                    onMainScreen { findTokenInAnyAccountByName(tokenName).assertIsDisplayed() }
+                },
+            )
+        }
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+    }
+    step("Open 'Swap' screen") {
+        openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
     }
 }
 
