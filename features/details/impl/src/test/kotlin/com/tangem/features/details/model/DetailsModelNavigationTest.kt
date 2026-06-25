@@ -5,7 +5,9 @@ import arrow.core.right
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
+import com.tangem.features.details.entity.SelectContactSupportTypeBS
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,17 +19,19 @@ import org.junit.jupiter.api.Test
 internal class DetailsModelNavigationTest : DetailsModelTestBase() {
 
     @Test
-    fun `GIVEN selected wallet and meta WHEN support chat clicked THEN router pushes Usedesk`() = runTest {
+    fun `GIVEN usedesk enabled WHEN chat option selected THEN router pushes Usedesk`() = runTest {
         // Arrange
         val wallet = hotWallet(wallet1)
         val meta = metaInfo(wallet1)
+        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery { getWalletMetaInfoUseCase(wallet1) } returns meta.right()
 
         // Act
         val model = createModel(this)
         advanceUntilIdle()
-        onChatSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
+        selectContactSupportOption(model, SelectContactSupportTypeBS.Option.Chat)
         advanceUntilIdle()
 
         // Assert
@@ -36,18 +40,49 @@ internal class DetailsModelNavigationTest : DetailsModelTestBase() {
     }
 
     @Test
-    fun `GIVEN meta info missing WHEN support chat clicked THEN no navigation`() = runTest {
+    fun `GIVEN meta info missing WHEN chat option selected THEN no navigation`() = runTest {
         val wallet = hotWallet(wallet1)
+        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery { getWalletMetaInfoUseCase(wallet1) } returns Throwable().left()
 
         val model = createModel(this)
         advanceUntilIdle()
-        onChatSlot.captured.invoke()
+        onSupportSlot.captured.invoke()
+        selectContactSupportOption(model, SelectContactSupportTypeBS.Option.Chat)
         advanceUntilIdle()
 
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN usedesk enabled WHEN mail option selected THEN sends email and does not open Usedesk`() = runTest {
+        // Arrange
+        val wallet = hotWallet(wallet1)
+        val meta = metaInfo(wallet1)
+        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
+        every { getWalletsUseCase.invokeSync() } returns listOf(wallet)
+        every { getSelectedWalletSyncUseCase() } returns wallet.right()
+        coEvery { getWalletMetaInfoUseCase(wallet1) } returns meta.right()
+        every { getTangemPayCustomerIdUseCase(wallet1) } returns customerId.right()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+        onSupportSlot.captured.invoke()
+        selectContactSupportOption(model, SelectContactSupportTypeBS.Option.Mail)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify { sendFeedbackEmailUseCase(any()) }
+        verify(exactly = 0) { router.push(route = AppRoute.Usedesk(meta), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    private fun selectContactSupportOption(model: DetailsModel, option: SelectContactSupportTypeBS.Option) {
+        val content = model.state.value.selectContactSupportTypeBSConfig.content as SelectContactSupportTypeBS
+        content.onOptionClick(option)
     }
 
     @Test

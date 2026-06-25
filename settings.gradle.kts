@@ -42,6 +42,7 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
                 includeGroupAndSubgroups("com.tangem.tangem-hot-sdk-kotlin")
                 includeGroupAndSubgroups("com.tangem.vico")
+                includeGroupAndSubgroups("com.tangem.usedesk")
                 includeModule("com.tangem", "blstlib")
                 includeModule("com.tangem", "blockchain")
                 includeModule("com.tangem", "wallet-core-proto")
@@ -129,6 +130,15 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("org.web3j")
             }
         }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/ud-android-sdk")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content { includeGroupAndSubgroups("com.tangem.usedesk") }
+        }
         maven("https://jitpack.io")
         maven("https://maven.sumsub.com/repository/maven-public/")
     }
@@ -161,6 +171,30 @@ if (properties.getProperty("blockchainSdk.local").toBoolean()) {
         }
     }
 }
+
+// Optional local composite build for the Usedesk SDK fork.
+// Enable it from local.properties (which is git-ignored, so it never reaches CI/develop):
+//
+//   usedesk.local=true
+//   usedesk.path=../ud-android-sdk   # optional, this is the default
+//
+// When enabled, com.tangem.usedesk:* is resolved from local sources instead of the
+// published Maven artifact (tangemUsedeskSdk in gradle/tangem_dependencies.toml).
+if (properties.getProperty("usedesk.local").toBoolean()) {
+    val usedeskPath = properties.getProperty("usedesk.path") ?: "../ud-android-sdk"
+    println("Usedesk SDK: using local composite build from '$usedeskPath'")
+    includeBuild(usedeskPath) {
+        dependencySubstitution {
+            substitute(module("com.tangem.usedesk:common-sdk")).using(project(":common-sdk"))
+            substitute(module("com.tangem.usedesk:common-gui")).using(project(":common-gui"))
+            substitute(module("com.tangem.usedesk:chat-sdk")).using(project(":chat-sdk"))
+            substitute(module("com.tangem.usedesk:chat-gui")).using(project(":chat-gui"))
+            substitute(module("com.tangem.usedesk:knowledgebase-sdk")).using(project(":knowledgebase-sdk"))
+            substitute(module("com.tangem.usedesk:knowledgebase-gui")).using(project(":knowledgebase-gui"))
+        }
+    }
+}
+
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 

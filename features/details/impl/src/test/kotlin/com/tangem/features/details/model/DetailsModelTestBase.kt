@@ -70,11 +70,9 @@ internal abstract class DetailsModelTestBase {
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
     protected val abSlot = slot<Boolean>()
-    protected val chatSlot = slot<Boolean>()
     protected val mobileSlot = slot<Boolean>()
     protected val walletIdSlot = slot<UserWalletId>()
-    protected val onEmailSlot = slot<() -> Unit>()
-    protected val onChatSlot = slot<() -> Unit>()
+    protected val onSupportSlot = slot<() -> Unit>()
     protected val onBuySlot = slot<() -> Unit>()
     protected val onTangemPaySlot = slot<() -> Unit>()
 
@@ -96,11 +94,9 @@ internal abstract class DetailsModelTestBase {
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = capture(wcSlot),
                 isAddressBookAvailable = capture(abSlot),
-                isSupportChatAvailable = capture(chatSlot),
                 hasAnyMobileWallet = capture(mobileSlot),
                 userWalletId = capture(walletIdSlot),
-                onSupportEmailClick = capture(onEmailSlot),
-                onSupportChatClick = capture(onChatSlot),
+                onSupportClick = capture(onSupportSlot),
                 onBuyClick = capture(onBuySlot),
             )
         } returns persistentListOf()
@@ -136,7 +132,7 @@ internal abstract class DetailsModelTestBase {
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {
         every {
-            itemsBuilder.buildAll(any(), any(), any(), any(), any(), any(), any(), any())
+            itemsBuilder.buildAll(any(), any(), any(), any(), any(), any())
         } returns list
     }
 

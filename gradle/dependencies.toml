@@ -96,7 +96,6 @@ decompose = "3.3.0"
 room = "2.7.2"
 markdown = "0.7.2"
 markdownComposeView = "0.5.4"
-usedesk = "4.4.0"
 sumsub = "1.38.0"
 haze = "1.7.2"
 kotlinpoet = "1.18.1"
@@ -306,8 +305,6 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 markdown-composeview = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdownComposeView" }
-usedesk-chat-sdk = { module = "com.github.Usedesk.Android_SDK:chat-sdk", version.ref = "usedesk" }
-usedesk-chat-gui = { module = "com.github.Usedesk.Android_SDK:chat-gui", version.ref = "usedesk" }
 sumsub-sdk = { module = "com.sumsub.sns:idensic-mobile-sdk", version.ref = "sumsub" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }

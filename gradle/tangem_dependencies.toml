@@ -13,8 +13,8 @@ tangemVico = "tangem-master-21"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
 tangemHotSdk = "develop-550"
 #tangemHotSdk = "0.0.1" # Keep it! - used for local builds ^
-
-
+tangemUsedeskSdk = "main-9"
+#tangemUsedeskSdk = "0.0.1" # Keep it! - used for local builds ^
 
 [libraries]
 blockchain = { module = "com.tangem:blockchain", version.ref = "tangemBlockchainSdk" }
@@ -22,6 +22,9 @@ card-android = { module = "com.tangem.tangem-sdk-kotlin:android", version.ref = 
 card-core = { module = "com.tangem.tangem-sdk-kotlin:core", version.ref = "tangemCardSdk" }
 hot-core = { module = "com.tangem.tangem-hot-sdk-kotlin:core", version.ref = "tangemHotSdk" }
 hot-android = { module = "com.tangem.tangem-hot-sdk-kotlin:android", version.ref = "tangemHotSdk" }
+
+usedesk-chat-sdk = { module = "com.tangem.usedesk:chat-sdk", version.ref = "tangemUsedeskSdk" }
+usedesk-chat-gui = { module = "com.tangem.usedesk:chat-gui", version.ref = "tangemUsedeskSdk" }
 
 vico-compose = { group = "com.tangem.vico", name = "compose", version.ref = "tangemVico" }
 vico-compose-m3 = { group = "com.tangem.vico", name = "compose-m3", version.ref = "tangemVico" }
