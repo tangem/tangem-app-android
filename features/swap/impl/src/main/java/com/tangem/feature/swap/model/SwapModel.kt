@@ -78,6 +78,7 @@ import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -650,7 +651,7 @@ internal class SwapModel @Inject constructor(
                     pairs = dataState.pairs,
                 )
                 if (toProvidersList.isEmpty()) {
-                    handleSwapNotSupported(
+                    handlePairUnavailable(
                         fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
                         toSwapCurrencyStatus = newToSwapCurrencyStatus,
                     )
@@ -714,7 +715,7 @@ internal class SwapModel @Inject constructor(
                         pairs = pairs,
                     )
                     if (providerList.isEmpty()) {
-                        handleSwapNotSupported(
+                        handlePairUnavailable(
                             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                             toSwapCurrencyStatus = toSwapCurrencyStatus,
                         )
@@ -925,6 +926,16 @@ internal class SwapModel @Inject constructor(
                     ),
                 ),
             )
+            return
+        }
+
+        if (toProvidersList.isEmpty()) {
+            modelScope.launch {
+                handlePairUnavailable(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                )
+            }
             return
         }
         if (!isSilent) {
@@ -1318,6 +1329,15 @@ internal class SwapModel @Inject constructor(
             return
         }
         modelScope.launch(dispatchers.main) {
+            val toRequirement = swapInteractor.getUnfulfilledReceiveRequirement(toSwapCurrencyStatus)
+            if (toRequirement != null) {
+                handleDestinationRequirementBlocked(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    requirement = toRequirement,
+                )
+                return@launch
+            }
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -2235,6 +2255,50 @@ internal class SwapModel @Inject constructor(
             scope = modelScope,
             started = SharingStarted.Eagerly,
             initialValue = AppCurrency.Default,
+        )
+    }
+
+    private suspend fun handlePairUnavailable(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ) {
+        val toRequirement = swapInteractor.getUnfulfilledReceiveRequirement(toSwapCurrencyStatus)
+        if (toRequirement != null) {
+            handleDestinationRequirementBlocked(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                requirement = toRequirement,
+            )
+        } else {
+            handleSwapNotSupported(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+            )
+        }
+    }
+
+    private fun handleDestinationRequirementBlocked(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        requirement: AssetRequirementsCondition,
+    ) {
+        singleTaskScheduler.cancelTask()
+        lastReducedBalanceBy.value = BigDecimal.ZERO
+        lastAmount.value = INITIAL_AMOUNT
+        isFiatInput.value = false
+        uiState = stateBuilder.createDestinationRequirementBlockedState(
+            uiStateHolder = uiState,
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            toSwapCurrencyStatus = toSwapCurrencyStatus,
+            requirement = requirement,
+            onAssociateClick = {
+                appRouter.push(
+                    AppRoute.CurrencyDetails(
+                        userWalletId = toSwapCurrencyStatus.userWalletId,
+                        currency = toSwapCurrencyStatus.currency,
+                    ),
+                )
+            },
         )
     }
 
