@@ -57,6 +57,17 @@ fun BaseTestCase.selectStablecoinAsFeeToken(coinName: String, tokenName: String)
     step("Select '$tokenName' as the fee-paying token") {
         onSendFeeSelectorBottomSheet { feeTokenItem(tokenName).performClick() }
     }
+    step("Wait until the '$tokenName' fee is loaded and 'Apply' is enabled") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching {
+                onSendFeeSelectorBottomSheet {
+                    networkFeeTitle.assertIsDisplayed()
+                    feeTokenItem(tokenName).assertIsDisplayed()
+                    applyButton.assertIsEnabled()
+                }
+            }.isSuccess
+        }
+    }
 }
 
 /**
