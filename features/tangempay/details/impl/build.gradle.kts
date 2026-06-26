@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.promoBanners.api)
 
     /** Domain */
     implementation(projects.domain.balanceHiding)
