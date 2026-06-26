@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
 import com.tangem.domain.addressbook.model.AddressEntry
@@ -73,7 +74,7 @@ internal class SaveContactInteractorTest {
             coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(userWallet)) } returns
                 signatures.right()
             val saved = slot<Contact>()
-            coEvery { repository.saveContact(capture(saved)) } returns Unit
+            coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
 
             // Act
             val result = interactor.createContact(userWallet, name = "Alice", iconColor = "TestColor", entries)
@@ -106,7 +107,7 @@ internal class SaveContactInteractorTest {
                     signUseCase(hashes = capture(hashesSlot), publicKey = capture(publicKeySlot), userWallet = eq(userWallet))
                 } returns signatures.right()
                 val saved = slot<Contact>()
-                coEvery { repository.saveContact(capture(saved)) } returns Unit
+                coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
 
                 // Act
                 interactor.createContact(userWallet, name = "Alice", iconColor = "TestColor", twoEntries)
@@ -130,7 +131,7 @@ internal class SaveContactInteractorTest {
             // Arrange
             stubNoExistingContacts()
             val saved = slot<Contact>()
-            coEvery { repository.saveContact(capture(saved)) } returns Unit
+            coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
 
             // Act
             val result = interactor.createContact(userWallet, name = "Alice", iconColor = "TestColor", emptyList())
@@ -204,6 +205,22 @@ internal class SaveContactInteractorTest {
             coVerify(exactly = 0) { repository.saveContact(any()) }
         }
 
+        @Test
+        fun `GIVEN backend rejects the save WHEN createContact THEN Backend error is propagated`() = runTest {
+            // Arrange
+            stubNoExistingContacts()
+            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = any()) } returns
+                listOf(byteArrayOf(0x01)).right()
+            coEvery { repository.saveContact(any()) } returns AddressBookSyncError.Conflict.left()
+
+            // Act
+            val result = interactor.createContact(userWallet, name = "Alice", iconColor = "TestColor", entries)
+
+            // Assert
+            assertThat(result.leftOrNull())
+                .isEqualTo(SaveContactError.Backend(AddressBookSyncError.Conflict))
+        }
+
         private fun stubNoExistingContacts() {
             every { repository.getContacts(userWallet.walletId) } returns flowOf(emptyList())
         }
@@ -224,7 +241,7 @@ internal class SaveContactInteractorTest {
                 coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(userWallet)) } returns
                     signatures.right()
                 val saved = slot<Contact>()
-                coEvery { repository.saveContact(capture(saved)) } returns Unit
+                coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
 
                 // Act
                 val result = interactor.updateContact(

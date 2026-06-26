@@ -1,5 +1,7 @@
 package com.tangem.domain.addressbook.repository
 
+import arrow.core.Either
+import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -16,8 +18,9 @@ interface AddressBookRepository {
 
     suspend fun getContact(userWalletId: UserWalletId, name: String): Contact?
 
-    /** Inserts or updates a [contact]. */
-    suspend fun saveContact(contact: Contact)
+    suspend fun saveContact(contact: Contact): Either<AddressBookSyncError, Unit>
 
-    suspend fun deleteContact(id: ContactId)
+    suspend fun deleteContact(id: ContactId): Either<AddressBookSyncError, Unit>
+
+    suspend fun syncAddressBooks(): Either<AddressBookSyncError, Unit>
 }
