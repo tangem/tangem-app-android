@@ -140,11 +140,14 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
 
 fun BaseTestCase.synchronizeAddresses(
     balance: String? = null,
-    isBalanceAvailable: Boolean = true
+    isBalanceAvailable: Boolean = true,
+    assertBalance: Boolean = true,
 ) {
     step("Click on 'Synchronize addresses' button") {
         onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
     }
+
+    if (!assertBalance) return
 
     when {
         !isBalanceAvailable -> step("Assert wallet balance = '$DASH_SIGN'") {
