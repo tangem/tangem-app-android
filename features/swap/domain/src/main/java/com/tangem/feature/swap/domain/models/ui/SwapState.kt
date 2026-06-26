@@ -55,6 +55,7 @@ sealed interface SwapState {
         val isFeeCoverage: Boolean,
         val sendingAmount: BigDecimal,
         val tronFeeNotificationShowCount: Int,
+        val isAmountSubtractAvailable: Boolean,
         val isSendingAmountLoading: Boolean = false,
         val currencyCheck: CryptoCurrencyCheck? = null,
         val validationResult: Throwable? = null,
