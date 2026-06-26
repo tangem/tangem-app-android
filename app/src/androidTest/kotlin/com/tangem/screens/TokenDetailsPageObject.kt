@@ -114,6 +114,12 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    fun tokenTitle(name: String): KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
+        hasAnyDescendant(withText(text = name, substring = true))
+        useUnmergedTree = true
+    }
+
     fun networkFeeNotificationMessage(
         currencyName: String,
         networkName: String,
