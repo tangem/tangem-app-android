@@ -158,11 +158,17 @@ object PreferencesKeys {
     }
     val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityList") }
 
+    val MARKETING_DISMISSED_BANNER_IDS_KEY by lazy { stringPreferencesKey(name = "marketingDismissedBannerIds") }
+
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
 
     // region Promo
     fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
+    // endregion
+
+    // region Marketing
+    fun getMarketingCampaignsCacheKey(type: String) = stringPreferencesKey(name = "marketingCampaignsCache_$type")
     // endregion
 
     // region Permission

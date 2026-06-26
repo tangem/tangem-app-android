@@ -170,5 +170,9 @@
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15862_MARKETING_BANNERS_ENABLED",
+        "version": "undefined"
     }
 ]
