@@ -3,13 +3,14 @@ package com.tangem.domain.yield.supply
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.GaslessYieldRepository
 import java.math.BigDecimal
 
-interface YieldSupplyTransactionRepository {
+interface YieldSupplyTransactionRepository : GaslessYieldRepository {
 
     suspend fun createEnterTransactions(
         userWalletId: UserWalletId,
@@ -23,10 +24,6 @@ interface YieldSupplyTransactionRepository {
         fee: Fee?,
     ): TransactionData.Uncompiled
 
-    suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String?
-
-    suspend fun getEffectiveProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal?
-
     /**
      * Checks the version status of the user's yield-module contract and wraps [callData] with an
      * upgrade transaction if the deployed version is out of date.
@@ -36,4 +33,7 @@ interface YieldSupplyTransactionRepository {
         network: Network,
         callData: SmartContractCallData,
     ): SmartContractCallData
+
+    /** Returns the on-chain version status of the user's yield module for [network]. */
+    suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
 }
