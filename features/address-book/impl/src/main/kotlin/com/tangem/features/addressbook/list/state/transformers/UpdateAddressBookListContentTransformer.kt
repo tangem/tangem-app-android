@@ -28,7 +28,6 @@ internal class UpdateAddressBookListContentTransformer(
     private val mode: AddressBookRoute.ListMode,
     private val selectedWalletId: String?,
     private val query: String,
-    private val isSearchActive: Boolean,
     private val onContactClick: (String) -> Unit,
     private val onPickContact: (MatchedContact) -> Unit,
     private val onQueryChange: (String) -> Unit,
@@ -61,7 +60,7 @@ internal class UpdateAddressBookListContentTransformer(
             .toImmutableList()
 
         return AddressBookListUM.Content(
-            searchBar = buildSearchBar(),
+            searchBar = (prevState as? AddressBookListUM.Content)?.searchBar ?: buildSearchBar(),
             chips = if (areChipsVisible) buildChips(matchingWalletIds, effectiveSelected) else persistentListOf(),
             contacts = displayContacts,
             isNothingFound = matchedItems.isEmpty(),
@@ -93,7 +92,7 @@ internal class UpdateAddressBookListContentTransformer(
         placeholderText = resourceReference(R.string.common_search),
         query = query,
         onQueryChange = onQueryChange,
-        isActive = isSearchActive,
+        isActive = false,
         onActiveChange = onActiveChange,
         onClearClick = onClearQuery,
         onCloseClick = { onActiveChange(false) },
