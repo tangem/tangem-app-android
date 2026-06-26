@@ -77,9 +77,9 @@ internal class TangemPayChangePinModel @Inject constructor(
                 uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
                 return@launch
             }
-            uiState.update { it.copy(submitButtonLoading = false) }
             when (result) {
                 SetPinResult.PIN_TOO_WEAK -> {
+                    uiState.update { it.copy(submitButtonLoading = false) }
                     uiMessageSender.send(
                         message = ToastMessage(resourceReference(R.string.tangempay_pin_validation_error_message)),
                     )
@@ -92,7 +92,10 @@ internal class TangemPayChangePinModel @Inject constructor(
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,
                 null,
-                -> uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
+                -> {
+                    uiState.update { it.copy(submitButtonLoading = false) }
+                    uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
+                }
             }
         }
     }
