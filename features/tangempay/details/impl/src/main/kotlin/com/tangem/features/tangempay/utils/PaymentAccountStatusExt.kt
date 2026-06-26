@@ -21,6 +21,9 @@ internal val AccountStatus.Payment.cryptoCurrency: CryptoCurrency.Token
 internal val AccountStatus.Payment.isDeactivated: Boolean
     get() = value is PaymentAccountStatusValue.Deactivated
 
+internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
+    get() = source == StatusSource.ACTUAL && error == null
+
 internal fun AccountStatus.Payment.requireLoaded(): PaymentAccountStatusValue.Loaded =
     value as? PaymentAccountStatusValue.Loaded
         ?: error("Card-detail subflow requires Loaded status, got ${value::class.simpleName}")
