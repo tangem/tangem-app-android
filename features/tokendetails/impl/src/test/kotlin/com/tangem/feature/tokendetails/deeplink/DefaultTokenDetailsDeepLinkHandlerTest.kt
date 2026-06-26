@@ -31,6 +31,7 @@ import com.tangem.utils.logging.TangemLogger
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -532,6 +533,9 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         mockMultiCurrencyWallet(userWalletId)
         mockSelectWallet(userWalletId)
         coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns null
+        every { singleAccountListSupplier.invoke(userWalletId) } returns MutableStateFlow(
+            AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptyList()),
+        )
 
         createHandler(scope = this, defaultQueryParams(), isFromOnNewIntent = true)
         advanceUntilIdle()
@@ -563,6 +567,35 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         verify {
             appRouter.push(route = expectedRoute, onComplete = any())
         }
+    }
+
+    @Test
+    fun `GIVEN token appears only after refresh WHEN handle deeplink THEN push new route`() = runTest {
+        val userWalletId = UserWalletId("011")
+        val cryptoCurrency = mockCryptoCurrency()
+        mockMultiCurrencyWallet(userWalletId)
+        mockSelectWallet(userWalletId)
+
+        val staleList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptyList())
+        val freshList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = listOf(cryptoCurrency))
+        val accountListFlow = MutableStateFlow(staleList)
+
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns staleList
+        every { singleAccountListSupplier.invoke(userWalletId) } returns accountListFlow
+        coEvery { singleAccountListFetcher.invoke(SingleAccountListFetcher.Params(userWalletId)) } answers {
+            accountListFlow.value = freshList
+            Either.Right(Unit)
+        }
+        every {
+            cryptoCurrencyBalanceFetcher.invoke(userWalletId = userWalletId, currency = cryptoCurrency)
+        } just Runs
+        val expectedRoute = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency)
+
+        createHandler(scope = this, defaultQueryParams(), isFromOnNewIntent = true)
+        advanceUntilIdle()
+
+        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+        verify(exactly = 0) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
     private fun defaultQueryParams() = mapOf(

@@ -31,7 +31,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
@@ -161,23 +164,31 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private suspend fun findCryptoCurrency(userWallet: UserWallet, networkId: String?, tokenId: String?) =
         if (userWallet.isMultiCurrency) {
             val derivationPath = queryParams[DERIVATION_PATH_KEY]
+            val matches = { currency: CryptoCurrency -> currency.matches(networkId, tokenId, derivationPath) }
 
-            getCryptoCurrencies(userWalletId = userWallet.walletId)?.firstOrNull { currency ->
-                val isNetwork = currency.network.rawId.equals(networkId, ignoreCase = true)
-                val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
-
-                val isDefaultDerivation = currency.network.derivationPath is Network.DerivationPath.Card
-                val isCustomDerivation = derivationPath?.equals(currency.network.derivationPath.value) == true
-                val isCorrectDerivation = isDefaultDerivation || isCustomDerivation
-                isNetwork && isCurrency && isCorrectDerivation
-            }
+            singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.flattenCurrencies()?.firstOrNull(matches)
+                // getSyncOrNull returns the stale SharedFlow replay just after a fetch; wait for the refreshed list.
+                ?: awaitCryptoCurrency(userWallet.walletId, matches)
         } else {
             singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
                 ?.mainAccount?.cryptoCurrencies?.first()
         }
 
-    private suspend fun getCryptoCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>? {
-        return singleAccountListSupplier.getSyncOrNull(userWalletId)?.flattenCurrencies()
+    private suspend fun awaitCryptoCurrency(
+        userWalletId: UserWalletId,
+        matches: (CryptoCurrency) -> Boolean,
+    ): CryptoCurrency? = withTimeoutOrNull(TOKEN_APPEARANCE_TIMEOUT_MILLIS) {
+        singleAccountListSupplier(userWalletId)
+            .mapNotNull { accountList -> accountList.flattenCurrencies().firstOrNull(matches) }
+            .firstOrNull()
+    }
+
+    private fun CryptoCurrency.matches(networkId: String?, tokenId: String?, derivationPath: String?): Boolean {
+        val isNetwork = network.rawId.equals(networkId, ignoreCase = true)
+        val isCurrency = id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+        val isDefaultDerivation = network.derivationPath is Network.DerivationPath.Card
+        val isCustomDerivation = derivationPath?.equals(network.derivationPath.value) == true
+        return isNetwork && isCurrency && (isDefaultDerivation || isCustomDerivation)
     }
 
     @AssistedFactory
@@ -187,5 +198,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             queryParams: Map<String, String>,
             isFromOnNewIntent: Boolean,
         ): DefaultTokenDetailsDeepLinkHandler
+    }
+
+    private companion object {
+        const val TOKEN_APPEARANCE_TIMEOUT_MILLIS = 3_000L
     }
 }
