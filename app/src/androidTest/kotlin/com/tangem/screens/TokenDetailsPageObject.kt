@@ -15,6 +15,7 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 
 class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TokenDetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -114,10 +115,13 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
-    fun tokenTitle(name: String): KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
-        hasAnyDescendant(withText(text = name, substring = true))
-        useUnmergedTree = true
+    fun tokenTitle(name: String): KNode {
+        val titleText = withText(text = name, substring = true)
+        return child {
+            hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
+            addSemanticsMatcher(titleText or withAnyDescendant(titleText))
+            useUnmergedTree = true
+        }
     }
 
     fun networkFeeNotificationMessage(
