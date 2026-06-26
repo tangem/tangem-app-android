@@ -3,6 +3,7 @@ package com.tangem.features.virtualaccount.main.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.virtualaccount.main.VirtualAccountMainModel
+import com.tangem.features.virtualaccount.main.addfunds.VirtualAccountAddFundsModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -17,4 +18,9 @@ internal interface VirtualAccountMainModelModule {
     @IntoMap
     @ClassKey(VirtualAccountMainModel::class)
     fun bindVirtualAccountMainModel(model: VirtualAccountMainModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(VirtualAccountAddFundsModel::class)
+    fun bindVirtualAccountAddFundsModel(model: VirtualAccountAddFundsModel): Model
 }
