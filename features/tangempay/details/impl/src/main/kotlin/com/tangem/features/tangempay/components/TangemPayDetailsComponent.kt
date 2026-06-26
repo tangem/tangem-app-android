@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -18,6 +19,7 @@ import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalVisaRedesignEnabled
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -34,9 +36,19 @@ internal class TangemPayDetailsComponent(
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
+
+    private val promoBannersBlockComponent: PromoBannersBlockComponent by lazy {
+        promoBannersBlockComponentFactory.create(
+            context = child("promoBannersBlockComponent"),
+            params = PromoBannersBlockComponent.Params(
+                placeholder = PromoBannersBlockComponent.Placeholder.PAYMENT_ACCOUNT_MAIN,
+            ),
+        )
+    }
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
@@ -63,6 +75,7 @@ internal class TangemPayDetailsComponent(
     }
 
     init {
+        promoBannersBlockComponent.setVisibleOnScreen(true)
         lifecycle.subscribe(
             onPause = model::onPause,
             onResume = model::onResume,
@@ -73,6 +86,9 @@ internal class TangemPayDetailsComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val promoBannersBlock = ComposableContentComponent { promoModifier ->
+            promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 16.dp)
+        }
         CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
             NavigationBar3ButtonsScrim()
             if (LocalVisaRedesignEnabled.current) {
@@ -80,6 +96,7 @@ internal class TangemPayDetailsComponent(
                     state = state,
                     txHistoryComponent = txHistoryComponent,
                     expressTransactionsComponent = expressTransactionsComponent,
+                    promoBannersBlockComponent = promoBannersBlock,
                     modifier = modifier,
                 )
             } else {
