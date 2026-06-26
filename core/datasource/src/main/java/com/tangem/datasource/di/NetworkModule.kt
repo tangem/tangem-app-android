@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
+import com.tangem.datasource.api.marketing.MarketingApi
 import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
@@ -250,6 +251,16 @@ internal object NetworkModule {
                 readTimeoutSeconds = TIMEOUT_60_SECONDS,
                 writeTimeoutSeconds = TIMEOUT_60_SECONDS,
             ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMarketingApi(retrofitApiBuilder: RetrofitApiBuilder): MarketingApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemTech,
+            applyTimeoutAnnotations = false,
+            sessionAuth = false,
         )
     }
 }
