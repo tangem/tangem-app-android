@@ -8,12 +8,14 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class TangemPayFreezeUnfreezeStateTransformer(
     private val cardFrozenState: TangemPayCardFrozenState,
+    private val isDataFresh: Boolean,
 ) : Transformer<TangemPayDetailsUM> {
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
         val balanceBlockState = if (prevState.balanceBlockState is TangemPayDetailsBalanceBlockState.Content) {
+            val isEnabled = isDataFresh && cardFrozenState == TangemPayCardFrozenState.Unfrozen
             val actionButtons = prevState.balanceBlockState.actionButtons.map {
-                it.copy(isEnabled = cardFrozenState == TangemPayCardFrozenState.Unfrozen)
+                it.copy(isEnabled = isEnabled)
             }
             prevState.balanceBlockState.copy(actionButtons = actionButtons.toPersistentList())
         } else {

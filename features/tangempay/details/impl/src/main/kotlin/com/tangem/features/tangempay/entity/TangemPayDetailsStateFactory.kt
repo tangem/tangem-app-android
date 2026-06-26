@@ -10,7 +10,6 @@ import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -18,6 +17,7 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
+import com.tangem.features.tangempay.utils.isFresh
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -60,7 +60,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
-        val isFresh = status.source == StatusSource.ACTUAL && status.error == null
+        val isFresh = status.isFresh
         val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
         val isAddCardEnabled = isFresh && !hasIssuingCard
