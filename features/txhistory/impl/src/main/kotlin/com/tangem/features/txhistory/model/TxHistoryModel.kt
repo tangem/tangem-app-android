@@ -23,6 +23,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -30,7 +33,6 @@ import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
@@ -54,7 +56,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TxHistoryModel @Inject constructor(
@@ -71,6 +73,7 @@ internal class TxHistoryModel @Inject constructor(
     private val designFeatureToggles: DesignFeatureToggles,
     private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val historyTxListManagerFactory: HistoryTxListManager.Factory,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
@@ -254,6 +257,13 @@ internal class TxHistoryModel @Inject constructor(
                     historyTxListManager?.startLoading()
                 }
         }
+        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+            val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
+                walletId = params.userWalletId,
+                currency = params.currency,
+            )
+            modelScope.launch { appTxHistoryFetcher.invoke(trigger) }
+        }
     }
 
     fun reload() {
@@ -267,6 +277,13 @@ internal class TxHistoryModel @Inject constructor(
                     txHistoryListManager?.reload()
                     historyTxListManager?.reload()
                 }
+            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+                val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
+                    walletId = params.userWalletId,
+                    currency = params.currency,
+                )
+                modelScope.launch { appTxHistoryFetcher.invoke(trigger) }
+            }
         }
     }
 
