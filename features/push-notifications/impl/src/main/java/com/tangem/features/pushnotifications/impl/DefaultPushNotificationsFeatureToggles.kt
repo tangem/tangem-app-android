@@ -13,4 +13,9 @@ internal class DefaultPushNotificationsFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             FeatureToggles.AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED,
         )
+
+    override val isDataPushAsNotificationEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_15933_DATA_PUSH_AS_NOTIFICATION_ENABLED,
+        )
 }
