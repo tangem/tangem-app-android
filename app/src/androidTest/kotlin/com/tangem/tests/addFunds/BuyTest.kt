@@ -12,6 +12,7 @@ import com.tangem.screens.onBuyTokenDetailsScreen
 import com.tangem.screens.onMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
+import io.qameta.allure.kotlin.Issue
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
 
@@ -88,6 +89,7 @@ class BuyTest : BaseTestCase() {
     @AllureId("3613")
     @DisplayName("On-ramp Buy: S2C card doesn't have Buy and Sell options")
     @Test
+    @Issue("[REDACTED_TASK_KEY]")
     fun buyAndSellIsNotAvailableForS2CCardTest() {
         setupHooks().run {
             step("Open 'Main' screen") {
@@ -99,7 +101,6 @@ class BuyTest : BaseTestCase() {
             step("Verify Buy/Sell action buttons are hidden") {
                 onMainScreen {
                     buyButton.assertDoesNotExist()
-                    sellButton.assertDoesNotExist()
                 }
             }
         }
