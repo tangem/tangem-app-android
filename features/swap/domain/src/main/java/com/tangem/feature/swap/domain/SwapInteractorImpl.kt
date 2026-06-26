@@ -131,10 +131,28 @@ internal class SwapInteractorImpl @Inject constructor(
         ConcurrentHashMap<IntegratedApprovalFallbackKey, Boolean>(),
     )
 
+    private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
+
     private fun hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String?) =
         integratedApprovalFallbackContexts.contains(
             IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress),
         )
+
+    private suspend fun isYieldSwapRouterAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        routerAddress: String,
+    ): Boolean {
+        val network = fromSwapCurrencyStatus.currency.network
+        val key = "${network.rawId}:${routerAddress.lowercase()}"
+        if (yieldSwapAllowedRouters.contains(key)) return true
+        val isAllowed = walletManagersFacade.isSwapSpenderAllowed(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = network,
+            spenderAddress = routerAddress,
+        )
+        if (isAllowed) yieldSwapAllowedRouters.add(key)
+        return isAllowed
+    }
 
     override suspend fun getPair(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -304,7 +322,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         }
                     }
                 }
-            }.awaitAll().toMap()
+            }.awaitAll().filterNotNull().toMap()
         }
     }
 
@@ -316,7 +334,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
-    ): Pair<SwapProvider, SwapState> {
+    ): Pair<SwapProvider, SwapState>? {
         if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true &&
             !swapFeatureToggles.isYieldSwapEnabled
         ) {
@@ -365,6 +383,12 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
         val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
+
+        if (isYieldSwap && dexRouterSpenderAddress != null &&
+            !isYieldSwapRouterAllowed(fromSwapCurrencyStatus, dexRouterSpenderAddress)
+        ) {
+            return null
+        }
 
         val allowanceInfo = spenderAddress?.let { allowanceContract ->
             getAllowanceInfoUseCase(

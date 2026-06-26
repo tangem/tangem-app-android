@@ -246,6 +246,8 @@ interface WalletManagersFacade {
      */
     suspend fun getPsbtFee(userWalletId: UserWalletId, network: Network, psbtBase64: String): BigDecimal?
 
+    suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
+
     /**
      * Get requirements for asset(currency)
      * @return null if there's no requirement, otherwise [AssetRequirementsCondition].

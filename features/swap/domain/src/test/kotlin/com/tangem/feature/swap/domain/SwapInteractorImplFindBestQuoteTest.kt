@@ -888,6 +888,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             coEvery {
                 yieldModuleAddressProvider.getOrFetch(any(), any())
             } returns yieldProxyAddress
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
         }
 
         @Test
@@ -1128,6 +1129,144 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
             val loaded = state as SwapState.QuotesLoadedState
             assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldSwapRouterAllowlist {
+
+        private val yieldProxyAddress = "0xYieldModuleProxy"
+        private val yieldTokenContract = "0xTokenContract"
+        private val notAllowedRouter = "0xMoonPayRouter"
+        private val allowedRouter = "0xOneInchRouter"
+
+        @BeforeEach
+        fun enableYieldSwap() {
+            every { swapFeatureToggles.isYieldSwapEnabled } returns true
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns yieldProxyAddress
+        }
+
+        private fun yieldTokenStatus(yieldActive: Boolean = true) = buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = yieldTokenContract,
+            isCoin = false,
+            amount = BigDecimal("10"),
+            yieldSupplyActive = yieldActive,
+            yieldSupplyAllowedToSpend = true,
+        )
+
+        private fun stubDexQuote(providerId: String, router: String) {
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = providerId, rateType = any(),
+                )
+            } returns buildQuoteModel(allowanceContract = router).right()
+        }
+
+        private fun stubExchangeData(providerId: String) {
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = providerId, rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            } returns buildSwapDataModelDex().right()
+        }
+
+        @Test
+        fun `should hide yield-swap DEX provider whose router is not allowed by the registry`() = runTest {
+            // Given — yield active, router NOT in the SwapExecutionRegistry (MoonPay/swaps.xyz)
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            stubDexQuote(dexProvider.providerId, notAllowedRouter)
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), notAllowedRouter) } returns false
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = yieldTokenStatus(),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — provider is absent from the list
+            assertThat(result.containsKey(dexProvider)).isFalse()
+            assertThat(result).isEmpty()
+        }
+
+        @Test
+        fun `should keep yield-swap DEX provider whose router is allowed by the registry`() = runTest {
+            // Given — yield active, router whitelisted (1inch)
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            stubDexQuote(dexProvider.providerId, allowedRouter)
+            stubExchangeData(dexProvider.providerId)
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), allowedRouter) } returns true
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = yieldTokenStatus(),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then
+            assertThat(result.containsKey(dexProvider)).isTrue()
+            assertThat(result[dexProvider]).isNotNull()
+        }
+
+        @Test
+        fun `should hide only the not-allowed router and keep the allowed one for yield swaps`() = runTest {
+            // Given — two DEX providers, only one router whitelisted
+            val allowedProvider = buildSwapProvider(ExchangeProviderType.DEX, "dex-allowed")
+            val blockedProvider = buildSwapProvider(ExchangeProviderType.DEX, "dex-blocked")
+            stubDexQuote(allowedProvider.providerId, allowedRouter)
+            stubDexQuote(blockedProvider.providerId, notAllowedRouter)
+            stubExchangeData(allowedProvider.providerId)
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), allowedRouter) } returns true
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), notAllowedRouter) } returns false
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = yieldTokenStatus(),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+                providers = listOf(allowedProvider, blockedProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then
+            assertThat(result.containsKey(allowedProvider)).isTrue()
+            assertThat(result.containsKey(blockedProvider)).isFalse()
+        }
+
+        @Test
+        fun `should not apply the registry filter to regular non-yield swaps`() = runTest {
+            // Given — yield NOT active; the registry verdict must be irrelevant for plain DEX swaps
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            stubDexQuote(dexProvider.providerId, notAllowedRouter)
+            stubExchangeData(dexProvider.providerId)
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns false
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = yieldTokenStatus(yieldActive = false),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — provider stays; the on-chain allowlist does not gate non-yield swaps
+            assertThat(result.containsKey(dexProvider)).isTrue()
+            coVerify(exactly = 0) { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) }
         }
     }
 
