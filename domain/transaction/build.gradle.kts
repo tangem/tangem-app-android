@@ -8,6 +8,10 @@ android {
     namespace = "com.tangem.domain.transaction"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
@@ -42,6 +46,8 @@ dependencies {
     implementation(projects.domain.notifications)
     api(projects.domain.networks)
 
+    testRuntimeOnly(deps.test.junit5.engine)
+    testRuntimeOnly(deps.test.junit5.vintage.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
