@@ -169,7 +169,14 @@ internal class TangemPayDetailsModel @Inject constructor(
         frozenStateJobHolder.cancel()
         cardDetailsRepository
             .cardFrozenState(cardId)
-            .onEach { uiState.update(TangemPayFreezeUnfreezeStateTransformer(cardFrozenState = it)) }
+            .onEach { frozenState ->
+                uiState.update(
+                    TangemPayFreezeUnfreezeStateTransformer(
+                        cardFrozenState = frozenState,
+                        isDataFresh = currentStatus.value.ifLoadedOrNull { it.isFresh } == true,
+                    ),
+                )
+            }
             .launchIn(modelScope)
             .saveIn(frozenStateJobHolder)
     }
