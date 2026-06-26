@@ -200,8 +200,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         appRouterConfig.initializedState.value = true
         router.replaceAll(AppRoute.ForceUpdate(mode = mode))
-        forceUpdateContinuation.awaitDismiss()
-        navigateToStartRoute()
+        if (mode == AppRoute.ForceUpdate.Mode.Optional) {
+            forceUpdateContinuation.awaitDismiss()
+            navigateToStartRoute()
+        }
     }
 
     private suspend fun resolveAppUpdateMode(): AppRoute.ForceUpdate.Mode? {
