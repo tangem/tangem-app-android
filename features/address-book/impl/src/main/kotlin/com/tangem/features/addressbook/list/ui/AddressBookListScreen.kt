@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,9 @@ internal fun AddressBookListScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.navigationBarsPadding()) {
+    val density = LocalDensity.current
+    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
+    Column(modifier = modifier) {
         TangemTopBar(
             modifier = Modifier.statusBarsPadding(),
             title = resourceReference(R.string.address_book_title),
@@ -91,15 +94,12 @@ internal fun AddressBookListScreen(
                 modifier = Modifier
                     .imePadding()
                     .padding(top = 16.dp)
+                    .padding(horizontal = 16.dp)
                     .background(
                         color = TangemTheme.colors3.bg.secondary,
                         shape = RoundedCornerShape(24.dp),
                     ),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 12.dp,
-                ),
+                contentPadding = PaddingValues(bottom = 12.dp + bottomBarHeight),
             ) {
                 items(items = state.contacts, key = ContactUM::id) { contact ->
                     ContactRow(contact = contact)
