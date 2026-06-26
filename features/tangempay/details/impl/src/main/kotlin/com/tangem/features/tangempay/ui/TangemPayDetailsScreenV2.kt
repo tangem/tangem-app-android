@@ -37,6 +37,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefres
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.components.topFade
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessage
@@ -77,6 +78,7 @@ internal fun TangemPayDetailsScreenV2(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
+    promoBannersBlockComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -116,6 +118,11 @@ internal fun TangemPayDetailsScreenV2(
                 ),
             ) {
                 payDetailsBody(state)
+                item("promoBannersBlock") {
+                    promoBannersBlockComponent.Content(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+                }
                 with(expressTransactionsComponent) {
                     expressTransactionsContent(
                         state = expressState.transactionsToDisplay,
@@ -455,6 +462,7 @@ private fun TangemPayDetailsScreenPreview(
                 txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
             ),
             expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
+            promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
 }
@@ -469,6 +477,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
             state = TangemPayDetailsUMProvider().values.first(),
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
             expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
+            promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
 }
