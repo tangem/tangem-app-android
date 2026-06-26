@@ -89,12 +89,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
-
-    // region Tests
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
+    
     testImplementation(projects.common.test)
-    // endregion
+    testImplementation(projects.test.core)
 }
