@@ -7,7 +7,9 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.CheckStakingTransactionUseCase
 import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
@@ -28,6 +30,7 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
     private val prepareForSendUseCase: PrepareForSendUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val p2pEthPoolRepository: P2PEthPoolRepository,
+    private val checkStakingTransactionUseCase: CheckStakingTransactionUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: P2PEthPoolIntegration,
@@ -36,7 +39,29 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
     private val balanceUpdater: StakingBalanceUpdater
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
 
-    override suspend fun validate(): StakingTransactionVerdict = StakingTransactionVerdict.SAFE
+    private var cachedVerdict: StakingTransactionVerdict? = null
+
+    // P2P transactions are built locally, but the user still signs an EVM transaction, so scan it
+    // with Blockaid (defense-in-depth) the same way StakeKit transactions are checked.
+    override suspend fun validate(): StakingTransactionVerdict {
+        val verdict = checkTransaction() ?: return StakingTransactionVerdict.SAFE
+        cachedVerdict = verdict
+        return verdict
+    }
+
+    private suspend fun checkTransaction(): StakingTransactionVerdict? {
+        val params = transactionCreator.extractParams(cryptoCurrencyStatus) ?: return null
+        val unsignedTx = transactionCreator.createTransaction(cryptoCurrencyStatus).getOrElse { return null }
+        val compiledTxJson = createCompiledTransactionJson(unsignedTx, params.sourceAddress)
+        return checkStakingTransactionUseCase(
+            network = NetworkType.ETHEREUM,
+            accountAddress = params.sourceAddress,
+            unsignedTransaction = compiledTxJson,
+            token = cryptoCurrencyStatus.currency.symbol,
+            blockchain = cryptoCurrencyStatus.currency.network.name,
+            provider = integration.integrationId.value,
+        )
+    }
 
     override suspend fun send(callbacks: StakingTransactionSender.Callbacks) {
         val params = transactionCreator.extractParams(cryptoCurrencyStatus)
@@ -53,6 +78,21 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
         }
 
         val compiledTxJson = createCompiledTransactionJson(unsignedTx, params.sourceAddress)
+
+        val verdict = cachedVerdict ?: checkStakingTransactionUseCase(
+            network = NetworkType.ETHEREUM,
+            accountAddress = params.sourceAddress,
+            unsignedTransaction = compiledTxJson,
+            token = cryptoCurrencyStatus.currency.symbol,
+            blockchain = cryptoCurrencyStatus.currency.network.name,
+            provider = integration.integrationId.value,
+        )
+        if (verdict == StakingTransactionVerdict.UNSAFE) {
+            callbacks.onConstructError(
+                StakingError.TransactionValidationFailed("Transaction blocked by security validation"),
+            )
+            return
+        }
 
         val transactionData = TransactionData.Compiled(
             value = TransactionData.Compiled.Data.RawString(compiledTxJson),

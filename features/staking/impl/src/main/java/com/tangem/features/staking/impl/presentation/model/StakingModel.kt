@@ -309,6 +309,7 @@ internal class StakingModel @Inject constructor(
     private val sendTransactionJobHolder = JobHolder()
     private val stepChangesJobHolder = JobHolder()
     private val balanceHidingJobHolder = JobHolder()
+    private val validationJobHolder = JobHolder()
 
     init {
         subscribeOnCurrencyStatusUpdates()
@@ -322,6 +323,7 @@ internal class StakingModel @Inject constructor(
         sendTransactionJobHolder.cancel()
         stepChangesJobHolder.cancel()
         balanceHidingJobHolder.cancel()
+        validationJobHolder.cancel()
     }
 
     override fun onBackClick() {
@@ -822,7 +824,7 @@ internal class StakingModel @Inject constructor(
             val verdict = transactionSender.validate()
             finishConfirmationValidation(verdict)
             updateNotifications()
-        }
+        }.saveIn(validationJobHolder)
     }
 
     private fun startConfirmationValidation() = updateConfirmationValidation(inProgress = true, verdict = null)
