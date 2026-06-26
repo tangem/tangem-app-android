@@ -32,9 +32,7 @@ import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -92,29 +90,93 @@ private fun TangemPayCardPageScreen(
         },
     ) { scaffoldPaddings ->
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-        LazyColumn(
+        val contentBottomPadding = TangemTheme.dimens.spacing16 + bottomBarHeight
+        val reissueTitle = reissueTitleOrNull(isRedesignEnabled = isRedesignEnabled, cardState = state.cardState)
+
+        if (reissueTitle != null) {
+            ReissueCardLayout(
+                title = reissueTitle,
+                cardSection = cardSection,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(scaffoldPaddings)
+                    .padding(bottom = contentBottomPadding),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(scaffoldPaddings),
+                contentPadding = PaddingValues(bottom = contentBottomPadding),
+                verticalArrangement = Arrangement.spacedBy(
+                    if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16,
+                ),
+            ) {
+                item(key = "Card") {
+                    Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+                        cardSection()
+                    }
+                }
+                if (
+                    isRedesignEnabled &&
+                    state.settingsV2.isNotEmpty() &&
+                    state.cardState == TangemPayCardState.Active
+                ) {
+                    cardPageItem("Settings buttons") {
+                        TangemPayCardPageSettingsButtonsBlock(
+                            modifier = Modifier.fillMaxWidth(),
+                            settings = state.settingsV2,
+                        )
+                    }
+                }
+                cardState(state = state)
+            }
+        }
+    }
+}
+
+private fun reissueTitleOrNull(isRedesignEnabled: Boolean, cardState: TangemPayCardState): TextReference? {
+    if (!isRedesignEnabled) return null
+    return when (cardState) {
+        TangemPayCardState.Reissuing -> combinedReference(
+            resourceReference(R.string.tangempay_reissue_card_in_progress),
+            stringReference(". "),
+            resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+        )
+        TangemPayCardState.Issuing -> combinedReference(
+            resourceReference(R.string.tangempay_issuing_new_digital_card_title),
+            stringReference(". "),
+            resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+        )
+        TangemPayCardState.Closing -> combinedReference(
+            resourceReference(R.string.tangempay_card_page_closing_banner_title),
+            stringReference(". "),
+            resourceReference(R.string.tangempay_card_page_closing_banner_description),
+        )
+        TangemPayCardState.Active -> null
+    }
+}
+
+@Composable
+private fun ReissueCardLayout(
+    title: TextReference,
+    modifier: Modifier = Modifier,
+    cardSection: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+            cardSection()
+        }
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(scaffoldPaddings),
-            contentPadding = PaddingValues(
-                bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
-            ),
-            verticalArrangement = Arrangement.spacedBy(if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16),
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center,
         ) {
-            item(key = "Card") {
-                Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
-                    cardSection()
-                }
-            }
-            if (isRedesignEnabled && state.settingsV2.isNotEmpty() && state.cardState == TangemPayCardState.Active) {
-                cardPageItem("Settings buttons") {
-                    TangemPayCardPageSettingsButtonsBlock(
-                        modifier = Modifier.fillMaxWidth(),
-                        settings = state.settingsV2,
-                    )
-                }
-            }
-            cardState(state)
+            TangemPayReissueBlock(title = title)
         }
     }
 }
