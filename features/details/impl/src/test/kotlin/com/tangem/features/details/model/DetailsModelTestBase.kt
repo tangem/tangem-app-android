@@ -16,6 +16,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
+import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -27,12 +29,7 @@ import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.slot
-import io.mockk.unmockkObject
+import io.mockk.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,6 +63,7 @@ internal abstract class DetailsModelTestBase {
     protected val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk()
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
+    protected val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase = mockk()
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
@@ -89,6 +87,7 @@ internal abstract class DetailsModelTestBase {
         every { appInfoProvider.appVersion } returns "1.2.3"
         every { appInfoProvider.appVersionCode } returns 456
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
+        coEvery { getVirtualAccountEligibilityUseCase(any()) } returns VirtualAccountEligibility.NotAvailable
 
         every {
             itemsBuilder.buildAll(
@@ -128,6 +127,7 @@ internal abstract class DetailsModelTestBase {
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
+        getVirtualAccountEligibilityUseCase = getVirtualAccountEligibilityUseCase,
     )
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {
