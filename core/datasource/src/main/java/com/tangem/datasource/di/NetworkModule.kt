@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
@@ -114,6 +115,16 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemTech,
             applyTimeoutAnnotations = true,
+            sessionAuth = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddressBookApi(retrofitApiBuilder: RetrofitApiBuilder): AddressBookApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemTech,
+            applyTimeoutAnnotations = false,
             sessionAuth = false,
         )
     }
