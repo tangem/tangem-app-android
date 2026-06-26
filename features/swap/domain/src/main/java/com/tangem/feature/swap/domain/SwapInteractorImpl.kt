@@ -63,6 +63,7 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainFeeUtils.patchIntegratedApprovalPriorityFee
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -1460,11 +1461,13 @@ internal class SwapInteractorImpl @Inject constructor(
             raise(GetFeeError.DataError(error))
         }
 
-        val approvalFee = getFeeUseCase(
-            transactionData = approvalTx,
-            userWallet = fromStatus.userWallet,
-            network = fromStatus.currency.network,
-        ).bind()
+        val approvalFee = runSuspendCatching {
+            getFeeUseCase(
+                transactionData = approvalTx,
+                userWallet = fromStatus.userWallet,
+                network = fromStatus.currency.network,
+            ).bind().patchIntegratedApprovalPriorityFee(INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL)
+        }.getOrElse { error -> raise(GetFeeError.DataError(error)) }
 
         IntegratedApprovalData(
             approvalTransaction = approvalTx,
@@ -2445,6 +2448,8 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
     companion object {
+        private const val INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL = 115 // 15% increase
+
         private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_LOW_THRESHOLD = 100_000.toBigDecimal() // in USD
