@@ -40,7 +40,7 @@ internal class IssueAdditionalCardUseCaseTest {
     private val offer = Offer(
         type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
         fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
-        data = Offer.Data(specificationName = spec, orderType = OrderType.CARD_ISSUE_ADDITIONAL),
+        data = Offer.Data(specificationName = spec, orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC),
     )
 
     @Test
@@ -58,7 +58,7 @@ internal class IssueAdditionalCardUseCaseTest {
     fun `WHEN active issue order exists THEN reuses it without calling createOrder`() = runTest {
         val existing = order(
             id = "existing",
-            type = OrderType.CARD_ISSUE_ADDITIONAL,
+            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
             status = OrderStatus.PROCESSING,
         )
         coEvery { offersRepository.getOffers(userWalletId) } returns listOf(offer).right()
@@ -66,7 +66,6 @@ internal class IssueAdditionalCardUseCaseTest {
             orderRepository.findOrders(
                 userWalletId,
                 types = setOf(
-                    OrderType.CARD_ISSUE_ADDITIONAL,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
@@ -89,7 +88,6 @@ internal class IssueAdditionalCardUseCaseTest {
             orderRepository.findOrders(
                 userWalletId,
                 types = setOf(
-                    OrderType.CARD_ISSUE_ADDITIONAL,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
@@ -100,7 +98,7 @@ internal class IssueAdditionalCardUseCaseTest {
         coEvery {
             orderRepository.createOrder(
                 userWalletId = userWalletId,
-                type = OrderType.CARD_ISSUE_ADDITIONAL,
+                type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                 specificationName = spec,
                 idempotencyKey = any(),
             )
@@ -118,7 +116,6 @@ internal class IssueAdditionalCardUseCaseTest {
             orderRepository.findOrders(
                 userWalletId,
                 types = setOf(
-                    OrderType.CARD_ISSUE_ADDITIONAL,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
@@ -128,13 +125,13 @@ internal class IssueAdditionalCardUseCaseTest {
         } returns emptyList<Order>().right()
         val newOrder = order(
             id = "new",
-            type = OrderType.CARD_ISSUE_ADDITIONAL,
+            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
             status = OrderStatus.NEW,
         )
         coEvery {
             orderRepository.createOrder(
                 userWalletId = userWalletId,
-                type = OrderType.CARD_ISSUE_ADDITIONAL,
+                type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                 specificationName = spec,
                 idempotencyKey = any(),
             )

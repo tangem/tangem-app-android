@@ -39,6 +39,22 @@ object BlockchainFeeUtils {
         }
     }
 
+    fun TransactionFee.patchIntegratedApprovalPriorityFee(increaseBy: Int): TransactionFee {
+        val patchedFee = when (this) {
+            is TransactionFee.Choosable -> {
+                copy(
+                    normal = normal.increaseGasPrice(increaseBy),
+                    minimum = minimum.increaseGasPrice(increaseBy),
+                    priority = priority.increaseGasPrice(increaseBy),
+                )
+            }
+            is TransactionFee.Single -> copy(
+                normal = normal.increaseGasPrice(increaseBy),
+            )
+        }
+        return patchedFee
+    }
+
     private fun Fee.increaseEthGasLimitInNeeded(increaseBy: Int): Fee {
         return when (this) {
             is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
@@ -78,6 +94,42 @@ object BlockchainFeeUtils {
         return when (this) {
             is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
             is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
+        }
+    }
+
+    /**
+     * Increase gasPrice/maxFeePerGas for Fee.Ethereum
+     */
+    private fun Fee.increaseGasPrice(percent: Int): Fee {
+        if (this !is Fee.Ethereum) return this
+
+        return when (this) {
+            is Fee.Ethereum.EIP1559 -> {
+                val increasedGasPrice = maxFeePerGas.multiply(percent.toBigInteger()).divide(HUNDRED_PERCENT)
+                val increasedAmount = amount.copy(
+                    value = gasLimit.toBigDecimal()
+                        .multiply(increasedGasPrice.toBigDecimal())
+                        .movePointLeft(amount.decimals),
+                )
+                copy(
+                    amount = increasedAmount,
+                    maxFeePerGas = increasedGasPrice,
+                    priorityFee = priorityFee.multiply(percent.toBigInteger()).divide(HUNDRED_PERCENT),
+                )
+            }
+            is Fee.Ethereum.Legacy -> {
+                val increasedGasPrice = gasPrice.multiply(percent.toBigInteger()).divide(HUNDRED_PERCENT)
+                val increasedAmount = amount.copy(
+                    value = gasLimit.toBigDecimal()
+                        .multiply(increasedGasPrice.toBigDecimal())
+                        .movePointLeft(amount.decimals),
+                )
+                copy(
+                    amount = increasedAmount,
+                    gasPrice = increasedGasPrice,
+                )
+            }
             is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
         }
     }

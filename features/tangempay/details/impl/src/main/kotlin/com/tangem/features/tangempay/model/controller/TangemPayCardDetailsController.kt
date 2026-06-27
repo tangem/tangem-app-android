@@ -77,6 +77,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
         onReveal = ::requestReveal,
         onCopy = ::copyData,
         shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
+        cardState = card.state,
     )
 
     val uiState: StateFlow<TangemPayCardDetailsUM>
@@ -117,6 +118,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
                             numberShort = "${StringsSigns.ASTERISK}${card.lastDigits}",
                             cardFrozenState = card.frozenState,
                             isActionsAvailable = card.state == TangemPayCardState.Active,
+                            cardState = card.state,
                         )
                     }
                     subscribeToCardFrozenState(card.id)

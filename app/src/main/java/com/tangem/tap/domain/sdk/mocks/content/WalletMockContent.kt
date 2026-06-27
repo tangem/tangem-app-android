@@ -172,7 +172,16 @@ object WalletMockContent : MockContent {
                 remainingSignatures = null,
                 index = 1,
                 hasBackup = false,
-                derivedKeys = emptyMap(),
+                derivedKeys = mapOf(
+                    DerivationPath("m/44'/501'/0'") to ExtendedPublicKey( // Solana (account 1)
+                        publicKey = byteArrayOf(-65, -53, -62, -12, -57, -32, -38, -9, -128, -52, -83, -61, 73, 39, 41, 15, -74, -97, 38, 52, -101, 63, 74, -56, -20, 15, 57, -127, 114, -93, -17, -109),
+                        chainCode = byteArrayOf(-81, 15, 125, 28, -115, -22, 87, 81, 87, -123, -25, -74, 86, 2, 1, 110, -115, 65, -110, 63, -64, 83, -93, -97, -104, 123, 12, -26, 94, 27, 84, -6),
+                    ),
+                    DerivationPath("m/44'/501'/1'") to ExtendedPublicKey( // Solana (account 2)
+                        publicKey = byteArrayOf(-65, -53, -62, -12, -57, -32, -38, -9, -128, -52, -83, -61, 73, 39, 41, 15, -74, -97, 38, 52, -101, 63, 74, -56, -20, 15, 57, -127, 114, -93, -17, -109),
+                        chainCode = byteArrayOf(-81, 15, 125, 28, -115, -22, 87, 81, 87, -123, -25, -74, 86, 2, 1, 110, -115, 65, -110, 63, -64, 83, -93, -97, -104, 123, 12, -26, 94, 27, 84, -6),
+                    ),
+                ),
                 extendedPublicKey = ExtendedPublicKey(
                     publicKey = byteArrayOf(-65, -53, -62, -12, -57, -32, -38, -9, -128, -52, -83, -61, 73, 39, 41, 15, -74, -97, 38, 52, -101, 63, 74, -56, -20, 15, 57, -127, 114, -93, -17, -109),
                     chainCode = byteArrayOf(-81, 15, 125, 28, -115, -22, 87, 81, 87, -123, -25, -74, 86, 2, 1, 110, -115, 65, -110, 63, -64, 83, -93, -97, -104, 123, 12, -26, 94, 27, 84, -6),
@@ -212,6 +221,13 @@ object WalletMockContent : MockContent {
                             childNumber = 0,
                         ),
                         DerivationPath("m/84'/0'/0'/0/0") to ExtendedPublicKey( // btc
+                            publicKey = byteArrayOf(3, 45, 58, -110, -52, -51, -83, -4, -45, -118, 119, 37, 123, -17, 66, -83, 61, -106, 115, 47, 121, 66, 84, -122, -57, -45, 7, -79, 70, -13, 28, -125, -52),
+                            chainCode = byteArrayOf(93, 51, 52, -66, -39, -38, 34, -84, 50, 1, -127, -20, 80, -20, -30, -72, 2, 1, -78, -81, -17, 51, -52, -25, 12, 108, 50, 89, -66, 18, 65, 70),
+                            depth = 0,
+                            parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                            childNumber = 0,
+                        ),
+                        DerivationPath("m/84'/0'/1'/0/0") to ExtendedPublicKey( // btc (account 2)
                             publicKey = byteArrayOf(3, 45, 58, -110, -52, -51, -83, -4, -45, -118, 119, 37, 123, -17, 66, -83, 61, -106, 115, 47, 121, 66, 84, -122, -57, -45, 7, -79, 70, -13, 28, -125, -52),
                             chainCode = byteArrayOf(93, 51, 52, -66, -39, -38, 34, -84, 50, 1, -127, -20, 80, -20, -30, -72, 2, 1, -78, -81, -17, 51, -52, -25, 12, 108, 50, 89, -66, 18, 65, 70),
                             depth = 0,
@@ -275,6 +291,13 @@ object WalletMockContent : MockContent {
                             childNumber = 0,
                         ),
                         DerivationPath("m/44'/144'/0'/0/0") to ExtendedPublicKey( // XRP
+                            publicKey = byteArrayOf(2, -40, 115, -15, 80, 104, 100, -29, 80, 29, 112, -35, -54, 64, -98, 45, 115, 108, 93, 113, -71, 89, 17, 72, 98, 21, 126, 82, -50, 50, -12, -87, -62),
+                            chainCode = byteArrayOf(-27, 56, 57, 54, 27, -40, 65, 109, 119, -54, -94, 88, -29, -115, -45, -112, -31, 57, 53, 56, 118, 87, 34, -16, -64, -45, 105, 77, 91, -106, -92, 41),
+                            depth = 0,
+                            parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                            childNumber = 0,
+                        ),
+                        DerivationPath("m/44'/144'/1'/0/0") to ExtendedPublicKey( // XRP (account 2)
                             publicKey = byteArrayOf(2, -40, 115, -15, 80, 104, 100, -29, 80, 29, 112, -35, -54, 64, -98, 45, 115, 108, 93, 113, -71, 89, 17, 72, 98, 21, 126, 82, -50, 50, -12, -87, -62),
                             chainCode = byteArrayOf(-27, 56, 57, 54, 27, -40, 65, 109, 119, -54, -94, 88, -29, -115, -45, -112, -31, 57, 53, 56, 118, 87, 34, -16, -64, -45, 105, 77, 91, -106, -92, 41),
                             depth = 0,
@@ -374,6 +397,13 @@ object WalletMockContent : MockContent {
                             childNumber = 0,
                         ),
                         DerivationPath("m/44'/148'/0'") to ExtendedPublicKey( // Stellar
+                            publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82),
+                            chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),
+                            depth = 0,
+                            parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                            childNumber = 0,
+                        ),
+                        DerivationPath("m/44'/148'/1'") to ExtendedPublicKey( // Stellar (account 2)
                             publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82),
                             chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),
                             depth = 0,
@@ -542,6 +572,13 @@ object WalletMockContent : MockContent {
                             childNumber = 0,
                         ),
                         DerivationPath("m/44'/148'/0'") to ExtendedPublicKey( // Stellar
+                            publicKey = byteArrayOf(2, -40, 115, -15, 80, 104, 100, -29, 80, 29, 112, -35, -54, 64, -98, 45, 115, 108, 93, 113, -71, 89, 17, 72, 98, 21, 126, 82, -50, 50, -12, -87, -62),
+                            chainCode = byteArrayOf(-27, 56, 57, 54, 27, -40, 65, 109, 119, -54, -94, 88, -29, -115, -45, -112, -31, 57, 53, 56, 118, 87, 34, -16, -64, -45, 105, 77, 91, -106, -92, 41),
+                            depth = 0,
+                            parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                            childNumber = 0,
+                        ),
+                        DerivationPath("m/44'/148'/1'") to ExtendedPublicKey( // Stellar (account 2)
                             publicKey = byteArrayOf(2, -40, 115, -15, 80, 104, 100, -29, 80, 29, 112, -35, -54, 64, -98, 45, 115, 108, 93, 113, -71, 89, 17, 72, 98, 21, 126, 82, -50, 50, -12, -87, -62),
                             chainCode = byteArrayOf(-27, 56, 57, 54, 27, -40, 65, 109, 119, -54, -94, 88, -29, -115, -45, -112, -31, 57, 53, 56, 118, 87, 34, -16, -64, -45, 105, 77, 91, -106, -92, 41),
                             depth = 0,

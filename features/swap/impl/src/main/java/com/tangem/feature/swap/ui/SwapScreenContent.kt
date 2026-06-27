@@ -94,7 +94,12 @@ internal fun SwapScreenContent(
 
             feeBlock?.invoke(Modifier.fillMaxWidth())
 
-            if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
+            if (state.notifications.isNotEmpty()) {
+                SwapNotifications(
+                    notifications = state.notifications,
+                    onTronBannerShown = state.onTronBannerShown,
+                )
+            }
 
             SpacerHMax()
 
@@ -342,7 +347,13 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
-private fun SwapNotifications(notifications: List<NotificationUM>) {
+private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerShown: () -> Unit) {
+    // The Tron token-fee banner's show-count is an "impression": tied to actual on-screen visibility.
+    // LaunchedEffect re-arms only when the boolean flips, so it fires once per hidden -> shown appearance.
+    val isTronBannerShown = notifications.any { it is SwapNotificationUM.Info.TronTokenFee }
+    LaunchedEffect(isTronBannerShown) {
+        if (isTronBannerShown) onTronBannerShown()
+    }
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.secondary)

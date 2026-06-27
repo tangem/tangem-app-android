@@ -47,6 +47,7 @@ dependencies {
     implementation(projects.domain.visa.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.notifications)
 
     /** Common modules */
     implementation(projects.common.ui)

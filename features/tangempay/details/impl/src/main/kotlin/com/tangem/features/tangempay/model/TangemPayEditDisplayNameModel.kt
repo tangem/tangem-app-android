@@ -107,9 +107,8 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     }
 
     private fun onValueChanged(value: TextFieldValue) {
-        val displayName = CardDisplayName(value.text)
-        val isAvailableForConfirm = displayName.isRight()
-        uiState.update { it.copy(editingValue = value, isDoneEnabled = isAvailableForConfirm) }
+        if (value.text.length > CardDisplayName.MAX_LENGTH) return
+        uiState.update { it.copy(editingValue = value, isDoneEnabled = value.text.isNotBlank()) }
     }
 
     private fun onDoneClick() {

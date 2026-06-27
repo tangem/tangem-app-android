@@ -6,18 +6,22 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNot
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -31,9 +35,8 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
         transferState: SwapState.Transfer,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         fee: Fee?,
-        onReduceByAmount: (SwapAmount, BigDecimal) -> Unit,
-        onReduceToAmount: (SwapAmount) -> Unit,
-        onBuyClick: (CryptoCurrency) -> Unit,
+        actions: UiActions,
+        getFeeError: GetFeeError?,
     ): ImmutableList<NotificationUM> {
         return buildList {
             maybeAddRentExemptionError(transferState)
@@ -41,11 +44,21 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 state = transferState,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 fee = fee,
-                onReduceByAmount = onReduceByAmount,
-                onReduceToAmount = onReduceToAmount,
+                onReduceByAmount = actions.onReduceByAmount,
+                onReduceToAmount = actions.onReduceToAmount,
             )
             maybeAddNeedReserveToCreateAccountWarning(transferState)
-            maybeAddExceedsBalanceNotification(transferState, onBuyClick)
+            maybeAddExceedsBalanceNotification(transferState, onBuyClick = actions.openTokenDetailsScreen)
+            addTronNetworkFeesNotification(
+                cryptoCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus.status,
+                transferState = transferState,
+            )
+            maybeAddFeeUnreachableNotification(
+                transferState = transferState,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                feeError = getFeeError,
+                actions = actions,
+            )
         }.toPersistentList()
     }
 
@@ -193,5 +206,40 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
             onAnalyticsEvent = {},
             onResetAnalyticsEvent = {},
         )
+    }
+
+    private fun MutableList<NotificationUM>.addTronNetworkFeesNotification(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        transferState: SwapState.Transfer,
+    ) {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val isTronToken = cryptoCurrency is CryptoCurrency.Token && isTron(cryptoCurrency.network.rawId)
+        val isVisible = isTronToken &&
+            transferState.tronFeeNotificationShowCount <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT
+
+        if (isVisible) {
+            add(SwapNotificationUM.Info.TronTokenFee)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddFeeUnreachableNotification(
+        transferState: SwapState.Transfer,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        feeError: GetFeeError?,
+        actions: UiActions,
+    ) {
+        feeCryptoCurrencyStatus ?: return
+        addFeeUnreachableNotification(
+            tokenStatus = transferState.fromTokenInfo.swapCurrencyStatus.status,
+            coinStatus = feeCryptoCurrencyStatus,
+            feeError = feeError,
+            dustValue = transferState.currencyCheck?.dustValue,
+            onReload = actions.onRetryClick,
+            onClick = actions.openTokenDetailsScreen,
+        )
+    }
+
+    companion object {
+        private const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
     }
 }

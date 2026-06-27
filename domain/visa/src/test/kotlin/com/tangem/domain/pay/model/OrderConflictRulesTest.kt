@@ -18,8 +18,8 @@ internal class OrderConflictRulesTest {
     }
 
     @Test
-    fun `IssueCard is blocked by an active additional-issue order`() {
-        val active = listOf(order(type = OrderType.CARD_ISSUE_ADDITIONAL, status = OrderStatus.NEW))
+    fun `IssueCard is blocked by an active KYC v2 issue order`() {
+        val active = listOf(order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2, status = OrderStatus.NEW))
 
         val resolution = OrderConflictRules.resolve(OrderIntent.IssueCard, active)
 
