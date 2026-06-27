@@ -154,6 +154,34 @@ Non-obvious points that bite:
 
 Reference: `AddFundsBottomSheetPageObject.trendingTokenWithTitle` and `MainScreenPageObject` (`lazyList`).
 
+## Touch auto-scroll gets hijacked by a nested-scroll container (e.g. a bottom sheet)
+
+When a screen hosts a nested-scroll container (a Material3 bottom sheet, `PullToRefreshBox`), Kakao's
+**touch-based** auto-scroll toward a below-the-fold target can be consumed by that container instead —
+expanding the sheet over the content, so the next click lands on the wrong element.
+
+- **Scroll with semantics, not touch:** `onNode(CONTAINER).performScrollToNode(matcher)` issues a
+  `ScrollToIndex` action that does NOT engage nested scroll.
+- **Don't `device.pressBack()` to collapse the sheet** on a root screen — its `BackHandler` only fires
+  when already expanded, races the press, and back often falls through and quits the app.
+
+## A perpetually animating screen keeps Compose non-idle → idle-synced actions flake
+
+Kakao/Compose-test actions block on Compose reaching *idle* first. A screen that animates forever — an
+auto-advancing stories/onboarding carousel, a looping shimmer, a never-ending spinner — never idles, so
+`clickWithAssertion()` / `assertIsDisplayed()` on it flake (`… is not displayed`, or
+`ComposeNotIdleException`). **First rule out a degraded emulator** (see running-and-debugging) — a
+slow-*loading* screen on a tired emulator throws the identical exception but is fixed by a cold-boot, not
+by changing the test. Only treat it as a *truly* infinite animation if it reproduces on a fresh emulator.
+
+For a genuinely infinite animation, **remove the screen at its source rather than out-waiting it:** most
+are gated by a feature toggle or a mock response — flip it off so the screen never renders. If it's
+server-driven, set the toggle **before app launch** (config is fetched at startup), not mid-test.
+(Example: the swap first-time stories are disabled via their WireMock scenario, then opened with
+`storiesExist = false`.) Note that `waitUntilAtLeastOneExists(hasTestTag(TAG))` polls the **merged** tree
+(no `useUnmergedTree` option), so a `clickable` node inside a `mergeDescendants` container — which exists
+only in the *unmerged* tree — will never match it; poll through the page object instead.
+
 ## Decompose model lifecycle vs. data refresh
 
 Models (e.g. `TangemPayDetailsModel`) call data fetches from `init {}`, NOT on `ON_RESUME`. Returning
