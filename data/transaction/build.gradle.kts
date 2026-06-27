@@ -16,6 +16,7 @@ dependencies {
     implementation(tangemDeps.card.core)
 
     /** Core */
+    implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
