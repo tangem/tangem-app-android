@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
@@ -32,6 +33,8 @@ import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
+import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -44,6 +47,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
+    private val txHistoryDetailsComponentFactory: TxHistoryDetailsComponent.Factory,
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
@@ -59,6 +63,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             userWalletId = params.userWalletId,
             currency = params.currency,
             openExplorer = model::onExploreClick,
+            onTxDetailsRequested = { txHistoryInfo ->
+                model.txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(txHistoryInfo))
+            },
         ),
     )
 
@@ -88,6 +95,24 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         },
     )
 
+    private val txHistoryDetailsSlot = childSlot(
+        key = TX_HISTORY_DETAILS_SLOT_KEY,
+        source = model.txDetailsNavigation,
+        serializer = null,
+        handleBackButton = true,
+        childFactory = { config, ctx ->
+            txHistoryDetailsComponentFactory.create(
+                context = childByContext(ctx),
+                params = TxHistoryDetailsComponent.Params(
+                    txHistoryInfo = config.txHistoryInfo,
+                    userWalletId = params.userWalletId,
+                    currency = params.currency,
+                    onDismiss = model.txDetailsNavigation::dismiss,
+                ),
+            )
+        },
+    )
+
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
         tokenMarketBlockComponentFactory.create(
             appComponentContext = child("tokenMarketBlockComponent"),
@@ -109,6 +134,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val ratingSlotState by ratingSlot.subscribeAsState()
+        val txHistoryDetails by txHistoryDetailsSlot.subscribeAsState()
         NavigationBar3ButtonsScrim()
 
         if (LocalRedesignEnabled.current) {
@@ -136,6 +162,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         }
 
         bottomSheet.child?.instance?.BottomSheet()
+        txHistoryDetails.child?.instance?.BottomSheet()
     }
 
     private fun CryptoCurrency.toTokenMarketParam(): TokenMarketBlockComponent.Params? {
@@ -204,5 +231,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
     companion object {
         private const val RATING_SLOT_KEY = "ratingSlot"
+        private const val TX_HISTORY_DETAILS_SLOT_KEY = "txHistoryDetailsSlot"
     }
 }

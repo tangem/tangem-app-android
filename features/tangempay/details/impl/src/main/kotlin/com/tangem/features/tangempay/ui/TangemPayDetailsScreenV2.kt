@@ -33,7 +33,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
@@ -417,7 +416,7 @@ private fun CardsBlock(
 
 @Composable
 private fun LazyItemScope.ActionBlock(
-    actionButtons: ImmutableList<ActionButtonConfig>,
+    actionButtons: ImmutableList<TangemPayActionButtonUM>,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -427,14 +426,15 @@ private fun LazyItemScope.ActionBlock(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        actionButtons.fastForEach { actionConfig ->
+        actionButtons.fastForEach { actionButton ->
+            val config = actionButton.config
             TangemPayActionButton(
                 modifier = Modifier.testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
-                iconRes = actionConfig.iconResId,
-                onClick = actionConfig.onClick,
-                isEnabled = actionConfig.isEnabled,
-                isLoading = actionConfig.isInProgress,
-                title = actionConfig.text,
+                iconRes = config.iconResId,
+                onClick = config.onClick,
+                isEnabled = config.isEnabled,
+                isLoading = config.isInProgress,
+                title = config.text,
             )
         }
     }
