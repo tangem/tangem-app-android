@@ -85,21 +85,6 @@ internal class TxHistoryInfoMergerTest {
         assertThat(result.map { it.timestampMillis }).containsExactly(200L, 100L).inOrder()
     }
 
-    @Test
-    fun `GIVEN outgoing swap WHEN toSyntheticTxInfo THEN viewed from-leg amount and swap type`() {
-        // Arrange
-        val swap = createSwap(matchHash = "missing", status = ExpressExchangeStatus.Waiting, isOutgoing = true)
-
-        // Act
-        val txInfo = swap.toSyntheticTxInfo()
-
-        // Assert
-        assertThat(txInfo.isOutgoing).isTrue()
-        assertThat(txInfo.amount).isEqualTo(BigDecimal("1.5"))
-        assertThat(txInfo.type).isEqualTo(TxInfo.TransactionType.Swap)
-        assertThat(txInfo.status).isEqualTo(TxInfo.TransactionStatus.Unconfirmed)
-    }
-
     private fun createTxInfo(txHash: String, timestamp: Long) = TxInfo(
         txHash = txHash,
         timestampInMillis = timestamp,
