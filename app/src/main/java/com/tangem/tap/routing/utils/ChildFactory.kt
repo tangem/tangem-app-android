@@ -21,7 +21,6 @@ import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
-import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
@@ -37,9 +36,10 @@ import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -71,7 +71,6 @@ internal class ChildFactory @Inject constructor(
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
     private val sellCryptoComponentFactory: SellCryptoComponent.Factory,
-    private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val newWelcomeComponentFactory: NewWelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
@@ -251,13 +250,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = SellCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = sellCryptoComponentFactory,
-                )
-            }
-            is AppRoute.SwapCrypto -> {
-                createComponentChild(
-                    context = context,
-                    params = SwapSelectTokensComponent.Params(userWalletId = route.userWalletId),
-                    componentFactory = swapSelectTokensComponentFactory,
                 )
             }
             is AppRoute.Onboarding -> {
@@ -495,10 +487,12 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = feedEntryComponentFactory,
                 )
             }
-            is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
+            is AppRoute.Usedesk -> {
                 createComponentChild(
                     context = context,
-                    params = UsedeskComponent.Params(),
+                    params = UsedeskComponent.Params(
+                        userWalletId = route.walletMetaInfo.userWalletId?.stringValue,
+                    ),
                     componentFactory = usedeskComponentFactory,
                 )
             }
@@ -759,7 +753,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.AddressBook -> {
                 createComponentChild(
                     context = context,
-                    params = AddressBookComponent.Params(route.predefinedAddress),
+                    params = AddressBookComponent.Params(addressBookOpenMode = route.addressBookOpenMode),
                     componentFactory = addressBookComponentFactory,
                 )
             }
