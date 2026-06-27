@@ -9,7 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.api.utils.getTronTokenFeeSendingText

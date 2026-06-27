@@ -37,7 +37,7 @@ import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.ui.swapSuccessNavigation
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
 import com.tangem.utils.extensions.orZero

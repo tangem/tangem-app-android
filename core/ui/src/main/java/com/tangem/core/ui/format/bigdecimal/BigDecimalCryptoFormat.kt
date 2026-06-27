@@ -52,11 +52,13 @@ open class BigDecimalCryptoFormatStyled(
 fun BigDecimalFormatScope.crypto(
     symbol: String,
     decimals: Int,
+    ignoreSymbolPosition: Boolean = false,
     locale: Locale = Locale.getDefault(),
 ): BigDecimalCryptoFormat {
     return BigDecimalCryptoFormat(
         symbol = symbol,
         decimals = decimals,
+        shouldIgnoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,
     )
 }

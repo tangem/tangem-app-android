@@ -10,7 +10,7 @@ import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest

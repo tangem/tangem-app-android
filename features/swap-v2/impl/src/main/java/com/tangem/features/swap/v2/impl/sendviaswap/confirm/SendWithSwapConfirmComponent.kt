@@ -14,11 +14,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.params.FeeSelectorParams.*
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.*
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM

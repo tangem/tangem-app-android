@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 

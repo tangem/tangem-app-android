@@ -9,6 +9,7 @@ data class AddressEntry(
     val id: AddressEntryId,
     val address: String,
     val networkId: Network.RawID,
+    val networkName: String,
     val memo: String?,
     val signature: String,
 )

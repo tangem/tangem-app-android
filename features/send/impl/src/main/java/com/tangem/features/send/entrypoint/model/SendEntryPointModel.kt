@@ -10,7 +10,7 @@ import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entry.SendEntryRoute
-import com.tangem.features.send.subcomponents.amount.SendAmountUpdateTrigger
+import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

@@ -44,6 +44,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.onramp.models)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -67,6 +68,8 @@ dependencies {
 
     /* Tests */
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
+    testImplementation(projects.domain.onramp.models)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)

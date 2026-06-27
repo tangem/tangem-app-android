@@ -13,9 +13,9 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.api.entity.FeeSelectorUM
-import com.tangem.features.send.api.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

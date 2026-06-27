@@ -27,6 +27,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessBatchTransactionData
+import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -38,6 +40,7 @@ class CreateAndSendGaslessTransactionUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
+    private val isGaslessV2Enabled: Boolean,
 ) {
 
     suspend operator fun invoke(
@@ -69,6 +72,12 @@ class CreateAndSendGaslessTransactionUseCase(
     /**
      * Prepares all necessary context for gasless transaction.
      * Includes: wallet manager, gasless provider, token status, nonce, transaction data.
+     *
+     * When the resolved fee plan is [GaslessFeePlan.TokenPayWithYieldWithdraw], the payload is a
+     * [GaslessPayload.Batch] with the user's main tx at index 0 and the yield-withdraw tx at index 1.
+     * [GaslessFeePlan.TokenPay] and a null plan produce a [GaslessPayload.Single] with the same
+     * single-transaction behavior as before. [GaslessFeePlan.NativePay] must never reach this use
+     * case — it is guarded in [assembleGaslessPayload].
      */
     private suspend fun prepareGaslessContext(
         userWallet: UserWallet,
@@ -91,11 +100,17 @@ class CreateAndSendGaslessTransactionUseCase(
 
         val gaslessContractNonce = getContractNonce(gaslessDataProvider, transactionData.sourceAddress)
 
-        val gaslessTransactionData = createGaslessTransactionData(
-            transactionData = transactionData,
-            txFee = fee,
-            currency = currency,
+        val mainTxGasLimit = fee.mainTransactionGasLimit
+            ?: error("Main transaction gas limit is required for a gasless (token-fee) transaction")
+        val mainTx = buildTransaction(transactionData, mainTxGasLimit)
+        val feeObj = buildFee(fee, currency)
+
+        val payload = assembleGaslessPayload(
+            mainTx = mainTx,
+            feeObj = feeObj,
             nonce = gaslessContractNonce,
+            plan = fee.gaslessFeePlan,
+            withdrawGasLimit = fee.withdrawGasLimit,
         )
 
         val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
@@ -104,7 +119,7 @@ class CreateAndSendGaslessTransactionUseCase(
             walletManager = walletManager,
             gaslessDataProvider = gaslessDataProvider,
             currency = currency,
-            gaslessTransactionData = gaslessTransactionData,
+            payload = payload,
             chainId = chainId,
         )
     }
@@ -125,17 +140,30 @@ class CreateAndSendGaslessTransactionUseCase(
     /**
      * Signs gasless transaction and EIP-7702 authorization.
      * Returns prepared signatures and authorization data.
+     *
+     * EIP-712 typed data is constructed from the payload:
+     * - [GaslessPayload.Single] → [Eip712TypedDataBuilder.build] (single-transaction schema)
+     * - [GaslessPayload.Batch]  → [Eip712TypedDataBuilder.buildBatch] (batch schema)
      */
     private suspend fun signGaslessTransactionByUser(
         userWallet: UserWallet,
         context: GaslessContext,
         transactionData: TransactionData.Uncompiled,
     ): SignedGaslessData {
-        val eip712Data = Eip712TypedDataBuilder.build(
-            gaslessTransaction = context.gaslessTransactionData,
-            chainId = context.chainId,
-            verifyingContract = transactionData.sourceAddress,
-        )
+        val eip712Data = when (val payload = context.payload) {
+            is GaslessPayload.Single -> Eip712TypedDataBuilder.build(
+                gaslessTransaction = payload.data,
+                chainId = context.chainId,
+                verifyingContract = transactionData.sourceAddress,
+                includeGasLimit = isGaslessV2Enabled,
+            )
+            is GaslessPayload.Batch -> Eip712TypedDataBuilder.buildBatch(
+                gaslessBatch = payload.data,
+                chainId = context.chainId,
+                verifyingContract = transactionData.sourceAddress,
+                includeGasLimit = isGaslessV2Enabled,
+            )
+        }
 
         val eip712HashToSign = EthereumUtils.makeTypedDataHash(eip712Data)
         val eip7702Data = getEIP7702DataForGasless(context.gaslessDataProvider)
@@ -182,19 +210,34 @@ class CreateAndSendGaslessTransactionUseCase(
 
     /**
      * Sends gasless transaction to the service.
+     *
+     * Routes to the appropriate repository call based on payload type:
+     * - [GaslessPayload.Single] → [GaslessTransactionRepository.signGaslessTransaction]
+     * - [GaslessPayload.Batch]  → [GaslessTransactionRepository.signGaslessBatchTransaction]
+     *
+     * Pending-transaction tracking is always keyed on the main (user's) transaction only.
      */
     private suspend fun signAndSendTransactionOnBackend(
         context: GaslessContext,
         signedData: SignedGaslessData,
         transactionData: TransactionData.Uncompiled,
     ): String {
-        val txHash = gaslessTransactionRepository.signGaslessTransaction(
-            network = context.currency.network,
-            gaslessTransactionData = context.gaslessTransactionData,
-            signature = signedData.eip712Signature,
-            userAddress = transactionData.sourceAddress,
-            eip7702Auth = signedData.eip7702Auth,
-        ).txHash
+        val txHash = when (val payload = context.payload) {
+            is GaslessPayload.Single -> gaslessTransactionRepository.signGaslessTransaction(
+                network = context.currency.network,
+                gaslessTransactionData = payload.data,
+                signature = signedData.eip712Signature,
+                userAddress = transactionData.sourceAddress,
+                eip7702Auth = signedData.eip7702Auth,
+            ).txHash
+            is GaslessPayload.Batch -> gaslessTransactionRepository.signGaslessBatchTransaction(
+                network = context.currency.network,
+                gaslessBatchTransactionData = payload.data,
+                signature = signedData.eip712Signature,
+                userAddress = transactionData.sourceAddress,
+                eip7702Auth = signedData.eip7702Auth,
+            ).txHash
+        }
 
         (context.walletManager as? PendingTransactionHandler)?.addPendingGaslessTransaction(
             transactionData = transactionData,
@@ -241,23 +284,10 @@ class CreateAndSendGaslessTransactionUseCase(
         }
     }
 
-    private suspend fun createGaslessTransactionData(
+    private fun buildTransaction(
         transactionData: TransactionData.Uncompiled,
-        txFee: TransactionFeeExtended,
-        currency: CryptoCurrency,
-        nonce: BigInteger,
-    ): GaslessTransactionData {
-        val transaction = buildTransaction(transactionData)
-        val fee = buildFee(txFee, currency)
-
-        return GaslessTransactionData(
-            transaction = transaction,
-            fee = fee,
-            nonce = nonce,
-        )
-    }
-
-    private fun buildTransaction(transactionData: TransactionData.Uncompiled): GaslessTransactionData.Transaction {
+        gasLimit: BigInteger,
+    ): GaslessTransactionData.Transaction {
         val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
             ?: error("Ethereum call data is required")
 
@@ -268,6 +298,7 @@ class CreateAndSendGaslessTransactionUseCase(
         return GaslessTransactionData.Transaction(
             to = getDestinationAddress(transactionData),
             value = nativeAmount,
+            gasLimit = gasLimit,
             data = callData.data,
         )
     }
@@ -295,20 +326,28 @@ class CreateAndSendGaslessTransactionUseCase(
     private suspend fun getEIP7702DataForGasless(
         gaslessDataProvider: EthereumGaslessDataProvider,
     ): EIP7702AuthorizationData {
-        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData()) {
+        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = isGaslessV2Enabled)) {
             is Result.Failure -> throw dataResult.error
             is Result.Success -> dataResult.data
         }
     }
 
-    private fun getDestinationAddress(txData: TransactionData.Uncompiled): String {
-        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
-        val contractAddress = txData.contractAddress
-        return if (ethereumCallData is EthereumYieldSupplySendCallData) {
-            ethereumCallData.destinationAddress
-        } else {
-            contractAddress ?: error("supports only Token transaction with contract address")
-        }
+    /**
+     * Discriminated union of the gasless transaction payload to sign and send.
+     *
+     * [Single] carries a single-transaction payload (the pre-existing path).
+     * [Batch] carries a batch payload where the yield-withdraw call is appended as the second
+     * transaction so that staked tokens are unlocked before the fee is settled.
+     */
+    internal sealed interface GaslessPayload {
+        /** Single-transaction path — behavior is identical to the original implementation. */
+        data class Single(val data: GaslessTransactionData) : GaslessPayload
+
+        /**
+         * Batch path — used when [GaslessFeePlan.TokenPayWithYieldWithdraw] is resolved.
+         * [data.transactions] has the user's main tx at index 0 and the withdraw tx at index 1.
+         */
+        data class Batch(val data: GaslessBatchTransactionData) : GaslessPayload
     }
 
     /**
@@ -318,7 +357,7 @@ class CreateAndSendGaslessTransactionUseCase(
         val walletManager: WalletManager,
         val gaslessDataProvider: EthereumGaslessDataProvider,
         val currency: CryptoCurrency,
-        val gaslessTransactionData: GaslessTransactionData,
+        val payload: GaslessPayload,
         val chainId: Int,
     )
 
@@ -353,9 +392,75 @@ class CreateAndSendGaslessTransactionUseCase(
         }
     }
 
-    private companion object {
+    internal companion object {
+
+        /**
+         * Assembles the [GaslessPayload] from already-built domain objects and the resolved fee plan.
+         *
+         * Dispatch rules:
+         * - [GaslessFeePlan.TokenPayWithYieldWithdraw] → [GaslessPayload.Batch]: the yield-withdraw
+         *   call is appended as the second transaction so that the fee token balance is topped up
+         *   before the gasless service processes the fee.
+         * - [GaslessFeePlan.TokenPay] or `null` → [GaslessPayload.Single]: single-transaction path,
+         *   identical to the original implementation. `null` is a legitimate value meaning the plan
+         *   was not explicitly resolved.
+         * - [GaslessFeePlan.NativePay] → error: native-pay fees must never reach this use case
+         *   (they are handled by the standard send path).
+         */
+        internal fun assembleGaslessPayload(
+            mainTx: GaslessTransactionData.Transaction,
+            feeObj: GaslessTransactionData.Fee,
+            nonce: BigInteger,
+            plan: GaslessFeePlan?,
+            withdrawGasLimit: BigInteger?,
+        ): GaslessPayload = when (plan) {
+            is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessPayload.Batch(
+                GaslessBatchTransactionData(
+                    transactions = listOf(
+                        mainTx,
+                        GaslessTransactionData.Transaction(
+                            to = plan.yieldModuleAddress,
+                            value = BigInteger.ZERO,
+                            gasLimit = withdrawGasLimit
+                                ?: error("Withdraw gas limit is required for a yield-withdraw batch"),
+                            data = plan.withdrawCallData.data,
+                        ),
+                    ),
+                    fee = feeObj,
+                    nonce = nonce,
+                ),
+            )
+            is GaslessFeePlan.TokenPay, null -> GaslessPayload.Single(
+                GaslessTransactionData(transaction = mainTx, fee = feeObj, nonce = nonce),
+            )
+            is GaslessFeePlan.NativePay -> error("NativePay must not reach the gasless send path")
+        }
+
         fun BigInteger.toFormattedHex(bytes: Int): String {
             return toByteArray().normalizeByteArray(bytes).toHexString().formatHex()
+        }
+
+        /**
+         * Resolves the on-chain `to` for the user's main gasless sub-call.
+         *
+         * - Yield-supply send (`EthereumYieldSupplySendCallData`, selector 0x0779afe6): `send(token, dest,
+         *   amount)` is a method ON the user's yield module — the executor must CALL the module (it holds the
+         *   staked funds and routes the transfer); the recipient is already encoded inside the call data.
+         *   [TransactionData.Uncompiled.destinationAddress] is patched to the module address in
+         *   `DefaultTransactionRepository.createTransaction`, mirroring the non-gasless send path (and the
+         *   withdraw sub-call's `to`). Reading `ethereumCallData.destinationAddress` (the recipient) instead
+         *   makes the executor call a plain address with the module's calldata, reverting the whole batch with
+         *   GAS_ESTIMATION_FAILED / require(false).
+         * - Otherwise (e.g. ERC-20 transfer): `to` is the contract the calldata runs against
+         *   ([TransactionData.Uncompiled.contractAddress], the token contract).
+         */
+        internal fun getDestinationAddress(txData: TransactionData.Uncompiled): String {
+            val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+            return if (ethereumCallData is EthereumYieldSupplySendCallData) {
+                txData.destinationAddress
+            } else {
+                txData.contractAddress ?: error("supports only Token transaction with contract address")
+            }
         }
     }
 }

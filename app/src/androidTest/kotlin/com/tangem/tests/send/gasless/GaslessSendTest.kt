@@ -132,9 +132,9 @@ class GaslessSendTest : BaseTestCase() {
     @DisplayName("Gasless: completed gasless transaction is shown in token transaction history")
     @Test
     fun checkGaslessTransactionInHistoryTest() {
-        val sentAmount = "1.00"
+        val operationAmount = "1.00"
         val gaslessFeeAmount = "0.10"
-        val sentTitle = getResourceString(R.string.common_sent)
+        val operationTitle = getResourceString(R.string.transaction_history_operation)
         val gaslessFeeTitle = getResourceString(R.string.gasless_transaction_fee)
 
         setupHooks(
@@ -166,13 +166,13 @@ class GaslessSendTest : BaseTestCase() {
                     onTxHistoryScreen { transactionItem(gaslessFeeTitle).assertIsDisplayed() }
                 }
             }
-            step("Assert '$sentTitle' transaction is displayed") {
-                onTxHistoryScreen { transactionItem(sentTitle).assertIsDisplayed() }
+            step("Assert '$operationTitle' transaction is displayed") {
+                onTxHistoryScreen { transactionItem(operationTitle).assertIsDisplayed() }
             }
-            step("Assert '$sentTitle' amount '$sentAmount' is displayed in '$currencySymbol'") {
+            step("Assert '$operationTitle' amount '$operationAmount' is displayed in '$currencySymbol'") {
                 onTxHistoryScreen {
-                    transactionAmount(sentTitle).assertTextContains(sentAmount, substring = true)
-                    transactionCurrency(sentTitle).assertTextEquals(currencySymbol)
+                    transactionAmount(operationTitle).assertTextContains(operationAmount, substring = true)
+                    transactionCurrency(operationTitle).assertTextEquals(currencySymbol)
                 }
             }
             step("Assert gasless '$gaslessFeeTitle' amount '$gaslessFeeAmount' is displayed in '$currencySymbol'") {

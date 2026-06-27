@@ -3,7 +3,6 @@ package com.tangem.features.home.impl.ui.compose.content
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -22,33 +21,44 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.utils.dpSize
 import com.tangem.core.ui.utils.toPx
 
-@Composable
-fun StoriesCurrenciesContent(paused: Boolean, duration: Int) {
-    val currencyDrawableList = remember {
-        listOf(
-            R.drawable.currency0,
-            R.drawable.currency1,
-            R.drawable.currency2,
-            R.drawable.currency3,
-            R.drawable.currency4,
-        )
-    }
+private val currencyDrawables = listOf(
+    R.drawable.currency0,
+    R.drawable.currency1,
+    R.drawable.currency2,
+    R.drawable.currency3,
+    R.drawable.currency4,
+)
 
+private val web3DappDrawables = listOf(
+    R.drawable.dapps1,
+    R.drawable.dapps1,
+    R.drawable.dapps2,
+    R.drawable.dapps3,
+    R.drawable.dapps4,
+    R.drawable.dapps5,
+)
+
+private val currencyDesignItemHeight = 82.dp
+private val web3DesignItemHeight = 75.dp
+private val currencyDecreaseRate = 1f / currencyDrawables.size
+private val web3DecreaseRate = 1f / web3DappDrawables.size
+private const val WEB3_CHESS_OFFSET_DIVIDER = 3
+
+@Composable
+internal fun StoriesCurrenciesContent(paused: Boolean, duration: Int) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val decreaseRate = remember { 1f / currencyDrawableList.size }
-    val designItemHeight = remember { 82.dp }
 
     BoxWithGradient {
         Column(modifier = Modifier.graphicsLayer(clip = false)) {
-            currencyDrawableList.forEachIndexed { index, drawableResId ->
+            currencyDrawables.forEachIndexed { index, drawableResId ->
                 val painter = painterResource(id = drawableResId)
-                val scaledItemSize = scaleToDesignSize(painter.dpSize(), designItemHeight = designItemHeight)
+                val scaledItemSize = scaleToDesignSize(painter.dpSize(), designItemHeight = currencyDesignItemHeight)
                 val itemOversizedScreenWidthBy = scaledItemSize.width - screenWidth
                 val moveItemToStartOfScreen = itemOversizedScreenWidthBy / 2
 
                 val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.halfHeight()
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 50.dp - 50.dp * index * decreaseRate
+                val animateTo = 50.dp - 50.dp * index * currencyDecreaseRate
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -65,34 +75,21 @@ fun StoriesCurrenciesContent(paused: Boolean, duration: Int) {
     }
 }
 
-@Suppress("MagicNumber")
 @Composable
-fun StoriesWeb3Content(paused: Boolean, duration: Int) {
-    val dappsItemList = remember {
-        listOf(
-            R.drawable.dapps1,
-            R.drawable.dapps1,
-            R.drawable.dapps2,
-            R.drawable.dapps3,
-            R.drawable.dapps4,
-            R.drawable.dapps5,
-        )
-    }
+internal fun StoriesWeb3Content(paused: Boolean, duration: Int) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val decreaseRate = remember { 1f / dappsItemList.size }
-    val designItemHeight = 75.dp
 
     BoxWithGradient {
         Column(modifier = Modifier.graphicsLayer(clip = false)) {
-            dappsItemList.forEachIndexed { index, drawableResId ->
+            web3DappDrawables.forEachIndexed { index, drawableResId ->
                 val painter = painterResource(id = drawableResId)
-                val scaledItemSize = scaleToDesignSize(painter.dpSize(), designItemHeight = designItemHeight)
+                val scaledItemSize = scaleToDesignSize(painter.dpSize(), designItemHeight = web3DesignItemHeight)
                 val itemOversizedScreenWidthBy = scaledItemSize.width - screenWidth
                 val moveItemToStartOfScreen = itemOversizedScreenWidthBy / 2
 
-                val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.width / 3
+                val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.width / WEB3_CHESS_OFFSET_DIVIDER
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 70.dp - 70.dp * index * decreaseRate
+                val animateTo = 70.dp - 70.dp * index * web3DecreaseRate
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -138,6 +135,6 @@ private val BottomGradient: Brush = Brush.verticalGradient(
     ),
 )
 
-fun DpSize.halfHeight(): Dp = this.height / 2
+private fun DpSize.halfHeight(): Dp = this.height / 2
 
-fun Int.isEven() = this and 1 == 0
+private fun Int.isEven() = this and 1 == 0

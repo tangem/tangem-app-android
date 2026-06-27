@@ -14,7 +14,13 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.expressStatus.ExpressEstimate
 import com.tangem.common.ui.expressStatus.ExpressHideButton
 import com.tangem.common.ui.expressStatus.ExpressProvider
+import com.tangem.common.ui.expressStatus.ExpressStatusBlock
+import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
+import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
+import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
+import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
@@ -27,7 +33,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun ExchangeStatusBottomSheetContent(
@@ -80,11 +88,7 @@ internal fun ExchangeStatusBottomSheetContent(
             extraContent()
             SpacerH12()
         }
-        ExchangeStatusBlock(
-            statuses = state.statuses,
-            showLink = state.showProviderLink,
-            onClick = { state.info.onGoToProviderClick(state.info.txExternalUrl.orEmpty()) },
-        )
+        ExpressStatusBlock(state = state.toExpressStatusUM())
         if (state.notification != null) {
             Notification(state = state.notification, activeStatus = state.activeStatus)
         }
@@ -100,6 +104,34 @@ internal fun ExchangeStatusBottomSheetContent(
         }
     }
 }
+
+private fun ExchangeUM.toExpressStatusUM(): ExpressStatusUM = ExpressStatusUM(
+    title = resourceReference(R.string.express_exchange_status_title),
+    link = if (showProviderLink) {
+        ExpressLinkUM.Content(
+            icon = R.drawable.ic_arrow_top_right_24,
+            text = resourceReference(R.string.common_go_to_provider),
+            onClick = { info.onGoToProviderClick(info.txExternalUrl.orEmpty()) },
+        )
+    } else {
+        ExpressLinkUM.Empty
+    },
+    statuses = statuses.map { it.toExpressStatusItemUM() }.toImmutableList(),
+)
+
+private fun ExchangeStatusState.toExpressStatusItemUM(): ExpressStatusItemUM = ExpressStatusItemUM(
+    text = text,
+    state = when {
+        status == ExchangeStatus.Cancelled -> ExpressStatusItemState.Error
+        status.isFailed() || status == ExchangeStatus.Refunded || status == ExchangeStatus.Paused -> {
+            if (isDone) ExpressStatusItemState.Done else ExpressStatusItemState.Error
+        }
+        status == ExchangeStatus.Verifying -> ExpressStatusItemState.Warning
+        isDone -> ExpressStatusItemState.Done
+        isActive -> ExpressStatusItemState.Active
+        else -> ExpressStatusItemState.Default
+    },
+)
 
 @Composable
 private fun Notification(state: ExchangeStatusNotification, activeStatus: ExchangeStatus?) {

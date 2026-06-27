@@ -3,24 +3,23 @@ package com.tangem.features.addressbook.addaddress.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.R
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
-import com.tangem.features.addressbook.addaddress.AddAddressComponent
-import com.tangem.features.addressbook.addaddress.contract.AddAddressUM
-import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
+import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
+import com.tangem.features.addressbook.addaddress.state.AddAddressStateController
+import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -28,11 +27,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -73,7 +68,6 @@ internal class AddAddressModelTest {
 
             // Assert
             assertThat(state.addressField.value).isEmpty()
-            assertThat(state.addressField.isValuePasted).isFalse()
             assertThat(state.buttonUM.isEnabled).isFalse()
         }
 
@@ -87,13 +81,11 @@ internal class AddAddressModelTest {
             model.state.value.onAddressChange(address)
 
             // Assert
-            val field = model.state.value.addressField
-            assertThat(field.value).isEqualTo(address)
-            assertThat(field.isValuePasted).isFalse()
+            assertThat(model.state.value.addressField.value).isEqualTo(address)
         }
 
         @Test
-        fun `GIVEN empty field WHEN onPasteClick THEN value marked as pasted`() = runTest {
+        fun `GIVEN empty field WHEN onPasteClick THEN value taken from clipboard`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
             val address = "0xABC"
@@ -103,13 +95,10 @@ internal class AddAddressModelTest {
             model.state.value.onPasteClick()
 
             // Assert
-            val field = model.state.value.addressField
-            assertThat(field.value).isEqualTo(address)
-            assertThat(field.isValuePasted).isTrue()
+            assertThat(model.state.value.addressField.value).isEqualTo(address)
         }
 
         // validateAndConfirm() is an unimplemented seam — the button click must NOT emit a result yet.
-        // This guards the foundation and will fail (prompting an update) once validation is wired in.
         @Test
         fun `GIVEN typed address WHEN button clicked THEN onConfirm not called yet`() = runTest {
             // Arrange
@@ -127,13 +116,12 @@ internal class AddAddressModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class AddressInput {
+    inner class Validation {
 
         @Test
-        fun `GIVEN coins available WHEN valid address typed THEN matching network chosen`() = runTest {
+        fun `GIVEN coins available WHEN valid address typed THEN no error AND button enabled`() = runTest {
             // Arrange
-            every { multiAccountListSupplier.invoke() } returns
-                flowOf(listOf(accountListWith(ethereum, bitcoin)))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountListWith(ethereum, bitcoin)))
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -143,16 +131,14 @@ internal class AddAddressModelTest {
 
             // Assert
             val state = model.state.value
-            assertThat(state.availableNetworks).containsExactly(ethereum.network)
-            assertThat(state.chosenNetworkStateUM)
-                .isEqualTo(resultOf(ethereum.network))
+            assertThat(state.addressField.isError).isFalse()
+            assertThat(state.buttonUM.isEnabled).isTrue()
         }
 
         @Test
-        fun `GIVEN coins available WHEN address matches no network THEN empty state`() = runTest {
+        fun `GIVEN coins available WHEN address matches no network THEN error AND button disabled`() = runTest {
             // Arrange
-            every { multiAccountListSupplier.invoke() } returns
-                flowOf(listOf(accountListWith(ethereum, bitcoin)))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountListWith(ethereum, bitcoin)))
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -162,31 +148,32 @@ internal class AddAddressModelTest {
 
             // Assert
             val state = model.state.value
-            assertThat(state.availableNetworks).isEmpty()
-            assertThat(state.chosenNetworkStateUM).isEqualTo(AddAddressUM.ChosenNetworkStateUM.Empty)
+            assertThat(state.addressField.isError).isTrue()
+            assertThat(state.addressField.label)
+                .isEqualTo(resourceReference(R.string.address_book_invalid_address_error))
+            assertThat(state.buttonUM.isEnabled).isFalse()
         }
 
         @Test
-        fun `GIVEN no coins available WHEN valid address typed THEN empty state`() = runTest {
-            // Arrange — supplier emits no accounts.
-            every { multiAccountListSupplier.invoke() } returns flowOf(emptyList())
+        fun `GIVEN empty address WHEN validated THEN no error AND button disabled`() = runTest {
+            // Arrange
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountListWith(ethereum)))
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Act
-            model.state.value.onAddressChange(VALID_ETH_ADDRESS)
+            model.state.value.onAddressChange("")
             advanceUntilIdle()
 
             // Assert
             val state = model.state.value
-            assertThat(state.availableNetworks).isEmpty()
-            assertThat(state.chosenNetworkStateUM).isEqualTo(AddAddressUM.ChosenNetworkStateUM.Empty)
+            assertThat(state.addressField.isError).isFalse()
+            assertThat(state.buttonUM.isEnabled).isFalse()
         }
 
-        // Covers the "not initialized yet" case: the address is typed before coins load, and the
-        // chosen network must resolve reactively once the supplier emits them.
+        // The address is typed before coins load; validity must resolve reactively once the supplier emits them.
         @Test
-        fun `GIVEN address typed before coins load WHEN coins emitted THEN network resolved reactively`() = runTest {
+        fun `GIVEN address typed before coins load WHEN coins emitted THEN validated reactively`() = runTest {
             // Arrange
             val accountsFlow = MutableStateFlow<List<AccountList>>(emptyList())
             every { multiAccountListSupplier.invoke() } returns accountsFlow
@@ -197,28 +184,18 @@ internal class AddAddressModelTest {
             model.state.value.onAddressChange(VALID_ETH_ADDRESS)
             advanceUntilIdle()
             // Assert intermediate: nothing to match yet
-            assertThat(model.state.value.chosenNetworkStateUM).isEqualTo(AddAddressUM.ChosenNetworkStateUM.Empty)
+            assertThat(model.state.value.buttonUM.isEnabled).isFalse()
 
             // Act — coins arrive later
             accountsFlow.value = listOf(accountListWith(ethereum, bitcoin))
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.state.value.chosenNetworkStateUM)
-                .isEqualTo(resultOf(ethereum.network))
+            val state = model.state.value
+            assertThat(state.buttonUM.isEnabled).isTrue()
+            assertThat(state.addressField.isError).isFalse()
         }
     }
-
-    private fun resultOf(vararg networks: Network) = AddAddressUM.ChosenNetworkStateUM.Result(
-        networkUMList = networks
-            .map { network ->
-                AddAddressUM.ChosenNetworkStateUM.Result.NetworkUM(
-                    networkName = network.name,
-                    iconResId = network.iconResId,
-                )
-            }
-            .toImmutableList(),
-    )
 
     private fun accountListWith(vararg currencies: CryptoCurrency): AccountList {
         val walletId = MockAccounts.userWalletId
@@ -239,7 +216,7 @@ internal class AddAddressModelTest {
     private fun createModel(
         testScope: TestScope,
         onConfirm: (ValidatedAddress) -> Unit = {},
-        params: AddAddressComponent.Params = AddAddressComponent.Params(
+        params: DefaultAddAddressComponent.Params = DefaultAddAddressComponent.Params(
             onBackClick = {},
             onConfirm = onConfirm,
         ),
@@ -250,6 +227,7 @@ internal class AddAddressModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             multiAccountListSupplier = multiAccountListSupplier,
             clipboardManager = clipboardManager,
+            stateController = AddAddressStateController(),
         ).also { model = it }
     }
 

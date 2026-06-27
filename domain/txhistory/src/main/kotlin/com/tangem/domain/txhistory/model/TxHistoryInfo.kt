@@ -64,6 +64,17 @@ sealed interface OnChainTx : TxHistoryInfo {
 fun TxInfo.identityKey(): String = "$txHash|$type"
 
 /**
+ * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
+ * blockchain tx to link to — an [ExpressTx] whose on-chain leg has not matched yet. The express `txId`
+ * must never stand in here: it is not an on-chain hash and would build a broken explorer URL.
+ */
+inline val TxHistoryInfo.explorerHash: String?
+    get() = when (this) {
+        is OnChainTx.BSDK -> txInfo.txHash
+        is ExpressTx -> matchHash
+    }
+
+/**
  * A history row backed by an express operation. It is a thin wrapper over the standalone express
  * model ([ExchangeTransaction] / [OnrampTransaction]), adding only the history-view concerns:
  * the matched on-chain leg ([txInfo]) and, for swaps, which side the viewed currency is on

@@ -6,7 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.feeselector.component.speed.FeeSpeedSelectorIntents
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents

@@ -3,11 +3,14 @@ package com.tangem.data.yield.supply
 import com.google.common.truth.Truth
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -305,5 +308,36 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         Truth.assertThat(result).isNotNull()
         Truth.assertThat(result.extras).isInstanceOf(EthereumTransactionExtras::class.java)
         Truth.assertThat((result.extras as EthereumTransactionExtras).callData?.data).isEqualTo(expectedCallData.data)
+    }
+
+    @Test
+    fun `createPartialWithdrawCallData returns withdraw call data when module is up to date`() = runTest {
+        coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
+
+        val token = mockk<CryptoCurrency.Token>(relaxed = true) {
+            every { contractAddress } returns mockedContractAddress
+            every { decimals } returns 6
+        }
+        val amount = Amount(
+            currencySymbol = "USDC",
+            value = BigDecimal("1.5"),
+            decimals = 6,
+            type = AmountType.Token(
+                token = Token(
+                    symbol = "USDC",
+                    contractAddress = mockedContractAddress,
+                    decimals = 6,
+                ),
+            ),
+        )
+
+        val result = repository.createPartialWithdrawCallData(
+            userWalletId = userWalletId,
+            cryptoCurrency = token,
+            amount = amount,
+        )
+
+        Truth.assertThat(result).isNotNull()
+        Truth.assertThat(result.methodId).isEqualTo("0xf3fef3a3")
     }
 }

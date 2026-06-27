@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.analytics)
 
     /** Domain */
+    implementation(projects.domain.transaction)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.walletManager)

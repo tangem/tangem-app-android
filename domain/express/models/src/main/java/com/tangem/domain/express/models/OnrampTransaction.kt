@@ -1,5 +1,6 @@
 package com.tangem.domain.express.models
 
+import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 
@@ -15,6 +16,7 @@ import com.tangem.domain.tokens.model.AmountType
  * @property payoutHash On-chain hash of the payout (received) leg, if known.
  * @property fromFiat The fiat paid.
  * @property toAsset The crypto asset received.
+ * @property country The country the onramp was made from; `null` if not resolved.
  */
 data class OnrampTransaction(
     val txId: String,
@@ -25,4 +27,5 @@ data class OnrampTransaction(
     /** The [Amount.type] is [AmountType.FiatType] . */
     val fromFiat: Amount,
     val toAsset: ExpressTransactionAsset,
+    val country: OnrampCountry? = null,
 )

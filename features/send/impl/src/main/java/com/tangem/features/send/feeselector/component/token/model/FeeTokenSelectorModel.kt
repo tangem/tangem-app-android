@@ -10,7 +10,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.feeselector.component.token.FeeTokenSelectorIntents
 import com.tangem.features.send.feeselector.component.token.entity.FeeTokenItemState

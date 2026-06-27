@@ -19,8 +19,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 internal fun TxHistoryDetailsContent(state: TxHistoryDetailsUM, modifier: Modifier = Modifier) {
     when (state) {
         is TxHistoryDetailsUM.SingleAsset -> SingleAssetContent(state = state, modifier = modifier)
-        // TODO([REDACTED_TASK_KEY]): two-asset (Swap / Onramp) body — out of scope for the single-asset amount block ticket.
-        is TxHistoryDetailsUM.TwoAssets -> TwoAssetsPlaceholder(state = state, modifier = modifier)
+        is TxHistoryDetailsUM.TwoAssets -> TwoAssetsContent(state = state, modifier = modifier)
     }
 }
 
@@ -41,6 +40,41 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        )
+    }
+}
+
+@Composable
+private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modifier = Modifier) {
+    val from = state.from
+    val to = state.to
+    Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+        if (from != null && to != null) {
+            TxHistoryDetailsTwoAssetsBlock(
+                from = from,
+                to = to,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp),
+            )
+        } else {
+            // Safety fallback for a future express variant that yields no asset legs — render the header-only card.
+            TwoAssetsPlaceholder(state = state)
+        }
+        // Express status plaque under the exchange block. The top gap is owned by the banner (inside its collapsing
+        // region), so only horizontal padding is applied here.
+        TxHistoryDetailsStatusBanner(
+            state = state.statusBanner,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        )
+        // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
+        TxHistoryDetailsInfoRows(
+            rows = state.rows,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
         )
     }
 }

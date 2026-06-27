@@ -14,7 +14,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
-import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent

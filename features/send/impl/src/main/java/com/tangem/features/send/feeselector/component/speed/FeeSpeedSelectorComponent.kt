@@ -7,7 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.feeselector.component.speed.model.FeeSpeedSelectorModel
 import com.tangem.features.send.feeselector.component.speed.ui.FeeSpeedSelectorContent

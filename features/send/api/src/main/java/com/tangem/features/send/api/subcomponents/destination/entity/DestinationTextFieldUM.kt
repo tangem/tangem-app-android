@@ -2,6 +2,7 @@ package com.tangem.features.send.api.subcomponents.destination.entity
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.utils.toBriefAddressFormat
 
@@ -24,6 +25,8 @@ sealed class DestinationTextFieldUM {
         val isValuePasted: Boolean,
         // if value is human-readable address, this field contains the actual blockchain address
         val blockchainAddress: String? = null,
+        val contactName: String? = null,
+        val contactIcon: AccountIconUM.CryptoPortfolio? = null,
     ) : DestinationTextFieldUM() {
 
         val actualAddress: String
