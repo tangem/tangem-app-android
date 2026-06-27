@@ -36,7 +36,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.api.NFTSendComponent
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.common.CommonSendRoute

@@ -8,12 +8,14 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * UI model for the in-app transaction details ("Operation") card.
  *
  * One model for all transaction types; the layout family is chosen from the transaction type by
- * `TxInfoToTxHistoryDetailsUMConverter`:
+ * `TxHistoryInfoToTxHistoryDetailsUMConverter`:
  * - [SingleAsset] — Receive / Send / Transfer
  * - [TwoAssets] — Swap / Onramp
  */
@@ -28,37 +30,114 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         override val header: HeaderUM,
         val amountBlock: AmountBlockUM,
         val counterparty: CounterpartyUM?,
-        val rows: List<InfoRowUM>,
+        val rows: ImmutableList<InfoRowUM>,
     ) : TxHistoryDetailsUM
 
-    /** Two-asset layout: Swap / Onramp */
+    /**
+     * Two-asset layout: Swap / Onramp.
+     *
+     * [from] ("You send") → [to] ("You receive") exchange block. Both are nullable: when a leg cannot be built (e.g. a
+     * future express variant with no asset data) the card falls back to a header-only placeholder. [statusBanner] is
+     * the express status plaque under the block, `null` until status is known. [rows] carries the provider row (its
+     * name) followed by the network-fee row pulled from the matched on-chain leg (`ExpressTx.txInfo`); each is dropped
+     * when its data is unavailable (rate is not surfaced yet — no data).
+     */
     data class TwoAssets(
         override val header: HeaderUM,
+        val from: AssetUM? = null,
+        val to: AssetUM? = null,
+        val statusBanner: StatusBannerUM? = null,
+        val rows: ImmutableList<InfoRowUM> = persistentListOf(),
     ) : TxHistoryDetailsUM
+
+    /**
+     * Express status plaque under the two-asset block. The UI animates between successive emissions.
+     *
+     * @property severity Plaque colors (background tint + text/icon color).
+     * @property title Status line, e.g. "Awaiting funds" / "Confirmed" / "Failed".
+     * @property subtitle Optional second line (e.g. the refund hint on a failed terminal).
+     * @property isLoading `true` → trailing rotating loader (in-progress); `false` → static [severity] glyph.
+     */
+    data class StatusBannerUM(
+        val severity: Severity,
+        val title: TextReference,
+        val subtitle: TextReference? = null,
+        val isLoading: Boolean,
+    ) {
+
+        /** Visual severity of the [StatusBannerUM] — selects the background tint and the text/icon color. */
+        enum class Severity { Info, Success, Error, Warning }
+    }
+
+    /**
+     * One side of the two-asset block: the [label] over the signed [amount], with the [currencyIcon] on the trailing
+     * side. [owner] `null` → plain label ("You send"); non-null → "From"/"To" prefix plus the resolved own account /
+     * wallet decoration. [isFaded] renders the failed amount (struck through, recolored to tertiary); an in-flight leg is
+     * not faded — it carries a `~` estimate sign instead.
+     *
+     * [currencyIcon] is `null` when the leg has no icon to show — the onramp fiat side carries no `CryptoCurrency` and
+     * no country flag is rendered (no data); the trailing icon slot is then left empty.
+     */
+    data class AssetUM(
+        val label: TextReference,
+        val owner: AssetOwnerUM?,
+        val amount: TextReference,
+        val currencyIcon: CurrencyIconState?,
+        val isFaded: Boolean,
+    )
+
+    /**
+     * Counterparty rendered inline in an [AssetUM.label] when a swap leg resolves to one of the user's own portfolios.
+     * Carries the [name] plus a kind-specific 16dp decoration. Only own account / own wallet are decorated here (no
+     * address case, unlike the single-asset [CounterpartyAvatar]).
+     */
+    @Immutable
+    sealed interface AssetOwnerUM {
+
+        val name: TextReference
+
+        /** User's own account — the [iconResId] glyph tinted over [backgroundColor], shown **before** the [name]. */
+        data class Account(
+            override val name: TextReference,
+            @DrawableRes val iconResId: Int,
+            val backgroundColor: Color,
+        ) : AssetOwnerUM
+
+        /** User's own wallet — the wallet card [deviceIconUM], shown **after** the [name]. */
+        data class Wallet(
+            override val name: TextReference,
+            val deviceIconUM: DeviceIconUM,
+        ) : AssetOwnerUM
+    }
 
     /**
      * Centered amount block of the single-asset card: token avatar (with network badge), the big signed crypto
      * [amount] and the secondary [fiatAmount].
      *
+     * [fiatAmount] is `null` while no fiat value is available (`TxInfo` has no fiat field yet) — the fiat line is then
+     * omitted entirely rather than shown as a placeholder.
+     *
      * [isFailed] drives the failed visual state — the amount is struck through, recolored to tertiary and carries no
      * `+`/`−` sign (mirrors the status-driven recolor in the shared header).
      */
-    @Immutable
     data class AmountBlockUM(
         val currencyIcon: CurrencyIconState,
         val amount: TextReference,
-        val fiatAmount: TextReference,
+        val fiatAmount: TextReference? = null,
         val isFailed: Boolean,
     )
 
     /**
      * A single info row of the details card: a [label] on the leading side and its [value] on the trailing side
      * (e.g. `Network fee` → `0.00056 ETH`, `Rate` → `1 POL ≈ 0.36 USDT`). Rendered by [TxHistoryDetailsInfoRows].
+     *
+     * [trailingIconRes] is an optional glyph drawn after the [value] (e.g. the arrow-up-right link affordance on the
+     * provider row); `null` leaves the trailing slot text-only.
      */
-    @Immutable
     data class InfoRowUM(
         val label: TextReference,
         val value: TextReference,
+        @DrawableRes val trailingIconRes: Int? = null,
     )
 
     /**
@@ -67,7 +146,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
      * and whether copy is offered. Only the [CounterpartyAvatar.Address] kind is currently produced by
-     * [com.tangem.features.txhistory.converter.TxInfoToTxHistoryDetailsUMConverter]; the own-account / own-wallet
+     * [com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter]; the own-account / own-wallet
      * avatars are populated in a follow-up, once the detail model assembles the same address->owner lookup the list
      * uses (`TxHistoryLookupContext`).
      *
@@ -76,7 +155,6 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * @property avatar Leading avatar.
      * @property onCopyClick Copy action; `null` hides the copy button (e.g. own-wallet has nothing to copy).
      */
-    @Immutable
     data class CounterpartyUM(
         val label: TextReference,
         val title: TextReference,
@@ -105,7 +183,6 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * Shared bottom-sheet top bar. The icon glyph and [title] text come from the transaction type; [status] drives
      * the three visual states (in-progress / confirmed / failed) — recoloring the icon circle and the title.
      */
-    @Immutable
     data class HeaderUM(
         @DrawableRes val iconRes: Int,
         val status: TransactionItemUM.Content.Status,

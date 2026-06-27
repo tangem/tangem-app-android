@@ -7,11 +7,14 @@ import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateCo
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]. Renders pre-redesign tx-history UI.")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 internal class TxHistoryLegacyUiManager(
     private val state: MutableStateFlow<TxHistoryListState>,
     private val txHistoryItemConverter: TxHistoryItemToTransactionStateConverter,

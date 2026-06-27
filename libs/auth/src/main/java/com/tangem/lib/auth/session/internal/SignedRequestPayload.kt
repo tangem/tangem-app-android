@@ -17,7 +17,7 @@ internal class SignedRequestPayload @Inject constructor(
     private val appInfoProvider: AppInfoProvider,
 ) {
 
-    /** Snapshot of [appInfoProvider]'s device facts as the network DTO. `userAgent` is intentionally null. */
+    /** Snapshot of [appInfoProvider]'s device facts as the network DTO. */
     val deviceMetadata: DeviceMetadata
         get() = DeviceMetadata(
             deviceModel = appInfoProvider.device,
@@ -25,7 +25,7 @@ internal class SignedRequestPayload @Inject constructor(
             os = appInfoProvider.platform.lowercase(),
             osVersion = appInfoProvider.osVersion,
             appVersion = appInfoProvider.appVersion,
-            userAgent = null,
+            userAgent = with(appInfoProvider) { "Tangem/$appVersion ($device; $platform $osVersion)" },
             locale = appInfoProvider.language,
             timezone = appInfoProvider.timezone,
         )
@@ -49,9 +49,7 @@ internal class SignedRequestPayload @Inject constructor(
     /**
      * Stable, newline-separated representation of the signed payload. Backend treats the bytes
      * opaquely; must stay aligned with the server-side canonicalisation. Field order matches the
-     * declaration order of [RegisterPayload] / [AuthenticationPayload], with one exception:
-     * [DeviceMetadata.userAgent] is intentionally NOT included in the signed bytes (it's always
-     * `null` in [deviceMetadata] and the server doesn't sign it either).
+     * declaration order of [RegisterPayload] / [AuthenticationPayload] and [DeviceMetadata].
      */
     private fun canonicalize(
         devicePublicKey: String,
@@ -62,12 +60,13 @@ internal class SignedRequestPayload @Inject constructor(
         append(devicePublicKey).append('\n')
         append(nonce).append('\n')
         append(attestationToken.orEmpty()).append('\n')
-        append(metadata.deviceModel.orEmpty()).append('\n')
+        append(metadata.deviceModel).append('\n')
         append(metadata.os).append('\n')
-        append(metadata.osVersion.orEmpty()).append('\n')
-        append(metadata.appVersion.orEmpty()).append('\n')
-        append(metadata.locale.orEmpty()).append('\n')
-        append(metadata.timezone.orEmpty())
+        append(metadata.osVersion).append('\n')
+        append(metadata.appVersion).append('\n')
+        append(metadata.userAgent).append('\n')
+        append(metadata.locale).append('\n')
+        append(metadata.timezone)
     }.toByteArray(Charsets.UTF_8)
 }
 

@@ -10,7 +10,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooHigh
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooLow
 import com.tangem.features.send.api.utils.formatFooterFiatFee
