@@ -19,12 +19,12 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.params.FeeSelectorParams
-import com.tangem.features.send.api.params.FeeSelectorParams.FeeStateConfiguration
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.FeeStateConfiguration
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
