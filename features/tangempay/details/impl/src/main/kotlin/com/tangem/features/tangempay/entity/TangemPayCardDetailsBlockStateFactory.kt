@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.entity
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 
@@ -11,6 +12,7 @@ internal class TangemPayCardDetailsBlockStateFactory(
     private val cardNumberEnd: String,
     private val displayName: CardDisplayName?,
     private val isEditingNameEnabled: Boolean,
+    private val cardState: TangemPayCardState,
     private val onEditNameClick: () -> Unit,
     private val onReveal: () -> Unit,
     private val onCopy: (String, CardDataType) -> Unit,
@@ -38,6 +40,7 @@ internal class TangemPayCardDetailsBlockStateFactory(
                 null
             },
             shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
+            cardState = cardState,
         )
     }
 }

@@ -38,6 +38,7 @@ internal data class TangemPayCardDetailsUM(
     val displayNameState: DisplayNameState?,
     val isActionsAvailable: Boolean = false,
     val shouldShowCardDetailsButtonOnCard: Boolean = false,
+    val cardState: TangemPayCardState = TangemPayCardState.Active,
 )
 
 @Immutable
