@@ -7,6 +7,7 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.IntegratedApprovalData
@@ -28,6 +29,8 @@ interface SwapInteractor {
         toSwapCurrencyStatus: SwapCurrencyStatus,
         pairs: List<SwapPairLeast>,
     ): List<SwapProvider>
+
+    suspend fun getUnfulfilledReceiveRequirement(toSwapCurrencyStatus: SwapCurrencyStatus): AssetRequirementsCondition?
 
     fun findProvidersForPair(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
