@@ -3,7 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
@@ -20,12 +23,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
  * Factory for creating a list of notifications that can be shown on the wallet screen.
  * These notifications are not critical and can be stacked with each other.
  */
+@Suppress("LongParameterList")
 @ModelScoped
 internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
@@ -34,8 +39,15 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
 ) {
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
+        val isBalanceResolvedFlow = singleAccountStatusListSupplier(
+            SingleAccountStatusListProducer.Params(userWallet.walletId),
+        )
+            .map { it.totalFiatBalance !is TotalFiatBalance.Loading }
+            .distinctUntilChanged()
+
         return combine(
             flow = notificationsRepository.getShouldShowNotification(
                 NotificationId.EnablePushesReminderNotification.key,
@@ -43,11 +55,15 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
             flow2 = isReadyToShowRateAppUseCase().distinctUntilChanged(),
             flow3 = getWalletsUseCase().conflate(),
             flow4 = yieldSupplyGetShouldShowMainPromoUseCase().distinctUntilChanged(),
-        ) { showPushesNotification, showRateAppPromo, wallets, shouldShowYieldPromoLocal ->
+            flow5 = isBalanceResolvedFlow,
+        ) { showPushesNotification, showRateAppPromo, wallets, shouldShowYieldPromoLocal, isBalanceResolved ->
 
             buildList {
                 addNoteMigrationNotification(userWallet, wallets, clickIntents)
-                addRateAppNotification(showRateAppPromo, clickIntents)
+
+                // isBalanceResolved gates Rate App on the balance leaving the loading state, so it does not
+                // flash during loading and then get replaced once balance-dependent banners are resolved.
+                addRateAppNotification(showRateAppPromo && isBalanceResolved, clickIntents)
 
                 addPushNotification(
                     shouldShow = showPushesNotification,
