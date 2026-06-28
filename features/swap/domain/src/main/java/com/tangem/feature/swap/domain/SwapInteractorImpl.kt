@@ -835,14 +835,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val payInAddress = if (isYieldSwap && fromCurrency is CryptoCurrency.Token) {
             swapData.transaction.txTo
-        } else if (txData is TransactionData.Uncompiled) {
-            getPayoutAddress(txData)
         } else {
-            swapData.transaction.txTo
+            getPayoutAddress(txData)
         }
 
         return if (integratedApproval != null) {
-            // TODO YIELD payInAddress [REDACTED_TASK_KEY]
             sendIntegratedApproveAndSwap(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -852,6 +849,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapTxData = txData,
                 swapFee = swapFee,
                 integratedApproval = integratedApproval,
+                payInAddress = payInAddress,
             )
         } else {
             handleSwapResult(
@@ -884,6 +882,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapTxData: TransactionData.Uncompiled,
         swapFee: SwapFee,
         integratedApproval: IntegratedApprovalData,
+        payInAddress: String,
     ): SwapTransactionState {
         val approvalFee = selectFeeForBucket(integratedApproval.approvalFee, swapFee.feeBucket)
         val approvalTx = integratedApproval.approvalTransaction.copy(fee = approvalFee)
@@ -908,7 +907,7 @@ internal class SwapInteractorImpl @Inject constructor(
             swapData = swapData,
             amount = amount,
             txHash = swapTxHash,
-            payInAddress = getPayoutAddress(swapTxData),
+            payInAddress = payInAddress,
         )
     }
 
