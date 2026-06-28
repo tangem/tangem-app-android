@@ -1343,7 +1343,6 @@ internal class SwapInteractorImpl @Inject constructor(
         val dexFeeResultEither = if (fromStatus.isYieldSwapActive && fromStatus.currency is CryptoCurrency.Token) {
             val network = (fromStatus.currency as CryptoCurrency.Token).network
             val yieldModuleAddress = yieldModuleAddressProvider.getOrFetch(fromStatus.userWalletId, network)
-            // TODO YIELD [REDACTED_TASK_KEY]
             dexSwapFeeCalculator.calculateYield(
                 fromSwapCurrencyStatus = fromStatus,
                 transaction = transaction,
@@ -1992,7 +1991,11 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapData = swapData,
                     provider = provider,
                 )
-                val isIntegratedApprovalNeeded = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+
+                val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
+                    fromSwapCurrencyStatus.currency is CryptoCurrency.Token
+                val isIntegratedApprovalNeeded = !isYieldSwap &&
+                    swapFeatureToggles.isSwapIntegratedApproveEnabled &&
                     allowanceInfo is AllowanceInfo.NotEnough &&
                     !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
                 swapState.copy(
@@ -2138,7 +2141,8 @@ internal class SwapInteractorImpl @Inject constructor(
             requiredAmount = swapAmount.value,
         ).getOrNull() ?: return quotesLoadedState.copy(permissionState = PermissionDataState.Empty)
 
-        val isIntegratedApprovalNeeded = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+        val isIntegratedApprovalNeeded = !isYieldSwap &&
+            swapFeatureToggles.isSwapIntegratedApproveEnabled &&
             allowanceInfo is AllowanceInfo.NotEnough &&
             !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, quoteModel.allowanceContract)
         return quotesLoadedState.copy(
