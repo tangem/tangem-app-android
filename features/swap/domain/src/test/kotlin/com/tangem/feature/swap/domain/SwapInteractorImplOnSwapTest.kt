@@ -169,6 +169,53 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
     }
 
     @Test
+    fun `GIVEN yield integratedApproval WHEN onSwap THEN exchangeSent uses dex router txTo as payInAddress not yield proxy`() =
+        runTest {
+            // Arrange — yield-active token swap is routed through the yield module proxy: the swap tx is
+            // addressed to the proxy, but the Express status must be tracked by the original dex router (txTo).
+            // [REDACTED_TASK_KEY] / [REDACTED_TASK_KEY]: otherwise the "Supplying to Aave" status never resolves.
+            every { swapFeatureToggles.isYieldSwapEnabled } returns true
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
+            coEvery {
+                createTransactionExtrasUseCase(callData = any(), network = any(), gasLimit = any())
+            } returns mockk<TransactionExtras>(relaxed = true).right()
+            coEvery {
+                createTransactionUseCase(
+                    amount = any(), fee = any(), memo = any(),
+                    destination = any(), userWalletId = any(), network = any(), txExtras = any(),
+                )
+            } returns yieldSwapTxUncompiled().right()
+            coEvery {
+                sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+            } returns listOf(APPROVAL_HASH, SWAP_HASH).right()
+            val payInSlot = slot<String>()
+            coEvery {
+                repository.exchangeSent(
+                    userWallet = any(), txId = any(), fromNetwork = any(), fromAddress = any(),
+                    payInAddress = capture(payInSlot), txHash = any(), payInExtraId = any(),
+                )
+            } returns Unit.right()
+
+            // Act
+            val result = sut.onSwap(
+                fromSwapCurrencyStatus = yieldTokenStatus(),
+                toSwapCurrencyStatus = hotStatus(),
+                swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+                swapData = yieldDexSwapData(),
+                amountToSwap = "1.0",
+                balanceStatus = SwapBalanceStatus.Sufficient,
+                fee = buildSwapFee(),
+                expressOperationType = ExpressOperationType.SWAP,
+                isTangemPayWithdrawal = false,
+                integratedApproval = integratedApproval(approvalFee = singleFee()),
+            )
+
+            // Assert — backend receives the original dex router address, not the yield module proxy.
+            assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+            assertThat(payInSlot.captured).isEqualTo(DEX_ROUTER)
+        }
+
+    @Test
     fun `GIVEN Choosable approval fee AND SLOW bucket THEN approval tx fee is the minimum`() = runTest {
         assertApprovalFeeBucket(
             approvalFee = choosableFee(),
@@ -270,6 +317,41 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         destinationAddress = "0xTo",
     )
 
+    /** Yield-swap tx is addressed to the yield module proxy, not to the dex router. */
+    private fun yieldSwapTxUncompiled(): TransactionData.Uncompiled = TransactionData.Uncompiled(
+        amount = realAmount(),
+        fee = NORMAL_FEE,
+        sourceAddress = "0xFrom",
+        destinationAddress = YIELD_PROXY,
+    )
+
+    private fun yieldTokenStatus(): SwapCurrencyStatus {
+        val hotWallet = mockk<UserWallet.Hot>(relaxed = true)
+        return buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = "0xTokenContract",
+            isCoin = false,
+            yieldSupplyActive = true,
+        ).let { SwapCurrencyStatus(userWallet = hotWallet, status = it.status, account = it.account) }
+    }
+
+    private fun yieldDexSwapData(): SwapDataModel = SwapDataModel(
+        toTokenAmount = SwapAmount(BigDecimal("0.5"), 18),
+        transaction = ExpressTransactionModel.DEX(
+            fromAmount = SwapAmount(BigDecimal("1.0"), 18),
+            toAmount = SwapAmount(BigDecimal("0.5"), 18),
+            txValue = "0",
+            txId = "tx-id",
+            txTo = DEX_ROUTER,
+            txExtraId = null,
+            txFrom = "0xFrom",
+            txData = "0xdata",
+            otherNativeFeeWei = null,
+            gas = BigInteger.valueOf(21_000L),
+            allowanceContract = "0xSpender",
+        ),
+    )
+
     private fun realAmount(): Amount = Amount(
         currencySymbol = "ETH",
         value = BigDecimal.ONE,
@@ -369,6 +451,8 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
     private companion object {
         const val APPROVAL_HASH = "0xApprovalHash"
         const val SWAP_HASH = "0xSwapHash"
+        const val DEX_ROUTER = "0xDexRouter"
+        const val YIELD_PROXY = "0xYieldProxy"
 
         val MIN_FEE: Fee = feeOf(BigDecimal("0.001"))
         val NORMAL_FEE: Fee = feeOf(BigDecimal("0.002"))
