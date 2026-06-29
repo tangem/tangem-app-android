@@ -102,9 +102,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     )
 
     /**
-     * Counterparty rendered inline in an [AssetUM.label] when a swap leg resolves to one of the user's own portfolios.
-     * Carries the [name] plus a kind-specific 16dp decoration. Only own account / own wallet are decorated here (no
-     * address case, unlike the single-asset [CounterpartyAvatar]).
+     * Counterparty rendered inline in an [AssetUM.label] of a swap leg. Carries the [name] plus a kind-specific 16dp
+     * decoration: an own account / own wallet when the leg's address resolves to one of the user's portfolios, or an
+     * external blockchain [Address] (e.g. a send-and-swap payout to a non-user address).
      */
     @Immutable
     sealed interface AssetOwnerUM {
@@ -122,6 +122,15 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         data class Wallet(
             override val name: TextReference,
             val deviceIconUM: DeviceIconUM,
+        ) : AssetOwnerUM
+
+        /**
+         * External blockchain address — the [name] is the brief address, decorated with an identicon generated from
+         * [rawAddress], shown **before** the [name].
+         */
+        data class Address(
+            override val name: TextReference,
+            val rawAddress: String,
         ) : AssetOwnerUM
     }
 
@@ -164,9 +173,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
      * and whether copy is offered. Only the [CounterpartyAvatar.Address] kind is currently produced by
-     * [com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter]; the own-account / own-wallet
-     * avatars are populated in a follow-up, once the detail model assembles the same address->owner lookup the list
-     * uses (`TxHistoryLookupContext`).
+     * [com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter]; resolving the own-account /
+     * own-wallet avatars here (the `TxHistoryLookupContext` is already wired for the swap/onramp legs) is a follow-up.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
