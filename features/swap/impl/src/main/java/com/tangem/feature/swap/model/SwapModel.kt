@@ -822,8 +822,7 @@ internal class SwapModel @Inject constructor(
                     transferState = swapState,
                     uiStateHolder = uiState,
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
-                    fee = selectedFee,
-                    feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
+                    feeSelectorUM = feeSelectorRepository.state.value,
                 )
                 when {
                     uiState.successState != null -> Unit
@@ -871,7 +870,7 @@ internal class SwapModel @Inject constructor(
                 feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatus ?: dataState.feePaidCryptoCurrency,
                 fee = fee,
                 isTangemPayWithdrawal = isTangemPayWithdrawal(),
-                feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
+                feeSelectorUM = feeSelectorRepository.state.value,
             )
         }
     }
