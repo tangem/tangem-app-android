@@ -43,7 +43,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
@@ -87,7 +86,6 @@ internal class YieldSupplyModelTest {
     private val getDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase = mockk()
     private val isBoostPromoEnabledUseCase: IsYieldBoostPromoEnabledForTokenUseCase = mockk()
     private val getBoostedApyUseCase = GetBoostedApyUseCase()
-    private val featureToggles: YieldSupplyFeatureToggles = mockk()
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("abcdef012345")
@@ -108,7 +106,6 @@ internal class YieldSupplyModelTest {
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
         coEvery { getTokenStatusUseCase(any()) } returns marketToken(isActive = true).right()
         coEvery { isBoostPromoEnabledUseCase(any(), any()) } returns false.right()
-        every { featureToggles.isYieldPromoEnabled } returns false
         coEvery { activateUseCase(any(), any(), any()) } returns true.right()
         coEvery { deactivateUseCase(any(), any()) } returns true.right()
         coEvery { minAmountUseCase(any(), any()) } returns BigDecimal("5").right()
@@ -172,7 +169,6 @@ internal class YieldSupplyModelTest {
     @Test
     fun `GIVEN promo enabled for token WHEN status emitted THEN boosted available promo`() = runTest {
         // Arrange
-        every { featureToggles.isYieldPromoEnabled } returns true
         coEvery { isBoostPromoEnabledUseCase(any(), any()) } returns true.right()
 
         // Act
@@ -583,7 +579,6 @@ internal class YieldSupplyModelTest {
         yieldSupplyGetDustMinAmountUseCase = getDustMinAmountUseCase,
         isYieldBoostPromoEnabledForTokenUseCase = isBoostPromoEnabledUseCase,
         getBoostedApyUseCase = getBoostedApyUseCase,
-        yieldSupplyFeatureToggles = featureToggles,
         boostStoryPreloader = boostStoryPreloader,
     )
 
