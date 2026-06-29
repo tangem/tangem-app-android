@@ -1,5 +1,6 @@
 package com.tangem.features.commonfeatures.impl.choosetoken.model
 
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
@@ -7,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
@@ -30,6 +32,8 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
     private val settingContextUseCase: SettingContextUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val walletIconUMConverter: WalletIconUMConverter,
     private val dispatchers: CoroutineDispatcherProvider,
     private val selectedWalletUseCase: GetSelectedWalletUseCase,
     @Assisted private val modelScope: CoroutineScope,
@@ -87,6 +91,7 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
                             onClick = { selectWalletTab(walletId) },
                             isSelected = selectedWalletId == walletId,
                             count = searchResultCount,
+                            deviceIcon = walletIconUMConverter.convert(getWalletIconUseCase(wallet)),
                         )
                     }
                 val walletListUM = if (walletsUM.size != 1) {
