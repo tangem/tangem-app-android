@@ -1421,6 +1421,7 @@
   <string name="staking_enabled">Staking activé</string>
   <string name="staking_error_no_validators_message">Aucun validateur disponible pour le moment. Veuillez réessayer plus tard.</string>
   <string name="staking_error_no_validators_title">Staking indisponible</string>
+  <string name="staking_error_unavailable_region">Le staking est indisponible dans votre région</string>
   <string name="staking_give_permission_fee_footer">Le réseau facturera des frais d’approbation de jeton pour vérifier que vous autorisez l’utilisation de votre jeton pour le jalonnement.</string>
   <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les %1$s et %2$s du fournisseur</string>
   <string name="staking_locked">Bloqué</string>
