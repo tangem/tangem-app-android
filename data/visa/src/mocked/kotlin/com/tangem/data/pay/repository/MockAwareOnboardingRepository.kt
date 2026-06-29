@@ -6,6 +6,7 @@ import com.tangem.core.error.UniversalError
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
@@ -47,6 +48,11 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> =
         real.getCustomerInfo(userWalletId)
 
+    override suspend fun getBankCredentials(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, BankCredentials> = real.getBankCredentials(userWalletId, productInstanceId)
+
     override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> {
         if (isMockMode) {
             mockOrderIds.add(userWalletId)
@@ -76,6 +82,10 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> =
         real.getCustomerEligibility()
+
+    override suspend fun fetchCustomerEligibility(
+        userWalletId: UserWalletId,
+    ): Either<VisaApiError, List<TangemPayEligibilityType>> = real.fetchCustomerEligibility(userWalletId)
 
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? =
         real.getSavedCustomerInfo(userWalletId)
