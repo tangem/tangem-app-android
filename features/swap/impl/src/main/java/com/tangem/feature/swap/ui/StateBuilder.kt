@@ -577,6 +577,7 @@ internal class StateBuilder(
         additionalBadge: ProviderState.AdditionalBadge,
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
+        isHighNetworkFee: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -590,6 +591,7 @@ internal class StateBuilder(
             swapFee = swapFee,
             feeError = feeError?.error,
             appRouter = appRouter,
+            isHighNetworkFee = isHighNetworkFee,
         )
 
         val fromAccountTitleUM = when {
