@@ -2,6 +2,7 @@ package com.tangem.feature.swap.ui.transfer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
@@ -18,8 +19,12 @@ import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.CustomFeeFieldUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -43,10 +48,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result).isEmpty()
@@ -65,10 +69,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Solana.RentInfo>()).hasSize(1)
@@ -85,16 +88,13 @@ internal class SwapTransferNotificationsFactoryTest {
                 ),
                 currencyCheck = buildCurrencyCheck(existentialDeposit = BigDecimal("0.5")),
             )
-            val fee: Fee = mockk(relaxed = true) {
-                every { amount.value } returns BigDecimal("0.4")
-            }
+            val feeSelectorUM = contentWithFee(feeValue = BigDecimal("0.4"))
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = feeSelectorUM,
                 feeCryptoCurrencyStatus = null,
-                fee = fee,
                 actions = actions,
-                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Error.ExistentialDeposit>()).hasSize(1)
@@ -113,10 +113,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Error.MinimumAmountError>()).hasSize(1)
@@ -131,10 +130,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = null,
                 feeCryptoCurrencyStatus = null,
-                fee = null,
                 actions = actions,
-                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Cardano.MinAdaValueCharged>()).hasSize(1)
@@ -154,10 +152,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Warning.FeeCoverageNotification>()).hasSize(1)
@@ -176,10 +173,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = null,
                 feeCryptoCurrencyStatus = null,
-                fee = null,
                 actions = actions,
-                getFeeError = null,
             )
 
             val reserve = result.filterIsInstance<SwapNotificationUM.Warning.NeedReserveToCreateAccount>()
@@ -199,10 +195,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<SwapNotificationUM.Warning.ReduceAmount>()).hasSize(1)
@@ -220,10 +215,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Error.TokenExceedsBalance>()).hasSize(1)
@@ -242,10 +236,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = null,
                 feeCryptoCurrencyStatus = null,
-                fee = null,
                 actions = actions,
-                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<SwapNotificationUM.Info.TronTokenFee>()).hasSize(1)
@@ -264,10 +257,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = null,
                 feeCryptoCurrencyStatus = null,
-                fee = null,
                 actions = actions,
-                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<SwapNotificationUM.Info.TronTokenFee>()).isEmpty()
@@ -285,10 +277,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
+            feeSelectorUM = null,
             feeCryptoCurrencyStatus = null,
-            fee = null,
             actions = actions,
-            getFeeError = null,
         )
 
         assertThat(result.filterIsInstance<SwapNotificationUM.Info.TronTokenFee>()).isEmpty()
@@ -302,10 +293,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = errorSelector(GetFeeError.UnknownError),
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                fee = null,
                 actions = actions,
-                getFeeError = GetFeeError.UnknownError,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Warning.NetworkFeeUnreachable>()).hasSize(1)
@@ -319,10 +309,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = errorSelector(GetFeeError.BlockchainErrors.TronActivationError),
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                fee = null,
                 actions = actions,
-                getFeeError = GetFeeError.BlockchainErrors.TronActivationError,
             )
 
             val notifications = result.filterIsInstance<NotificationUM.Warning.TronAccountNotActivated>()
@@ -337,10 +326,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = errorSelector(GetFeeError.UnknownError),
                 feeCryptoCurrencyStatus = null,
-                fee = null,
                 actions = actions,
-                getFeeError = GetFeeError.UnknownError,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Warning.NetworkFeeUnreachable>()).isEmpty()
@@ -353,14 +341,93 @@ internal class SwapTransferNotificationsFactoryTest {
 
             val result = sut.getNotifications(
                 transferState = transferState,
+                feeSelectorUM = null,
                 feeCryptoCurrencyStatus = buildCoinStatus().status,
-                fee = null,
                 actions = actions,
-                getFeeError = null,
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Warning.NetworkFeeUnreachable>()).isEmpty()
         }
+
+    @Test
+    fun `GIVEN custom fee below network minimum WHEN getNotifications THEN FeeTooLow is added`() = runTest {
+        val transferState = buildTransferState()
+        val feeSelectorUM = contentWithCustomFeeBelowMinimum(
+            customFeeValue = "0.0001",
+            minimumFeeValue = BigDecimal("0.001"),
+        )
+
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeSelectorUM = feeSelectorUM,
+            feeCryptoCurrencyStatus = null,
+            actions = actions,
+        )
+
+        assertThat(result.filterIsInstance<NotificationUM.Warning.FeeTooLow>()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN custom fee at network minimum WHEN getNotifications THEN no FeeTooLow`() = runTest {
+        val transferState = buildTransferState()
+        val feeSelectorUM = contentWithCustomFeeBelowMinimum(
+            customFeeValue = "0.001",
+            minimumFeeValue = BigDecimal("0.001"),
+        )
+
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeSelectorUM = feeSelectorUM,
+            feeCryptoCurrencyStatus = null,
+            actions = actions,
+        )
+
+        assertThat(result.filterIsInstance<NotificationUM.Warning.FeeTooLow>()).isEmpty()
+    }
+
+    /**
+     * Builds a [FeeSelectorUM.Content] with a Custom fee whose [customFeeValue] is below the choosable
+     * [minimumFeeValue], so
+     * [com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooLow]
+     * reports the fee as too low. The choosable `priority` is left unstubbed (null) so the sibling
+     * `checkIfCustomFeeTooHigh` short-circuits and does not add a spurious TooHigh notification.
+     */
+    private fun contentWithCustomFeeBelowMinimum(
+        customFeeValue: String,
+        minimumFeeValue: BigDecimal,
+        decimals: Int = 8,
+    ): FeeSelectorUM.Content {
+        val customField: CustomFeeFieldUM = mockk(relaxed = true) {
+            every { value } returns customFeeValue
+            every { this@mockk.decimals } returns decimals
+        }
+        val customFeeItem: FeeItem.Custom = mockk(relaxed = true) {
+            every { customValues } returns persistentListOf(customField)
+        }
+        val choosableFees: TransactionFee.Choosable = mockk(relaxed = true) {
+            every { minimum.amount.value } returns minimumFeeValue
+        }
+        return mockk(relaxed = true) {
+            every { selectedFeeItem } returns customFeeItem
+            every { fees } returns choosableFees
+        }
+    }
+
+    /**
+     * Builds a [FeeSelectorUM.Content] whose selected fee carries [feeValue]. A non-Custom fee item is used so
+     * [com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooHigh]
+     * short-circuits and does not add a spurious TooHigh notification.
+     */
+    private fun contentWithFee(feeValue: BigDecimal): FeeSelectorUM.Content {
+        val fee: Fee = mockk(relaxed = true) {
+            every { amount.value } returns feeValue
+        }
+        return mockk(relaxed = true) {
+            every { selectedFeeItem } returns FeeItem.Market(fee = fee)
+        }
+    }
+
+    private fun errorSelector(error: GetFeeError): FeeSelectorUM.Error = FeeSelectorUM.Error(error = error)
 
     @Suppress("LongParameterList")
     private fun buildTransferState(
@@ -373,6 +440,7 @@ internal class SwapTransferNotificationsFactoryTest {
         isFeeCoverage: Boolean = false,
         sendingAmount: BigDecimal = fromTokenInfo.tokenAmount.value,
         tronFeeNotificationShowCount: Int = 0,
+        isAmountSubtractAvailable: Boolean = false,
     ): SwapState.Transfer = SwapState.Transfer(
         userWallet = coldWallet,
         fromTokenInfo = fromTokenInfo,
@@ -385,6 +453,7 @@ internal class SwapTransferNotificationsFactoryTest {
         isFeeCoverage = isFeeCoverage,
         sendingAmount = sendingAmount,
         tronFeeNotificationShowCount = tronFeeNotificationShowCount,
+        isAmountSubtractAvailable = isAmountSubtractAvailable,
         currencyCheck = currencyCheck,
         validationResult = validationResult,
         minAdaValue = minAdaValue,
