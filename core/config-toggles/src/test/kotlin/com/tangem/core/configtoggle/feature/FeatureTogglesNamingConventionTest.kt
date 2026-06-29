@@ -39,7 +39,6 @@ internal class FeatureTogglesNamingConventionTest {
         /** Toggles created before the AND_/TWI_ naming convention. Do NOT add new entries. */
         val EXCLUDED_TOGGLES_LIST = setOf(
             "ADDRESS_SYNC_ENABLED",
-            "ADD_AND_MANAGE_TOKENS_ENABLED",
             "APP_REDESIGN_ENABLED",
             "ASSETS_DISCOVERY_ENABLED",
             "DYNAMIC_ADDRESSES_ENABLED",

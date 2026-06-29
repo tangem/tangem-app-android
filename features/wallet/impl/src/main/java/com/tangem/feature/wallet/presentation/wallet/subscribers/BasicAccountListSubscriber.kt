@@ -34,7 +34,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
     abstract val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase
     abstract val stateController: WalletStateController
     abstract val clickIntents: WalletClickIntents
-    abstract val isAddAndManageTokensEnabled: Boolean
 
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier
         get() = accountDependencies.singleAccountStatusListSupplier
@@ -107,7 +106,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = isAccountMode,
                 isRedesignEnabled = true,
-                isAddAndManageTokensEnabled = isAddAndManageTokensEnabled,
                 isMultipleCardsEnabled = isMultipleCardsEnabled,
             ),
         )
@@ -172,7 +170,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = false,
                 isRedesignEnabled = false,
-                isAddAndManageTokensEnabled = isAddAndManageTokensEnabled,
                 isMultipleCardsEnabled = false,
             ),
         )
