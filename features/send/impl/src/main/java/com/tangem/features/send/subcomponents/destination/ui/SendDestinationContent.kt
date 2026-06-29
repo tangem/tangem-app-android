@@ -30,6 +30,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.SendAddressScreenTestTags
 import com.tangem.core.ui.utils.GlobalMultipleClickPreventer
+import com.tangem.features.addressbook.AddressBookContactsBlockComponent
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -47,6 +48,7 @@ internal fun SendDestinationContent(
     state: DestinationUM,
     clickIntents: SendDestinationClickIntents,
     isBalanceHidden: Boolean,
+    contactsBlock: AddressBookContactsBlockComponent? = null,
 ) {
     if (state !is DestinationUM.Content) return
     val recipients = state.recent
@@ -115,6 +117,15 @@ internal fun SendDestinationContent(
                 )
             },
         )
+        if (contactsBlock != null && !state.isRecentHidden) {
+            item(key = "CONTACTS_BLOCK_KEY") {
+                contactsBlock.Content(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                )
+            }
+        }
         item("SPACER_KEY") {
             SpacerH(16.dp)
         }

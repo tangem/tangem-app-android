@@ -1,54 +1,49 @@
 package com.tangem.data.pushnotificationpreferences
 
 import arrow.core.Either
+import com.tangem.data.pushnotificationpreferences.converters.PushNotificationPreferencesConverter
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesBody
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
-import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
 import com.tangem.domain.pushnotificationpreferences.repository.WalletPushNotificationPreferencesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * In-memory cache implementation of [WalletPushNotificationPreferencesRepository].
- *
- * Mock-mode (current): defaults are computed locally and writes are kept in-memory only.
- * Real-mode (when Variant C BE is ready): replace TODO blocks with [TangemTechApi] calls.
- *
- * Defaults for existing users (until BE migration runs): TX read from
- * [PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] (default true), Offers&Updates = true, Price Alerts = false,
- * isVisible = true for all three.
+ * Preferences are cached in-memory (non-persistent); writes are full-replace PUTs and the server echo
+ * is cached as the source of truth.
  */
 internal class DefaultWalletPushNotificationPreferencesRepository(
-    private val appPreferencesStore: AppPreferencesStore,
-    @Suppress("unused") private val tangemTechApi: TangemTechApi,
+    private val tangemTechApi: TangemTechApi,
     private val cache: RuntimeSharedStore<Map<String, WalletPushNotificationPreferences>>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletPushNotificationPreferencesRepository {
 
+    private val walletMutexes = ConcurrentHashMap<String, Mutex>()
+
     override suspend fun preload(userWalletId: UserWalletId) {
-        if (cache.getSyncOrNull()?.containsKey(userWalletId.stringValue) == true) return
-        val preferences = withContext(dispatchers.io) {
-            // TODO: uncomment when api is ready
-            //   val response = tangemTechApi.getPushNotificationPreferences(userWalletId.stringValue).getOrThrow()
-            //   PushNotificationPreferencesConverter.convert(response)
-            loadDefaults(userWalletId)
-        }
-        cache.update(default = emptyMap()) { current ->
-            if (current.containsKey(userWalletId.stringValue)) {
-                current
-            } else {
-                current + (userWalletId.stringValue to preferences)
+        if (isCached(userWalletId)) return
+        mutexFor(userWalletId).withLock {
+            if (isCached(userWalletId)) return
+            val preferences = fetch(userWalletId)
+            cache.update(default = emptyMap()) { current ->
+                if (current.containsKey(userWalletId.stringValue)) {
+                    current
+                } else {
+                    current + (userWalletId.stringValue to preferences)
+                }
             }
         }
     }
@@ -64,9 +59,11 @@ internal class DefaultWalletPushNotificationPreferencesRepository(
         category: PushNotificationCategory,
         isEnabled: Boolean,
     ): Either<Throwable, Unit> = Either.catch {
-        val current = cache.getSyncOrNull()?.get(userWalletId.stringValue) ?: loadDefaults(userWalletId)
-        val updated = current.withCategory(category, isEnabled)
-        putAndCommit(userWalletId, updated)
+        mutexFor(userWalletId).withLock {
+            val current = currentOrFetch(userWalletId)
+            val updated = current.withCategory(category, isEnabled)
+            putAndCommit(userWalletId, updated)
+        }
     }
 
     override suspend fun setAllPreferences(
@@ -75,39 +72,45 @@ internal class DefaultWalletPushNotificationPreferencesRepository(
         offersUpdates: Boolean,
         priceAlerts: Boolean,
     ): Either<Throwable, Unit> = Either.catch {
-        val current = cache.getSyncOrNull()?.get(userWalletId.stringValue) ?: loadDefaults(userWalletId)
-        val updated = current.copy(
-            transactionAlerts = current.transactionAlerts.copy(isEnabled = transactionAlerts),
-            offersUpdates = current.offersUpdates.copy(isEnabled = offersUpdates),
-            priceAlerts = current.priceAlerts.copy(isEnabled = priceAlerts),
-        )
-        putAndCommit(userWalletId, updated)
+        mutexFor(userWalletId).withLock {
+            val current = currentOrFetch(userWalletId)
+            val updated = current.copy(
+                transactionAlerts = current.transactionAlerts.copy(isEnabled = transactionAlerts),
+                offersUpdates = current.offersUpdates.copy(isEnabled = offersUpdates),
+                priceAlerts = current.priceAlerts.copy(isEnabled = priceAlerts),
+            )
+            putAndCommit(userWalletId, updated)
+        }
     }
+
+    // Cache, or a freshly fetched server snapshot, so a full-replace PUT never carries fabricated defaults.
+    private suspend fun currentOrFetch(userWalletId: UserWalletId): WalletPushNotificationPreferences =
+        cache.getSyncOrNull()?.get(userWalletId.stringValue) ?: fetch(userWalletId)
+
+    private suspend fun fetch(userWalletId: UserWalletId): WalletPushNotificationPreferences =
+        withContext(dispatchers.io) {
+            val response = tangemTechApi.getPushNotificationPreferences(userWalletId.stringValue).getOrThrow()
+            PushNotificationPreferencesConverter.convert(response)
+        }
+
+    private suspend fun isCached(userWalletId: UserWalletId): Boolean =
+        cache.getSyncOrNull()?.containsKey(userWalletId.stringValue) == true
+
+    private fun mutexFor(userWalletId: UserWalletId): Mutex =
+        walletMutexes.computeIfAbsent(userWalletId.stringValue) { Mutex() }
 
     private suspend fun putAndCommit(userWalletId: UserWalletId, updated: WalletPushNotificationPreferences) {
-        withContext(dispatchers.io) {
-            // TODO: uncomment when api is ready
-            //   tangemTechApi.updatePushNotificationPreferences(
-            //       walletId = userWalletId.stringValue,
-            //       body = PushNotificationPreferencesBody(
-            //           areTransactionAlertsEnabled = updated.transactionAlerts.isEnabled,
-            //           areOffersUpdatesEnabled = updated.offersUpdates.isEnabled,
-            //           arePriceAlertsEnabled = updated.priceAlerts.isEnabled,
-            //       ),
-            //   ).getOrThrow()
+        val applied = withContext(dispatchers.io) {
+            val response = tangemTechApi.updatePushNotificationPreferences(
+                walletId = userWalletId.stringValue,
+                body = PushNotificationPreferencesBody(
+                    areTransactionEventsEnabled = updated.transactionAlerts.isEnabled,
+                    areOfferUpdatesEnabled = updated.offersUpdates.isEnabled,
+                    arePriceAlertsEnabled = updated.priceAlerts.isEnabled,
+                ),
+            ).getOrThrow()
+            PushNotificationPreferencesConverter.convert(response)
         }
-        cache.update(default = emptyMap()) { it + (userWalletId.stringValue to updated) }
-    }
-
-    // TODO remove when api is ready, use api methods to load real settings
-    private suspend fun loadDefaults(userWalletId: UserWalletId): WalletPushNotificationPreferences {
-        val areTransactionAlertsEnabled = appPreferencesStore
-            .getObjectMapSync<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)[userWalletId.stringValue] !=
-            false
-        return WalletPushNotificationPreferences(
-            transactionAlerts = PushNotificationPreference(isEnabled = areTransactionAlertsEnabled, isVisible = true),
-            offersUpdates = PushNotificationPreference(isEnabled = true, isVisible = true),
-            priceAlerts = PushNotificationPreference(isEnabled = false, isVisible = true),
-        )
+        cache.update(default = emptyMap()) { it + (userWalletId.stringValue to applied) }
     }
 }
