@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.ui.transfer
 
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
@@ -18,6 +18,8 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
@@ -33,22 +35,30 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
     @Suppress("LongParameterList")
     fun getNotifications(
         transferState: SwapState.Transfer,
+        feeSelectorUM: FeeSelectorUM?,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        fee: Fee?,
         actions: UiActions,
-        getFeeError: GetFeeError?,
     ): ImmutableList<NotificationUM> {
+        // The fee selector exposes a single sealed state; narrow it here so call sites pass the raw
+        // FeeSelectorUM and this factory owns the Content/Error/Loading discrimination.
+        val feeContent = feeSelectorUM
+        val getFeeError = (feeSelectorUM as? FeeSelectorUM.Error)?.error
         return buildList {
             maybeAddRentExemptionError(transferState)
             maybeAddDomainWarnings(
                 state = transferState,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                fee = fee,
+                feeSelectorUM = feeContent,
                 onReduceByAmount = actions.onReduceByAmount,
                 onReduceToAmount = actions.onReduceToAmount,
             )
             maybeAddNeedReserveToCreateAccountWarning(transferState)
-            maybeAddExceedsBalanceNotification(transferState, onBuyClick = actions.openTokenDetailsScreen)
+            maybeAddExceedsBalanceNotifications(
+                transferState = transferState,
+                feeSelectorUM = feeContent,
+                onBuyClick = actions.openTokenDetailsScreen,
+            )
+            maybeAddTooHighOrTooLowNotification(feeContent)
             addTronNetworkFeesNotification(
                 cryptoCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus.status,
                 transferState = transferState,
@@ -71,13 +81,14 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
     private fun MutableList<NotificationUM>.maybeAddDomainWarnings(
         state: SwapState.Transfer,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        fee: Fee?,
+        feeSelectorUM: FeeSelectorUM?,
         onReduceByAmount: (SwapAmount, BigDecimal) -> Unit,
         onReduceToAmount: (SwapAmount) -> Unit,
     ) {
         val swapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus
         val amount = state.fromTokenInfo.tokenAmount
         val balance = swapCurrencyStatus.status.value.amount ?: BigDecimal.ZERO
+        val fee = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee
         val feeValue = fee?.amount?.value.orZero()
         val isCardano = BlockchainUtils.isCardano(swapCurrencyStatus.currency.network.rawId)
         addExistentialWarningNotification(
@@ -191,8 +202,9 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
         }
     }
 
-    private fun MutableList<NotificationUM>.maybeAddExceedsBalanceNotification(
+    private fun MutableList<NotificationUM>.maybeAddExceedsBalanceNotifications(
         transferState: SwapState.Transfer,
+        feeSelectorUM: FeeSelectorUM?,
         onBuyClick: (CryptoCurrency) -> Unit,
     ) {
         val cryptoCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus.status
@@ -206,6 +218,27 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
             onAnalyticsEvent = {},
             onResetAnalyticsEvent = {},
         )
+        val feeAmount = (feeSelectorUM as? FeeSelectorUM.Content)?.selectedFeeItem?.fee?.amount?.value
+        if (feeAmount != null) {
+            addExceedBalanceNotification(
+                feeAmount = feeAmount,
+                sendingAmount = transferState.sendingAmount,
+                isSubtractionAvailable = transferState.isAmountSubtractAvailable,
+                cryptoCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus.status,
+            )
+        }
+    }
+
+    @Suppress("CanBeNonNullable")
+    private fun MutableList<NotificationUM>.maybeAddTooHighOrTooLowNotification(feeSelectorUM: FeeSelectorUM?) {
+        val content = feeSelectorUM as? FeeSelectorUM.Content ?: return
+        val (isFeeTooHigh, diff) = FeeCalculationUtils.checkIfCustomFeeTooHigh(feeSelectorUM = content)
+        if (isFeeTooHigh) {
+            add(NotificationUM.Warning.TooHigh(diff))
+        }
+        if (FeeCalculationUtils.checkIfCustomFeeTooLow(feeSelectorUM = content)) {
+            add(NotificationUM.Warning.FeeTooLow)
+        }
     }
 
     private fun MutableList<NotificationUM>.addTronNetworkFeesNotification(
