@@ -332,6 +332,8 @@ dependencies {
     implementation(projects.features.yieldSupply.impl)
     implementation(projects.features.approval.api)
     implementation(projects.features.approval.impl)
+    implementation(projects.features.forYou.api)
+    implementation(projects.features.forYou.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
