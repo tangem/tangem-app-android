@@ -57,7 +57,7 @@ internal class WcSolanaSignAndSendTransactionUseCase @AssistedInject constructor
         val formattedHash = getFormattedHash(hash) // uses for flow sendLargeSolanaTransaction
         if (context.session.wallet is UserWallet.Cold && isLargeHash(formattedHash)) {
             // workaround for large transactions that cannot be signed directly by card
-            TangemLogger.w("The transaction hash is too large to be signed directly: ${formattedHash.size} bytes")
+            TangemLogger.i("The transaction hash is too large to be signed directly: ${formattedHash.size} bytes")
             sendLargeSolanaTransactionUseCase(context.session.wallet as UserWallet.Cold, context.network, formattedHash)
                 .fold(
                     ifLeft = { error ->
