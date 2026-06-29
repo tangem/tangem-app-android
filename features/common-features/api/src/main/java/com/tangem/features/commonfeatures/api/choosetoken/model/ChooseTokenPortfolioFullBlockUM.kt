@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.api.choosetoken.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -22,6 +23,7 @@ data class WalletTabUM(
     val count: TextReference?,
     val isSelected: Boolean,
     val onClick: () -> Unit,
+    val deviceIcon: DeviceIconUM,
 )
 
 @Immutable

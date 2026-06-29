@@ -1,6 +1,9 @@
 package com.tangem.feature.wallet.child.organizetokens.model.converter.items
 
+import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -20,6 +23,10 @@ internal class OrganizeAccountItemConverter(
         return OrganizeRowItemUM.Portfolio(
             headerRowUM = TangemHeaderRowUM(
                 id = value.accountId.value,
+                startIconUM = TangemIconUM.Currency(
+                    currencyIconState = AccountIconItemStateConverter(size = AccountIconSize.RedesignExtraSmall)
+                        .convert(value.account),
+                ),
                 title = value.account.accountName.toUM().value,
                 subtitle = stringReference(
                     accountBalance?.amount.format {

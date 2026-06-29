@@ -262,8 +262,6 @@ private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifi
                 text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_error_subtitle),
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.secondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
         is TangemPayDailyLimitBlockState.Content -> {
@@ -272,8 +270,6 @@ private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifi
                 text = state.limit,
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
         TangemPayDailyLimitBlockState.Loading -> {

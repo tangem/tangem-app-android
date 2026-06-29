@@ -187,6 +187,7 @@ internal class SwapTransferInteractorImplTest {
                 isFeeCoverage = false,
                 sendingAmount = expectedAmount,
                 tronFeeNotificationShowCount = 0,
+                isAmountSubtractAvailable = false,
                 currencyCheck = currencyCheck,
             )
             assertThat(result).isEqualTo(expected)
@@ -259,6 +260,7 @@ internal class SwapTransferInteractorImplTest {
             isFeeCoverage = false,
             sendingAmount = expectedAmount,
             tronFeeNotificationShowCount = 0,
+            isAmountSubtractAvailable = false,
             currencyCheck = currencyCheck,
         )
         assertThat(result).isEqualTo(expected)

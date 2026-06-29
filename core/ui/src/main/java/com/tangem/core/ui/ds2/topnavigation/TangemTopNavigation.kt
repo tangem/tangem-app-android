@@ -47,6 +47,9 @@ private enum class SlotId { Start, Content, Group, End }
  * @param contentAlign How [contentColumn] is aligned horizontally within the bar.
  * @param windowInsets Top inset applied above the row. Pass `WindowInsets(0)` inside a bottom
  *   sheet / modal.
+ * @param contentPadding Inner padding applied to the row, inside [windowInsets]. Defaults to
+ *   [TangemTopNavigation.DefaultContentPadding] (top 8, bottom 16, horizontal 16). Override a single
+ *   edge via [com.tangem.core.ui.extensions.copy], e.g. `DefaultContentPadding.copy(top = 16.dp)`.
  * @param blurBackground Whether the fade behind the row should blur the content below.
  * @param startButton Leading slot. Typically a back button (see [TangemButton.Back]).
  * @param endButtonsGroup Optional pill-grouped secondary actions placed just before [endButton].
@@ -59,6 +62,7 @@ fun TangemTopNavigation(
     modifier: Modifier = Modifier,
     contentAlign: TangemTopNavigation.ContentAlign = TangemTopNavigation.ContentAlign.Start,
     windowInsets: WindowInsets = WindowInsets.statusBars,
+    contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
     startButton: (@Composable () -> Unit)? = null,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
@@ -89,12 +93,7 @@ fun TangemTopNavigation(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(windowInsets)
-                .padding(
-                    top = 8.dp,
-                    bottom = 16.dp,
-                    start = 16.dp,
-                    end = 16.dp,
-                ),
+                .padding(contentPadding),
             content = {
                 val displayedStart = rememberLastNonNull(startButton)
                 Box(modifier = Modifier.layoutId(SlotId.Start)) {
@@ -208,6 +207,7 @@ fun TangemTopNavigation(
     subtitle: TextReference? = null,
     contentAlign: TangemTopNavigation.ContentAlign = TangemTopNavigation.ContentAlign.Start,
     windowInsets: WindowInsets = WindowInsets.statusBars,
+    contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
     onBack: (() -> Unit)? = null,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
@@ -217,6 +217,7 @@ fun TangemTopNavigation(
         modifier = modifier,
         contentAlign = contentAlign,
         windowInsets = windowInsets,
+        contentPadding = contentPadding,
         blurBackground = blurBackground,
         startButton = onBack?.let { { TangemButton.Back(onClick = it) } },
         endButtonsGroup = endButtonsGroup,
@@ -233,6 +234,7 @@ fun TangemTopNavigation(
     subtitle: TextReference? = null,
     contentAlign: TangemTopNavigation.ContentAlign = TangemTopNavigation.ContentAlign.Start,
     windowInsets: WindowInsets = WindowInsets.statusBars,
+    contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
@@ -242,6 +244,7 @@ fun TangemTopNavigation(
         modifier = modifier,
         contentAlign = contentAlign,
         windowInsets = windowInsets,
+        contentPadding = contentPadding,
         blurBackground = blurBackground,
         startButton = startButton,
         endButtonsGroup = endButtonsGroup,
@@ -258,6 +261,7 @@ fun TangemTopNavigation(
     subtitle: TextReference? = null,
     contentAlign: TangemTopNavigation.ContentAlign = TangemTopNavigation.ContentAlign.Start,
     windowInsets: WindowInsets = WindowInsets.statusBars,
+    contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
     onBack: (() -> Unit)? = null,
     endButton: @Composable () -> Unit,
@@ -266,6 +270,7 @@ fun TangemTopNavigation(
         modifier = modifier,
         contentAlign = contentAlign,
         windowInsets = windowInsets,
+        contentPadding = contentPadding,
         blurBackground = blurBackground,
         startButton = onBack?.let { { TangemButton.Back(onClick = it) } },
         endButton = endButton,
@@ -308,7 +313,7 @@ private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextRefere
     ) {
         displayedSubtitle?.let { text ->
             Column {
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(4.dp))
                 TangemNavigationText(text = text, role = TangemNavigationText.Role.Subtitle)
             }
         }
@@ -316,6 +321,15 @@ private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextRefere
 }
 
 object TangemTopNavigation {
+
+    /** Default inner padding of the row: top 8, bottom 16, horizontal 16. */
+    @Suppress("MagicNumber")
+    val DefaultContentPadding: PaddingValues = PaddingValues(
+        top = 8.dp,
+        bottom = 16.dp,
+        start = 16.dp,
+        end = 16.dp,
+    )
 
     /** Horizontal alignment of the center content slot. */
     enum class ContentAlign {
