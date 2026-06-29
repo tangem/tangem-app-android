@@ -252,6 +252,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(percent = 50))
             .background(backgroundColor)
             .clickable(onClick = state.onClick)
+            .testTag(BuyTokenScreenTestTags.WALLET_TAB)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
