@@ -193,7 +193,6 @@ abstract class BaseTestCase : TestCase(
                 // 5.37
                 "HEDERA_ERC20_ENABLED" to true,
                 // 5.39
-                "STAKING_ETH_ENABLED" to true,
                 "DYNAMIC_ADDRESSES_ENABLED" to true,
                 "SOLANA_TX_HISTORY_ENABLED" to true,
                 "SOLANA_SCALED_UI_AMOUNT_ENABLED" to true,
