@@ -30,6 +30,16 @@ internal sealed class AddressBookRoute {
     @Serializable
     data object AddAddress : AddressBookRoute()
 
+    /**
+     * Network-selection screen for the [address] entered on [AddAddress]. [selectedNetworkIds] carries the current
+     * selection so it can be restored; empty means nothing is pre-selected.
+     */
+    @Serializable
+    data class SelectNetworks(
+        val address: String,
+        val selectedNetworkIds: kotlin.collections.List<String> = emptyList(),
+    ) : AddressBookRoute()
+
     /** How the contacts list is shown — agnostic of which feature opened it. */
     @Serializable
     sealed interface ListMode {
