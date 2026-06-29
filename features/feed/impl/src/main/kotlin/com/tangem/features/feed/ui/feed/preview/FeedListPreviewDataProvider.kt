@@ -7,9 +7,15 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_heart_28
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
@@ -56,6 +62,7 @@ internal object FeedListPreviewDataProvider {
             earnListUM = EarnListUM.Content(
                 items = createEarnListItemsUM(),
             ),
+            forYouBannerUM = createForYouItem(),
         )
     }
 
@@ -284,5 +291,18 @@ internal object FeedListPreviewDataProvider {
                 onItemClick = {},
             )
         }.toPersistentList()
+    }
+
+    private fun createForYouItem(): ForYouBannerUM {
+        return ForYouBannerUM.Content(
+            TangemMessageUM(
+                id = ForYouBannerUM.Content::class.java.simpleName,
+                title = resourceReference(R.string.for_you_title),
+                subtitle = resourceReference(R.string.for_you_description),
+                iconUM = TangemIconUM.Icon(Icons.ic_heart_28), //  TODO ForYou update icon,
+                messageEffect = TangemMessageEffect.Magic,
+                onClick = {},
+            ),
+        )
     }
 }
