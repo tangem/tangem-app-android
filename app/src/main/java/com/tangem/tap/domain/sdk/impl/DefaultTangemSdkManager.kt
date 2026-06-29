@@ -86,7 +86,7 @@ internal class DefaultTangemSdkManager(
             secureStorage = tangemSdk.secureStorage,
         )
     }
-    override val needEnrollBiometrics: Boolean
+    override val isEnrollBiometricsNeeded: Boolean
         get() {
             val isNeedEnrollBiometrics = tangemSdk.authenticationManager.needEnrollBiometrics
             if (isNeedEnrollBiometrics) {
@@ -102,7 +102,7 @@ internal class DefaultTangemSdkManager(
 
     override val canUseBiometry: Boolean
         get() {
-            val isCanUseBiometry = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
+            val isCanUseBiometry = tangemSdk.authenticationManager.canAuthenticate || isEnrollBiometricsNeeded
             if (!isCanUseBiometry) {
                 analyticsErrorHandler.sendErrorEvent(
                     AnalyticsEvent(
@@ -124,7 +124,7 @@ internal class DefaultTangemSdkManager(
         get() = tangemSdk.config.userCodeRequestPolicy
 
     override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean {
-        return needEnrollBiometrics
+        return isEnrollBiometricsNeeded
     }
 
     override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean {
