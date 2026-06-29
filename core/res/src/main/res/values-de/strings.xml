@@ -1550,6 +1550,7 @@
   <string name="staking_enabled">Staking aktiviert</string>
   <string name="staking_error_no_validators_message">Zurzeit sind keine Validierer verfügbar. Bitte versuche es später noch einmal.</string>
   <string name="staking_error_no_validators_title">Staking nicht verfügbar</string>
+  <string name="staking_error_unavailable_region">Staking ist in Ihrer Region nicht verfügbar.</string>
   <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
   <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
