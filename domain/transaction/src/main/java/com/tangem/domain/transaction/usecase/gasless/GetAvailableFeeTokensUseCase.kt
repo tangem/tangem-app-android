@@ -12,12 +12,15 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.raiseIllegalStateError
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 
 class GetAvailableFeeTokensUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
+    private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val isYieldWithdrawEnabled: Boolean,
 ) {
@@ -41,6 +44,15 @@ class GetAvailableFeeTokensUseCase(
 
                     val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
                         raiseIllegalStateError("No native currency found: ${network.id}")
+                    }
+
+                    // Tron gasless is a parallel path: its supported fee tokens come from the Tron
+                    // gasless backend, not the EVM gasless service.
+                    if (isTron(network.rawId)) {
+                        return@either buildList {
+                            add(nativeCurrencyStatus)
+                            addAll(getTronGaslessTokens(network, userCurrenciesStatuses))
+                        }
                     }
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
@@ -77,6 +89,22 @@ class GetAvailableFeeTokensUseCase(
                 token is CryptoCurrency.Token && supportedGaslessTokens.contains(token.contractAddress.lowercase())
             }
             .toList()
+    }
+
+    private suspend fun getTronGaslessTokens(
+        network: Network,
+        userCurrenciesStatuses: List<CryptoCurrencyStatus>,
+    ): List<CryptoCurrencyStatus> {
+        val supportedContracts = runCatching { tronGaslessTransactionRepository.getSupportedTokens() }
+            .getOrDefault(emptyList())
+            .map { it.contractAddress }
+            .toSet()
+        return userCurrenciesStatuses.filter { status ->
+            val token = status.currency
+            token is CryptoCurrency.Token &&
+                token.network.id == network.id &&
+                supportedContracts.contains(token.contractAddress)
+        }
     }
 
     internal companion object {

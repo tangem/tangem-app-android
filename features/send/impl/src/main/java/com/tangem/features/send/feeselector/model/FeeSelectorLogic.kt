@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
@@ -38,6 +39,7 @@ import com.tangem.features.send.feeselector.model.transformers.FeeSelectorLoadin
 import com.tangem.features.send.feeselector.model.transformers.FeeSelectorNonceChangeTransformer
 import com.tangem.features.send.feeselector.model.transformers.FeeSelectorRemoveSuggestedTransformer
 import com.tangem.features.send.feeselector.model.transformers.FeeSelectorTokenSelectedTransformer
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
@@ -67,6 +69,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
     isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    sendFeatureToggles: SendFeatureToggles,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -74,8 +77,16 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     val uiState = MutableStateFlow(params.state)
 
     val isGaslessEnabled = params.onLoadFeeExtended != null &&
-        isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) &&
-        params.cryptoCurrencyStatus.currency is CryptoCurrency.Token
+        params.cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
+        (
+            isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
+                // Tron gasless is a parallel path gated by its own toggle (backend-support is checked
+                // later when loading the fee token list / estimate).
+                (
+                    sendFeatureToggles.isTronGaslessEnabled &&
+                        BlockchainUtils.isTron(params.cryptoCurrencyStatus.currency.network.rawId)
+                    )
+            )
 
     val shouldShowOnlySpeedOption: StateFlow<Boolean>
         field = MutableStateFlow(params.shouldShowOnlySpeedOption)

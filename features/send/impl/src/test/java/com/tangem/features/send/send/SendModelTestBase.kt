@@ -26,10 +26,14 @@ import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
@@ -105,6 +109,9 @@ internal abstract class SendModelTestBase {
     protected val sendAmountUpdateTrigger: SendAmountUpdateTrigger = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
+    protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
+    protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
+    protected val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
 
     // SendConfirmModel-specific dependencies
     protected val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase = mockk(relaxed = true)
@@ -122,6 +129,8 @@ internal abstract class SendModelTestBase {
     protected val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk(relaxed = true)
+    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
+        mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
     protected val sendBalanceUpdaterFactory: SendBalanceUpdater.Factory = mockk(relaxed = true)
 
@@ -197,6 +206,9 @@ internal abstract class SendModelTestBase {
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
+            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            sendFeatureToggles = sendFeatureToggles,
         )
     }
 
@@ -233,6 +245,7 @@ internal abstract class SendModelTestBase {
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             currenciesRepository = currenciesRepository,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
+            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
         )
     }

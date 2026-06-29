@@ -29,6 +29,14 @@ sealed class CommonSendAnalyticEvents(
         ),
     ), AppsFlyerIncludedEvent
 
+    /** A gasless transaction was successfully sent (network fee paid in a token, e.g. Tron USDT). */
+    data class GaslessTransactionUsed(
+        val categoryName: String,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Gasless Transaction Used",
+    )
+
     /** Amount screen opened */
     data class AmountScreenOpened(
         val categoryName: String,

@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -44,8 +45,13 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
             val isFeePaidByToken =
                 feePaidCurrency is FeePaidCurrency.Token && tokenStatus.currency.id != feePaidCurrency.tokenId
 
+            // Tron gasless is a parallel path: the fee token (USDT) pays for its own transfer, so the
+            // notification-level guard ("must hold > 0 fee token") applies the same way as EVM gasless.
+            // The authoritative transfer+compensation ≤ balance check lives in the backend and in
+            // CreateAndSendTronGaslessTransactionUseCase.
             val isFeePaidByGaslessToken =
-                currencyChecksRepository.isNetworkSupportedForGaslessTx(feeStatus.currency.network) &&
+                (currencyChecksRepository.isNetworkSupportedForGaslessTx(feeStatus.currency.network) ||
+                    isTron(feeStatus.currency.network.rawId)) &&
                     feeStatus.currency is CryptoCurrency.Token
 
             val warning = when {

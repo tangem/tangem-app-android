@@ -29,6 +29,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.qrscanning.models.SourceType
@@ -40,10 +41,13 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -97,6 +101,9 @@ internal class SendModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
+    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+    private val sendFeatureToggles: SendFeatureToggles,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
@@ -345,14 +352,22 @@ internal class SendModel @Inject constructor(
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
 
-        return if (maybeToken == null) {
-            getFeeForGaslessUseCase(
+        val feeToken = maybeToken?.currency
+        return when {
+            // Tron gasless is a parallel path: toggle-gated HERE (feature layer) + domain support check.
+            feeToken is CryptoCurrency.Token &&
+                sendFeatureToggles.isTronGaslessEnabled &&
+                isTronGaslessSupportedUseCase(params.currency.network, feeToken) ->
+                getTronGaslessFeeUseCase(
+                    transactionData = transferTransaction,
+                    feeToken = feeToken,
+                )
+            maybeToken == null -> getFeeForGaslessUseCase(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 network = params.currency.network,
             )
-        } else {
-            getFeeForTokenUseCase(
+            else -> getFeeForTokenUseCase(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 token = maybeToken.currency,
