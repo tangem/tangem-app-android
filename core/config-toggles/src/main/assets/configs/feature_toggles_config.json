@@ -180,6 +180,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1367_HIGH_FEE_WARNING_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1638_VA_MVP0_ENABLED",
         "version": "6.1"
     }

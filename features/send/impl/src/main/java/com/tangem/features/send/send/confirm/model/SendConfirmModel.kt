@@ -34,6 +34,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -43,6 +44,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -113,6 +115,8 @@ internal class SendConfirmModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
+    private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
+    private val sendFeatureToggles: SendFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -503,6 +507,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun updateConfirmNotifications() {
         modelScope.launch {
+            val feeCryptoCurrencyStatus = getCurrencyStatusForFeePayment()
             notificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
                     destinationAddress = confirmData.enteredDestination.orEmpty(),
@@ -512,9 +517,10 @@ internal class SendConfirmModel @Inject constructor(
                     isIgnoreReduce = confirmData.isIgnoreReduce,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
-                    feeCryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 ),
             )
+            val isHighNetworkFee = isHighNetworkFee(feeCryptoCurrencyStatus.currency)
             _uiState.update { state ->
                 state.copy(
                     confirmUM = SendConfirmationNotificationsTransformerV2(
@@ -524,10 +530,17 @@ internal class SendConfirmModel @Inject constructor(
                         cryptoCurrency = cryptoCurrencyStatus.currency,
                         appCurrency = appCurrency,
                         analyticsCategoryName = params.analyticsCategoryName,
+                        isHighNetworkFee = isHighNetworkFee,
                     ).transform(uiState.value.confirmUM),
                 )
             }
         }
+    }
+
+    private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
+        if (!sendFeatureToggles.isHighFeeWarningEnabled) return false
+        val feeAmount = confirmData.fee?.amount?.value ?: return false
+        return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }
 
     @Suppress("LongMethod")
