@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.presentation.state.stub
 
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingTarget
@@ -45,10 +44,6 @@ internal object StakingClickIntentsStub : StakingClickIntents {
     override fun openRewardsValidators() {}
 
     override fun showApprovalBottomSheet() {}
-
-    override fun onApproveTypeChange(approveType: ApproveType) {}
-
-    override fun onApprovalClick() {}
 
     override fun onExploreClick() {}
 

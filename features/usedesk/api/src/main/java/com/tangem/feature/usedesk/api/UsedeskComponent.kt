@@ -6,7 +6,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 interface UsedeskComponent : ComposableContentComponent {
 
     data class Params(
-        val feedback: String? = null, // TODO [REDACTED_TASK_KEY]
+        /** User wallet id (hex string) sent to Usedesk as the client email to identify the user. */
+        val userWalletId: String? = null,
     )
 
     interface Factory : ComponentFactory<Params, UsedeskComponent>

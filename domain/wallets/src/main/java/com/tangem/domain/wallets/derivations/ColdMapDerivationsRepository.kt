@@ -27,6 +27,9 @@ interface ColdMapDerivationsRepository {
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Pair<UserWallet.Cold, Map<ByteArrayKey, ExtendedPublicKeysMap>>
 
+    /** Merges already-derived [keys] into [userWallet]'s stored derivations without deriving on the card. */
+    fun mergeDerivedKeys(userWallet: UserWallet.Cold, keys: Map<ByteArrayKey, ExtendedPublicKeysMap>): UserWallet.Cold
+
     /** Check if user [userWallet] has missed derivations using map of [Network.ID] with extraDerivationPath */
     suspend fun hasMissedDerivations(
         userWallet: UserWallet.Cold,

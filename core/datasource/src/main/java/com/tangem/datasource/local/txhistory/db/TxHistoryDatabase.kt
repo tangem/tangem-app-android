@@ -8,6 +8,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateE
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCountryEntity
 
 @Database(
     version = 1,
@@ -16,6 +17,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEn
         ExpressExchangeEntity::class,
         ExpressOnrampEntity::class,
         ExpressSyncStateEntity::class,
+        OnrampCountryEntity::class,
     ],
 )
 abstract class TxHistoryDatabase : RoomDatabase() {

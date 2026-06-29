@@ -72,6 +72,14 @@ class AuthErrorConverterTest {
     }
 
     @Test
+    fun `409 is converted to Conflict`() {
+        val result = converter.convert(httpError(Code.CONFLICT, sampleBody))
+
+        assertThat(result).isInstanceOf(AuthError.Conflict::class.java)
+        assertThat((result as AuthError.Conflict).problem).isEqualTo(sampleProblem)
+    }
+
+    @Test
     fun `429 surfaces retryAfterSeconds from problem`() {
         val rateLimitBody = """
             {

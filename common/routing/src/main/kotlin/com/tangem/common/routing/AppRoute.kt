@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
@@ -174,8 +175,15 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class AddressBook(
-        val predefinedAddress: String? = null,
-    ) : AppRoute(path = "/address_book/predefinedAddress/$predefinedAddress")
+        val addressBookOpenMode: AddressBookOpenMode = AddressBookOpenMode.Default,
+    ) : AppRoute(
+        path = when (addressBookOpenMode) {
+            is AddressBookOpenMode.WithContactCreation ->
+                "/address_book/${addressBookOpenMode.address}-${addressBookOpenMode.networkId}"
+            is AddressBookOpenMode.ContactSelection -> "/address_book/select/${addressBookOpenMode.networkId}"
+            AddressBookOpenMode.Default -> "/address_book"
+        },
+    )
 
     @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
@@ -187,6 +195,7 @@ sealed class AppRoute(val path: String) : Route {
                     is Send -> "/$networkName"
                     WalletConnect -> ""
                     MainScreen -> ""
+                    AddressBook -> ""
                 }
 
             data class Send(val networkName: String) : Source()
@@ -194,6 +203,8 @@ sealed class AppRoute(val path: String) : Route {
             data object WalletConnect : Source()
 
             data object MainScreen : Source()
+
+            data object AddressBook : Source()
         }
     }
 
@@ -323,11 +334,6 @@ sealed class AppRoute(val path: String) : Route {
     data class SellCrypto(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/sell_crypto/${userWalletId.stringValue}")
-
-    @Serializable
-    data class SwapCrypto(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
 
     /**
      * Onboarding V2
@@ -507,6 +513,24 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class VirtualAccountOnboarding(
+        val mode: Mode,
+    ) : AppRoute(path = "/virtual_account_onboarding/$mode") {
+
+        @Serializable
+        sealed class Mode {
+            @Serializable
+            data class Deeplink(val userWalletId: UserWalletId, val deeplink: String) : Mode()
+
+            @Serializable
+            data class FromMain(val userWalletId: UserWalletId) : Mode()
+
+            @Serializable
+            data class FromDetailsScreen(val userWalletId: UserWalletId) : Mode()
+        }
+    }
 
     @Serializable
     data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")

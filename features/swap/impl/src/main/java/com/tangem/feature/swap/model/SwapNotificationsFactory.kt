@@ -124,6 +124,7 @@ internal class SwapNotificationsFactory(
         swapFee: SwapFee?,
         feeError: GetFeeError?,
         appRouter: AppRouter,
+        isHighNetworkFee: Boolean = false,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddFeeErrorNotification(feeCryptoCurrencyStatus, quoteModel, feeError)
@@ -135,8 +136,15 @@ internal class SwapNotificationsFactory(
             maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, appRouter)
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
+            maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }
         return warnings.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {
+        if (isHighNetworkFee) {
+            add(NotificationUM.Warning.HighNetworkFee)
+        }
     }
 
     private fun MutableList<NotificationUM>.maybeAddRentExemptionError(quoteModel: SwapState.QuotesLoadedState) {

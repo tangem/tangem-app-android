@@ -52,6 +52,18 @@ internal class HistoryTxListManager @AssistedInject constructor(
 
     val paginationStatus: Flow<PaginationStatus<*>> = state.map { it.status }.distinctUntilChanged()
 
+    /**
+     * Reactive stream of a single row tracked by its [TxHistoryInfo.txId], for the in-app details sheet.
+     *
+     * Seeded with the tapped [item] so the sheet always has an immediate snapshot, then re-emits the matching row from
+     * the live merged list as its status changes. The seed also covers rows not present in [items] yet (e.g. a pending
+     * tx surfaced from the currency status), which would otherwise never resolve.
+     */
+    fun txHistoryInfoFlow(item: TxHistoryInfo): Flow<TxHistoryInfo> = items
+        .mapNotNull { list -> list.firstOrNull { it.txId == item.txId } }
+        .onStart { emit(item) }
+        .distinctUntilChanged()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun init() {
         coroutineScope {

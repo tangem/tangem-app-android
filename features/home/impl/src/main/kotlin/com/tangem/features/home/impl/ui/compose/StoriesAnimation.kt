@@ -26,7 +26,7 @@ private const val SCALE_SWITCH_BARRIER = 1.15f
 
 @Suppress("LongParameterList")
 @Composable
-fun HorizontalSlidingImage(
+internal fun HorizontalSlidingImage(
     painter: Painter,
     paused: Boolean,
     duration: Int,
@@ -52,7 +52,7 @@ fun HorizontalSlidingImage(
 }
 
 @Composable
-fun StoriesTextAnimation(
+internal fun StoriesTextAnimation(
     slideInDuration: Int = 500,
     slideInDelay: Int = 200,
     slideDistance: Dp = 60.dp,
@@ -94,7 +94,7 @@ fun StoriesTextAnimation(
 }
 
 @Composable
-fun StoriesBottomImageAnimation(
+internal fun StoriesBottomImageAnimation(
     firstStepDuration: Int,
     totalDuration: Int,
     initialScale: Float = 2.5f,

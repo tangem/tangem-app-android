@@ -22,6 +22,7 @@ object VisaUtilities {
     val visaDefaultDerivationPath
         get() = visaBlockchain.derivationPath(DerivationStyle.V3)
     val customDerivationPath = DerivationPath("m/44'/60'/999999'/0/0")
+    val virtualAccountDerivationPath = DerivationPath("m/44'/60'/999998'/0/0")
     val curve = EllipticCurve.Secp256k1
 
     fun signWithNonceMessage(nonce: String): String {

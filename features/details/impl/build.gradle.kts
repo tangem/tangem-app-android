@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.settings)
     implementation(projects.domain.visa)
+    implementation(projects.domain.virtualAccount)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring

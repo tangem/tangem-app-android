@@ -23,6 +23,7 @@ internal class InitializeQrScanningStateTransformer(
             SourceType.SEND -> network?.let { resourceReference(R.string.send_qrcode_scan_info, wrappedList(it)) }
             SourceType.WALLET_CONNECT -> resourceReference(R.string.wc_qr_scan_hint)
             SourceType.MAIN_SCREEN -> resourceReference(R.string.main_qr_scan_hint)
+            SourceType.ADDRESS_BOOK -> resourceReference(R.string.main_qr_scan_hint)
         }
 
         return QrScanningState(
@@ -48,6 +49,10 @@ internal class InitializeQrScanningStateTransformer(
             SourceType.MAIN_SCREEN -> TopBarConfig(
                 title = null,
                 startIcon = R.drawable.ic_close_24,
+            )
+            SourceType.ADDRESS_BOOK -> TopBarConfig(
+                title = null,
+                startIcon = R.drawable.ic_back_24,
             )
         }
     }

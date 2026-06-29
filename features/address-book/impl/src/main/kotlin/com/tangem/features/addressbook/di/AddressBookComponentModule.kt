@@ -1,13 +1,14 @@
 package com.tangem.features.addressbook.di
 
 import com.tangem.features.addressbook.AddressBookComponent
-import com.tangem.features.addressbook.addaddress.AddAddressComponent
-import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
-import com.tangem.features.addressbook.component.DefaultAddressBookComponent
-import com.tangem.features.addressbook.list.AddressBookListComponent
-import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
-import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
-import com.tangem.features.addressbook.editcontact.EditContactComponent
+import com.tangem.features.addressbook.AddressBookContactsBlockComponent
+import com.tangem.features.addressbook.AddressSelectorComponent
+import com.tangem.features.addressbook.ContactSelectionListener
+import com.tangem.features.addressbook.ContactSelectionTrigger
+import com.tangem.features.addressbook.addressselector.DefaultAddressSelectorComponent
+import com.tangem.features.addressbook.block.DefaultAddressBookContactsBlockComponent
+import com.tangem.features.addressbook.common.DefaultAddressBookComponent
+import com.tangem.features.addressbook.common.DefaultContactSelectionTrigger
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -24,15 +25,21 @@ internal interface AddressBookComponentModule {
 
     @Binds
     @Singleton
-    fun bindAddressBookListComponentFactory(
-        factory: DefaultAddressBookListComponent.Factory,
-    ): AddressBookListComponent.Factory
+    fun bindContactsBlockComponentFactory(
+        factory: DefaultAddressBookContactsBlockComponent.Factory,
+    ): AddressBookContactsBlockComponent.Factory
 
     @Binds
     @Singleton
-    fun bindEditContactComponentFactory(factory: DefaultEditContactComponent.Factory): EditContactComponent.Factory
+    fun bindAddressSelectorComponentFactory(
+        factory: DefaultAddressSelectorComponent.Factory,
+    ): AddressSelectorComponent.Factory
 
     @Binds
     @Singleton
-    fun bindAddAddressComponentFactory(factory: DefaultAddAddressComponent.Factory): AddAddressComponent.Factory
+    fun bindContactSelectionTrigger(impl: DefaultContactSelectionTrigger): ContactSelectionTrigger
+
+    @Binds
+    @Singleton
+    fun bindContactSelectionListener(impl: DefaultContactSelectionTrigger): ContactSelectionListener
 }

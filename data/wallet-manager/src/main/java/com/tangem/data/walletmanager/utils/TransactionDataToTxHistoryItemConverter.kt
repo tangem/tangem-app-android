@@ -47,6 +47,7 @@ internal class TransactionDataToTxHistoryItemConverter(
             },
             type = getTransactionType(value),
             amount = amount,
+            fee = value.fee?.amount?.toDomain(),
         )
     }
 

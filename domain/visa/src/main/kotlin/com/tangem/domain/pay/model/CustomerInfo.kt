@@ -67,6 +67,7 @@ data class CustomerInfo(
         val actualCardLimit: TangemPayCardLimit?,
         val adminCardLimit: TangemPayCardLimit?,
         val status: Status,
+        val specificationDataType: SpecificationDataType,
     ) {
         enum class Status {
             NEW,
@@ -81,6 +82,12 @@ data class CustomerInfo(
             DEACTIVATED,
             CANCELED,
             UNKNOWN,
+        }
+
+        /** `ACCOUNT` marks a Virtual Account instance (vs. a `CARD`); used by VA MVP0 (TWI-1638). */
+        enum class SpecificationDataType {
+            ACCOUNT,
+            CARD,
         }
     }
 

@@ -10,12 +10,19 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
 
     val dialogContainer: KNode = child {
         hasTestTag(BaseDialogTestTags.CONTAINER)
+    }
+
+    fun containerWithText(text: String): KNode = child {
+        hasTestTag(BaseDialogTestTags.CONTAINER)
+        hasAnyDescendant(withText(text = text, substring = true))
+        useUnmergedTree = true
     }
 
     val title: KNode = child {

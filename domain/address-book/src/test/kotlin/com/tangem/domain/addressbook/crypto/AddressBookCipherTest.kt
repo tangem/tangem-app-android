@@ -36,8 +36,16 @@ internal class AddressBookCipherTest {
     fun `GIVEN multi-contact book WHEN encrypt then decrypt THEN original book is restored`() {
         // Arrange
         val book = addressBook(
-            contact("Alice", entry("addr-1", "0xabc", memo = "memo")),
-            contact("Bob", entry("addr-2", "0xdef", memo = null)),
+            contact(
+                name = "Alice",
+                iconColor = "TestColor1",
+                entries = arrayOf(entry("addr-1", "0xabc", memo = "memo")),
+            ),
+            contact(
+                name = "Bob",
+                iconColor = "TestColor2",
+                entries = arrayOf(entry("addr-2", "0xdef", memo = null)),
+            ),
         )
 
         // Act
@@ -64,7 +72,13 @@ internal class AddressBookCipherTest {
     @Test
     fun `GIVEN a book WHEN encrypt THEN blob metadata and field sizes match the spec`() {
         // Arrange
-        val book = addressBook(contact("Alice", entry("addr-1", "0xabc", memo = null)))
+        val book = addressBook(
+            contact(
+                name = "Alice",
+                iconColor = "TestColor",
+                entries = arrayOf(entry("addr-1", "0xabc", memo = null)),
+            )
+        )
 
         // Act
         val blob = cipher.encrypt(book, wallet, updatedAt).rightValue()
@@ -94,7 +108,13 @@ internal class AddressBookCipherTest {
     @Test
     fun `GIVEN same book encrypted twice WHEN compared THEN nonce differs but both decrypt to original`() {
         // Arrange
-        val book = addressBook(contact("Alice", entry("addr-1", "0xabc", memo = null)))
+        val book = addressBook(
+            contact(
+                name = "Alice",
+                iconColor = "TestColor",
+                entries = arrayOf(entry("addr-1", "0xabc", memo = null)),
+            )
+        )
 
         // Act
         val first = cipher.encrypt(book, wallet, updatedAt).rightValue()
@@ -201,19 +221,41 @@ internal class AddressBookCipherTest {
         assertThat(result.leftValue()).isEqualTo(AddressBookCryptoError.NoWalletPublicKey)
     }
 
+    // region cross-platform vectors
+    // Shared known-answer vector, identical to iOS CommonAddressBookEncryptionServiceTests. Asserting the
+    // same bytes on both platforms guarantees a blob sealed on one opens on the other. Do not change these
+    // constants without changing the iOS suite in lockstep.
+
     @Test
-    fun `GIVEN fixed public key WHEN deriveAesKey THEN matches the locked HMAC-SHA256 vector`() {
-        // Arrange — independently computed: HMAC-SHA256(SHA-256([01,02,03,04]), "TokensSymmetricKey")
-        val publicKey = byteArrayOf(0x01, 0x02, 0x03, 0x04)
-        val expected = "da48094b89902e137ae73ae90acbd809af9ad4f648044c17e7ee6de73e96b0c2"
+    fun `GIVEN shared cross-platform public key WHEN deriveAesKey THEN matches the iOS vector`() {
+        // Arrange
+        val publicKey = VECTOR_PUBLIC_KEY_HEX.hexToBytes()
 
         // Act
         val aesKey = AddressBookKeyDerivation.deriveAesKey(publicKey)
 
         // Assert
         assertThat(aesKey).hasLength(AES_256_KEY_BYTES)
-        assertThat(aesKey.toHexString().lowercase()).isEqualTo(expected)
+        assertThat(aesKey.toHexString().lowercase()).isEqualTo(VECTOR_KEY_HEX)
     }
+
+    @Test
+    fun `GIVEN a blob sealed on the other platform WHEN decrypt with the derived key THEN restores the plaintext`() {
+        // Arrange — open the iOS-produced AES-256-GCM box with the key derived from the shared seed
+        val aesKey = AddressBookKeyDerivation.deriveAesKey(VECTOR_PUBLIC_KEY_HEX.hexToBytes())
+
+        // Act
+        val plaintext = aesGcmOpen(
+            key = aesKey,
+            nonce = VECTOR_NONCE_HEX.hexToBytes(),
+            ciphertext = VECTOR_CIPHERTEXT_HEX.hexToBytes(),
+            authTag = VECTOR_TAG_HEX.hexToBytes(),
+        )
+
+        // Assert
+        assertThat(plaintext.toString(Charsets.UTF_8)).isEqualTo(VECTOR_PLAINTEXT)
+    }
+    // endregion
 
     // region helpers
     private fun addressBook(vararg contacts: Contact): AddressBook =
@@ -222,10 +264,12 @@ internal class AddressBookCipherTest {
     private fun addressBook(walletId: UserWalletId): AddressBook =
         AddressBook(walletId = walletId, contacts = emptyList())
 
-    private fun contact(name: String, vararg entries: AddressEntry): Contact = Contact(
+    private fun contact(name: String, iconColor: String, vararg entries: AddressEntry): Contact = Contact(
         id = ContactId("contact-$name"),
         walletId = wallet.walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = iconColor,
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-05-22T09:00:00.000Z",
         addressEntries = entries.toList(),
@@ -237,9 +281,18 @@ internal class AddressBookCipherTest {
         networkId = Network.RawID("ethereum"),
         memo = memo,
         signature = "",
+        networkName = "Ethereum",
     )
 
     private fun String.flipFirstHexNibble(): String = (if (first() == '0') '1' else '0') + substring(1)
+
+    private fun String.hexToBytes(): ByteArray = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+
+    /** Raw AES-256-GCM open, mirroring [AddressBookCipher]'s transformation and tag size. */
+    private fun aesGcmOpen(key: ByteArray, nonce: ByteArray, ciphertext: ByteArray, authTag: ByteArray): ByteArray =
+        Cipher.getInstance("AES/GCM/NoPadding").apply {
+            init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(TAG_BITS, nonce))
+        }.doFinal(ciphertext + authTag)
 
     private fun <T> Either<AddressBookCryptoError, T>.rightValue(): T =
         getOrNull() ?: error("Expected Either.Right but was $this")
@@ -272,5 +325,13 @@ internal class AddressBookCipherTest {
         const val NONCE_HEX_LENGTH = NONCE_BYTES * 2
         const val TAG_HEX_LENGTH = TAG_BYTES * 2
         const val AES_256_KEY_BYTES = 32
+
+        // Shared cross-platform known-answer vector (see iOS CommonAddressBookEncryptionServiceTests).
+        const val VECTOR_PUBLIC_KEY_HEX = "0374d0f81f42ddfe34114d533e95e6ae5fe6ea271c96f1fa505199fdc365ae9720"
+        const val VECTOR_KEY_HEX = "59b85ce53fac0a8493d9d8d9c0d32adb5f586741dd8bbfd9348a3212e493730d"
+        const val VECTOR_NONCE_HEX = "000102030405060708090a0b"
+        const val VECTOR_CIPHERTEXT_HEX = "f4ee0f404e747b5b5cca730c44baf86ca3d8f6fbdf66ff2fe98d3b8f88cb23df7ff55b52205f32c8ab"
+        const val VECTOR_TAG_HEX = "6c4b71b27958f43afc6633850369a17a"
+        const val VECTOR_PLAINTEXT = "Tangem Address Book cross-platform vector"
     }
 }

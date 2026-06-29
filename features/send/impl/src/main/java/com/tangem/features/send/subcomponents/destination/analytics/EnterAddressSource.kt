@@ -6,11 +6,12 @@ internal enum class EnterAddressSource {
     RecentAddress,
     InputField,
     MyWallets,
+    Contact,
     ;
 
     val isPasted: Boolean
         get() = this != InputField
 
     val isAutoNext: Boolean
-        get() = this == RecentAddress || this == MyWallets
+        get() = this == RecentAddress || this == MyWallets || this == Contact
 }

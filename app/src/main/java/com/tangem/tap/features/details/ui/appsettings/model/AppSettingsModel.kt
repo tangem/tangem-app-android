@@ -115,7 +115,7 @@ internal class AppSettingsModel @Inject constructor(
     private fun observeBiometricsStatusChanges() {
         flow {
             do {
-                val isEnrollBiometricsNeeded = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
+                val isEnrollBiometricsNeeded = runCatching(tangemSdkManager::isEnrollBiometricsNeeded).getOrNull()
                 if (isEnrollBiometricsNeeded != null) {
                     emit(isEnrollBiometricsNeeded)
                 }
@@ -366,7 +366,7 @@ internal class AppSettingsModel @Inject constructor(
         localState.update { state ->
             state.copy(
                 hasSecuredWallets = userWalletsListRepository.hasSecuredWallets(),
-                isEnrollBiometricsNeeded = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() == true,
+                isEnrollBiometricsNeeded = runCatching(tangemSdkManager::isEnrollBiometricsNeeded).getOrNull() == true,
                 isBiometricAuthenticationUsed = walletsRepository.useBiometricAuthentication(),
                 isAccessCodeRequired = walletsRepository.requireAccessCode(),
             )

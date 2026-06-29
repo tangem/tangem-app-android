@@ -25,7 +25,7 @@ class SignedRequestPayloadTest {
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
 
     @Test
-    fun `deviceMetadata wires AppInfoProvider fields, forces userAgent to null, lowercases platform`() {
+    fun `deviceMetadata wires AppInfoProvider fields, builds userAgent, lowercases platform`() {
         val metadata = signedRequestPayload.deviceMetadata
 
         // Backend contract is lowercase `android`/`ios` — verify normalization at the source.
@@ -35,7 +35,7 @@ class SignedRequestPayloadTest {
                 os = "android",
                 osVersion = "14",
                 appVersion = "5.40.0",
-                userAgent = null,
+                userAgent = "Tangem/5.40.0 (Pixel 8; Android 14)",
                 locale = "en-US",
                 timezone = "Europe/Moscow",
             ),
@@ -49,7 +49,7 @@ class SignedRequestPayloadTest {
             os = "Android",
             osVersion = "14",
             appVersion = "5.40.0",
-            userAgent = null,
+            userAgent = "Tangem/5.40.0 (Pixel 8; Android 14)",
             locale = "en-US",
             timezone = "Europe/Moscow",
         )
@@ -71,6 +71,7 @@ class SignedRequestPayloadTest {
             Android
             14
             5.40.0
+            Tangem/5.40.0 (Pixel 8; Android 14)
             en-US
             Europe/Moscow
             """.trimIndent(),
@@ -78,15 +79,15 @@ class SignedRequestPayloadTest {
     }
 
     @Test
-    fun `canonicalize replaces null fields with empty string`() {
+    fun `canonicalize replaces null attestationToken with empty string`() {
         val metadata = DeviceMetadata(
-            deviceModel = null,
+            deviceModel = "Pixel 8",
             os = "Android",
-            osVersion = null,
-            appVersion = null,
-            userAgent = null,
-            locale = null,
-            timezone = null,
+            osVersion = "14",
+            appVersion = "5.40.0",
+            userAgent = "Tangem/5.40.0 (Pixel 8; Android 14)",
+            locale = "en-US",
+            timezone = "Europe/Moscow",
         )
         val payload = RegisterPayload(
             devicePublicKey = "pub",
@@ -97,8 +98,10 @@ class SignedRequestPayloadTest {
 
         val bytes = signedRequestPayload.canonicalize(payload)
 
-        // 8 newlines separate 9 logical slots; all but `devicePublicKey`, `nonce`, and `os` are empty.
-        assertThat(bytes.toString(Charsets.UTF_8)).isEqualTo("pub\nnonce-1\n\n\nAndroid\n\n\n\n")
+        // The null attestationToken collapses to an empty slot between `nonce` and `deviceModel`.
+        assertThat(bytes.toString(Charsets.UTF_8)).isEqualTo(
+            "pub\nnonce-1\n\nPixel 8\nAndroid\n14\n5.40.0\nTangem/5.40.0 (Pixel 8; Android 14)\nen-US\nEurope/Moscow",
+        )
     }
 
     @Test
@@ -110,7 +113,7 @@ class SignedRequestPayloadTest {
             os = "Android",
             osVersion = "14",
             appVersion = "5.40.0",
-            userAgent = null,
+            userAgent = "Tangem/5.40.0 (Pixel 8; Android 14)",
             locale = "en-US",
             timezone = "Europe/Moscow",
         )

@@ -627,5 +627,7 @@ internal class DefaultUserWalletsListRepository(
     private suspend fun onAllWalletsDeleted() {
         // reset flag (that is set from AF deeplink) after removing the last wallet
         mobileWalletPromoRepository.setShouldShowMobileWalletPromo(false)
+        // wipe the Usedesk support-chat clientId so a fresh UUID is generated for the next wallet
+        appPreferencesStore.editData { it.remove(PreferencesKeys.USEDESK_CLIENT_ID_KEY) }
     }
 }

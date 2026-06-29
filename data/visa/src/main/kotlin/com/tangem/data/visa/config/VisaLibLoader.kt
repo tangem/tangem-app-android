@@ -32,7 +32,7 @@ internal class VisaLibLoader @Inject constructor(
         val config = getOrLoadConfig()
 
         provider = VisaContractInfoProvider.Builder(
-            useTestnetRpc = VisaConstants.USE_TEST_ENV,
+            isTestnetRpcEnabled = VisaConstants.USE_TEST_ENV,
             bridgeProcessorAddress = if (VisaConstants.USE_TEST_ENV) {
                 config.testnet.bridgeProcessor
             } else {

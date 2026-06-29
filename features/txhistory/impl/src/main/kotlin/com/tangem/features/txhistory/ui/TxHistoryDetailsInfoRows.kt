@@ -2,11 +2,17 @@ package com.tangem.features.txhistory.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,6 +26,9 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.InfoRowUM
+import com.tangem.features.txhistory.impl.R
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Info-rows block of the transaction details card: a vertical list of DS3 [TangemRow]s (label on the leading side,
@@ -36,7 +45,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.InfoRowUM
  * @param modifier Modifier applied to the list container.
  */
 @Composable
-internal fun TxHistoryDetailsInfoRows(rows: List<InfoRowUM>, modifier: Modifier = Modifier) {
+internal fun TxHistoryDetailsInfoRows(rows: ImmutableList<InfoRowUM>, modifier: Modifier = Modifier) {
     if (rows.isEmpty()) return
     Column(
         modifier = modifier,
@@ -45,17 +54,31 @@ internal fun TxHistoryDetailsInfoRows(rows: List<InfoRowUM>, modifier: Modifier 
         rows.forEachIndexed { index, row ->
             TangemRow(
                 divider = index < lastIndex,
-                contentLead = TangemRowContentLead.Start,
+                contentLead = TangemRowContentLead.End,
+                onClick = row.onClick,
                 titleSlot = { TangemRowText(text = row.label, role = TangemRowTextRole.Title) },
                 valueSlot = {
-                    Text(
-                        text = row.value.resolveReference(),
-                        color = TangemTheme.colors3.text.secondary,
-                        style = TangemTheme.typography3.body.medium,
-                        textAlign = TextAlign.End,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = row.value.resolveReference(),
+                            color = TangemTheme.colors3.text.secondary,
+                            style = TangemTheme.typography3.body.medium,
+                            textAlign = TextAlign.End,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        row.trailingIconRes?.let { iconRes ->
+                            Icon(
+                                painter = painterResource(id = iconRes),
+                                contentDescription = null,
+                                tint = TangemTheme.colors3.text.secondary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
                 },
             )
         }
@@ -74,8 +97,12 @@ private fun TxHistoryDetailsInfoRowsPreview() {
         ) {
             // Multiple rows — dividers between rows, none after the last
             TxHistoryDetailsInfoRows(
-                rows = listOf(
-                    InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+                rows = persistentListOf(
+                    InfoRowUM(
+                        label = stringReference("Provider"),
+                        value = stringReference("Mercuryo"),
+                        trailingIconRes = R.drawable.ic_arrow_top_right_24,
+                    ),
                     InfoRowUM(label = stringReference("Rate"), value = stringReference("1 POL ≈ 0.36 USDT")),
                     InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
                 ),
@@ -83,7 +110,7 @@ private fun TxHistoryDetailsInfoRowsPreview() {
             // Single row — no divider
             TxHistoryDetailsInfoRows(
                 modifier = Modifier.padding(top = 16.dp),
-                rows = listOf(
+                rows = persistentListOf(
                     InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
                 ),
             )

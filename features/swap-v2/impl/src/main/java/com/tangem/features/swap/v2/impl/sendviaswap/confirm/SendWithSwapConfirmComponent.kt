@@ -14,11 +14,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.params.FeeSelectorParams.*
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.*
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -81,6 +81,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             cryptoCurrency = model.secondaryCurrency,
             predefinedValues = PredefinedValues.Empty,
             isAllowSelfSend = true,
+            isAddContactAvailable = true,
         ),
         // No feedback: the read-only block is driven one-way by the model.uiState collector ([REDACTED_TASK_KEY]).
         onResult = {},

@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemThemePreview
@@ -27,6 +28,7 @@ import com.tangem.features.feed.ui.feed.components.*
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.feed.state.FeedListUM
+import com.tangem.features.feed.ui.feed.state.ForYouBannerUM
 import com.tangem.features.feed.ui.feed.state.GlobalFeedState
 
 @Composable
@@ -105,6 +107,17 @@ private fun FeedListContent(
             SpacerH(contentPadding.calculateTopPadding())
         }
         DateBlock(state.currentDate)
+
+        SpacerH(16.dp)
+
+        if (state.forYouBannerUM is ForYouBannerUM.Content && LocalRedesignEnabled.current) {
+            // TODO ForYou replace with message banner
+            TangemMessage(
+                messageUM = state.forYouBannerUM.banner,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
         SpacerH(32.dp)
 
         MarketBlock(

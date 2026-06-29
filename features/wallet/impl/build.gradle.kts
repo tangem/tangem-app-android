@@ -81,6 +81,7 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.addressBook)
     implementation(projects.domain.analytics)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)

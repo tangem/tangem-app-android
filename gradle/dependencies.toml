@@ -19,10 +19,13 @@ huaweiPush = "6.11.0.300"
 # endregion AppGallery
 
 # region AndroidX
+androidxActivity = "1.10.1"
 androidxActivityCompose = "1.8.0"
+androidxAnnotation = "1.9.1"
 androidxAppCompat = "1.5.1"
 androidxBrowser = "1.4.0"
 androidxConstraintLayout = "2.2.1"
+androidxCore = "1.13.1"
 androidxKtx = "1.9.0"
 androidxSplashScreen = "1.0.1"
 androidxFragment = "1.8.5"
@@ -96,7 +99,6 @@ decompose = "3.3.0"
 room = "2.7.2"
 markdown = "0.7.2"
 markdownComposeView = "0.5.4"
-usedesk = "4.4.0"
 sumsub = "1.38.0"
 haze = "1.7.2"
 kotlinpoet = "1.18.1"
@@ -115,7 +117,7 @@ espresso-intents = "3.5.1"
 junit = "4.13.2"
 junit5 = "5.8.2"
 junitAndroidExt = "1.1.5"
-mockk = "1.13.4"
+mockk = "1.14.11"
 turbine = "1.2.0"
 truth = "1.1.3"
 kaspresso = "1.6.0"
@@ -153,10 +155,13 @@ gradle-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinp
 # end region Classpath
 
 # region AndroidX
+androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidxBrowser" }
 androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintLayout" }
+androidx-core = { module = "androidx.core:core", version.ref = "androidxCore" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxKtx" }
 androidx-core-splashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
@@ -285,6 +290,7 @@ viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydeleg
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinSerialization" }
 kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinDatetime" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
@@ -306,8 +312,6 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 markdown-composeview = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdownComposeView" }
-usedesk-chat-sdk = { module = "com.github.Usedesk.Android_SDK:chat-sdk", version.ref = "usedesk" }
-usedesk-chat-gui = { module = "com.github.Usedesk.Android_SDK:chat-gui", version.ref = "usedesk" }
 sumsub-sdk = { module = "com.sumsub.sns:idensic-mobile-sdk", version.ref = "sumsub" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }

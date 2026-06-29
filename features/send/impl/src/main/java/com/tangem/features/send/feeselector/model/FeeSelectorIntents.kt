@@ -2,7 +2,7 @@ package com.tangem.features.send.feeselector.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.send.api.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 
 @Stable
 internal interface FeeSelectorIntents {

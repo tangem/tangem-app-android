@@ -64,6 +64,8 @@ class ValidateContactNameUseCaseTest {
         id = ContactId("id-$name"),
         walletId = walletId,
         name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = "KekColor",
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-01-01T00:00:00.000Z",
         addressEntries = listOf(
@@ -73,6 +75,7 @@ class ValidateContactNameUseCaseTest {
                 networkId = Network.RawID("ethereum"),
                 memo = null,
                 signature = "sig",
+                networkName = "Ethereum",
             ),
         ),
     )

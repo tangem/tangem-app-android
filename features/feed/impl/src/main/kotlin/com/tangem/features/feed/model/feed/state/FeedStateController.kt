@@ -65,6 +65,7 @@ internal class FeedStateController @Inject constructor() {
             ),
             globalState = GlobalFeedState.Loading,
             earnListUM = EarnListUM.Loading,
+            forYouBannerUM = ForYouBannerUM.Empty,
         )
     }
 }

@@ -8,6 +8,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.virtualaccount.converter.VirtualAccountStatusValueDMConverter
 import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusFetcher
 import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusProducer
+import com.tangem.data.virtualaccount.repository.DefaultVirtualAccountActivationRepository
 import com.tangem.data.virtualaccount.store.VirtualAccountStatusesStore
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
@@ -17,6 +18,13 @@ import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusProducer
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.virtualaccount.repository.VirtualAccountActivationRepository
+import com.tangem.domain.virtualaccount.usecase.ActivateVirtualAccountUseCase
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountSuitableWalletsUseCase
+import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -39,6 +47,12 @@ internal interface VirtualAccountDataModule {
     @Binds
     @Singleton
     fun bindVirtualAccountStatusFetcher(impl: DefaultVirtualAccountStatusFetcher): VirtualAccountStatusFetcher
+
+    @Binds
+    @Singleton
+    fun bindVirtualAccountActivationRepository(
+        impl: DefaultVirtualAccountActivationRepository,
+    ): VirtualAccountActivationRepository
 
     companion object {
 
@@ -76,6 +90,35 @@ internal interface VirtualAccountDataModule {
                 factory = factory,
                 keyCreator = { "virtual_account_status_${it.userWalletId.stringValue}" },
             ) {}
+        }
+
+        @Provides
+        @Singleton
+        fun provideActivateVirtualAccountUseCase(
+            repository: VirtualAccountActivationRepository,
+        ): ActivateVirtualAccountUseCase {
+            return ActivateVirtualAccountUseCase(repository = repository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideGetVirtualAccountSuitableWalletsUseCase(
+            userWalletsListRepository: UserWalletsListRepository,
+        ): GetVirtualAccountSuitableWalletsUseCase {
+            return GetVirtualAccountSuitableWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
+        }
+
+        @Provides
+        fun provideGetVirtualAccountEligibilityUseCase(
+            getVirtualAccountSuitableWalletsUseCase: GetVirtualAccountSuitableWalletsUseCase,
+            onboardingRepository: OnboardingRepository,
+            deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
+        ): GetVirtualAccountEligibilityUseCase {
+            return GetVirtualAccountEligibilityUseCase(
+                getVirtualAccountSuitableWalletsUseCase = getVirtualAccountSuitableWalletsUseCase,
+                onboardingRepository = onboardingRepository,
+                deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+            )
         }
     }
 }

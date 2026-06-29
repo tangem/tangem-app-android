@@ -149,6 +149,8 @@ sealed class PaymentAccountStatusValue {
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
      * @property error Transient error overlaid on top of cached data when a refresh fails
      *                 (see [copySealed]), or `null` when the status is up to date. Not persisted.
+     * @property virtualAccount Virtual Account (Visa on-ramp) availability — VA MVP0 (TWI-1638).
+     *                          Transient: not persisted in the local cache.
      */
     @Serializable
     data class Loaded(
@@ -160,6 +162,7 @@ sealed class PaymentAccountStatusValue {
         val cards: List<TangemPayCard>,
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
+        val virtualAccount: VirtualAccountOnramp,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,

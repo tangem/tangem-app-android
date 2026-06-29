@@ -1,16 +1,22 @@
 package com.tangem.features.addressbook.addaddress.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.*
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.ds.button.PrimaryTangemButton
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -18,11 +24,11 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.addressbook.addaddress.contract.AddAddressUM
-import com.tangem.features.addressbook.addaddress.contract.AddressFieldUM
-import kotlinx.collections.immutable.persistentListOf
+import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM
+import com.tangem.features.addressbook.addaddress.ui.state.AddressFieldUM
 
 @Composable
 internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifier) {
@@ -34,7 +40,6 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemTopBar(
-            modifier = Modifier.statusBarsPadding(),
             title = resourceReference(R.string.address_book_add_address),
             startContent = {
                 TangemButton(
@@ -45,30 +50,118 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
                 )
             },
         )
-
-        RecipientRow(
-            addressField = state.addressField,
-            onValueChange = state.onAddressChange,
-            onAddressClear = state.onAddressClear,
-            onQrClick = state.onQrClick,
-            onPasteClick = state.onPasteClick,
-        )
-        SpacerH12()
-        NetworkBlock(state.chosenNetworkStateUM)
-        PrimaryButton(state.buttonUM)
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+        ) {
+            val minContentHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .heightIn(min = minContentHeight)
+                        .imePadding(),
+                ) {
+                    RecipientRow(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        addressField = state.addressField,
+                        onValueChange = state.onAddressChange,
+                        onAddressClear = state.onAddressClear,
+                        onQrClick = state.onQrClick,
+                        onPasteClick = state.onPasteClick,
+                    )
+                    MemoSection(memoField = state.memoField)
+                    NetworkSelector(
+                        chosenNetworkStateUM = state.chosenNetworkStateUM,
+                        onNetworkClick = state.onNetworkClick,
+                    )
+                    AddButton(state.buttonUM)
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun ColumnScope.PrimaryButton(buttonUM: TangemButtonUM) {
-    Spacer(modifier = Modifier.weight(1f))
+private fun MemoSection(memoField: AddAddressUM.MemoFieldUM) {
+    AnimatedVisibility(
+        visible = memoField.isVisible,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            MemoRow(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp),
+                memoField = memoField,
+            )
+            SpacerH(10.dp)
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = stringResourceSafe(R.string.send_recipient_memo_footer_v2),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = stringResourceSafe(R.string.send_recipient_memo_footer_v2_highlighted),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+        }
+    }
+}
 
-    PrimaryTangemButton(
+@Composable
+private fun NetworkSelector(chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM, onNetworkClick: () -> Unit) {
+    AnimatedContent(
+        targetState = chosenNetworkStateUM,
+        transitionSpec = {
+            ContentTransform(
+                targetContentEnter = fadeIn(),
+                initialContentExit = fadeOut(),
+                sizeTransform = SizeTransform(clip = false) { _, _ -> snap() },
+            )
+        },
+        contentKey = { it::class },
+        modifier = Modifier.animateContentSize(),
+        label = "network_selector",
+    ) { networkState ->
+        when (networkState) {
+            AddAddressUM.ChosenNetworkStateUM.Hidden -> Box(modifier = Modifier.fillMaxWidth())
+            AddAddressUM.ChosenNetworkStateUM.Loading,
+            is AddAddressUM.ChosenNetworkStateUM.Result,
+            -> NetworkBlock(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .fillMaxWidth()
+                    .background(color = TangemTheme.colors3.bg.secondary),
+                chosenNetworkStateUM = networkState,
+                onNetworkSelectClick = onNetworkClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.AddButton(buttonUM: TangemButtonUM) {
+    Spacer(modifier = Modifier.weight(1f))
+    TangemButton(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-        buttonUM = buttonUM,
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        onClick = buttonUM.onClick,
+        isEnabled = buttonUM.isEnabled,
+        isLoading = buttonUM.isLoading,
+        size = TangemButton.Size.X12,
+        text = buttonUM.text,
     )
 }
 
@@ -84,19 +177,27 @@ private fun Preview_AddAddressContent() {
                     placeholder = resourceReference(R.string.address_book_enter_address),
                     label = resourceReference(R.string.common_address),
                 ),
-                availableNetworks = persistentListOf(),
+                memoField = AddAddressUM.MemoFieldUM(
+                    isVisible = false,
+                    value = "",
+                    label = resourceReference(R.string.send_extras_hint_memo),
+                    isError = false,
+                    onValueChange = {},
+                    onPasteClick = {},
+                ),
                 buttonUM = TangemButtonUM(
                     text = TextReference.Res(R.string.address_book_add_address),
                     type = TangemButtonType.Primary,
                     isEnabled = false,
                     onClick = { },
                 ),
-                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Empty,
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Hidden,
                 onAddressChange = {},
                 onAddressClear = {},
                 onPasteClick = {},
                 onQrClick = {},
                 onBackClick = {},
+                onNetworkClick = {},
             ),
         )
     }

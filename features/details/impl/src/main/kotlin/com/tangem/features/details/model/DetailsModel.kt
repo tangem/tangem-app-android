@@ -22,8 +22,12 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
+import com.tangem.domain.virtualaccount.model.VirtualAccountEntryPoint
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookFeatureToggles
@@ -31,6 +35,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
+import com.tangem.features.details.entity.SelectContactSupportTypeBS
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
@@ -67,9 +72,12 @@ internal class DetailsModel @Inject constructor(
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
+    private val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
+
+    private val isUsedeskEnabled = feedbackFeatureToggles.isUsedeskEnabled
 
     private val items: MutableStateFlow<ImmutableList<DetailsItemUM>>
 
@@ -89,16 +97,15 @@ internal class DetailsModel @Inject constructor(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
                 isAddressBookAvailable = addressBookFeatureToggles.isAddressBookEnabled,
-                isSupportChatAvailable = feedbackFeatureToggles.isUsedeskEnabled,
                 hasAnyMobileWallet = getWalletsUseCase.invokeSync().any { it is UserWallet.Hot },
                 userWalletId = params.userWalletId,
-                onSupportEmailClick = ::sendFeedback,
-                onSupportChatClick = ::openUseDesk,
+                onSupportClick = ::onContactSupportClick,
                 onBuyClick = ::onBuyClick,
             ),
         )
 
         addTangemPayItemIfEligible()
+        addVirtualAccountItemIfEligible()
 
         state = MutableStateFlow(
             value = DetailsUM(
@@ -108,6 +115,7 @@ internal class DetailsModel @Inject constructor(
                     appVersion = getAppVersion(),
                 ),
                 selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig.Empty,
+                selectContactSupportTypeBSConfig = TangemBottomSheetConfig.Empty,
                 popBack = router::pop,
             ),
         )
@@ -156,6 +164,46 @@ internal class DetailsModel @Inject constructor(
 
             analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Settings))
             sendFeedbackEmailUseCase(feedbackType)
+        }
+    }
+
+    private fun onContactSupportClick() {
+        // Offer the mail/chat choice only when the chat is available; otherwise open mail directly.
+        if (isUsedeskEnabled) {
+            showContactSupportChooserBS()
+        } else {
+            sendFeedback()
+        }
+    }
+
+    private fun showContactSupportChooserBS() {
+        state.update { current ->
+            current.copy(
+                selectContactSupportTypeBSConfig = TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = ::hideContactSupportChooserBS,
+                    content = SelectContactSupportTypeBS(
+                        onOptionClick = { option ->
+                            hideContactSupportChooserBS()
+                            when (option) {
+                                SelectContactSupportTypeBS.Option.Mail -> sendFeedback()
+                                SelectContactSupportTypeBS.Option.Chat -> {
+                                    analyticsEventHandler.send(Settings.ButtonOpenChat())
+                                    openUseDesk()
+                                }
+                            }
+                        },
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun hideContactSupportChooserBS() {
+        state.update { current ->
+            current.copy(
+                selectContactSupportTypeBSConfig = current.selectContactSupportTypeBSConfig.copy(isShown = false),
+            )
         }
     }
 
@@ -281,6 +329,33 @@ internal class DetailsModel @Inject constructor(
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
             } else {
                 items.update { itemsBuilder.removeTangemPayItem(it) }
+            }
+        }
+    }
+
+    private fun addVirtualAccountItemIfEligible() {
+        modelScope.launch {
+            val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)
+            if (eligibility is VirtualAccountEligibility.Available) {
+                items.update { items ->
+                    itemsBuilder.addVirtualAccountItem(
+                        items = items,
+                        onClick = ::onVirtualAccountItemClicked,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun onVirtualAccountItemClicked() {
+        modelScope.launch {
+            when (val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)) {
+                is VirtualAccountEligibility.Available -> router.push(
+                    AppRoute.VirtualAccountOnboarding(
+                        AppRoute.VirtualAccountOnboarding.Mode.FromDetailsScreen(eligibility.wallets.first().walletId),
+                    ),
+                )
+                VirtualAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeVirtualAccountItem(it) }
             }
         }
     }

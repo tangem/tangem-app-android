@@ -3,8 +3,6 @@ package com.tangem.features.home.impl.model
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -16,11 +14,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -30,10 +26,11 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.home.api.HomeComponent
+import com.tangem.features.home.api.HomeFeatureToggles
+import com.tangem.features.home.impl.ui.state.HomeStoriesConfig
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
@@ -59,14 +56,12 @@ internal class HomeModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
-    private val appRouter: AppRouter,
     private val getUserCountryUseCase: GetUserCountryUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
-    private val urlOpener: UrlOpener,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
+    private val homeFeatureToggles: HomeFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -74,17 +69,8 @@ internal class HomeModel @Inject constructor(
 
     val params = paramsContainer.require<HomeComponent.Params>()
 
-    private val _uiState = MutableStateFlow(
-        HomeUM(
-            scanInProgress = false,
-            stories = getRestrictedStories().toImmutableList(),
-            onShopClick = ::onShopClick,
-            onSearchTokensClick = ::onSearchTokensClick,
-            onGetStartedClick = ::onGetStartedClick,
-        ),
-    )
-
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUM>
+        field = MutableStateFlow(createInitialState())
 
     init {
         analyticsEventHandler.send(IntroductionProcess.ScreenOpened())
@@ -94,6 +80,17 @@ internal class HomeModel @Inject constructor(
             InitScreenLaunchMode.Standard -> Unit
             InitScreenLaunchMode.WithCardScan -> scanCard()
         }
+    }
+
+    private fun createInitialState(): HomeUM {
+        val initialStories = getRestrictedStories().toImmutableList()
+        return HomeUM(
+            isScanInProgress = false,
+            isStoriesContainerEnabled = homeFeatureToggles.isStoriesContainerEnabled,
+            stories = initialStories,
+            storiesConfig = HomeStoriesConfig(stories = initialStories),
+            onGetStartedClick = ::onGetStartedClick,
+        )
     }
 
     private fun observeUserCountryChanges() {
@@ -114,35 +111,21 @@ internal class HomeModel @Inject constructor(
         } else {
             Stories.entries
         }
+            .toImmutableList()
 
-        _uiState.update {
-            it.copy(stories = stories.toImmutableList())
+        uiState.update {
+            it.copy(stories = stories, storiesConfig = HomeStoriesConfig(stories = stories))
         }
-    }
-
-    private fun onShopClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards())
-        analyticsEventHandler.send(Shop.ScreenOpened())
-        modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke(null).let { urlOpener.openUrl(it) }
-        }
-    }
-
-    private fun onSearchTokensClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonTokensList())
-        router.push(AppRoute.ManageTokens(Source.STORIES))
     }
 
     private fun onGetStartedClick() {
         debouncer.debounce(modelScope) {
-            modelScope.launch {
-                val mode = if (shouldShowMobileWalletPromoUseCase()) {
-                    AppRoute.CreateWalletStart.Mode.HotWallet
-                } else {
-                    AppRoute.CreateWalletStart.Mode.ColdWallet
-                }
-                router.push(AppRoute.CreateWalletStart(mode = mode))
+            val mode = if (shouldShowMobileWalletPromoUseCase()) {
+                AppRoute.CreateWalletStart.Mode.HotWallet
+            } else {
+                AppRoute.CreateWalletStart.Mode.ColdWallet
             }
+            router.push(AppRoute.CreateWalletStart(mode = mode))
         }
     }
 
@@ -198,13 +181,13 @@ internal class HomeModel @Inject constructor(
                 setLoading(false)
                 when (error) {
                     is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $error")
-                    is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
+                    is SaveWalletError.WalletAlreadySaved -> router.replaceAll(AppRoute.Wallet)
                 }
             },
             ifRight = {
                 setLoading(false)
                 sendSignedInCardAnalyticsEvent(scanResponse, userWallet.isImported)
-                appRouter.replaceAll(AppRoute.Wallet)
+                router.replaceAll(AppRoute.Wallet)
             },
         )
     }
@@ -221,7 +204,7 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun setLoading(isLoading: Boolean) {
-        _uiState.update { it.copy(scanInProgress = isLoading) }
+        uiState.update { it.copy(isScanInProgress = isLoading) }
     }
 
     private fun handleScanError(error: TangemError) {

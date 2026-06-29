@@ -40,5 +40,6 @@ sealed class SendDestinationComponentParams {
         val blockClickEnableFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
         override val isAllowSelfSend: Boolean = false,
+        val isAddContactAvailable: Boolean = false,
     ) : SendDestinationComponentParams()
 }

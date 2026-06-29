@@ -1,80 +1,79 @@
 package com.tangem.features.addressbook.editcontact.model
 
-import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.addressbook.editcontact.EditContactComponent
-import com.tangem.features.addressbook.editcontact.contract.EditContactUM
-import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
+import com.tangem.features.addressbook.common.AddressBookResultHolder
+import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
+import com.tangem.features.addressbook.editcontact.state.EditContactStateController
+import com.tangem.features.addressbook.editcontact.state.transformers.AddValidatedAddressTransformer
+import com.tangem.features.addressbook.editcontact.state.transformers.SelectContactColorTransformer
+import com.tangem.features.addressbook.editcontact.state.transformers.UpdateContactNameTransformer
+import com.tangem.features.addressbook.editcontact.state.transformers.UpdateEditContactInitialStateTransformer
+import com.tangem.features.addressbook.editcontact.ui.state.EditContactUM
+import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 @ModelScoped
 internal class EditContactModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val stateController: EditContactStateController,
+    private val resultHolder: AddressBookResultHolder,
 ) : Model() {
 
-    private val params: EditContactComponent.Params = paramsContainer.require()
+    private val params: DefaultEditContactComponent.Params = paramsContainer.require()
 
-    val state: StateFlow<EditContactUM>
-        field = MutableStateFlow(getInitialState())
+    val state: StateFlow<EditContactUM> get() = stateController.uiState
+
+    init {
+        updateInitialState()
+        prefillPredefinedAddress()
+        subscribeToConfirmedAddresses()
+    }
+
+    /** In WithContactCreation mode the contact opens with the already-known address attached. */
+    private fun prefillPredefinedAddress() {
+        params.predefinedAddress?.let(::addAddress)
+    }
+
+    private fun updateInitialState() {
+        stateController.update(
+            UpdateEditContactInitialStateTransformer(
+                isExistingContact = params.contactId != null,
+                onNameChange = ::onNameChange,
+                onColorSelect = ::onColorSelect,
+                onCloseClick = params.onBackClick,
+                onAddAddressClick = params.onAddAddressClick,
+            ),
+        )
+    }
+
+    private fun subscribeToConfirmedAddresses() {
+        resultHolder.confirmedAddress
+            .filterNotNull()
+            .onEach { address ->
+                addAddress(address)
+                resultHolder.clear()
+            }
+            .launchIn(modelScope)
+    }
 
     private fun onNameChange(name: String) {
-        state.update { it.copy(name = name) }
+        stateController.update(UpdateContactNameTransformer(name = name))
     }
 
     private fun onColorSelect(color: CryptoPortfolioIcon.Color) {
-        state.update { oldState ->
-            oldState.copy(
-                colors = oldState.colors.copy(selected = color),
-                portfolioIcon = oldState.portfolioIcon.copy(color = color),
-            )
-        }
-    }
-
-    private fun requestAddAddress() {
-        params.onAddAddressClick(::addAddress)
+        stateController.update(SelectContactColorTransformer(color = color))
     }
 
     private fun addAddress(address: ValidatedAddress) {
-        state.update { it.copy(addresses = (it.addresses + address).toImmutableList()) }
-    }
-
-    private fun getInitialState(): EditContactUM {
-        val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
-        val selectedColor = colors.first()
-        val titleResId = if (params.contactId == null) {
-            R.string.address_book_new_contact
-        } else {
-            R.string.address_book_contact
-        }
-        return EditContactUM(
-            title = resourceReference(titleResId),
-            name = "",
-            namePlaceholder = resourceReference(R.string.address_book_new_contact),
-            portfolioIcon = AccountIconUM.CryptoPortfolio(
-                value = CryptoPortfolioIcon.Icon.Letter,
-                color = selectedColor,
-            ),
-            colors = EditContactUM.Colors(
-                selected = selectedColor,
-                list = colors,
-                onColorSelect = ::onColorSelect,
-            ),
-            addresses = persistentListOf(),
-            onNameChange = ::onNameChange,
-            onCloseClick = params.onBackClick,
-            onAddAddressClick = ::requestAddAddress,
-        )
+        stateController.update(AddValidatedAddressTransformer(address = address))
     }
 }

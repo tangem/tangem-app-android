@@ -5,7 +5,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -22,11 +21,7 @@ internal class SingleWalletWithTokenSubscriberLegacy @AssistedInject constructor
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : BasicAccountListSubscriber() {
-
-    override val isAddAndManageTokensEnabled: Boolean
-        get() = walletFeatureToggles.isAddAndManageTokensEnabled
 
     override fun create(coroutineScope: CoroutineScope): Flow<Unit> = combine(
         flow = getAccountStatusListFlow(),
