@@ -27,6 +27,7 @@ import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
@@ -37,16 +38,17 @@ import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.features.send.api.SendNotificationsComponent
-import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.swap.v2.api.SwapFeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -76,7 +78,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import com.tangem.features.send.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.utils.transformer.update as transformerUpdate
 
 @Suppress("LongParameterList", "LargeClass")
@@ -89,6 +91,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase,
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val sendNotificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
@@ -467,10 +471,17 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     feeValue = confirmData.fee?.amount?.value,
                 ),
             )
+            val isHighNetworkFee = isHighNetworkFee(feeCryptoCurrencyStatus.currency)
             uiState.transformerUpdate(
-                SendWithSwapConfirmationNotificationsTransformer(),
+                SendWithSwapConfirmationNotificationsTransformer(isHighNetworkFee = isHighNetworkFee),
             )
         }
+    }
+
+    private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
+        if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
+        val feeAmount = confirmData.fee?.amount?.value ?: return false
+        return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }
 
     private fun subscribeOnNotificationUpdates() {

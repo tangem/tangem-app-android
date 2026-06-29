@@ -235,6 +235,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.send_notification_fee_too_high_text, wrappedList(value)),
         )
 
+        data object HighNetworkFee : Warning(
+            title = resourceReference(id = R.string.high_fee_warning_title),
+            subtitle = resourceReference(id = R.string.high_fee_warning_description),
+        )
+
         data class NetworkFeeUnreachable(val onRefresh: () -> Unit) : Warning(
             title = resourceReference(R.string.send_fee_unreachable_error_title),
             subtitle = resourceReference(R.string.send_fee_unreachable_error_text),

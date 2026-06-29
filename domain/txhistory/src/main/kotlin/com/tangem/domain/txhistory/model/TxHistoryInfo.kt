@@ -64,6 +64,17 @@ sealed interface OnChainTx : TxHistoryInfo {
 fun TxInfo.identityKey(): String = "$txHash|$type"
 
 /**
+ * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
+ * blockchain tx to link to — an [ExpressTx] whose on-chain leg has not matched yet. The express `txId`
+ * must never stand in here: it is not an on-chain hash and would build a broken explorer URL.
+ */
+inline val TxHistoryInfo.explorerHash: String?
+    get() = when (this) {
+        is OnChainTx.BSDK -> txInfo.txHash
+        is ExpressTx -> matchHash
+    }
+
+/**
  * A history row backed by an express operation. It is a thin wrapper over the standalone express
  * model ([ExchangeTransaction] / [OnrampTransaction]), adding only the history-view concerns:
  * the matched on-chain leg ([txInfo]) and, for swaps, which side the viewed currency is on
@@ -88,6 +99,12 @@ sealed interface ExpressTx : TxHistoryInfo {
     /** Provider behind this op, resolved from the local providers table by `providerId`; `null` if unknown. */
     val provider: ExpressProvider?
 
+    /**
+     * Provider's page for this deal (tracking / refund / KYC), surfaced as the "Go to provider" CTA on the
+     * failed / verification terminals; `null` when the provider supplies no such link.
+     */
+    val externalTxUrl: String?
+
     /** Whether the deal reached a final state. Delegates to the wrapped model's typed status. */
     val isTerminal: Boolean
 
@@ -103,6 +120,7 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val createdAtMillis: Long get() = tx.createdAtMillis
         override val matchHash: String? get() = if (isOutgoing) tx.payinHash else tx.payoutHash
         override val provider: ExpressProvider? get() = tx.provider
+        override val externalTxUrl: String? get() = tx.externalTxUrl
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
 
@@ -114,6 +132,7 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val createdAtMillis: Long get() = tx.createdAtMillis
         override val matchHash: String? get() = tx.payoutHash
         override val provider: ExpressProvider? get() = tx.provider
+        override val externalTxUrl: String? get() = tx.externalTxUrl
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
 }

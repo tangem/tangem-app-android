@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
@@ -18,6 +19,7 @@ import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
+import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -113,6 +115,16 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemTech,
             applyTimeoutAnnotations = true,
+            sessionAuth = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddressBookApi(retrofitApiBuilder: RetrofitApiBuilder): AddressBookApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemTech,
+            applyTimeoutAnnotations = false,
             sessionAuth = false,
         )
     }
@@ -240,6 +252,22 @@ internal object NetworkModule {
     @Provides
     @Singleton
     fun provideGaslessTxServiceApi(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.GaslessTxService,
+            applyTimeoutAnnotations = false,
+            sessionAuth = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGaslessTxServiceApiV2(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApiV2 {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.GaslessTxService,
             applyTimeoutAnnotations = false,
