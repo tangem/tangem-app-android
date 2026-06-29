@@ -23,6 +23,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -30,6 +31,7 @@ import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
@@ -122,6 +124,8 @@ internal abstract class SendModelTestBase {
     protected val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk(relaxed = true)
+    protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
+    protected val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
     protected val sendBalanceUpdaterFactory: SendBalanceUpdater.Factory = mockk(relaxed = true)
 
@@ -233,6 +237,8 @@ internal abstract class SendModelTestBase {
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             currenciesRepository = currenciesRepository,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
+            isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
+            sendFeatureToggles = sendFeatureToggles,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
         )
     }
