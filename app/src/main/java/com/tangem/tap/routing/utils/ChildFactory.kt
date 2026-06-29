@@ -374,6 +374,7 @@ internal class ChildFactory @Inject constructor(
                     is AppRoute.QrScanning.Source.Send -> SourceType.SEND
                     is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
                     is AppRoute.QrScanning.Source.MainScreen -> SourceType.MAIN_SCREEN
+                    is AppRoute.QrScanning.Source.AddressBook -> SourceType.ADDRESS_BOOK
                 }
                 createComponentChild(
                     context = context,
