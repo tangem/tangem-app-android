@@ -1,8 +1,11 @@
 package com.tangem.features.send.subcomponents.amount.model
 
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
@@ -13,43 +16,28 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
-import com.tangem.features.send.common.CommonSendRoute
-import com.tangem.features.send.loadedStatus
-import com.tangem.features.send.testDispatcherProvider
-import com.tangem.features.send.api.subcomponents.amount.AmountRoute
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceListener
 import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateListener
+import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.common.CommonSendRoute
+import com.tangem.features.send.loadedStatus
+import com.tangem.features.send.testDispatcherProvider
 import com.tangem.test.core.ProvideTestModels
-import com.google.common.truth.Truth.assertThat
-import io.mockk.MockKAnnotations
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
@@ -79,7 +67,14 @@ internal class SendAmountModelTest {
     fun setUp() {
         MockKAnnotations.init(this)
         // PER_CLASS parameterized nested classes reuse one instance — reset verified mocks between rows.
-        clearMocks(callback, sendAmountAlertFactory, analyticsEventHandler, answers = false, recordedCalls = true, childMocks = false)
+        clearMocks(
+            callback,
+            sendAmountAlertFactory,
+            analyticsEventHandler,
+            answers = false,
+            recordedCalls = true,
+            childMocks = false
+        )
         every { getUserWalletUseCase.invokeFlow(testUserWalletId) } returns flowOf(coldWallet().right())
         coEvery { getMinimumTransactionAmountSyncUseCase(any(), any()) } returns BigDecimal.ONE.right()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
@@ -107,12 +102,7 @@ internal class SendAmountModelTest {
                 PredefinedValues.Empty
             }
             // Start off an Amount route so the navigation combine stays idle until the wallet is loaded.
-            val currentRoute = MutableStateFlow<CommonSendRoute>(CommonSendRoute.Confirm)
-            val sut = buildModel(predefinedValues = predefined, currentRoute = currentRoute)
-            advanceUntilIdle()
-
-            // Act — flip to Amount so setSendWithSwapAvailability() re-runs with the loaded wallet
-            currentRoute.value = CommonSendRoute.Amount(isEditMode = false)
+            val sut = buildModel(predefinedValues = predefined, route = CommonSendRoute.Amount(false))
             advanceUntilIdle()
 
             // Assert
@@ -138,7 +128,7 @@ internal class SendAmountModelTest {
         fun `WHEN onConvertToAnotherToken THEN reset-alert in edit mode else convert directly`(model: ConvertModel) =
             runTest {
                 // Arrange
-                val sut = buildModel(currentRoute = MutableStateFlow(CommonSendRoute.Amount(isEditMode = model.isEditMode)))
+                val sut = buildModel(route = CommonSendRoute.Amount(isEditMode = model.isEditMode))
                 advanceUntilIdle()
 
                 // Act
@@ -248,7 +238,10 @@ internal class SendAmountModelTest {
         }
 
         private fun provideTestModels() = listOf(
-            AmountNextModel(isFiat = true, expectedType = CommonSendAmountAnalyticEvents.SelectedCurrencyType.AppCurrency),
+            AmountNextModel(
+                isFiat = true,
+                expectedType = CommonSendAmountAnalyticEvents.SelectedCurrencyType.AppCurrency
+            ),
             AmountNextModel(isFiat = false, expectedType = CommonSendAmountAnalyticEvents.SelectedCurrencyType.Token),
         )
     }
@@ -257,7 +250,7 @@ internal class SendAmountModelTest {
 
     private fun TestScope.buildModel(
         predefinedValues: PredefinedValues = PredefinedValues.Empty,
-        currentRoute: MutableStateFlow<CommonSendRoute> = MutableStateFlow(CommonSendRoute.Amount(isEditMode = false)),
+        route: CommonSendRoute.Amount = CommonSendRoute.Amount(isEditMode = false),
         cryptoCurrencyStatusFlow: MutableStateFlow<CryptoCurrencyStatus> =
             MutableStateFlow(loadedStatus(cryptoCurrency, balance = BigDecimal.TEN)),
         state: AmountState = AmountState.Empty,
@@ -275,7 +268,7 @@ internal class SendAmountModelTest {
             accountFlow = MutableStateFlow<Account?>(null),
             isAccountModeFlow = MutableStateFlow(false),
             callback = callback,
-            currentRoute = currentRoute.filterIsInstance<AmountRoute>(),
+            route = route,
         )
         return SendAmountModel(
             paramsContainer = MutableParamsContainer(params),

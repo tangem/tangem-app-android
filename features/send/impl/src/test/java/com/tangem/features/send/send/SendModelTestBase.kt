@@ -1,16 +1,21 @@
 package com.tangem.features.send.send
 
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -21,55 +26,45 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
+import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
+import com.tangem.domain.settings.NeverShowTapHelpUseCase
+import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
+import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateTrigger
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.common.SendBalanceUpdater
 import com.tangem.features.send.common.SendConfirmAlertFactory
+import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
-import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
-import com.tangem.features.send.api.subcomponents.amount.SendAmountUpdateTrigger
-import com.tangem.features.send.testDispatcherProvider
-import com.tangem.core.navigation.share.ShareManager
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
-import com.tangem.domain.settings.NeverShowTapHelpUseCase
-import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.qrscanning.models.SourceType
-import arrow.core.right
-import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.navigationButtons.NavigationUM
-import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
-import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.model.SendModel
-import io.mockk.MockKAnnotations
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
+import com.tangem.features.send.send.ui.state.SendUM
+import com.tangem.features.send.testDispatcherProvider
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -89,7 +84,8 @@ internal abstract class SendModelTestBase {
     protected val router: Router = mockk(relaxed = true)
     protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
-    protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk(relaxed = true)
+    protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase =
+        mockk(relaxed = true)
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
     protected val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk(relaxed = true)
     protected val parseQrCodeUseCase: ParseQrCodeUseCase = mockk(relaxed = true)
@@ -260,7 +256,6 @@ internal abstract class SendModelTestBase {
             destinationUM = DestinationUM.Empty(),
             feeSelectorUM = FeeSelectorUM.Loading,
             confirmUM = ConfirmUM.Empty,
-            navigationUM = NavigationUM.Empty,
             confirmData = null,
         ),
         cryptoCurrencyStatus: CryptoCurrencyStatus = testCryptoCurrencyStatus,
@@ -278,7 +273,6 @@ internal abstract class SendModelTestBase {
         isAccountModeFlow = kotlinx.coroutines.flow.MutableStateFlow(false),
         appCurrency = AppCurrency.Default,
         callback = mockk(relaxed = true),
-        currentRoute = kotlinx.coroutines.flow.flowOf(),
         isBalanceHidingFlow = kotlinx.coroutines.flow.MutableStateFlow(false),
         predefinedValues = PredefinedValues.Empty,
         onLoadFee = { Either.Right(mockk(relaxed = true)) },
