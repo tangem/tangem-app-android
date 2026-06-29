@@ -16,6 +16,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -127,6 +128,7 @@ internal class WalletModel @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -162,6 +164,7 @@ internal class WalletModel @Inject constructor(
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
         applyPendingAssetsDiscovery()
+        syncAddressBooks()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -874,6 +877,13 @@ internal class WalletModel @Inject constructor(
     private fun applyPendingAssetsDiscovery() {
         if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
             startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
+        }
+    }
+
+    private fun syncAddressBooks() {
+        modelScope.launch {
+            syncAddressBooksUseCase()
+                .onLeft { TangemLogger.e("Failed to sync address books: $it") }
         }
     }
 
