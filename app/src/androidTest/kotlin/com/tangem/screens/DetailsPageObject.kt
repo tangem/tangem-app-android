@@ -28,6 +28,10 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val addWalletButton: KNode = child {
+        hasTestTag(DetailsScreenTestTags.ADD_WALLET_BUTTON)
+    }
+
     val buyTangemButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
         hasText(getResourceString(R.string.details_buy_wallet))
