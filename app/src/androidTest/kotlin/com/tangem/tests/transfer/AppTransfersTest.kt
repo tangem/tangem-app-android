@@ -850,7 +850,7 @@ class AppTransfersTest : BaseTestCase() {
         }
     }
 
-    // [REDACTED_TASK_KEY]: blockchain SDK TonProvidersBuilder drops public providers, so TON has no provider in the mocked build.
+    // blockchain SDK TonProvidersBuilder drops public providers, so TON has no provider in the mocked build.
     @Ignore("[REDACTED_JIRA]")
     @AllureId("10012")
     @DisplayName("App transfers: TON network fee")
@@ -1016,8 +1016,7 @@ class AppTransfersTest : BaseTestCase() {
             step("Choose identical receive token '$token' from '$receiveAccountName'") {
                 chooseIdenticalReceiveToken(tokenName = token, receiveAccountName = receiveAccountName)
             }
-            // Assert the top-bar 'Transfer' title (unambiguous transfer-mode signal) + no provider block; the
-            // withdraw-entry swap keeps recalculating, so use flakySafely rather than assertTransferReady's waitUntil.
+            // Withdraw-entry swap keeps recalculating — use flakySafely rather than assertTransferReady's waitUntil.
             step("Assert Transfer mode is ready") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) {
                     onSwapTokenScreen { transferTitle.assertIsDisplayed() }
