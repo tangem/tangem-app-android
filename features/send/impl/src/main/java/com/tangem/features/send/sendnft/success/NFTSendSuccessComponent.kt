@@ -63,6 +63,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             blockClickEnableFlow = MutableStateFlow(false),
             predefinedValues = PredefinedValues.Empty,
+            isAddContactAvailable = true,
         ),
         onResult = {},
         onClick = {},
