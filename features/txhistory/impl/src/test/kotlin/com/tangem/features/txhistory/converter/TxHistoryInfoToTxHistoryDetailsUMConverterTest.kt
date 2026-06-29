@@ -53,6 +53,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
     // The express payout leg: a real Bitcoin coin so the resolved symbol (BTC) matches the "bitcoin" network id.
     private val bitcoin = mockCurrencyFactory.bitcoin
     private val ownAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1, name = "Family")
+    private val secondAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
     private val copiedAddresses = mutableListOf<String>()
     private val openedUrls = mutableListOf<String>()
     private val converter = TxHistoryInfoToTxHistoryDetailsUMConverter(
@@ -832,6 +833,46 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         assertThat(result.from?.label).isEqualTo(resourceReference(R.string.tx_history_you_paid))
         assertThat(result.to?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
         assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
+    }
+
+    @Test
+    fun `GIVEN leg with unresolved currency but own address WHEN convert THEN owner resolved cross-network`() {
+        // Arrange — from leg has no cryptoCurrency (null network), yet its address is owned on exactly one network.
+        val swap = expressSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromAddress = FROM_ADDRESS,
+            fromCurrency = null,
+        )
+        val lookup = lookupOf(currency.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount))
+
+        // Act
+        val result = ownConverter(lookup).convert(swap) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
+        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.common_from))
+    }
+
+    @Test
+    fun `GIVEN leg with unresolved currency and address on two distinct accounts WHEN convert THEN stays external`() {
+        // Arrange — null network forces a cross-network lookup; the same address maps to two different accounts.
+        val swap = expressSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromAddress = FROM_ADDRESS,
+            fromCurrency = null,
+        )
+        val lookup = lookupOf(
+            currency.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(FROM_ADDRESS to secondAccount),
+        )
+
+        // Act
+        val result = ownConverter(lookup).convert(swap) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert — ambiguous, so it falls back to the external address rather than guessing an owner.
+        val owner = result.from?.owner
+        assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Address::class.java)
+        assertThat((owner as TxHistoryDetailsUM.AssetOwnerUM.Address).rawAddress).isEqualTo(FROM_ADDRESS)
     }
 
     // endregion
