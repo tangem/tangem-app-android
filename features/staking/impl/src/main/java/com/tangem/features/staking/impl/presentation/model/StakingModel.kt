@@ -7,15 +7,12 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
-import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
@@ -66,7 +63,6 @@ import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.approval.api.GiveApprovalComponent
-import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -125,7 +121,6 @@ internal class StakingModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
-    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val vibratorHapticManager: VibratorHapticManager,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
@@ -156,7 +151,6 @@ internal class StakingModel @Inject constructor(
     private val coroutineScope: AppCoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
-    private val giveApprovalFeatureToggles: GiveApprovalFeatureToggles,
     appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
@@ -311,7 +305,6 @@ internal class StakingModel @Inject constructor(
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
     private val actionsJobHolder: JobHolder = JobHolder()
-    private val approvalJobHolder: JobHolder = JobHolder()
     private val feeJobHolder: JobHolder = JobHolder()
     private val sendTransactionJobHolder = JobHolder()
     private val stepChangesJobHolder = JobHolder()
@@ -325,7 +318,6 @@ internal class StakingModel @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
         paramsInterceptorHolder.removeParamsInterceptor(StakingParamsInterceptor.ID)
-        approvalJobHolder.cancel()
         feeJobHolder.cancel()
         sendTransactionJobHolder.cancel()
         stepChangesJobHolder.cancel()
@@ -820,112 +812,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun showApprovalBottomSheet() {
-        if (giveApprovalFeatureToggles.isGaslessApprovalEnabled) {
-            approvalSlotNavigation.activate(Unit)
-        } else {
-            stateController.update(
-                ShowApprovalBottomSheetTransformer(
-                    userWallet = userWallet,
-                    appCurrencyProvider = Provider { currentAppCurrency.value },
-                    cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                ) {
-                    stateController.update(DismissBottomSheetStateTransformer)
-                },
-            )
-        }
-    }
-
-    override fun onApproveTypeChange(approveType: ApproveType) {
-        stateController.update(SetApprovalBottomSheetTypeChangeTransformer(approveType))
-    }
-
-    @Suppress("LongMethod")
-    override fun onApprovalClick() {
-        modelScope.launch {
-            stateController.update(
-                SetApprovalBottomSheetInProgressTransformer {
-                    stateController.update(DismissBottomSheetStateTransformer)
-                },
-            )
-
-            val tokenCryptoCurrency =
-                cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: error("No token currency")
-            val amountValue = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-
-            val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
-                ?: error("No confirmation state")
-            val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
-            val approval = stakingApproval as? StakingApproval.Needed ?: error("No staking approve spender address")
-
-            val approvalBottomSheetConfig = value.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
-            val isLimitedApproval = approvalBottomSheetConfig?.data?.approveType == ApproveType.LIMITED
-
-            val approvalTransaction = createApprovalTransactionUseCase(
-                amount = amountValue.takeIf { isLimitedApproval },
-                contractAddress = tokenCryptoCurrency.contractAddress,
-                spenderAddress = approval.spenderAddress,
-                fee = fee,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                userWalletId = userWalletId,
-            ).fold(
-                ifLeft = { error ->
-                    TangemLogger.e(error.toString())
-                    analyticsEventHandler.send(
-                        StakingAnalyticsEvent.TransactionError(
-                            errorCode = "CreateApprovalTxError",
-                        ),
-                    )
-                    stateController.update(
-                        SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { currentAppCurrency.value },
-                            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                            fee = TransactionFee.Single(fee),
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        ),
-                    )
-                    stakingEventFactory.createGenericErrorAlert(error.message ?: error.toString())
-                    stateController.update(
-                        SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
-                    )
-                    return@launch
-                },
-                ifRight = { it },
-            )
-
-            sendTransactionUseCase(
-                txData = approvalTransaction,
-                userWallet = userWallet,
-                network = tokenCryptoCurrency.network,
-            ).fold(
-                ifLeft = { error ->
-                    TangemLogger.e(error.toString())
-                    analyticsEventHandler.send(
-                        StakingAnalyticsEvent.TransactionError(
-                            errorCode = error.getAnalyticsDescription(),
-                        ),
-                    )
-                    stateController.update(
-                        SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { currentAppCurrency.value },
-                            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                            fee = TransactionFee.Single(fee),
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        ),
-                    )
-                    stakingEventFactory.createSendTransactionErrorAlert(error)
-                    stateController.update(
-                        SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
-                    )
-                },
-                ifRight = {
-                    stakingAnalyticSender.sendTransactionApprovalAnalytics(tokenCryptoCurrency)
-                    stateController.update(SetApprovalInProgressTransformer)
-                    stateController.update(DismissBottomSheetStateTransformer)
-                    awaitForAllowance()
-                },
-            )
-        }.saveIn(approvalJobHolder)
+        approvalSlotNavigation.activate(Unit)
     }
 
     private fun updateNotifications(feeError: GetFeeError? = null, stakingError: StakingError? = null) {

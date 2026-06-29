@@ -184,7 +184,6 @@ abstract class BaseTestCase : TestCase(
             toggleStates = mapOf(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
-                "GASLESS_APPROVAL_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
                 "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
                 "ASSETS_DISCOVERY_ENABLED" to true,

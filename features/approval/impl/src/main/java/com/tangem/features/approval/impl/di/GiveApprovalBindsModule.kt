@@ -4,11 +4,9 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.GiveApprovalEntryComponent
-import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.approval.impl.DefaultGiveApprovalComponent
 import com.tangem.features.approval.impl.DefaultGiveApprovalEntryComponent
-import com.tangem.features.approval.impl.DefaultGiveApprovalFeatureToggles
 import com.tangem.features.approval.impl.DefaultSelectApprovalTypeComponent
 import com.tangem.features.approval.impl.model.GiveApprovalModel
 import com.tangem.features.approval.impl.model.SelectApprovalTypeModel
@@ -23,10 +21,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Module
 internal interface GiveApprovalFeatureModule {
-
-    @Singleton
-    @Binds
-    fun bindGiveApprovalFeatureToggle(toggles: DefaultGiveApprovalFeatureToggles): GiveApprovalFeatureToggles
 
     @Binds
     @Singleton
