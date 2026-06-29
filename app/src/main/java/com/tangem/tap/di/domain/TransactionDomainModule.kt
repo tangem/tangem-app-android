@@ -321,6 +321,7 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetAvailableFeeTokensUseCase(
         gaslessTransactionRepository: GaslessTransactionRepository,
+        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
         featureTogglesManager: FeatureTogglesManager,
@@ -328,6 +329,7 @@ internal object TransactionDomainModule {
         return GetAvailableFeeTokensUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
+            tronGaslessTransactionRepository = tronGaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
