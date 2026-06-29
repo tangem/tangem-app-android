@@ -1,6 +1,9 @@
 package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
+import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.extensions.TextReference
@@ -28,6 +31,9 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Severity
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.ResolvedOwner
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
@@ -51,12 +57,20 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onCopyAddress: (String) -> Unit,
     private val onGoToProvider: (String) -> Unit,
-    private val ownAddresses: Set<String> = emptySet(),
+    private val lookup: TxHistoryLookupContext = TxHistoryLookupContext(
+        ownAccountByNetwork = emptyMap(),
+        isAccountsModeEnabled = false,
+        walletInfoById = emptyMap(),
+    ),
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val exchangeStatusConverter = ExpressExchangeStatusToUiStatusConverter()
     private val onrampStatusConverter = ExpressOnrampStatusToUiStatusConverter()
+
+    /** Own deposit addresses on the viewed currency's network — drives the on-chain own-vs-external transfer title. */
+    private val ownAddresses: Set<String> =
+        lookup.ownAccountByNetwork[currency.network.id.rawId]?.keys.orEmpty()
 
     override fun convert(value: TxHistoryInfo): TxHistoryDetailsUM = when (value) {
         is OnChainTx.BSDK -> convertOnChain(value.txInfo)
@@ -93,12 +107,13 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     )
 
     /**
-     * Counterparty card ("Recipient" / "From"). Currently only the external-address avatar is produced — built from
-     * the `User` interaction address (the same source the history list uses for its external-address subtitle).
+     * Counterparty card ("Recipient" / "From"). Only the external-address avatar is produced — built from the `User`
+     * interaction address (the same source the history list uses for its external-address subtitle); a counterparty that
+     * is not a plain external `User` address yields no card (`null`).
      *
-     * The own-account / own-wallet avatars require the address->owner lookup the list assembles in
-     * `TxHistoryLookupContext`; wiring that into the detail model is a follow-up, so for now a counterparty that is not
-     * a plain external `User` address yields no card (`null`).
+     * The [lookup] needed to resolve an own-account / own-wallet avatar here is already available (it drives the
+     * swap/onramp leg owners), but applying it to the single-asset counterparty card is intentionally out of scope for
+     * now — a follow-up.
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
         val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
@@ -144,6 +159,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
      */
     private fun convertExpressSwap(swap: ExpressTx.Swap): TxHistoryDetailsUM.TwoAssets {
         val status = exchangeStatusConverter.convert(swap.tx.status)
+        val fromOwner = resolveLegOwner(swap.tx.fromAddress, swap.tx.fromAsset.cryptoCurrency)
+        val toOwner = resolveLegOwner(swap.tx.payoutAddress, swap.tx.toAsset.cryptoCurrency)
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 iconRes = R.drawable.ic_exchange_vertical_24,
@@ -152,12 +169,14 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
                 subtitle = headerSubtitle(swap.timestampMillis),
             ),
             from = swap.tx.fromAsset.toAssetUM(
-                label = resourceReference(R.string.swapping_from_title_v2),
+                label = ownerLabel(fromOwner, fallback = R.string.swapping_from_title_v2, owned = R.string.common_from),
+                owner = fromOwner,
                 sign = status.outgoingSign(),
                 isFaded = status is Status.Failed,
             ),
             to = swap.tx.toAsset.toAssetUM(
-                label = resourceReference(R.string.swapping_to_title),
+                label = ownerLabel(toOwner, fallback = R.string.swapping_to_title, owned = R.string.common_to),
+                owner = toOwner,
                 sign = status.incomingSign(),
                 isFaded = status is Status.Failed,
             ),
@@ -169,6 +188,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
 
     private fun convertExpressOnramp(onramp: ExpressTx.Onramp): TxHistoryDetailsUM.TwoAssets {
         val status = onrampStatusConverter.convert(onramp.tx.status)
+        val toOwner = resolveLegOwner(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 iconRes = R.drawable.ic_tangem_card_24,
@@ -180,11 +200,13 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
                 subtitle = headerSubtitle(onramp.timestampMillis),
             ),
             from = onramp.tx.fromFiat.toFiatAssetUM(
-                label = resourceReference(R.string.swapping_from_title_v2),
+                // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
+                label = resourceReference(R.string.tx_history_you_paid),
                 isFaded = status is Status.Failed,
             ),
             to = onramp.tx.toAsset.toAssetUM(
-                label = resourceReference(R.string.swapping_to_title),
+                label = ownerLabel(toOwner, fallback = R.string.swapping_to_title, owned = R.string.common_to),
+                owner = toOwner,
                 sign = status.incomingSign(),
                 isFaded = status is Status.Failed,
             ),
@@ -193,6 +215,37 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
             providerButton = providerButton(onramp.externalTxUrl, onramp.tx.status.providerButtonLabel()),
         )
     }
+
+    /**
+     * Resolves a swap/onramp leg's [address] (on the leg currency's network) to the owner shown under the amount:
+     * the user's own account / wallet, or the external [TxHistoryDetailsUM.AssetOwnerUM.Address] (e.g. a send-and-swap
+     * payout). `null` when there is no address to resolve (e.g. the very-old-version missing `fromAddress`, onramp fiat).
+     */
+    private fun resolveLegOwner(address: String?, legCurrency: CryptoCurrency?): TxHistoryDetailsUM.AssetOwnerUM? {
+        if (address == null) return null
+        return when (val resolved = lookup.resolveOwner(address, legCurrency?.network?.id?.rawId)) {
+            is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
+                name = resolved.account.accountName.toUM().value,
+                iconResId = resolved.account.icon.value.getResId(),
+                backgroundColor = resolved.account.icon.color.getUiColor(),
+            )
+            is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
+                name = stringReference(resolved.walletInfo.name),
+                deviceIconUM = resolved.walletInfo.deviceIconUM,
+            )
+            is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(
+                name = stringReference(resolved.address.toBriefAddressFormat()),
+                rawAddress = resolved.address,
+            )
+        }
+    }
+
+    /** Leg caption: the direction-only [fallback] ("You send" / "You receive") without an owner, "From" / "To" with one. */
+    private fun ownerLabel(
+        owner: TxHistoryDetailsUM.AssetOwnerUM?,
+        @StringRes fallback: Int,
+        @StringRes owned: Int,
+    ): TextReference = resourceReference(if (owner != null) owned else fallback)
 
     /** Opens the deal's provider page on tap; `null` when the deal has no provider link. */
     private fun ExpressTx.providerClick(): (() -> Unit)? = externalTxUrl?.let { url -> { onGoToProvider(url) } }
@@ -212,6 +265,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
      */
     private fun ExpressTransactionAsset.toAssetUM(
         label: TextReference,
+        owner: TxHistoryDetailsUM.AssetOwnerUM?,
         sign: String,
         isFaded: Boolean,
     ): TxHistoryDetailsUM.AssetUM {
@@ -223,7 +277,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         ) }.trim()
         return TxHistoryDetailsUM.AssetUM(
             label = label,
-            owner = null,
+            owner = owner,
             amount = stringReference((sign + formatted).trim()),
             currencyIcon = cryptoCurrency?.let(iconStateConverter::convert),
             isFaded = isFaded,
