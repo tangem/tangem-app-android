@@ -9,6 +9,7 @@ import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.route.AddressBookRoute
+import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
 import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
 
@@ -47,7 +48,17 @@ internal class AddressBookChildFactory @Inject constructor(
             appComponentContext = context,
             params = DefaultAddAddressComponent.Params(
                 onBackClick = clickIntents::onAddAddressBack,
+                onSelectNetworksClick = clickIntents::onSelectNetworksClick,
                 onConfirm = clickIntents::onAddressConfirmed,
+            ),
+        )
+        is AddressBookRoute.SelectNetworks -> DefaultSelectNetworksComponent(
+            appComponentContext = context,
+            params = DefaultSelectNetworksComponent.Params(
+                address = route.address,
+                selectedNetworkIds = route.selectedNetworkIds,
+                onBackClick = clickIntents::onSelectNetworksBack,
+                onDone = clickIntents::onNetworksSelected,
             ),
         )
     }
