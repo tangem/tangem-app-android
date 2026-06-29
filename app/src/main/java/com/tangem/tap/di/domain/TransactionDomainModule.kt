@@ -372,6 +372,16 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideIsTronGaslessSupportedUseCase(
+        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
+    ): IsTronGaslessSupportedUseCase {
+        return IsTronGaslessSupportedUseCase(
+            repository = tronGaslessTransactionRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetFeeForTokenUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
