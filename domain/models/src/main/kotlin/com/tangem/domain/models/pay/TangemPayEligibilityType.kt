@@ -10,6 +10,8 @@ enum class TangemPayEligibilityType {
     DETAILS_VIRTUAL_ACCOUNT,
     DEEPLINK_VIRTUAL_ACCOUNT,
 
+    VISA_VIRTUAL_ACCOUNT,
+
     UNKNOWN,
     ;
 
@@ -21,6 +23,7 @@ enum class TangemPayEligibilityType {
             "BANNER_VIRTUAL_ACCOUNT" -> BANNER_VIRTUAL_ACCOUNT
             "DETAILS_VIRTUAL_ACCOUNT" -> DETAILS_VIRTUAL_ACCOUNT
             "DEEPLINK_VIRTUAL_ACCOUNT" -> DEEPLINK_VIRTUAL_ACCOUNT
+            "VISA_VIRTUAL_ACCOUNT" -> VISA_VIRTUAL_ACCOUNT
             else -> UNKNOWN
         }
     }
