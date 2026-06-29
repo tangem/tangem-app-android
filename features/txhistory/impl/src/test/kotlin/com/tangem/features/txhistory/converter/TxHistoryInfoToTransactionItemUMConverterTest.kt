@@ -108,6 +108,8 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
             provider = null,
             payinHash = null,
             payoutHash = null,
+            fromAddress = null,
+            payoutAddress = null,
             fromAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "ethereum", contractAddress = "0"),
                 amount = BigDecimal("1.5"),

@@ -1,11 +1,14 @@
 package com.tangem.features.txhistory.converter
 
 import android.text.format.DateFormat
+import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -14,17 +17,23 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -43,6 +52,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
 
     // The express payout leg: a real Bitcoin coin so the resolved symbol (BTC) matches the "bitcoin" network id.
     private val bitcoin = mockCurrencyFactory.bitcoin
+    private val ownAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1, name = "Family")
     private val copiedAddresses = mutableListOf<String>()
     private val openedUrls = mutableListOf<String>()
     private val converter = TxHistoryInfoToTxHistoryDetailsUMConverter(
@@ -145,7 +155,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             currency = currency,
             onCopyAddress = copiedAddresses::add,
             onGoToProvider = openedUrls::add,
-            ownAddresses = setOf(USER_ADDRESS),
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
         val tx = onChain(
             type = TransactionType.Transfer,
@@ -167,7 +177,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             currency = currency,
             onCopyAddress = copiedAddresses::add,
             onGoToProvider = openedUrls::add,
-            ownAddresses = setOf(USER_ADDRESS),
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
         val tx = onChain(
             type = TransactionType.Transfer,
@@ -736,6 +746,96 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
 
     // endregion
 
+    // region Express leg owner
+
+    @Test
+    fun `GIVEN swap between own accounts WHEN convert THEN legs labelled From-To with account owners`() {
+        // Arrange — from leg on ethereum, payout leg on bitcoin, both addresses owned, accounts mode on.
+        val swap = expressSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+            fromCurrency = currency,
+        )
+        val lookup = lookupOf(
+            currency.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+        )
+
+        // Act
+        val result = ownConverter(lookup).convert(swap) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.common_from))
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
+        assertThat(result.from?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
+        assertThat(result.to?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
+    }
+
+    @Test
+    fun `GIVEN swap to own address with accounts mode off WHEN convert THEN owner is wallet`() {
+        // Arrange
+        val swap = expressSwap(status = ExpressExchangeStatus.Finished, payoutAddress = PAYOUT_ADDRESS)
+        val lookup = lookupOf(
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+            isAccountsModeEnabled = false,
+        )
+
+        // Act
+        val result = ownConverter(lookup).convert(swap) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        val owner = result.to?.owner
+        assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Wallet::class.java)
+        assertThat((owner as TxHistoryDetailsUM.AssetOwnerUM.Wallet).name).isEqualTo(stringReference("My Wallet"))
+    }
+
+    @Test
+    fun `GIVEN send-and-swap to external address WHEN convert THEN to leg owner is external address`() {
+        // Arrange — payout address is none of the user's, so it stays an external address.
+        val swap = expressSwap(status = ExpressExchangeStatus.Finished, payoutAddress = EXTERNAL_ADDRESS)
+
+        // Act
+        val result = ownConverter(lookupOf()).convert(swap) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        val owner = result.to?.owner
+        assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Address::class.java)
+        assertThat((owner as TxHistoryDetailsUM.AssetOwnerUM.Address).rawAddress).isEqualTo(EXTERNAL_ADDRESS)
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
+    }
+
+    @Test
+    fun `GIVEN swap without addresses WHEN convert THEN no owner and default labels`() {
+        // Act — no fromAddress / payoutAddress plumbed (e.g. very old app version).
+        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished))
+            as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.owner).isNull()
+        assertThat(result.to?.owner).isNull()
+        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.swapping_from_title_v2))
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.swapping_to_title))
+    }
+
+    @Test
+    fun `GIVEN onramp to own account WHEN convert THEN from is You paid and to has account owner`() {
+        // Arrange
+        val onramp = expressOnramp(status = ExpressOnrampStatus.Finished, payoutAddress = PAYOUT_ADDRESS)
+        val lookup = lookupOf(bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount))
+
+        // Act
+        val result = ownConverter(lookup).convert(onramp) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.from?.owner).isNull()
+        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.tx_history_you_paid))
+        assertThat(result.to?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
+    }
+
+    // endregion
+
     private fun onChain(
         type: TransactionType,
         isOutgoing: Boolean = false,
@@ -774,6 +874,9 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         txInfo: OnChainTx? = null,
         provider: ExpressProvider? = null,
         externalTxUrl: String? = null,
+        fromAddress: String? = null,
+        payoutAddress: String? = null,
+        fromCurrency: CryptoCurrency? = null,
     ): ExpressTx.Swap = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "swap-1",
@@ -782,7 +885,14 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             provider = provider,
             payinHash = null,
             payoutHash = null,
-            fromAsset = expressAsset(networkId = "ethereum", amount = BigDecimal("1.5"), decimals = 18),
+            fromAddress = fromAddress,
+            payoutAddress = payoutAddress,
+            fromAsset = expressAsset(
+                networkId = "ethereum",
+                amount = BigDecimal("1.5"),
+                decimals = 18,
+                cryptoCurrency = fromCurrency,
+            ),
             toAsset = expressAsset(
                 networkId = "bitcoin",
                 amount = BigDecimal("0.001"),
@@ -799,6 +909,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         status: ExpressOnrampStatus,
         txInfo: OnChainTx? = null,
         externalTxUrl: String? = null,
+        payoutAddress: String? = null,
     ): ExpressTx.Onramp = ExpressTx.Onramp(
         tx = OnrampTransaction(
             txId = "onramp-1",
@@ -806,6 +917,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             createdAtMillis = TIMESTAMP,
             provider = null,
             payoutHash = null,
+            payoutAddress = payoutAddress,
             externalTxUrl = externalTxUrl,
             fromFiat = Amount(
                 currencySymbol = "SEK",
@@ -836,6 +948,29 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
             cryptoCurrency = cryptoCurrency,
         )
 
+    /** Builds a details lookup with the given per-network own-address maps. */
+    private fun lookupOf(
+        vararg networks: Pair<Network.RawID, Map<String, Account.CryptoPortfolio>>,
+        isAccountsModeEnabled: Boolean = true,
+        walletInfoById: Map<UserWalletId, WalletInfo> = mapOf(
+            MockAccounts.userWalletId to WalletInfo(
+                name = "My Wallet",
+                deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
+            ),
+        ),
+    ): TxHistoryLookupContext = TxHistoryLookupContext(
+        ownAccountByNetwork = networks.toMap(),
+        isAccountsModeEnabled = isAccountsModeEnabled,
+        walletInfoById = walletInfoById,
+    )
+
+    private fun ownConverter(lookup: TxHistoryLookupContext) = TxHistoryInfoToTxHistoryDetailsUMConverter(
+        currency = currency,
+        onCopyAddress = copiedAddresses::add,
+        onGoToProvider = openedUrls::add,
+        lookup = lookup,
+    )
+
     private fun TextReference.resolveString(): String = (this as TextReference.Str).value
 
     private companion object {
@@ -844,5 +979,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest {
         const val USER_ADDRESS = "0x1234567890abcdef1234"
         const val VALIDATOR_ADDRESS = "0xvalidator"
         const val EXTERNAL_URL = "https://provider.example/tx/swap-1"
+        const val FROM_ADDRESS = "0xfromOwnAddress1234"
+        const val PAYOUT_ADDRESS = "bc1qPayoutOwnAddress"
+        const val EXTERNAL_ADDRESS = "bc1qExternalNonUserAddress"
     }
 }
