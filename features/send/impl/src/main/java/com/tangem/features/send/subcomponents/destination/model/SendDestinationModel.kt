@@ -3,7 +3,11 @@ package com.tangem.features.send.subcomponents.destination.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import arrow.core.left
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -15,6 +19,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -34,6 +40,9 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.ContactSelectionListener
+import com.tangem.features.addressbook.MatchedContact
+import com.tangem.features.addressbook.SelectedContact
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -41,18 +50,12 @@ import com.tangem.features.send.api.subcomponents.destination.SendDestinationCom
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.common.CommonSendRoute
-import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
-import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationAddressTransformer
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationMemoTransformer
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationPredefinedStateTransformer
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationRecentListTransformer
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationValidationResultTransformer
-import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationValidationStartedTransformer
-import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
+import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
+import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
+import com.tangem.features.send.subcomponents.destination.model.transformers.*
+import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -88,6 +91,8 @@ internal class SendDestinationModel @Inject constructor(
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    getContactsUseCase: GetContactsUseCase,
+    contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -97,6 +102,36 @@ internal class SendDestinationModel @Inject constructor(
     private val analyticsCategoryName = params.analyticsCategoryName
     private val cryptoCurrency = params.cryptoCurrency
     private val userWalletId = params.userWalletId
+
+    private val contacts: StateFlow<List<Contact>> = getContactsUseCase(query = "", userWalletId = userWalletId)
+        .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
+
+    val addressSelectorNavigation = SlotNavigation<MatchedContact>()
+    val addressQuery: StateFlow<String> = uiState
+        .map { (it as? DestinationUM.Content)?.addressTextField?.value.orEmpty() }
+        .distinctUntilChanged()
+        .stateIn(modelScope, SharingStarted.Eagerly, "")
+
+    /**
+     * Whether to offer saving the recipient to the address book under the recipient block. Only for the success-screen
+     * block ([DestinationBlockParams.isAddContactAvailable]) and only when the recipient was NOT a contact and its
+     * `(address, network)` pair is not already saved in the current wallet's book.
+     */
+    val showAddContact: StateFlow<Boolean> =
+        if ((params as? DestinationBlockParams)?.isAddContactAvailable == true) {
+            combine(uiState, contacts) { state, contactList ->
+                val address = (state as? DestinationUM.Content)?.addressTextField ?: return@combine false
+                if (address.contactName != null) return@combine false // sent via a contact
+                val networkId = cryptoCurrency.network.rawId
+                contactList.none { contact ->
+                    contact.addressEntries.any {
+                        it.networkId.value == networkId && it.address.equals(address.actualAddress, ignoreCase = true)
+                    }
+                }
+            }.stateIn(modelScope, SharingStarted.Eagerly, false)
+        } else {
+            MutableStateFlow(false)
+        }
 
     // In "Send with swap" flow, these are addresses in the destination network (not the actual sender addresses).
     // Self-send validation must be skipped for them, so use only with params.isAllowSelfSend.
@@ -110,6 +145,61 @@ internal class SendDestinationModel @Inject constructor(
         configDestinationNavigation()
         subscribeOnQRScannerResult()
         initialState()
+        resetContactOnEdit()
+        contactSelectionListener.resultFlow
+            .onEach(::applySelectedContact)
+            .launchIn(modelScope)
+    }
+
+    private fun resetContactOnEdit() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        params.currentRoute
+            .filter { it.isEditMode }
+            .onEach {
+                val content = uiState.value as? DestinationUM.Content ?: return@onEach
+                if (content.addressTextField.contactName != null) {
+                    _uiState.update(SendDestinationContactTransformer(contact = null))
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    fun onContactClick(contact: MatchedContact) {
+        val singleEntry = contact.entries.singleOrNull()
+        if (singleEntry != null) {
+            applySelectedContact(contact.toSelectedContact(singleEntry))
+        } else {
+            addressSelectorNavigation.activate(contact)
+        }
+    }
+
+    fun onSeeAllContactsClick() {
+        router.push(
+            AppRoute.AddressBook(AddressBookOpenMode.ContactSelection(networkId = cryptoCurrency.network.rawId)),
+        )
+    }
+
+    /** Opens the contact editor pre-filled with the sent address/network to save the recipient (success screen). */
+    fun onAddContactClick() {
+        val address = (uiState.value as? DestinationUM.Content)?.addressTextField?.actualAddress ?: return
+        router.push(
+            AppRoute.AddressBook(
+                AddressBookOpenMode.WithContactCreation(address = address, networkId = cryptoCurrency.network.rawId),
+            ),
+        )
+    }
+
+    fun applySelectedContact(contact: SelectedContact) {
+        addressSelectorNavigation.dismiss()
+        _uiState.update(SendDestinationAddressTransformer(address = contact.address, isPasted = true))
+        _uiState.update(SendDestinationContactTransformer(contactName = contact.name, contactIcon = contact.icon))
+
+        val isMemoSupported = (uiState.value as? DestinationUM.Content)?.memoTextField != null
+        val memo = contact.memo?.takeIf { isMemoSupported && it.isNotBlank() }
+        if (memo != null) {
+            _uiState.update(SendDestinationMemoTransformer(memo = memo, isPasted = true))
+        }
+        validate(address = contact.address, memo = memo, type = EnterAddressSource.Contact)
     }
 
     private fun initialState() {
@@ -371,6 +461,7 @@ internal class SendDestinationModel @Inject constructor(
                     isMemoRequired = isMemoRequired,
                 ),
             )
+            recognizeContact(type = type, isValidAddress = addressValidationResult.isRight(), address = resolvedAddress)
             if (type != null) {
                 autoNextFromRecipient(
                     type = type,
@@ -379,6 +470,21 @@ internal class SendDestinationModel @Inject constructor(
                 )
             }
         }.saveIn(validationJobHolder)
+    }
+
+    private fun recognizeContact(type: EnterAddressSource?, isValidAddress: Boolean, address: String) {
+        if (type == null || type == EnterAddressSource.Contact) return
+        val contact = if (isValidAddress) findContactByAddress(address) else null
+        _uiState.update(SendDestinationContactTransformer(contact))
+    }
+
+    private fun findContactByAddress(address: String): Contact? {
+        val networkId = cryptoCurrency.network.rawId
+        return contacts.value.firstOrNull { contact ->
+            contact.addressEntries.any { entry ->
+                entry.networkId.value == networkId && entry.address.equals(address, ignoreCase = true)
+            }
+        }
     }
 
     private fun autoNextFromRecipient(type: EnterAddressSource, isValidAddress: Boolean, isValidMemo: Boolean) {

@@ -1,20 +1,16 @@
 package com.tangem.features.addressbook.editcontact.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -22,19 +18,27 @@ import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.fields.AutoSizeTextField
+import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_sign_plus_20
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.addressbook.editcontact.contract.EditContactUM
-import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
+import com.tangem.features.addressbook.editcontact.ui.state.EditContactUM
+import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -45,6 +49,7 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
         modifier = modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors3.bg.primary)
+            .imePadding()
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -63,91 +68,96 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
 
         Column(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             ContactSummary(state = state)
             ContactColor(colors = state.colors)
-            ContactAddresses(addresses = state.addresses)
-            AddAddressRow(onClick = state.onAddAddressClick)
-        }
-    }
-}
-
-@Composable
-private fun ContactAddresses(addresses: ImmutableList<ValidatedAddress>) {
-    if (addresses.isEmpty()) return
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.secondary),
-    ) {
-        addresses.fastForEach { entry ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+            BlockCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
             ) {
-                Text(
-                    text = entry.network.name,
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.tertiary,
-                )
-                Text(
-                    text = entry.address,
-                    style = TangemTheme.typography3.body.medium,
-                    color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
-                )
+                ContactAddresses(addresses = state.addresses)
+                AddAddressRow(onClick = state.onAddAddressClick)
             }
         }
     }
 }
 
 @Composable
-private fun AddAddressRow(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.secondary)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 15.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.status.infoSubtle),
-        ) {
-            Icon(
-                modifier = Modifier.size(18.dp),
-                imageVector = ImageVector.vectorResource(R.drawable.ic_plus_24),
-                tint = TangemTheme.colors3.text.status.info,
-                contentDescription = null,
-            )
-        }
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = stringResourceSafe(R.string.address_book_add_address),
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
-            Text(
-                text = stringResourceSafe(R.string.address_book_add_address_description),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.tertiary,
-            )
-        }
+private fun ContactAddresses(addresses: ImmutableList<ValidatedAddress>) {
+    addresses.fastForEach { entry ->
+        AddressRow(entry = entry)
     }
+}
+
+@Composable
+private fun AddressRow(entry: ValidatedAddress) {
+    TangemRow(
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        startSlot = {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Ident(text = entry.address),
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape),
+            )
+        },
+        titleSlot = {
+            TangemRowText(
+                text = stringReference(entry.address),
+                role = TangemRowTextRole.Title,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
+        },
+        subtitleSlot = {
+            TangemRowText(
+                text = pluralReference(
+                    id = R.plurals.common_networks_count,
+                    count = entry.networkIds.size,
+                    formatArgs = wrappedList(entry.networkIds.size),
+                ),
+                role = TangemRowTextRole.Subtitle,
+            )
+        },
+    )
+}
+
+@Composable
+private fun AddAddressRow(onClick: () -> Unit) {
+    TangemRow(
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = onClick,
+        startSlot = {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_sign_plus_20,
+                    tintReference = { TangemTheme.colors3.icon.brand },
+                ),
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = TangemTheme.colors3.bg.status.infoSubtle,
+                        shape = RoundedCornerShape(10.dp),
+                    )
+                    .padding(8.dp),
+            )
+        },
+        titleSlot = {
+            TangemRowText(
+                text = TextReference.Res(R.string.address_book_add_address),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        subtitleSlot = {
+            TangemRowText(
+                text = TextReference.Res(R.string.address_book_add_address_description),
+                role = TangemRowTextRole.Subtitle,
+            )
+        },
+    )
 }
 
 @Composable
@@ -155,26 +165,29 @@ private fun ContactSummary(state: EditContactUM) {
     val avatarName = state.name.ifBlank { state.namePlaceholder.resolveReference() }
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
             .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.secondary),
+            .background(TangemTheme.colors3.bg.secondary)
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        SpacerH(20.dp)
 
         AccountIcon(
             name = stringReference(avatarName),
             icon = state.portfolioIcon,
-            size = AccountIconSize.Large,
+            size = AccountIconSize.RedesignLarge,
         )
-        Spacer(modifier = Modifier.height(24.dp))
+
+        SpacerH(28.dp)
 
         Text(
             text = stringResourceSafe(R.string.address_book_contact_name),
             style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
-        Spacer(modifier = Modifier.height(2.dp))
+
+        SpacerH(4.dp)
 
         AutoSizeTextField(
             value = state.name,
@@ -186,7 +199,7 @@ private fun ContactSummary(state: EditContactUM) {
             color = TangemTheme.colors3.text.primary,
             placeholderColor = TangemTheme.colors3.text.tertiary,
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        SpacerH(8.dp)
     }
 }
 
@@ -196,16 +209,16 @@ private fun ContactSummary(state: EditContactUM) {
 private fun ContactColor(colors: EditContactUM.Colors) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
             .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.secondary),
+            .background(TangemTheme.colors3.bg.secondary)
+            .padding(16.dp),
     ) {
         FlowRow(
             maxItemsInEachRow = 6,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             colors.list.fastForEach { color ->
                 val isSelected = color == colors.selected
@@ -219,12 +232,12 @@ private fun ContactColor(colors: EditContactUM.Colors) {
                     if (isSelected) {
                         Box(
                             modifier = Modifier
-                                .size(47.dp)
+                                .size(48.dp)
                                 .border(2.dp, color.getUiColor(), shape = CircleShape),
                         )
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(38.dp)
                                 .background(color = color.getUiColor(), shape = CircleShape),
                         )
                     } else {
@@ -260,7 +273,12 @@ private fun Preview_EditContactContent() {
                     list = colors,
                     onColorSelect = {},
                 ),
-                addresses = persistentListOf(),
+                addresses = persistentListOf(
+                    ValidatedAddress(
+                        address = "0x1234567890abcdef1234567890abcdef12345678",
+                        networkIds = persistentListOf("ethereum", "bsc", "polygon"),
+                    ),
+                ),
                 onNameChange = {},
                 onCloseClick = {},
                 onAddAddressClick = {},
