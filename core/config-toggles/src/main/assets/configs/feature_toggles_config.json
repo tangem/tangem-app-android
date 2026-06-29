@@ -178,5 +178,9 @@
     {
         "name": "TWI_1469_FOR_YOU_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1638_VA_MVP0_ENABLED",
+        "version": "6.1"
     }
 ]
