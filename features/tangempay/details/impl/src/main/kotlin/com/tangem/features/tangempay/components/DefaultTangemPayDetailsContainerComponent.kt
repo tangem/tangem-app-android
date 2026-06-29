@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
@@ -29,6 +30,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -65,6 +67,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             expressTransactionsComponentFactory = expressTransactionsComponentFactory,
+            promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
         )
         is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),

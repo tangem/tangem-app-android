@@ -144,7 +144,6 @@ internal class UpdateAddressBookListContentTransformerTest {
         wallets = wallets,
         selectedWalletId = selectedWalletId,
         query = query,
-        isSearchActive = false,
         onContactClick = {},
         onPickContact = {},
         onQueryChange = {},

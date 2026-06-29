@@ -74,7 +74,7 @@ class ReasonBlockTest : BaseTestCase() {
     fun reasonBlockTokenWithdrawalUnavailableWithoutFeeCoverage() {
         val userWalletsScenarioName = "user_tokens_api"
         val userWalletsState = "SolanaUSDC"
-        val solBalanceScenarioName = "GetAccountInfoSol"
+        val solBalanceScenarioName = "solana_get_account_info_recipient"
         val solBalanceState = "ZeroBalance"
         val token = "USDC"
         val feeCurrencyName = "Solana"

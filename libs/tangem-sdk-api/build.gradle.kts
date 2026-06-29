@@ -7,24 +7,39 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.legacy"
+    namespace = "com.tangem.libs.tangem_sdk_api"
 }
 
 dependencies {
-    implementation(projects.domain.models)
-    implementation(projects.domain.visa.models)
 
-    api(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.res)
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Tangem libraries */
-    implementation(tangemDeps.card.core)
+    // region AndroidX
+    api(deps.androidx.activity)
+    api(deps.androidx.annotation)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Tangem
+    api(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    // endregion
 
-    /** DI */
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
+    // region Core modules
+    api(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.visa.models)
+    // endregion
 }
