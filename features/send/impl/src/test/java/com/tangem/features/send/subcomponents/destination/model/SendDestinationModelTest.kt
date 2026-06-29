@@ -2,6 +2,8 @@ package com.tangem.features.send.subcomponents.destination.model
 
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -9,6 +11,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.addressbook.model.*
+import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
@@ -21,25 +25,16 @@ import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
-import com.google.common.truth.Truth.assertThat
-import com.tangem.common.ui.account.AccountIconUM
-import com.tangem.domain.addressbook.model.AddressEntry
-import com.tangem.domain.addressbook.model.AddressEntryId
-import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.ContactId
-import com.tangem.domain.addressbook.model.ContactName
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
-import com.tangem.features.addressbook.MatchedContact
-import com.tangem.features.addressbook.SelectedContact
-import com.tangem.features.send.api.entity.PredefinedValues
-import kotlinx.collections.immutable.toImmutableList
 import com.tangem.domain.transaction.usecase.IsSelfSendAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.ContactSelectionListener
+import com.tangem.features.addressbook.MatchedContact
+import com.tangem.features.addressbook.SelectedContact
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
@@ -49,13 +44,14 @@ import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFa
 import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
 import com.tangem.features.send.testDispatcherProvider
-import io.mockk.MockKAnnotations
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import com.tangem.test.core.ProvideTestModels
+import io.mockk.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,7 +60,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -127,7 +122,15 @@ internal class SendDestinationModelTest {
         fun `GIVEN valid non-problematic address WHEN address entered THEN send valid analytics without backup alert`() =
             runTest {
                 // Arrange
-                coEvery { validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any()) } returns
+                coEvery {
+                    validateWalletAddressUseCase(
+                        any(),
+                        any(),
+                        any(),
+                        any<List<CryptoCurrencyAddress>>(),
+                        any()
+                    )
+                } returns
                     AddressValidation.Success.Valid.right()
                 val sut = buildModel()
                 advanceUntilIdle()
@@ -144,14 +147,22 @@ internal class SendDestinationModelTest {
                 }
                 verify(exactly = 0) { sendDestinationAlertFactory.showRecipientBackupErrorAlert(any()) }
                 // InputField is not an auto-next source → no auto-advance even for a valid address
-                verify(exactly = 0) { callback.onNextClick() }
+                verify(exactly = 0) { callback.onNextClick(CommonSendRoute.Destination(false)) }
             }
 
         @Test
         fun `GIVEN valid backup-problematic address WHEN address entered THEN show recipient backup error alert`() =
             runTest {
                 // Arrange
-                coEvery { validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any()) } returns
+                coEvery {
+                    validateWalletAddressUseCase(
+                        any(),
+                        any(),
+                        any(),
+                        any<List<CryptoCurrencyAddress>>(),
+                        any()
+                    )
+                } returns
                     AddressValidation.Success.Valid.right()
                 coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns testUserWalletId
                 val sut = buildModel()
@@ -172,7 +183,15 @@ internal class SendDestinationModelTest {
         @Test
         fun `GIVEN invalid address WHEN address entered THEN send invalid analytics`() = runTest {
             // Arrange
-            coEvery { validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any()) } returns
+            coEvery {
+                validateWalletAddressUseCase(
+                    any(),
+                    any(),
+                    any(),
+                    any<List<CryptoCurrencyAddress>>(),
+                    any()
+                )
+            } returns
                 AddressValidation.Error.InvalidAddress.left()
             val sut = buildModel()
             advanceUntilIdle()
@@ -193,7 +212,15 @@ internal class SendDestinationModelTest {
         fun `GIVEN memo change with null type WHEN handled THEN no address-entered analytics and no auto-next`() =
             runTest {
                 // Arrange
-                coEvery { validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any()) } returns
+                coEvery {
+                    validateWalletAddressUseCase(
+                        any(),
+                        any(),
+                        any(),
+                        any<List<CryptoCurrencyAddress>>(),
+                        any()
+                    )
+                } returns
                     AddressValidation.Success.Valid.right()
                 val sut = buildModel()
                 advanceUntilIdle()
@@ -206,7 +233,7 @@ internal class SendDestinationModelTest {
                 verify(exactly = 0) {
                     analyticsEventHandler.send(any<SendDestinationAnalyticEvents.AddressEntered>())
                 }
-                verify(exactly = 0) { callback.onNextClick() }
+                verify(exactly = 0) { callback.onNextClick(CommonSendRoute.Destination(false)) }
             }
     }
 
@@ -231,7 +258,7 @@ internal class SendDestinationModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                verify(exactly = model.expectedNextClicks) { callback.onNextClick() }
+                verify(exactly = model.expectedNextClicks) { callback.onNextClick(CommonSendRoute.Destination(false)) }
             }
 
         private fun provideTestModels() = listOf(
@@ -256,7 +283,15 @@ internal class SendDestinationModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 0) { validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any()) }
+            coVerify(exactly = 0) {
+                validateWalletAddressUseCase(
+                    any(),
+                    any(),
+                    any(),
+                    any<List<CryptoCurrencyAddress>>(),
+                    any()
+                )
+            }
         }
     }
 
@@ -286,25 +321,38 @@ internal class SendDestinationModelTest {
             }
 
         @Test
-        fun `GIVEN a contact is set WHEN route switches to edit mode THEN the contact is reset`() = runTest {
-            // Arrange
-            coEvery {
-                validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
-            } returns AddressValidation.Success.Valid.right()
-            val currentRoute = MutableStateFlow<DestinationRoute>(CommonSendRoute.Destination(isEditMode = false))
-            val sut = buildModel(currentRoute = currentRoute)
-            advanceUntilIdle()
-            sut.applySelectedContact(selectedContact(name = "Dave", address = "0xDave"))
-            advanceUntilIdle()
-            assertThat(content(sut).addressTextField.contactName).isEqualTo("Dave")
+        fun `GIVEN a contact is pre-set in state AND route is edit mode WHEN model initializes THEN the contact is reset`() =
+            runTest {
+                // Arrange — build initial state with a contact name already set and isInitialized = true
+                // so the InitialStateTransformer does NOT overwrite it, leaving resetContactOnEdit() to clear it.
+                val stateWithContact = DestinationUM.Content(
+                    isPrimaryButtonEnabled = false,
+                    isInitialized = true,
+                    addressTextField = DestinationTextFieldUM.RecipientAddress(
+                        value = "0xDave",
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Text),
+                        placeholder = com.tangem.core.ui.extensions.stringReference(""),
+                        label = com.tangem.core.ui.extensions.stringReference(""),
+                        isValuePasted = false,
+                        contactName = "Dave",
+                    ),
+                    memoTextField = null,
+                    recent = persistentListOf(),
+                    wallets = persistentListOf(),
+                    networkName = "Ethereum",
+                    isRecentHidden = false,
+                )
 
-            // Act — entering edit mode must clear the bound contact
-            currentRoute.value = CommonSendRoute.Destination(isEditMode = true)
-            advanceUntilIdle()
+                // Act — init with isEditMode = true triggers resetContactOnEdit()
+                val sut = buildModel(
+                    currentRoute = CommonSendRoute.Destination(isEditMode = true),
+                    initialState = stateWithContact,
+                )
+                advanceUntilIdle()
 
-            // Assert
-            assertThat(content(sut).addressTextField.contactName).isNull()
-        }
+                // Assert
+                assertThat(content(sut).addressTextField.contactName).isNull()
+            }
     }
 
     @Nested
@@ -335,9 +383,19 @@ internal class SendDestinationModelTest {
 
         private fun provideTestModels() = listOf(
             // saved "0xAddr", entered "0xaddr" → case-insensitive match
-            ContactRecognitionModel(savedName = "Alice", savedAddress = "0xAddr", enteredAddress = "0xaddr", expectedContactName = "Alice"),
+            ContactRecognitionModel(
+                savedName = "Alice",
+                savedAddress = "0xAddr",
+                enteredAddress = "0xaddr",
+                expectedContactName = "Alice"
+            ),
             // entered address not among saved contacts → no recognition
-            ContactRecognitionModel(savedName = "Alice", savedAddress = "0xOther", enteredAddress = "0xAddr", expectedContactName = null),
+            ContactRecognitionModel(
+                savedName = "Alice",
+                savedAddress = "0xOther",
+                enteredAddress = "0xAddr",
+                expectedContactName = null
+            ),
         )
     }
 
@@ -411,29 +469,44 @@ internal class SendDestinationModelTest {
 
         private fun provideTestModels() = listOf(
             // not available -> never shown, even for a fresh valid address
-            AddContactModel(isAddContactAvailable = false, savedAddresses = emptyList(), enteredAddress = "0xFresh", expectedShown = false),
+            AddContactModel(
+                isAddContactAvailable = false,
+                savedAddresses = emptyList(),
+                enteredAddress = "0xFresh",
+                expectedShown = false
+            ),
             // available + address not in the book -> shown
-            AddContactModel(isAddContactAvailable = true, savedAddresses = emptyList(), enteredAddress = "0xFresh", expectedShown = true),
+            AddContactModel(
+                isAddContactAvailable = true,
+                savedAddresses = emptyList(),
+                enteredAddress = "0xFresh",
+                expectedShown = true
+            ),
             // available but address already saved -> hidden
-            AddContactModel(isAddContactAvailable = true, savedAddresses = listOf("0xSaved"), enteredAddress = "0xSaved", expectedShown = false),
+            AddContactModel(
+                isAddContactAvailable = true,
+                savedAddresses = listOf("0xSaved"),
+                enteredAddress = "0xSaved",
+                expectedShown = false
+            ),
         )
     }
 
     // region fixtures
 
     private fun TestScope.buildModel(
-        currentRoute: MutableStateFlow<DestinationRoute> =
-            MutableStateFlow(CommonSendRoute.Destination(isEditMode = false)),
+        currentRoute: DestinationRoute = CommonSendRoute.Destination(isEditMode = false),
+        initialState: DestinationUM = DestinationUM.Empty(),
     ): SendDestinationModel {
         val params = SendDestinationComponentParams.DestinationParams(
-            state = DestinationUM.Empty(),
+            state = initialState,
             analyticsCategoryName = "test_send",
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send,
             cryptoCurrency = cryptoCurrency,
             userWalletId = testUserWalletId,
             title = stringReference("Send to"),
             isBalanceHidingFlow = MutableStateFlow(false),
-            currentRoute = currentRoute,
+            route = currentRoute,
             callback = callback,
             isAllowSelfSend = false,
         )
