@@ -23,7 +23,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCa
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -54,7 +53,6 @@ class YieldSupplyActiveModelBoostBlockTest {
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase = mockk(relaxed = true)
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
     private val analyticsHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
@@ -83,7 +81,6 @@ class YieldSupplyActiveModelBoostBlockTest {
 
     @BeforeEach
     fun setUp() {
-        every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns true
         every { getUserWalletUseCase.invoke(userWalletId) } returns userWallet.right()
         every { singleAccountStatusListSupplier.invoke(userWalletId) } returns emptyFlow()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
@@ -108,7 +105,6 @@ class YieldSupplyActiveModelBoostBlockTest {
         appRouter = appRouter,
         yieldSupplyGetDustMinAmountUseCase = yieldSupplyGetDustMinAmountUseCase,
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         boostStoryPreloader = boostStoryPreloader,
     )
 
@@ -145,16 +141,6 @@ class YieldSupplyActiveModelBoostBlockTest {
         assertThat(model.uiState.value.boostText).isNull()
         coVerify(exactly = 1) { getYieldBoostStatusUseCase(userWalletId, false) }
         coVerify(exactly = 1) { getYieldBoostStatusUseCase(userWalletId, true) }
-    }
-
-    @Test
-    fun `GIVEN promo toggle disabled WHEN model created THEN does not query boost status`() = runTest {
-        every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns false
-
-        val model = createModel()
-
-        assertThat(model.uiState.value.boostText).isNull()
-        coVerify(exactly = 0) { getYieldBoostStatusUseCase(any(), any()) }
     }
 
     private companion object {

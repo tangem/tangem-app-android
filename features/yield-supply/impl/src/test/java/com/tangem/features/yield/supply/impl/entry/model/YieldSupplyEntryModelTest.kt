@@ -23,7 +23,6 @@ import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -48,7 +47,6 @@ internal class YieldSupplyEntryModelTest {
     private val enterStatusUseCase: YieldSupplyEnterStatusUseCase = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val isPromoEnabledUseCase: IsYieldBoostPromoEnabledForTokenUseCase = mockk()
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk()
 
     private val accountStatusList: AccountStatusList = mockk()
 
@@ -56,11 +54,10 @@ internal class YieldSupplyEntryModelTest {
     fun setUp() {
         clearMocks(
             router, enterStatusUseCase, accountStatusListSupplier,
-            isPromoEnabledUseCase, yieldSupplyFeatureToggles,
+            isPromoEnabledUseCase,
         )
         mockkObject(CryptoCurrencyStatusOperations)
         coEvery { accountStatusListSupplier.getSyncOrNull(USER_WALLET_ID) } returns accountStatusList
-        every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns true
     }
 
     @AfterEach
@@ -177,21 +174,6 @@ internal class YieldSupplyEntryModelTest {
         }
 
     @Test
-    fun `GIVEN promo toggle disabled WHEN created THEN Promo route with promo disabled`() = runTest {
-        // Arrange
-        every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns false
-        stubStatusLookup(status(isActive = false).some())
-        coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns null.right()
-
-        // Act
-        createModel(currency = token())
-
-        // Assert
-        val route = captureReplacedRoute()
-        assertThat((route as YieldSupplyEntryRoute.Promo).isPromoEnabled).isFalse()
-    }
-
-    @Test
     fun `GIVEN promo use case returns false WHEN created THEN Promo route with promo disabled`() = runTest {
         // Arrange
         stubStatusLookup(status(isActive = false).some())
@@ -228,7 +210,6 @@ internal class YieldSupplyEntryModelTest {
         yieldSupplyEnterStatusUseCase = enterStatusUseCase,
         singleAccountStatusListSupplier = accountStatusListSupplier,
         isYieldBoostPromoEnabledForTokenUseCase = isPromoEnabledUseCase,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
     )
 
     private fun pendingEnter(): YieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txIds = listOf("0xTx"))

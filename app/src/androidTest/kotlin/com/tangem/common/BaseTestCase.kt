@@ -207,8 +207,6 @@ abstract class BaseTestCase : TestCase(
                 "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED" to true,
                 "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
                 "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
-                // 5.39.2
-                "AND_15154_YIELD_PROMO_ENABLED" to true,
                 // 5.40
                 "TWI_1377_MANAGE_FUNDS" to true,
                 // 6.0
