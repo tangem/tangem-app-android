@@ -20,6 +20,7 @@ import com.tangem.features.feed.components.news.details.DefaultNewsDetailsCompon
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
@@ -33,6 +34,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val forYouComponentFactory: ForYouComponent.Factory,
 ) {
 
     @Serializable
@@ -66,6 +68,10 @@ internal class FeedEntryChildFactory @Inject constructor(
         @Serializable
         @Immutable
         data class Search(val source: String) : Child
+
+        @Serializable
+        @Immutable
+        data object ForYou : Child
     }
 
     @Suppress("LongMethod")
@@ -146,6 +152,10 @@ internal class FeedEntryChildFactory @Inject constructor(
                     sourceParams = child.source,
                     onSeeAllMarketsClick = { feedEntryClickIntents.onMarketOpenClick(SortByTypeUM.Rating) },
                 ),
+            )
+            Child.ForYou -> forYouComponentFactory.create(
+                context = appComponentContext,
+                params = Unit,
             )
         }
     }
