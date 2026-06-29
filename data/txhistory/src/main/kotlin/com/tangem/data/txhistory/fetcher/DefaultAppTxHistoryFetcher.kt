@@ -9,6 +9,7 @@ import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.fetcher.WalletTxHistoryFetcher
@@ -22,6 +23,7 @@ import javax.inject.Inject
 internal class DefaultAppTxHistoryFetcher @Inject constructor(
     private val utils: TxHistoryFetcherUtils,
     private val expressRepository: ExpressRepository,
+    private val onrampRepository: OnrampRepository,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val selectedWalletUseCase: GetSelectedWalletUseCase,
     private val walletTxHistoryFetcherFactory: DefaultWalletTxHistoryFetcher.Factory,
@@ -29,9 +31,6 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val fetchers = ConcurrentHashMap<UserWalletId, WalletTxHistoryFetcher>()
-
-    /** Wallets whose express providers were already loaded — to load them at most once per wallet. */
-    private val providersLoadedWallets = mutableSetOf<UserWalletId>()
 
     init {
         defaultLaunchIn(buildFlow())
@@ -53,11 +52,14 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
             .stateIn(this)
 
         walletsFlow.value.keys.createForNewWallets()
+        walletsFlow.value.values.firstOrNull()?.let { wallet ->
+            loadExpressProviders(wallet)
+            loadOnrampCountries(wallet)
+        }
 
         selectedWalletUseCase.selectedFlow()
             .filter { wallet -> wallet.isMultiCurrency }
             // todo txhistory some init trigger?
-            .onEach { wallet -> loadExpressProviders(wallet) }
             .launchIn(this)
 
         walletsFlow
@@ -79,9 +81,13 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
     }
 
     private fun ProducerScope<*>.loadExpressProviders(wallet: UserWallet) {
-        // Load once per wallet: `add` returns false if this walletId was already loaded.
-        if (!providersLoadedWallets.add(wallet.walletId)) return
         flow { emit(expressRepository.getProviders(userWallet = wallet, filterProviderTypes = emptyList())) }
+            .retryThreeTimes()
+            .launchIn(this)
+    }
+
+    private fun ProducerScope<*>.loadOnrampCountries(wallet: UserWallet) {
+        flow { emit(onrampRepository.fetchCountries(userWallet = wallet)) }
             .retryThreeTimes()
             .launchIn(this)
     }
