@@ -185,7 +185,6 @@ abstract class BaseTestCase : TestCase(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
-                "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
                 "ASSETS_DISCOVERY_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
                 // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
