@@ -39,7 +39,6 @@ import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.annotations.RemoveWithToggle
@@ -70,7 +69,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val designFeatureToggles: DesignFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
 ) {
@@ -208,7 +206,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         clickIntents: WalletClickIntents,
     ) {
         if (!shouldShowLocal) return
-        if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
         if (designFeatureToggles.isRedesignEnabled) return
         val shouldShow = shouldShowYieldBoostMainBannerUseCase(userWallet.walletId).getOrNull() == true
         if (!shouldShow) return
