@@ -3,8 +3,10 @@ package com.tangem.features.addressbook.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.addressbook.addaddress.model.AddAddressModel
+import com.tangem.features.addressbook.block.model.ContactsBlockModel
 import com.tangem.features.addressbook.list.model.AddressBookListModel
 import com.tangem.features.addressbook.editcontact.model.EditContactModel
+import com.tangem.features.addressbook.selectnetworks.model.SelectNetworksModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -22,6 +24,11 @@ internal interface AddressBookModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(ContactsBlockModel::class)
+    fun bindContactsBlockModel(model: ContactsBlockModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(EditContactModel::class)
     fun bindEditContactModel(model: EditContactModel): Model
 
@@ -29,4 +36,9 @@ internal interface AddressBookModelModule {
     @IntoMap
     @ClassKey(AddAddressModel::class)
     fun bindAddAddressModel(model: AddAddressModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SelectNetworksModel::class)
+    fun bindSelectNetworksModel(model: SelectNetworksModel): Model
 }
