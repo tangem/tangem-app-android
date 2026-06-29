@@ -20,6 +20,7 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
+import com.tangem.datasource.api.gasless.TronGaslessApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -268,6 +269,22 @@ internal object NetworkModule {
     @Provides
     @Singleton
     fun provideGaslessTxServiceApiV2(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApiV2 {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.GaslessTxService,
+            applyTimeoutAnnotations = false,
+            sessionAuth = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTronGaslessApi(retrofitApiBuilder: RetrofitApiBuilder): TronGaslessApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.GaslessTxService,
             applyTimeoutAnnotations = false,
