@@ -6,9 +6,7 @@ import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
@@ -32,50 +30,36 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.common.SendBalanceUpdater
 import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.loadedStatus
-import com.tangem.features.send.testDispatcherProvider
 import com.tangem.features.send.sendnft.analytics.NFTSendAnalyticHelper
 import com.tangem.features.send.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.sendnft.ui.state.NFTSendUM
+import com.tangem.features.send.testDispatcherProvider
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.MockKAnnotations
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.unmockkObject
-import io.mockk.unmockkStatic
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class NFTSendConfirmModelTest {
@@ -166,10 +150,30 @@ internal class NFTSendConfirmModelTest {
 
             // Assert
             if (model.expectedSendInitiated) {
-                coVerify(exactly = 1) { createNFTTransferTransactionUseCase(any(), any(), any(), any(), any(), any(), any()) }
+                coVerify(exactly = 1) {
+                    createNFTTransferTransactionUseCase(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
+                }
                 coVerify(exactly = 0) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
             } else {
-                coVerify(exactly = 0) { createNFTTransferTransactionUseCase(any(), any(), any(), any(), any(), any(), any()) }
+                coVerify(exactly = 0) {
+                    createNFTTransferTransactionUseCase(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
+                }
                 coVerify(exactly = 1) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
             }
         }
@@ -303,7 +307,6 @@ internal class NFTSendConfirmModelTest {
         account = null,
         isAccountsMode = false,
         callback = mockk(relaxed = true),
-        currentRoute = flowOf(),
         isBalanceHidingFlow = kotlinx.coroutines.flow.MutableStateFlow(false),
         onLoadFee = { mockk<com.tangem.blockchain.common.transaction.TransactionFee>(relaxed = true).right() },
         onSendTransaction = {},
@@ -328,7 +331,6 @@ internal class NFTSendConfirmModelTest {
             destinationUM = destination,
             feeSelectorUM = feeSelector,
             confirmUM = mockk<ConfirmUM.Content>(relaxed = true),
-            navigationUM = NavigationUM.Empty,
         )
     }
 
