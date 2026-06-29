@@ -102,30 +102,40 @@ internal class NFTSendModelTest {
             // Arrange
             val sut = buildModel()
             advanceUntilIdle()
-            sut.currentRouteFlow.value = model.route
 
             // Act
-            sut.onNextClick()
+            sut.onNextClick(model.route)
             advanceUntilIdle()
 
             // Assert
-            if (model.expectPushConfirm) {
-                verify(exactly = 1) { router.push(CommonSendRoute.Confirm, any()) }
-                verify(exactly = 0) { router.pop(any()) }
-            } else {
-                verify(exactly = 1) { router.pop(any()) }
-                verify(exactly = 0) { router.push(any(), any()) }
-                // Confirm.isEditMode == true, so the `Confirm -> replaceAll(ConfirmSuccess)` branch is unreachable
-                verify(exactly = 0) { router.replaceAll(CommonSendRoute.ConfirmSuccess, onComplete = any()) }
+            when (model.expectedAction) {
+                NextClickAction.PushConfirm -> {
+                    verify(exactly = 1) { router.push(CommonSendRoute.Confirm, any()) }
+                    verify(exactly = 0) { router.pop(any()) }
+                    verify(exactly = 0) { router.replaceAll(*anyVararg(), onComplete = any()) }
+                }
+                NextClickAction.ReplaceAllConfirmSuccess -> {
+                    // Confirm route → replaceAll(ConfirmSuccess)
+                    verify(exactly = 1) { router.replaceAll(CommonSendRoute.ConfirmSuccess, onComplete = any()) }
+                    verify(exactly = 0) { router.pop(any()) }
+                    verify(exactly = 0) { router.push(any(), any()) }
+                }
+                NextClickAction.Pop -> {
+                    verify(exactly = 1) { router.pop(any()) }
+                    verify(exactly = 0) { router.push(any(), any()) }
+                    verify(exactly = 0) { router.replaceAll(*anyVararg(), onComplete = any()) }
+                }
             }
         }
 
         private fun provideTestModels() = listOf(
-            NextClickModel(route = CommonSendRoute.Destination(isEditMode = false), expectPushConfirm = true),
-            NextClickModel(route = CommonSendRoute.Destination(isEditMode = true), expectPushConfirm = false),
-            NextClickModel(route = CommonSendRoute.Confirm, expectPushConfirm = false),
+            NextClickModel(route = CommonSendRoute.Destination(isEditMode = false), expectedAction = NextClickAction.PushConfirm),
+            NextClickModel(route = CommonSendRoute.Destination(isEditMode = true), expectedAction = NextClickAction.Pop),
+            NextClickModel(route = CommonSendRoute.Confirm, expectedAction = NextClickAction.ReplaceAllConfirmSuccess),
         )
     }
+
+    enum class NextClickAction { PushConfirm, ReplaceAllConfirmSuccess, Pop }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -138,10 +148,9 @@ internal class NFTSendModelTest {
                 // Arrange
                 val sut = buildModel()
                 advanceUntilIdle()
-                sut.currentRouteFlow.value = model.route
 
                 // Act
-                sut.onBackClick()
+                sut.onBackClick(model.route)
                 advanceUntilIdle()
 
                 // Assert
@@ -221,7 +230,7 @@ internal class NFTSendModelTest {
         )
     }
 
-    data class NextClickModel(val route: CommonSendRoute, val expectPushConfirm: Boolean)
+    data class NextClickModel(val route: CommonSendRoute, val expectedAction: NextClickAction)
 
     data class BackClickModel(val route: CommonSendRoute, val expectedTriggerCalls: Int)
 
