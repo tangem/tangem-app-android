@@ -111,6 +111,28 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             )
     }
 
+    // Wallet pager keeps the adjacent page composed (beyondViewportPageCount=1), so the token is mounted on two pages — click the displayed copy.
+    fun clickDisplayedToken(tokenName: String) {
+        val matcher = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName))
+        val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = true)
+        for (i in 0 until nodes.fetchSemanticsNodes().size) {
+            if (runCatching { nodes[i].assertIsDisplayed(); nodes[i].performClick() }.isSuccess) return
+        }
+        error("Token '$tokenName' is not displayed on the current wallet page")
+    }
+
+    // Adjacent pager pages stay mounted; swipe the wallet card that's actually on-screen.
+    fun swipeToAdjacentWallet(toPrevious: Boolean) {
+        val nodes = semanticsProvider.onAllNodes(withTestTag(MainScreenTestTags.WALLET_LIST_ITEM))
+        for (i in 0 until nodes.fetchSemanticsNodes().size) {
+            val swiped = runCatching {
+                nodes[i].assertIsDisplayed()
+                nodes[i].performTouchInput { if (toPrevious) swipeRight() else swipeLeft() }
+            }.isSuccess
+            if (swiped) return
+        }
+    }
+
     val restoringProgressText: KNode = child {
         hasTestTag(MainScreenTestTags.SYNC_PROGRESS_TEXT)
         useUnmergedTree = true
