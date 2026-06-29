@@ -1,6 +1,5 @@
 package com.tangem.data.staking.toggles
 
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.google.common.truth.Truth.assertThat
@@ -24,21 +23,10 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `P2PEthPool returns true when STAKING_ETH_ENABLED is enabled`() {
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) } returns true
-
+    fun `P2PEthPool integration is always enabled`() {
         assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isTrue()
 
-        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) }
-    }
-
-    @Test
-    fun `P2PEthPool returns false when STAKING_ETH_ENABLED is disabled`() {
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) } returns false
-
-        assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isFalse()
-
-        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) }
+        verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
     }
 
     @Test

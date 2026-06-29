@@ -191,6 +191,7 @@ dependencies {
     implementation(projects.libs.tangemSdkApi)
 
     implementation(projects.data.account)
+    implementation(projects.data.addressBook)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
@@ -331,6 +332,8 @@ dependencies {
     implementation(projects.features.yieldSupply.impl)
     implementation(projects.features.approval.api)
     implementation(projects.features.approval.impl)
+    implementation(projects.features.forYou.api)
+    implementation(projects.features.forYou.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
