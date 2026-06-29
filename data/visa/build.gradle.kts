@@ -48,6 +48,7 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.common)
     implementation(projects.features.swap.domain)
+    implementation(projects.features.virtualAccounts.details.api)
 
 
     /** Project - Utils */
