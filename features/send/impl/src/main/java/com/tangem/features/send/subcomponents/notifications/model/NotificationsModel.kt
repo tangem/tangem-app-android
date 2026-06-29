@@ -35,8 +35,8 @@ import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.send.api.SendNotificationsComponent
-import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener

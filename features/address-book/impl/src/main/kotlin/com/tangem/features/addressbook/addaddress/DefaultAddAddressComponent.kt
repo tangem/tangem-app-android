@@ -7,16 +7,15 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.addressbook.addaddress.model.AddAddressModel
 import com.tangem.features.addressbook.addaddress.ui.AddAddressContent
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 
-internal class DefaultAddAddressComponent @AssistedInject constructor(
-    @Assisted context: AppComponentContext,
-    @Assisted params: AddAddressComponent.Params,
-) : AddAddressComponent, AppComponentContext by context {
+internal class DefaultAddAddressComponent(
+    appComponentContext: AppComponentContext,
+    params: Params,
+) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: AddAddressModel = getOrCreateModel(params)
 
@@ -30,11 +29,9 @@ internal class DefaultAddAddressComponent @AssistedInject constructor(
         BackHandler(onBack = state.onBackClick)
     }
 
-    @AssistedFactory
-    interface Factory : AddAddressComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: AddAddressComponent.Params,
-        ): DefaultAddAddressComponent
-    }
+    data class Params(
+        val onBackClick: () -> Unit,
+        val onSelectNetworksClick: (address: String, selectedNetworkIds: List<String>) -> Unit,
+        val onConfirm: (ValidatedAddress) -> Unit,
+    )
 }
