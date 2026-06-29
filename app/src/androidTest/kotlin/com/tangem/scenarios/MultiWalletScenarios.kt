@@ -24,7 +24,7 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-// The 'Add Wallet' button sits in a nested LazyColumn and rejects touch injection, so invoke OnClick directly.
+// Custom/nested clickables (Add-Wallet row, wallet tab) reject touch injection — drive OnClick directly.
 private fun BaseTestCase.clickViaSemantics(matcher: SemanticsMatcher, useUnmergedTree: Boolean = false) {
     composeTestRule.onNode(matcher, useUnmergedTree).performSemanticsAction(SemanticsActions.OnClick)
 }
@@ -42,12 +42,7 @@ private fun BaseTestCase.swipeDisplayedWallet(toPrevious: Boolean) {
     waitForIdle()
 }
 
-/**
- * Adds a second hardware (card) wallet from a wallet-restricted state (a hot wallet already exists):
- * 'Add Wallet' scans a card immediately — there is no wallet-type chooser — so the scan mock must be
- * set before the click. After saving, the app returns to Main; the added card lands as an off-screen
- * pager page, so this swipes to it and syncs its missing addresses before returning.
- */
+/** 'Add Wallet' scans a card immediately (no type chooser), so [mockContent] must be set before the click. */
 fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     step("Click 'More' button on TopBar") {
         onMainScreenTopBar { moreButton.clickWithAssertion() }
@@ -56,8 +51,7 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
         clickViaSemantics(hasTestTag(DetailsScreenTestTags.ADD_WALLET_BUTTON))
     }
-    // Details pops back to Main only after the freshly scanned wallet finishes its initial load over many (some failing) RPCs.
-    // Gate on the top-bar More button, not the screen container — the bottom Markets sheet can leave the container un-"displayed".
+    // Gate on the top-bar More button, not the container — the bottom Markets sheet can leave the container un-"displayed".
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
             runCatching { onMainScreenTopBar { moreButton.assertIsDisplayed() } }.isSuccess
@@ -71,8 +65,7 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
             if (!shown) swipeDisplayedWallet(toPrevious = false)
             shown
         }
-        // Let the pager fling settle before clicking — the wait above releases as soon as the prompt has bounds, and a
-        // click landing mid-animation is eaten by the button's clickableSingle debounce, so the prompt never clears.
+        // Let the pager fling settle — a click mid-animation is eaten by the button's clickableSingle debounce.
         waitForIdle()
         onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
         // The prompt clears once the card's addresses are derived (re-scan + reload over many, some failing, RPCs).
@@ -84,11 +77,10 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     }
 }
 
-/** Taps the on-screen token row by [tokenName]; the wallet pager keeps both pages mounted, so click the displayed copy. */
+/** Both pager pages mount the same token; clicks the [tokenName] copy currently on-screen. */
 fun BaseTestCase.clickDisplayedTokenOnMain(tokenName: String) {
     val matcher = hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(hasText(tokenName))
     step("Click on token '$tokenName' on the visible wallet") {
-        // Both pager pages mount the same token; click the one currently on-screen once the swipe has settled.
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             val nodes = composeTestRule.onAllNodes(matcher, useUnmergedTree = true)
             (0 until nodes.fetchSemanticsNodes().size).any { i ->
@@ -101,14 +93,13 @@ fun BaseTestCase.clickDisplayedTokenOnMain(tokenName: String) {
     }
 }
 
-/** Swipes the wallet card to the previous wallet (the one added before the current page). */
 fun BaseTestCase.switchToPreviousWallet() {
     step("Swipe wallet card to the previous wallet") {
         swipeDisplayedWallet(toPrevious = true)
     }
 }
 
-/** Opens the receive selector and picks identical [token] located on a different wallet [walletName] via its wallet tab. */
+/** Picks a [token] the recipient [walletName] already holds, via the wallet tab. */
 fun BaseTestCase.selectReceiveTokenOnWallet(token: String, walletName: String) {
     step("Click on 'Choose token' button") {
         onSwapTokenScreen { chooseTokenButton.performClick() }
@@ -128,7 +119,7 @@ fun BaseTestCase.selectReceiveTokenOnWallet(token: String, walletName: String) {
     }
 }
 
-/** Searches the receive selector for [token], adds it to recipient wallet [recipientWalletName] via the market result. */
+/** Adds [token] to [recipientWalletName] which lacks it, via market search. */
 fun BaseTestCase.addMissingReceiveTokenToWallet(token: String, recipientWalletName: String) {
     step("Click on 'Choose token' button") {
         onSwapTokenScreen { chooseTokenButton.performClick() }

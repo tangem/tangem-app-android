@@ -490,7 +490,7 @@ fun BaseTestCase.confirmSwapByHolding(accessCode: String? = null) {
     }
 }
 
-/** Holds the Transfer confirm button; the caller asserts the outcome (transfer mode has no in-progress marker to wait on). */
+// Caller asserts the outcome — transfer mode has no in-progress marker to wait on.
 fun BaseTestCase.holdToConfirmTransfer() {
     composeTestRule.onNode(
         hasTestTag(BaseButtonTestTags.BUTTON) and
