@@ -195,6 +195,7 @@ sealed class AppRoute(val path: String) : Route {
                     is Send -> "/$networkName"
                     WalletConnect -> ""
                     MainScreen -> ""
+                    AddressBook -> ""
                 }
 
             data class Send(val networkName: String) : Source()
@@ -202,6 +203,8 @@ sealed class AppRoute(val path: String) : Route {
             data object WalletConnect : Source()
 
             data object MainScreen : Source()
+
+            data object AddressBook : Source()
         }
     }
 
