@@ -76,6 +76,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = false,
         )
         val initialState: ConfirmUM = ConfirmUM.Empty
 
@@ -98,6 +99,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -120,6 +122,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -145,6 +148,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -159,6 +163,31 @@ class SendConfirmationNotificationsTransformerV2Test {
     }
 
     @Test
+    fun `GIVEN high network fee WHEN transform THEN returns state with high network fee notification`() = runTest {
+        // GIVEN
+        val feeSelectorUM = createNormalFeeSelectorUM()
+        val amountUM = createTestAmountUM()
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = amountUM,
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = true,
+        )
+        val initialState = createTestConfirmUM()
+
+        // WHEN
+        val result = transformer.transform(initialState)
+
+        // THEN
+        assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
+        val content = result as ConfirmUM.Content
+        assertThat(content.notifications).containsExactly(NotificationUM.Warning.HighNetworkFee)
+    }
+
+    @Test
     fun `GIVEN fee too low WHEN transform THEN returns state with too low notification`() = runTest {
         // GIVEN
         val feeSelectorUM = createFeeTooLowUM()
@@ -170,6 +199,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -196,6 +226,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isHighNetworkFee = false,
         )
         val initialState = createTestConfirmUM()
 
