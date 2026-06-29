@@ -129,6 +129,21 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     }
 
     @Test
+    fun `GIVEN compensation token differs from sent token WHEN invoke THEN error`() = runTest {
+        // Arrange — backend quotes a compensation token other than the one being sent.
+        val mismatchedFee = fee.copy(
+            tronGaslessQuote = quote.copy(compensationToken = "TOtherContractAddress00000000000000"),
+        )
+
+        // Act
+        val result = useCase(userWallet, usdtCurrency.network, originalTx, mismatchedFee)
+
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN backend reports partial failure WHEN invoke THEN error`() = runTest {
         // Arrange
         coEvery {

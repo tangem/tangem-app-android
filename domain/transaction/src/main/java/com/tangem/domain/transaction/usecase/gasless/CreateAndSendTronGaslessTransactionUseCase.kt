@@ -47,6 +47,16 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 val sentToken = (original.amount.type as? AmountType.Token)?.token
                     ?: error("Tron gasless requires a token transfer")
 
+                // The compensation must be paid in the quoted compensation token. Today only the
+                // single-token case (sent == compensation, e.g. USDT->USDT) is supported, so the
+                // compensation transfer reuses the sent token. Fail loudly if the backend ever quotes a
+                // different compensation token (Tron contract addresses are base58, case-sensitive) so a
+                // future multi-token path cannot silently transfer the wrong asset to the fee recipient.
+                require(sentToken.contractAddress == quote.compensationToken) {
+                    "Tron gasless compensation token (${quote.compensationToken}) differs from the sent " +
+                        "token (${sentToken.contractAddress}); multi-token compensation is not supported yet"
+                }
+
                 // Compensation = transfer of the quoted token amount to the Tangem fee recipient.
                 val compensationTx = transactionRepository.createTransferTransaction(
                     amount = Amount(token = sentToken, value = quote.compensationAmountDecimal),
