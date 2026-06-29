@@ -566,7 +566,7 @@
   <string name="dynamic_addresses_disable_main_button_title">Dynamische Adressen deaktivieren</string>
   <string name="dynamic_addresses_disable_title">Dynamische Adressen deaktivieren</string>
   <string name="dynamic_addresses_disabled_popup_title">Dynamische Adressen deaktiviert</string>
-  <string name="dynamic_addresses_enabled_toast_title">Einige Adressen fehlen</string>
+  <string name="dynamic_addresses_enabled_toast_title">Dynamische Adressen aktiviert</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Verwenden Sie für jede Transaktion eine neue Adresse, um die Rückverfolgbarkeit zu verringern und den Datenschutz in der Kette zu verbessern.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Verbesserter Datenschutz</string>
   <string name="dynamic_addresses_enter_features_receving_description">Einfacher Geldempfang in UTXO-basierten Netzwerken mit automatischer Adressgenerierung - keine manuelle Adressverwaltung erforderlich.</string>
@@ -1550,6 +1550,7 @@
   <string name="staking_enabled">Staking aktiviert</string>
   <string name="staking_error_no_validators_message">Zurzeit sind keine Validierer verfügbar. Bitte versuche es später noch einmal.</string>
   <string name="staking_error_no_validators_title">Staking nicht verfügbar</string>
+  <string name="staking_error_unavailable_region">Staking ist in Ihrer Region nicht verfügbar.</string>
   <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
   <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
