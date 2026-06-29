@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,58 +12,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
-import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_right_24
-import com.tangem.feature.wallet.impl.R
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.res.R as ResR
 
 @Composable
-internal fun AddAndManageBottomSheetContent(
+internal fun AddAndManageBottomSheetContentLegacy(
     onAddTokensClick: () -> Unit,
     shouldShowOrganizeButton: Boolean,
     onOrganizeTokensClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
-        config = TangemBottomSheetConfig(
-            isShown = true,
-            onDismissRequest = onDismiss,
-            content = TangemBottomSheetConfigContent.Empty,
-        ),
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors2.surface.level2,
+    val config = TangemBottomSheetConfig(
+        isShown = true,
+        onDismissRequest = onDismiss,
+        content = AddAndManageBottomSheetConfigContent,
+    )
+
+    TangemModalBottomSheet<AddAndManageBottomSheetConfigContent>(
+        config = config,
+        containerColor = TangemTheme.colors.background.primary,
         title = {
-            TangemTopBar(
-                title = resourceReference(R.string.main_add_and_manage_tokens),
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    TangemButton(
-                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
-                        onClick = onDismiss,
-                        size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
-                    )
-                },
+            TangemModalBottomSheetTitle(
+                title = resourceReference(ResR.string.main_add_and_manage_tokens),
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = onDismiss,
             )
         },
         content = {
             AddAndManageContent(
-                modifier = Modifier.padding(bottom = 16.dp),
                 onAddTokensClick = onAddTokensClick,
                 shouldShowOrganizeButton = shouldShowOrganizeButton,
                 onOrganizeTokensClick = onOrganizeTokensClick,
@@ -78,29 +66,38 @@ private fun AddAndManageContent(
     onAddTokensClick: () -> Unit,
     shouldShowOrganizeButton: Boolean,
     onOrganizeTokensClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                vertical = 8.dp,
-                horizontal = 16.dp,
-            ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp,
+        ),
     ) {
         AddAndManageRow(
             iconRes = R.drawable.ic_plus_24,
-            title = R.string.add_and_manage_sheet_manage_title,
-            subtitle = R.string.add_and_manage_sheet_manage_subtitle,
+            title = ResR.string.add_and_manage_sheet_manage_title,
+            subtitle = ResR.string.add_and_manage_sheet_manage_subtitle,
             onClick = onAddTokensClick,
+            modifier = Modifier.roundedShapeItemDecoration(
+                currentIndex = 0,
+                lastIndex = if (shouldShowOrganizeButton) 1 else 0,
+                addDefaultPadding = false,
+                backgroundColor = TangemTheme.colors.background.action,
+            ),
         )
         if (shouldShowOrganizeButton) {
             AddAndManageRow(
                 iconRes = R.drawable.ic_filter_default_24,
-                title = R.string.add_and_manage_sheet_organize_title,
-                subtitle = R.string.add_and_manage_sheet_organize_subtitle,
+                title = ResR.string.add_and_manage_sheet_organize_title,
+                subtitle = ResR.string.add_and_manage_sheet_organize_subtitle,
                 onClick = onOrganizeTokensClick,
+                modifier = Modifier.roundedShapeItemDecoration(
+                    currentIndex = 1,
+                    lastIndex = 1,
+                    addDefaultPadding = false,
+                    backgroundColor = TangemTheme.colors.background.action,
+                ),
             )
         }
     }
@@ -117,57 +114,50 @@ private fun AddAndManageRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
-            .background(TangemTheme.colors2.surface.level3)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(40.dp)
+                .size(36.dp)
                 .clip(CircleShape)
-                .background(TangemTheme.colors2.graphic.status.accent.copy(alpha = 0.1f)),
+                .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f)),
         ) {
             Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = ImageVector.vectorResource(id = iconRes),
-                tint = TangemTheme.colors2.markers.iconBlue,
+                modifier = Modifier.size(18.dp),
+                painter = rememberVectorPainter(ImageVector.vectorResource(id = iconRes)),
+                tint = TangemTheme.colors.icon.accent,
                 contentDescription = null,
             )
         }
-        SpacerW(12.dp)
         Column(
-            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = stringResourceSafe(id = title),
-                style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.primary1,
             )
             Text(
                 text = stringResourceSafe(id = subtitle),
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
             )
         }
-        SpacerW(8.dp)
-        Icon(
-            imageVector = Icons.ic_chevron_right_24,
-            tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
-            contentDescription = null,
-        )
     }
 }
+
+private object AddAndManageBottomSheetConfigContent : TangemBottomSheetConfigContent
 
 // region Preview
 @Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun AddAndManageBottomSheetContent_Preview() {
-    TangemThemePreviewRedesign {
+    TangemThemePreview {
         AddAndManageContent(
             onAddTokensClick = {},
             shouldShowOrganizeButton = true,
