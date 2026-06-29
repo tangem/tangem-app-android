@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.AmountType
 
  * @property provider The provider behind the deal; `null` if not resolved.
  * @property payoutHash On-chain hash of the payout (received) leg, if known.
+ * @property payoutAddress Address that received the crypto (the user's own address); `null` when unknown.
  * @property fromFiat The fiat paid.
  * @property toAsset The crypto asset received.
  * @property country The country the onramp was made from; `null` if not resolved.
@@ -26,6 +27,7 @@ data class OnrampTransaction(
     val createdAtMillis: Long,
     val provider: ExpressProvider?,
     val payoutHash: String?,
+    val payoutAddress: String?,
     /** The [Amount.type] is [AmountType.FiatType] . */
     val fromFiat: Amount,
     val toAsset: ExpressTransactionAsset,

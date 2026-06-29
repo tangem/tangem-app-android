@@ -2,19 +2,15 @@ package com.tangem.features.txhistory.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.Option
-import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -28,7 +24,6 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
@@ -60,8 +55,6 @@ internal class TxHistoryModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-    private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val walletIconUMConverter: WalletIconUMConverter,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val urlOpener: UrlOpener,
     private val txHistoryUpdateListener: TxHistoryUpdateListener,
@@ -72,36 +65,13 @@ internal class TxHistoryModel @Inject constructor(
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
-    multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    userWalletsListRepository: UserWalletsListRepository,
+    ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) : Model(), TxHistoryUiActions {
 
     private val params: TxHistoryComponent.Params = paramsContainer.require()
 
     private val lookupDataFlow: Flow<TxHistoryLookupContext> = if (designFeatureToggles.isRedesignEnabled) {
-        combine(
-            flow = multiAccountStatusListSupplier(),
-            flow2 = isAccountsModeEnabledUseCase(),
-            flow3 = userWalletsListRepository.userWallets.filterNotNull(),
-            transform = ::Triple,
-        )
-            .map { (accountLists, modeEnabled, wallets) ->
-                TxHistoryLookupContext(
-                    ownAccountByAddress = buildOwnAccountAddressMap(
-                        lists = accountLists,
-                        networkRawId = params.currency.network.id.rawId,
-                    ),
-                    isAccountsModeEnabled = modeEnabled,
-                    walletInfoById = wallets.associate { wallet ->
-                        wallet.walletId to WalletInfo(
-                            name = wallet.name,
-                            deviceIconUM = walletIconUMConverter.convert(getWalletIconUseCase(wallet)),
-                        )
-                    },
-                )
-            }
-            .distinctUntilChanged()
+        ownerLookupProducer()
             .flowOn(dispatchers.default)
             .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
     } else {
