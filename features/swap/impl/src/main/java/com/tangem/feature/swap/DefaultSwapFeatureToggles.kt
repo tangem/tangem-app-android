@@ -52,4 +52,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_15715_SWAP_BEST_DEX_RATE_ENABLED,
         ) && isSwapIntegratedApproveEnabled
+
+    override val isHighFeeWarningEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1367_HIGH_FEE_WARNING_ENABLED,
+        )
 }
