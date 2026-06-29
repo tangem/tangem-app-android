@@ -9,7 +9,6 @@ import com.tangem.datasource.api.auth.models.request.AuthApiRequest
 import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
@@ -55,10 +54,17 @@ internal class DefaultSessionTokenRefresher(
         }
 
         if (isOwner) {
+            TangemLogger.i("Session refresh started (owner)")
             try {
-                deferred.complete(runRefresh(current = store.get().getOrNull()))
+                val outcome = runRefresh(current = store.get().getOrNull())
+                outcome.fold(
+                    ifLeft = { TangemLogger.e("Session refresh finished with error: $it") },
+                    ifRight = { TangemLogger.i("Session refresh finished successfully") },
+                )
+                deferred.complete(outcome)
             } catch (t: Throwable) {
                 // Propagate to every waiter — without this they'd suspend forever on `await()`.
+                TangemLogger.e("Session refresh threw; propagating to waiters", t)
                 deferred.completeExceptionally(t)
                 throw t
             } finally {
@@ -68,6 +74,8 @@ internal class DefaultSessionTokenRefresher(
                     mutex.withLock { inFlight = null }
                 }
             }
+        } else {
+            TangemLogger.i("Session refresh already in-flight — joining as waiter")
         }
 
         deferred.await()
@@ -78,11 +86,31 @@ internal class DefaultSessionTokenRefresher(
 
         val isRefreshTokenValid = current?.refreshTokenExpiresAt != null && current.refreshTokenExpiresAt > now
         if (current?.refreshToken != null && isRefreshTokenValid) {
+            TangemLogger.i("Calling /refresh with stored refresh token")
             when (val result = callRefresh(current.refreshToken)) {
-                is RefreshOutcome.Success -> return result.tokens.right()
-                RefreshOutcome.Unauthenticated -> Unit // fall through to /authenticate
-                is RefreshOutcome.Transient -> return SessionRefreshError.Api(result.cause).left()
+                is RefreshOutcome.Success -> {
+                    store.save(result.tokens)
+                    TangemLogger.i("/refresh succeeded; session tokens persisted")
+                    return result.tokens.right()
+                }
+                // 401: refresh token is invalid/expired/revoked/replayed but the device key is
+                // intact server-side → fall back to /authenticate to mint a new pair.
+                RefreshOutcome.RefreshTokenInvalid -> {
+                    TangemLogger.i("/refresh returned 401 — falling back to /authenticate")
+                }
+                // 403: device is blocked server-side (RED tier). `/authenticate` would also 403,
+                // so don't waste the call — surface the terminal state and let the caller bail.
+                RefreshOutcome.DeviceBlocked -> {
+                    TangemLogger.e("/refresh returned 403 — device is blocked server-side (terminal)")
+                    return SessionRefreshError.DeviceBlocked.left()
+                }
+                is RefreshOutcome.Transient -> {
+                    TangemLogger.e("/refresh failed with transient error: ${result.cause}")
+                    return SessionRefreshError.Api(result.cause).left()
+                }
             }
+        } else {
+            TangemLogger.i("No valid refresh token in store — proceeding directly to /authenticate")
         }
 
         return runAuthenticate()
@@ -90,10 +118,19 @@ internal class DefaultSessionTokenRefresher(
 
     private suspend fun callRefresh(refreshToken: String): RefreshOutcome {
         val response = authApi.refresh(RefreshApiRequest(refreshToken = refreshToken))
-        return handleTokenResponse(response, clearOnUnauthenticated = false)
+        return when (response) {
+            is ApiResponse.Success -> RefreshOutcome.Success(SessionTokensConverter.convertBack(response.data))
+            is ApiResponse.Error -> when (val authError = errorConverter.convert(response.cause)) {
+                is AuthError.Unauthorized -> RefreshOutcome.RefreshTokenInvalid
+                is AuthError.Forbidden -> RefreshOutcome.DeviceBlocked
+                else -> RefreshOutcome.Transient(authError)
+            }
+        }
     }
 
     private suspend fun runAuthenticate(): Either<SessionRefreshError, SessionTokens> = either {
+        TangemLogger.i("Starting /authenticate")
+
         val devicePublicKey = deviceKeyManager.getPublicKey().getOrNull()
             ?: raise(SessionRefreshError.DeviceKeyUnavailable)
 
@@ -104,6 +141,7 @@ internal class DefaultSessionTokenRefresher(
             is ApiResponse.Success -> nonceResponse.data.cipheredNonce
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(nonceResponse.cause)
+                TangemLogger.e("/nonce/auth request failed: $authError")
                 raise(SessionRefreshError.Api(authError))
             }
         }
@@ -129,33 +167,25 @@ internal class DefaultSessionTokenRefresher(
         }
 
         val authResponse = authApi.authenticate(AuthApiRequest(payload = payload, signature = signature))
-        return when (val outcome = handleTokenResponse(authResponse, clearOnUnauthenticated = true)) {
-            is RefreshOutcome.Success -> outcome.tokens.right()
-            RefreshOutcome.Unauthenticated -> SessionRefreshError.SessionRevoked.left()
-            is RefreshOutcome.Transient -> SessionRefreshError.Api(outcome.cause).left()
-        }
-    }
-
-    private suspend fun handleTokenResponse(
-        response: ApiResponse<TokenApiResponse>,
-        clearOnUnauthenticated: Boolean,
-    ): RefreshOutcome {
-        return when (response) {
+        when (authResponse) {
             is ApiResponse.Success -> {
-                val tokens = SessionTokensConverter.convertBack(response.data)
+                val tokens = SessionTokensConverter.convertBack(authResponse.data)
                 store.save(tokens)
-                RefreshOutcome.Success(tokens)
+                TangemLogger.i("/authenticate succeeded; session tokens persisted")
+                tokens
             }
             is ApiResponse.Error -> {
-                when (val authError = errorConverter.convert(response.cause)) {
+                val authError = errorConverter.convert(authResponse.cause)
+                when (authError) {
                     is AuthError.Unauthorized, is AuthError.Forbidden -> {
-                        if (clearOnUnauthenticated) {
-                            TangemLogger.i("Session revoked: ${authError.problem?.detail ?: authError}")
-                            store.clear()
-                        }
-                        RefreshOutcome.Unauthenticated
+                        TangemLogger.i("Session revoked: ${authError.problem?.detail ?: authError}")
+                        store.clear()
+                        raise(SessionRefreshError.SessionRevoked)
                     }
-                    else -> RefreshOutcome.Transient(authError)
+                    else -> {
+                        TangemLogger.e("/authenticate request failed: $authError")
+                        raise(SessionRefreshError.Api(authError))
+                    }
                 }
             }
         }
@@ -163,7 +193,8 @@ internal class DefaultSessionTokenRefresher(
 
     private sealed interface RefreshOutcome {
         data class Success(val tokens: SessionTokens) : RefreshOutcome
-        data object Unauthenticated : RefreshOutcome
+        data object RefreshTokenInvalid : RefreshOutcome
+        data object DeviceBlocked : RefreshOutcome
         data class Transient(val cause: AuthError) : RefreshOutcome
     }
 }

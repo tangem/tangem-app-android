@@ -39,18 +39,14 @@ internal class FeatureTogglesNamingConventionTest {
         /** Toggles created before the AND_/TWI_ naming convention. Do NOT add new entries. */
         val EXCLUDED_TOGGLES_LIST = setOf(
             "ADDRESS_SYNC_ENABLED",
-            "ADD_AND_MANAGE_TOKENS_ENABLED",
             "APP_REDESIGN_ENABLED",
             "ASSETS_DISCOVERY_ENABLED",
             "DYNAMIC_ADDRESSES_ENABLED",
-            "GASLESS_APPROVAL_ENABLED",
             "HEDERA_ERC20_ENABLED",
             "NEW_CARD_SCANNING_ENABLED",
             "SOLANA_SCALED_UI_AMOUNT_ENABLED",
             "SOLANA_TX_HISTORY_ENABLED",
-            "STAKING_ETH_ENABLED",
             "SWAP_AB_ENABLED",
-            "USEDESK_ENABLED",
             "VIRTUAL_ACCOUNTS_ENABLED",
             "VISA_ONBOARDING_ENABLED",
             "WALLET_CONNECT_BITCOIN_ENABLED",

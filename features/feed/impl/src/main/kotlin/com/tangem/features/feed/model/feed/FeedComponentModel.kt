@@ -14,7 +14,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.DesignFeatureToggles
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_heart_28
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -37,6 +42,7 @@ import com.tangem.features.feed.model.feed.state.transformers.*
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.*
+import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
@@ -61,6 +67,7 @@ internal class FeedComponentModel @Inject constructor(
     private val appRouter: AppRouter,
     private val designFeatureToggles: DesignFeatureToggles,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val forYouFeatureToggles: ForYouFeatureToggles,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -273,6 +280,20 @@ internal class FeedComponentModel @Inject constructor(
             ),
             globalState = GlobalFeedState.Loading,
             earnListUM = EarnListUM.Loading,
+            forYouBannerUM = if (forYouFeatureToggles.isForYouEnabled) {
+                ForYouBannerUM.Content(
+                    TangemMessageUM(
+                        id = ForYouBannerUM.Content::class.java.simpleName,
+                        title = resourceReference(R.string.for_you_title),
+                        subtitle = resourceReference(R.string.for_you_description),
+                        iconUM = TangemIconUM.Icon(Icons.ic_heart_28), //  TODO ForYou update icon,
+                        messageEffect = TangemMessageEffect.Magic,
+                        onClick = params.feedClickIntents::openForYou,
+                    ),
+                )
+            } else {
+                ForYouBannerUM.Empty
+            },
         )
     }
 
