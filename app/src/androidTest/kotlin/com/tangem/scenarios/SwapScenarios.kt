@@ -490,11 +490,12 @@ fun BaseTestCase.confirmSwapByHolding(accessCode: String? = null) {
     }
 }
 
-/** Holds the last BASE_BUTTON to confirm a transfer; the caller asserts the outcome (transfer mode has no in-progress marker to wait on). */
+/** Holds the Transfer confirm button; the caller asserts the outcome (transfer mode has no in-progress marker to wait on). */
 fun BaseTestCase.holdToConfirmTransfer() {
-    val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
-    val confirmButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
-    confirmButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+    composeTestRule.onNode(
+        hasTestTag(BaseButtonTestTags.BUTTON) and
+            hasText(getResourceString(CoreUiR.string.swapping_transfer_action)),
+    ).performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
     waitForIdle()
 }
 
