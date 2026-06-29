@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -76,7 +77,12 @@ private fun ComponentPreview(state: TangemSearchStory) {
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp)),
     ) {
-        PreviewBackground(background = state.background, modifier = Modifier.matchParentSize())
+        PreviewBackground(
+            background = state.background,
+            modifier = Modifier
+                .matchParentSize()
+                .hazeSourceTangem(),
+        )
         TangemSearch(
             state = TangemSearch.State(
                 placeholderText = stringReference(state.placeholder.text),
