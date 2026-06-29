@@ -43,7 +43,6 @@ internal class FeatureTogglesNamingConventionTest {
             "APP_REDESIGN_ENABLED",
             "ASSETS_DISCOVERY_ENABLED",
             "DYNAMIC_ADDRESSES_ENABLED",
-            "GASLESS_APPROVAL_ENABLED",
             "HEDERA_ERC20_ENABLED",
             "NEW_CARD_SCANNING_ENABLED",
             "SOLANA_SCALED_UI_AMOUNT_ENABLED",
