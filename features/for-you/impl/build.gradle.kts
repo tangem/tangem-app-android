@@ -23,6 +23,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.foundation)
     implementation(deps.lifecycle.compose)
+    implementation(deps.compose.material3)
 
     /** DI */
     implementation(deps.hilt.android)
