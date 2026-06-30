@@ -15,15 +15,14 @@ import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
 import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
+import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
-import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -50,7 +49,7 @@ internal class DefaultSwapRepository(
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
-    private val expressHistoryDao: ExpressHistoryDao,
+    private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : SwapRepository {
@@ -157,9 +156,11 @@ internal class DefaultSwapRepository(
                             )
                             .getOrThrow()
 
-                        val entity = response.toEntity(ownerAddress = response.fromAddress.orEmpty())
                         if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-                            expressHistoryDao.upsertExchanges(listOf(entity))
+                            expressHistoryRepository.storeExchanges(
+                                ownerAddress = response.fromAddress.orEmpty(),
+                                items = listOf(response),
+                            )
                         }
 
                         exchangeStatusConverter.convert(response)

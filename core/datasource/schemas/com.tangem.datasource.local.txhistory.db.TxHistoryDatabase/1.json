@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "55f2651d215126dd0465b9c711165cba",
+    "identityHash": "5d37870ed1a5b37c62e9836dc3fd061c",
     "entities": [
       {
         "tableName": "express_provider",
@@ -510,7 +510,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "onrampAvailable",
+            "fieldPath": "isOnrampAvailable",
             "columnName": "onramp_available",
             "affinity": "INTEGER",
             "notNull": true
@@ -551,11 +551,66 @@
             "code"
           ]
         }
+      },
+      {
+        "tableName": "token_info",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`network_id` TEXT NOT NULL, `contract_address` TEXT NOT NULL, `coin_id` TEXT NOT NULL, `name` TEXT NOT NULL, `symbol` TEXT NOT NULL, `decimals` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`network_id`, `contract_address`))",
+        "fields": [
+          {
+            "fieldPath": "networkId",
+            "columnName": "network_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contractAddress",
+            "columnName": "contract_address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "coinId",
+            "columnName": "coin_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symbol",
+            "columnName": "symbol",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "decimals",
+            "columnName": "decimals",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "network_id",
+            "contract_address"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55f2651d215126dd0465b9c711165cba')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5d37870ed1a5b37c62e9836dc3fd061c')"
     ]
   }
 }

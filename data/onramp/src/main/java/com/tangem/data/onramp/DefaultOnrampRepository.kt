@@ -4,6 +4,7 @@ import android.net.Uri
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
 import com.tangem.data.onramp.converters.PaymentMethodConverter
@@ -76,6 +77,7 @@ internal class DefaultOnrampRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : OnrampRepository {
@@ -172,7 +174,7 @@ internal class DefaultOnrampRepository(
             .getOrThrow()
 
         if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryDao.upsertOnramps(listOf(response.toEntity(ownerAddress = response.payoutAddress)))
+            expressHistoryRepository.storeOnramps(ownerAddress = response.payoutAddress, items = listOf(response))
         }
 
         statusConverter.convert(response)
