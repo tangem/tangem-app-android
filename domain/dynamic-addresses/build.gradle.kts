@@ -8,19 +8,36 @@ android {
     namespace = "com.tangem.domain.dynamicaddresses"
 }
 dependencies {
-    api(projects.domain.core)
-    api(projects.domain.dynamicAddresses.models)
 
-    implementation(projects.domain.models)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets)
-    implementation(projects.libs.blockchainSdk)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(tangemDeps.blockchain) {
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(tangemDeps.card.core)
+    api(tangemDeps.card.core)
+    // endregion
 
-    testImplementation(projects.common.test)
-    testImplementation(projects.test.core)
+    // region Domain
+    api(projects.domain.models)
+    api(projects.domain.walletManager)
+    api(projects.domain.wallets)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.dynamicAddresses.models)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tests
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }
