@@ -1,4 +1,4 @@
-package com.tangem.core.ui.ds2.for_you_temp
+package com.tangem.features.foryou.impl.components
 
 import android.content.res.Configuration
 import android.graphics.BlurMaskFilter
@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.TangemColorPalette
 
 /**
  * Canvas-based take on the glow divider: the line background and every blurred color blob are painted by
@@ -56,24 +55,21 @@ import com.tangem.core.ui.res.generated.TangemColorPalette
  * @param dots Color blobs; [GlowDot.offset] is the blob center relative to the line's top-center,
  *   [GlowDot.size] its diameter, [GlowDot.blur] the mask-blur radius.
  */
-data class CanvasGlowDot(
+internal data class CanvasGlowDot(
     val color: Color,
     val offset: DpOffset,
     val height: Dp,
     val blur: Dp = 8.dp,
 )
 
-@Suppress("MagicNumber", "LongParameterList")
+@Suppress("MagicNumber", "LongParameterList", "LongMethod")
 @Composable
-fun CanvasGradientDivider(modifier: Modifier = Modifier, lineWidth: Dp = 2.dp) {
+internal fun CanvasGradientDivider(modifier: Modifier = Modifier, lineWidth: Dp = 2.dp) {
     val shape = RoundedCornerShape(size = 100.dp)
-
-    // Gentle "breathing" glow: pulse the drop-shadow alpha between MIN and MAX. Designer hasn't
-    // provided timing yet, so 1600ms per direction reads as a calm, non-distracting pulse.
     val infiniteTransition = rememberInfiniteTransition(label = "GlowDividerShadow")
     val shadowAlpha by infiniteTransition.animateFloat(
-        initialValue = GlowMinAlpha,
-        targetValue = GlowMaxAlpha,
+        initialValue = GLOW_MIN_ALPHA,
+        targetValue = GLOW_MAX_ALPHA,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1600, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
@@ -81,11 +77,19 @@ fun CanvasGradientDivider(modifier: Modifier = Modifier, lineWidth: Dp = 2.dp) {
         label = "GlowDividerShadowAlpha",
     )
 
+    val accent = TangemTheme.colors3.icon.accent
+    val dotColors = GlowDotColors(
+        violet = accent.violet,
+        green = accent.green,
+        blue = accent.blue,
+        orange = accent.orange,
+    )
+
     Box(
         modifier = modifier
             .width(lineWidth)
             .drawBehind {
-                val resolvedDots = canvasDefaultDots(size.height.toDp())
+                val resolvedDots = canvasDefaultDots(size.height.toDp(), dotColors)
                 val cornerPx = size.width / 2f
                 val capsule = Path().apply {
                     addRoundRect(
@@ -100,7 +104,6 @@ fun CanvasGradientDivider(modifier: Modifier = Modifier, lineWidth: Dp = 2.dp) {
                 }
 
                 clipPath(capsule) {
-                    // Base background.
                     drawRect(color = LineColor)
 
                     // Blurred color blobs, drawn with a native BlurMaskFilter paint.
@@ -143,8 +146,8 @@ fun CanvasGradientDivider(modifier: Modifier = Modifier, lineWidth: Dp = 2.dp) {
 }
 
 /** Glow pulse bounds for the animated drop shadow alpha. */
-private const val GlowMinAlpha = 0.3f
-private const val GlowMaxAlpha = 0.65f
+private const val GLOW_MIN_ALPHA = 0.3f
+private const val GLOW_MAX_ALPHA = 0.65f
 
 /** Line fill — Figma "Background color" #0000F9 at 56% opacity (alpha 0x8F). */
 private val LineColor = Color(0x8F0000F9)
@@ -152,19 +155,27 @@ private val LineColor = Color(0x8F0000F9)
 /** Fixed blob width (the oval's horizontal diameter). */
 private val DotWidth = 12.dp
 
+/** Accent colors for the glow blobs, resolved from `colors3.icon.accent.*` in the composable. */
+private data class GlowDotColors(
+    val violet: Color,
+    val green: Color,
+    val blue: Color,
+    val orange: Color,
+)
+
 /**
  * Placeholder snake-scatter of the four Figma "selection colors", sized proportionally to [lineHeight]
  * so the glow scales with the divider's length. Tune to match Figma.
  */
 @Suppress("MagicNumber")
-private fun canvasDefaultDots(lineHeight: Dp): List<CanvasGlowDot> {
+private fun canvasDefaultDots(lineHeight: Dp, colors: GlowDotColors): List<CanvasGlowDot> {
     val step = lineHeight / 5
     return listOf(
-        CanvasGlowDot(TangemColorPalette.Violet.`40`, DpOffset(x = 0.5.dp, y = (-3).dp), height = step), // purple
-        CanvasGlowDot(TangemColorPalette.Green.`40`, DpOffset(x = 4.dp, y = step * 1.7f), height = step), // green
-        CanvasGlowDot(TangemColorPalette.Blue.`40`, DpOffset(x = (-2.5).dp, y = step * 2.2f), height = step), // blue
-        CanvasGlowDot(TangemColorPalette.Orange.`40`, DpOffset(x = (-3.5).dp, y = step * 3), height = step + step / 2),
-        CanvasGlowDot(TangemColorPalette.Violet.`40`, DpOffset(x = 0.5.dp, y = step * 4 + 4.dp), height = step),
+        CanvasGlowDot(colors.violet, DpOffset(x = 0.5.dp, y = (-3).dp), height = step), // purple
+        CanvasGlowDot(colors.green, DpOffset(x = 4.dp, y = step * 1.7f), height = step), // green
+        CanvasGlowDot(colors.blue, DpOffset(x = (-2.5).dp, y = step * 2.2f), height = step), // blue
+        CanvasGlowDot(colors.orange, DpOffset(x = (-3.5).dp, y = step * 3), height = step + step / 2),
+        CanvasGlowDot(colors.violet, DpOffset(x = 0.5.dp, y = step * 4 + 4.dp), height = step),
     )
 }
 
