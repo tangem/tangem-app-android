@@ -1,7 +1,7 @@
 package com.tangem.data.txhistory.repository
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.converter.toEntity
+import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.express.TangemExpressApi
@@ -14,16 +14,17 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
+import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -31,23 +32,26 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class ExpressHistoryRepositoryTest {
+internal class DefaultExpressHistoryRepositoryTest {
 
     private val exchangeApi: TangemExpressApi = mockk()
     private val onrampApi: OnrampApi = mockk()
     private val expressHistoryDao: ExpressHistoryDao = mockk(relaxUnitFun = true)
     private val expressSyncStateDao: ExpressSyncStateDao = mockk(relaxUnitFun = true)
+    private val tokenInfoRepository: TokenInfoRepository = mockk(relaxUnitFun = true)
 
-    private val repository = ExpressHistoryRepository(
+    private val repository = DefaultExpressHistoryRepository(
         exchangeApi = exchangeApi,
         onrampApi = onrampApi,
         expressHistoryDao = expressHistoryDao,
         expressSyncStateDao = expressSyncStateDao,
+        tokenInfoRepository = tokenInfoRepository,
+        appScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(exchangeApi, onrampApi, expressHistoryDao, expressSyncStateDao)
+        clearMocks(exchangeApi, onrampApi, expressHistoryDao, expressSyncStateDao, tokenInfoRepository)
     }
 
     // region exchange history
@@ -88,24 +92,6 @@ internal class ExpressHistoryRepositoryTest {
         // THEN
         coVerify(exactly = 1) {
             exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = null, limit = DEFAULT_LIMIT)
-        }
-    }
-
-    @Test
-    fun `GIVEN custom limit WHEN fetchExchangeHistory THEN forwards limit to api`() = runTest {
-        // GIVEN
-        val response = ExchangeHistoryResponse(items = emptyList(), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, syncState(afterCursor = AFTER_CURSOR))
-        coEvery {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = any())
-        } returns ApiResponse.Success(response)
-
-        // WHEN
-        repository.fetchExchangeHistory(fromAddress = ADDRESS, userWalletId = USER_WALLET_ID, limit = 25)
-
-        // THEN
-        coVerify(exactly = 1) {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = 25)
         }
     }
 
@@ -173,24 +159,6 @@ internal class ExpressHistoryRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no sync state WHEN fetchOnrampHistory THEN passes null cursor`() = runTest {
-        // GIVEN
-        val response = OnrampHistoryResponse(items = emptyList(), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, ADDRESS, state = null)
-        coEvery {
-            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, afterCursor = null, limit = any())
-        } returns ApiResponse.Success(response)
-
-        // WHEN
-        repository.fetchOnrampHistory(payoutAddress = ADDRESS, userWalletId = USER_WALLET_ID)
-
-        // THEN
-        coVerify(exactly = 1) {
-            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, afterCursor = null, limit = DEFAULT_LIMIT)
-        }
-    }
-
-    @Test
     fun `GIVEN sync state WHEN fetchOnrampHistoryDelta THEN passes delta cursor and persists items`() = runTest {
         // GIVEN
         val item = createOnrampItem()
@@ -230,42 +198,53 @@ internal class ExpressHistoryRepositoryTest {
 
     // endregion
 
-    // region syncState
+    // region store
 
     @Test
-    fun `GIVEN stored sync state WHEN syncState THEN returns first emitted value`() = runTest {
+    fun `GIVEN exchanges WHEN storeExchanges THEN persists entities and fetches missing info for both legs`() = runTest {
         // GIVEN
-        val state = syncState(afterCursor = AFTER_CURSOR, deltaCursor = DELTA_CURSOR)
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, state)
+        val item = createExchangeItem()
 
         // WHEN
-        val result = repository.syncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS)
+        repository.storeExchanges(ownerAddress = ADDRESS, items = listOf(item))
 
         // THEN
-        assertThat(result).isEqualTo(state)
+        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) {
+            tokenInfoRepository.fetchMissing(
+                setOf(
+                    ExpressAsset.ID(networkId = "ethereum", contractAddress = "0xfromContract"),
+                    ExpressAsset.ID(networkId = "bitcoin", contractAddress = "0xtoContract"),
+                ),
+            )
+        }
     }
 
     @Test
-    fun `GIVEN multiple items WHEN fetchExchangeHistory THEN maps every item with owner address`() = runTest {
+    fun `GIVEN onramps WHEN storeOnramps THEN persists entities and fetches missing info for to-leg`() = runTest {
         // GIVEN
-        val items = listOf(
-            createExchangeItem(txId = "tx-1"),
-            createExchangeItem(txId = "tx-2"),
-        )
-        val response = ExchangeHistoryResponse(items = items, pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, syncState(afterCursor = AFTER_CURSOR))
-        coEvery {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = any())
-        } returns ApiResponse.Success(response)
-        val saved = slot<List<ExpressExchangeEntity>>()
-        coEvery { expressHistoryDao.upsertExchanges(capture(saved)) } returns Unit
+        val item = createOnrampItem()
 
         // WHEN
-        repository.fetchExchangeHistory(fromAddress = ADDRESS, userWalletId = USER_WALLET_ID)
+        repository.storeOnramps(ownerAddress = ADDRESS, items = listOf(item))
 
         // THEN
-        assertThat(saved.captured).isEqualTo(items.map { it.toEntity(ADDRESS) })
-        assertThat(saved.captured.map { it.ownerAddress }.toSet()).containsExactly(ADDRESS)
+        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) {
+            tokenInfoRepository.fetchMissing(setOf(ExpressAsset.ID(networkId = "bitcoin", contractAddress = "0xtoContract")))
+        }
+    }
+
+    @Test
+    fun `GIVEN empty items WHEN store THEN does nothing`() = runTest {
+        // WHEN
+        repository.storeExchanges(ownerAddress = ADDRESS, items = emptyList())
+        repository.storeOnramps(ownerAddress = ADDRESS, items = emptyList())
+
+        // THEN
+        coVerify(exactly = 0) { expressHistoryDao.upsertExchanges(any()) }
+        coVerify(exactly = 0) { expressHistoryDao.upsertOnramps(any()) }
+        coVerify(exactly = 0) { tokenInfoRepository.fetchMissing(any()) }
     }
 
     // endregion
@@ -313,8 +292,6 @@ internal class ExpressHistoryRepositoryTest {
         refundNetwork = null,
         refundContractAddress = null,
         createdAt = "2026-06-01T00:00:00Z",
-        // todo txHistory uncomment
-        // updatedAt = "2026-06-01T00:05:00Z",
         payTill = null,
         averageDuration = null,
         fromContractAddress = "0xfromContract",
@@ -338,8 +315,6 @@ internal class ExpressHistoryRepositoryTest {
         externalTxUrl = null,
         payoutHash = "payout-hash",
         createdAt = "2026-06-01T00:00:00Z",
-        // todo txHistory uncomment
-        // updatedAt = "2026-06-01T00:05:00Z",
         fromCurrencyCode = "USD",
         fromAmount = "100.0",
         fromPrecision = 2,
