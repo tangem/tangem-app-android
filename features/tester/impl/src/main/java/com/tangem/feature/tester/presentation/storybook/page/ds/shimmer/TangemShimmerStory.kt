@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.ds2.shimmers.RectangleShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.TangemShimmerStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemShimmerStory.*
@@ -38,10 +38,18 @@ internal fun TangemShimmerStory(state: TangemShimmerStory, modifier: Modifier = 
         ) {
             ChipSection(label = "Text style") {
                 ChipGrid(
-                    items = TextShimmerStyle.entries,
+                    items = TextStyleOption.entries,
                     label = { it.chipLabel() },
                     isSelected = { it == state.textStyle },
                     onSelect = state.onTextStyleChange,
+                )
+            }
+            ChipSection(label = "Text position") {
+                ChipGrid(
+                    items = TextPositionOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.textPosition },
+                    onSelect = state.onTextPositionChange,
                 )
             }
             ChipSection(label = "Radius") {
@@ -89,18 +97,17 @@ private fun ComponentPreview(state: TangemShimmerStory) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            PreviewLabel(text = "RectangleShimmer")
+            PreviewLabel(text = "TangemShimmer · rectangle")
             RectangleShimmerPreview(
                 width = state.rectangleWidth,
                 height = state.rectangleHeight,
                 radius = radius,
             )
 
-            PreviewLabel(text = "TextShimmer · ${state.textStyle.chipLabel()}")
-            TextShimmer(
-                text = SAMPLE_TEXT,
-                style = state.textStyle,
-                radius = radius,
+            PreviewLabel(text = "TangemShimmer · text · ${state.textStyle.chipLabel()}")
+            TangemShimmer(
+                style = state.textStyle.toTextStyle(),
+                textAlign = state.textPosition.toTextAlign(),
             )
         }
     }
@@ -113,7 +120,7 @@ private fun RectangleShimmerPreview(width: RectangleWidthOption, height: Rectang
         else -> Modifier.width(width.value())
     }.height(height.value())
 
-    RectangleShimmer(
+    TangemShimmer(
         modifier = sizeModifier,
         radius = radius,
     )
@@ -194,13 +201,29 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
 
 // endregion
 
-private fun TextShimmerStyle.chipLabel(): String = when (this) {
-    TextShimmerStyle.DISPLAY -> "Display"
-    TextShimmerStyle.HEADING_MEDIUM -> "Head.M"
-    TextShimmerStyle.HEADING_SMALL -> "Head.S"
-    TextShimmerStyle.BODY -> "Body"
-    TextShimmerStyle.SUBHEADING -> "Sub.H"
-    TextShimmerStyle.CAPTION -> "Caption"
+private fun TextStyleOption.chipLabel(): String = when (this) {
+    TextStyleOption.DISPLAY -> "Display"
+    TextStyleOption.HEADING_MEDIUM -> "Head.M"
+    TextStyleOption.HEADING_SMALL -> "Head.S"
+    TextStyleOption.BODY -> "Body"
+    TextStyleOption.SUBHEADING -> "Sub.H"
+    TextStyleOption.CAPTION -> "Caption"
+}
+
+@Composable
+private fun TextStyleOption.toTextStyle(): TextStyle = when (this) {
+    TextStyleOption.DISPLAY -> TangemTheme.typography3.display.medium
+    TextStyleOption.HEADING_MEDIUM -> TangemTheme.typography3.heading.medium
+    TextStyleOption.HEADING_SMALL -> TangemTheme.typography3.heading.small
+    TextStyleOption.BODY -> TangemTheme.typography3.body.medium
+    TextStyleOption.SUBHEADING -> TangemTheme.typography3.subheading.medium
+    TextStyleOption.CAPTION -> TangemTheme.typography3.caption.medium
+}
+
+private fun TextPositionOption.toTextAlign(): TextAlign = when (this) {
+    TextPositionOption.START -> TextAlign.Start
+    TextPositionOption.CENTER -> TextAlign.Center
+    TextPositionOption.END -> TextAlign.End
 }
 
 private fun RadiusOption.value(): Dp = when (this) {
@@ -225,5 +248,3 @@ private fun RectangleHeightOption.value(): Dp = when (this) {
     RectangleHeightOption.H40 -> 40.dp
     RectangleHeightOption.H64 -> 64.dp
 }
-
-private const val SAMPLE_TEXT = "Sample shimmer text"
