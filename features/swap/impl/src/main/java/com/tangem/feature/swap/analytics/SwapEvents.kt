@@ -332,6 +332,7 @@ sealed class SwapEvents(
         fromCurrency: CryptoCurrency?,
         toCurrency: CryptoCurrency?,
         feeNetwork: Network,
+        isTangemPay: Boolean,
     ) : SwapEvents(
         event = "Transfer in Progress Screen Opened",
         params = mapOf(
@@ -340,6 +341,7 @@ sealed class SwapEvents(
             RECEIVE_TOKEN to toCurrency?.symbol.orEmpty(),
             "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
             "Network fee" to feeNetwork.name,
+            "Pay Account" to isTangemPay.toString(),
         ),
     ), AppsFlyerIncludedEvent
 
