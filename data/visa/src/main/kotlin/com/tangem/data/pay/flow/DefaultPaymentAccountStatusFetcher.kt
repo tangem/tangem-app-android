@@ -403,11 +403,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638). Gated by the feature toggle.
      * If a product instance with [SpecificationDataType.ACCOUNT] exists, eagerly fetches its bank credentials
      * ([VirtualAccountOnramp.Available]); otherwise surfaces [VirtualAccountOnramp.Eligible] when the wallet has
-     * the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else
-     * [VirtualAccountOnramp.None].
+     * the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
-    private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp {
-        if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return VirtualAccountOnramp.None
+    private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
+        if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return null
 
         val accountInstance = productInstances.firstOrNull {
             it.specificationDataType == SpecificationDataType.ACCOUNT
@@ -416,7 +415,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
                 ifLeft = { error ->
                     logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
-                    VirtualAccountOnramp.None
+                    null
                 },
                 ifRight = { credentials ->
                     VirtualAccountOnramp.Available(
@@ -430,13 +429,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return onboardingRepository.fetchCustomerEligibility(userWalletId).fold(
             ifLeft = { error ->
                 logger.e("fetchCustomerEligibility failed for $userWalletId: $error")
-                VirtualAccountOnramp.None
+                null
             },
             ifRight = { channels ->
                 if (channels.contains(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT)) {
                     VirtualAccountOnramp.Eligible
                 } else {
-                    VirtualAccountOnramp.None
+                    null
                 }
             },
         )
