@@ -117,7 +117,7 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                 ) {
                     itemsIndexed(
                         items = animatedState.items,
-                        key = { _, item -> "${item.tokenName}-${item.network}" },
+                        key = { _, item -> item.id },
                     ) { index, item ->
                         val cardModifier = Modifier.conditional(
                             condition = index == FOURTH_ITEM_INDEX,
