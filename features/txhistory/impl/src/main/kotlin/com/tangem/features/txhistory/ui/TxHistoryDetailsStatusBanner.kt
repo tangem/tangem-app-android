@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,7 @@ import com.tangem.core.ui.res.generated.icons.ic_success_20
 import com.tangem.core.ui.res.generated.icons.ic_warning_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Severity
+import kotlinx.coroutines.delay
 
 // Animation timings in ms (ProtoPie spec). The status swap is two-phase: the old status fades out, then the new one
 // fades/slides in after ENTER_DELAY. Most steps run over the default duration; the trailing loader/glyph fades faster
@@ -60,6 +62,9 @@ private const val FAST_FADE_MILLIS = 200
 private const val GROW_MILLIS = 400
 private const val ENTER_DELAY_MILLIS = DEFAULT_ANIMATION_MILLIS // phase 2 waits for the phase-1 fade-out to clear
 private const val SUBTITLE_DELAY_MILLIS = ENTER_DELAY_MILLIS + 100 // subtitle trails the title
+
+/** How long the success terminal ("Confirmed") lingers before the plaque auto-collapses — it shows only as a transition. */
+private const val CONFIRMED_VISIBLE_MILLIS = 1_000L
 
 private const val TITLE_SLIDE_FRACTION = 12 // in-progress/Success title slides in 1/12 width from the right
 private const val CONTENT_RISE_FRACTION = 2 // Warning/Error title floats up 1/2 height from below
@@ -134,8 +139,31 @@ internal fun TxHistoryDetailsStatusBanner(state: StatusBannerUM?, modifier: Modi
     SideEffect { if (state != null) lastState.value = state }
     val content = state ?: lastState.value
 
+    // Auto-hide rules for the success terminal ("Confirmed"). It is the only [Severity.Success] state and must read as a
+    // *transition*, not a resting state: opening the details on an already-finished deal (no in-flight status was ever
+    // seen) shows nothing, and once it does appear it lingers only briefly before collapsing. Failure / verification
+    // terminals are not Success, so they stay put.
+    val seenNonSuccess = remember { mutableStateOf(false) }
+    SideEffect { if (state != null && state.severity != Severity.Success) seenNonSuccess.value = true }
+
+    val isTerminalSuccess = state?.severity == Severity.Success
+    val confirmedDismissed = remember { mutableStateOf(false) }
+    LaunchedEffect(isTerminalSuccess) {
+        if (isTerminalSuccess && seenNonSuccess.value) {
+            delay(CONFIRMED_VISIBLE_MILLIS)
+            confirmedDismissed.value = true
+        }
+    }
+
+    val isVisible = when {
+        state == null -> false
+        isTerminalSuccess && !seenNonSuccess.value -> false // opened already on the success terminal → never shown
+        isTerminalSuccess && confirmedDismissed.value -> false // "Confirmed" lingered long enough → collapse away
+        else -> true
+    }
+
     AnimatedVisibility(
-        visible = state != null,
+        visible = isVisible,
         // Fade and size share one tween so alpha and height finish together (mismatched default springs leave a jerk).
         enter = fadeIn(tween(DEFAULT_ANIMATION_MILLIS)) +
             expandVertically(tween(DEFAULT_ANIMATION_MILLIS), expandFrom = Alignment.Top),

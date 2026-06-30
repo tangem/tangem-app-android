@@ -23,7 +23,7 @@ internal class DefaultAddressBookBlobStoreTest {
     }
 
     @Test
-    fun `GIVEN blob WHEN storeBlob THEN getBlob emits it AND it is unsynchronized`() = runTest {
+    fun `GIVEN blob WHEN storeBlob THEN getBlob emits it`() = runTest {
         // Arrange
         val blob = createBlob(walletId = WALLET_A)
 
@@ -33,21 +33,6 @@ internal class DefaultAddressBookBlobStoreTest {
         // Assert
         assertThat(store.getBlob(UserWalletId(WALLET_A)).first()).isEqualTo(blob)
         assertThat(store.getBlobSync(UserWalletId(WALLET_A))).isEqualTo(blob)
-        assertThat(store.getUnsynchronizedBlobs()).containsExactly(blob)
-    }
-
-    @Test
-    fun `GIVEN stored blob WHEN markAsSynchronized THEN getUnsynchronizedBlobs excludes it`() = runTest {
-        // Arrange
-        val blob = createBlob(walletId = WALLET_A)
-        store.storeBlob(blob)
-
-        // Act
-        store.markAsSynchronized(UserWalletId(WALLET_A))
-
-        // Assert
-        assertThat(store.getUnsynchronizedBlobs()).isEmpty()
-        assertThat(store.getBlob(UserWalletId(WALLET_A)).first()).isEqualTo(blob)
     }
 
     @Test
@@ -63,7 +48,6 @@ internal class DefaultAddressBookBlobStoreTest {
 
         // Assert
         assertThat(result).isEqualTo(blobA)
-        assertThat(store.getUnsynchronizedBlobs()).containsExactly(blobA, blobB)
     }
 
     @Test
