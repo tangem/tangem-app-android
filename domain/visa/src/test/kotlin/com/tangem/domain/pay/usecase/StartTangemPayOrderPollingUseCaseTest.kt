@@ -138,6 +138,49 @@ internal class StartTangemPayOrderPollingUseCaseTest {
             firstPoller.cancel()
         }
 
+    @Test
+    fun `GIVEN processing order WHEN poll returns terminal THEN onTerminalReached runs before status fetch`() = runTest {
+        // Arrange — recording both callbacks proves the order hint is cleared before the refresh that
+        // would otherwise re-poll GET /order/{id} for the just-resolved order.
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+        val events = mutableListOf<String>()
+        coEvery {
+            cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
+        } returns TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED).right()
+        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } answers {
+            events.add("fetch")
+            Unit.right()
+        }
+
+        // Act
+        val result = useCase(order, USER_WALLET_ID, onTerminalReached = { events.add("clear") })
+
+        // Assert
+        assertThat(result).isTrue()
+        assertThat(events).containsExactly("clear", "fetch").inOrder()
+    }
+
+    @Test
+    fun `GIVEN order already being polled WHEN invoke again THEN onTerminalReached is not invoked for duplicate`() =
+        runTest {
+            // Arrange — first poller never reaches terminal, so it keeps polling.
+            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+            coEvery { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) } returns
+                TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING).right()
+            var duplicateCleared = false
+
+            // Act — start the first poller, then invoke again for the same order.
+            val firstPoller = launch { useCase(order, USER_WALLET_ID) }
+            runCurrent()
+            val secondResult = useCase(order, USER_WALLET_ID, onTerminalReached = { duplicateCleared = true })
+
+            // Assert — the duplicate is a no-op: it must not clear the hint of the live poller.
+            assertThat(secondResult).isFalse()
+            assertThat(duplicateCleared).isFalse()
+
+            firstPoller.cancel()
+        }
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
         const val ORDER_ID = "order-test-1"

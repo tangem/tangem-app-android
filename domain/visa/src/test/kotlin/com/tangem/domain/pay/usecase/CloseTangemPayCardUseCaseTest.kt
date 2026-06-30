@@ -31,9 +31,9 @@ internal class CloseTangemPayCardUseCaseTest {
         val result = useCase(USER_WALLET_ID, CARD_ID)
 
         assertThat(result.isLeft()).isTrue()
-        coVerify(exactly = 0) { closeCardRepository.setCloseOrderId(any(), any()) }
+        coVerify(exactly = 0) { closeCardRepository.storeCloseOrderId(any(), any()) }
         coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) }
-        coVerify(exactly = 0) { startPollingUseCase(any(), any()) }
+        coVerify(exactly = 0) { startPollingUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -46,9 +46,9 @@ internal class CloseTangemPayCardUseCaseTest {
             val result = useCase(USER_WALLET_ID, CARD_ID)
 
             assertThat(result.isLeft()).isTrue()
-            coVerify(exactly = 0) { closeCardRepository.setCloseOrderId(any(), any()) }
+            coVerify(exactly = 0) { closeCardRepository.storeCloseOrderId(any(), any()) }
             coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) }
-            coVerify(exactly = 0) { startPollingUseCase(any(), any()) }
+            coVerify(exactly = 0) { startPollingUseCase(any(), any(), any()) }
         }
 
     @Test
@@ -57,17 +57,17 @@ internal class CloseTangemPayCardUseCaseTest {
             val useCase = createUseCase()
             val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
             coEvery { closeCardRepository.closeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
-            coEvery { closeCardRepository.setCloseOrderId(CARD_ID, ORDER_ID) } returns Unit.right()
+            coEvery { closeCardRepository.storeCloseOrderId(CARD_ID, ORDER_ID) } returns Unit.right()
             coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
-            coEvery { startPollingUseCase(order, USER_WALLET_ID) } returns true
+            coEvery { startPollingUseCase(order, USER_WALLET_ID, any()) } returns true
 
             val result = useCase(USER_WALLET_ID, CARD_ID)
 
             assertThat(result.isRight()).isTrue()
             coVerifyOrder {
-                closeCardRepository.setCloseOrderId(CARD_ID, ORDER_ID)
+                closeCardRepository.storeCloseOrderId(CARD_ID, ORDER_ID)
                 paymentAccountStatusFetcher.invoke(USER_WALLET_ID)
-                startPollingUseCase(order, USER_WALLET_ID)
+                startPollingUseCase(order, USER_WALLET_ID, any())
             }
         }
 
@@ -77,16 +77,16 @@ internal class CloseTangemPayCardUseCaseTest {
             val useCase = createUseCase()
             val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
             coEvery { closeCardRepository.closeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
-            coEvery { closeCardRepository.setCloseOrderId(CARD_ID, ORDER_ID) } returns Unit.right()
+            coEvery { closeCardRepository.storeCloseOrderId(CARD_ID, ORDER_ID) } returns Unit.right()
             coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
-            coEvery { startPollingUseCase(order, USER_WALLET_ID) } returns true
+            coEvery { startPollingUseCase(order, USER_WALLET_ID, any()) } returns true
 
             val result = useCase(USER_WALLET_ID, CARD_ID)
 
             assertThat(result.isRight()).isTrue()
-            coVerify(exactly = 1) { closeCardRepository.setCloseOrderId(CARD_ID, ORDER_ID) }
+            coVerify(exactly = 1) { closeCardRepository.storeCloseOrderId(CARD_ID, ORDER_ID) }
             coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
-            coVerify(exactly = 1) { startPollingUseCase(order, USER_WALLET_ID) }
+            coVerify(exactly = 1) { startPollingUseCase(order, USER_WALLET_ID, any()) }
         }
 
     private fun createUseCase() = CloseTangemPayCardUseCase(

@@ -10,7 +10,9 @@ interface TangemPayCloseCardRepository {
 
     suspend fun closeCard(userWalletId: UserWalletId, cardId: String): Either<VisaApiError, TangemPayOrderInfo>
 
-    suspend fun setCloseOrderId(cardId: String, orderId: String?): Either<UniversalError, Unit>
+    suspend fun storeCloseOrderId(cardId: String, orderId: String): Either<UniversalError, Unit>
+
+    suspend fun removeCloseOrderId(cardId: String): Either<UniversalError, Unit>
 
     suspend fun getCloseOrderId(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?>
 }

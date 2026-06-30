@@ -37,13 +37,20 @@ internal class DefaultCloseCardRepository @Inject constructor(
         )
     }
 
-    override suspend fun setCloseOrderId(cardId: String, orderId: String?): Either<UniversalError, Unit> =
+    override suspend fun storeCloseOrderId(cardId: String, orderId: String): Either<UniversalError, Unit> =
         runSuspendCatching {
-            tangemPayCloseCardStore.setCloseOrderId(cardId, orderId)
+            tangemPayCloseCardStore.storeCloseOrderId(cardId, orderId)
         }.fold(
             onSuccess = { Unit.right() },
             onFailure = { Either.Left(VisaApiError.Unspecified) },
         )
+
+    override suspend fun removeCloseOrderId(cardId: String): Either<UniversalError, Unit> = runSuspendCatching {
+        tangemPayCloseCardStore.removeCloseOrderId(cardId)
+    }.fold(
+        onSuccess = { Unit.right() },
+        onFailure = { Either.Left(VisaApiError.Unspecified) },
+    )
 
     override suspend fun getCloseOrderId(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?> =
         either {
