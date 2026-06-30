@@ -68,12 +68,13 @@ Search Jira for Crashlytics tasks created in the past day:
 
 - Tool: `mcp__atlassian__searchJiraIssuesUsingJql`
 - `cloudId`: `tangem.atlassian.net`
-- `jql`: `project = "AND" AND summary ~ "\\[Crashlytics\\]" AND created >= <since value> ORDER BY created DESC`
+- `jql`: `project = "CRASHAND" AND summary ~ "\\[Crashlytics\\]" AND created >= <since value> ORDER BY created DESC`
+  - Crashlytics auto-tickets live in the dedicated **CRASHAND** project (Firebase Alerts -> Jira). The `summary ~ "[Crashlytics]"` filter excludes test alerts (e.g. `[Firebase] [Test Alert]`).
   - Use the `--since` argument value, or `-1d` if not provided.
 - `maxResults`: `50`
 - `fields`: `["summary", "status"]`
 
-Collect all returned issue keys (e.g., `[REDACTED_TASK_KEY]`).
+Collect all returned issue keys (e.g., `CRASHAND-19`).
 
 If no tasks found, output "No Crashlytics tasks found since <since value>" and stop.
 
