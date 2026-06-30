@@ -115,6 +115,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 @Suppress("LongMethod", "DestructuringDeclarationWithTooManyEntries")
 @Composable
 private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
+    val isRedesignEnabled = LocalVisaRedesignEnabled.current
     Box(modifier = modifier.fillMaxSize()) {
         TangemPayCardBackground(
             modifier = Modifier
@@ -158,20 +159,24 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                     )
 
                     when (state.cardFrozenState) {
-                        TangemPayCardFrozenState.Frozen -> Icon(
-                            modifier = Modifier
-                                .constrainAs(frozenIconRef) {
-                                    start.linkTo(cardNumberRef.end, margin = 4.dp)
-                                    top.linkTo(cardNumberRef.top)
-                                    bottom.linkTo(cardNumberRef.bottom)
-                                }
-                                .padding(bottom = 8.dp)
-                                .size(16.dp)
-                                .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
-                            painter = painterResource(id = R.drawable.ic_snow_24),
-                            contentDescription = null,
-                            tint = TangemTheme.colors.icon.constant,
-                        )
+                        TangemPayCardFrozenState.Frozen -> {
+                            if (!isRedesignEnabled) {
+                                Icon(
+                                    modifier = Modifier
+                                        .constrainAs(frozenIconRef) {
+                                            start.linkTo(cardNumberRef.end, margin = 4.dp)
+                                            top.linkTo(cardNumberRef.top)
+                                            bottom.linkTo(cardNumberRef.bottom)
+                                        }
+                                        .padding(bottom = 8.dp)
+                                        .size(16.dp)
+                                        .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
+                                    painter = painterResource(id = R.drawable.ic_snow_24),
+                                    contentDescription = null,
+                                    tint = TangemTheme.colors.icon.constant,
+                                )
+                            }
+                        }
                         TangemPayCardFrozenState.Pending -> CircularProgressIndicator(
                             modifier = Modifier
                                 .constrainAs(frozenIconRef) {
@@ -194,7 +199,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 bottom.linkTo(parent.bottom)
                             }
                             .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
-                        visible = !LocalVisaRedesignEnabled.current ||
+                        visible = !isRedesignEnabled ||
                             state.isLoading ||
                             state.shouldShowCardDetailsButtonOnCard,
                     ) {
