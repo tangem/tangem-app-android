@@ -11,6 +11,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
@@ -346,6 +347,40 @@ internal data class TangemGlowRingStory(
 ) : DsStoryBookPage {
 
     /** Backdrop the glow-ring preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemMessageBannerStory(
+    val variant: TangemMessageBanner.Variant,
+    val contentAlign: TangemMessageBanner.ContentAlign,
+    val hasGlowRing: Boolean,
+    val hasDescription: Boolean,
+    val hasSecondaryButton: Boolean,
+    val hasPrimaryButton: Boolean,
+    val hasCloseButton: Boolean,
+    val hasSlotStart: Boolean,
+    val hasSlotEnd: Boolean,
+    val hasExtraContent: Boolean,
+    val background: Background,
+    val onVariantChange: (TangemMessageBanner.Variant) -> Unit,
+    val onContentAlignChange: (TangemMessageBanner.ContentAlign) -> Unit,
+    val onGlowRingToggle: () -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onSecondaryButtonToggle: () -> Unit,
+    val onPrimaryButtonToggle: () -> Unit,
+    val onCloseButtonToggle: () -> Unit,
+    val onSlotStartToggle: () -> Unit,
+    val onSlotEndToggle: () -> Unit,
+    val onExtraContentToggle: () -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the banner preview is rendered on top of. */
     enum class Background(val label: String) {
         BgPrimary("bg.primary"),
         BgSecondary("bg.secondary"),
