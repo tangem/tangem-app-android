@@ -5,14 +5,18 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.scenarios.*
 import com.tangem.screens.*
+import com.tangem.screens.tangempay.*
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
+import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
@@ -805,6 +809,333 @@ class AppTransfersTest : BaseTestCase() {
             step("Enter amount '$amount'") { inputAmount(amount) }
             step("Assert Transfer mode is ready") { assertTransferReady() }
             step("Assert network fee is displayed") { waitForFeeDisplayed() }
+        }
+    }
+
+    @AllureId("10005")
+    @DisplayName("App transfers: Tron network fee")
+    @Test
+    fun tronNetworkFeeTest() {
+        val token = "Tron"
+        val amount = "0.001"
+        val userTokensState = "TwoAccountsSameTron"
+        val networksProvidersScenario = "networks_providers"
+        val appTransfersNetworksState = "AppTransfersNetworks"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(storiesScenario, storiesErrorState)
+                // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
+                setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
+            },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(networksProvidersScenario)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            // Non-zero prices keep total fiat > 0 so the empty-wallet banner doesn't push the account list under the Markets sheet.
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$appTransfersNetworksState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = appTransfersNetworksState)
+            }
+
+            step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+        }
+    }
+
+    // blockchain SDK TonProvidersBuilder drops public providers, so TON has no provider in the mocked build.
+    @Ignore("[REDACTED_JIRA]")
+    @AllureId("10012")
+    @DisplayName("App transfers: TON network fee")
+    @Test
+    fun tonNetworkFeeTest() {
+        // The SDK names TON's coin "Gram" (Blockchain.TON.getCoinName), so the portfolio row shows "Gram", not "Toncoin".
+        val token = "Gram"
+        val amount = "0.001"
+        val userTokensState = "TwoAccountsSameTON"
+        val networksProvidersScenario = "networks_providers"
+        val appTransfersNetworksState = "AppTransfersNetworks"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(storiesScenario, storiesErrorState)
+                // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
+                setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
+            },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(networksProvidersScenario)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            // Non-zero prices keep total fiat > 0 so the empty-wallet banner doesn't push the account list under the Markets sheet.
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$appTransfersNetworksState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = appTransfersNetworksState)
+            }
+
+            step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+        }
+    }
+
+    @AllureId("10013")
+    @DisplayName("App transfers: Cosmos network fee")
+    @Test
+    fun cosmosNetworkFeeTest() {
+        val token = "Cosmos"
+        val amount = "0.001"
+        val userTokensState = "TwoAccountsSameCosmos"
+        val networksProvidersScenario = "networks_providers"
+        val appTransfersNetworksState = "AppTransfersNetworks"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(storiesScenario, storiesErrorState)
+                // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
+                setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
+            },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(networksProvidersScenario)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            // Non-zero prices keep total fiat > 0 so the empty-wallet banner doesn't push the account list under the Markets sheet.
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$appTransfersNetworksState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = appTransfersNetworksState)
+            }
+
+            step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+        }
+    }
+
+    @AllureId("10015")
+    @DisplayName("App transfers: Aptos network fee")
+    @Test
+    fun aptosNetworkFeeTest() {
+        val token = "Aptos"
+        val amount = "0.001"
+        val userTokensState = "TwoAccountsSameAptos"
+        val networksProvidersScenario = "networks_providers"
+        val appTransfersNetworksState = "AppTransfersNetworks"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(storiesScenario, storiesErrorState)
+                // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
+                setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
+            },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(networksProvidersScenario)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            // Non-zero prices keep total fiat > 0 so the empty-wallet banner doesn't push the account list under the Markets sheet.
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$appTransfersNetworksState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = appTransfersNetworksState)
+            }
+
+            step("Open Swap in Transfer mode for '$token'") { openSwapInTransferMode(token) }
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+        }
+    }
+
+    @AllureId("9856")
+    @DisplayName("App transfers: Transfer mode is available from a Tangem Pay account")
+    @Test
+    fun transferModeAvailableFromTangemPayAccountTest() {
+        val token = "USDC"
+        val receiveAccountName = "Main account"
+        val eligibilityState = "PaeraCustomer"
+        val balanceScenario = "tangem_pay_balance_update"
+        val balanceInitialState = "InitialBalance"
+        val historyScenario = "tangem_pay_transaction_history"
+        val historyInitialState = "InitialEmpty"
+        val userTokensState = "TangemPayTransferUsdc"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
+                resetWireMockScenarioState(balanceScenario)
+                resetWireMockScenarioState(historyScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+            }
+        ).run {
+            step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
+                setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
+            }
+            step("Set WireMock scenario: '$balanceScenario' to state: '$balanceInitialState'") {
+                setWireMockScenarioState(scenarioName = balanceScenario, state = balanceInitialState)
+            }
+            step("Set WireMock scenario: '$historyScenario' to state: '$historyInitialState'") {
+                setWireMockScenarioState(scenarioName = historyScenario, state = historyInitialState)
+            }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+
+            step("Open Tangem Pay") { openTangemPay() }
+            step("Click on 'Withdraw' button") {
+                onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
+            }
+            step("Acknowledge withdrawal note sheet") {
+                onTangemPayWithdrawNoteSheet {
+                    title.assertIsDisplayed()
+                    gotItButton.clickWithAssertion()
+                }
+            }
+            step("Choose identical receive token '$token' from '$receiveAccountName'") {
+                chooseIdenticalReceiveToken(tokenName = token, receiveAccountName = receiveAccountName)
+            }
+            // Withdraw-entry swap keeps recalculating — use flakySafely rather than assertTransferReady's waitUntil.
+            step("Assert Transfer mode is ready") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+                    onSwapTokenScreen { transferTitle.assertIsDisplayed() }
+                }
+                onSwapTokenScreen { providersBlock.assertIsNotDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("9995")
+    @DisplayName("App transfers: transfer between different wallets reaches 'Transfer in progress' screen")
+    @Test
+    fun transferBetweenDifferentWalletsReachesFinishTest() {
+        val token = "Ethereum"
+        val amount = "0.001"
+        val secondWalletName = "Wallet 2"
+        val userTokensState = "EthereumWithSecondToken"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(ethCallScenario)
+                resetWireMockScenarioState(ethBalanceScenario)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            step("Set WireMock scenario: '$ethCallScenario' to state: '$started'") {
+                setWireMockScenarioState(scenarioName = ethCallScenario, state = started)
+            }
+            step("Set WireMock scenario: '$ethBalanceScenario' to state: '$started'") {
+                setWireMockScenarioState(scenarioName = ethBalanceScenario, state = started)
+            }
+
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Generate missing addresses") { generateMissingHotWalletAddresses() }
+            step("Wait for addresses to be generated") { waitForAddressesGenerated() }
+            step("Add a second card wallet '$secondWalletName'") {
+                addNewCardWallet(WalletMockContent)
+            }
+            step("Switch back to the hot wallet") { switchToPreviousWallet() }
+            step("Click on token with name: '$token'") { clickDisplayedTokenOnMain(token) }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+            }
+            step("Select identical receive token '$token' on '$secondWalletName'") {
+                selectReceiveTokenOnWallet(token = token, walletName = secondWalletName)
+            }
+            step("Enter amount '$amount'") { inputAmount(amount) }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
+            step("Assert network fee is displayed") { waitForFeeDisplayed() }
+            step("Hold to confirm the transfer") { holdToConfirmTransfer() }
+            step("Assert 'Transfer in progress' screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapSuccessScreen { transferInProgressTitle.assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @AllureId("9996")
+    @DisplayName("App transfers: adding a missing token to the recipient wallet enables Transfer")
+    @Test
+    fun addMissingTokenToRecipientWalletEnablesTransferTest() {
+        val token = "Ethereum"
+        val bitcoinToken = "Bitcoin"
+        val recipientWalletName = "Wallet"
+        val recipientWithoutEthereumState = "RecipientWithoutEthereum"
+        val ethereumWithSecondTokenState = "EthereumWithSecondToken"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
+            additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(ethCallScenario)
+                resetWireMockScenarioState(ethBalanceScenario)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$recipientWithoutEthereumState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = recipientWithoutEthereumState)
+            }
+            step("Set WireMock scenario: '$ethCallScenario' to state: '$started'") {
+                setWireMockScenarioState(scenarioName = ethCallScenario, state = started)
+            }
+            step("Set WireMock scenario: '$ethBalanceScenario' to state: '$started'") {
+                setWireMockScenarioState(scenarioName = ethBalanceScenario, state = started)
+            }
+
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Generate missing addresses") { generateMissingHotWalletAddresses() }
+            step("Wait for addresses to be generated") { waitForAddressesGenerated() }
+            step("Assert token '$bitcoinToken' is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { tokenWithTitleAndAddress(bitcoinToken).assertIsDisplayed() }
+                }
+            }
+            // Switch the user-tokens mock so the second wallet loads with Ethereum while the recipient stays Ethereum-less.
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$ethereumWithSecondTokenState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = ethereumWithSecondTokenState)
+            }
+            step("Add a second card wallet") {
+                addNewCardWallet(WalletMockContent)
+            }
+            step("Click on token with name: '$token'") { clickDisplayedTokenOnMain(token) }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+            }
+            step("Add missing token '$token' to recipient wallet '$recipientWalletName'") {
+                addMissingReceiveTokenToWallet(token = token, recipientWalletName = recipientWalletName)
+            }
+            step("Assert Transfer mode is ready") { assertTransferReady() }
         }
     }
 
