@@ -395,6 +395,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             ),
             error = null,
             virtualAccount = virtualAccount,
+            tariffPlan = tariffPlan,
         )
     }
 

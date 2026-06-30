@@ -151,6 +151,8 @@ sealed class PaymentAccountStatusValue {
      *                 (see [copySealed]), or `null` when the status is up to date. Not persisted.
      * @property virtualAccount Virtual Account (Visa on-ramp) availability — VA MVP0 (TWI-1638).
      *                          Transient: not persisted in the local cache.
+     * @property tariffPlan Current tariff plan with subscription data (Tiers).
+     *                      Transient: not persisted in the local cache.
      */
     @Serializable
     data class Loaded(
@@ -163,6 +165,7 @@ sealed class PaymentAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
         val virtualAccount: VirtualAccountOnramp,
+        val tariffPlan: TangemPayCustomerTariffPlan?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,

@@ -17,6 +17,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -81,6 +82,12 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayAddToWalletComponent.Params(
                 card = config.card,
                 userWalletId = params.initialStatus.userWalletId,
+            ),
+        )
+        is TangemPayAccountDetailsInnerRoute.CurrentPlan -> TangemPayCurrentPlanComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayCurrentPlanComponent.Params(
+                tariffPlan = config.tariffPlan,
             ),
         )
     }

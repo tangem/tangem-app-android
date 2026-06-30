@@ -120,6 +120,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 },
                 error = null,
                 virtualAccount = VirtualAccountOnramp.None,
+                tariffPlan = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,

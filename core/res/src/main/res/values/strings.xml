@@ -1951,6 +1951,10 @@
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
+  <string name="tangempay_current_plan_title">Current plan</string>
+  <string name="tangempay_current_plan_section_card">Card related</string>
+  <string name="tangempay_current_plan_section_plan">Plan related</string>
+  <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_reissue_card_confirm">Replace card</string>
   <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
