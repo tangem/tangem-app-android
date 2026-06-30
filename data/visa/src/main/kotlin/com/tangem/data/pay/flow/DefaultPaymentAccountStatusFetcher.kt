@@ -462,7 +462,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return if (closingOrderId != null) {
             val order = cardDetailsRepository.getOrderInfo(userWalletId, closingOrderId).getOrNull()
             if (order != null && order.orderStatus.isTerminal) {
-                closeCardRepository.setCloseOrderId(cardId, null)
+                closeCardRepository.removeCloseOrderId(cardId)
                 TangemPayCardState.Active
             } else {
                 TangemPayCardState.Closing
@@ -470,6 +470,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         } else if (reissueOrderId != null) {
             val order = cardDetailsRepository.getOrderInfo(userWalletId, reissueOrderId).getOrNull()
             if (order != null && order.orderStatus.isTerminal) {
+                reissueCardRepository.removeReissueOrderId(cardId)
                 TangemPayCardState.Active
             } else {
                 TangemPayCardState.Reissuing
