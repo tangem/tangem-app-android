@@ -4,7 +4,7 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.cancelS
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.defaultLaunchIn
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTriggerInstance
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
-import com.tangem.data.txhistory.repository.ExpressHistoryRepository
+import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
 import com.tangem.datasource.api.express.models.response.ExchangeHistoryDeltaResponse
 import com.tangem.datasource.api.express.models.response.ExchangeHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
@@ -31,7 +31,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
     @Assisted private val accountId: AccountId,
     private val utils: TxHistoryFetcherUtils,
     private val expressSyncStateDao: ExpressSyncStateDao,
-    private val expressHistoryRepository: ExpressHistoryRepository,
+    private val expressHistoryRepository: DefaultExpressHistoryRepository,
 ) : ExpressTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
     private val userWalletId: UserWalletId get() = accountId.userWalletId
