@@ -111,7 +111,6 @@ internal fun DonutChart(
         Modifier.pointerInput(segments, startAngle, strokePx) {
             detectTapGestures { tap ->
                 val clickedIndex = segmentIndexAt(tap, size.toSize(), strokePx, segments, startAngle)
-
                 if (latestSelectedIndex != clickedIndex) latestOnSegmentClick?.invoke(clickedIndex)
             }
         }
