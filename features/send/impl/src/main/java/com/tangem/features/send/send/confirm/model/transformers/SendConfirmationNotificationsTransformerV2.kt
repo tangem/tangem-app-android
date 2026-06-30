@@ -21,7 +21,9 @@ import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SendConfirmationNotificationsTransformerV2(
     private val feeSelectorUM: FeeSelectorUM,
     private val amountUM: AmountState,
@@ -29,6 +31,8 @@ internal class SendConfirmationNotificationsTransformerV2(
     private val cryptoCurrency: CryptoCurrency,
     private val appCurrency: AppCurrency,
     private val analyticsCategoryName: String,
+    private val isFeeSubtractedFromAmount: Boolean,
+    private val isFeeExceedingBalance: Boolean,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         val state = prevState as? ConfirmUM.Content ?: return prevState
@@ -73,10 +77,14 @@ internal class SendConfirmationNotificationsTransformerV2(
 
         val isFeeConvertibleToFiat = feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat
 
-        val fiatSendingValue = if (isFeeConvertibleToFiat) {
-            fiatFeeValue?.let { fiatAmountValue?.plus(it) }
-        } else {
-            fiatAmountValue
+        val fiatSendingValue = when {
+            !isFeeConvertibleToFiat -> fiatAmountValue
+            // Fee alone exceeds the balance → the transaction can't go through, nothing is sent.
+            isFeeExceedingBalance -> BigDecimal.ZERO
+            // When the fee is subtracted from the amount, the entered amount is the gross that already
+            // includes the fee, so it must not be added again — that double-counts it.
+            isFeeSubtractedFromAmount -> fiatAmountValue
+            else -> fiatFeeValue?.let { fiatAmountValue?.plus(it) }
         }
 
         val fiatSending = fiatSendingValue.format {
