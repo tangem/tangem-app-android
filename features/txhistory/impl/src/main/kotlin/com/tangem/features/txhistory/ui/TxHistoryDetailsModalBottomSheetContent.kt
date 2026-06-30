@@ -53,6 +53,15 @@ private fun TxHistoryDetailsModalBottomSheetContentPreview() {
     }
 }
 
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun TxHistoryDetailsModalBottomSheetContentTwoAssetsPreview() {
+    TangemThemePreviewRedesign {
+        TxHistoryDetailsModalBottomSheetContent(state = previewTwoAssets(), onDismiss = {})
+    }
+}
+
 /** Fully-populated single-asset state exercising every sub-view: header, amount block, counterparty and info rows. */
 private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     header = TxHistoryDetailsUM.HeaderUM(
@@ -82,6 +91,59 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     ),
     rows = persistentListOf(
         TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+    ),
+)
+
+/** Failed swap exercising the two-asset body: both legs, the error status banner, provider link row and the CTA. */
+private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
+    header = TxHistoryDetailsUM.HeaderUM(
+        iconRes = R.drawable.ic_exchange_vertical_24,
+        status = Status.Failed,
+        title = stringReference("Swap"),
+        subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+    ),
+    from = TxHistoryDetailsUM.AssetUM(
+        label = stringReference("You send"),
+        owner = null,
+        amount = stringReference("- 1.5 ETH"),
+        currencyIcon = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_eth_22,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        ),
+        isFaded = true,
+    ),
+    to = TxHistoryDetailsUM.AssetUM(
+        label = stringReference("You receive"),
+        owner = null,
+        amount = stringReference("+ 0.001 BTC"),
+        currencyIcon = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_btc_22,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        ),
+        isFaded = true,
+    ),
+    statusBanner = TxHistoryDetailsUM.StatusBannerUM(
+        severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+        title = stringReference("Failed"),
+        subtitle = stringReference("Funds will be refunded by the provider"),
+        isLoading = false,
+    ),
+    rows = persistentListOf(
+        TxHistoryDetailsUM.InfoRowUM(
+            label = stringReference("Provider"),
+            value = stringReference("Changelly"),
+            trailingIconRes = R.drawable.ic_arrow_top_right_24,
+            onClick = {},
+        ),
+        TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+    ),
+    providerButton = TxHistoryDetailsUM.ProviderButtonUM(
+        text = stringReference("Go to provider"),
+        onClick = {},
     ),
 )
 

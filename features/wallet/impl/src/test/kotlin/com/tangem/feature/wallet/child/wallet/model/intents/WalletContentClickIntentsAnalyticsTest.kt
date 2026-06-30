@@ -6,7 +6,6 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -21,7 +20,6 @@ internal class WalletContentClickIntentsAnalyticsTest {
 
     private val stateHolder: WalletStateController = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val walletFeatureToggles: WalletFeatureToggles = mockk(relaxed = true)
     private val router: InnerWalletRouter = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
@@ -45,16 +43,14 @@ internal class WalletContentClickIntentsAnalyticsTest {
             yieldSupplySetShouldShowMainPromoUseCase = mockk(relaxed = true),
             tokenListAnalyticsSender = mockk(relaxed = true),
             uiMessageSender = mockk(relaxed = true),
-            walletFeatureToggles = walletFeatureToggles,
         )
         implementor.initialize(router = router, coroutineScope = TestScope())
         return implementor
     }
 
     @Test
-    fun `GIVEN add and manage toggle enabled WHEN onOrganizeTokensClick THEN sends ButtonAddManage event and opens bottom sheet`() =
+    fun `WHEN onOrganizeTokensClick THEN sends ButtonAddManage event and opens bottom sheet`() =
         runTest {
-            every { walletFeatureToggles.isAddAndManageTokensEnabled } returns true
             val implementor = createImplementor()
             val captured = slot<AnalyticsEvent>()
 
@@ -66,18 +62,5 @@ internal class WalletContentClickIntentsAnalyticsTest {
             assertThat(captured.captured.params).isEmpty()
             verify(exactly = 1) { router.openAddAndManageBottomSheet(userWalletId = userWalletId) }
             verify(exactly = 0) { router.openOrganizeTokensScreen(any()) }
-        }
-
-    @Test
-    fun `GIVEN add and manage toggle disabled WHEN onOrganizeTokensClick THEN does not send analytics and opens organize screen`() =
-        runTest {
-            every { walletFeatureToggles.isAddAndManageTokensEnabled } returns false
-            val implementor = createImplementor()
-
-            implementor.onOrganizeTokensClick()
-
-            verify(exactly = 0) { analyticsEventHandler.send(any<AnalyticsEvent>()) }
-            verify(exactly = 1) { router.openOrganizeTokensScreen(userWalletId = userWalletId) }
-            verify(exactly = 0) { router.openAddAndManageBottomSheet(any()) }
         }
 }

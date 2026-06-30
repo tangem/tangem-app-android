@@ -25,6 +25,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -62,7 +63,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
@@ -109,6 +110,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         isRedesignEnabled = isRedesignEnabled(),
         isRemoveAccountEnabled = tangemPayFeatureToggles.isRemoveAccountEnabled,
         isMultipleCardsEnabled = isMultipleCardsEnabled,
+        isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -378,6 +380,10 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickTermsAndLimits() {
         analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+    }
+
+    override fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan) {
+        router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
 
     override fun onCardClick(cardId: String) {
