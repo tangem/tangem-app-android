@@ -113,7 +113,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
-            feeSelectorUM = null,
+            // A loaded (non-zero) fee is required: the manual dust check is now skipped when feeValue is zero
+            // (fee errored / not yet loaded), so it cannot duplicate the fee-error path's MinimumAmountError.
+            feeSelectorUM = contentWithFee(feeValue = BigDecimal("0.001")),
             feeCryptoCurrencyStatus = null,
             actions = actions,
         )
