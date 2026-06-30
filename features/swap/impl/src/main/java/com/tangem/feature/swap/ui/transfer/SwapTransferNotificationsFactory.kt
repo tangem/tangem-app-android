@@ -69,10 +69,7 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 feeError = getFeeError,
                 actions = actions,
             )
-        }
-            // Two independent dust checks can both add an identical MinimumAmountError; collapse the duplicate banner.
-            .distinct()
-            .toPersistentList()
+        }.toPersistentList()
     }
 
     private fun MutableList<NotificationUM>.maybeAddRentExemptionError(state: SwapState.Transfer) {
