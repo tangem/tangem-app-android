@@ -1,19 +1,11 @@
 package com.tangem.features.feed.components.market.details
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
@@ -27,32 +19,24 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.DesignFeatureToggles
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
-import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockParentClickIntents
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
-import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
-import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTopBar
+import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTitle
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -187,58 +171,12 @@ internal class DefaultMarketsTokenDetailsComponent(
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by model.state.collectAsStateWithLifecycle()
-        val background = LocalMainBottomSheetColor.current.value
-        if (LocalRedesignEnabled.current) {
-            TangemTopBar(
-                startContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .clip(CircleShape)
-                            .hazeEffectTangem { blurRadius = 8.dp }
-                            .clickableSingle(
-                                onClick = { params.onBackClicked() },
-                                enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                            )
-                            .padding(TangemTheme.dimens2.x2),
-                    )
-                },
-                endContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_share_new_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .clip(CircleShape)
-                            .hazeEffectTangem { blurRadius = 8.dp }
-                            .clickableSingle(
-                                onClick = state.onShareClick,
-                                enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                            )
-                            .padding(TangemTheme.dimens2.x2_5),
-                    )
-                },
-                type = if (LocalIsOpenedInBottomSheet.current) {
-                    TangemTopBarType.BottomSheet
-                } else {
-                    TangemTopBarType.Default
-                },
-            )
-        } else {
-            MarketsTokenDetailsTopBar(
-                onBackClick = { params.onBackClicked() },
-                isBackButtonEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                shouldShowPriceSubtitle = state.shouldShowPriceSubtitle,
-                tokenName = state.tokenName,
-                tokenPrice = state.priceText,
-                backgroundColor = background,
-                onShareClick = state.onShareClick,
-            )
-        }
+        MarketsTokenDetailsTitle(
+            state = state,
+            backgroundColor = LocalMainBottomSheetColor.current.value,
+            isBackButtonEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+            onBackClick = { params.onBackClicked() },
+        )
     }
 
     @Composable

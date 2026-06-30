@@ -289,6 +289,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 onScroll = {},
             ),
             onShareClick = ::onShareClick,
+            isAddToPortfolioButtonVisible = false,
+            onAddToPortfolioClick = ::openAddToPortfolio,
         ),
     )
 
@@ -343,6 +345,18 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     else -> Unit
                 }
             }
+        }
+        if (isAddToPortfolioAvailable) {
+            addToPortfolioManager.setTokenParams(params.token)
+            addToPortfolioManager.state
+                .map { managerState ->
+                    managerState is AddToPortfolioManager.State.Ready && managerState.isAvailableToAdd
+                }
+                .distinctUntilChanged()
+                .onEach { isVisible ->
+                    state.update { it.copy(isAddToPortfolioButtonVisible = isVisible) }
+                }
+                .launchIn(modelScope)
         }
         addToPortfolioManager.onDismiss.receiveAsFlow()
             .onEach { addToPortfolioSheetNavigation.dismiss() }
