@@ -29,9 +29,7 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.ds2.shimmers.RectangleShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -175,12 +173,7 @@ private fun GroupTitleBlock(
                 .fillMaxWidth()
                 .padding(top = 6.dp, start = 16.dp),
         ) {
-            TextShimmer(
-                modifier = Modifier.width(TangemTheme.dimens2.x10),
-                text = state.title,
-                style = TextShimmerStyle.SUBHEADING,
-                radius = TangemTheme.dimens2.x25,
-            )
+            TangemShimmer(style = TangemTheme.typography3.subheading.medium)
         }
     } else {
         Text(
@@ -224,7 +217,7 @@ private fun Icon(state: TangemPayTransactionState, modifier: Modifier = Modifier
             iconState = state.iconV2,
             modifier = modifier,
         )
-        is TangemPayTransactionState.Loading -> RectangleShimmer(
+        is TangemPayTransactionState.Loading -> TangemShimmer(
             modifier = modifier.size(TangemTheme.dimens2.x10),
             radius = TangemTheme.dimens2.x25,
         )
@@ -266,12 +259,7 @@ private fun Title(state: TangemPayTransactionState, modifier: Modifier = Modifie
             TangemRowText(text = state.title.resolveReference(), role = TangemRowTextRole.Title)
         }
         is TangemPayTransactionState.Loading -> {
-            TextShimmer(
-                modifier = modifier,
-                text = "Transfer",
-                radius = TangemTheme.dimens2.x25,
-                style = TextShimmerStyle.BODY,
-            )
+            TangemShimmer(modifier = modifier, style = TangemTheme.typography3.body.medium)
         }
     }
 }
@@ -283,12 +271,7 @@ private fun Subtitle(state: TangemPayTransactionState, modifier: Modifier = Modi
             TangemRowText(text = state.subtitle.resolveReference(), role = TangemRowTextRole.Subtitle)
         }
         is TangemPayTransactionState.Loading -> {
-            TextShimmer(
-                modifier = modifier,
-                text = "Transfer",
-                radius = TangemTheme.dimens2.x25,
-                style = TextShimmerStyle.CAPTION,
-            )
+            TangemShimmer(modifier = modifier, style = TangemTheme.typography3.caption.medium)
         }
     }
 }
@@ -306,12 +289,7 @@ private fun Amount(state: TangemPayTransactionState, isBalanceHidden: Boolean, m
             )
         }
         is TangemPayTransactionState.Loading -> {
-            TextShimmer(
-                modifier = modifier,
-                text = "10000",
-                radius = TangemTheme.dimens2.x25,
-                style = TextShimmerStyle.BODY,
-            )
+            TangemShimmer(modifier = modifier, style = TangemTheme.typography3.body.medium)
         }
     }
 }
@@ -323,12 +301,7 @@ private fun Timestamp(state: TangemPayTransactionState, modifier: Modifier = Mod
             TangemRowText(text = state.time, role = TangemRowTextRole.Subvalue)
         }
         is TangemPayTransactionState.Loading -> {
-            TextShimmer(
-                modifier = modifier,
-                text = "00:00",
-                radius = TangemTheme.dimens2.x25,
-                style = TextShimmerStyle.CAPTION,
-            )
+            TangemShimmer(modifier = modifier, style = TangemTheme.typography3.caption.medium)
         }
     }
 }
