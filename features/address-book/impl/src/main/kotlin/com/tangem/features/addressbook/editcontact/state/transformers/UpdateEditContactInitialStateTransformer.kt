@@ -16,6 +16,7 @@ internal class UpdateEditContactInitialStateTransformer(
     private val onColorSelect: (CryptoPortfolioIcon.Color) -> Unit,
     private val onCloseClick: () -> Unit,
     private val onAddAddressClick: () -> Unit,
+    private val onSaveClick: () -> Unit,
 ) : Transformer<EditContactUM> {
 
     override fun transform(prevState: EditContactUM): EditContactUM {
@@ -27,6 +28,7 @@ internal class UpdateEditContactInitialStateTransformer(
         return prevState.copy(
             title = resourceReference(titleResId),
             colors = prevState.colors.copy(onColorSelect = onColorSelect),
+            saveButton = prevState.saveButton.copy(onClick = onSaveClick),
             onNameChange = onNameChange,
             onCloseClick = onCloseClick,
             onAddAddressClick = onAddAddressClick,

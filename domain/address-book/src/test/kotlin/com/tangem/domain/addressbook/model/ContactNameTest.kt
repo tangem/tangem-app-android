@@ -39,8 +39,33 @@ class ContactNameTest {
     }
 
     @Test
-    fun `emoji is rejected`() {
-        assertThat(ContactName("Alice 😀").leftOrNull()).isEqualTo(ContactName.Error.InvalidCharacters)
+    fun `simple emoji is accepted`() {
+        assertThat(ContactName("Alice 😀").isRight()).isTrue()
+    }
+
+    @Test
+    fun `emoji-only name is accepted`() {
+        assertThat(ContactName("😀").isRight()).isTrue()
+    }
+
+    @Test
+    fun `flag emoji is accepted`() {
+        assertThat(ContactName("Team 🇺🇸").isRight()).isTrue()
+    }
+
+    @Test
+    fun `zwj emoji sequence is accepted`() {
+        assertThat(ContactName("Family 👨‍👩‍👧").isRight()).isTrue()
+    }
+
+    @Test
+    fun `emoji with variation selector is accepted`() {
+        assertThat(ContactName("Love ❤️").isRight()).isTrue()
+    }
+
+    @Test
+    fun `non-latin letters are accepted`() {
+        assertThat(ContactName("Алёша 大阪").isRight()).isTrue()
     }
 
     @Test
@@ -51,6 +76,16 @@ class ContactNameTest {
     @Test
     fun `tab is rejected`() {
         assertThat(ContactName("Ali\tce").leftOrNull()).isEqualTo(ContactName.Error.InvalidCharacters)
+    }
+
+    @Test
+    fun `zero-width space is rejected`() {
+        assertThat(ContactName("Ali\u200Bce").leftOrNull()).isEqualTo(ContactName.Error.InvalidCharacters)
+    }
+
+    @Test
+    fun `non-breaking space is rejected`() {
+        assertThat(ContactName("Ali\u00A0ce").leftOrNull()).isEqualTo(ContactName.Error.InvalidCharacters)
     }
 
     @Test
