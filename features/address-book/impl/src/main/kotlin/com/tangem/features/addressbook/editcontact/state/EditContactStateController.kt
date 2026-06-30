@@ -3,6 +3,8 @@ package com.tangem.features.addressbook.editcontact.state
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -32,6 +34,7 @@ internal class EditContactStateController @Inject constructor() {
             title = TextReference.EMPTY,
             name = "",
             namePlaceholder = resourceReference(R.string.address_book_new_contact),
+            nameError = null,
             portfolioIcon = AccountIconUM.CryptoPortfolio(
                 value = CryptoPortfolioIcon.Icon.Letter,
                 color = selectedColor,
@@ -42,6 +45,18 @@ internal class EditContactStateController @Inject constructor() {
                 onColorSelect = {},
             ),
             addresses = persistentListOf(),
+            walletBlock = EditContactUM.WalletBlockUM(
+                walletName = "",
+                isChangeable = false,
+                onClick = {},
+            ),
+            isAddAddressEnabled = true,
+            saveButton = TangemButtonUM(
+                text = TextReference.Res(R.string.common_save),
+                type = TangemButtonType.Primary,
+                isEnabled = false,
+                onClick = {},
+            ),
             onNameChange = {},
             onCloseClick = {},
             onAddAddressClick = {},

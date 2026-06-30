@@ -25,6 +25,7 @@ dependencies {
     api(projects.features.wallet.api)
     api(projects.features.account.api)
     api(projects.features.commonFeatures.api)
+    api(projects.features.forYou.api)
     implementation(projects.features.promoBanners.api)
 
     /* Data */

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
@@ -23,6 +24,7 @@ internal fun SettingsScreensScaffold(
     @StringRes titleRes: Int? = null,
     addBottomInsets: Boolean = true,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    backButtonTestTag: String? = null,
     content: @Composable () -> Unit,
     fab: @Composable () -> Unit = {},
 ) {
@@ -35,6 +37,7 @@ internal fun SettingsScreensScaffold(
                 modifier = Modifier.statusBarsPadding(),
                 onBackClick = onBackClick,
                 backgroundColor = backgroundColor,
+                backButtonTestTag = backButtonTestTag,
             )
         },
         modifier = modifier,
@@ -91,13 +94,17 @@ internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color = TangemTheme.colors.background.primary,
+    backButtonTestTag: String? = null,
 ) {
     TopAppBar(
         modifier = modifier,
         title = { },
         navigationIcon =
         {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = if (backButtonTestTag != null) Modifier.testTag(backButtonTestTag) else Modifier,
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back_24),
                     contentDescription = null,

@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
@@ -38,6 +39,8 @@ import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
@@ -153,7 +156,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
                         )
 
                         if (state.marketsBlock != null) {
-                            item("markets_title_spacer") { SpacerH(height = 20.dp) }
+                            item("markets_title_spacer") { SpacerH(height = 40.dp) }
                             swapMarketsListItems(state.marketsBlock)
                         }
                     }
@@ -206,9 +209,9 @@ private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapM
 private fun LazyListScope.assetsTitle() {
     item(key = "assets_title") {
         Text(
-            text = stringResourceSafe(R.string.swap_your_assets_title),
-            style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
+            style = TangemTheme.typography2.headingSemibold20,
+            color = TangemTheme.colors2.text.neutral.primary,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -224,7 +227,7 @@ private fun LazyListScope.walletListItem(walletList: WalletListUM) {
     if (walletList.items.isEmpty()) return
     item("wallet_list") {
         LazyRow(
-            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
@@ -249,7 +252,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(percent = 50))
             .background(backgroundColor)
             .clickable(onClick = state.onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -259,7 +262,14 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
         Text(
             text = state.text.resolveReference(),
             color = buttonTextColor,
-            style = TangemTheme.typography.button,
+            style = TangemTheme.typography2.bodySemibold16,
+        )
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        TangemDeviceIcon(
+            state = state.deviceIcon,
+            modifier = Modifier.size(20.dp),
         )
 
         val count = state.count
@@ -331,7 +341,13 @@ private fun LazyListScope.emptyTokensList(modifier: Modifier = Modifier) {
     item("EmptyTokensList") {
         Box(
             modifier = modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(
+                    color = if (LocalRedesignEnabled.current) {
+                        TangemTheme.colors2.surface.level2
+                    } else {
+                        TangemTheme.colors.background.secondary
+                    },
+                )
                 .fillParentMaxSize(),
         ) {
             Column(modifier = Modifier.align(Alignment.Center)) {
@@ -362,7 +378,13 @@ private fun LazyListScope.tokensNotFound(modifier: Modifier = Modifier) {
     item("TokensNotFound") {
         Box(
             modifier = modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(
+                    color = if (LocalRedesignEnabled.current) {
+                        TangemTheme.colors2.surface.level2
+                    } else {
+                        TangemTheme.colors.background.secondary
+                    },
+                )
                 .fillParentMaxSize(),
         ) {
             Text(
@@ -452,24 +474,31 @@ private val wallets
             isSelected = true,
             onClick = {},
             count = null,
+            deviceIcon = DeviceIconUM.Card(
+                mainColor = Color.DarkGray,
+                secondColor = null,
+            ),
         ),
         WalletTabUM(
             text = TextReference.Str(value = "Wallet 1"),
             isSelected = true,
             onClick = {},
-            count = stringReference("3"),
+            count = null,
+            deviceIcon = DeviceIconUM.Mobile,
         ),
         WalletTabUM(
             text = TextReference.Str(value = "Wallet 2"),
             isSelected = false,
             onClick = {},
-            count = stringReference("333"),
+            count = stringReference("3"),
+            deviceIcon = DeviceIconUM.Ring(),
         ),
         WalletTabUM(
             text = TextReference.Str(value = "Wallet 3"),
             isSelected = false,
             onClick = {},
             count = null,
+            deviceIcon = DeviceIconUM.Mobile,
         ),
     )
 
