@@ -111,6 +111,7 @@ surveysparrow = "1.2.9"
 # region Tools
 detektComposeRules = "1.4.0"
 detekt = "1.23.8"
+dependencyAnalysis = "3.16.0"
 # endregion Tools
 
 # region Testing
@@ -142,6 +143,7 @@ firebase-perf = { id = "com.google.firebase.firebase-perf", version.ref = "fireb
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependencyAnalysis" }
 room = { id = "androidx.room", version.ref = "room" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
@@ -166,6 +168,7 @@ androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayo
 androidx-core = { module = "androidx.core:core", version.ref = "androidxCore" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxKtx" }
 androidx-core-splashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "androidxFragment" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
 androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "androidxFragment" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
@@ -297,6 +300,7 @@ kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-j
 kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinSerialization" }
 kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinDatetime" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
+arrow-atomic = { module = "io.arrow-kt:arrow-atomic", version.ref = "arrow" }
 arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 reownCore = { module = "com.reown:android-core", version.ref = "reownCore" }
 reownWeb3 = { module = "com.reown:walletkit", version.ref = "reownWeb3" }

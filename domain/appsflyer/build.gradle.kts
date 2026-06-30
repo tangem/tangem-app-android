@@ -7,7 +7,3 @@ plugins {
 android {
     namespace = "com.tangem.domain.appsflyer"
 }
-
-dependencies {
-    implementation(deps.kotlin.coroutines)
-}

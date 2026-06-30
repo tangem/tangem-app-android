@@ -14,52 +14,61 @@ android {
 }
 
 dependencies {
-    /** Core modules */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    implementation(projects.core.analytics)
 
-    /** Common modules */
-    implementation(projects.data.common)
-
-    /** Domain modules */
-    implementation(projects.domain.account)
-    implementation(projects.domain.onramp)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.card)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.appTheme.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.txhistory)
-
-    // region DI
-
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
     // endregion
 
-    // region Others dependencies
-
+    // region Other libraries
+    api(deps.moshi)
     implementation(deps.androidx.datastore)
+    implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.immutable.collections)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
-    implementation(deps.kotlin.serialization)
+    // endregion
 
-
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.libs.crypto)
-
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain) {
+    // region Tangem SDK
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.card.core)
+    // endregion
 
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    // endregion
+
+    // region Data modules
+    api(projects.data.common)
+    // endregion
+
+    // region Domain modules
+    api(projects.domain.common)
+    api(projects.domain.models)
+    api(projects.domain.onramp)
+    api(projects.domain.txhistory)
+    api(projects.domain.walletManager)
+    implementation(projects.domain.card)
+    runtimeOnly(projects.domain.account)
+    // endregion
+
+    // region Domain models
+    implementation(projects.domain.express.models)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.tokens.models)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
     // endregion
 }
