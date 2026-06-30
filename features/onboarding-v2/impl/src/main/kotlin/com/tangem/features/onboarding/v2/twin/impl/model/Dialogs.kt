@@ -14,6 +14,15 @@ internal val TwinProcessNotCompleted = DialogMessage(
     ),
 )
 
+internal val WalletPublicKeyMissing = DialogMessage(
+    message = resourceReference(R.string.common_unknown_error),
+    title = resourceReference(R.string.security_alert_title),
+    firstAction = EventMessageAction(
+        title = resourceReference(R.string.warning_button_ok),
+        onClick = {},
+    ),
+)
+
 internal fun cardVerificationFailedDialog(
     errorDescription: TextReference,
     onRequestSupport: () -> Unit,

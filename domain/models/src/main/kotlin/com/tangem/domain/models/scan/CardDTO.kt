@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.EncryptionMode
+import com.tangem.common.encryption.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
@@ -262,7 +262,7 @@ data class CardDTO(
     @JsonClass(generateAdapter = true)
     data class Wallet(
         @Json(name = "publicKey")
-        val publicKey: ByteArray,
+        val publicKey: ByteArray?,
         @Json(name = "chainCode")
         val chainCode: ByteArray?,
         @Json(name = "curve")
@@ -303,7 +303,12 @@ data class CardDTO(
             if (this === other) return true
             if (other !is Wallet) return false
 
-            if (!publicKey.contentEquals(other.publicKey)) return false
+            if (publicKey != null) {
+                if (other.publicKey == null) return false
+                if (!publicKey.contentEquals(other.publicKey)) return false
+            } else {
+                if (other.publicKey != null) return false
+            }
             if (chainCode != null) {
                 if (other.chainCode == null) return false
                 if (!chainCode.contentEquals(other.chainCode)) return false
@@ -320,7 +325,7 @@ data class CardDTO(
         }
 
         override fun hashCode(): Int {
-            var result = publicKey.contentHashCode()
+            var result = publicKey?.contentHashCode() ?: 0
             result = 31 * result + (chainCode?.contentHashCode() ?: 0)
             result = 31 * result + curve.hashCode()
             result = 31 * result + settings.hashCode()

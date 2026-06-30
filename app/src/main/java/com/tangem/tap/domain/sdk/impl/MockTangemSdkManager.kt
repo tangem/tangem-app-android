@@ -124,10 +124,6 @@ class MockTangemSdkManager(
         return CompletionResult.Success(true)
     }
 
-    override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
-        return CompletionResult.Success(Unit)
-    }
-
     override suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }

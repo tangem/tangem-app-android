@@ -4,12 +4,13 @@ import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.TapWorkarounds.hasOldStyleDerivation
+import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.card.configs.Wallet2CardConfig
@@ -39,19 +40,29 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     val seedKey = wallet.extendedPublicKey
     return when {
         scanResponse.cardTypesResolver.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
+            val twinWalletPublicKey = wallet.publicKey
+                ?: throw IllegalStateException("Wallet public key should not be null for twins")
             createTwinWalletManager(
-                walletPublicKey = wallet.publicKey,
+                walletPublicKey = twinWalletPublicKey,
                 pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
                 blockchain = environmentBlockchain,
                 curve = wallet.curve,
             )
         }
         scanResponse.card.settings.isHDWalletAllowed && seedKey != null && derivationParams != null -> {
-            val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
+            val hdWalletPublicKey = when {
+                scanResponse.card.firmwareVersion >= FirmwareVersion.v8 -> {
+                    wallet.publicKey
+                        ?: throw IllegalStateException("WalletPublicKey is null v8 wallet have no backup")
+                }
+                else -> throw IllegalStateException("Wallet public key should not be null for HD wallets")
+            }
+
+            val derivedKeys = scanResponse.derivedKeys[hdWalletPublicKey.toMapKey()]
             val derivationPath = derivationParams.getPath(blockchain)
 
             val publicKey = makePublicKey(
-                seedKey = wallet.publicKey,
+                seedKey = hdWalletPublicKey,
                 blockchain = blockchain,
                 derivationPath = derivationPath ?: return null,
                 derivedWalletKeys = derivedKeys ?: return null,
@@ -65,9 +76,11 @@ fun WalletManagerFactory.makeWalletManagerForApp(
             )
         }
         else -> {
+            val walletPublicKey = wallet.publicKey
+                ?: throw IllegalStateException("Wallet public key should not be null for legacy wallets")
             createLegacyWalletManager(
                 blockchain = environmentBlockchain,
-                walletPublicKey = wallet.publicKey,
+                walletPublicKey = walletPublicKey,
                 curve = wallet.curve,
             )
         }

@@ -215,8 +215,8 @@ internal class DefaultVisaRepository @Inject constructor(
             it.curve == EllipticCurve.Secp256k1
         }
         requireNotNull(cardWallet) { "Visa card wallet not found" }
-
-        return cardWallet.publicKey.toHexString()
+        val publicKey = requireNotNull(cardWallet.publicKey) { "Visa card wallet has no public key" }
+        return publicKey.toHexString()
     }
 
     private fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {

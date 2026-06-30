@@ -4,7 +4,7 @@ import com.tangem.common.SuccessResponse
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.EncryptionMode
+import com.tangem.common.encryption.EncryptionMode
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath

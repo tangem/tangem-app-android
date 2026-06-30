@@ -94,8 +94,6 @@ interface TangemSdkManager {
 
     suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean>
 
-    suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit>
-
     suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit>
 
     suspend fun clearSavedUserCodes(): CompletionResult<Unit>

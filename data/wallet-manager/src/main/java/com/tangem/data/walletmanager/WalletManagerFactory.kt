@@ -32,7 +32,7 @@ internal class WalletManagerFactory(
                 derivationParams = derivationParams,
             )
         } catch (e: Throwable) {
-            TangemLogger.w("Failed to create wallet manager for $blockchain", e)
+            TangemLogger.e("Failed to create wallet manager for $blockchain", e)
             null
         }
     }

@@ -26,10 +26,10 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 object Wallet2WithDerivationsMockContent : MockContent by Wallet2MockContent {
 
     private val secp256k1Pubkey: ByteArray =
-        Wallet2MockContent.cardDto.wallets.first { it.curve == EllipticCurve.Secp256k1 }.publicKey
+        Wallet2MockContent.cardDto.wallets.first { it.curve == EllipticCurve.Secp256k1 }.publicKey!!
 
     private val ed25519Pubkey: ByteArray =
-        Wallet2MockContent.cardDto.wallets.first { it.curve == EllipticCurve.Ed25519 }.publicKey
+        Wallet2MockContent.cardDto.wallets.first { it.curve == EllipticCurve.Ed25519 }.publicKey!!
 
     override val derivationTaskResponse: DerivationTaskResponse = DerivationTaskResponse(
         entries = rekey(WalletMockContent.derivationTaskResponse.entries),

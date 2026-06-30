@@ -2,6 +2,7 @@ package com.tangem.tap.domain.sdk.mocks.content
 
 import com.tangem.common.SuccessResponse
 import com.tangem.common.card.*
+import com.tangem.common.encryption.EncryptionMode
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse

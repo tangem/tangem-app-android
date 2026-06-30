@@ -14,7 +14,7 @@ import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.common.usersCode.UserCodeRepository
+import com.tangem.common.usersCode.AccessCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -48,12 +48,11 @@ import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.domain.tasks.product.*
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
-import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
-import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
-import com.tangem.tap.domain.tasks.visa.VisaCustomerWalletApproveTask
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
+import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
+import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
+import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -83,7 +82,7 @@ internal class DefaultTangemSdkManager(
         get() = cardSdkConfigRepository.sdk
 
     private val userCodeRepository by lazy {
-        UserCodeRepository(
+        AccessCodeRepository(
             keystoreManager = tangemSdk.keystoreManager,
             secureStorage = tangemSdk.secureStorage,
         )
@@ -291,16 +290,6 @@ internal class DefaultTangemSdkManager(
                     R.string.initial_message_reset_backup_card_header,
                     cardNumber.toString(),
                 ),
-            ),
-        )
-    }
-
-    override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
-        return userCodeRepository.save(
-            cardsIds = cardsIds,
-            userCode = UserCode(
-                type = UserCodeType.AccessCode,
-                stringValue = accessCode,
             ),
         )
     }
