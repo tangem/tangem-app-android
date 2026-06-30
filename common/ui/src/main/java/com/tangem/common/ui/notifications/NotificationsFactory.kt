@@ -120,40 +120,66 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addReserveAmountErrorNotification(
         reserveAmount: BigDecimal?,
         sendingAmount: BigDecimal,
         cryptoCurrency: CryptoCurrency,
         feeCryptoCurrency: CryptoCurrency?,
         isAccountFunded: Boolean,
+        hasRequiredTrustline: Boolean,
     ) {
         val sendingCoinAmount = when (cryptoCurrency) {
             is CryptoCurrency.Coin -> sendingAmount
             is CryptoCurrency.Token -> BigDecimal.ZERO
         }
 
-        if (feeCryptoCurrency == null && cryptoCurrency is CryptoCurrency.Token) {
+        when {
             // No need to show reserve amount warning if fee currency is unknown for token transfer
-            return
-        } else if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingCoinAmount) {
+            feeCryptoCurrency == null && cryptoCurrency is CryptoCurrency.Token -> Unit
             // account not funded, sending coin amount < reserve (send coin with less amount OR send any token)
+            !isAccountFunded && reserveAmount != null && reserveAmount > sendingCoinAmount ->
+                addAccountNotFundedNotification(
+                    reserveAmount = reserveAmount,
+                    cryptoCurrency = cryptoCurrency,
+                    feeCryptoCurrency = feeCryptoCurrency,
+                )
+            hasRequiredTrustline -> addTrustlineRequiredNotification()
+        }
+    }
 
-            if (cryptoCurrency is CryptoCurrency.Coin) {
-                // Try to send coin amount less than reserve amount (e.g. less than 1 XLM in Stellar)
+    private fun MutableList<NotificationUM>.addAccountNotFundedNotification(
+        reserveAmount: BigDecimal,
+        cryptoCurrency: CryptoCurrency,
+        feeCryptoCurrency: CryptoCurrency?,
+    ) {
+        when (cryptoCurrency) {
+            // Try to send coin amount less than reserve amount (e.g. less than 1 XLM in Stellar)
+            is CryptoCurrency.Coin -> add(
+                NotificationUM.Error.ReserveAmount(
+                    reserveAmount.format {
+                        crypto(feeCryptoCurrency ?: cryptoCurrency)
+                    },
+                ),
+            )
+            // Try to send any token (e.g. USDC in Stellar, but account not funded -> user must send XLM at first)
+            is CryptoCurrency.Token -> {
+                checkNotNull(feeCryptoCurrency)
                 add(
-                    NotificationUM.Error.ReserveAmount(
-                        reserveAmount.format {
-                            crypto(feeCryptoCurrency ?: cryptoCurrency)
+                    NotificationUM.Error.NetworkAccountNotFunded(
+                        coinName = feeCryptoCurrency.name,
+                        reserveAmount = reserveAmount.format {
+                            crypto(symbol = "", decimals = feeCryptoCurrency.decimals)
                         },
+                        reserveSymbol = feeCryptoCurrency.symbol,
                     ),
                 )
-            } else {
-                checkNotNull(feeCryptoCurrency)
-                // Try to send any token (e.g. USDC in Stellar, but account not funded -> user must send XLM at first)
-                add(NotificationUM.Error.NetworkAccountNotFunded(coinName = feeCryptoCurrency.name))
             }
         }
-        // TODO: check the RECEIVER account trustline before sending
+    }
+
+    private fun MutableList<NotificationUM>.addTrustlineRequiredNotification() {
+        add(NotificationUM.Error.RequiredTrustline)
     }
 
     fun MutableList<NotificationUM>.addMinimumAmountErrorNotification(
