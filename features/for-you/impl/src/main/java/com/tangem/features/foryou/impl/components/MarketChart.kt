@@ -194,12 +194,15 @@ private fun DonutSegmentTooltipBlock(
     onDismissRequest: () -> Unit,
 ) {
     val density = LocalDensity.current
-    val gapPx = with(density) { TooltipGap.roundToPx() }
+    val gapPx = with(density) { 8.dp.roundToPx() }
     val strokePx = with(density) { DonutStrokeWidth.toPx() }
+    var shownIndex by remember { mutableStateOf<Int?>(null) }
+    if (selectedIndex != null) shownIndex = selectedIndex
 
-    val selectedSegment = selectedIndex?.let(segments::getOrNull)
+    val isExpanded = selectedIndex?.let(segments::getOrNull) != null
+    val shownSegment = shownIndex?.let(segments::getOrNull)
     val positionProvider = remember(
-        selectedIndex,
+        shownIndex,
         segments,
         chartSize,
         chartWindowOffset,
@@ -208,7 +211,7 @@ private fun DonutSegmentTooltipBlock(
         gapPx,
     ) {
         segmentTooltipPositionProvider(
-            selectedIndex = selectedIndex,
+            selectedIndex = shownIndex,
             segments = segments,
             chartSize = chartSize,
             chartWindowOffset = chartWindowOffset,
@@ -220,11 +223,11 @@ private fun DonutSegmentTooltipBlock(
     }
 
     DonutSegmentTooltip(
-        expanded = selectedSegment != null,
+        expanded = isExpanded,
         positionProvider = positionProvider,
-        title = selectedSegment?.title.orEmpty(),
-        fiatValue = selectedSegment?.fiatValue.orEmpty(),
-        percent = selectedSegment?.let { formatSegmentPercent(it.weight) }.orEmpty(),
+        title = shownSegment?.title.orEmpty(),
+        fiatValue = shownSegment?.fiatValue.orEmpty(),
+        percent = shownSegment?.let { formatSegmentPercent(it.weight) }.orEmpty(),
         onDismissRequest = onDismissRequest,
     )
 }
@@ -236,8 +239,7 @@ private fun formatSegmentPercent(weight: Float): String {
 }
 
 private val DonutStrokeWidth = 28.dp
-private const val DonutStartAngle = -90f
-private val TooltipGap = 8.dp
+private val DonutStartAngle = -90f
 
 @Composable
 private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Float) {
