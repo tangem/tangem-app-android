@@ -393,6 +393,7 @@ dependencies {
     kapt(deps.hilt.compilerx)
 
     /** Other libraries */
+    implementation(deps.arrow.fx)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.googlePlay.review)
