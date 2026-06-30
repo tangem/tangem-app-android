@@ -258,7 +258,7 @@ private class CreateWalletTangemWallet(
                 )
             }
 
-            card.settings.isHDWalletAllowed -> {
+            card.shouldDeriveKeys() -> {
                 deriveKeys(
                     card = card,
                     createWalletResponses = createWalletResponses,
@@ -288,7 +288,7 @@ private class CreateWalletTangemWallet(
                 is CompletionResult.Success -> {
                     primaryCard = result.data
                     when {
-                        card.settings.isHDWalletAllowed -> {
+                        card.shouldDeriveKeys() -> {
                             deriveKeys(
                                 card = card,
                                 createWalletResponses = createWalletResponses,
@@ -317,12 +317,20 @@ private class CreateWalletTangemWallet(
         }
     }
 
+    private fun CardDTO.shouldDeriveKeys(): Boolean {
+        return this.settings.isHDWalletAllowed && this.firmwareVersion < FirmwareVersion.v8
+    }
+
     private fun deriveKeys(
         card: CardDTO,
         createWalletResponses: List<CreateWalletResponse>,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
+        if (card.firmwareVersion >= FirmwareVersion.v8) {
+            // for v8 we make it on finalize backup, so we don't need to derive keys here
+            return
+        }
         val map = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
         var isBlockchainsForCurvesExist = false
         createWalletResponses.forEach { response ->
@@ -333,8 +341,9 @@ private class CreateWalletTangemWallet(
                 isBlockchainsForCurvesExist = true
                 blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())
             }
+            val publicKey = response.wallet.publicKey ?: return@forEach
             if (derivationPaths.isNotEmpty()) {
-                map[response.wallet.publicKey.toMapKey()] = derivationPaths
+                map[publicKey.toMapKey()] = derivationPaths
             }
         }
         val cardEnv = session.environment.card
