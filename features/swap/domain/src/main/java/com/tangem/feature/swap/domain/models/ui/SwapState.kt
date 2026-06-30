@@ -60,6 +60,7 @@ sealed interface SwapState {
         val currencyCheck: CryptoCurrencyCheck? = null,
         val validationResult: Throwable? = null,
         val minAdaValue: BigDecimal? = null,
+        val hasRequiredTrustline: Boolean = false,
     ) : SwapState
 
     data class EmptyAmountState(
