@@ -25,14 +25,17 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
 import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
+import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.api.SendNotificationsComponent
@@ -70,9 +73,11 @@ internal class NotificationsModel @Inject constructor(
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
+    private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
+    private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
-    private val analyticsEventHandler: AnalyticsEventHandler,
+    analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: SendNotificationsComponent.Params = paramsContainer.require()
@@ -295,12 +300,31 @@ internal class NotificationsModel @Inject constructor(
             cryptoCurrency = currency,
             feeCryptoCurrency = feeCryptoCurrencyStatus.currency,
             isAccountFunded = currencyCheck.isAccountFunded,
+            hasRequiredTrustline = recipientRequiresTrustline(notificationData.destinationAddress),
         )
         addMinimumAmountErrorNotification(
             minimumSendAmount = currencyCheck.minimumSendAmount,
             sendingAmount = sendingAmount,
             cryptoCurrency = currency,
         )
+    }
+
+    private suspend fun recipientRequiresTrustline(destinationAddress: String?): Boolean {
+        val recipientAccount = destinationAddress
+            ?.let { getAccountCurrencyByAddressUseCase(it).getOrNull() }
+            ?.account
+            ?: return false
+        val recipientCurrency = recipientAccount.cryptoCurrencies
+            .firstOrNull { it.isSameTokenAs(currency) }
+            ?: return false
+        return getAssetRequirementsUseCase(
+            userWalletId = recipientAccount.userWalletId,
+            currency = recipientCurrency,
+        ).getOrNull() is AssetRequirementsCondition.RequiredTrustline
+    }
+
+    private fun CryptoCurrency.isSameTokenAs(other: CryptoCurrency): Boolean {
+        return id.rawNetworkId == other.id.rawNetworkId && id.contractAddress == other.id.contractAddress
     }
 
     private suspend fun MutableList<NotificationUM>.addWarningNotifications(
