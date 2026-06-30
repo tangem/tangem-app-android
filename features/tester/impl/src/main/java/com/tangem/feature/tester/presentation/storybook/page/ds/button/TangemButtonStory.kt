@@ -137,7 +137,7 @@ private fun ComponentPreview(state: TangemButtonStory) {
             background = state.background,
             modifier = Modifier
                 .matchParentSize()
-                .hazeSourceTangem(zIndex = 0f),
+                .hazeSourceTangem(zIndex = -1f),
         )
         Box(
             contentAlignment = Alignment.Center,
