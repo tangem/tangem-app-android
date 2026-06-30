@@ -1,9 +1,9 @@
-package com.tangem.core.ui.ds2.for_you_temp.models
+package com.tangem.features.foryou.impl.components.state
 
 import androidx.compose.ui.graphics.Color
 
 /**
- * One colored slice of a [com.tangem.core.ui.ds2.for_you_temp.DonutChart].
+ * One colored slice of a [com.tangem.features.foryou.impl.components.DonutChart].
  *
  * @param weight Fraction of the full circle this slice occupies, in `0f..1f`. The slices are laid out
  *   contiguously; whatever is left after `sum(weight)` shows through as the track.
@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
  * @param fiatValue Pre-formatted fiat value of the slice (e.g. `"$5,720.22"`). Shown in the selection
  *   tooltip next to the share. Empty by default.
  */
-data class DonutSegment(
+internal data class DonutSegment(
     val weight: Float,
     val color: Color,
     val title: String = "",
