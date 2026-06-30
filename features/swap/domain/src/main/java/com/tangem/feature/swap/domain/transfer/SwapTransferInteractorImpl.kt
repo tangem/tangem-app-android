@@ -24,6 +24,7 @@ import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -31,6 +32,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -66,8 +68,10 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
+    private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
 ) : SwapTransferInteractor {
 
+    @Suppress("LongMethod")
     override suspend fun updateTransfer(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -109,6 +113,7 @@ class SwapTransferInteractorImpl @Inject constructor(
             amount = fromTokenAmountValue,
             fee = warningsFee,
             feeCurrencyBalanceAfterTransaction = null,
+            recipientAddress = toSwapCurrencyStatus.destinationAddress(),
         )
         val isAmountSubtractAvailable = isAmountSubtractAvailable(
             userWalletId = userWallet.walletId,
@@ -130,6 +135,10 @@ class SwapTransferInteractorImpl @Inject constructor(
             )
         }
         val tronFeeNotificationShowCount = getTronFeeNotificationShowCountUseCase()
+        val hasRequiredTrustline = getAssetRequirementsUseCase(
+            userWalletId = toSwapCurrencyStatus.userWalletId,
+            currency = toToken,
+        ).getOrNull() is AssetRequirementsCondition.RequiredTrustline
         return SwapState.Transfer(
             userWallet = userWallet,
             fromTokenInfo = fromTokenInfo,
@@ -145,6 +154,7 @@ class SwapTransferInteractorImpl @Inject constructor(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
             isSendingAmountLoading = coverageState.isSendingAmountLoading,
             currencyCheck = currencyCheck,
+            hasRequiredTrustline = hasRequiredTrustline,
         )
     }
 

@@ -21,6 +21,7 @@ import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -42,6 +43,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -65,6 +67,7 @@ internal class SwapTransferInteractorImplTest {
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase = mockk(relaxed = true)
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase = mockk(relaxed = true)
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase = mockk(relaxed = true)
+    private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase = mockk()
 
     private val sut = SwapTransferInteractorImpl(
         swapFeatureToggles = swapFeatureToggles,
@@ -82,7 +85,13 @@ internal class SwapTransferInteractorImplTest {
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
         getTronFeeNotificationShowCountUseCase = getTronFeeNotificationShowCountUseCase,
         incrementNotificationsShowCountUseCase = incrementNotificationsShowCountUseCase,
+        getAssetRequirementsUseCase = getAssetRequirementsUseCase,
     )
+
+    @BeforeEach
+    fun setup() {
+        coEvery { getAssetRequirementsUseCase(any(), any()) } returns null.right()
+    }
 
     @AfterEach
     fun tearDown() {
@@ -427,6 +436,68 @@ internal class SwapTransferInteractorImplTest {
             ) as SwapState.Transfer
 
             assertThat(result.isSendingAmountLoading).isTrue()
+        }
+
+    @Test
+    fun `GIVEN destination address WHEN updateTransfer THEN currency check requested with recipient and isAccountFunded flows through`() =
+        runTest {
+            // Arrange
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = BigDecimal("1.6"),
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+                destinationAddress = DESTINATION_ADDRESS,
+            )
+            every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+            // Stub matches only when the destination address is forwarded as recipientAddress; the
+            // returned check has isAccountFunded = true (buildCurrencyCheck default).
+            val fundedCheck = buildCurrencyCheck()
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = DESTINATION_ADDRESS,
+                )
+            } returns fundedCheck
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns false.right()
+
+            // Act
+            val result = sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = "1,5",
+                feePaidCurrencyStatus = null,
+                fee = null,
+            ) as SwapState.Transfer
+
+            // Assert
+            assertThat(result.currencyCheck?.isAccountFunded).isTrue()
+            coVerify {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = DESTINATION_ADDRESS,
+                )
+            }
         }
 
     // endregion
