@@ -22,6 +22,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangem
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSearchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
@@ -41,6 +42,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
     DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
     DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
+    DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
 )
 
 @Composable
