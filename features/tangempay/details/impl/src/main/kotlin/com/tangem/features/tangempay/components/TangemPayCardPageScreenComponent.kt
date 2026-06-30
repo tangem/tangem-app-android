@@ -97,6 +97,14 @@ internal class TangemPayCardPageScreenComponent(
                     fiatBalance = navigation.fiatBalance,
                     depositAddress = navigation.depositAddress,
                     cryptoCurrency = navigation.cryptoCurrency,
+                    virtualAccountOnramp = navigation.virtualAccountOnramp,
+                ),
+            )
+            is TangemPayCardNavigation.VirtualAccountDeposit -> TangemPayVirtualAccountDepositComponent(
+                appComponentContext = context,
+                params = TangemPayVirtualAccountDepositComponent.Params(
+                    virtualAccountOnramp = navigation.virtualAccountOnramp,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(

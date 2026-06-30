@@ -5,7 +5,6 @@ import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -119,7 +118,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                     )
                 },
                 error = null,
-                virtualAccount = VirtualAccountOnramp.None,
+                virtualAccount = null,
                 tariffPlan = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
