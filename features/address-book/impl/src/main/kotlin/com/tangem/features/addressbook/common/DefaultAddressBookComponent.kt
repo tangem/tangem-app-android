@@ -29,13 +29,15 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
     @Assisted private val params: AddressBookComponent.Params,
     private val childFactory: AddressBookChildFactory,
     private val resultHolder: AddressBookResultHolder,
+    private val selectNetworksResultHolder: SelectNetworksResultHolder,
 ) : AddressBookComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<AddressBookRoute>()
 
     init {
-        // Drop any address left over from a previous session before the (possibly preloaded) stack starts collecting.
+        // Drop any results left over from a previous session before the (possibly preloaded) stack starts collecting.
         resultHolder.clear()
+        selectNetworksResultHolder.clear()
     }
 
     private val clickIntents = object : AddressBookClickIntents {
@@ -62,6 +64,21 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
 
         override fun onAddressConfirmed(address: ValidatedAddress) {
             resultHolder.setConfirmedAddress(address)
+            navigation.pop()
+        }
+
+        override fun onSelectNetworksClick(address: String, selectedNetworkIds: List<String>) {
+            navigation.pushNew(
+                AddressBookRoute.SelectNetworks(address = address, selectedNetworkIds = selectedNetworkIds),
+            )
+        }
+
+        override fun onSelectNetworksBack() {
+            navigation.pop()
+        }
+
+        override fun onNetworksSelected(selectedNetworkIds: Set<String>) {
+            selectNetworksResultHolder.setSelectedNetworkIds(selectedNetworkIds)
             navigation.pop()
         }
     }
