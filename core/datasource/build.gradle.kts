@@ -60,70 +60,79 @@ androidComponents {
 }
 dependencies {
 
-    /** Project */
-    implementation(projects.core.analytics)
-    implementation(projects.core.utils)
-    implementation(projects.core.res)
-    implementation(projects.domain.appTheme.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.staking.models)
-    implementation(projects.domain.onramp.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.nft.models)
-    implementation(projects.domain.walletConnect.models)
-    implementation(projects.domain.yieldSupply.models)
-    implementation(projects.domain.visa.models)
-
-    /** Tangem libraries */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
-
-    /** DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Coroutines */
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.coroutines.rx2)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
     api(deps.kotlin.datetime)
     api(deps.kotlin.serialization)
+    // endregion
 
-    /** Logging */
+    // region AndroidX
+    implementation(deps.androidx.core)
+    api(deps.androidx.datastore)
+    // endregion
 
-    /** Network */
+    // region Network
     api(deps.moshi)
-    implementation(deps.moshi.kotlin)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.adapters.ext)
+    implementation(deps.moshi.kotlin)
+    ksp(deps.moshi.kotlin.codegen)
     api(deps.okHttp)
     implementation(deps.okHttp.prettyLogging)
+    implementation(deps.okio)
     api(deps.retrofit)
-    implementation(deps.retrofit.moshi)
-    ksp(deps.moshi.kotlin.codegen)
+    api(deps.retrofit.moshi)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
 
-    /** Time */
-    implementation(deps.jodatime)
+    // region Room
+    api(deps.room.runtime)
+    ksp(deps.room.compiler)
+    // endregion
 
-    /** Security */
-    implementation(deps.spongecastle.core)
+    // region Other libraries
+    api(deps.jodatime)
+    runtimeOnly(deps.spongecastle.core)
+    // endregion
 
-    /** Chucker */
+    // region Chucker
     debugImplementation(deps.chucker)
     mockedImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
+    // endregion
 
-    /** Local storages */
-    api(deps.androidx.datastore)
-    implementation(deps.room.runtime)
-    implementation(deps.room.ktx)
-    ksp(deps.room.compiler)
+    // region Tangem
+    api(tangemDeps.blockchain)
+    api(tangemDeps.card.core)
+    // endregion
 
+    // region Core modules
+    api(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    api(projects.core.utils)
+    implementation(projects.core.res)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.nft.models)
+    api(projects.domain.onramp.models)
+    api(projects.domain.staking.models)
+    api(projects.domain.txhistory.models)
+    api(projects.domain.visa.models)
+    api(projects.domain.walletConnect.models)
+    api(projects.domain.wallets.models)
+    api(projects.domain.yieldSupply.models)
+    // endregion
+
+    // region Tests
     testImplementation(projects.test.core)
+    // endregion
 }
