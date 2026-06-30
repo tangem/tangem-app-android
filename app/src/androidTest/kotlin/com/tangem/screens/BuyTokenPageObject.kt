@@ -15,6 +15,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
 
 class BuyTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<BuyTokenPageObject>(semanticsProvider = semanticsProvider) {
@@ -47,6 +48,19 @@ class BuyTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
             hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
             useUnmergedTree = true
         }
+    }
+
+    fun walletTab(walletName: String): KNode = child {
+        hasTestTag(BuyTokenScreenTestTags.WALLET_TAB)
+        hasAnyDescendant(withText(walletName))
+        useUnmergedTree = true
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenWithTitle(tokenTitle: String): LazyListItemNode = lazyList.childWith<LazyListItemNode> {
+        hasTestTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+        hasText(tokenTitle)
+        useUnmergedTree = true
     }
 }
 
