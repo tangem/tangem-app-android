@@ -138,7 +138,10 @@ internal class SwapNotificationsFactory(
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
             maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }
-        return warnings.toPersistentList()
+        // Two independent dust checks (SDK TransactionDustChangeError in addValidateTransactionNotifications +
+        // manual change-below-dust in addDustWarningNotification) can both add an identical MinimumAmountError.
+        // distinct() collapses the duplicate "Invalid amount" banner.
+        return warnings.distinct().toPersistentList()
     }
 
     private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {
