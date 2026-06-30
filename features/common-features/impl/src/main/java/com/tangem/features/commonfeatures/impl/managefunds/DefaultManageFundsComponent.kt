@@ -199,7 +199,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                         iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
                         onClick = onBackClick,
                         size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
+                        variant = TangemButton.Variant.Secondary,
                     )
                 }
             } else {
@@ -211,7 +211,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                     iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                     onClick = onCloseClick,
                     size = TangemButton.Size.X11,
-                    variant = TangemButton.Variant.Material,
+                    variant = TangemButton.Variant.Secondary,
                 )
             },
         )

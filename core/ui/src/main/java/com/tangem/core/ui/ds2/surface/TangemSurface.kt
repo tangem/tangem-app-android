@@ -12,8 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.LinearGradientShader
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -113,7 +117,7 @@ fun TangemSurface(
 @Composable
 private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
     radius = 40.dp,
-    color = Color.Black.copy(alpha = 0.10f),
+    color = Color.Black.copy(alpha = 0.12f),
     shape = shape,
     spread = 0.dp,
     offset = DpOffset(x = 0.dp, y = 8.dp),
@@ -141,19 +145,22 @@ private fun Modifier.materialBorder(shape: Shape): Modifier = border(
 @Composable
 private fun Modifier.materialFill(): Modifier {
     val isBlurEnabled = LocalHazeState.current.blurEnabled
+    val material = TangemTheme.colors3.material
     val hazed = hazeEffectTangem(
         style = HazeStyle(
-            backgroundColor = TangemTheme.colors3.material.fill.blur,
+            backgroundColor = Color.Transparent,
             blurRadius = 32.dp,
-            tints = emptyList(),
+            tints = listOf(
+                HazeTint(material.fill.blur),
+            ),
         ),
     ) {
         fallbackTint = HazeTint(Color.Transparent)
     }
     return hazed.conditionalCompose(!isBlurEnabled) {
         // Paint the opaque fill first, then layer the translucent tint on top so both are visible.
-        background(TangemTheme.colors3.material.fill.solid)
-            .background(TangemTheme.colors3.material.tint.solid)
+        background(material.fill.solid)
+            .background(material.tint.solid)
     }
 }
 
@@ -162,13 +169,22 @@ private fun Modifier.materialFill(): Modifier {
 @ReadOnlyComposable
 private fun materialBorderBrush(): Brush {
     val border = TangemTheme.colors3.material.border
-    return Brush.linearGradient(
-        0f to border.start,
-        0.5f to border.mid,
-        1f to border.end,
-        start = Offset.Zero,
-        end = Offset.Infinite,
-    )
+    val startColor = border.start
+    val midColor = Color.Transparent
+    val endColor = border.end
+    return object : ShaderBrush() {
+        override fun createShader(size: Size): Shader {
+            val w = size.width
+            val h = size.height
+            val k = 2f * w * h / (w * w + h * h)
+            return LinearGradientShader(
+                from = Offset.Zero,
+                to = Offset(x = k * h, y = k * w),
+                colors = listOf(startColor, midColor, midColor, endColor),
+                colorStops = listOf(0f, 0.40f, 0.60f, 1f),
+            )
+        }
+    }
 }
 
 // endregion

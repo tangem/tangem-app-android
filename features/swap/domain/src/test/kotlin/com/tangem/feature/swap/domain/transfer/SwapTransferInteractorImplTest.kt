@@ -16,6 +16,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
+import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -61,6 +63,8 @@ internal class SwapTransferInteractorImplTest {
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk()
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase = mockk()
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase = mockk(relaxed = true)
+    private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase = mockk(relaxed = true)
+    private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase = mockk(relaxed = true)
 
     private val sut = SwapTransferInteractorImpl(
         swapFeatureToggles = swapFeatureToggles,
@@ -76,6 +80,8 @@ internal class SwapTransferInteractorImplTest {
         isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
         tangemPayWithdrawUseCase = tangemPayWithdrawUseCase,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
+        getTronFeeNotificationShowCountUseCase = getTronFeeNotificationShowCountUseCase,
+        incrementNotificationsShowCountUseCase = incrementNotificationsShowCountUseCase,
     )
 
     @AfterEach
@@ -180,6 +186,8 @@ internal class SwapTransferInteractorImplTest {
                 isAccountsMode = true,
                 isFeeCoverage = false,
                 sendingAmount = expectedAmount,
+                tronFeeNotificationShowCount = 0,
+                isAmountSubtractAvailable = false,
                 currencyCheck = currencyCheck,
             )
             assertThat(result).isEqualTo(expected)
@@ -251,6 +259,8 @@ internal class SwapTransferInteractorImplTest {
             isAccountsMode = true,
             isFeeCoverage = false,
             sendingAmount = expectedAmount,
+            tronFeeNotificationShowCount = 0,
+            isAmountSubtractAvailable = false,
             currencyCheck = currencyCheck,
         )
         assertThat(result).isEqualTo(expected)
