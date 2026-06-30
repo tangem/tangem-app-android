@@ -49,6 +49,7 @@ internal data class SwapStateHolder(
     val onShowPermissionBottomSheet: () -> Unit = {},
     val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
     val onSwapTypeMenuOpened: () -> Unit = {},
+    val onTronBannerShown: () -> Unit = {},
 )
 
 @Immutable

@@ -14,11 +14,14 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.addressBook.api)
+    implementation(projects.features.commonFeatures.api)
 
     /** Domain */
     implementation(projects.domain.account)
     implementation(projects.domain.addressBook)
     implementation(projects.domain.models)
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.wallets)
 
     /** Common */

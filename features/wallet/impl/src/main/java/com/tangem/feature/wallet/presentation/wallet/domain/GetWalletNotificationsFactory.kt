@@ -338,20 +338,22 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     ) {
         if (userWallet !is UserWallet.Hot) return
 
+        if (totalFiatBalance is TotalFiatBalance.Loading) return
+
         val isBackupExists = userWallet.backedUp
         val isAccessCodeRequired = userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword &&
             !shouldAccessCodeSkipped
         val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired
 
         val messageEffect = when (totalFiatBalance) {
-            TotalFiatBalance.Failed,
-            TotalFiatBalance.Loading,
-            -> TangemMessageEffect.None
             is TotalFiatBalance.Loaded -> if (totalFiatBalance.amount.orZero().isPositive()) {
                 TangemMessageEffect.Warning
             } else {
                 TangemMessageEffect.None
             }
+            TotalFiatBalance.Loading,
+            TotalFiatBalance.Failed,
+            -> TangemMessageEffect.None
         }
 
         addIf(

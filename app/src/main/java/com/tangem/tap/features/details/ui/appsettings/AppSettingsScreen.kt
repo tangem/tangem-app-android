@@ -31,6 +31,7 @@ internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () ->
         modifier = modifier,
         titleRes = R.string.app_settings_title,
         addBottomInsets = false,
+        backButtonTestTag = AppSettingsScreenTestTags.BACK_BUTTON,
         content = {
             when (state) {
                 is AppSettingsScreenState.Content -> AppSettings(state = state)
