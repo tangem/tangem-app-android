@@ -184,9 +184,7 @@ abstract class BaseTestCase : TestCase(
             toggleStates = mapOf(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
-                "GASLESS_APPROVAL_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
-                "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
                 "ASSETS_DISCOVERY_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
                 // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
@@ -195,7 +193,6 @@ abstract class BaseTestCase : TestCase(
                 // 5.37
                 "HEDERA_ERC20_ENABLED" to true,
                 // 5.39
-                "STAKING_ETH_ENABLED" to true,
                 "DYNAMIC_ADDRESSES_ENABLED" to true,
                 "SOLANA_TX_HISTORY_ENABLED" to true,
                 "SOLANA_SCALED_UI_AMOUNT_ENABLED" to true,
@@ -207,8 +204,6 @@ abstract class BaseTestCase : TestCase(
                 "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED" to true,
                 "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
                 "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
-                // 5.39.2
-                "AND_15154_YIELD_PROMO_ENABLED" to true,
                 // 5.40
                 "TWI_1377_MANAGE_FUNDS" to true,
                 // 6.0

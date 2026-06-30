@@ -9,6 +9,8 @@ import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.route.AddressBookRoute
+import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
 
@@ -18,6 +20,7 @@ import javax.inject.Inject
  */
 internal class AddressBookChildFactory @Inject constructor(
     private val addressSelectorFactory: AddressSelectorComponent.Factory,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) {
 
     fun createChild(
@@ -42,12 +45,23 @@ internal class AddressBookChildFactory @Inject constructor(
                 onBackClick = clickIntents::onEditContactBack,
                 onAddAddressClick = clickIntents::onAddAddressClick,
             ),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         )
         AddressBookRoute.AddAddress -> DefaultAddAddressComponent(
             appComponentContext = context,
             params = DefaultAddAddressComponent.Params(
                 onBackClick = clickIntents::onAddAddressBack,
+                onSelectNetworksClick = clickIntents::onSelectNetworksClick,
                 onConfirm = clickIntents::onAddressConfirmed,
+            ),
+        )
+        is AddressBookRoute.SelectNetworks -> DefaultSelectNetworksComponent(
+            appComponentContext = context,
+            params = DefaultSelectNetworksComponent.Params(
+                address = route.address,
+                selectedNetworkIds = route.selectedNetworkIds,
+                onBackClick = clickIntents::onSelectNetworksBack,
+                onDone = clickIntents::onNetworksSelected,
             ),
         )
     }

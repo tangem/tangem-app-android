@@ -11,8 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 
 @Composable
@@ -58,8 +62,7 @@ private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modi
                     .padding(start = 16.dp, end = 16.dp),
             )
         } else {
-            // TODO([REDACTED_TASK_KEY]): the converter cannot populate the swap legs yet (TxInfo exposes no two-leg / fiat /
-            //  provider data). Until those fields land, fall back to the header-only placeholder.
+            // Safety fallback for a future express variant that yields no asset legs — render the header-only card.
             TwoAssetsPlaceholder(state = state)
         }
         // Express status plaque under the exchange block. The top gap is owned by the banner (inside its collapsing
@@ -70,6 +73,25 @@ private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modi
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         )
+        // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
+        TxHistoryDetailsInfoRows(
+            rows = state.rows,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+        )
+        // Bottom "Go to provider" / "Go to verification" CTA — only on a provider-actionable terminal with a link.
+        state.providerButton?.let { providerButton ->
+            TangemButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                variant = TangemButton.Variant.Primary,
+                text = providerButton.text,
+                iconEnd = TangemIconUM.Icon(Icons.ic_chevron_right_20),
+                onClick = providerButton.onClick,
+            )
+        }
     }
 }
 

@@ -32,6 +32,7 @@ internal class TangemPayDetailsStateFactoryTest {
         isRedesignEnabled = true,
         isRemoveAccountEnabled = true,
         isMultipleCardsEnabled = true,
+        isTiersPlusPlanEnabled = true,
     )
 
     @BeforeEach
