@@ -190,6 +190,38 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
     }
 
     @Test
+    fun `GIVEN yield swap AND NotEnough allowance AND integrated active THEN permissionState is not integrated`() =
+        runTest {
+            // [REDACTED_TASK_KEY] / iOS parity: yield swaps must never use the integrated approve+swap path.
+            // The yield-module proxy allowance is granted at enrollment, so no in-flow approval is shown.
+            every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
+            every { swapFeatureToggles.isYieldSwapEnabled } returns true
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
+            stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE))
+
+            val dexProvider = stubDexQuoteAndExchangeData()
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = buildSwapCurrencyStatus(
+                    networkRawId = ethNetwork,
+                    isCoin = false,
+                    contractAddress = "0xToken",
+                    amount = BigDecimal("10"),
+                    yieldSupplyActive = true,
+                ),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork),
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+            val state = result[dexProvider] as SwapState.QuotesLoadedState
+
+            assertThat(state.permissionState)
+                .isNotInstanceOf(PermissionDataState.PermissionSettings::class.java)
+            assertThat(state.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+
+    @Test
     fun `GIVEN NotEnough allowance AND integrated toggle OFF THEN does not reach loadDexSwapDataNoFee`() = runTest {
         // With the integrated toggle off, NotEnough is not allowance-satisfied (requires Enough),
         // so manageDex does NOT enter loadDexSwapDataNoFee — getExchangeData is never called.
@@ -290,5 +322,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
 
     private companion object {
         const val SPENDER = "0xSpender"
+        const val YIELD_PROXY = "0xYieldProxy"
     }
 }

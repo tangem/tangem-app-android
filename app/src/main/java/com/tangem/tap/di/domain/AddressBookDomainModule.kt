@@ -8,6 +8,7 @@ import com.tangem.domain.addressbook.time.DefaultIsoTimestampProvider
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactAddressUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -83,6 +84,12 @@ object AddressBookDomainModule {
     @Singleton
     fun provideDeleteContactUseCase(repository: AddressBookRepository): DeleteContactUseCase {
         return DeleteContactUseCase(repository = repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSyncAddressBooksUseCase(repository: AddressBookRepository): SyncAddressBooksUseCase {
+        return SyncAddressBooksUseCase(repository = repository)
     }
 
     @Provides

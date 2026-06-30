@@ -115,10 +115,17 @@
   <string name="address_book_enter_address">Enter address</string>
   <string name="address_book_invalid_address_error">Invalid address</string>
   <string name="address_book_keep_editing">Keep editing</string>
+  <string name="address_book_max_networks_alert_description">You can not create more than 20 addresses. Delete one to add new.</string>
+  <string name="address_book_max_networks_alert_title">Can\'t add new address </string>
+  <string name="address_book_name_empty_error">Contact name is required</string>
+  <string name="address_book_name_invalid_chars_error">Contact name contains invalid characters</string>
+  <string name="address_book_name_max_chars_error">Contact name must not exceed 50 characters</string>
+  <string name="address_book_name_taken_error">That name is already taken on this wallet</string>
   <string name="address_book_new_contact">New contact</string>
   <string name="address_book_no_contacts">No contacts yet</string>
   <string name="address_book_no_contacts_description">Contacts added will appear here</string>
   <string name="address_book_remove_address">Remove address</string>
+  <string name="address_book_save_to_wallet_title">Save to Wallet</string>
   <string name="address_book_save_wallet_to_description">This contact will be linked to this wallet’s address book.</string>
   <string name="address_book_select_network">Select network</string>
   <string name="address_book_title">Address book</string>
@@ -352,6 +359,7 @@
   <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
+  <string name="common_go_to_verification">Go to verification</string>
   <string name="common_got_it">Got it</string>
   <string name="common_hide">Hide</string>
   <string name="common_hold_to">Hold to %s</string>
@@ -410,6 +418,7 @@
   <string name="common_privacy_policy">Privacy Policy</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
+  <string name="common_rate">Rate</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_received">Received</string>
@@ -701,6 +710,8 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
+  <string name="for_you_description">Review portfolio and explore earn opportunities</string>
+  <string name="for_you_title">For You</string>
   <string name="force_update_action">Update now</string>
   <string name="force_update_banner_message">Update the app to its latest version to ensure proper functionality</string>
   <string name="force_update_banner_title">Update needed</string>
@@ -732,6 +743,8 @@
   <string name="hardware_wallet_key_feature_title">Key Generation</string>
   <string name="hardware_wallet_security_feature_description">All cryptographic operations happen inside the secure chip, certified against cloning and physical tampering.</string>
   <string name="hardware_wallet_security_feature_title">Hardware-Level Security</string>
+  <string name="high_fee_warning_description">Network activity is high. You can continue now or try again later when fees may be lower.</string>
+  <string name="high_fee_warning_title">Network fee is higher than usual</string>
   <string name="home_button_add_existing_wallet">Add Existing Wallet</string>
   <string name="home_button_create_new_wallet">Create New Wallet</string>
   <string name="home_button_order">Order Tangem</string>
@@ -1402,6 +1415,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
+  <string name="send_from_account_in_wallet_name">from %1$s in %2$s</string>
   <string name="send_from_title">You send</string>
   <string name="send_from_wallet_name">From %s</string>
   <string name="send_gas_limit">Gas limit</string>
@@ -1937,6 +1951,10 @@
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
+  <string name="tangempay_current_plan_title">Current plan</string>
+  <string name="tangempay_current_plan_section_card">Card related</string>
+  <string name="tangempay_current_plan_section_plan">Plan related</string>
+  <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_reissue_card_confirm">Replace card</string>
   <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>

@@ -60,6 +60,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.CardDataType
 import com.tangem.features.tangempay.entity.DisplayNameState
@@ -120,6 +121,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 .matchParentSize()
                 .zIndex(0f),
             cardFrozenState = state.cardFrozenState,
+            cardState = state.cardState,
         )
 
         Box(
@@ -209,7 +211,11 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
 }
 
 @Composable
-private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, modifier: Modifier = Modifier) {
+private fun TangemPayCardBackground(
+    cardState: TangemPayCardState,
+    cardFrozenState: TangemPayCardFrozenState,
+    modifier: Modifier = Modifier,
+) {
     val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
     val freezeProgress by animateFloatAsState(
         targetValue = if (isFrozen) 1f else 0f,
@@ -223,7 +229,14 @@ private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, m
     Box(modifier = modifier.fillMaxSize()) {
         Image(
             modifier = Modifier.fillMaxSize(),
-            painter = painterResource(R.drawable.img_tangem_pay_visa),
+            painter = when (cardState) {
+                TangemPayCardState.Active,
+                -> painterResource(R.drawable.img_tangem_pay_visa)
+                TangemPayCardState.Reissuing,
+                TangemPayCardState.Closing,
+                TangemPayCardState.Issuing,
+                -> painterResource(R.drawable.img_tangem_pay_visa_reissuing)
+            },
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
         )

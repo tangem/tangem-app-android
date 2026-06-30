@@ -46,6 +46,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AllowanceInfo
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -62,6 +63,7 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainFeeUtils.patchIntegratedApprovalPriorityFee
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -129,10 +131,28 @@ internal class SwapInteractorImpl @Inject constructor(
         ConcurrentHashMap<IntegratedApprovalFallbackKey, Boolean>(),
     )
 
+    private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
+
     private fun hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String?) =
         integratedApprovalFallbackContexts.contains(
             IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress),
         )
+
+    private suspend fun isYieldSwapRouterAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        routerAddress: String,
+    ): Boolean {
+        val network = fromSwapCurrencyStatus.currency.network
+        val key = "${network.rawId}:${routerAddress.lowercase()}"
+        if (yieldSwapAllowedRouters.contains(key)) return true
+        val isAllowed = walletManagersFacade.isSwapSpenderAllowed(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = network,
+            spenderAddress = routerAddress,
+        )
+        if (isAllowed) yieldSwapAllowedRouters.add(key)
+        return isAllowed
+    }
 
     override suspend fun getPair(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -207,12 +227,14 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         pairs: List<SwapPairLeast>,
     ): List<SwapProvider> {
-        val requirements = getAssetRequirementsUseCase.invoke(
+        val fromRequirements = getAssetRequirementsUseCase.invoke(
             fromSwapCurrencyStatus.userWalletId,
             fromSwapCurrencyStatus.currency,
         ).getOrNull()
 
-        if (!rampStateManager.checkAssetRequirements(requirements)) {
+        val isToFulfilled = getUnfulfilledReceiveRequirement(toSwapCurrencyStatus) == null
+
+        if (!rampStateManager.checkAssetRequirements(fromRequirements) || !isToFulfilled) {
             return emptyList()
         }
 
@@ -221,6 +243,17 @@ internal class SwapInteractorImpl @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             pairs = pairs,
         )
+    }
+
+    override suspend fun getUnfulfilledReceiveRequirement(
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): AssetRequirementsCondition? {
+        val requirements = getAssetRequirementsUseCase.invoke(
+            toSwapCurrencyStatus.userWalletId,
+            toSwapCurrencyStatus.currency,
+        ).getOrNull()
+
+        return requirements?.takeUnless { rampStateManager.checkAssetRequirements(it) }
     }
 
     override suspend fun findBestQuote(
@@ -289,7 +322,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         }
                     }
                 }
-            }.awaitAll().toMap()
+            }.awaitAll().filterNotNull().toMap()
         }
     }
 
@@ -301,7 +334,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
-    ): Pair<SwapProvider, SwapState> {
+    ): Pair<SwapProvider, SwapState>? {
         if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true &&
             !swapFeatureToggles.isYieldSwapEnabled
         ) {
@@ -350,6 +383,12 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
         val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
+
+        if (isYieldSwap && dexRouterSpenderAddress != null &&
+            !isYieldSwapRouterAllowed(fromSwapCurrencyStatus, dexRouterSpenderAddress)
+        ) {
+            return null
+        }
 
         val allowanceInfo = spenderAddress?.let { allowanceContract ->
             getAllowanceInfoUseCase(
@@ -796,14 +835,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val payInAddress = if (isYieldSwap && fromCurrency is CryptoCurrency.Token) {
             swapData.transaction.txTo
-        } else if (txData is TransactionData.Uncompiled) {
-            getPayoutAddress(txData)
         } else {
-            swapData.transaction.txTo
+            getPayoutAddress(txData)
         }
 
         return if (integratedApproval != null) {
-            // TODO YIELD payInAddress [REDACTED_TASK_KEY]
             sendIntegratedApproveAndSwap(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -813,6 +849,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapTxData = txData,
                 swapFee = swapFee,
                 integratedApproval = integratedApproval,
+                payInAddress = payInAddress,
             )
         } else {
             handleSwapResult(
@@ -845,6 +882,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapTxData: TransactionData.Uncompiled,
         swapFee: SwapFee,
         integratedApproval: IntegratedApprovalData,
+        payInAddress: String,
     ): SwapTransactionState {
         val approvalFee = selectFeeForBucket(integratedApproval.approvalFee, swapFee.feeBucket)
         val approvalTx = integratedApproval.approvalTransaction.copy(fee = approvalFee)
@@ -869,7 +907,7 @@ internal class SwapInteractorImpl @Inject constructor(
             swapData = swapData,
             amount = amount,
             txHash = swapTxHash,
-            payInAddress = getPayoutAddress(swapTxData),
+            payInAddress = payInAddress,
         )
     }
 
@@ -1305,7 +1343,6 @@ internal class SwapInteractorImpl @Inject constructor(
         val dexFeeResultEither = if (fromStatus.isYieldSwapActive && fromStatus.currency is CryptoCurrency.Token) {
             val network = (fromStatus.currency as CryptoCurrency.Token).network
             val yieldModuleAddress = yieldModuleAddressProvider.getOrFetch(fromStatus.userWalletId, network)
-            // TODO YIELD [REDACTED_TASK_KEY]
             dexSwapFeeCalculator.calculateYield(
                 fromSwapCurrencyStatus = fromStatus,
                 transaction = transaction,
@@ -1446,11 +1483,13 @@ internal class SwapInteractorImpl @Inject constructor(
             raise(GetFeeError.DataError(error))
         }
 
-        val approvalFee = getFeeUseCase(
-            transactionData = approvalTx,
-            userWallet = fromStatus.userWallet,
-            network = fromStatus.currency.network,
-        ).bind()
+        val approvalFee = runSuspendCatching {
+            getFeeUseCase(
+                transactionData = approvalTx,
+                userWallet = fromStatus.userWallet,
+                network = fromStatus.currency.network,
+            ).bind().patchIntegratedApprovalPriorityFee(INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL)
+        }.getOrElse { error -> raise(GetFeeError.DataError(error)) }
 
         IntegratedApprovalData(
             approvalTransaction = approvalTx,
@@ -1952,7 +1991,11 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapData = swapData,
                     provider = provider,
                 )
-                val isIntegratedApprovalNeeded = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+
+                val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
+                    fromSwapCurrencyStatus.currency is CryptoCurrency.Token
+                val isIntegratedApprovalNeeded = !isYieldSwap &&
+                    swapFeatureToggles.isSwapIntegratedApproveEnabled &&
                     allowanceInfo is AllowanceInfo.NotEnough &&
                     !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
                 swapState.copy(
@@ -2098,7 +2141,8 @@ internal class SwapInteractorImpl @Inject constructor(
             requiredAmount = swapAmount.value,
         ).getOrNull() ?: return quotesLoadedState.copy(permissionState = PermissionDataState.Empty)
 
-        val isIntegratedApprovalNeeded = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+        val isIntegratedApprovalNeeded = !isYieldSwap &&
+            swapFeatureToggles.isSwapIntegratedApproveEnabled &&
             allowanceInfo is AllowanceInfo.NotEnough &&
             !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, quoteModel.allowanceContract)
         return quotesLoadedState.copy(
@@ -2431,6 +2475,8 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
     companion object {
+        private const val INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL = 115 // 15% increase
+
         private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_LOW_THRESHOLD = 100_000.toBigDecimal() // in USD

@@ -37,5 +37,6 @@ interface ETagsStore {
     enum class Key {
         WalletAccounts,
         UserTokens,
+        AddressBook,
     }
 }

@@ -6,9 +6,11 @@ import androidx.datastore.dataStoreFile
 import com.tangem.data.addressbook.DefaultAddressBookRepository
 import com.tangem.data.addressbook.store.AddressBookBlobStore
 import com.tangem.data.addressbook.store.DefaultAddressBookBlobStore
-import com.tangem.data.addressbook.store.StoredAddressBookBlob
+import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.utils.KotlinxDataStoreSerializer
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
+import com.tangem.domain.addressbook.model.AddressBookBlob
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -39,7 +41,7 @@ internal object AddressBookDataModule {
                     defaultValue = emptyMap(),
                     serializer = MapSerializer(
                         keySerializer = String.serializer(),
-                        valueSerializer = StoredAddressBookBlob.serializer(),
+                        valueSerializer = AddressBookBlob.serializer(),
                     ),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "address_book_blobs") },
@@ -50,9 +52,12 @@ internal object AddressBookDataModule {
 
     @Provides
     @Singleton
+    @Suppress("LongParameterList")
     fun provideAddressBookRepository(
         blobStore: AddressBookBlobStore,
         cipher: AddressBookCipher,
+        addressBookApi: AddressBookApi,
+        eTagsStore: ETagsStore,
         userWalletsListRepository: UserWalletsListRepository,
         timestampProvider: IsoTimestampProvider,
         dispatchers: CoroutineDispatcherProvider,
@@ -60,6 +65,8 @@ internal object AddressBookDataModule {
         return DefaultAddressBookRepository(
             blobStore = blobStore,
             cipher = cipher,
+            addressBookApi = addressBookApi,
+            eTagsStore = eTagsStore,
             userWalletsListRepository = userWalletsListRepository,
             timestampProvider = timestampProvider,
             dispatchers = dispatchers,

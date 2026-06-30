@@ -22,6 +22,8 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInter
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.features.commonfeatures.impl.choosetoken.AddToPortfolioRoute
 import com.tangem.features.commonfeatures.impl.choosetoken.market.MarketsListBatchFlowManager
+import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketCategoriesUM
+import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketCategory
 import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketState
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
@@ -48,6 +50,8 @@ internal class MarketBlockDelegate @AssistedInject constructor(
 
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
     private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+
+    private val selectedCategoryFlow = MutableStateFlow(SwapMarketCategory.Trending)
 
     val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
@@ -91,7 +95,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val defaultMarketsListManager by lazy {
         marketsListBatchFlowManagerFactory.create(
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
-            order = TokenMarketListConfig.Order.Trending,
+            currentOrder = Provider { selectedCategoryFlow.value.order },
             currentSearchText = Provider { null },
             modelScope = modelScope,
         )
@@ -100,7 +104,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val searchMarketsListManager by lazy {
         marketsListBatchFlowManagerFactory.create(
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
-            order = TokenMarketListConfig.Order.ByRating,
+            currentOrder = Provider { TokenMarketListConfig.Order.ByRating },
             currentSearchText = Provider { searchQueryState.value.value },
             modelScope = modelScope,
         )
@@ -148,19 +152,26 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     }
 
     private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
-        val marketsTitle = TextReference.Res(R.string.feed_trending_now)
+        val marketsTitle = TextReference.Res(R.string.markets_pulse_common_title)
         return combine(
-            defaultMarketsListManager.uiItems,
-            defaultMarketsListManager.isInInitialLoadingErrorState,
-            defaultMarketsListManager.totalCount,
-        ) { uiItems, isError, total ->
+            flow = defaultMarketsListManager.uiItems,
+            flow2 = defaultMarketsListManager.isInInitialLoadingErrorState,
+            flow3 = defaultMarketsListManager.totalCount,
+            flow4 = selectedCategoryFlow,
+        ) { uiItems, isError, total, selectedCategory ->
+            val categories = buildCategoriesUM(selectedCategory)
             when {
                 isError -> SwapMarketState.LoadingError(
                     onRetryClicked = { defaultMarketsListManager.reload() },
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = false,
+                    categories = categories,
                 )
-                uiItems.isEmpty() -> SwapMarketState.DefaultLoading
+                uiItems.isEmpty() -> SwapMarketState.Loading(
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                    categories = categories,
+                )
                 else -> SwapMarketState.Content(
                     items = uiItems,
                     loadMore = { defaultMarketsListManager.loadMore() },
@@ -169,9 +180,22 @@ internal class MarketBlockDelegate @AssistedInject constructor(
                     total = total ?: uiItems.size,
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = false,
+                    categories = categories,
                 )
             }
         }
+    }
+
+    private fun buildCategoriesUM(selected: SwapMarketCategory): SwapMarketCategoriesUM = SwapMarketCategoriesUM(
+        items = SwapMarketCategory.entries.toImmutableList(),
+        selected = selected,
+        onCategoryClick = ::onCategorySelected,
+    )
+
+    private fun onCategorySelected(category: SwapMarketCategory) {
+        if (selectedCategoryFlow.value == category) return
+        selectedCategoryFlow.value = category
+        defaultMarketsListManager.reload()
     }
 
     private fun createSearchMarketsFlow(): Flow<SwapMarketState> {
