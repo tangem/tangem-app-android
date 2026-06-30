@@ -10,6 +10,7 @@ import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.route.AddressBookRoute
 import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
 
@@ -19,6 +20,7 @@ import javax.inject.Inject
  */
 internal class AddressBookChildFactory @Inject constructor(
     private val addressSelectorFactory: AddressSelectorComponent.Factory,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) {
 
     fun createChild(
@@ -43,6 +45,7 @@ internal class AddressBookChildFactory @Inject constructor(
                 onBackClick = clickIntents::onEditContactBack,
                 onAddAddressClick = clickIntents::onAddAddressClick,
             ),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         )
         AddressBookRoute.AddAddress -> DefaultAddAddressComponent(
             appComponentContext = context,
