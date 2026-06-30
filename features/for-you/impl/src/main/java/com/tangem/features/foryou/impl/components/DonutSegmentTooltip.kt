@@ -1,4 +1,4 @@
-package com.tangem.core.ui.ds2.for_you_temp
+package com.tangem.features.foryou.impl.components
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.MutableTransitionState
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -20,25 +19,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
-import com.tangem.core.ui.ds2.for_you_temp.models.DonutSegment
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import kotlin.math.roundToInt
 
 /**
  * Frosted-glass selection tooltip for a [DonutChart] slice.
@@ -70,15 +60,16 @@ import kotlin.math.roundToInt
  * @param positionProvider Where the pill is placed. Defaults to centered over the anchor; pass a
  *   [SegmentTooltipPositionProvider] to anchor it to the end of the selected slice.
  */
+@Suppress("LongParameterList")
 @Composable
-fun DonutSegmentTooltip(
-    modifier: Modifier = Modifier,
+internal fun DonutSegmentTooltip(
     expanded: Boolean,
     title: String,
     fiatValue: String,
     percent: String,
     positionProvider: PopupPositionProvider,
     onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val expandedStates = remember { MutableTransitionState(false) }
     expandedStates.targetState = expanded
@@ -174,62 +165,6 @@ private fun TooltipPill(
                 )
             }
         }
-    }
-}
-
-/**
- * Positions the pill relative to the **end of the selected slice**, per the agreed spec.
- *
- * - **Base:** the pill's bottom-center sits [gapPx] above [anchorInWindow] (screen-up). [anchorInWindow] is
- *   the slice-end point on the ring's inner edge, in window coordinates.
- * - **Card fallback:** if that placement would push the pill above the top of [cardBoundsInWindow] (the
- *   `MarketChart` card), it flips to a side placement — the pill's start-center sits [gapPx] to the right
- *   of the anchor.
- * - **Screen clamp:** the result is finally kept inside the window with a [gapPx] margin (shifted back by
- *   however much it overflowed).
- *
- * @param anchorInWindow Slice-end / inner-edge point in window px.
- * @param cardBoundsInWindow `MarketChart` card bounds in window px (only the top edge gates the fallback).
- * @param gapPx The 8dp gap, in px.
- */
-class SegmentTooltipPositionProvider(
-    private val anchorInWindow: Offset,
-    private val cardBoundsInWindow: Rect,
-    private val gapPx: Int,
-    private val strokePx: Int = 0,
-) : PopupPositionProvider {
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize,
-    ): IntOffset {
-        val w = popupContentSize.width
-        val h = popupContentSize.height
-        val ax = anchorInWindow.x.roundToInt()
-        val ay = anchorInWindow.y.roundToInt()
-
-        // Base: bottom-center, gap above the anchor (screen-up).
-        var x = ax - w / 2
-        var y = ay - h - gapPx
-
-        val isFlip = y < cardBoundsInWindow.top
-
-        if (isFlip) {
-            x = ax + gapPx + (strokePx / 2)
-            y = ay - h / 2 + (strokePx / 2)
-        }
-
-        // Keep the pill inside the card on every edge, shifting it back by however much it overflows
-        // (with a gap margin). The card sits within the screen, so this also keeps the pill on-screen.
-        val minX = cardBoundsInWindow.left.roundToInt() + gapPx
-        val minY = cardBoundsInWindow.top.roundToInt() + gapPx
-        val maxX = (cardBoundsInWindow.right.roundToInt() - w - gapPx).coerceAtLeast(minX)
-        val maxY = (cardBoundsInWindow.bottom.roundToInt() - h - gapPx).coerceAtLeast(minY)
-        val clampedX = x.coerceIn(minX, maxX)
-        val clampedY = y.coerceIn(minY, maxY)
-
-        return IntOffset(clampedX, clampedY)
     }
 }
 
