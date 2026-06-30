@@ -449,6 +449,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         cryptoBalance = balance.cryptoBalance.balance,
                         depositAddress = balance.cryptoBalance.depositAddress,
                         cryptoCurrency = cryptoCurrency,
+                        virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
                     ),
                 )
             }
@@ -482,6 +483,12 @@ internal class TangemPayCardPageModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    override fun onClickBankTransfer() {
+        val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount } ?: return
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayCardNavigation.VirtualAccountDeposit(onramp))
     }
 
     override fun onDismissAddFunds() {

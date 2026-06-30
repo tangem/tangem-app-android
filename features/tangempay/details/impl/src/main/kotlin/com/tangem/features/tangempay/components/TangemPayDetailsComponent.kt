@@ -143,6 +143,14 @@ internal class TangemPayDetailsComponent(
                     depositAddress = navigation.depositAddress,
                     cryptoCurrency = navigation.cryptoCurrency,
                     listener = model,
+                    virtualAccountOnramp = navigation.virtualAccountOnramp,
+                ),
+            )
+            is TangemPayDetailsNavigation.VirtualAccountDeposit -> TangemPayVirtualAccountDepositComponent(
+                appComponentContext = context,
+                params = TangemPayVirtualAccountDepositComponent.Params(
+                    virtualAccountOnramp = navigation.virtualAccountOnramp,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
             is TangemPayDetailsNavigation.IssueAdditionalCard -> TangemPayIssueAdditionalCardComponent(
