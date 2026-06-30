@@ -53,6 +53,8 @@ class SaveContactInteractor(
             .mapLeft(SaveContactError::Signing)
             .bind()
         repository.saveContact(signed)
+            .mapLeft(SaveContactError::Backend)
+            .bind()
         signed
     }
 
@@ -77,6 +79,8 @@ class SaveContactInteractor(
             .mapLeft(SaveContactError::Signing)
             .bind()
         repository.saveContact(signed)
+            .mapLeft(SaveContactError::Backend)
+            .bind()
         signed
     }
 
