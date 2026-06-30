@@ -25,8 +25,7 @@ import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTr
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -105,11 +104,7 @@ private fun AmountBlock(state: TangemPayCardLimitSetupUM, modifier: Modifier = M
             color = TangemTheme.colors3.text.tertiary,
         )
         if (state.isInitialDataLoading) {
-            TextShimmer(
-                style = TextShimmerStyle.HEADING_MEDIUM,
-                text = "$ 10000",
-                radius = TangemTheme.dimens2.x25,
-            )
+            TangemShimmer(style = TangemTheme.typography3.heading.medium)
         } else {
             val colors = TangemAmountTextFieldColors.copy(
                 textColor = TangemTheme.colors3.text.primary,

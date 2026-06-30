@@ -31,8 +31,7 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -174,11 +173,7 @@ private fun FeeInfoRow(titleRes: Int, value: String, showDivider: Boolean = fals
         },
         valueSlot = {
             if (value.isEmpty()) {
-                TextShimmer(
-                    text = "$ 0.00",
-                    style = TextShimmerStyle.BODY,
-                    radius = 48.dp,
-                )
+                TangemShimmer(style = TangemTheme.typography3.body.medium)
             } else {
                 TangemRowText(
                     text = value,

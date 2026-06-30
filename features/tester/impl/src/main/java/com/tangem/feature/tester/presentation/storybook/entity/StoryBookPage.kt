@@ -12,7 +12,6 @@ import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 
 internal sealed interface StoryBookPage
@@ -113,15 +112,34 @@ internal data class TangemLoaderStory(
 
 @Immutable
 internal data class TangemShimmerStory(
-    val textStyle: TextShimmerStyle,
+    val textStyle: TextStyleOption,
+    val textPosition: TextPositionOption,
     val radius: RadiusOption,
     val rectangleWidth: RectangleWidthOption,
     val rectangleHeight: RectangleHeightOption,
-    val onTextStyleChange: (TextShimmerStyle) -> Unit,
+    val onTextStyleChange: (TextStyleOption) -> Unit,
+    val onTextPositionChange: (TextPositionOption) -> Unit,
     val onRadiusChange: (RadiusOption) -> Unit,
     val onRectangleWidthChange: (RectangleWidthOption) -> Unit,
     val onRectangleHeightChange: (RectangleHeightOption) -> Unit,
 ) : DsStoryBookPage {
+
+    /** Selectable typography preset for the `TangemShimmer` text variant. */
+    enum class TextStyleOption {
+        DISPLAY,
+        HEADING_MEDIUM,
+        HEADING_SMALL,
+        BODY,
+        SUBHEADING,
+        CAPTION,
+    }
+
+    /** Horizontal position of the `TangemShimmer` text block within the parent width. */
+    enum class TextPositionOption(val label: String) {
+        START("Start"),
+        CENTER("Center"),
+        END("End"),
+    }
 
     /** Selectable corner radius (matches `borderRadius` tokens). */
     enum class RadiusOption(val label: String) {

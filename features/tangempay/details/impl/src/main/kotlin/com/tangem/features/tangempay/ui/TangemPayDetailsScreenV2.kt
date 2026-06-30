@@ -44,8 +44,7 @@ import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -343,11 +342,8 @@ private fun BalanceBlock(
             },
         ) { animatedState ->
             when (animatedState) {
-                is TangemPayDetailsBalanceBlockState.Loading -> TextShimmer(
-                    modifier = Modifier.size(width = 160.dp, height = 56.dp),
-                    text = "1234.00",
-                    style = TextShimmerStyle.HEADING_MEDIUM,
-                    radius = TangemTheme.dimens2.x25,
+                is TangemPayDetailsBalanceBlockState.Loading -> TangemShimmer(
+                    style = TangemTheme.typography3.heading.medium,
                 )
                 is TangemPayDetailsBalanceBlockState.Content -> Text(
                     modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),

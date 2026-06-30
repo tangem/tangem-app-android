@@ -28,9 +28,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.shimmers.RectangleShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
@@ -180,7 +178,7 @@ private fun CurrentLimitBlockV2(state: TangemPayDailyLimitBlockState, modifier: 
                 )
             }
             TangemPayDailyLimitBlockState.Loading -> {
-                RectangleShimmer(
+                TangemShimmer(
                     modifier = Modifier
                         .padding(start = TangemTheme.dimens2.x3)
                         .layoutId(TangemRowLayoutId.TAIL)
@@ -273,12 +271,7 @@ private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifi
             )
         }
         TangemPayDailyLimitBlockState.Loading -> {
-            TextShimmer(
-                radius = TangemTheme.dimens2.x25,
-                modifier = modifier,
-                style = TextShimmerStyle.BODY,
-                text = "$50,000",
-            )
+            TangemShimmer(modifier = modifier, style = TangemTheme.typography3.body.medium)
         }
     }
 }
