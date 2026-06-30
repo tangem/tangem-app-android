@@ -74,7 +74,6 @@ class SetTokenListTransformerTest {
             shouldShowMainPromo = false,
             isAccountsModeEnabled = false,
             isRedesignEnabled = true,
-            isAddAndManageTokensEnabled = false,
             isMultipleCardsEnabled = false,
         )
     }

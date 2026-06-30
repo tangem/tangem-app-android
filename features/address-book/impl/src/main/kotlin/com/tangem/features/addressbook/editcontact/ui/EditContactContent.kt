@@ -5,11 +5,16 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,6 +28,8 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.fields.AutoSizeTextField
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
@@ -66,24 +73,54 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
             },
         )
 
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .weight(1f),
         ) {
-            ContactSummary(state = state)
-            ContactColor(colors = state.colors)
-            BlockCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
+            val minContentHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
             ) {
-                ContactAddresses(addresses = state.addresses)
-                AddAddressRow(onClick = state.onAddAddressClick)
+                Column(
+                    modifier = Modifier
+                        .heightIn(min = minContentHeight)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        ContactSummary(state = state)
+                        ContactColor(colors = state.colors)
+                        BlockCard(
+                            shape = RoundedCornerShape(24.dp),
+                            colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
+                        ) {
+                            ContactAddresses(addresses = state.addresses)
+                            AddAddressRow(isEnabled = state.isAddAddressEnabled, onClick = state.onAddAddressClick)
+                        }
+                        WalletBlock(walletBlock = state.walletBlock)
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    SaveButton(saveButton = state.saveButton)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun SaveButton(saveButton: TangemButtonUM) {
+    TangemButton(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        text = saveButton.text,
+        onClick = saveButton.onClick,
+        isEnabled = saveButton.isEnabled,
+        isLoading = saveButton.isLoading,
+        size = TangemButton.Size.X12,
+    )
 }
 
 @Composable
@@ -126,7 +163,7 @@ private fun AddressRow(entry: ValidatedAddress) {
 }
 
 @Composable
-private fun AddAddressRow(onClick: () -> Unit) {
+private fun AddAddressRow(isEnabled: Boolean, onClick: () -> Unit) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = onClick,
@@ -134,29 +171,110 @@ private fun AddAddressRow(onClick: () -> Unit) {
             TangemIcon(
                 tangemIconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_sign_plus_20,
-                    tintReference = { TangemTheme.colors3.icon.brand },
+                    tintReference = {
+                        if (isEnabled) {
+                            TangemTheme.colors3.icon.brand
+                        } else {
+                            TangemTheme.colors3.icon.tertiary
+                        }
+                    },
                 ),
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        color = TangemTheme.colors3.bg.status.infoSubtle,
+                        color = if (isEnabled) {
+                            TangemTheme.colors3.bg.status.infoSubtle
+                        } else {
+                            TangemTheme.colors3.bg.opaque.secondary
+                        },
                         shape = RoundedCornerShape(10.dp),
                     )
                     .padding(8.dp),
             )
         },
         titleSlot = {
-            TangemRowText(
-                text = TextReference.Res(R.string.address_book_add_address),
-                role = TangemRowTextRole.Title,
-            )
+            if (isEnabled) {
+                TangemRowText(
+                    text = TextReference.Res(R.string.address_book_add_address),
+                    role = TangemRowTextRole.Title,
+                )
+            } else {
+                Text(
+                    text = stringResourceSafe(R.string.address_book_add_address),
+                    color = TangemTheme.colors3.text.tertiary,
+                    style = TangemTheme.typography3.body.medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         },
         subtitleSlot = {
-            TangemRowText(
-                text = TextReference.Res(R.string.address_book_add_address_description),
-                role = TangemRowTextRole.Subtitle,
-            )
+            if (isEnabled) {
+                TangemRowText(
+                    text = TextReference.Res(R.string.address_book_add_address_description),
+                    role = TangemRowTextRole.Subtitle,
+                )
+            } else {
+                Text(
+                    text = stringResourceSafe(R.string.address_book_add_address_description),
+                    color = TangemTheme.colors3.text.tertiary,
+                    style = TangemTheme.typography3.caption.medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         },
+    )
+}
+
+@Composable
+private fun WalletBlock(walletBlock: EditContactUM.WalletBlockUM, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .fillMaxWidth()
+            .background(TangemTheme.colors3.bg.secondary),
+    ) {
+        TangemRow(
+            onClick = if (walletBlock.isChangeable) walletBlock.onClick else null,
+            verticalAlignment = TangemRowVerticalAlignment.Center,
+            titleSlot = {
+                TangemRowText(
+                    text = stringResourceSafe(R.string.address_book_save_to_wallet_title),
+                    role = TangemRowTextRole.Title,
+                )
+            },
+            endSlot = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = walletBlock.walletName,
+                        style = TangemTheme.typography3.body.medium,
+                        color = TangemTheme.colors3.text.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                            maxFontSize = TangemTheme.typography3.body.medium.fontSize,
+                        ),
+                    )
+                    if (walletBlock.isChangeable) {
+                        WalletChevronIcon()
+                    }
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun WalletChevronIcon() {
+    Icon(
+        modifier = Modifier
+            .padding(start = 4.dp)
+            .size(20.dp),
+        tint = TangemTheme.colors3.icon.secondary,
+        imageVector = ImageVector.vectorResource(id = R.drawable.ic_select_18_24),
+        contentDescription = null,
     )
 }
 
@@ -199,6 +317,17 @@ private fun ContactSummary(state: EditContactUM) {
             color = TangemTheme.colors3.text.primary,
             placeholderColor = TangemTheme.colors3.text.tertiary,
         )
+
+        if (state.nameError != null) {
+            Text(
+                modifier = Modifier.padding(top = 4.dp),
+                textAlign = TextAlign.Center,
+                text = state.nameError.resolveReference(),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.error,
+            )
+        }
+
         SpacerH(8.dp)
     }
 }
@@ -264,6 +393,7 @@ private fun Preview_EditContactContent() {
                 title = stringReference("New contact"),
                 name = "",
                 namePlaceholder = stringReference("New contact"),
+                nameError = null,
                 portfolioIcon = AccountIconUM.CryptoPortfolio(
                     value = CryptoPortfolioIcon.Icon.Letter,
                     color = colors.first(),
@@ -278,6 +408,18 @@ private fun Preview_EditContactContent() {
                         address = "0x1234567890abcdef1234567890abcdef12345678",
                         networkIds = persistentListOf("ethereum", "bsc", "polygon"),
                     ),
+                ),
+                walletBlock = EditContactUM.WalletBlockUM(
+                    walletName = "Main Wallet",
+                    isChangeable = true,
+                    onClick = {},
+                ),
+                isAddAddressEnabled = true,
+                saveButton = TangemButtonUM(
+                    text = TextReference.Res(R.string.common_save),
+                    type = TangemButtonType.Primary,
+                    isEnabled = true,
+                    onClick = {},
                 ),
                 onNameChange = {},
                 onCloseClick = {},

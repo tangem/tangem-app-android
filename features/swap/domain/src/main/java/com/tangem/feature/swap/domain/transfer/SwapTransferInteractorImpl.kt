@@ -19,6 +19,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
+import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -62,6 +64,8 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
+    private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
+    private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
 ) : SwapTransferInteractor {
 
     override suspend fun updateTransfer(
@@ -106,9 +110,14 @@ class SwapTransferInteractorImpl @Inject constructor(
             fee = warningsFee,
             feeCurrencyBalanceAfterTransaction = null,
         )
+        val isAmountSubtractAvailable = isAmountSubtractAvailable(
+            userWalletId = userWallet.walletId,
+            currency = fromTokenInfo.swapCurrencyStatus.currency,
+            fee = fee,
+        )
         val coverageState = getCoverageState(
             fromTokenInfo = fromTokenInfo,
-            userWallet = userWallet,
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
             fee = fee,
             currencyCheck = currencyCheck,
         )
@@ -120,6 +129,7 @@ class SwapTransferInteractorImpl @Inject constructor(
                 feeStatus = feeStatus,
             )
         }
+        val tronFeeNotificationShowCount = getTronFeeNotificationShowCountUseCase()
         return SwapState.Transfer(
             userWallet = userWallet,
             fromTokenInfo = fromTokenInfo,
@@ -131,6 +141,8 @@ class SwapTransferInteractorImpl @Inject constructor(
             isAccountsMode = isAccountsMode,
             isFeeCoverage = coverageState.isFeeCoverage,
             sendingAmount = coverageState.sendingAmount,
+            tronFeeNotificationShowCount = tronFeeNotificationShowCount,
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
             isSendingAmountLoading = coverageState.isSendingAmountLoading,
             currencyCheck = currencyCheck,
         )
@@ -150,18 +162,13 @@ class SwapTransferInteractorImpl @Inject constructor(
         ).getOrNull()
     }
 
-    private suspend fun getCoverageState(
+    private fun getCoverageState(
         fromTokenInfo: TokenSwapInfo,
-        userWallet: UserWallet,
+        isAmountSubtractAvailable: Boolean,
         fee: Fee?,
         currencyCheck: CryptoCurrencyCheck,
     ): CoverageState {
         val swapCurrencyStatus = fromTokenInfo.swapCurrencyStatus
-        val isAmountSubtractAvailable = isAmountSubtractAvailable(
-            userWalletId = userWallet.walletId,
-            currency = swapCurrencyStatus.currency,
-            fee = fee,
-        )
         val balance = swapCurrencyStatus.status.value.amount ?: BigDecimal.ZERO
         val reduceAmountBy = currencyCheck.existentialDeposit.orZero()
         val amount = fromTokenInfo.tokenAmount
@@ -389,5 +396,11 @@ class SwapTransferInteractorImpl @Inject constructor(
 
     private fun SwapCurrencyStatus.destinationAddress(): String? {
         return status.value.networkAddress?.defaultAddress?.value
+    }
+
+    override suspend fun incrementTronTokenFeeShowCount(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
+        cryptoCurrencyStatus?.currency?.let { cryptoCurrency ->
+            incrementNotificationsShowCountUseCase(cryptoCurrency)
+        }
     }
 }

@@ -81,6 +81,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             cryptoCurrency = model.secondaryCurrency,
             predefinedValues = PredefinedValues.Empty,
             isAllowSelfSend = true,
+            isAddContactAvailable = true,
         ),
         // No feedback: the read-only block is driven one-way by the model.uiState collector ([REDACTED_TASK_KEY]).
         onResult = {},

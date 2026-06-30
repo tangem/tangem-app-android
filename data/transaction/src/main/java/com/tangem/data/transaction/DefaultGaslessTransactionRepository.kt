@@ -3,17 +3,23 @@ package com.tangem.data.transaction
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuilder
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
+import com.tangem.data.transaction.convertes.GaslessTxDataToGaslessRequestConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
+import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
@@ -23,17 +29,19 @@ import java.math.BigInteger
 
 class DefaultGaslessTransactionRepository(
     private val gaslessTxServiceApi: GaslessTxServiceApi,
+    private val gaslessTxServiceApiV2: GaslessTxServiceApiV2,
+    private val isGaslessV2Enabled: Boolean,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
 
     private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
-    private val allFeeRecipientAddress = mutableSetOf<String>()
-    private val allAddressesMutex = Mutex()
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
-    private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
+    private val requestConverter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = isGaslessV2Enabled)
+    private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder(requestConverter)
+    private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder(requestConverter)
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
 
     override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
@@ -109,13 +117,42 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = gaslessTxServiceApi.signGaslessTransaction(transactionRequest).getOrThrow()
+        val response = if (isGaslessV2Enabled) {
+            gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest)
+        } else {
+            gaslessTxServiceApi.signGaslessTransaction(transactionRequest)
+        }.getOrThrow()
 
         if (!response.isSuccess) {
             error("Gasless service returned unsuccessful response")
         }
 
         // Convert DTO to domain model
+        signedTransactionResultConverter.convert(response.result)
+    }
+
+    override suspend fun signGaslessBatchTransaction(
+        gaslessBatchTransactionData: GaslessBatchTransactionData,
+        signature: String,
+        userAddress: String,
+        network: Network,
+        eip7702Auth: Eip7702Authorization?,
+    ): GaslessSignedTransactionResult = withContext(coroutineDispatcherProvider.io) {
+        val blockchain = network.toBlockchain()
+        val transactionRequest = gaslessBatchTransactionRequestBuilder.build(
+            gaslessBatchTransaction = gaslessBatchTransactionData,
+            signature = signature,
+            userAddress = userAddress,
+            chainId = blockchain.getChainId() ?: error("ChainId is null for blockchain: $blockchain"),
+            eip7702Auth = eip7702Auth,
+        )
+
+        val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrow()
+
+        if (!response.isSuccess) {
+            error("Gasless service returned unsuccessful response")
+        }
+
         signedTransactionResultConverter.convert(response.result)
     }
 
@@ -129,21 +166,20 @@ class DefaultGaslessTransactionRepository(
     }
 
     override suspend fun getGaslessFeeAddresses(): Set<String> {
-        return allAddressesMutex.withLock {
-            allFeeRecipientAddress.ifEmpty {
-                val allFeeAddresses = getAllFeeRecipientAddresses()
-                allFeeRecipientAddress.addAll(allFeeAddresses)
-                allFeeRecipientAddress
-            }
-        }
-    }
-
-    private suspend fun getAllFeeRecipientAddresses(): Set<String> {
         // TODO Replace with other backend call to get all fee recipient addresses when available
-        return setOf(getTokenFeeReceiverAddress())
+        val backendAddress = runSuspendCatching { getTokenFeeReceiverAddress() }
+            .onFailure { TangemLogger.e("Failed to load gasless fee recipient; serving hardcoded addresses", it) }
+            .getOrNull()
+        return KNOWN_FEE_COLLECTION_ADDRESSES + setOfNotNull(backendAddress)
     }
 
     private companion object {
         val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("60000")
+
+        
+        val KNOWN_FEE_COLLECTION_ADDRESSES = setOf(
+            "0xFc719364BcCdc92D055d8C3164eF1ab4f5A9182c",
+            "0xAf722F46145fbb106379d506ED3a5B96f110c8E5",
+        )
     }
 }
