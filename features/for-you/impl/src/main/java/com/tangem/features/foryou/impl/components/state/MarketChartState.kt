@@ -1,9 +1,9 @@
-package com.tangem.core.ui.ds2.for_you_temp.models
+package com.tangem.features.foryou.impl.components.state
 
 import kotlin.Float
 import kotlin.collections.List
 
-sealed class MarketChartState(
+internal sealed class MarketChartState(
     open val donutChartState: DonutChartState,
     open val aiInsightState: AiInsightState,
 ) {
@@ -25,7 +25,7 @@ sealed class MarketChartState(
     )
 }
 
-sealed class DonutChartState(
+internal sealed class DonutChartState(
     open val donutSegmentList: List<DonutSegment>,
 ) {
     data class Loaded(
@@ -36,8 +36,8 @@ sealed class DonutChartState(
     data object NoData : DonutChartState(donutSegmentList = emptyList())
 }
 
-sealed class AiInsightState {
+internal sealed class AiInsightState {
     data object Hide : AiInsightState()
-    data class AskAiInsight(val askAiInsightClick: () -> Unit): AiInsightState()
+    data class AskAiInsight(val askAiInsightClick: () -> Unit) : AiInsightState()
     data class Displayed(val text: String) : AiInsightState()
 }

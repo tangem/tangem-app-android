@@ -1,4 +1,4 @@
-package com.tangem.core.ui.ds2.for_you_temp
+package com.tangem.features.foryou.impl.components
 
 import android.content.res.Configuration
 import android.graphics.BlurMaskFilter
@@ -38,10 +38,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.ds2.for_you_temp.models.DonutSegment
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.TangemColorPalette
+import com.tangem.features.foryou.impl.components.state.DonutSegment
 import kotlin.math.min
 
 /**
@@ -68,7 +67,7 @@ import kotlin.math.min
  * yet). Taps are hit-tested against the ring band only and reported via [onSegmentClick]; the chart is
  * interactive only when [onSegmentClick] is set **and** [segments] is non-empty.
  *
- * @param segments Slices, in priority order (index 0 is painted on top). See [com.tangem.core.ui.ds2.for_you_temp.models.DonutSegment.weight].
+ * @param segments Slices, in priority order (index 0 is painted on top). See [DonutSegment.weight].
  * @param modifier Modifier; should carry the overall size (e.g. `Modifier.size(240.dp)`).
  * @param selectedIndex Index of the currently selected slice, or `null` for no selection (nothing dimmed).
  * @param onSegmentClick Invoked on every tap inside the chart: with the tapped slice index, or with `null`
@@ -80,9 +79,9 @@ import kotlin.math.min
  * @param startAngle Angle (degrees) where the first slice starts. `-90f` = 12 o'clock.
  * @param content Centered content (e.g. total value + caption, or the "No data" label).
  */
-@Suppress("MagicNumber", "LongParameterList")
+@Suppress("MagicNumber", "LongParameterList", "LongMethod", "NamedArguments")
 @Composable
-fun DonutChart(
+internal fun DonutChart(
     segments: List<DonutSegment>,
     modifier: Modifier = Modifier,
     selectedIndex: Int? = null,
@@ -93,7 +92,6 @@ fun DonutChart(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val strokePx = with(LocalDensity.current) { strokeWidth.toPx() }
-    // Theme-adaptive dim overlay for non-selected slices (black@20% in dark, white@20% in light).
     val dimOverlayColor = TangemTheme.colors3.border.inverse.tertiary
 
     // Fade the dim in/out in step with the segment tooltip's pop-in (same spring as DonutSegmentTooltip).
@@ -102,14 +100,10 @@ fun DonutChart(
         animationSpec = spring(dampingRatio = DIM_SPRING_DAMPING, stiffness = DIM_SPRING_STIFFNESS),
         label = "donutDim",
     )
-    // Keep the previously selected slice bright while the dim fades back out (selectedIndex is already null
-    // by then, so we can't rely on it during the exit animation).
+
     var highlightedIndex by remember { mutableStateOf<Int?>(null) }
     if (selectedIndex != null) highlightedIndex = selectedIndex
 
-    // pointerInput below is set up once (its keys don't include selectedIndex/onSegmentClick), so the tap
-    // lambda would capture a STALE selectedIndex and re-fire for the already-selected slice. Read the latest
-    // values through rememberUpdatedState instead.
     val latestSelectedIndex by rememberUpdatedState(selectedIndex)
     val latestOnSegmentClick by rememberUpdatedState(onSegmentClick)
 
@@ -327,8 +321,8 @@ private fun DrawScope.drawInnerShadowArc(
     }
 }
 
-/** Inner shadow — Figma #FFFFFF at 24% opacity. */
-private val InnerShadowColor = TangemColorPalette.Base.white.copy(alpha = 0.24f)
+/** Inner shadow — Figma #FFFFFF at 24% opacity (theme-independent). */
+private val InnerShadowColor = Color.White.copy(alpha = 0.24f)
 
 // Selection-dim spring, mirroring DonutSegmentTooltip's pop-in so the dim and the tooltip move together.
 private const val DIM_SPRING_DAMPING = 0.82f

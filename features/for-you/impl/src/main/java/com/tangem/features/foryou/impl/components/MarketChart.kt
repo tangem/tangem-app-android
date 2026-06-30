@@ -1,4 +1,4 @@
-package com.tangem.core.ui.ds2.for_you_temp
+package com.tangem.features.foryou.impl.components
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
@@ -42,33 +42,30 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.PopupPositionProvider
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.ds2.for_you_temp.models.AiInsightState
-import com.tangem.core.ui.ds2.for_you_temp.models.DonutChartState
-import com.tangem.core.ui.ds2.for_you_temp.models.DonutSegment
-import com.tangem.core.ui.ds2.for_you_temp.models.MarketChartState
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.foryou.impl.components.state.AiInsightState
+import com.tangem.features.foryou.impl.components.state.DonutChartState
+import com.tangem.features.foryou.impl.components.state.DonutSegment
+import com.tangem.features.foryou.impl.components.state.MarketChartState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.Int
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.sin
 
 @Composable
-fun MarketChart(marketChartState: MarketChartState, modifier: Modifier = Modifier) {
+internal fun MarketChart(marketChartState: MarketChartState, modifier: Modifier = Modifier) {
     val hazeState = LocalHazeState.current
-    // Card bounds in window px — gates the tooltip's "flip to the side" fallback (see DonutChartBlock).
     var cardBoundsInWindow by remember { mutableStateOf(Rect.Zero) }
 
     TangemSurface(
@@ -95,6 +92,7 @@ fun MarketChart(marketChartState: MarketChartState, modifier: Modifier = Modifie
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBoundsInWindow: Rect) {
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
@@ -114,9 +112,9 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
         DonutChart(
             modifier = Modifier
                 .fillMaxSize()
-                .onGloballyPositioned {
-                    chartSize = it.size
-                    chartWindowOffset = it.localToWindow(Offset.Zero)
+                .onGloballyPositioned { coordinates ->
+                    chartSize = coordinates.size
+                    chartWindowOffset = coordinates.localToWindow(Offset.Zero)
                 }
                 // A press on the chart means this tap is "on the chart", not "outside" — veto the pending
                 // outside-dismiss before it commits.
@@ -180,12 +178,12 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
                     withFrameNanos { }
                     selectedIndex = null
                 }
-            }
+            },
         )
-
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun DonutSegmentTooltipBlock(
     selectedIndex: Int?,
@@ -201,7 +199,13 @@ private fun DonutSegmentTooltipBlock(
 
     val selectedSegment = selectedIndex?.let(segments::getOrNull)
     val positionProvider = remember(
-        selectedIndex, segments, chartSize, chartWindowOffset, cardBoundsInWindow, strokePx, gapPx,
+        selectedIndex,
+        segments,
+        chartSize,
+        chartWindowOffset,
+        cardBoundsInWindow,
+        strokePx,
+        gapPx,
     ) {
         segmentTooltipPositionProvider(
             selectedIndex = selectedIndex,
@@ -209,6 +213,7 @@ private fun DonutSegmentTooltipBlock(
             chartSize = chartSize,
             chartWindowOffset = chartWindowOffset,
             strokePx = strokePx,
+            startAngle = DonutStartAngle,
             cardBoundsInWindow = cardBoundsInWindow,
             gapPx = gapPx,
         )
@@ -220,7 +225,7 @@ private fun DonutSegmentTooltipBlock(
         title = selectedSegment?.title.orEmpty(),
         fiatValue = selectedSegment?.fiatValue.orEmpty(),
         percent = selectedSegment?.let { formatSegmentPercent(it.weight) }.orEmpty(),
-        onDismissRequest = onDismissRequest
+        onDismissRequest = onDismissRequest,
     )
 }
 
@@ -231,51 +236,8 @@ private fun formatSegmentPercent(weight: Float): String {
 }
 
 private val DonutStrokeWidth = 28.dp
-private val DonutStartAngle = -90f
+private const val DonutStartAngle = -90f
 private val TooltipGap = 8.dp
-
-/**
- * Builds the tooltip position provider anchored to the end of the selected slice. Returns the centered
- * fallback while the chart hasn't been measured yet or nothing is selected.
- */
-@Suppress("MagicNumber")
-private fun segmentTooltipPositionProvider(
-    selectedIndex: Int?,
-    segments: List<DonutSegment>,
-    chartSize: IntSize,
-    chartWindowOffset: Offset,
-    strokePx: Float,
-    cardBoundsInWindow: Rect,
-    gapPx: Int,
-): PopupPositionProvider {
-    if (selectedIndex == null || selectedIndex !in segments.indices ||
-        chartSize.width == 0 || chartSize.height == 0
-    ) {
-        // Not shown in this state (selectedIndex is null / chart not measured) — position is irrelevant.
-        return SegmentTooltipPositionProvider(Offset.Zero, Rect.Zero, gapPx)
-    }
-    val diameter = min(chartSize.width, chartSize.height).toFloat()
-    val centerX = chartSize.width / 2f
-    val centerY = chartSize.height / 2f
-    val innerRadius = diameter / 2f - strokePx / 2
-    // End angle of the selected slice (before its round cap) — same layout as DonutChart's drawing pass.
-    val sweeps = segments.map { it.weight.coerceIn(0f, 1f) * 360f }
-    val endAngleDeg = DonutStartAngle + sweeps.take(selectedIndex + 1).sum()
-    val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
-    val anchorLocal = Offset(
-        x = centerX + innerRadius * cos(endAngleRad).toFloat(),
-        y = centerY + innerRadius * sin(endAngleRad).toFloat() - strokePx / 2,
-    )
-
-    val anchorInWindow = chartWindowOffset + anchorLocal
-
-    return SegmentTooltipPositionProvider(
-        anchorInWindow = anchorInWindow,
-        cardBoundsInWindow = cardBoundsInWindow,
-        gapPx = gapPx,
-        strokePx = strokePx.toInt(),
-    )
-}
 
 @Composable
 private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Float) {
@@ -304,6 +266,8 @@ private fun ColumnScope.CantLoadDataBlock() {
     )
 }
 
+// IntrinsicSize.Min lets the gradient divider match the AI text height — heightIn wouldn't achieve that.
+@Suppress("ModifierHeightWithText")
 @Composable
 private fun AiInsightContent(aiInsightState: AiInsightState) {
     AnimatedContent(
@@ -318,7 +282,7 @@ private fun AiInsightContent(aiInsightState: AiInsightState) {
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     onClick = currentState.askAiInsightClick,
                     size = TangemButtonSize.X9,
-                    text = stringReference("Ask for AI summary")
+                    text = stringReference("Ask for AI summary"),
                 )
             }
             is AiInsightState.Displayed -> {
@@ -362,152 +326,94 @@ private fun AiInsightContent(aiInsightState: AiInsightState) {
 
 // region Previews
 
+private enum class MarketChartPreviewScenario { DISPLAYED, ASK_AI, NO_AI, NO_DATA }
+
+private class MarketChartPreviewProvider : PreviewParameterProvider<MarketChartPreviewScenario> {
+    override val values: Sequence<MarketChartPreviewScenario>
+        get() = MarketChartPreviewScenario.entries.asSequence()
+}
+
 @Preview(name = "MarketChart • Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "MarketChart • Light", showBackground = true)
 @Composable
-private fun PreviewMarketChart() {
+private fun MarketChart_Preview(
+    @PreviewParameter(MarketChartPreviewProvider::class) scenario: MarketChartPreviewScenario,
+) {
     TangemThemePreviewRedesign {
         Box(
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
-            MarketChart(
-                MarketChartState.Loaded(
-                    topHoldingPercent = 0.41f,
-                    aiInsightState = AiInsightState.Displayed(
-                        "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
-                            "buffer. Consider trimmng concentration for a smoother ride",
-                    ),
-                    donutChartState = DonutChartState.Loaded(
-                        totalAmount = "$10,123456.1333",
-                        donutSegmentList = listOf(
-                            DonutSegment(
-                                weight = 0.55f,
-                                color = TangemTheme.colors3.border.brand,
-                                title = "Ethereum",
-                                fiatValue = "$5,720.22",
-                            ),
-                            DonutSegment(
-                                weight = 0.07f,
-                                color = TangemTheme.colors3.border.accent.violet,
-                                title = "Solana",
-                                fiatValue = "$728.30",
-                            ),
-                            DonutSegment(
-                                weight = 0.06f,
-                                color = TangemTheme.colors3.border.accent.red,
-                                title = "Polkadot",
-                                fiatValue = "$624.26",
-                            ),
-                            DonutSegment(
-                                weight = 0.05f,
-                                color = TangemTheme.colors3.border.accent.green,
-                                title = "Tether",
-                                fiatValue = "$520.18",
-                            ),
-                        ),
-                    ),
-                ),
-
-                )
+            MarketChart(marketChartState = previewMarketChartState(scenario))
         }
     }
 }
 
-@Preview(name = "MarketChart • Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(name = "MarketChart • Light", showBackground = true)
+/**
+ * Maps a [scenario] to the state shown. Built inside a `@Composable` (not the [PreviewParameterProvider])
+ * because the segment colors come from [TangemTheme.colors3], which can only be read in composition.
+ */
+@Suppress("MagicNumber")
 @Composable
-private fun PreviewMarketChartAskAI() {
-    TangemThemePreviewRedesign {
-        Box(
-            modifier = Modifier
-                .background(TangemTheme.colors3.bg.primary)
-                .padding(16.dp),
-        ) {
-            MarketChart(
-                MarketChartState.Loaded(
-                    topHoldingPercent = 0.41f,
-                    aiInsightState = AiInsightState.AskAiInsight(askAiInsightClick = {}),
-                    donutChartState = DonutChartState.Loaded(
-                        totalAmount = "$10,123456.1333",
-                        donutSegmentList = listOf(
-                            DonutSegment(
-                                weight = 0.55f,
-                                color = TangemTheme.colors3.border.brand,
-                                title = "Ethereum",
-                                fiatValue = "$5,720.22",
-                            ),
-                            DonutSegment(
-                                weight = 0.07f,
-                                color = TangemTheme.colors3.border.accent.violet,
-                                title = "Solana",
-                                fiatValue = "$728.30",
-                            ),
-                            DonutSegment(
-                                weight = 0.06f,
-                                color = TangemTheme.colors3.border.accent.red,
-                                title = "Polkadot",
-                                fiatValue = "$624.26",
-                            ),
-                            DonutSegment(
-                                weight = 0.05f,
-                                color = TangemTheme.colors3.border.accent.green,
-                                title = "Tether",
-                                fiatValue = "$520.18",
-                            ),
-                        ),
-                    ),
-                ),
-
-                )
-        }
-    }
+private fun previewMarketChartState(scenario: MarketChartPreviewScenario): MarketChartState = when (scenario) {
+    MarketChartPreviewScenario.DISPLAYED -> MarketChartState.Loaded(
+        topHoldingPercent = 0.41f,
+        aiInsightState = AiInsightState.Displayed(
+            "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
+                "buffer. Consider trimmng concentration for a smoother ride",
+        ),
+        donutChartState = previewLoadedDonut(),
+    )
+    MarketChartPreviewScenario.ASK_AI -> MarketChartState.Loaded(
+        topHoldingPercent = 0.41f,
+        aiInsightState = AiInsightState.AskAiInsight(askAiInsightClick = {}),
+        donutChartState = previewLoadedDonut(),
+    )
+    MarketChartPreviewScenario.NO_AI -> MarketChartState.Loaded(
+        topHoldingPercent = 0.41f,
+        aiInsightState = AiInsightState.Hide,
+        donutChartState = DonutChartState.Loaded(
+            totalAmount = "$10,12345678912.1333",
+            donutSegmentList = listOf(
+                DonutSegment(weight = 0.55f, color = TangemTheme.colors3.border.brand),
+                DonutSegment(weight = 0.45f, color = TangemTheme.colors3.border.accent.green),
+            ),
+        ),
+    )
+    MarketChartPreviewScenario.NO_DATA -> MarketChartState.NoData
 }
 
-@Preview(name = "MarketChart • Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(name = "MarketChart • Light", showBackground = true)
+@Suppress("MagicNumber")
 @Composable
-private fun PreviewMarketChartNoAi() {
-    TangemThemePreviewRedesign {
-        Box(
-            modifier = Modifier
-                .background(TangemTheme.colors3.bg.primary)
-                .padding(16.dp),
-        ) {
-            MarketChart(
-                MarketChartState.Loaded(
-                    topHoldingPercent = 0.41f,
-                    aiInsightState = AiInsightState.Hide,
-                    donutChartState = DonutChartState.Loaded(
-                        totalAmount = "$10,12345678912.1333",
-                        donutSegmentList = listOf(
-                            DonutSegment(weight = 0.55f, color = TangemTheme.colors3.border.brand),
-                            DonutSegment(weight = 0.45f, color = TangemTheme.colors3.border.accent.green),
-                        ),
-                    ),
-                ),
-
-                )
-        }
-    }
-}
-
-@Preview(name = "MarketChart • Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(name = "MarketChart • Light", showBackground = true)
-@Composable
-private fun PreviewMarketChartNoData() {
-    TangemThemePreviewRedesign {
-        Box(
-            modifier = Modifier
-                .background(TangemTheme.colors3.bg.primary)
-                .padding(16.dp),
-        ) {
-            MarketChart(
-                MarketChartState.NoData,
-            )
-        }
-    }
-}
+private fun previewLoadedDonut(): DonutChartState.Loaded = DonutChartState.Loaded(
+    totalAmount = "$10,123456.1333",
+    donutSegmentList = listOf(
+        DonutSegment(
+            weight = 0.55f,
+            color = TangemTheme.colors3.border.brand,
+            title = "Ethereum",
+            fiatValue = "$5,720.22",
+        ),
+        DonutSegment(
+            weight = 0.07f,
+            color = TangemTheme.colors3.border.accent.violet,
+            title = "Solana",
+            fiatValue = "$728.30",
+        ),
+        DonutSegment(
+            weight = 0.06f,
+            color = TangemTheme.colors3.border.accent.red,
+            title = "Polkadot",
+            fiatValue = "$624.26",
+        ),
+        DonutSegment(
+            weight = 0.05f,
+            color = TangemTheme.colors3.border.accent.green,
+            title = "Tether",
+            fiatValue = "$520.18",
+        ),
+    ),
+)
 
 // endregion

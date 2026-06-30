@@ -22,8 +22,10 @@ dependencies {
 
     implementation(deps.compose.ui)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.animation)
     implementation(deps.lifecycle.compose)
     implementation(deps.compose.material3)
+    implementation(deps.compose.ui.tooling)
 
     /** DI */
     implementation(deps.hilt.android)
