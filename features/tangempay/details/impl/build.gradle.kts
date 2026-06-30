@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.features.txhistory.api)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.promoBanners.api)
+    implementation(projects.features.virtualAccounts.details.api) // TWI_1638_VA_MVP0_ENABLED
 
     /** Domain */
     implementation(projects.domain.balanceHiding)
