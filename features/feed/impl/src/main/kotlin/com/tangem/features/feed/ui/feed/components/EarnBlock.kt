@@ -154,7 +154,7 @@ private fun EarnContentBlock(items: ImmutableList<EarnListItemUM>) {
         ) {
             items(
                 items = items,
-                key = { item -> "${item.tokenName}-${item.network}" },
+                key = { item -> item.id },
             ) { item ->
                 MostlyUsedCard(
                     item = item,

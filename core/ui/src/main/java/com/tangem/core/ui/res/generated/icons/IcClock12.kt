@@ -35,7 +35,7 @@ val Icons.ic_clock_12: ImageVector
             )
             addPath(
                 fill = SolidColor(Color.Black),
-                pathFillType = PathFillType.EvenOdd,
+                pathFillType = PathFillType.NonZero,
                 pathData = addPathNodes("M6 1C8.76142 1 11 3.23858 11 6C11 8.76142 8.76142 11 6 11C3.23858 11 1 8.76142 1 6C1 3.23858 3.23858 1 6 1ZM6 2C3.79086 2 2 3.79086 2 6C2 8.20914 3.79086 10 6 10C8.20914 10 10 8.20914 10 6C10 3.79086 8.20914 2 6 2Z"),
             )
         }.build()

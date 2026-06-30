@@ -355,7 +355,8 @@ private fun WalletContent2(
                     MarketsHint(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = peekHeight + TangemTheme.dimens2.x7),
+                            .fillMaxWidth(fraction = .6f)
+                            .padding(bottom = peekHeight),
                         isVisible = isShowMarketsHint,
                     )
                 }

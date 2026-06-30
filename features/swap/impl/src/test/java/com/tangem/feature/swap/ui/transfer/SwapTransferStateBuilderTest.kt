@@ -39,12 +39,14 @@ import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -57,10 +59,9 @@ internal class SwapTransferStateBuilderTest {
         coEvery {
             getNotifications(
                 transferState = any(),
+                feeSelectorUM = any(),
                 feeCryptoCurrencyStatus = any(),
-                fee = any(),
                 actions = any(),
-                getFeeError = any(),
             )
         } returns persistentListOf()
     }
@@ -71,6 +72,21 @@ internal class SwapTransferStateBuilderTest {
         notificationsFactory = notificationsFactory,
         isFeeApproximateUseCase = isFeeApproximateUseCase,
     )
+
+    // PER_CLASS reuses the notificationsFactory mock across tests, so clear its recorded calls (and re-stub)
+    // before each test to keep coVerify(exactly = 1) scoped to the current test.
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(notificationsFactory)
+        coEvery {
+            notificationsFactory.getNotifications(
+                transferState = any(),
+                feeSelectorUM = any(),
+                feeCryptoCurrencyStatus = any(),
+                actions = any(),
+            )
+        } returns persistentListOf()
+    }
 
     private val userWalletId = UserWalletId(stringValue = "deadbeef")
     private val coldWallet: UserWallet.Cold = mockk(relaxed = true) {
@@ -123,8 +139,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
-                fee = null,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
@@ -154,10 +169,9 @@ internal class SwapTransferStateBuilderTest {
             coVerify(exactly = 1) {
                 notificationsFactory.getNotifications(
                     transferState = transferState,
+                    feeSelectorUM = any(),
                     feeCryptoCurrencyStatus = null,
-                    fee = null,
                     actions = any(),
-                    getFeeError = any(),
                 )
             }
         }
@@ -177,8 +191,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
-                fee = null,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
@@ -197,10 +210,9 @@ internal class SwapTransferStateBuilderTest {
             coVerify(exactly = 1) {
                 notificationsFactory.getNotifications(
                     transferState = transferState,
+                    feeSelectorUM = any(),
                     feeCryptoCurrencyStatus = null,
-                    fee = null,
                     actions = any(),
-                    getFeeError = any(),
                 )
             }
         }
@@ -221,8 +233,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
-                fee = null,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
@@ -241,10 +252,9 @@ internal class SwapTransferStateBuilderTest {
             coVerify(exactly = 1) {
                 notificationsFactory.getNotifications(
                     transferState = transferState,
+                    feeSelectorUM = any(),
                     feeCryptoCurrencyStatus = null,
-                    fee = null,
                     actions = any(),
-                    getFeeError = any(),
                 )
             }
         }
@@ -265,8 +275,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
-                fee = null,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val portfolioAccount = toCurrencyStatus.account as Account.CryptoPortfolio
@@ -291,10 +300,9 @@ internal class SwapTransferStateBuilderTest {
             coVerify(exactly = 1) {
                 notificationsFactory.getNotifications(
                     transferState = transferState,
+                    feeSelectorUM = any(),
                     feeCryptoCurrencyStatus = null,
-                    fee = null,
                     actions = any(),
-                    getFeeError = any(),
                 )
             }
         }
@@ -338,10 +346,9 @@ internal class SwapTransferStateBuilderTest {
             coEvery {
                 notificationsFactory.getNotifications(
                     transferState = transferState,
+                    feeSelectorUM = any(),
                     feeCryptoCurrencyStatus = null,
-                    fee = fee,
                     actions = any(),
-                    getFeeError = any(),
                 )
             } returns persistentListOf()
 
@@ -353,7 +360,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
                 isTangemPayWithdrawal = false,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -362,10 +369,9 @@ internal class SwapTransferStateBuilderTest {
             coVerify(exactly = 1) {
                 notificationsFactory.getNotifications(
                     transferState = transferState,
+                    feeSelectorUM = any(),
                     feeCryptoCurrencyStatus = null,
-                    fee = fee,
                     actions = any(),
-                    getFeeError = any(),
                 )
             }
         }
@@ -387,8 +393,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = baseStateHolder(),
                 feePaidCryptoCurrencyStatus = null,
-                fee = mockk(relaxed = true),
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val sendCard = result.sendCardData as SwapCardState.SwapCardData
@@ -422,8 +427,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = baseStateHolder(),
                 feePaidCryptoCurrencyStatus = null,
-                fee = null,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
@@ -450,8 +454,7 @@ internal class SwapTransferStateBuilderTest {
                 transferState = transferState,
                 uiStateHolder = baseStateHolder(),
                 feePaidCryptoCurrencyStatus = null,
-                fee = null,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
@@ -482,7 +485,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = mockk(relaxed = true),
                 isTangemPayWithdrawal = false,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             val receiveCard = result.receiveCardData as SwapCardState.SwapCardData
@@ -517,7 +520,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
                 isTangemPayWithdrawal = false,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             assertThat(result.transferFooter).isInstanceOf(TextReference.Combined::class.java)
@@ -576,7 +579,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
                 isTangemPayWithdrawal = false,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             assertThat(result.transferFooter).isEqualTo(
@@ -622,7 +625,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
                 isTangemPayWithdrawal = false,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             assertThat(result.transferFooter).isEqualTo(
@@ -753,7 +756,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = null,
                 isTangemPayWithdrawal = true,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -789,7 +792,7 @@ internal class SwapTransferStateBuilderTest {
                 feePaidCryptoCurrencyStatus = null,
                 fee = null,
                 isTangemPayWithdrawal = false,
-                feeError = null,
+                feeSelectorUM = null,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -939,6 +942,7 @@ internal class SwapTransferStateBuilderTest {
             isFeeCoverage = isFeeCoverage,
             sendingAmount = toAmount,
             tronFeeNotificationShowCount = 0,
+            isAmountSubtractAvailable = false,
             isSendingAmountLoading = isSendingAmountLoading,
         )
     }

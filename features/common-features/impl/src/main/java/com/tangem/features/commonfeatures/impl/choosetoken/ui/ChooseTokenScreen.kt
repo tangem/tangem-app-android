@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
@@ -38,6 +39,8 @@ import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
@@ -263,6 +266,13 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
             style = TangemTheme.typography2.bodySemibold16,
         )
 
+        Spacer(modifier = Modifier.width(4.dp))
+
+        TangemDeviceIcon(
+            state = state.deviceIcon,
+            modifier = Modifier.size(20.dp),
+        )
+
         val count = state.count
         if (count != null) {
             Spacer(modifier = Modifier.width(8.dp))
@@ -465,24 +475,31 @@ private val wallets
             isSelected = true,
             onClick = {},
             count = null,
+            deviceIcon = DeviceIconUM.Card(
+                mainColor = Color.DarkGray,
+                secondColor = null,
+            ),
         ),
         WalletTabUM(
             text = TextReference.Str(value = "Wallet 1"),
             isSelected = true,
             onClick = {},
-            count = stringReference("3"),
+            count = null,
+            deviceIcon = DeviceIconUM.Mobile,
         ),
         WalletTabUM(
             text = TextReference.Str(value = "Wallet 2"),
             isSelected = false,
             onClick = {},
-            count = stringReference("333"),
+            count = stringReference("3"),
+            deviceIcon = DeviceIconUM.Ring(),
         ),
         WalletTabUM(
             text = TextReference.Str(value = "Wallet 3"),
             isSelected = false,
             onClick = {},
             count = null,
+            deviceIcon = DeviceIconUM.Mobile,
         ),
     )
 

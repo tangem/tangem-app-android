@@ -18,7 +18,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cloud_24_filled
 
-private const val DEFAULT_DEVICE_ICON_COLOR = 0xFF2C2C2C
+private const val DEFAULT_DEVICE_ICON_COLOR = 0xFF595963
 private const val DEFAULT_BORDER_COLOR = 0x1A1E1E1E
 
 /**

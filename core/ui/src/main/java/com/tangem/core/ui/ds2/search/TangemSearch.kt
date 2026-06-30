@@ -250,7 +250,7 @@ private fun CloseButton(onClick: () -> Unit) {
 @Composable
 private fun Preview(@PreviewParameter(TangemSearchStateProvider::class) state: TangemSearch.State) {
     TangemThemePreviewRedesign {
-        Box(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
+        Box(modifier = Modifier.background(TangemTheme.colors3.bg.tertiary)) {
             TangemSearch(
                 state = state,
                 modifier = Modifier

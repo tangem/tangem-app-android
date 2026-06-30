@@ -99,7 +99,7 @@ internal fun WalletBalance(
             }
         }
         SpacerH(TangemTheme.dimens2.x2)
-        ActionButtons(buttons)
+        ActionButtons(buttons, modifier = Modifier.fillMaxWidth())
         SpacerH(TangemTheme.dimens2.x6)
     }
 }
