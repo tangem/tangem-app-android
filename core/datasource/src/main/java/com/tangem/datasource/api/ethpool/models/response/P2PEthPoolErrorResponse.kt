@@ -23,7 +23,7 @@ data class P2PEthPoolErrorDetailsDTO(
     @Json(name = "message")
     val message: String, // Human-readable error message
     @Json(name = "name")
-    val name: String, // Error name/type
+    val name: String?, // Error name/type
     @Json(name = "errors")
     val errors: List<String>? = null, // Optional validation errors array
 )
