@@ -18,6 +18,7 @@ import com.tangem.features.addressbook.SelectedContact
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.list.state.AddressBookListStateController
 import com.tangem.features.addressbook.list.state.transformers.UpdateAddressBookListContentTransformer
+import com.tangem.features.addressbook.list.state.transformers.UpdateAddressBookListQueryTransformer
 import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
 import com.tangem.features.addressbook.route.AddressBookRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -68,15 +69,14 @@ internal class AddressBookListModel @Inject constructor(
             allContacts,
             matchedContacts,
             searchQuery,
-            combine(selectedWalletId, searchActive) { selected, active -> selected to active },
+            selectedWalletId,
             getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true),
-        ) { all, matched, query, (selected, active), wallets ->
+        ) { all, matched, query, selected, wallets ->
             ListInputs(
                 allContacts = all,
                 matchedContacts = matched,
                 query = query,
                 selectedWalletId = selected,
-                isSearchActive = active,
                 wallets = wallets,
             )
         }
@@ -94,7 +94,6 @@ internal class AddressBookListModel @Inject constructor(
                 wallets = inputs.wallets,
                 selectedWalletId = inputs.selectedWalletId,
                 query = inputs.query,
-                isSearchActive = inputs.isSearchActive,
                 onContactClick = params.onContactClick,
                 onPickContact = ::onPickContact,
                 onQueryChange = ::onQueryChange,
@@ -108,14 +107,21 @@ internal class AddressBookListModel @Inject constructor(
 
     private fun onQueryChange(query: String) {
         searchQuery.value = query
+        updateSearchBar(query = query, isActive = searchActive.value)
     }
 
     private fun onActiveChange(active: Boolean) {
         searchActive.value = active
+        updateSearchBar(query = searchQuery.value, isActive = active)
     }
 
     private fun onClearQuery() {
         searchQuery.value = ""
+        updateSearchBar(query = "", isActive = searchActive.value)
+    }
+
+    private fun updateSearchBar(query: String, isActive: Boolean) {
+        stateController.update(UpdateAddressBookListQueryTransformer(query = query, isActive = isActive))
     }
 
     private fun onChipSelected(walletId: String?) {
@@ -143,7 +149,6 @@ internal class AddressBookListModel @Inject constructor(
         val matchedContacts: List<VerifiedContact>,
         val query: String,
         val selectedWalletId: String?,
-        val isSearchActive: Boolean,
         val wallets: Map<UserWalletId, UserWallet>,
     )
 }

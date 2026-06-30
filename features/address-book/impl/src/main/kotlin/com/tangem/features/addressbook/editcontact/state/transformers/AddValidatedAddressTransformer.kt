@@ -7,13 +7,16 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class AddValidatedAddressTransformer(
     private val address: ValidatedAddress,
+    private val maxAddresses: Int,
 ) : Transformer<EditContactUM> {
 
     override fun transform(prevState: EditContactUM): EditContactUM {
         // Skip duplicates: an address is identified by its string value (it already carries all its networks).
         if (prevState.addresses.any { it.address == address.address }) return prevState
+        val addresses = (prevState.addresses + address).toImmutableList()
         return prevState.copy(
-            addresses = (prevState.addresses + address).toImmutableList(),
+            addresses = addresses,
+            isAddAddressEnabled = addresses.size < maxAddresses,
         )
     }
 }
