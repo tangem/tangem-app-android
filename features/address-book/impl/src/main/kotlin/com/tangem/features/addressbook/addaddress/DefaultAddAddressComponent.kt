@@ -31,6 +31,7 @@ internal class DefaultAddAddressComponent(
 
     data class Params(
         val onBackClick: () -> Unit,
+        val onSelectNetworksClick: (address: String, selectedNetworkIds: List<String>) -> Unit,
         val onConfirm: (ValidatedAddress) -> Unit,
     )
 }

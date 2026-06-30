@@ -8,22 +8,34 @@ import com.tangem.utils.transformer.Transformer
  * state produced by [com.tangem.features.addressbook.addaddress.state.AddAddressStateController].
  */
 internal class UpdateAddAddressInitialStateTransformer(
-    private val onAddressChange: (String) -> Unit,
-    private val onAddressClear: () -> Unit,
-    private val onPasteClick: () -> Unit,
-    private val onQrClick: () -> Unit,
-    private val onBackClick: () -> Unit,
-    private val onConfirmClick: () -> Unit,
+    private val intents: Intents,
 ) : Transformer<AddAddressUM> {
 
     override fun transform(prevState: AddAddressUM): AddAddressUM {
         return prevState.copy(
-            onAddressChange = onAddressChange,
-            onAddressClear = onAddressClear,
-            onPasteClick = onPasteClick,
-            onQrClick = onQrClick,
-            onBackClick = onBackClick,
-            buttonUM = prevState.buttonUM.copy(onClick = onConfirmClick),
+            onAddressChange = intents.onAddressChange,
+            onAddressClear = intents.onAddressClear,
+            onPasteClick = intents.onPasteClick,
+            onQrClick = intents.onQrClick,
+            onBackClick = intents.onBackClick,
+            onNetworkClick = intents.onNetworkClick,
+            memoField = prevState.memoField.copy(
+                onValueChange = intents.onMemoChange,
+                onPasteClick = intents.onMemoPasteClick,
+            ),
+            buttonUM = prevState.buttonUM.copy(onClick = intents.onConfirmClick),
         )
     }
+
+    data class Intents(
+        val onAddressChange: (String) -> Unit,
+        val onAddressClear: () -> Unit,
+        val onPasteClick: () -> Unit,
+        val onQrClick: () -> Unit,
+        val onBackClick: () -> Unit,
+        val onNetworkClick: () -> Unit,
+        val onMemoChange: (String) -> Unit,
+        val onMemoPasteClick: () -> Unit,
+        val onConfirmClick: () -> Unit,
+    )
 }

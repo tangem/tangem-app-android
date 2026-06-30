@@ -34,6 +34,7 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.visa)
+    implementation(projects.domain.virtualAccount)
     implementation(projects.domain.card)
     implementation(projects.domain.wallets)
     implementation(projects.domain.legacy)
@@ -47,6 +48,7 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.common)
     implementation(projects.features.swap.domain)
+    implementation(projects.features.virtualAccounts.details.api)
 
 
     /** Project - Utils */

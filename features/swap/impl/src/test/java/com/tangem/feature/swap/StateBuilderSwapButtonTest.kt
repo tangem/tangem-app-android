@@ -109,6 +109,7 @@ internal class StateBuilderSwapButtonTest {
                 additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = null,
                 feeError = null,
+                isHighNetworkFee = false,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -134,6 +135,7 @@ internal class StateBuilderSwapButtonTest {
                 additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = null,
                 feeError = null,
+                isHighNetworkFee = false,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -163,6 +165,7 @@ internal class StateBuilderSwapButtonTest {
                 additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = null,
                 feeError = null,
+                isHighNetworkFee = false,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -187,6 +190,7 @@ internal class StateBuilderSwapButtonTest {
                 additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = buildSwapFee(),
                 feeError = null,
+                isHighNetworkFee = false,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -215,6 +219,7 @@ internal class StateBuilderSwapButtonTest {
                 additionalBadge = ProviderState.AdditionalBadge.Empty,
                 swapFee = buildSwapFee(),
                 feeError = null,
+                isHighNetworkFee = false,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()

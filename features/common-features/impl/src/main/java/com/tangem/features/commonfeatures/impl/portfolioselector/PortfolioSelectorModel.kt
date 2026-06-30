@@ -59,14 +59,15 @@ internal class PortfolioSelectorModel @Inject constructor(
             flow4 = selectorController.isEnabled,
             flow5 = selectedAccountState,
             transform = { isAccountsMode, portfolioData, artworks, isEnabled, selectedAccount ->
+                val isAccountsModeEffective = isAccountsMode && !params.settings.isWalletSelectionOnly
                 val uiList = buildUiList(
-                    isAccountsMode = isAccountsMode,
+                    isAccountsMode = isAccountsModeEffective,
                     portfolioData = portfolioData,
                     artworks = artworks,
                     isEnabled = isEnabled,
                     selectedAccount = selectedAccount,
                 )
-                val title = when (isAccountsMode) {
+                val title = when (isAccountsModeEffective) {
                     true -> resourceReference(R.string.common_choose_account)
                     false -> resourceReference(R.string.common_choose_wallet)
                 }

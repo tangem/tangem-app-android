@@ -12,20 +12,12 @@
         "version": "undefined"
     },
     {
-        "name": "STAKING_ETH_ENABLED",
-        "version": "5.39"
-    },
-    {
         "name": "TWI_485_USEDESK_ENABLED",
         "version": "undefined"
     },
     {
         "name": "APP_REDESIGN_ENABLED",
         "version": "6.0"
-    },
-    {
-        "name": "GASLESS_APPROVAL_ENABLED",
-        "version": "5.37"
     },
     {
         "name": "DYNAMIC_ADDRESSES_ENABLED",
@@ -50,10 +42,6 @@
     {
         "name": "HEDERA_ERC20_ENABLED",
         "version": "5.37"
-    },
-    {
-        "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
-        "version": "5.38"
     },
     {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
@@ -116,10 +104,6 @@
         "version": "5.39"
     },
     {
-        "name": "AND_15154_YIELD_PROMO_ENABLED",
-        "version": "5.39.2"
-    },
-    {
         "name": "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED",
         "version": "5.39"
     },
@@ -148,7 +132,15 @@
         "version": "undefined"
     },
     {
+        "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_83_ADDRESS_BOOK_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
         "version": "undefined"
     },
     {
@@ -170,5 +162,17 @@
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1469_FOR_YOU_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1367_HIGH_FEE_WARNING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1638_VA_MVP0_ENABLED",
+        "version": "6.1"
     }
 ]

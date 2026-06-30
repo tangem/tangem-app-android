@@ -23,4 +23,10 @@ internal interface AddressBookClickIntents {
     fun onAddAddressBack()
 
     fun onAddressConfirmed(address: ValidatedAddress)
+
+    fun onSelectNetworksClick(address: String, selectedNetworkIds: List<String>)
+
+    fun onSelectNetworksBack()
+
+    fun onNetworksSelected(selectedNetworkIds: Set<String>)
 }

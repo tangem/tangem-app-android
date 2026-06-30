@@ -32,6 +32,15 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
         val portfolioFetcher: PortfolioFetcher,
         val controller: PortfolioSelectorController,
         val bsCallback: BottomSheetCallback? = null,
+        val settings: Settings = Settings(),
+    )
+
+    /**
+     * @param isWalletSelectionOnly when `true`, the selector always shows a flat wallet list and ignores the global
+     * accounts mode (no account grouping).
+     */
+    data class Settings(
+        val isWalletSelectionOnly: Boolean = false,
     )
 
     interface BottomSheetCallback {

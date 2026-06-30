@@ -35,6 +35,7 @@ import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapProviderStateBuilder
@@ -122,6 +123,7 @@ internal class StateBuilder(
             swapUIMode = swapUIMode,
             onSwapUIModeChange = actions.onSwapUIModeChange,
             onSwapTypeMenuOpened = actions.onSwapTypeMenuOpened,
+            onTronBannerShown = actions.onTronBannerShown,
             shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
         )
     }
@@ -455,6 +457,34 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): SwapStateHolder = createBlockedSwapState(
+        uiStateHolder = uiStateHolder,
+        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+        toSwapCurrencyStatus = toSwapCurrencyStatus,
+        notifications = notificationsFactory.getSwapNotSupportedNotifications(),
+    )
+
+    fun createDestinationRequirementBlockedState(
+        uiStateHolder: SwapStateHolder,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        requirement: AssetRequirementsCondition,
+        onAssociateClick: () -> Unit,
+    ): SwapStateHolder = createBlockedSwapState(
+        uiStateHolder = uiStateHolder,
+        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+        toSwapCurrencyStatus = toSwapCurrencyStatus,
+        notifications = notificationsFactory.getDestinationRequirementNotifications(
+            requirement = requirement,
+            onAssociateClick = onAssociateClick,
+        ),
+    )
+
+    private fun createBlockedSwapState(
+        uiStateHolder: SwapStateHolder,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        notifications: ImmutableList<NotificationUM>,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
@@ -482,7 +512,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
                 appCurrency = appCurrencyProvider(),
             ),
-            notifications = notificationsFactory.getSwapNotSupportedNotifications(),
+            notifications = notifications,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
@@ -547,6 +577,7 @@ internal class StateBuilder(
         additionalBadge: ProviderState.AdditionalBadge,
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
+        isHighNetworkFee: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -560,6 +591,7 @@ internal class StateBuilder(
             swapFee = swapFee,
             feeError = feeError?.error,
             appRouter = appRouter,
+            isHighNetworkFee = isHighNetworkFee,
         )
 
         val fromAccountTitleUM = when {

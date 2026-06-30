@@ -112,10 +112,13 @@ private fun TwoAssetsSideRow(asset: AssetUM, modifier: Modifier = Modifier) {
             )
         },
         endSlot = {
-            TangemCurrencyIcon(
-                state = asset.currencyIcon,
-                modifier = Modifier.size(40.dp),
-            )
+            // The fiat leg of an onramp carries no icon (no CryptoCurrency, no country flag) — leave the slot empty.
+            asset.currencyIcon?.let { icon ->
+                TangemCurrencyIcon(
+                    state = icon,
+                    modifier = Modifier.size(40.dp),
+                )
+            }
         },
     )
 }
@@ -231,10 +234,11 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                 from = previewAsset(label = "You sent", amount = "- 390 USDT", isFaded = false),
                 to = previewAsset(label = "You receive", amount = "+ 1,800.00 POL", isFaded = false),
             )
-            // Unsettled swap — the "You receive" side is struck through until the funds arrive.
+            // Unsettled swap — the "You receive" side shows the estimated amount with a `~` until the funds arrive
+            // (struck through is reserved for the failed state).
             TxHistoryDetailsTwoAssetsBlock(
                 from = previewAsset(label = "You sent", amount = "- 390 USDT", isFaded = false),
-                to = previewAsset(label = "You receive", amount = "1,800.00 POL", isFaded = true),
+                to = previewAsset(label = "You receive", amount = "~ 1,800.00 POL", isFaded = false),
             )
             // Account -> another account (own-to-own transfer between two of the user's accounts).
             TxHistoryDetailsTwoAssetsBlock(

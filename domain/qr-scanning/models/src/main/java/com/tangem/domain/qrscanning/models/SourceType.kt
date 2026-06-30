@@ -4,4 +4,5 @@ enum class SourceType {
     WALLET_CONNECT,
     SEND,
     MAIN_SCREEN,
+    ADDRESS_BOOK,
 }

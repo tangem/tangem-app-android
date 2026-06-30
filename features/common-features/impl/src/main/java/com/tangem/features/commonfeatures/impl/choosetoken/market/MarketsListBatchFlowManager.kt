@@ -28,7 +28,7 @@ internal class MarketsListBatchFlowManager @AssistedInject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     @Assisted private val batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
-    @Assisted private val order: TokenMarketListConfig.Order,
+    @Assisted private val currentOrder: Provider<TokenMarketListConfig.Order>,
     @Assisted private val currentSearchText: Provider<String?>,
     @Assisted private val modelScope: CoroutineScope,
 ) {
@@ -192,7 +192,7 @@ internal class MarketsListBatchFlowManager @AssistedInject constructor(
                             searchText ?: currentSearchText()
                         },
                         priceChangeInterval = TokenMarketListConfig.Interval.H24,
-                        order = order,
+                        order = currentOrder(),
                         shouldNetworks = true,
                     ),
                 ),
@@ -262,7 +262,7 @@ internal class MarketsListBatchFlowManager @AssistedInject constructor(
     interface Factory {
         fun create(
             batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
-            order: TokenMarketListConfig.Order,
+            currentOrder: Provider<TokenMarketListConfig.Order>,
             currentSearchText: Provider<String?>,
             modelScope: CoroutineScope,
         ): MarketsListBatchFlowManager

@@ -30,7 +30,7 @@ internal class CheckOrderConflictUseCaseTest {
 
     @Test
     fun `WHEN active issue order exists AND intent is IssueCard THEN returns Blocked`() = runTest {
-        val activeIssue = order(type = OrderType.CARD_ISSUE_ADDITIONAL, status = OrderStatus.PROCESSING)
+        val activeIssue = order(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING)
         coEvery { repository.findOrders(userWalletId, types = emptySet(), statuses = ACTIVE_STATUSES) } returns
             listOf(activeIssue).right()
 

@@ -63,21 +63,32 @@ tasks.withType<Detekt>().configureEach {
     exclude { it.file.absolutePath.contains("/build/generated/") }
 }
 dependencies {
-    /** DI */
+
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Local storages */
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region AndroidX
+    implementation(deps.androidx.annotation)
     implementation(deps.androidx.datastore)
+    // endregion
 
-    /** Other libraries */
+    // region Other libraries
     implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
+    // endregion
 
-    /** Core modules */
+    // region Core modules
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    // endregion
 
+    // region Tests
     testImplementation(projects.test.core)
+    // endregion
 }

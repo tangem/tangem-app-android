@@ -1,17 +1,17 @@
 package com.tangem.data.pay
 
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.pay.isTangemPayType
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.models.wallet.isTangemPayCompatible
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.hot.sdk.model.HotWalletId
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.sync.Mutex
@@ -85,7 +85,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
 
         val candidates = wallets.filter { wallet ->
-            wallet.isMultiCurrency && !wallet.isLocked && wallet.isCompatible() &&
+            wallet.isMultiCurrency && !wallet.isLocked && wallet.isTangemPayCompatible &&
                 !onboardingRepository.isTangemPayDeactivated(wallet.walletId)
         }
 
@@ -96,11 +96,6 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
 
         return candidates
-    }
-
-    private fun UserWallet.isCompatible(): Boolean = when (this) {
-        is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
-        is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
     }
 
     private suspend fun List<UserWallet>.addPaeraCustomersData(): List<UserWalletData> {
@@ -139,7 +134,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
             onboardingRepository.checkCustomerEligibility()
         }
         return if (entryPoint == null) {
-            eligibility.isNotEmpty()
+            eligibility.any { it.isTangemPayType }
         } else {
             eligibility.any { it == entryPoint.toEligibilityType() }
         }

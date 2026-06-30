@@ -17,6 +17,7 @@ interface TangemPayCurrencyFactory {
      * @throws IllegalStateException if no wallet with [userWalletId] is currently loaded.
      */
     fun create(userWalletId: UserWalletId): CryptoCurrency.Token
+    fun createVirtualAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token
 
     /** Hardcoded token metadata for the Tangem Pay currency (USDC on Polygon). */
     companion object {

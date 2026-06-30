@@ -20,12 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -48,7 +46,10 @@ internal fun NetworkBlock(
     chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM,
     modifier: Modifier = Modifier,
 ) {
+    val isClickable = chosenNetworkStateUM is AddAddressUM.ChosenNetworkStateUM.Result &&
+        chosenNetworkStateUM.isClickable
     TangemRow(
+        onClick = if (isClickable) onNetworkSelectClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         modifier = modifier,
         titleSlot = {
@@ -59,45 +60,27 @@ internal fun NetworkBlock(
             )
         },
         endSlot = {
-            SelectNetworkButton(
-                onNetworkSelectClick = onNetworkSelectClick,
-                chosenNetworkStateUM = chosenNetworkStateUM,
-            )
+            when (chosenNetworkStateUM) {
+                AddAddressUM.ChosenNetworkStateUM.Loading -> TangemLoader(size = TangemLoaderSize.X20)
+                is AddAddressUM.ChosenNetworkStateUM.Result -> NetworkRow(chosenNetworkStateUM = chosenNetworkStateUM)
+                AddAddressUM.ChosenNetworkStateUM.Hidden -> Unit
+            }
         },
     )
 }
 
 @Composable
-private fun SelectNetworkButton(
-    onNetworkSelectClick: () -> Unit,
-    chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM,
-) {
-    Row(
-        modifier = Modifier.clickableSingle(
-            onClick = onNetworkSelectClick,
-            enabled = chosenNetworkStateUM !is AddAddressUM.ChosenNetworkStateUM.Loading,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        when (chosenNetworkStateUM) {
-            is AddAddressUM.ChosenNetworkStateUM.Result -> NetworkIconsResolver(chosenNetworkStateUM.networkUMList)
-            AddAddressUM.ChosenNetworkStateUM.Loading -> TangemLoader(size = TangemLoaderSize.X20)
-            AddAddressUM.ChosenNetworkStateUM.Empty -> {
-                Text(
-                    modifier = Modifier.padding(start = 8.dp),
-                    text = stringResourceSafe(R.string.address_book_select_network),
-                    style = TangemTheme.typography3.body.medium,
-                    color = TangemTheme.colors3.text.secondary,
-                )
-                SpacerW(4.dp)
-                ChevronIcon()
-            }
-        }
+private fun NetworkRow(chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM.Result) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        NetworkIconsResolver(
+            networks = chosenNetworkStateUM.networkUMList,
+            showChevron = chosenNetworkStateUM.isClickable,
+        )
     }
 }
 
 @Composable
-private fun NetworkIconsResolver(networks: ImmutableList<NetworkUM>) {
+private fun NetworkIconsResolver(networks: ImmutableList<NetworkUM>, showChevron: Boolean) {
     when (networks.size) {
         0 -> Unit
         1 -> {
@@ -112,13 +95,13 @@ private fun NetworkIconsResolver(networks: ImmutableList<NetworkUM>) {
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
-            ChevronIcon()
+            if (showChevron) ChevronIcon()
         }
         // 3 and any larger count share the same rendering: up to MAX_VISIBLE_NETWORKS overlapping
         // icons, plus a "+N" badge that appears only when there are more than that.
         else -> {
             OverlappingNetworkIcons(networks)
-            ChevronIcon()
+            if (showChevron) ChevronIcon()
         }
     }
 }
@@ -191,6 +174,7 @@ private fun Preview_NetworkBlock() {
                     networkUMList = persistentListOf(
                         NetworkUM(networkName = "Ethereum", iconResId = R.drawable.img_eth_22),
                     ),
+                    isClickable = false,
                 ),
             )
             SpacerH12()
@@ -202,6 +186,7 @@ private fun Preview_NetworkBlock() {
                         NetworkUM(networkName = "BSC", iconResId = R.drawable.img_bsc_22),
                         NetworkUM(networkName = "Polygon", iconResId = R.drawable.img_polygon_22),
                     ),
+                    isClickable = true,
                 ),
             )
             SpacerH12()
@@ -211,12 +196,9 @@ private fun Preview_NetworkBlock() {
                     networkUMList = List(15) {
                         NetworkUM(networkName = "Network", iconResId = R.drawable.img_eth_22)
                     }.toImmutableList(),
+                    isClickable = true,
                 ),
             )
-            SpacerH12()
-            NetworkBlock(chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Loading, onNetworkSelectClick = {})
-            SpacerH12()
-            NetworkBlock(chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Empty, onNetworkSelectClick = {})
         }
     }
 }

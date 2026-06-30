@@ -21,6 +21,32 @@ data class CustomerMeResponse(
         @Json(name = "balance") val balance: BalanceResponse?,
         @Json(name = "product_instances") val productInstances: List<ProductInstance>,
         @Json(name = "cards") val cards: List<Card>,
+        @Json(name = "customer_tariff_plan") val customerTariffPlan: CustomerTariffPlan? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class CustomerTariffPlan(
+        @Json(name = "status") val status: String?,
+        @Json(name = "next_billing_at") val nextBillingAt: String?,
+        @Json(name = "pending_transition_at") val pendingTransitionAt: String?,
+        @Json(name = "tariff_plan") val tariffPlan: TariffPlan?,
+        @Json(name = "pending_tariff_plan") val pendingTariffPlan: TariffPlan?,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class TariffPlan(
+        @Json(name = "id") val id: String?,
+        @Json(name = "type") val type: String?,
+        @Json(name = "name") val name: String?,
+        @Json(name = "description_items") val descriptionItems: List<DescriptionItem>?,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class DescriptionItem(
+        @Json(name = "type") val type: String?,
+        @Json(name = "order") val order: Int?,
+        @Json(name = "title") val title: String?,
+        @Json(name = "body") val body: String?,
     )
 
     @JsonClass(generateAdapter = true)
@@ -35,7 +61,17 @@ data class CustomerMeResponse(
         @Json(name = "display_name") val displayName: String?,
         @Json(name = "actual_card_limit") val actualCardLimit: CardLimit?,
         @Json(name = "admin_card_limit") val adminCardLimit: CardLimit?,
+        @Json(name = "product_specification_data_type") val specificationDataType: SpecificationDataType,
     ) {
+        @JsonClass(generateAdapter = false)
+        enum class SpecificationDataType {
+            @Json(name = "ACCOUNT")
+            ACCOUNT,
+
+            @Json(name = "CARD")
+            CARD,
+        }
+
         @JsonClass(generateAdapter = false)
         enum class Status {
             @Json(name = "NEW")

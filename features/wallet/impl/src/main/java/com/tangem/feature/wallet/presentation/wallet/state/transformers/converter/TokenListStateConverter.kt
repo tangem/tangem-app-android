@@ -8,7 +8,6 @@ import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.models.hasMultiCurrencyAccount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.TotalFiatBalance
@@ -42,7 +41,6 @@ internal class TokenListStateConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
     shouldShowMainPromo: Boolean,
-    private val isAddAndManageTokensEnabled: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val yieldSupplyPromoBannerConverter = YieldSupplyPromoBannerConverter(
@@ -170,8 +168,7 @@ internal class TokenListStateConverter(
     }
 
     private fun getOrganizeTokensButtonStateV2(accountList: AccountStatusList): WalletOrganizeTokensButtonConfig? {
-        val shouldShowOrganizeIfOldButton = accountList.hasMultiCurrencyAccount() || isAddAndManageTokensEnabled
-        return if (shouldShowOrganizeIfOldButton && !isSingleCurrencyWalletWithToken()) {
+        return if (!isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
                 textRes = organizeButtonTextRes(),
                 iconRes = organizeButtonIconRes(),
@@ -183,17 +180,9 @@ internal class TokenListStateConverter(
         }
     }
 
-    private fun organizeButtonTextRes(): Int = if (isAddAndManageTokensEnabled) {
-        R.string.main_add_and_manage_tokens
-    } else {
-        R.string.organize_tokens_title
-    }
+    private fun organizeButtonTextRes(): Int = R.string.main_add_and_manage_tokens
 
-    private fun organizeButtonIconRes(): Int = if (isAddAndManageTokensEnabled) {
-        R.drawable.ic_filter_default_24
-    } else {
-        R.drawable.ic_filter_24
-    }
+    private fun organizeButtonIconRes(): Int = R.drawable.ic_filter_default_24
 
     private fun isSingleCurrencyWalletWithToken(): Boolean {
         return selectedWallet is UserWallet.Cold &&

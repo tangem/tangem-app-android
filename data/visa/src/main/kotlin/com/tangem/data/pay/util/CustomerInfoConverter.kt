@@ -6,6 +6,8 @@ import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -14,9 +16,11 @@ import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
+import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
+import org.joda.time.DateTime
 
 internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, CustomerInfo> {
     override fun convert(value: CustomerMeResponse.Result): CustomerInfo {
@@ -44,8 +48,36 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             fiatBalance = fiatBalance?.toDomain(),
             cryptoBalance = cryptoBalance?.toDomain(),
             availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
+            tariffPlan = value.customerTariffPlan?.toDomain(),
         )
     }
+
+    private fun CustomerMeResponse.CustomerTariffPlan.toDomain(): TangemPayCustomerTariffPlan? {
+        val plan = tariffPlan?.toDomain() ?: return null
+        return TangemPayCustomerTariffPlan(
+            status = TangemPayCustomerTariffPlan.Status.fromString(status),
+            plan = plan,
+            nextBillingAt = nextBillingAt.toDateTimeOrNull(),
+            pendingPlan = pendingTariffPlan?.toDomain(),
+            pendingTransitionAt = pendingTransitionAt.toDateTimeOrNull(),
+        )
+    }
+
+    private fun CustomerMeResponse.TariffPlan.toDomain(): TangemPayTariffPlan? {
+        val name = name ?: return null
+        return TangemPayTariffPlan(
+            type = TangemPayTariffPlan.Type.fromString(type),
+            name = name,
+            descriptionItems = descriptionItems.orEmpty().map { it.toDomain() },
+        )
+    }
+
+    private fun CustomerMeResponse.DescriptionItem.toDomain() = TangemPayTariffPlan.DescriptionItem(
+        section = TangemPayTariffPlan.Section.fromString(type),
+        order = order ?: 0,
+        title = title.orEmpty(),
+        body = body.orEmpty(),
+    )
 
     private fun CustomerMeResponse.ProductInstance.toDomain(): ProductInstance {
         val status = status.toDomain()
@@ -62,6 +94,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             displayName = if (name != null) CardDisplayName(name).getOrElse { null } else null,
             actualCardLimit = actualCardLimit?.parseCardLimit(),
             adminCardLimit = adminCardLimit?.parseCardLimit(),
+            specificationDataType = specificationDataType.toDomain(),
         )
     }
 
@@ -108,4 +141,12 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         CustomerMeResponse.ProductInstance.Status.CANCELED -> Status.CANCELED
         CustomerMeResponse.ProductInstance.Status.UNKNOWN -> Status.UNKNOWN
     }
+
+    private fun CustomerMeResponse.ProductInstance.SpecificationDataType.toDomain(): SpecificationDataType =
+        when (this) {
+            CustomerMeResponse.ProductInstance.SpecificationDataType.ACCOUNT -> SpecificationDataType.ACCOUNT
+            CustomerMeResponse.ProductInstance.SpecificationDataType.CARD -> SpecificationDataType.CARD
+        }
+
+    private fun String?.toDateTimeOrNull(): DateTime? = this?.let { runCatching { DateTime.parse(it) }.getOrNull() }
 }

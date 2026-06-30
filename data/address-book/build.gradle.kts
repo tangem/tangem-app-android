@@ -16,6 +16,10 @@ dependencies {
     implementation(projects.core.utils)
     // endregion
 
+    // region Project - Data
+    implementation(projects.data.common)
+    // endregion
+
     // region Project - Domain
     implementation(projects.domain.addressBook)
     implementation(projects.domain.common)

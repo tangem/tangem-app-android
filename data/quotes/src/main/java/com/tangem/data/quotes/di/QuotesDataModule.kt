@@ -15,6 +15,7 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
@@ -78,5 +79,13 @@ internal object QuotesDataModule {
     @Provides
     fun provideGetCurrencyUSDQuoteUseCase(quotesRepository: QuotesRepository): GetCurrencyUSDQuoteUseCase {
         return GetCurrencyUSDQuoteUseCase(quotesRepository)
+    }
+
+    @Singleton
+    @Provides
+    fun provideIsHighNetworkFeeUseCase(
+        getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
+    ): IsHighNetworkFeeUseCase {
+        return IsHighNetworkFeeUseCase(getCurrencyUSDQuoteUseCase)
     }
 }

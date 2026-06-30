@@ -29,6 +29,7 @@ internal class SendConfirmationNotificationsTransformerV2(
     private val cryptoCurrency: CryptoCurrency,
     private val appCurrency: AppCurrency,
     private val analyticsCategoryName: String,
+    private val isHighNetworkFee: Boolean = false,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         val state = prevState as? ConfirmUM.Content ?: return prevState
@@ -38,8 +39,15 @@ internal class SendConfirmationNotificationsTransformerV2(
             notifications = buildList {
                 addTooHighNotification(feeSelectorUM)
                 addTooLowNotification(feeSelectorUM)
+                addHighNetworkFeeNotification()
             }.toPersistentList(),
         )
+    }
+
+    private fun MutableList<NotificationUM>.addHighNetworkFeeNotification() {
+        if (isHighNetworkFee) {
+            add(NotificationUM.Warning.HighNetworkFee)
+        }
     }
 
     private fun MutableList<NotificationUM>.addTooLowNotification(feeSelectorUM: FeeSelectorUM.Content) {

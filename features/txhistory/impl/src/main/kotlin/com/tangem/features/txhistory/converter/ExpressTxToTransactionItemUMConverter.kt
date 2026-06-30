@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction as RowDirection
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle.Direction as SubtitleDirection
 import com.tangem.core.ui.extensions.TextReference
@@ -12,6 +13,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.domain.express.models.ExpressExchangeStatus
+import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.explorerHash
@@ -29,7 +32,7 @@ import java.math.BigDecimal
  * express statuses collapse into the three [Status] buckets (those drive title/icon/amount colors in the row UI).
  *
  * The counterparty ticker symbol+icon come from the resolved [ExpressTransactionAsset.cryptoCurrency] (swap);
- * onramp shows the real fiat code with no icon yet (fiat carries no `CryptoCurrency`). The row click routes through
+ * onramp shows the fiat code with the onramp country flag as the icon (fiat carries no `CryptoCurrency`). The row click routes through
  * [TxHistoryUiActions.onTransactionClick] (express rows open the in-app details sheet).
  */
 internal class ExpressTxToTransactionItemUMConverter(
@@ -67,16 +70,15 @@ internal class ExpressTxToTransactionItemUMConverter(
                 symbol = counterparty.cryptoCurrency?.symbol ?: counterparty.id.networkId,
                 icon = counterparty.cryptoCurrency?.let(iconStateConverter::convert),
             ),
-            // TODO: replace null to warning logic.
-            warning = null,
+            warning = swapWarning(swap),
         )
     }
 
     private fun onrampContent(onramp: ExpressTx.Onramp): TransactionItemUM.Content {
         val status = onrampStatusConverter.convert(onramp.tx.status)
-        val prefix = when {
-            status is Status.Failed -> ""
-            status is Status.Confirmed -> StringsSigns.PLUS
+        val prefix = when (status) {
+            is Status.Failed -> ""
+            is Status.Confirmed -> StringsSigns.PLUS
             else -> StringsSigns.TILDE_SIGN
         }
         return buildContent(
@@ -89,11 +91,12 @@ internal class ExpressTxToTransactionItemUMConverter(
             subtitle = ContentSubtitle.Asset(
                 direction = SubtitleDirection.FROM,
                 symbol = onramp.tx.fromFiat.currencySymbol,
-                // TODO: fiat carries no OnrampCurrency, so no icon yet — render with a fiat country flag once available.
-                icon = null,
+                icon = CurrencyIconState.FiatIcon(
+                    url = onramp.tx.country?.image,
+                    fallbackResId = R.drawable.ic_currency_24,
+                ),
             ),
-            // TODO: replace null to warning logic.
-            warning = null,
+            warning = onrampWarning(onramp),
         )
     }
 
@@ -143,4 +146,24 @@ internal class ExpressTxToTransactionItemUMConverter(
             wrappedList(resourceReference(R.string.tx_history_onramp_top_up)),
         )
     }
+
+    /**
+     * KYC-verification warning. Other "problem" statuses (failed / refunded / expired) already surface as the red
+     * [Status.Failed] row title, so they need no extra warning line; only [ExpressExchangeStatus.Verifying] —
+     * which buckets into the in-progress [Status.Unconfirmed] — requires it to signal the pending user action.
+     */
+    private fun swapWarning(swap: ExpressTx.Swap): TextReference? =
+        if (swap.tx.status == ExpressExchangeStatus.Verifying) {
+            resourceReference(R.string.express_exchange_notification_verification_title)
+        } else {
+            null
+        }
+
+    /** KYC-verification warning; see [swapWarning] for why failed statuses are intentionally excluded. */
+    private fun onrampWarning(onramp: ExpressTx.Onramp): TextReference? =
+        if (onramp.tx.status == ExpressOnrampStatus.Verifying) {
+            resourceReference(R.string.express_exchange_notification_verification_title)
+        } else {
+            null
+        }
 }

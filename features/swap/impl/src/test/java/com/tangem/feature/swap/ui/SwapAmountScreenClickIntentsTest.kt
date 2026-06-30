@@ -37,6 +37,7 @@ internal class SwapAmountScreenClickIntentsTest {
         onReceiveCardWarningClick = {},
         onSwapUIModeChange = {},
         onSwapTypeMenuOpened = {},
+        onTronBannerShown = {},
     )
 
     private val sut = SwapAmountScreenClickIntents(actions)

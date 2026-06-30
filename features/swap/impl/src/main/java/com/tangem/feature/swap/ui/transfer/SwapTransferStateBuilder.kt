@@ -37,6 +37,7 @@ import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.ui.swapSuccessNavigation
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
 import com.tangem.utils.extensions.orZero
@@ -52,12 +53,13 @@ internal class SwapTransferStateBuilder @Inject constructor(
 
     private val iconConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
+    @Suppress("LongParameterList")
     fun createTransferState(
         actions: UiActions,
         transferState: SwapState.Transfer,
         uiStateHolder: SwapStateHolder,
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        fee: Fee?,
+        feeSelectorUM: FeeSelectorUM?,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
@@ -65,11 +67,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val prevAmountField = prevSendCard?.amountField
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
+            feeSelectorUM = feeSelectorUM,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
-            fee = fee,
-            onBuyClick = actions.openTokenDetailsScreen,
-            onReduceByAmount = actions.onReduceByAmount,
-            onReduceToAmount = actions.onReduceToAmount,
+            actions = actions,
         )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
@@ -342,14 +342,13 @@ internal class SwapTransferStateBuilder @Inject constructor(
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         fee: Fee?,
         isTangemPayWithdrawal: Boolean,
+        feeSelectorUM: FeeSelectorUM?,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
-            fee = fee,
-            onBuyClick = actions.openTokenDetailsScreen,
-            onReduceByAmount = actions.onReduceByAmount,
-            onReduceToAmount = actions.onReduceToAmount,
+            feeSelectorUM = feeSelectorUM,
+            actions = actions,
         )
         return uiStateHolder.copy(
             notifications = notifications,
@@ -395,7 +394,8 @@ internal class SwapTransferStateBuilder @Inject constructor(
 
         val fiatAmountValue = tokenSwapInfo.amountFiat
         val status = dataState.fromSwapCurrencyStatus?.status ?: return null
-        val fiatFeeValue = fee.amount.value
+        val value = dataState.feePaidCryptoCurrency?.value
+        val fiatFeeValue = value?.fiatRate?.multiply(fee.amount.value)
         val isFeeConvertibleToFiat = status.currency.network.hasFiatFeeRate
 
         val fiatSendingValue = if (isFeeConvertibleToFiat) {
@@ -412,8 +412,11 @@ internal class SwapTransferStateBuilder @Inject constructor(
         }
 
         val networkId = status.currency.network.id
+        // When the fee is convertible to fiat, show the fiat-converted value; otherwise keep the raw
+        // crypto fee amount — formatFooterFiatFee renders amount.value as crypto in the non-fiat case.
+        val feeAmount = if (isFeeConvertibleToFiat) fee.amount.copy(value = fiatFeeValue) else fee.amount
         val fiatFee = formatFooterFiatFee(
-            amount = fee.amount.copy(value = fiatFeeValue),
+            amount = feeAmount,
             isFeeConvertibleToFiat = isFeeConvertibleToFiat,
             isFeeApproximate = isFeeApproximateUseCase(networkId = networkId, amountType = fee.amount.type),
             appCurrency = appCurrency,

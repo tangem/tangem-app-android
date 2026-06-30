@@ -25,7 +25,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
@@ -201,6 +200,7 @@ private fun DecorationBox(
                 Field(
                     state = state,
                     innerTextField = innerTextField,
+                    modifier = if (state.query.isEmpty()) Modifier else Modifier.weight(1f),
                 )
                 ClearButton(
                     state = state,
@@ -217,58 +217,45 @@ private fun DecorationBox(
 }
 
 @Composable
-private fun Field(state: SearchBarUM, innerTextField: @Composable () -> Unit) {
+private fun Field(state: SearchBarUM, modifier: Modifier = Modifier, innerTextField: @Composable () -> Unit) {
     Box(
         contentAlignment = Alignment.CenterStart,
-        modifier = Modifier
+        modifier = modifier
             .heightIn(min = TangemTheme.dimens2.x5)
-            .width(IntrinsicSize.Max),
+            .then(if (state.query.isEmpty()) Modifier.width(IntrinsicSize.Max) else Modifier),
     ) {
         innerTextField()
 
-        val placeholderOpacity by remember(state.query) {
-            derivedStateOf {
-                if (state.query.isNotEmpty()) {
-                    0f
-                } else {
-                    1f
-                }
-            }
+        if (state.query.isEmpty()) {
+            Text(
+                text = state.placeholderText.resolveReference(),
+                color = TangemTheme.colors2.text.neutral.tertiary,
+                style = TangemTheme.typography2.bodySemibold16,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(SearchBarTestTags.PLACEHOLDER_TEXT),
+            )
         }
-
-        Text(
-            text = state.placeholderText.resolveReference(),
-            color = TangemTheme.colors2.text.neutral.tertiary,
-            style = TangemTheme.typography2.bodySemibold16,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .testTag(SearchBarTestTags.PLACEHOLDER_TEXT)
-                .alpha(placeholderOpacity),
-        )
     }
 }
 
 @Composable
 private fun ClearButton(state: SearchBarUM) {
     if (state.query.isNotEmpty()) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_close_new_20),
-                tint = TangemTheme.colors2.graphic.neutral.tertiary,
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .size(TangemTheme.dimens2.x5)
-                    .clip(CircleShape)
-                    .clickable(
-                        onClick = state.onClearClick,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = false),
-                    )
-                    .testTag(SearchBarTestTags.CLEAR_BUTTON),
-            )
-        }
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.ic_close_new_20),
+            tint = TangemTheme.colors2.graphic.neutral.tertiary,
+            contentDescription = null,
+            modifier = Modifier
+                .size(TangemTheme.dimens2.x5)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = state.onClearClick,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false),
+                )
+                .testTag(SearchBarTestTags.CLEAR_BUTTON),
+        )
     }
 }
 

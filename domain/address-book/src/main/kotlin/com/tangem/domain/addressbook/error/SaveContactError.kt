@@ -10,4 +10,6 @@ sealed interface SaveContactError {
     data class Address(val error: AddressValidation.Error) : SaveContactError
 
     data class Signing(val error: SignHashesError) : SaveContactError
+
+    data class Backend(val error: AddressBookSyncError) : SaveContactError
 }

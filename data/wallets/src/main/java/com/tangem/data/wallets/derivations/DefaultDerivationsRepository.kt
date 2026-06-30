@@ -77,6 +77,24 @@ internal class DefaultDerivationsRepository @Inject constructor(
         }
     }
 
+    override suspend fun storeDerivedKeys(
+        userWalletId: UserWalletId,
+        derivedKeys: Map<ByteArrayKey, ExtendedPublicKeysMap>,
+    ) {
+        if (derivedKeys.isEmpty()) {
+            TangemLogger.d("Nothing to store")
+            return
+        }
+
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        val updatedUserWallet = when (userWallet) {
+            is UserWallet.Cold -> coldDerivationsRepository.mergeDerivedKeys(userWallet, derivedKeys)
+            is UserWallet.Hot -> hotDerivationsRepository.mergeDerivedKeys(userWallet, derivedKeys)
+        }
+
+        userWallet.update(updatedUserWallet)
+    }
+
     override suspend fun getExistingDerivedKeys(
         userWalletId: UserWalletId,
         seedKey: ByteArrayKey,

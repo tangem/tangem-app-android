@@ -5,16 +5,16 @@ plugins {
 }
 
 dependencies {
-    /** Project - Core */
-    implementation(projects.core.analytics.models)
 
-    /** Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.staking.models)
-    implementation(projects.domain.stories.models)
+    // region Kotlin
+    api(deps.kotlin.serialization.core)
+    // endregion
 
-    /** Other dependencies */
-    implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
+    // region Core modules
+    api(projects.core.analytics.models)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

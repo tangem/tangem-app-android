@@ -20,6 +20,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -78,6 +79,19 @@ internal class SwapNotificationsFactory(
         )
     }
 
+    fun getDestinationRequirementNotifications(
+        requirement: AssetRequirementsCondition,
+        onAssociateClick: () -> Unit,
+    ): ImmutableList<NotificationUM> {
+        val notification = when (requirement) {
+            is AssetRequirementsCondition.RequiredTrustline ->
+                SwapNotificationUM.Warning.TokenTrustlineRequired(onAssociateClick)
+            else ->
+                SwapNotificationUM.Warning.TokenAssociationRequired(onAssociateClick)
+        }
+        return persistentListOf(notification)
+    }
+
     fun getQuotesErrorStateNotifications(
         expressDataError: ExpressDataError,
         fromToken: CryptoCurrency,
@@ -110,6 +124,7 @@ internal class SwapNotificationsFactory(
         swapFee: SwapFee?,
         feeError: GetFeeError?,
         appRouter: AppRouter,
+        isHighNetworkFee: Boolean = false,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddFeeErrorNotification(feeCryptoCurrencyStatus, quoteModel, feeError)
@@ -121,8 +136,15 @@ internal class SwapNotificationsFactory(
             maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, appRouter)
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
+            maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }
         return warnings.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {
+        if (isHighNetworkFee) {
+            add(NotificationUM.Warning.HighNetworkFee)
+        }
     }
 
     private fun MutableList<NotificationUM>.maybeAddRentExemptionError(quoteModel: SwapState.QuotesLoadedState) {

@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -18,8 +19,10 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
@@ -97,7 +100,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         cryptoCurrency: CryptoCurrency,
     ): BigDecimal? = withContext(dispatchers.io) {
         require(cryptoCurrency is CryptoCurrency.Token)
-        runCatching {
+        runSuspendCatching {
             val walletManager = walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWalletId,
                 blockchain = cryptoCurrency.network.toBlockchain(),
@@ -110,7 +113,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     decimals = cryptoCurrency.decimals,
                 ),
             )
-        }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
+        }.logErrorUnlessCancellation().getOrThrow()
     }
 
     @Suppress("LongParameterList")
@@ -201,27 +204,27 @@ internal class DefaultYieldSupplyTransactionRepository(
         cryptoCurrency: CryptoCurrency,
     ): String? = withContext(dispatchers.io) {
         require(cryptoCurrency is CryptoCurrency.Token)
-        runCatching {
+        runSuspendCatching {
             val walletManager = walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWalletId,
                 blockchain = cryptoCurrency.network.toBlockchain(),
                 derivationPath = cryptoCurrency.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
             walletManager.calculateYieldModuleAddress()
-        }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
+        }.logErrorUnlessCancellation().getOrThrow()
     }
 
     override suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
         withContext(dispatchers.io) {
             require(cryptoCurrency is CryptoCurrency.Token)
-            runCatching {
+            runSuspendCatching {
                 val walletManager = walletManagersFacade.getOrCreateWalletManager(
                     userWalletId = userWalletId,
                     blockchain = cryptoCurrency.network.toBlockchain(),
                     derivationPath = cryptoCurrency.network.derivationPath.value,
                 ) ?: error("Wallet manager not found")
                 walletManager.getYieldModuleAddress()
-            }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
+            }.logErrorUnlessCancellation().getOrThrow()
         }
 
     override suspend fun wrapYieldSwapCallDataWithUpgradeIfNeeded(
@@ -238,11 +241,42 @@ internal class DefaultYieldSupplyTransactionRepository(
         YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, callData)
     }
 
+    override suspend fun getYieldModuleVersionStatus(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): YieldModuleVersionStatus = withContext(dispatchers.io) {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = network.toBlockchain(),
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found for $network")
+        walletManager.checkModuleVersionStatus()
+    }
+
+    override suspend fun createPartialWithdrawCallData(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        amount: Amount,
+    ): SmartContractCallData = withContext(dispatchers.io) {
+        require(cryptoCurrency is CryptoCurrency.Token)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = cryptoCurrency.network.toBlockchain(),
+            derivationPath = cryptoCurrency.network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+        val withdrawCallData = YieldSupplyContractCallDataProviderFactory.getWithdrawCallData(
+            tokenContractAddress = cryptoCurrency.contractAddress,
+            amount = amount,
+        )
+        val versionStatus = walletManager.checkModuleVersionStatus()
+        YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, withdrawCallData)
+    }
+
     private suspend fun getYieldTokenStatus(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
     ): YieldSupplyStatus? = withContext(dispatchers.io) {
-        runCatching {
+        runSuspendCatching {
             val sdkSupplyStatus = walletManager.getYieldSupplyStatus(cryptoCurrency.contractAddress)
             val protocolBalance = if (sdkSupplyStatus?.isActive == true) {
                 walletManager.getEffectiveProtocolBalance(
@@ -269,7 +303,20 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isAllowedToSpend = isAllowedToSpend,
                 effectiveProtocolBalance = protocolBalance,
             )
-        }.onFailure { TangemLogger.e("Error", it) }.getOrNull()
+        }.logErrorUnlessCancellation().getOrThrow()
+    }
+
+    /**
+     * Logs failures via [TangemLogger] but rethrows coroutine cancellation so a cancelled scope
+     * (e.g. leaving the yield-supply screen) cancels cleanly instead of being reported as a real
+     * error and swallowed to `null`. Covers both a raw [CancellationException] and one wrapped by
+     * the blockchain SDK as [BlockchainSdkError.WrappedThrowable] (carried in [Throwable.cause]),
+     * which is what `EthereumLikeJsonRpcProvider.post` throws when an in-flight RPC is cancelled.
+     */
+    private fun <T> Result<T>.logErrorUnlessCancellation(): Result<T> = onFailure { error ->
+        val cancellation = error as? CancellationException ?: error.cause as? CancellationException
+        if (cancellation != null) throw cancellation
+        TangemLogger.e("Error", error)
     }
 
     private fun createDeployTransaction(

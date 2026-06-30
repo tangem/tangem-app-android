@@ -142,6 +142,10 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         override fun openSearch(source: String) {
             stackNavigation.bringToFront(FeedEntryChildFactory.Child.Search(source))
         }
+
+        override fun openForYou() {
+            stackNavigation.bringToFront(FeedEntryChildFactory.Child.ForYou)
+        }
     }
 
     private val stack: Value<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>> =

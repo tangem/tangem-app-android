@@ -1,11 +1,14 @@
 package com.tangem.features.addressbook.addaddress.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.*
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +24,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM
@@ -70,17 +74,12 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
                         onQrClick = state.onQrClick,
                         onPasteClick = state.onPasteClick,
                     )
-                    SpacerH(20.dp)
-                    NetworkBlock(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .fillMaxWidth()
-                            .background(color = TangemTheme.colors3.bg.secondary),
+                    MemoSection(memoField = state.memoField)
+                    NetworkSelector(
                         chosenNetworkStateUM = state.chosenNetworkStateUM,
-                        onNetworkSelectClick = state.onNetworkClick,
+                        onNetworkClick = state.onNetworkClick,
                     )
-                    PrimaryButton(state.buttonUM)
+                    AddButton(state.buttonUM)
                 }
             }
         }
@@ -88,7 +87,71 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun ColumnScope.PrimaryButton(buttonUM: TangemButtonUM) {
+private fun MemoSection(memoField: AddAddressUM.MemoFieldUM) {
+    AnimatedVisibility(
+        visible = memoField.isVisible,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            MemoRow(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp),
+                memoField = memoField,
+            )
+            SpacerH(10.dp)
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = stringResourceSafe(R.string.send_recipient_memo_footer_v2),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = stringResourceSafe(R.string.send_recipient_memo_footer_v2_highlighted),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun NetworkSelector(chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM, onNetworkClick: () -> Unit) {
+    AnimatedContent(
+        targetState = chosenNetworkStateUM,
+        transitionSpec = {
+            ContentTransform(
+                targetContentEnter = fadeIn(),
+                initialContentExit = fadeOut(),
+                sizeTransform = SizeTransform(clip = false) { _, _ -> snap() },
+            )
+        },
+        contentKey = { it::class },
+        modifier = Modifier.animateContentSize(),
+        label = "network_selector",
+    ) { networkState ->
+        when (networkState) {
+            AddAddressUM.ChosenNetworkStateUM.Hidden -> Box(modifier = Modifier.fillMaxWidth())
+            AddAddressUM.ChosenNetworkStateUM.Loading,
+            is AddAddressUM.ChosenNetworkStateUM.Result,
+            -> NetworkBlock(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .fillMaxWidth()
+                    .background(color = TangemTheme.colors3.bg.secondary),
+                chosenNetworkStateUM = networkState,
+                onNetworkSelectClick = onNetworkClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.AddButton(buttonUM: TangemButtonUM) {
     Spacer(modifier = Modifier.weight(1f))
     TangemButton(
         modifier = Modifier
@@ -114,13 +177,21 @@ private fun Preview_AddAddressContent() {
                     placeholder = resourceReference(R.string.address_book_enter_address),
                     label = resourceReference(R.string.common_address),
                 ),
+                memoField = AddAddressUM.MemoFieldUM(
+                    isVisible = false,
+                    value = "",
+                    label = resourceReference(R.string.send_extras_hint_memo),
+                    isError = false,
+                    onValueChange = {},
+                    onPasteClick = {},
+                ),
                 buttonUM = TangemButtonUM(
                     text = TextReference.Res(R.string.address_book_add_address),
                     type = TangemButtonType.Primary,
                     isEnabled = false,
                     onClick = { },
                 ),
-                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Empty,
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Hidden,
                 onAddressChange = {},
                 onAddressClear = {},
                 onPasteClick = {},
