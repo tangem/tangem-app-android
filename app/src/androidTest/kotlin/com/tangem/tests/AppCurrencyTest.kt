@@ -59,15 +59,15 @@ class AppCurrencyTest : BaseTestCase() {
                     onAppSettingsScreen { currencyButton.assertIsDisplayed() }
                 }
             }
-            step("Return to 'Details' screen") {
-                waitForIdle()
-                device.uiDevice.pressBack()
+            step("Return to 'Details' screen via 'Back' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onAppSettingsScreen { backButton.clickWithAssertion() }
+                    onDetailsScreen { screenContainer.assertIsDisplayed() }
+                }
             }
             step("Return to 'Main' screen via 'Back' button") {
-                onDetailsScreen { topAppBarBackButton.clickWithAssertion() }
-            }
-            step("Assert 'Main' screen is opened") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onDetailsScreen { topAppBarBackButton.clickWithAssertion() }
                     onMainScreen { screenContainer.assertIsDisplayed() }
                 }
             }
