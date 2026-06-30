@@ -1,6 +1,7 @@
 package com.tangem.features.addressbook.common.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
@@ -15,8 +16,9 @@ import com.tangem.features.addressbook.list.ui.state.ContactUM
 import com.tangem.utils.StringsSigns
 
 @Composable
-internal fun ContactRow(contact: ContactUM) {
+internal fun ContactRow(contact: ContactUM, modifier: Modifier = Modifier) {
     TangemRow(
+        modifier = modifier,
         onClick = contact.onClick,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         contentLead = TangemRowContentLead.Start,
