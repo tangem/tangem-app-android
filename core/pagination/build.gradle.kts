@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    // region Coroutines
-    implementation(deps.kotlin.coroutines)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
     // endregion
 }

@@ -10,12 +10,17 @@ android {
 
 dependencies {
 
-    implementation(projects.core.utils)
+    // region AndroidX
+    api(deps.androidx.annotation)
+    // endregion
 
-
-    // region Firebase libraries
+    // region Firebase
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    // endregion
+
+    // region Core modules
+    implementation(projects.core.utils)
     // endregion
 }
