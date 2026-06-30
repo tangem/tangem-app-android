@@ -82,6 +82,7 @@ object MockScanResponseFactory {
                             isImported = true,
                             hasBackup = true,
                             derivedKeys = emptyMap(),
+                            status = CardWallet.Status.BackedUpImported
                         ),
                     )
                 },
