@@ -22,7 +22,9 @@ import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 
-internal class SendWithSwapConfirmationNotificationsTransformer : Transformer<SendWithSwapUM> {
+internal class SendWithSwapConfirmationNotificationsTransformer(
+    private val isHighNetworkFee: Boolean,
+) : Transformer<SendWithSwapUM> {
     override fun transform(prevState: SendWithSwapUM): SendWithSwapUM {
         val confirmUM = prevState.confirmUM as? ConfirmUM.Content ?: return prevState
         val feeSelectorUM = prevState.feeSelectorUM as? FeeSelectorUM.Content ?: return prevState
@@ -34,9 +36,16 @@ internal class SendWithSwapConfirmationNotificationsTransformer : Transformer<Se
                 notifications = buildList {
                     addTooHighNotification(feeSelectorUM = feeSelectorUM)
                     addTooLowNotification(feeSelectorUM = feeSelectorUM)
+                    addHighNetworkFeeNotification()
                 }.toPersistentList(),
             ),
         )
+    }
+
+    private fun MutableList<NotificationUM>.addHighNetworkFeeNotification() {
+        if (isHighNetworkFee) {
+            add(NotificationUM.Warning.HighNetworkFee)
+        }
     }
 
     private fun MutableList<NotificationUM>.addTooLowNotification(feeSelectorUM: FeeSelectorUM.Content) {
