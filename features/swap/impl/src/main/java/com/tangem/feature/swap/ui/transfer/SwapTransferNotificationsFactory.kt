@@ -126,7 +126,8 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
             sendingAmount = amount.value,
             cryptoCurrency = swapCurrencyStatus.currency,
             feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
-            isAccountFunded = true,
+            isAccountFunded = state.currencyCheck?.isAccountFunded == true,
+            hasRequiredTrustline = state.hasRequiredTrustline,
         )
         addReduceAmountNotification(
             cryptoCurrencyStatus = swapCurrencyStatus.status,
