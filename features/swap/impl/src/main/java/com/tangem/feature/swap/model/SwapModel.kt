@@ -1491,7 +1491,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun updateTransferModeTangemPayState() {
-        sendTransferInProgressEvent()
+        sendTransferInProgressEvent(isTangemPay = true)
         uiState = swapTransferStateBuilder.createTangemPayWithdrawalSuccessState(
             uiState = uiState,
             dataState = dataState,
@@ -1541,7 +1541,7 @@ internal class SwapModel @Inject constructor(
                     ""
                 }
                 updateWalletBalance()
-                sendTransferInProgressEvent()
+                sendTransferInProgressEvent(isTangemPay = false)
                 uiState = swapTransferStateBuilder.createSuccessState(
                     uiState = uiState,
                     dataState = dataState,
@@ -1564,7 +1564,7 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun sendTransferInProgressEvent() {
+    private fun sendTransferInProgressEvent(isTangemPay: Boolean) {
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
         val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
         analyticsEventHandler.send(
@@ -1572,6 +1572,7 @@ internal class SwapModel @Inject constructor(
                 fromCurrency = fromSwapCurrencyStatus?.currency,
                 toCurrency = toSwapCurrencyStatus?.currency,
                 feeNetwork = getFeeToken().network,
+                isTangemPay = isTangemPay,
             ),
         )
     }
