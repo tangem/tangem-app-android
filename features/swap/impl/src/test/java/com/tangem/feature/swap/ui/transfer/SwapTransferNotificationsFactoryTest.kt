@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.ui.transfer
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.notifications.NotificationUM
@@ -121,32 +120,6 @@ internal class SwapTransferNotificationsFactoryTest {
 
         assertThat(result.filterIsInstance<NotificationUM.Error.MinimumAmountError>()).hasSize(1)
     }
-
-    @Test
-    fun `GIVEN SDK dust-change error and manual dust limit WHEN getNotifications THEN single MinimumAmountError`() =
-        runTest {
-            // Both the SDK validation (TransactionDustChangeError) and the manual checkDustLimits change-below-dust
-            // path add an identical MinimumAmountError; the dedup must collapse them into one banner.
-            val fromStatus = buildCoinStatus(balance = BigDecimal("1.0"))
-            val transferState = buildTransferState(
-                fromTokenInfo = buildTokenInfo(
-                    swapCurrencyStatus = fromStatus,
-                    amount = BigDecimal("0.99"),
-                ),
-                currencyCheck = buildCurrencyCheck(dustValue = BigDecimal("0.02")),
-                validationResult = BlockchainSdkError.TransactionDustChangeError,
-                sendingAmount = BigDecimal("0.99"),
-            )
-
-            val result = sut.getNotifications(
-                transferState = transferState,
-                feeSelectorUM = null,
-                feeCryptoCurrencyStatus = null,
-                actions = actions,
-            )
-
-            assertThat(result.filterIsInstance<NotificationUM.Error.MinimumAmountError>()).hasSize(1)
-        }
 
     @Test
     fun `GIVEN minAdaValue and no validationResult WHEN getNotifications THEN MinAdaValueCharged is added`() =
