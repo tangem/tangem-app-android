@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.addressBook.api)
+    implementation(projects.features.commonFeatures.api)
 
     /** Domain */
     implementation(projects.domain.account)
