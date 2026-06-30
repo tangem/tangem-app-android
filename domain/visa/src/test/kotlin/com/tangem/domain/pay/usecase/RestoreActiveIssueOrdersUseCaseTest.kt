@@ -52,10 +52,10 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, first.id) }
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, second.id) }
         coVerify(exactly = 1) {
-            startTangemPayOrderPollingUseCase(TangemPayOrderInfo(first.id, first.status), userWalletId)
+            startTangemPayOrderPollingUseCase(TangemPayOrderInfo(first.id, first.status), userWalletId, any())
         }
         coVerify(exactly = 1) {
-            startTangemPayOrderPollingUseCase(TangemPayOrderInfo(second.id, second.status), userWalletId)
+            startTangemPayOrderPollingUseCase(TangemPayOrderInfo(second.id, second.status), userWalletId, any())
         }
     }
 
@@ -72,7 +72,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
-        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any()) }
+        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -89,7 +89,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         // Assert
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
-        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any()) }
+        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -105,7 +105,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
-        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any()) }
+        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any()) }
     }
 
     private fun order(id: String, type: OrderType, status: OrderStatus): Order = Order(
