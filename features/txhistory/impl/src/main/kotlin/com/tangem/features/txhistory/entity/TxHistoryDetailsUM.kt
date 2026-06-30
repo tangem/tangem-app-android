@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * UI model for the in-app transaction details ("Operation") card.
@@ -35,15 +36,20 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /**
      * Two-asset layout: Swap / Onramp.
      *
-     * [from] ("You sent") → [to] ("You receive") exchange block. Both are nullable: the converter can't populate the
-     * legs yet (`TxInfo` exposes no swap amounts/currencies/fiat), so the card falls back to a header-only placeholder
-     * until that data lands. [statusBanner] is the express status plaque under the block, `null` until status is known.
+     * [from] ("You send") → [to] ("You receive") exchange block. Both are nullable: when a leg cannot be built (e.g. a
+     * future express variant with no asset data) the card falls back to a header-only placeholder. [statusBanner] is
+     * the express status plaque under the block, `null` until status is known. [rows] carries, in order, the provider
+     * row (its name), the effective-rate row, and the network-fee row pulled from the matched on-chain leg
+     * (`ExpressTx.txInfo`); each is dropped when its data is unavailable. [providerButton] is the bottom "Go to
+     * provider" / "Go to verification" CTA, `null` unless the deal is on a provider-actionable terminal with a link.
      */
     data class TwoAssets(
         override val header: HeaderUM,
         val from: AssetUM? = null,
         val to: AssetUM? = null,
         val statusBanner: StatusBannerUM? = null,
+        val rows: ImmutableList<InfoRowUM> = persistentListOf(),
+        val providerButton: ProviderButtonUM? = null,
     ) : TxHistoryDetailsUM
 
     /**
@@ -66,15 +72,32 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     }
 
     /**
+     * Bottom call-to-action of the two-asset card, shown only on the provider-actionable terminals of an express deal
+     * (failed / expired → "Go to provider"; KYC verification → "Go to verification") and only when the deal carries a
+     * provider link. [onClick] opens that link (`ExpressTx.externalTxUrl`).
+     *
+     * @property text Button label ("Go to provider" / "Go to verification").
+     * @property onClick Opens the provider's page for this deal.
+     */
+    data class ProviderButtonUM(
+        val text: TextReference,
+        val onClick: () -> Unit,
+    )
+
+    /**
      * One side of the two-asset block: the [label] over the signed [amount], with the [currencyIcon] on the trailing
-     * side. [owner] `null` → plain label ("You sent"); non-null → "From"/"To" prefix plus the resolved own account /
-     * wallet decoration. [isFaded] renders the unsettled/failed amount (struck through, recolored to tertiary).
+     * side. [owner] `null` → plain label ("You send"); non-null → "From"/"To" prefix plus the resolved own account /
+     * wallet decoration. [isFaded] renders the failed amount (struck through, recolored to tertiary); an in-flight leg is
+     * not faded — it carries a `~` estimate sign instead.
+     *
+     * [currencyIcon] is `null` when the leg has no icon to show — the onramp fiat side carries no `CryptoCurrency` and
+     * no country flag is rendered (no data); the trailing icon slot is then left empty.
      */
     data class AssetUM(
         val label: TextReference,
         val owner: AssetOwnerUM?,
         val amount: TextReference,
-        val currencyIcon: CurrencyIconState,
+        val currencyIcon: CurrencyIconState?,
         val isFaded: Boolean,
     )
 
@@ -106,23 +129,33 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * Centered amount block of the single-asset card: token avatar (with network badge), the big signed crypto
      * [amount] and the secondary [fiatAmount].
      *
+     * [fiatAmount] is `null` while no fiat value is available (`TxInfo` has no fiat field yet) — the fiat line is then
+     * omitted entirely rather than shown as a placeholder.
+     *
      * [isFailed] drives the failed visual state — the amount is struck through, recolored to tertiary and carries no
      * `+`/`−` sign (mirrors the status-driven recolor in the shared header).
      */
     data class AmountBlockUM(
         val currencyIcon: CurrencyIconState,
         val amount: TextReference,
-        val fiatAmount: TextReference,
+        val fiatAmount: TextReference? = null,
         val isFailed: Boolean,
     )
 
     /**
      * A single info row of the details card: a [label] on the leading side and its [value] on the trailing side
      * (e.g. `Network fee` → `0.00056 ETH`, `Rate` → `1 POL ≈ 0.36 USDT`). Rendered by [TxHistoryDetailsInfoRows].
+     *
+     * [trailingIconRes] is an optional glyph drawn after the [value] (e.g. the arrow-up-right link affordance on the
+     * provider row); `null` leaves the trailing slot text-only.
+     *
+     * [onClick] makes the row tappable (e.g. the provider row opens the provider page); `null` makes it non-interactive.
      */
     data class InfoRowUM(
         val label: TextReference,
         val value: TextReference,
+        @DrawableRes val trailingIconRes: Int? = null,
+        val onClick: (() -> Unit)? = null,
     )
 
     /**
