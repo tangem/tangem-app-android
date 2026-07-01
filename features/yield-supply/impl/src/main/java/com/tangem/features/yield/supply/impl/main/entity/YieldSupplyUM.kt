@@ -27,8 +27,8 @@ internal sealed class YieldSupplyUM {
         val subtitle: TextReference,
         val rewardsApy: TextReference,
         val onClick: () -> Unit,
-        val showWarningIcon: Boolean,
-        val showInfoIcon: Boolean,
+        val shouldShowWarningIcon: Boolean,
+        val shouldShowInfoIcon: Boolean,
     ) : YieldSupplyUM()
 
     @Immutable

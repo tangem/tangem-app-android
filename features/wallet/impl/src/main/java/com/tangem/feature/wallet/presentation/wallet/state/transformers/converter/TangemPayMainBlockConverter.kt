@@ -2,9 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
@@ -13,6 +11,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.converter.Converter
@@ -22,6 +21,7 @@ import java.util.Currency
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
     private val isRedesignEnabled: Boolean,
+    private val isMultipleCardsEnabled: Boolean,
 ) : Converter<AccountStatus.Payment, TangemPayMainUM> {
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun convert(value: AccountStatus.Payment): TangemPayMainUM {
@@ -57,25 +57,31 @@ internal class TangemPayMainBlockConverter(
                 subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(
-                    currencyCode = statusValue.fiatBalance.currency,
-                    balance = statusValue.fiatBalance.availableBalance,
+                    currencyCode = statusValue.balance.fiatBalance.currency,
+                    balance = statusValue.balance.fiatBalance.availableBalance,
                 ),
                 balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Loaded -> {
+                val cardsCount = statusValue.cards.count()
                 val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
+                val subtitle = when {
+                    isMultipleCardsEnabled -> pluralReference(
+                        id = R.plurals.tangempay_cards_count,
+                        count = cardsCount,
+                        formatArgs = wrappedList(cardsCount),
+                    )
+                    card.state == TangemPayCardState.Reissuing -> resourceReference(R.string.tangempay_status_replacing)
+                    else -> stringReference("*${card.lastDigits}")
+                }
                 TangemPayMainUM.Content(
-                    subtitle = if (card.isReissuing) {
-                        resourceReference(R.string.tangempay_status_replacing)
-                    } else {
-                        stringReference("*${card.lastDigits}")
-                    },
+                    subtitle = subtitle,
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(
-                        currencyCode = statusValue.currencyCode,
-                        balance = statusValue.fiatBalance.availableBalance,
+                        currencyCode = statusValue.balance.fiatBalance.currency,
+                        balance = statusValue.balance.fiatBalance.availableBalance,
                     ),
                     balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,

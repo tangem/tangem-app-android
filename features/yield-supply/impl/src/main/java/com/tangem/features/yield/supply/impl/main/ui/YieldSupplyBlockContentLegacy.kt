@@ -213,12 +213,12 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = 
             targetState = supplyUM,
         ) { currentState ->
             when {
-                currentState.showWarningIcon -> Icon(
+                currentState.shouldShowWarningIcon -> Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.attention,
                 )
-                currentState.showInfoIcon -> Icon(
+                currentState.shouldShowInfoIcon -> Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_red_20),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.accent,
@@ -432,8 +432,8 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 rewardsApy = stringReference("APY 5.1%"),
                 onClick = {},
                 apy = "5.1",
-                showWarningIcon = false,
-                showInfoIcon = true,
+                shouldShowWarningIcon = false,
+                shouldShowInfoIcon = true,
             ),
             YieldSupplyUM.Content(
                 title = stringReference("Aave lending is active "),
@@ -441,8 +441,8 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 rewardsApy = stringReference("APY 5.1%"),
                 onClick = {},
                 apy = "5.1",
-                showWarningIcon = true,
-                showInfoIcon = false,
+                shouldShowWarningIcon = true,
+                shouldShowInfoIcon = false,
             ),
             YieldSupplyUM.Loading,
             YieldSupplyUM.Processing.Enter,

@@ -6,7 +6,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
@@ -14,7 +13,6 @@ import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
-import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -32,7 +30,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private val testUserWalletId = UserWalletId("1234567890ABCDEF")
     private val testUserWallet: UserWallet.Hot = mockk(relaxed = true) {
@@ -43,12 +40,12 @@ internal class TangemPayHotWalletOnboardingModelTest {
     inner class OnTermsClick {
 
         @Test
-        fun `WHEN onTermsClick THEN urlOpener called with terms link`() = runTest {
+        fun `WHEN onTermsClick THEN navigate to Disclaimer`() = runTest {
             val model = createModel()
 
             model.uiState.value.onTermsClick.invoke()
 
-            verify { urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK) }
+            verify { router.push(AppRoute.Disclaimer(isTosAccepted = true)) }
         }
     }
 
@@ -118,7 +115,6 @@ internal class TangemPayHotWalletOnboardingModelTest {
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             router = router,
             uiMessageSender = uiMessageSender,
-            urlOpener = urlOpener,
         )
     }
 }

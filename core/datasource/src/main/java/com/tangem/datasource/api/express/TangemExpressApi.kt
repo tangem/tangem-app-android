@@ -78,7 +78,7 @@ interface TangemExpressApi {
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
         @Query("txId") txId: String,
-    ): ApiResponse<ExchangeStatusResponse>
+    ): ApiResponse<ExchangeItemResponse>
 
     @POST("exchange-sent")
     suspend fun exchangeSent(
@@ -87,10 +87,19 @@ interface TangemExpressApi {
         @Body body: ExchangeSentRequestBody,
     ): ApiResponse<ExchangeSentResponseBody>
 
-    @GET("exchange/history")
+    @GET("history/exchange")
     suspend fun getHistory(
-        @Query("wallet_address") walletAddress: String,
-        @Query("cursor") cursor: String?,
+        @Header("user-id") userWalletId: String,
+        @Query("fromAddress") fromAddress: String,
+        @Query("afterCursor") cursor: String?,
         @Query("limit") limit: Int = 100,
     ): ApiResponse<ExchangeHistoryResponse>
+
+    @GET("history/delta/exchange")
+    suspend fun getHistoryDelta(
+        @Header("user-id") userWalletId: String,
+        @Query("fromAddress") fromAddress: String,
+        @Query("beforeCursor") cursor: String?,
+        @Query("limit") limit: Int = 100,
+    ): ApiResponse<ExchangeHistoryDeltaResponse>
 }
