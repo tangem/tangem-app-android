@@ -55,6 +55,7 @@ internal sealed class TangemPay(
         "version" to ProviderSuspend { appInfoProvider.appVersion },
         "platform" to ProviderSuspend { "Android" },
         "X-API-KEY" to ProviderSuspend { getBffStaticToken(apiEnvironment) },
+        "X-Device-Scale" to ProviderSuspend { appInfoProvider.deviceScale.toString() },
     )
 
     private fun getBffStaticToken(apiEnvironment: ApiEnvironment): String {

@@ -9,6 +9,7 @@ data class TangemPayTariffPlan(
     @SerialName("type") val type: Type,
     @SerialName("name") val name: String,
     @SerialName("description_items") val descriptionItems: List<DescriptionItem>,
+    @SerialName("image_url") val imageUrl: String? = null,
 ) {
     @Serializable
     data class DescriptionItem(

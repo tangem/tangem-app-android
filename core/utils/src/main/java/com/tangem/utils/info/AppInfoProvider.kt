@@ -27,6 +27,11 @@ interface AppInfoProvider {
     /** Current locale as a BCP 47 language tag (e.g. `"en-US"`, `"zh-CN"`). */
     val language: String
 
+    /**
+     * Display density as a float (e.g. `"2.0"`, `"2.75"`, `"3.0"`).
+     */
+    val deviceScale: Float
+
     /** IANA time-zone id of the device's current time zone, e.g. `"Europe/Moscow"`, `"UTC"`. */
     val timezone: String
 

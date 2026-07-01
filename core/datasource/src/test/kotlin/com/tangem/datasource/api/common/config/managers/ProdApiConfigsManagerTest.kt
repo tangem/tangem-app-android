@@ -70,6 +70,7 @@ internal class ProdApiConfigsManagerTest {
         every { appInfoProvider.osVersion } returns "Android 16"
         every { appInfoProvider.language } returns Locale.getDefault().toLanguageTag()
         every { appInfoProvider.device } returns "${Build.MANUFACTURER} ${Build.MODEL}"
+        every { appInfoProvider.deviceScale } returns DEVICE_SCALE
 
         manager = ProdApiConfigsManager(apiConfigs = createApiConfigs())
     }
@@ -298,6 +299,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
+                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE },
                 ),
             ),
         )
@@ -313,6 +315,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
+                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE },
                 ),
             ),
         )
@@ -457,6 +460,7 @@ internal class ProdApiConfigsManagerTest {
     private companion object {
 
         const val VERSION_NAME = "debug"
+        const val DEVICE_SCALE = 3f
         const val EXPRESS_SESSION_ID = "express_session_id"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
         const val P2P_API_KEY = "p2p_api_key"

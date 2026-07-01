@@ -1,13 +1,17 @@
 package com.tangem.tap.data
 
+import android.content.Context
 import android.os.Build
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.wallet.BuildConfig
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
 
-internal class DefaultAppInfoProvider @Inject constructor() : AppInfoProvider {
+internal class DefaultAppInfoProvider @Inject constructor(
+    @ApplicationContext private val context: Context,
+) : AppInfoProvider {
     override val platform: String
         get() = "Android"
     override val device: String
@@ -18,6 +22,8 @@ internal class DefaultAppInfoProvider @Inject constructor() : AppInfoProvider {
         get() = Build.VERSION.SDK_INT
     override val language: String
         get() = Locale.getDefault().toLanguageTag()
+    override val deviceScale: Float
+        get() = context.resources.displayMetrics.density
     override val timezone: String
         get() = TimeZone.getDefault().id
     override val appVersion: String = BuildConfig.VERSION_NAME

@@ -7,7 +7,5 @@ import com.tangem.domain.visa.error.VisaApiError
 
 interface TangemPayTariffPlanTransitionsRepository {
 
-    suspend fun getTransitions(
-        userWalletId: UserWalletId,
-    ): Either<VisaApiError, List<TangemPayTariffPlanTransition>>
+    suspend fun getTransitions(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayTariffPlanTransition>>
 }
