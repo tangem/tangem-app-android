@@ -257,6 +257,7 @@ internal class AddStakingNotificationsTransformer(
             cryptoCurrency = cryptoCurrency,
             feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
             isAccountFunded = false,
+            hasRequiredTrustline = false,
         )
     }
 

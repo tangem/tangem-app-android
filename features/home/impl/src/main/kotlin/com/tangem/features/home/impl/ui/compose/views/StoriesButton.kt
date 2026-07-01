@@ -24,7 +24,6 @@ internal fun StoriesButton(
         colors = if (useDarkerColors) DarkerButtonColors else LighterButtonColors,
         showProgress = showProgress,
         enabled = true,
-        shape = TangemTheme.shapes.roundedCornersXMedium,
         textStyle = TangemTheme.typography.subtitle1,
         iconPadding = when (icon) {
             is TangemButtonIconPosition.Start -> TangemTheme.dimens.spacing4
