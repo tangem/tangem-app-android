@@ -25,6 +25,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -314,6 +315,16 @@ internal class TangemPayDetailsModel @Inject constructor(
         val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount } ?: return
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(TangemPayDetailsNavigation.VirtualAccountDeposit(onramp))
+    }
+
+    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VirtualAccountRequisites(
+                userWalletId = userWalletId,
+                bankCredentials = onramp.bankCredentials,
+            ),
+        )
     }
 
     override fun onClickReceive(data: TangemPayTopUpData) {
