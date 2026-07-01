@@ -1,6 +1,7 @@
 package com.tangem.features.foryou.impl.components.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
 internal sealed class MarketChartUM(
@@ -10,8 +11,7 @@ internal sealed class MarketChartUM(
     data class Loaded(
         override val donutChart: DonutChartUM.Loaded,
         override val aiInsight: AiInsightUM = AiInsightUM.Hide,
-        /* from 0 to 1 */
-        val topHoldingPercent: Float,
+        val topHoldingPercent: TextReference,
     ) : MarketChartUM(
         donutChart = donutChart,
         aiInsight = aiInsight,
