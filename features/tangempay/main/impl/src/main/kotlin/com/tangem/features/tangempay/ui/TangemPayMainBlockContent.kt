@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -30,6 +31,7 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -96,7 +98,7 @@ private fun TangemPayMainContent(
             .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
     ) {
         Image(
-            painter = painterResource(R.drawable.img_visa_36),
+            painter = getVisaIconPainter(),
             contentDescription = null,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
@@ -145,7 +147,7 @@ private fun TangemPayStateRow(
             .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) },
     ) {
         Image(
-            painter = painterResource(R.drawable.img_visa_36),
+            painter = getVisaIconPainter(),
             contentDescription = null,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
@@ -272,6 +274,12 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
                 .width(TangemTheme.dimens2.x11),
         )
     }
+}
+
+@Composable
+private fun getVisaIconPainter(): Painter {
+    val resource = if (LocalRedesignEnabled.current) R.drawable.ic_visa_in_banner else R.drawable.img_visa_36
+    return painterResource(resource)
 }
 
 // region Preview

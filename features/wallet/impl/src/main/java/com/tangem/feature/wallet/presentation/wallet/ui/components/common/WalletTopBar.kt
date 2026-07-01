@@ -36,6 +36,7 @@ import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
+import com.tangem.utils.annotations.RemoveWithToggle
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
@@ -93,7 +94,10 @@ internal fun WalletTopBar(
                         ),
                 ) {
                     topBarConfig.endActions.forEach { action ->
-                        TangemTopBarActionContent(action)
+                        TangemTopBarActionContent(
+                            action,
+                            modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
+                        )
                     }
                 }
             },
@@ -111,6 +115,7 @@ internal fun WalletTopBar(
  */
 @Suppress("MagicNumber")
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletTopBar(config: WalletTopBarConfig) {

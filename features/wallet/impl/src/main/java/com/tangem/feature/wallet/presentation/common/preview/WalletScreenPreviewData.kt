@@ -19,6 +19,7 @@ import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import kotlinx.collections.immutable.persistentListOf
 
 internal object WalletScreenPreviewData {
@@ -179,6 +180,7 @@ internal object WalletScreenPreviewData {
             onItemClick = {},
         ),
         tangemPayMainUM = TangemPayMainUM.Loading,
+        virtualAccountMainUM = VirtualAccountMainUM.Loading,
     )
 
     private val walletEmpty = WalletUM.Content(
@@ -194,6 +196,7 @@ internal object WalletScreenPreviewData {
         tokensListUM = WalletTokensListUM.Empty(onEmptyClick = {}),
         nftState = WalletNFTItemUM.Hidden,
         tangemPayMainUM = TangemPayMainUM.Empty,
+        virtualAccountMainUM = VirtualAccountMainUM.Empty,
     )
 
     private val walletAccountDefault = walletDefault.copy(
