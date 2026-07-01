@@ -21,24 +21,24 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenElementsTestTags
-import org.burnoutcrew.reorderable.ReorderableLazyListState
 
 /**
  * Composable function that represents a Tangem token row in a list.
  *
  * [Token Row](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8207-17583&t=k8dyaykorsNocGVq-4)
  *
- * @param tokenRowUM        The user model containing the data for the token row.
- * @param isBalanceHidden   A boolean indicating whether the balance should be hidden.
- * @param reorderableState  The state of the reorderable lazy list, if applicable.
- * @param modifier          The modifier to be applied to the row.
+ * @param tokenRowUM         The user model containing the data for the token row.
+ * @param isBalanceHidden    A boolean indicating whether the balance should be hidden.
+ * @param dragHandleModifier Modifier applied to the drag handle in the row's tail (e.g. a reorderable
+ * drag-handle modifier). Defaults to [Modifier] for non-reorderable rows.
+ * @param modifier           The modifier to be applied to the row.
  */
 @Composable
 fun TangemTokenRow(
     tokenRowUM: TangemTokenRowUM,
     isBalanceHidden: Boolean,
-    reorderableState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
+    dragHandleModifier: Modifier = Modifier,
 ) {
     TangemRowContainer(
         content = {
@@ -91,7 +91,7 @@ fun TangemTokenRow(
 
             TangemRowTail(
                 tangemRowTailUM = tokenRowUM.tailUM,
-                reorderableState = reorderableState,
+                dragHandleModifier = dragHandleModifier,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
@@ -116,18 +116,19 @@ fun TangemTokenRow(
  * [Token Row](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8207-17583&t=k8dyaykorsNocGVq-4)
  *
  * @param tokenRowUM        The user model containing the data for the token row.
- * @param headComponent     The composable function representing the head component.
- * @param titleComponent    The composable function representing the title component.
- * @param isBalanceHidden   A boolean indicating whether the balance should be hidden.
- * @param reorderableState  The state of the reorderable lazy list, if applicable.
- * @param modifier          The modifier to be applied to the row.
+ * @param headComponent      The composable function representing the head component.
+ * @param titleComponent     The composable function representing the title component.
+ * @param isBalanceHidden    A boolean indicating whether the balance should be hidden.
+ * @param dragHandleModifier Modifier applied to the drag handle in the row's tail (e.g. a reorderable
+ * drag-handle modifier). Defaults to [Modifier] for non-reorderable rows.
+ * @param modifier           The modifier to be applied to the row.
  */
 @Composable
 fun TangemTokenRow(
     tokenRowUM: TangemTokenRowUM,
     isBalanceHidden: Boolean,
-    reorderableState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
+    dragHandleModifier: Modifier = Modifier,
     headComponent: @Composable (Modifier) -> Unit,
     titleComponent: @Composable (Modifier) -> Unit,
 ) {
@@ -190,7 +191,7 @@ fun TangemTokenRow(
 
             TangemRowTail(
                 tangemRowTailUM = tokenRowUM.tailUM,
-                reorderableState = reorderableState,
+                dragHandleModifier = dragHandleModifier,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
@@ -210,7 +211,6 @@ private fun TangemTokenRow_Preview(
         TangemTokenRow(
             tokenRowUM = tokenRowUM,
             isBalanceHidden = false,
-            reorderableState = null,
             modifier = Modifier.background(TangemTheme.colors2.surface.level1),
         )
     }

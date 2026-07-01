@@ -59,7 +59,6 @@ internal fun TokenActionContent(
             TangemTokenRow(
                 tokenRowUM = tokenRowUM,
                 isBalanceHidden = isBalanceHidden,
-                reorderableState = null,
                 modifier = Modifier
                     .padding(horizontal = TangemTheme.dimens2.x3)
                     .clip(RoundedCornerShape(18.dp))

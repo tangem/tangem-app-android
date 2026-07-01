@@ -31,6 +31,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.paging)
     implementation(deps.compose.reorderable)
+    implementation(deps.compose.reorderableV2)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)

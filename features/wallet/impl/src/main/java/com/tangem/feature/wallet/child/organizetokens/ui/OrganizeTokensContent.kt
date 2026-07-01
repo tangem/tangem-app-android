@@ -28,7 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -48,7 +48,6 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
@@ -63,9 +62,9 @@ import com.tangem.feature.wallet.child.organizetokens.ui.preview.OrganizeTokensP
 import com.tangem.feature.wallet.impl.R
 import dev.chrisbanes.haze.rememberHazeState
 import org.burnoutcrew.reorderable.ItemPosition
-import org.burnoutcrew.reorderable.ReorderableLazyListState
-import org.burnoutcrew.reorderable.rememberReorderableLazyListState
-import org.burnoutcrew.reorderable.reorderable
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.ReorderableLazyListState
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 internal fun OrganizeTokensContent(
@@ -134,26 +133,27 @@ private fun TokenList(
 
     val hapticFeedback = LocalHapticFeedback.current
     val tokenList = organizeTokensUM.tokenList
+
+    var draggingItem by remember { mutableStateOf<OrganizeRowItemUM?>(null) }
+
     Box(
         modifier = modifier.background(TangemTheme.colors2.surface.level2),
     ) {
-        val onDragEnd: (Int, Int) -> Unit = remember {
-            { _, _ ->
-                dragAndDropIntents.onItemDraggingEnd()
-            }
-        }
-        val reorderableListState = rememberReorderableLazyListState(
-            onMove = dragAndDropIntents::onItemDragged,
-            listState = tokensListState,
-            canDragOver = dragAndDropIntents::canDragItemOver,
-            onDragEnd = onDragEnd,
-        )
+        val footerInset = LocalTangemBottomSheetContentBottomInset.current
 
-        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+        val reorderableState = rememberReorderableLazyListState(
+            lazyListState = tokensListState,
+            scrollThresholdPadding = PaddingValues(bottom = footerInset),
+        ) { from, to ->
+            dragAndDropIntents.onItemDragged(
+                ItemPosition(index = from.index, key = from.key),
+                ItemPosition(index = to.index, key = to.key),
+            )
+        }
 
         val listContentPadding = PaddingValues(
             top = TangemTheme.dimens2.x1,
-            bottom = TangemTheme.dimens2.x1 + bottomBarHeight,
+            bottom = TangemTheme.dimens2.x1 + footerInset,
             start = TangemTheme.dimens2.x3,
             end = TangemTheme.dimens2.x3,
         )
@@ -161,60 +161,82 @@ private fun TokenList(
         LazyColumn(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .reorderable(reorderableListState)
                 .testTag(OrganizeTokensScreenTestTags.TOKENS_LAZY_LIST),
-            state = reorderableListState.listState,
+            state = tokensListState,
             contentPadding = listContentPadding,
         ) {
             itemsIndexed(
                 items = tokenList,
                 key = { _, item -> item.id },
             ) { index, item ->
-
-                val onDragStart = remember(item) {
-                    {
-                        dragAndDropIntents.onItemDraggingStart(item)
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                }
-
                 DraggableItem(
                     index = index,
                     item = item,
-                    reorderableState = reorderableListState,
-                    onDragStart = onDragStart,
+                    reorderableState = reorderableState,
+                    isValidDropTarget = isValidDropTarget(
+                        item = item,
+                        dragging = draggingItem,
+                        isGrouped = organizeTokensUM.isGrouped,
+                        isAccountsMode = organizeTokensUM.isAccountsMode,
+                    ),
                     isBalanceHidden = organizeTokensUM.isBalanceHidden,
+                    onDragStart = {
+                        draggingItem = item
+                        dragAndDropIntents.onItemDraggingStart(item)
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                    onDragStop = {
+                        draggingItem = null
+                        dragAndDropIntents.onItemDraggingEnd()
+                    },
                 )
-            }
-
-            item {
-                SpacerH(TangemTheme.dimens2.x20)
             }
         }
     }
 }
 
+private fun isValidDropTarget(
+    item: OrganizeRowItemUM,
+    dragging: OrganizeRowItemUM?,
+    isGrouped: Boolean,
+    isAccountsMode: Boolean,
+): Boolean {
+    return when {
+        dragging == null -> true
+        item.id == dragging.id -> true
+        dragging is OrganizeRowItemUM.Network ->
+            item is OrganizeRowItemUM.Placeholder && item.accountId == dragging.accountId
+        dragging is OrganizeRowItemUM.Token -> when (item) {
+            is OrganizeRowItemUM.Token -> when {
+                isGrouped -> item.groupId == dragging.groupId
+                isAccountsMode -> item.accountId == dragging.accountId
+                else -> true
+            }
+            else -> false
+        }
+        else -> false
+    }
+}
+
+@Suppress("LongParameterList")
 @Composable
 private fun LazyItemScope.DraggableItem(
     index: Int,
     item: OrganizeRowItemUM,
     reorderableState: ReorderableLazyListState,
-    onDragStart: () -> Unit,
+    isValidDropTarget: Boolean,
     isBalanceHidden: Boolean,
+    onDragStart: () -> Unit,
+    onDragStop: () -> Unit,
 ) {
-    var isDragging by remember {
-        mutableStateOf(value = false)
-    }
-
     val itemModifier = Modifier.applyShapeAndShadow(item.roundingModeUM, item.isShowShadow)
 
     ReorderableItem(
-        reorderableState = reorderableState,
-        index = index,
+        state = reorderableState,
         key = item.id,
-    ) { isItemDragging ->
-        isDragging = isItemDragging
-
+        // Only same-group/account items are eligible drop targets while dragging (see TokenList).
+        enabled = isValidDropTarget,
+    ) { _ ->
         val modifierWithBackground = itemModifier
             .background(color = TangemTheme.colors.background.primary)
             .semantics { lazyListItemPosition = index }
@@ -222,7 +244,10 @@ private fun LazyItemScope.DraggableItem(
         when (item) {
             is OrganizeRowItemUM.Network -> TangemHeaderRow(
                 modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.GROUP_TITLE_ITEM),
-                reorderableState = reorderableState,
+                dragHandleModifier = Modifier.draggableHandle(
+                    onDragStarted = { onDragStart() },
+                    onDragStopped = { onDragStop() },
+                ),
                 headerRowUM = item.headerRowUM,
             )
             is OrganizeRowItemUM.Portfolio -> TangemHeaderRow(
@@ -233,19 +258,14 @@ private fun LazyItemScope.DraggableItem(
             is OrganizeRowItemUM.Token -> OrganizeTokenRow(
                 modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM),
                 tokenRowUM = item.tokenRowUM,
-                reorderableState = reorderableState,
+                dragHandleModifier = Modifier.draggableHandle(
+                    onDragStarted = { onDragStart() },
+                    onDragStopped = { onDragStop() },
+                ),
                 isBalanceHidden = isBalanceHidden,
             )
             // Should be presented in the list but remain invisible
             is OrganizeRowItemUM.Placeholder -> Box(modifier = Modifier.fillMaxWidth())
-        }
-    }
-
-    DisposableEffect(isDragging) {
-        onDispose {
-            if (isDragging) {
-                onDragStart()
-            }
         }
     }
 }
@@ -310,7 +330,7 @@ private fun Modifier.applyShapeAndShadow(roundingMode: RoundingModeUM, showShado
 private fun OrganizeTokenRow(
     tokenRowUM: TangemTokenRowUM,
     isBalanceHidden: Boolean,
-    reorderableState: ReorderableLazyListState?,
+    dragHandleModifier: Modifier,
     modifier: Modifier = Modifier,
 ) {
     TangemRowContainer(
@@ -345,7 +365,7 @@ private fun OrganizeTokenRow(
 
             TangemRowTail(
                 tangemRowTailUM = tokenRowUM.tailUM,
-                reorderableState = reorderableState,
+                dragHandleModifier = dragHandleModifier,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
