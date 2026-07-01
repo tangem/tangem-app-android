@@ -54,51 +54,49 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
-import com.tangem.features.foryou.impl.components.state.AiInsightState
-import com.tangem.features.foryou.impl.components.state.DonutChartState
-import com.tangem.features.foryou.impl.components.state.DonutSegment
-import com.tangem.features.foryou.impl.components.state.MarketChartState
+import com.tangem.features.foryou.impl.components.state.AiInsightUM
+import com.tangem.features.foryou.impl.components.state.DonutChartUM
+import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
+import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun MarketChart(marketChartState: MarketChartState, modifier: Modifier = Modifier) {
-    val hazeState = LocalHazeState.current
+internal fun MarketChart(modifier: Modifier = Modifier, marketChart: MarketChartUM) {
     var cardBoundsInWindow by remember { mutableStateOf(Rect.Zero) }
 
     TangemSurface(
         modifier = modifier
-            .hazeSourceTangem(hazeState)
+            .hazeSourceTangem()
             .onGloballyPositioned { cardBoundsInWindow = it.boundsInWindow() },
         color = TangemTheme.colors3.bg.secondary,
     ) {
         Column {
-            DonutChartBlock(marketChartState.donutChartState, cardBoundsInWindow)
+            DonutChartBlock(marketChart.donutChart, cardBoundsInWindow)
             Spacer(modifier = Modifier.height(16.dp))
-            if (marketChartState is MarketChartState.Loaded) {
+            if (marketChart is MarketChartUM.Loaded) {
                 TopHoldingBlock(
-                    assetCount = marketChartState.assetCount,
-                    topHoldingPercent = marketChartState.topHoldingPercent,
+                    assetCount = marketChart.assetCount,
+                    topHoldingPercent = marketChart.topHoldingPercent,
                 )
             } else {
                 CantLoadDataBlock()
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            AiInsightContent(marketChartState.aiInsightState)
+            AiInsightContent(marketChart.aiInsight)
         }
     }
 }
 
 @Suppress("LongMethod")
 @Composable
-private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBoundsInWindow: Rect) {
+private fun ColumnScope.DonutChartBlock(donutChartUM: DonutChartUM, cardBoundsInWindow: Rect) {
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
-    val segments = donutChartState.donutSegmentList
+    val segments = donutChartUM.donutSegmentList
     val scope = rememberCoroutineScope()
     var dismissJob by remember { mutableStateOf<Job?>(null) }
     var chartSize by remember { mutableStateOf(IntSize.Zero) }
@@ -135,9 +133,9 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
             },
             segments = segments,
         ) {
-            if (donutChartState is DonutChartState.Loaded) {
+            if (donutChartUM is DonutChartUM.Loaded) {
                 Text(
-                    text = donutChartState.totalAmount,
+                    text = donutChartUM.totalAmount,
                     color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography3.body.medium,
                     maxLines = 1,
@@ -189,7 +187,7 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
 @Composable
 private fun DonutSegmentTooltipBlock(
     selectedIndex: Int?,
-    segments: List<DonutSegment>,
+    segments: List<DonutSegmentUM>,
     chartSize: IntSize,
     chartWindowOffset: Offset,
     cardBoundsInWindow: Rect,
@@ -273,13 +271,13 @@ private fun ColumnScope.CantLoadDataBlock() {
 // IntrinsicSize.Min lets the gradient divider match the AI text height — heightIn wouldn't achieve that.
 @Suppress("ModifierHeightWithText")
 @Composable
-private fun AiInsightContent(aiInsightState: AiInsightState) {
+private fun AiInsightContent(aiInsightUM: AiInsightUM) {
     AnimatedContent(
-        targetState = aiInsightState,
+        targetState = aiInsightUM,
         transitionSpec = { fadeIn().togetherWith(fadeOut()) },
     ) { currentState ->
         when (currentState) {
-            is AiInsightState.AskAiInsight -> {
+            is AiInsightUM.AskAiInsight -> {
                 SecondaryTangemButton(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -289,7 +287,7 @@ private fun AiInsightContent(aiInsightState: AiInsightState) {
                     text = resourceReference(R.string.market_chart_ask_for_ai_summary_button),
                 )
             }
-            is AiInsightState.Displayed -> {
+            is AiInsightUM.Displayed -> {
                 Row(
                     modifier = Modifier
                         .height(IntrinsicSize.Min)
@@ -324,7 +322,7 @@ private fun AiInsightContent(aiInsightState: AiInsightState) {
                     )
                 }
             }
-            AiInsightState.Hide -> {}
+            AiInsightUM.Hide -> {}
         }
     }
 }
@@ -350,7 +348,7 @@ private fun MarketChart_Preview(
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
-            MarketChart(marketChartState = previewMarketChartState(scenario))
+            MarketChart(marketChart = previewMarketChartState(scenario))
         }
     }
 }
@@ -361,58 +359,58 @@ private fun MarketChart_Preview(
  */
 @Suppress("MagicNumber")
 @Composable
-private fun previewMarketChartState(scenario: MarketChartPreviewScenario): MarketChartState = when (scenario) {
-    MarketChartPreviewScenario.DISPLAYED -> MarketChartState.Loaded(
+private fun previewMarketChartState(scenario: MarketChartPreviewScenario): MarketChartUM = when (scenario) {
+    MarketChartPreviewScenario.DISPLAYED -> MarketChartUM.Loaded(
         topHoldingPercent = 0.41f,
-        aiInsightState = AiInsightState.Displayed(
+        aiInsight = AiInsightUM.Displayed(
             "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
                 "buffer. Consider trimming concentration for a smoother ride",
         ),
-        donutChartState = previewLoadedDonut(),
+        donutChart = previewLoadedDonut(),
     )
-    MarketChartPreviewScenario.ASK_AI -> MarketChartState.Loaded(
+    MarketChartPreviewScenario.ASK_AI -> MarketChartUM.Loaded(
         topHoldingPercent = 0.41f,
-        aiInsightState = AiInsightState.AskAiInsight(askAiInsightClick = {}),
-        donutChartState = previewLoadedDonut(),
+        aiInsight = AiInsightUM.AskAiInsight(askAiInsightClick = {}),
+        donutChart = previewLoadedDonut(),
     )
-    MarketChartPreviewScenario.NO_AI -> MarketChartState.Loaded(
+    MarketChartPreviewScenario.NO_AI -> MarketChartUM.Loaded(
         topHoldingPercent = 0.41f,
-        aiInsightState = AiInsightState.Hide,
-        donutChartState = DonutChartState.Loaded(
+        aiInsight = AiInsightUM.Hide,
+        donutChart = DonutChartUM.Loaded(
             totalAmount = "$10,12345678912.1333",
             donutSegmentList = listOf(
-                DonutSegment(weight = 0.55f, color = TangemTheme.colors3.border.brand),
-                DonutSegment(weight = 0.45f, color = TangemTheme.colors3.border.accent.green),
+                DonutSegmentUM(weight = 0.55f, color = TangemTheme.colors3.border.brand),
+                DonutSegmentUM(weight = 0.45f, color = TangemTheme.colors3.border.accent.green),
             ),
         ),
     )
-    MarketChartPreviewScenario.NO_DATA -> MarketChartState.NoData
+    MarketChartPreviewScenario.NO_DATA -> MarketChartUM.NoData
 }
 
 @Suppress("MagicNumber")
 @Composable
-private fun previewLoadedDonut(): DonutChartState.Loaded = DonutChartState.Loaded(
+private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
     totalAmount = "$10,123456.1333",
     donutSegmentList = listOf(
-        DonutSegment(
+        DonutSegmentUM(
             weight = 0.55f,
             color = TangemTheme.colors3.border.brand,
             title = "Ethereum",
             fiatValue = "$5,720.22",
         ),
-        DonutSegment(
+        DonutSegmentUM(
             weight = 0.077f,
             color = TangemTheme.colors3.border.accent.violet,
             title = "Solana",
             fiatValue = "$728.30",
         ),
-        DonutSegment(
+        DonutSegmentUM(
             weight = 0.0666f,
             color = TangemTheme.colors3.border.accent.red,
             title = "Polkadot",
             fiatValue = "$624.26",
         ),
-        DonutSegment(
+        DonutSegmentUM(
             weight = 0.05f,
             color = TangemTheme.colors3.border.accent.green,
             title = "Tether",

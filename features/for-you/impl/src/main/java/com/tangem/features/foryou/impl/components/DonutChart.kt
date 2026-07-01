@@ -42,7 +42,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
-import com.tangem.features.foryou.impl.components.state.DonutSegment
+import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.min
@@ -71,7 +71,7 @@ import kotlin.math.min
  * yet). Taps are hit-tested against the ring band only and reported via [onSegmentClick]; the chart is
  * interactive only when [onSegmentClick] is set **and** [segments] is non-empty.
  *
- * @param segments Slices, in priority order (index 0 is painted on top). See [DonutSegment.weight].
+ * @param segments Slices, in priority order (index 0 is painted on top). See [DonutSegmentUM.weight].
  * @param modifier Modifier; should carry the overall size (e.g. `Modifier.size(240.dp)`).
  * @param selectedIndex Index of the currently selected slice, or `null` for no selection (nothing dimmed).
  * @param onSegmentClick Invoked on every tap inside the chart: with the tapped slice index, or with `null`
@@ -86,7 +86,7 @@ import kotlin.math.min
 @Suppress("MagicNumber", "LongParameterList", "LongMethod", "NamedArguments")
 @Composable
 internal fun DonutChart(
-    segments: List<DonutSegment>,
+    segments: List<DonutSegmentUM>,
     modifier: Modifier = Modifier,
     selectedIndex: Int? = null,
     onSegmentClick: ((index: Int?) -> Unit)? = null,
@@ -230,7 +230,7 @@ private fun segmentIndexAt(
     tap: Offset,
     size: Size,
     strokePx: Float,
-    segments: List<DonutSegment>,
+    segments: List<DonutSegmentUM>,
     startAngle: Float,
 ): Int? {
     val cx = size.width / 2f
@@ -351,10 +351,10 @@ private fun PreviewDonutChart() {
                 selectedIndex = selectedIndex,
                 onSegmentClick = { index -> selectedIndex = index.takeIf { it != selectedIndex } },
                 segments = listOf(
-                    DonutSegment(weight = 0.55f, color = TangemTheme.colors3.border.brand),
-                    DonutSegment(weight = 0.07f, color = TangemTheme.colors3.border.accent.violet),
-                    DonutSegment(weight = 0.06f, color = TangemTheme.colors3.border.accent.red),
-                    DonutSegment(weight = 0.05f, color = TangemTheme.colors3.border.accent.green),
+                    DonutSegmentUM(weight = 0.55f, color = TangemTheme.colors3.border.brand),
+                    DonutSegmentUM(weight = 0.07f, color = TangemTheme.colors3.border.accent.violet),
+                    DonutSegmentUM(weight = 0.06f, color = TangemTheme.colors3.border.accent.red),
+                    DonutSegmentUM(weight = 0.05f, color = TangemTheme.colors3.border.accent.green),
                 ),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

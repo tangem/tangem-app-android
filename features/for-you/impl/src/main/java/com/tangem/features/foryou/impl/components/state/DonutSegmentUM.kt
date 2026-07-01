@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
  * @param fiatValue Pre-formatted fiat value of the slice (e.g. `"$5,720.22"`). Shown in the selection
  *   tooltip next to the share. Empty by default.
  */
-internal data class DonutSegment(
+internal data class DonutSegmentUM(
     val weight: Float,
     val color: Color,
     val title: String = "",
