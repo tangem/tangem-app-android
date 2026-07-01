@@ -1208,6 +1208,7 @@
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">El importe acumulado de la transacción superior a %1s puede requerir la verificación de la identidad con %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">El importe acumulado de la transacción superior al equivalente de %1s puede requerir la verificación de la identidad con %2s</string>
+  <string name="onramp_native_payment_identity_verification">Las transacciones de Apple Pay pueden requerir verificación de identidad con %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">Al hacer clic en Pagar, usted acepta %1s\'s %2s y %3s.</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
   <string name="onramp_offer_type_fastet">Procesamiento más rápido</string>

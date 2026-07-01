@@ -38,10 +38,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.components.state.DonutSegment
 import kotlin.math.min
+import com.tangem.features.foryou.impl.R
 
 /**
  * Ring (donut) chart drawn behind a center [content] slot.
@@ -361,7 +363,7 @@ private fun PreviewDonutChart() {
                         style = TangemTheme.typography3.heading.medium,
                     )
                     Text(
-                        text = "Total value",
+                        text = stringResourceSafe(R.string.market_chart_buble_total_value),
                         color = TangemTheme.colors3.text.secondary,
                         style = TangemTheme.typography3.body.medium,
                     )
@@ -387,7 +389,7 @@ private fun PreviewDonutChartEmpty() {
                 segments = emptyList(),
             ) {
                 Text(
-                    text = "No data",
+                    text = stringResourceSafe(R.string.market_chart_buble_no_data),
                     color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography3.heading.medium,
                 )

@@ -158,7 +158,7 @@ private fun TooltipPill(
                     maxLines = 1,
                 )
                 Text(
-                    text = "  •  $percent",
+                    text = "  •  $percent%",
                     color = TangemTheme.colors3.text.tertiary,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
