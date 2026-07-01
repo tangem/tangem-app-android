@@ -11,11 +11,6 @@ plugins {
 android {
     namespace = "com.tangem.data.nft"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Project - Data */
@@ -60,5 +55,4 @@ dependencies {
 
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

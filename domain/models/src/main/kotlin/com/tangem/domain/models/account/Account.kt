@@ -176,7 +176,7 @@ sealed interface Account {
     }
 
     @Serializable
-    data class Payment(
+    data class Payment private constructor(
         override val accountId: AccountId,
     ) : Account {
         override val accountName: AccountName.Custom = AccountName.Custom("Payment").getOrElse {
@@ -189,10 +189,26 @@ sealed interface Account {
             }
         }
     }
+
+    @Serializable
+    data class Virtual private constructor(
+        override val accountId: AccountId,
+    ) : Account {
+        override val accountName: AccountName.Custom = AccountName.Custom("Virtual").getOrElse {
+            error("Can not create account name for Virtual account with userWalletId = ${accountId.userWalletId}")
+        }
+
+        companion object {
+            operator fun invoke(userWalletId: UserWalletId): Virtual {
+                return Virtual(accountId = AccountId.forVirtualAccount(userWalletId = userWalletId))
+            }
+        }
+    }
 }
 
 val Account.derivationIndex: DerivationIndex?
     get() = when (this) {
         is Account.CryptoPortfolio -> derivationIndex
         is Account.Payment -> null
+        is Account.Virtual -> null
     }

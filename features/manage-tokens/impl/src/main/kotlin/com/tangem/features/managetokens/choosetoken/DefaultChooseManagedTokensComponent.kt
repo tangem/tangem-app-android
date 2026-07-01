@@ -12,6 +12,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.choosetoken.model.ChooseManagedTokensModel
 import com.tangem.features.managetokens.choosetoken.ui.ChooseManagedTokenContent
@@ -28,6 +29,7 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
     @Assisted private val params: ChooseManagedTokensComponent.Params,
     private val swapChooseTokenNetworkFactory: SwapChooseTokenNetworkComponent.Factory,
     private val swapChooseTokenNetworkTrigger: SwapChooseTokenNetworkTrigger,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : ChooseManagedTokensComponent, AppComponentContext by context {
 
     private val model: ChooseManagedTokensModel = getOrCreateModel(params)
@@ -76,7 +78,14 @@ internal class DefaultChooseManagedTokensComponent @AssistedInject constructor(
                         params.callback?.onResult() ?: router.pop()
                     }
                 },
+                onSwapClick = { toCryptoCurrency ->
+                    model.onSwapTokenClick(token = config.token, targetCurrency = toCryptoCurrency)
+                },
             ),
+        )
+        ChooseManageTokensBottomSheetConfig.AddToPortfolioBottomSheetConfig -> addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(addToPortfolioManager = model.addToPortfolioManager),
         )
     }
 
