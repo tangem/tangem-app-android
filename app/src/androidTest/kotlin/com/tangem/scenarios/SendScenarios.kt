@@ -6,11 +6,14 @@ import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.extensions.assertIsDimmed
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.ui.R
+import com.kaspersky.kaspresso.testcases.core.testcontext.TestContext
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openSendScreen(
@@ -34,8 +37,11 @@ fun BaseTestCase.openSendScreen(
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
     }
-    step("Click on 'Send' button") {
-        onTokenDetailsScreen { sendButton().performClick() }
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
+    }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
 }
 
@@ -91,11 +97,11 @@ fun BaseTestCase.openSendAddressScreen(
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
     }
-    step("Assert 'Send' button is not dimmed") {
-        onTokenDetailsScreen { sendButton().assertIsDimmed(false) }
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
     }
-    step("Click on 'Send' button") {
-        onTokenDetailsScreen { sendButton().performClick() }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
     step("Type '$inputAmount' in input text field") {
         onSendScreen {
@@ -108,6 +114,13 @@ fun BaseTestCase.openSendAddressScreen(
     }
     step("Assert 'Send Address' container is displayed") {
         onSendAddressScreen { container.assertIsDisplayed() }
+    }
+    step("Wait for recipient list to load") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
+            }.isSuccess
+        }
     }
 }
 
@@ -193,6 +206,20 @@ fun BaseTestCase.openSendConfirmScreenViaNextButton() {
     }
 }
 
+fun BaseTestCase.openSendConfirmScreenViaContinueButton() {
+    step("Click on 'Continue' button") {
+        onSendAddressScreen {
+            addressesShimmer.assertIsNotDisplayed()
+            continueButton.assertIsDisplayed()
+            continueButton.assertIsEnabled()
+            continueButton.performClick()
+        }
+    }
+    step("Assert 'Send' button on 'Send confirm' screen is displayed") {
+        onSendConfirmScreen { sendButton.assertIsDisplayed() }
+    }
+}
+
 fun BaseTestCase.openSendSuccessScreenViaLongClickOnSendButton() {
     step("Long click on 'Send' button") {
         onSendConfirmScreen {
@@ -239,13 +266,100 @@ fun BaseTestCase.checkSendViaSwapSuccessScreen() {
     }
 }
 
+/** From the token details screen, open the transfer bottom sheet and reach the send amount input. */
+fun BaseTestCase.openSendFromTokenDetails() {
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
+    }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
+    }
+}
+
+/** Open an existing hot wallet and reach the send amount input for [tokenName]. */
+fun BaseTestCase.openSendScreenWithHotWallet(seedPhrase: String, tokenName: String) {
+    step("Open 'Main' screen with existing hot wallet") {
+        openMainScreenWithExistingHotWallet(seedPhrase)
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+    openSendFromTokenDetails()
+}
+
+fun BaseTestCase.getNetworkFeeAmount(): String {
+    var fee = ""
+    step("Read current network fee amount") {
+        onSendConfirmScreen { fee = feeAmount.extractText() }
+    }
+    return fee
+}
+
+fun BaseTestCase.switchFeeToFastAndApply() {
+    val fastOption = getResourceString(R.string.common_fee_selector_option_fast)
+    step("Click on fee selector icon") {
+        onSendConfirmScreen { feeSelectorIcon.performClick() }
+    }
+    // Selecting a non-custom speed auto-applies and closes the fee selector — no 'Done' step.
+    step("Click on '$fastOption' fee option") {
+        onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastOption).performClick() }
+    }
+}
+
+fun BaseTestCase.assertNetworkFeeChanged(previousFee: String) {
+    step("Assert network fee changed from '$previousFee'") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching {
+                var current = previousFee
+                onSendConfirmScreen { current = feeAmount.extractText() }
+                current != previousFee
+            }.getOrDefault(false)
+        }
+    }
+}
+
+/** Reads the network fee amount on the 'Send confirm' screen (empty while it shows a loading shimmer). */
+fun BaseTestCase.readNetworkFeeAmount(): String {
+    var fee = ""
+    onSendConfirmScreen { fee = feeAmount.extractText() }
+    return fee
+}
+
+/**
+ * Wait until the network fee value stops changing across two checks — the send button stays disabled
+ * (and the hold-to-confirm gesture is swallowed) until the fee re-fetch settles. The hold button has
+ * no enabled/disabled semantics, so waiting on the fee value is the only reliable readiness signal.
+ */
+fun TestContext<Unit>.waitUntilNetworkFeeIsStable(readFee: () -> String) {
+    step("Wait for the network fee to finish loading") {
+        var previousFee: String? = null
+        flakySafely(timeoutMs = WAIT_UNTIL_TIMEOUT_LONG, intervalMs = FEE_STABILITY_INTERVAL_MS) {
+            val currentFee = readFee()
+            val isStable = currentFee.isNotEmpty() && currentFee == previousFee
+            previousFee = currentFee
+            if (!isStable) throw AssertionError("Network fee is still settling (current='$currentFee')")
+        }
+    }
+}
+
+private const val FEE_STABILITY_INTERVAL_MS = 750L
+
+fun BaseTestCase.assertNetworkFeeContains(currencySymbol: String) {
+    step("Assert network fee contains '$currencySymbol'") {
+        onSendConfirmScreen { feeAmount.assertTextContains(currencySymbol, substring = true) }
+    }
+}
+
 fun BaseTestCase.selectTokenToSendViaSwap(
     swapTokenName: String,
     networkName: String,
     networkType: String? = null,
 ) {
-    step("Click on 'Send' button") {
-        onTokenDetailsScreen { sendButton().performClick() }
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
+    }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
     step("Click on 'Swap to another token' button") {
         onSendScreen { swapToAnotherTokenButton.performClick() }

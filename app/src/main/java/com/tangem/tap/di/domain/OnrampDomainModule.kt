@@ -1,12 +1,8 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.offramp.GetOfframpUrlUseCase
-import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.tap.data.DefaultOfframpRepository
-import com.tangem.tap.network.exchangeServices.SellService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -269,17 +265,5 @@ internal object OnrampDomainModule {
             onrampTransactionRepository = onrampTransactionRepository,
             settingsRepository = settingsRepository,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideOfframpRepository(sellService: SellService): OfframpRepository {
-        return DefaultOfframpRepository(sellService)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetOfframpUrlUseCase(offrampRepository: OfframpRepository): GetOfframpUrlUseCase {
-        return GetOfframpUrlUseCase(offrampRepository)
     }
 }

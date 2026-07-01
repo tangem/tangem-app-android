@@ -117,6 +117,16 @@ internal class TxHistoryListManager(
         )
     }
 
+    fun txInfoFlow(txHash: String, type: TxInfo.TransactionType): Flow<TxInfo> = state
+        .map { st ->
+            st.rawBatches.asSequence()
+                .flatMap { it.data.items }
+                .firstOrNull { it.txHash == txHash && it.type == type }
+        }
+        .filterNotNull()
+        .distinctUntilChanged()
+        .flowOn(dispatchers.default)
+
     private fun updateState(
         batchListState: BatchListState<Int, PaginationWrapper<TxInfo>>,
         lookupContext: TxHistoryLookupContext?,
@@ -129,6 +139,7 @@ internal class TxHistoryListManager(
             val isRedesignEnabled = designFeatureToggles.isRedesignEnabled
             state.copy(
                 status = batchListState.status,
+                rawBatches = batchListState.data,
                 uiBatches = if (isRedesignEnabled) {
                     val converter = TxHistoryItemToTransactionItemUMConverter(
                         currency = currency,
