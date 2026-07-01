@@ -70,4 +70,81 @@ sealed class PushNotificationAnalyticEvents(
             AnalyticsParam.STATE to if (isEnabled) "On" else "Off",
         ),
     )
+
+    data class NotificationSettingsScreenOpened(
+        val isSystemPermissionEnabled: Boolean,
+    ) : PushNotificationAnalyticEvents(
+        event = "Notification Settings Screen Opened",
+        params = mapOf(
+            AnalyticsParam.STATE to isSystemPermissionEnabled.toString(),
+        ),
+    )
+
+    data class ToggleClicked(
+        val toggleType: String,
+        val isEnabled: Boolean,
+    ) : PushNotificationAnalyticEvents(
+        event = "Toggle Clicked",
+        params = mapOf(
+            "Toggle Type" to toggleType,
+            AnalyticsParam.STATE to if (isEnabled) "On" else "Off",
+        ),
+    )
+
+    class BannerOpenSettingsTapped : PushNotificationAnalyticEvents(
+        event = "Banner - Open Settings Tapped",
+    )
+
+    data class NotificationSettingsErrorShown(
+        val toggleType: String,
+        val errorType: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "Notification Settings Error Shown",
+        params = mapOf(
+            "Toggle Type" to toggleType,
+            AnalyticsParam.ERROR_TYPE to errorType,
+        ),
+    )
+
+    data class WarningScreenShown(
+        val source: AnalyticsParam.ScreensSources,
+        val variant: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "[Warning Screen] Shown",
+        params = mapOf(
+            WARNING_SCREEN_PARAM_VARIANT to variant,
+            WARNING_SCREEN_PARAM_ZONE to source.toWarningScreenZone(),
+        ),
+    )
+
+    data class WarningScreenEnableTapped(
+        val source: AnalyticsParam.ScreensSources,
+        val variant: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "[Warning Screen] Enable Tapped",
+        params = mapOf(
+            WARNING_SCREEN_PARAM_VARIANT to variant,
+            WARNING_SCREEN_PARAM_ZONE to source.toWarningScreenZone(),
+        ),
+    )
+
+    data class WarningScreenSkipTapped(
+        val source: AnalyticsParam.ScreensSources,
+        val variant: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "[Warning Screen] Skip Tapped",
+        params = mapOf(
+            WARNING_SCREEN_PARAM_VARIANT to variant,
+            WARNING_SCREEN_PARAM_ZONE to source.toWarningScreenZone(),
+        ),
+    )
+}
+
+private const val WARNING_SCREEN_PARAM_VARIANT = "variant"
+private const val WARNING_SCREEN_PARAM_ZONE = "zone"
+
+private fun AnalyticsParam.ScreensSources.toWarningScreenZone(): String = when (this) {
+    AnalyticsParam.ScreensSources.Onboarding -> "onboarding"
+    AnalyticsParam.ScreensSources.Main -> "main"
+    else -> value
 }
