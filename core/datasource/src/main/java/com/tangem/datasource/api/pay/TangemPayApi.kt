@@ -17,6 +17,12 @@ interface TangemPayApi {
         @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
     ): ApiResponse<TangemPayTxHistoryResponse>
 
+    @GET("v1/customer/transactions/{transaction_id}")
+    suspend fun getCustomerTransaction(
+        @Header("Authorization") authHeader: String,
+        @Path("transaction_id") transactionId: String,
+    ): ApiResponse<TangemPayTransactionResponse>
+
     @GET("v1/customer/kyc")
     suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
 

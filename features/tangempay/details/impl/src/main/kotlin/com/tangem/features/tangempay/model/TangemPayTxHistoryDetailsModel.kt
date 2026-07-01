@@ -13,6 +13,8 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUiStates
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverter
@@ -31,31 +33,51 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val urlOpener: UrlOpener,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
+    private val tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
     private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayTransactionBottomSheetComponent.Params>()
-    val uiState: StateFlow<TangemPayTxHistoryDetailsUiStates>
-        field = MutableStateFlow(buildUiStates(isBalanceHidden = params.isBalanceHidden))
+
+    private val transaction = MutableStateFlow(params.transaction)
+
+    val uiState: StateFlow<TangemPayTxHistoryDetailsUiStates> = combine(
+        balanceHidingSettings.isBalanceHidden(),
+        transaction,
+    ) { isBalanceHidden, transaction ->
+        buildUiStates(isBalanceHidden, transaction)
+    }.stateIn(
+        scope = modelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = buildUiStates(isBalanceHidden = params.isBalanceHidden, transaction = params.transaction),
+    )
 
     init {
-        subscribeToBalanceHiding()
+        loadTransaction()
     }
 
     fun dismiss() {
         params.onDismiss()
     }
 
-    private fun subscribeToBalanceHiding() {
-        balanceHidingSettings.isBalanceHidden()
-            .onEach { isBalanceHidden -> uiState.update { buildUiStates(isBalanceHidden) } }
-            .launchIn(modelScope)
+    private fun loadTransaction() {
+        val current = params.transaction
+        if (current !is TangemPayTxHistoryItem.Spend) return
+        modelScope.launch {
+            tangemPayTxHistoryRepository.getTransaction(
+                userWalletId = params.userWalletId,
+                transactionId = current.id,
+            ).onRight { loaded -> if (loaded != null) transaction.value = loaded }
+        }
     }
 
-    private fun buildUiStates(isBalanceHidden: Boolean): TangemPayTxHistoryDetailsUiStates {
+    private fun buildUiStates(
+        isBalanceHidden: Boolean,
+        transaction: TangemPayTxHistoryItem,
+    ): TangemPayTxHistoryDetailsUiStates {
         val converterInput = TangemPayTxHistoryDetailsConverter.Input(
-            item = params.transaction,
+            item = transaction,
             isBalanceHidden = isBalanceHidden,
             onExplorerClick = ::openExplorer,
             onDisputeClick = { dispute(customerId = params.customerId) },

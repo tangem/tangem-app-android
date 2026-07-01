@@ -1,5 +1,6 @@
 package com.tangem.data.pay.repository
 
+import arrow.core.Either
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
@@ -11,6 +12,7 @@ import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
@@ -97,6 +99,17 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
 
     private fun getCacheKey(userWalletId: UserWalletId, cursor: String?): String {
         return "tangem_pay_tx_history_${userWalletId.stringValue}_${cursor ?: INITIAL_CURSOR}"
+    }
+
+    override suspend fun getTransaction(
+        userWalletId: UserWalletId,
+        transactionId: String,
+    ): Either<VisaApiError, TangemPayTxHistoryItem?> {
+        return requestPerformer.performRequest(userWalletId = userWalletId) { authHeader ->
+            visaApi.getCustomerTransaction(authHeader = authHeader, transactionId = transactionId)
+        }.map { response ->
+            txHistoryItemConverter.convert(response.result)
+        }
     }
 
     private suspend fun fetch(userWalletId: UserWalletId, cursor: String?, pageSize: Int) {

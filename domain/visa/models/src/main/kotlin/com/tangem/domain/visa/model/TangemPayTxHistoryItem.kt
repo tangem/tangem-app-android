@@ -31,6 +31,8 @@ sealed class TangemPayTxHistoryItem {
         val status: Status,
         val enrichedMerchantIconUrl: String?,
         val declinedReason: String?,
+        val cardName: String? = null,
+        val cardNumberLast4: String? = null,
     ) : TangemPayTxHistoryItem()
 
     @Serializable

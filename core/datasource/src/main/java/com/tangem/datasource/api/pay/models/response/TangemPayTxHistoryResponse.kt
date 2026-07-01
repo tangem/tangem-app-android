@@ -44,6 +44,8 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "enriched_merchant_category") val enrichedMerchantCategory: String? = null,
         @Json(name = "card_id") val cardId: String? = null,
         @Json(name = "card_type") val cardType: String? = null,
+        @Json(name = "card_display_name") val cardDisplayName: String? = null,
+        @Json(name = "card_number_end") val cardNumberEnd: String? = null,
         @Json(name = "status") val status: String,
         @Json(name = "declined_reason") val declinedReason: String? = null,
         @Json(name = "authorized_at") val authorizedAt: DateTime,

@@ -233,6 +233,24 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
 @Composable
 private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUMV2, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
+        if (state.card != null) {
+            TangemRow(
+                divider = true,
+                contentLead = TangemRowContentLead.Start,
+                titleSlot = {
+                    TangemRowText(
+                        text = resourceReference(R.string.tangempay_common_card),
+                        role = TangemRowTextRole.Title,
+                    )
+                },
+                valueSlot = {
+                    TangemRowText(
+                        text = state.card,
+                        role = TangemRowTextRole.Value,
+                    )
+                },
+            )
+        }
         TangemRow(
             divider = state.mcc != null,
             contentLead = TangemRowContentLead.Start,
@@ -289,6 +307,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
+                card = stringReference("Basic card *9092"),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = stringReference("5814"),
                 transactionAmount = "-$5.86",
@@ -310,6 +329,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("NuCaloric"),
+                card = stringReference("Basic card *9092"),
                 transactionCategory = stringReference("Groceries"),
                 mcc = stringReference("0000"),
                 transactionAmount = "-$820.52",
@@ -332,6 +352,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
+                card = stringReference("Basic card *9092"),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = null,
                 transactionAmount = "-$5.86",
@@ -353,6 +374,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_percent_24),
                 transactionTitle = stringReference("Service fees"),
+                card = null,
                 transactionCategory = stringReference("Service fees"),
                 mcc = null,
                 transactionAmount = "-$5.86",
@@ -375,6 +397,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
                 transactionTitle = resourceReference(R.string.common_transfer),
+                card = null,
                 transactionCategory = resourceReference(R.string.common_transfer),
                 mcc = null,
                 transactionAmount = "+$20",
