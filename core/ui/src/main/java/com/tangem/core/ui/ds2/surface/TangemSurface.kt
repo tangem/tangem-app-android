@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
@@ -70,6 +71,7 @@ fun TangemSurface(
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
+    shadowRadius: Dp = 40.dp,
     content: @Composable () -> Unit,
 ) {
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
@@ -77,7 +79,7 @@ fun TangemSurface(
     val surface: @Composable () -> Unit = {
         Box(
             modifier = modifier
-                .conditionalCompose(isMaterial) { materialShadow(shape) }
+                .conditionalCompose(isMaterial) { materialShadow(shape, shadowRadius) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
                 .conditionalCompose(isMaterial) { materialBorder(shape) }
                 .clip(shape)
@@ -115,8 +117,8 @@ fun TangemSurface(
  * `isAlphaContentClip`) to avoid the dark blur bleeding through the surface.
  */
 @Composable
-private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
-    radius = 40.dp,
+private fun Modifier.materialShadow(shape: Shape, radius: Dp): Modifier = softLayerShadow(
+    radius = radius,
     color = Color.Black.copy(alpha = 0.12f),
     shape = shape,
     spread = 0.dp,
