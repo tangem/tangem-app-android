@@ -9,41 +9,56 @@ android {
     namespace = "com.tangem.data.common"
 }
 dependencies {
-    /* Core */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
 
-    /* Domain */
-    implementation(projects.domain.account)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.card)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    /* Libs - SDK */
-    implementation(tangemDeps.blockchain)
+    // region Other libraries
+    api(deps.arrow.core)
+    api(deps.jodatime)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.datastore)
+    // endregion
+
+    // region Libs - SDK
+    api(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
-    implementation(projects.libs.crypto)
-    implementation(projects.libs.blockchainSdk)
+    // endregion
 
-    /* DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /* Libs - Other */
-    implementation(deps.androidx.datastore)
-    implementation(deps.arrow.core)
-    implementation(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
+    // region Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
 
-    /* Test */
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.walletManager)
+    api(projects.domain.wallets)
+    implementation(projects.domain.card)
+    implementation(projects.domain.core)
+    runtimeOnly(projects.domain.account)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.demo.models)
+    api(projects.domain.express.models)
+    api(projects.domain.models)
+    implementation(projects.domain.wallets.models)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region Test
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testImplementation(deps.moshi)
+    // endregion
 }
