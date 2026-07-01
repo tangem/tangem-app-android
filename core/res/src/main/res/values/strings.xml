@@ -98,6 +98,7 @@
   <string name="address_book_add_address">Add address</string>
   <string name="address_book_add_address_description">Add address and select network</string>
   <string name="address_book_add_contact">Add contact</string>
+  <string name="address_book_address_copied">Address copied</string>
   <string name="address_book_address_taken_error">This address is already saved as %1$s</string>
   <plurals name="address_book_addresses">
     <item quantity="one">%d address</item>
@@ -119,7 +120,6 @@
   <string name="address_book_keep_editing">Keep editing</string>
   <string name="address_book_max_networks_alert_description">You can not create more than 20 addresses. Delete one to add new.</string>
   <string name="address_book_max_networks_alert_title">Can\'t add new address</string>
-  <string name="address_book_memo_footer">Memo / Destination Tag is a code separating transactions to a shared recipient in a crypto network.\n**Caution: Missing a memo may lead to fund loss.**</string>
   <string name="address_book_name_empty_error">Contact name is required</string>
   <string name="address_book_name_invalid_chars_error">Contact name contains invalid characters</string>
   <string name="address_book_name_max_chars_error">Contact name must not exceed 50 characters</string>
@@ -887,13 +887,14 @@
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
-  <string name="market_chart_ai_total">Al Total:</string>
+  <string name="market_chart_ai_total">AI Total:</string>
+  <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
   <plurals name="market_chart_assets_android">
     <item quantity="one">%d asset</item>
     <item quantity="other">%d assets</item>
   </plurals>
-  <string name="market_chart_buble_no_data">No data</string>
-  <string name="market_chart_buble_total_value">Total value</string>
+  <string name="market_chart_bubble_no_data">No data</string>
+  <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
   <string name="market_chart_top_holding">Top holding %s%%</string>
   <string name="markets_about_coin_header">About coin</string>

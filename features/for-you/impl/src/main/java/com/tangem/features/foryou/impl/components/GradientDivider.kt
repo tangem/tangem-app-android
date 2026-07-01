@@ -39,21 +39,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 /**
- * Canvas-based take on the glow divider: the line background and every blurred color blob are painted by
- * hand inside a single `Box(Modifier.drawBehind { … })`.
+ * One blurred color blob painted inside [CanvasGradientDivider].
  *
- * How it differs from [GlowDotsDivider] (which layers child `Box`es with [androidx.compose.ui.draw.blur]):
- * here there are no child composables at all. Inside [androidx.compose.ui.draw.drawBehind] we clip to the
- * capsule path, fill the base color, then draw each [GlowDot] as a circle whose native [Paint] carries a
- * [BlurMaskFilter] — the canvas equivalent of a Gaussian layer blur. The clip means a blob drawn past the
- * line's bounds only paints its color onto the visible capsule.
- *
- * @param modifier Modifier for positioning. Lays out to [lineWidth]×[lineHeight].
- * @param lineWidth Width of the capsule.
- * @param lineHeight Height of the capsule.
- * @param lineColor Solid base fill of the line.
- * @param dots Color blobs; [GlowDot.offset] is the blob center relative to the line's top-center,
- *   [GlowDot.size] its diameter, [GlowDot.blur] the mask-blur radius.
+ * @param color Blob color.
+ * @param offset Blob center, relative to the line's top-center.
+ * @param height Blob height (its vertical diameter); the width is fixed by [DotWidth].
+ * @param blur Mask-blur radius applied via [BlurMaskFilter].
  */
 internal data class CanvasGlowDot(
     val color: Color,
@@ -62,6 +53,17 @@ internal data class CanvasGlowDot(
     val blur: Dp = 8.dp,
 )
 
+/**
+ * Canvas-based glow divider: the line background and every blurred color blob are painted by hand inside a
+ * single `Box(Modifier.drawBehind { … })`, with no child composables. Inside [Modifier.drawBehind] we clip
+ * to the capsule path, fill the base [LineColor], then draw each [CanvasGlowDot] as an oval whose native
+ * [Paint] carries a [BlurMaskFilter] — the canvas equivalent of a Gaussian layer blur. The clip means a blob
+ * drawn past the line's bounds only paints its color onto the visible capsule.
+ *
+ * @param modifier Modifier for positioning; the capsule height comes from the parent, so the glow scales
+ *   with the divider's length.
+ * @param lineWidth Width of the capsule.
+ */
 @Suppress("MagicNumber", "LongParameterList", "LongMethod")
 @Composable
 internal fun CanvasGradientDivider(modifier: Modifier = Modifier, lineWidth: Dp = 2.dp) {
@@ -163,10 +165,6 @@ private data class GlowDotColors(
     val orange: Color,
 )
 
-/**
- * Placeholder snake-scatter of the four Figma "selection colors", sized proportionally to [lineHeight]
- * so the glow scales with the divider's length. Tune to match Figma.
- */
 @Suppress("MagicNumber")
 private fun canvasDefaultDots(lineHeight: Dp, colors: GlowDotColors): List<CanvasGlowDot> {
     val step = lineHeight / 5

@@ -35,15 +35,17 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.foryou.impl.components.state.DonutSegment
-import kotlin.math.min
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.state.DonutSegment
+import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.min
 
 /**
  * Ring (donut) chart drawn behind a center [content] slot.
@@ -122,7 +124,6 @@ internal fun DonutChart(
 
     Box(
         modifier = modifier
-            .background(TangemTheme.colors3.bg.secondary)
             .then(clickModifier)
             .drawBehind {
                 val arc = arcRect(strokePx)
@@ -240,11 +241,11 @@ private fun segmentIndexAt(
     val outer = min(size.width, size.height) / 2f
     val inner = outer - strokePx
     val tolerance = strokePx * 0.4f
-    val dist = kotlin.math.hypot(dx, dy)
+    val dist = hypot(dx, dy)
     if (dist < inner - tolerance || dist > outer + tolerance) return null
 
     // Degrees clockwise from 3 o'clock — same convention as Canvas.drawArc.
-    val angle = Math.toDegrees(kotlin.math.atan2(dy, dx).toDouble()).toFloat().mod(360f)
+    val angle = Math.toDegrees(atan2(dy, dx).toDouble()).toFloat().mod(360f)
 
     val sweeps = segments.map { it.weight.coerceIn(0f, 1f) * 360f }
     val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
@@ -363,7 +364,7 @@ private fun PreviewDonutChart() {
                         style = TangemTheme.typography3.heading.medium,
                     )
                     Text(
-                        text = stringResourceSafe(R.string.market_chart_buble_total_value),
+                        text = stringResourceSafe(R.string.market_chart_bubble_total_value),
                         color = TangemTheme.colors3.text.secondary,
                         style = TangemTheme.typography3.body.medium,
                     )
@@ -389,7 +390,7 @@ private fun PreviewDonutChartEmpty() {
                 segments = emptyList(),
             ) {
                 Text(
-                    text = stringResourceSafe(R.string.market_chart_buble_no_data),
+                    text = stringResourceSafe(R.string.market_chart_bubble_no_data),
                     color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography3.heading.medium,
                 )

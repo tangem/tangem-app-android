@@ -38,7 +38,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -53,19 +52,18 @@ import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.AiInsightState
 import com.tangem.features.foryou.impl.components.state.DonutChartState
 import com.tangem.features.foryou.impl.components.state.DonutSegment
 import com.tangem.features.foryou.impl.components.state.MarketChartState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlin.Int
-import com.tangem.features.foryou.impl.R
 
 @Composable
 internal fun MarketChart(marketChartState: MarketChartState, modifier: Modifier = Modifier) {
@@ -149,7 +147,7 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
                     ),
                 )
                 Text(
-                    text = stringResourceSafe(R.string.market_chart_buble_total_value),
+                    text = stringResourceSafe(R.string.market_chart_bubble_total_value),
                     color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
@@ -159,7 +157,7 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
                 )
             } else {
                 Text(
-                    text = stringResourceSafe(R.string.market_chart_buble_no_data),
+                    text = stringResourceSafe(R.string.market_chart_bubble_no_data),
                     color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography3.body.medium,
                     maxLines = 1,
@@ -239,7 +237,7 @@ private fun DonutSegmentTooltipBlock(
 @Suppress("MagicNumber")
 private fun formatSegmentPercent(weight: Float): String {
     val percent = weight.coerceIn(0f, 1f) * 100
-    return if (percent % 1f == 0f) "${percent.toInt()}" else "%.2f%".format(percent)
+    return if (percent % 1f == 0f) "${percent.toInt()}" else "%.2f".format(percent)
 }
 
 private val DonutStrokeWidth = 28.dp
@@ -288,7 +286,7 @@ private fun AiInsightContent(aiInsightState: AiInsightState) {
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     onClick = currentState.askAiInsightClick,
                     size = TangemButtonSize.X9,
-                    text = stringReference("Ask for AI summary"),
+                    text = resourceReference(R.string.market_chart_ask_for_ai_summary_button),
                 )
             }
             is AiInsightState.Displayed -> {
@@ -368,7 +366,7 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
         topHoldingPercent = 0.41f,
         aiInsightState = AiInsightState.Displayed(
             "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
-                "buffer. Consider trimmng concentration for a smoother ride",
+                "buffer. Consider trimming concentration for a smoother ride",
         ),
         donutChartState = previewLoadedDonut(),
     )
@@ -403,13 +401,13 @@ private fun previewLoadedDonut(): DonutChartState.Loaded = DonutChartState.Loade
             fiatValue = "$5,720.22",
         ),
         DonutSegment(
-            weight = 0.07f,
+            weight = 0.077f,
             color = TangemTheme.colors3.border.accent.violet,
             title = "Solana",
             fiatValue = "$728.30",
         ),
         DonutSegment(
-            weight = 0.06f,
+            weight = 0.0666f,
             color = TangemTheme.colors3.border.accent.red,
             title = "Polkadot",
             fiatValue = "$624.26",
