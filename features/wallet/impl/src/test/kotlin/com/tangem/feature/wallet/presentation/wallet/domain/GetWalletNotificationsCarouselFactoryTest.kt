@@ -5,10 +5,13 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.card.CardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.repository.NotificationsRepository
@@ -23,10 +26,13 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -85,6 +91,11 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         } returns flowOf(accountStatusList(TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL)))
     }
 
+    @AfterEach
+    fun tearDown() {
+        unmockkStatic(ScanResponse::cardTypesResolver)
+    }
+
     @ParameterizedTest
     @MethodSource("provideTestModels")
     fun `GIVEN gating conditions WHEN create THEN yield boost banner visibility matches`(model: Model) = runTest {
@@ -132,6 +143,56 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         // Assert
         verify { clickIntents.onYieldBoostBannerClick(WALLET_ID) }
         verify { clickIntents.onDismissYieldBoostBanner(WALLET_ID) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNoteMigrationTestModels")
+    fun `GIVEN single-currency card WHEN create THEN discover wallet promo visibility matches`(
+        model: NoteMigrationModel,
+    ) = runTest {
+        // Arrange
+        mockkStatic(ScanResponse::cardTypesResolver)
+        val selectedResolver = mockk<CardTypesResolver>(relaxed = true) {
+            every { isSingleCurrency() } returns model.isSingleCurrency
+        }
+        val selectedWallet = mockColdWallet(selectedResolver, walletId = WALLET_ID)
+        val wallets = buildList {
+            add(selectedWallet)
+            if (model.userAlreadyHasWallet) {
+                val walletResolver = mockk<CardTypesResolver>(relaxed = true) {
+                    every { isTangemWallet() } returns true
+                }
+                add(mockColdWallet(walletResolver, walletId = OTHER_WALLET_ID))
+            }
+        }
+        every { getWalletsUseCase() } returns flowOf(wallets)
+
+        // Act
+        val result = factory.create(selectedWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.any { it is WalletNotificationUM.NoteMigration }).isEqualTo(model.expectedShown)
+    }
+
+    @Test
+    fun `GIVEN hot wallet WHEN create THEN discover wallet promo is hidden`() = runTest {
+        // Arrange
+        every { getWalletsUseCase() } returns flowOf(listOf(userWallet))
+
+        // Act
+        val result = factory.create(userWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.none { it is WalletNotificationUM.NoteMigration }).isTrue()
+    }
+
+    private fun mockColdWallet(resolver: CardTypesResolver, walletId: UserWalletId): UserWallet.Cold {
+        val scanResponse = mockk<ScanResponse>()
+        every { scanResponse.cardTypesResolver } returns resolver
+        return mockk<UserWallet.Cold>(relaxed = true) {
+            every { this@mockk.walletId } returns walletId
+            every { this@mockk.scanResponse } returns scanResponse
+        }
     }
 
     private fun accountStatusList(balance: TotalFiatBalance) = AccountStatusList(
@@ -189,7 +250,23 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         ),
     )
 
+    internal data class NoteMigrationModel(
+        val isSingleCurrency: Boolean,
+        val userAlreadyHasWallet: Boolean,
+        val expectedShown: Boolean,
+    )
+
+    private fun provideNoteMigrationTestModels() = listOf(
+        // Single-currency card (Note / S2C / Twins) and the user owns no multi-currency wallet — promo shown.
+        NoteMigrationModel(isSingleCurrency = true, userAlreadyHasWallet = false, expectedShown = true),
+        // Single-currency card, but the user already owns a Wallet / Wallet2 — promo hidden.
+        NoteMigrationModel(isSingleCurrency = true, userAlreadyHasWallet = true, expectedShown = false),
+        // Multi-currency card — promo hidden.
+        NoteMigrationModel(isSingleCurrency = false, userAlreadyHasWallet = false, expectedShown = false),
+    )
+
     private companion object {
         val WALLET_ID = UserWalletId("01")
+        val OTHER_WALLET_ID = UserWalletId("02")
     }
 }

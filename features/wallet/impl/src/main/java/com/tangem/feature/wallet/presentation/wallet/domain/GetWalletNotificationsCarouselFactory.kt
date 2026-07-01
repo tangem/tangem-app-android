@@ -122,7 +122,7 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
             typesResolver.isTangemWallet() || typesResolver.isWallet2()
         }
 
-        addIf(cardTypesResolver != null && cardTypesResolver.isTangemNote() && !isUserHasWalletOrWallet2) {
+        addIf(cardTypesResolver != null && cardTypesResolver.isSingleCurrency() && !isUserHasWalletOrWallet2) {
             WalletNotificationUM.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(TangemSiteUrlBuilder.NOTE_MIGRATION_URL) },
             )
