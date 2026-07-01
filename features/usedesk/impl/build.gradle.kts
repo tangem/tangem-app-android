@@ -26,6 +26,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.feedback)
+    implementation(projects.domain.settings)
 
     /** DI */
     implementation(deps.hilt.android)

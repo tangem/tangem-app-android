@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.usedesk.analytics.UsedeskAnalyticsEvents
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.usedesk.chat_sdk.entity.UsedeskChatConfiguration
@@ -29,6 +30,7 @@ internal class UsedeskModel @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val feedbackRepository: FeedbackRepository,
+    private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -54,6 +56,7 @@ internal class UsedeskModel @Inject constructor(
                     clientEmail = params.userWalletId,
                     clientInitMessage = params.prefilledMessage,
                     additionalFields = additionalFieldsFor(params.source),
+                    tokenTtlMillis = usedeskTokenTtlManager.getTokenTtlMillisSync(),
                 ),
             )
         }

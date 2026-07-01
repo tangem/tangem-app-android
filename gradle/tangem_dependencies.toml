@@ -13,7 +13,7 @@ tangemVico = "tangem-master-21"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
 tangemHotSdk = "develop-550"
 #tangemHotSdk = "0.0.1" # Keep it! - used for local builds ^
-tangemUsedeskSdk = "main-9"
+tangemUsedeskSdk = "main-10"
 #tangemUsedeskSdk = "0.0.1" # Keep it! - used for local builds ^
 
 [libraries]
