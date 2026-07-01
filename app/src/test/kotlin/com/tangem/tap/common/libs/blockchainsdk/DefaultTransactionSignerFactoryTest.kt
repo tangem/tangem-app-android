@@ -2,13 +2,13 @@ package com.tangem.tap.common.libs.blockchainsdk
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.analytics.store.LastSignedWalletFormStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.domain.TangemSignerResponse
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
