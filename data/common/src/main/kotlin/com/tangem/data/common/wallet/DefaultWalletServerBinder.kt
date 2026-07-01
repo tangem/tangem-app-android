@@ -1,6 +1,7 @@
 package com.tangem.data.common.wallet
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
@@ -9,6 +10,7 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 
 internal class DefaultWalletServerBinder(
@@ -19,7 +21,12 @@ internal class DefaultWalletServerBinder(
 ) : WalletServerBinder {
 
     override suspend fun bind(userWalletId: UserWalletId): ApiResponse<Unit>? {
-        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId) ?: return null
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
+
+        if (userWallet == null) {
+            TangemLogger.e("bind wallet=$userWalletId: user wallet not found locally, skipping createWallet call")
+            return null
+        }
 
         return bind(userWallet)
     }
@@ -30,6 +37,12 @@ internal class DefaultWalletServerBinder(
         return withContext(dispatchers.io) {
             tangemTechApi.createWallet(
                 body = WalletIdBodyConverter.convert(userWallet, conversionData),
+            )
+        }.also { response ->
+            val eTag = response.headers[ETAG_HEADER]?.firstOrNull()
+            TangemLogger.i(
+                "bind wallet=${userWallet.walletId}: createWallet code=${(response as? ApiResponse.Success)?.code}, " +
+                    "hasETag=${eTag != null}, eTagNotEmpty=${!eTag.isNullOrEmpty()}",
             )
         }
     }
