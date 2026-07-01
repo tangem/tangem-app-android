@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
 import com.tangem.domain.addressbook.interactor.SaveContactInteractor
@@ -23,6 +24,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.AddressBookResultHolder
 import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.state.EditContactStateController
@@ -60,6 +62,7 @@ internal class EditContactModelTest {
     private val portfolioSelectorController: PortfolioSelectorController = mockk()
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
+    private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
 
     // Drives the wallet picked in the reused portfolio selector; `first` of the pair is the chosen wallet.
     private val selectedWalletData =
@@ -119,6 +122,41 @@ internal class EditContactModelTest {
             onAddAddressClick = state.onAddAddressClick,
         )
         assertThat(state).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN new contact without predefined address WHEN created THEN AddContactTapped sent from settings`() =
+        runTest {
+            // Act
+            createModel(testScope = this, params = createParams(contactId = null, predefinedAddress = null))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsSender.sendAddContactTapped(fromSendSuccess = false, scope = any()) }
+        }
+
+    @Test
+    fun `GIVEN new contact with predefined address WHEN created THEN AddContactTapped sent from send success`() =
+        runTest {
+            // Arrange
+            val predefined = ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum"))
+
+            // Act
+            createModel(testScope = this, params = createParams(predefinedAddress = predefined))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsSender.sendAddContactTapped(fromSendSuccess = true, scope = any()) }
+        }
+
+    @Test
+    fun `GIVEN existing contactId WHEN model created THEN AddContactTapped not sent`() = runTest {
+        // Act
+        createModel(testScope = this, params = createParams(contactId = ContactId(value = "contact-id")))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsSender.sendAddContactTapped(any(), any()) }
     }
 
     @Test
@@ -216,6 +254,7 @@ internal class EditContactModelTest {
         // Assert
         assertThat(addClicked).isTrue()
         verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
+        verify(exactly = 1) { analyticsSender.sendAddressScreenOpened() }
     }
 
     @Test
@@ -240,7 +279,39 @@ internal class EditContactModelTest {
             assertThat(model.state.value.isAddAddressEnabled).isFalse()
             assertThat(addClicked).isFalse()
             verify { messageSender.send(any<DialogMessage>()) }
+            verify(exactly = 0) { analyticsSender.sendAddressScreenOpened() }
         }
+
+    @Test
+    fun `GIVEN changeable wallet block WHEN clicked THEN SaveToButtonClicked sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        val walletB = createWallet(id = "bb", name = "Wallet B")
+        setupWallets(wallets = listOf(walletA, walletB), selected = walletA)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.walletBlock.onClick()
+
+        // Assert
+        verify(exactly = 1) { analyticsSender.sendSaveToButtonClicked() }
+    }
+
+    @Test
+    fun `GIVEN non-changeable wallet block WHEN clicked THEN SaveToButtonClicked not sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.walletBlock.onClick()
+
+        // Assert
+        verify(exactly = 0) { analyticsSender.sendSaveToButtonClicked() }
+    }
 
     @Test
     fun `GIVEN new contact AND multiple unlocked wallets WHEN created THEN wallet block changeable`() = runTest {
@@ -391,7 +462,8 @@ internal class EditContactModelTest {
         var navigatedBack = false
         val walletA = createWallet(id = "aa", name = "Wallet A")
         setupWallets(wallets = listOf(walletA), selected = walletA)
-        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns mockk<Contact>().right()
+        val savedContact = mockk<Contact> { every { id } returns ContactId(value = "saved-1") }
+        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns savedContact.right()
         val model = createModel(testScope = this, params = createParams(onBackClick = { navigatedBack = true }))
         advanceUntilIdle()
         model.state.value.onNameChange("Satoshi")
@@ -411,7 +483,77 @@ internal class EditContactModelTest {
                 addressEntries = any(),
             )
         }
+        verify(exactly = 1) {
+            analyticsSender.sendContactSaved(walletId = walletA.walletId, contactId = "saved-1", isEdit = false)
+        }
         assertThat(navigatedBack).isTrue()
+    }
+
+    @Test
+    fun `GIVEN save fails WHEN save clicked THEN ContactSaved not sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns
+            SaveContactError.Name(ContactNameValidationError.Duplicate).left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.state.value.onNameChange("Satoshi")
+        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsSender.sendContactSaved(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN new contact AND save fails WHEN save clicked THEN SaveErrorShown sent with null contactId`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val error = SaveContactError.Backend(AddressBookSyncError.Network)
+        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns error.left()
+        val model = createModel(testScope = this, params = createParams(contactId = null))
+        advanceUntilIdle()
+        model.state.value.onNameChange("Satoshi")
+        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsSender.sendSaveErrorShown(walletId = walletA.walletId, contactId = null, error = error)
+        }
+    }
+
+    @Test
+    fun `GIVEN existing contact AND save fails WHEN save clicked THEN SaveErrorShown sent with contactId`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val error = SaveContactError.Backend(AddressBookSyncError.Network)
+        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns error.left()
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId(value = "contact-id")))
+        advanceUntilIdle()
+        model.state.value.onNameChange("Satoshi")
+        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsSender.sendSaveErrorShown(walletId = walletA.walletId, contactId = "contact-id", error = error)
+        }
     }
 
     @Test
@@ -462,6 +604,7 @@ internal class EditContactModelTest {
             userWalletsListRepository = userWalletsListRepository,
             validateContactNameUseCase = validateContactNameUseCase,
             saveContactInteractor = saveContactInteractor,
+            analyticsSender = analyticsSender,
             portfolioSelectorController = portfolioSelectorController,
             portfolioFetcherFactory = portfolioFetcherFactory,
         ).also { model = it }
