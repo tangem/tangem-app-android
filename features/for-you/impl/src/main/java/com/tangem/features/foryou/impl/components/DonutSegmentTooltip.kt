@@ -27,6 +27,9 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -64,8 +67,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 @Composable
 internal fun DonutSegmentTooltip(
     expanded: Boolean,
-    title: String,
-    fiatValue: String,
+    title: TextReference,
+    fiatValue: TextReference,
     percent: String,
     positionProvider: PopupPositionProvider,
     onDismissRequest: () -> Unit,
@@ -100,8 +103,8 @@ private const val DISMISSED_SCALE = 0.8f
 @Composable
 private fun TooltipPill(
     expandedStates: MutableTransitionState<Boolean>,
-    title: String,
-    fiatValue: String,
+    title: TextReference,
+    fiatValue: TextReference,
     percent: String,
     modifier: Modifier = Modifier,
 ) {
@@ -145,7 +148,7 @@ private fun TooltipPill(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = title,
+                text = title.resolveReference(),
                 color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography3.caption.medium,
                 maxLines = 1,
@@ -153,13 +156,13 @@ private fun TooltipPill(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = fiatValue,
+                    text = fiatValue.resolveReference(),
                     color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
                 )
                 Text(
-                    text = "  •  $percent%",
+                    text = "  •  $percent",
                     color = TangemTheme.colors3.text.tertiary,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
@@ -185,9 +188,9 @@ private fun PreviewDonutSegmentTooltip() {
         ) {
             TooltipPill(
                 expandedStates = remember { MutableTransitionState(true) },
-                title = "Ethereum",
-                fiatValue = "$5,720.22",
-                percent = "57.5",
+                title = stringReference("Ethereum"),
+                fiatValue = stringReference("$5,720.22"),
+                percent = "57.5%",
             )
         }
     }
