@@ -38,6 +38,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -51,7 +52,9 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -62,6 +65,7 @@ import com.tangem.features.foryou.impl.components.state.MarketChartState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.Int
+import com.tangem.features.foryou.impl.R
 
 @Composable
 internal fun MarketChart(marketChartState: MarketChartState, modifier: Modifier = Modifier) {
@@ -145,7 +149,7 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
                     ),
                 )
                 Text(
-                    text = "Total value",
+                    text = stringResourceSafe(R.string.market_chart_buble_total_value),
                     color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography3.caption.medium,
                     maxLines = 1,
@@ -155,7 +159,7 @@ private fun ColumnScope.DonutChartBlock(donutChartState: DonutChartState, cardBo
                 )
             } else {
                 Text(
-                    text = "No data",
+                    text = stringResourceSafe(R.string.market_chart_buble_no_data),
                     color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography3.body.medium,
                     maxLines = 1,
@@ -235,7 +239,7 @@ private fun DonutSegmentTooltipBlock(
 @Suppress("MagicNumber")
 private fun formatSegmentPercent(weight: Float): String {
     val percent = weight.coerceIn(0f, 1f) * 100
-    return if (percent % 1f == 0f) "${percent.toInt()}%" else "%.2f%%".format(percent)
+    return if (percent % 1f == 0f) "${percent.toInt()}" else "%.2f%".format(percent)
 }
 
 private val DonutStrokeWidth = 28.dp
@@ -245,14 +249,14 @@ private val DonutStartAngle = -90f
 private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Float) {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = "$assetCount assets",
+        text = pluralStringResourceSafe(R.plurals.market_chart_assets_android, assetCount, assetCount),
         color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography3.heading.small,
     )
 
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = "Top holding: ${formatSegmentPercent(topHoldingPercent)}",
+        text = stringResourceSafe(R.string.market_chart_top_holding, formatSegmentPercent(topHoldingPercent)),
         color = TangemTheme.colors3.text.primary,
         style = TangemTheme.typography3.heading.small,
     )
@@ -262,7 +266,7 @@ private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Floa
 private fun ColumnScope.CantLoadDataBlock() {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = "Can't load data",
+        text = stringResourceSafe(R.string.market_chart_can_not_load_data),
         color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography3.heading.small,
     )
@@ -313,7 +317,8 @@ private fun AiInsightContent(aiInsightState: AiInsightState) {
                                     ),
                                     alpha = 1f,
                                 ),
-                            ) { append("Al Total: ") } // TODO add localization
+                            ) { append(stringResourceSafe(R.string.market_chart_ai_total)) }
+                            append(" ")
                             append(currentState.text)
                         },
                         color = TangemTheme.colors3.text.secondary,
