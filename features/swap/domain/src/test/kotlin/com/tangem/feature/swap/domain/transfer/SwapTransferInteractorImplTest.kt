@@ -31,6 +31,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
@@ -68,6 +69,7 @@ internal class SwapTransferInteractorImplTest {
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase = mockk(relaxed = true)
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase = mockk(relaxed = true)
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase = mockk()
+    private val validateTransactionUseCase: ValidateTransactionUseCase = mockk()
 
     private val sut = SwapTransferInteractorImpl(
         swapFeatureToggles = swapFeatureToggles,
@@ -86,11 +88,13 @@ internal class SwapTransferInteractorImplTest {
         getTronFeeNotificationShowCountUseCase = getTronFeeNotificationShowCountUseCase,
         incrementNotificationsShowCountUseCase = incrementNotificationsShowCountUseCase,
         getAssetRequirementsUseCase = getAssetRequirementsUseCase,
+        validateTransactionUseCase = validateTransactionUseCase,
     )
 
     @BeforeEach
     fun setup() {
         coEvery { getAssetRequirementsUseCase(any(), any()) } returns null.right()
+        coEvery { validateTransactionUseCase(any(), any(), any(), any(), any(), any()) } returns Unit.right()
     }
 
     @AfterEach
@@ -499,6 +503,57 @@ internal class SwapTransferInteractorImplTest {
                 )
             }
         }
+
+    @Test
+    fun `GIVEN Cardano token fee WHEN updateTransfer THEN minAdaValue flows through to Transfer state`() = runTest {
+        // Arrange
+        val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+        val userWallet: UserWallet = mockk(relaxed = true)
+        val expectedMinAdaValue = BigDecimal("1.444443")
+        val fromCurrencyStatus = buildCurrencyStatus(
+            rawCurrencyId = FROM_RAW_CURRENCY_ID,
+            decimals = FROM_DECIMALS,
+            fiatRate = BigDecimal.TEN,
+            amount = BigDecimal("1.6"),
+            userWallet = userWallet,
+        )
+        val toCurrencyStatus = buildCurrencyStatus(
+            rawCurrencyId = TO_RAW_CURRENCY_ID,
+            decimals = TO_DECIMALS,
+            userWallet = userWallet,
+        )
+        val fee: Fee.CardanoToken = mockk(relaxed = true) {
+            every { amount.value } returns BigDecimal("0.2")
+            every { minAdaValue } returns expectedMinAdaValue
+        }
+        every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery {
+            getCurrencyCheckUseCase(
+                userWalletId = any(),
+                currencyStatus = any(),
+                feeCurrencyStatus = any(),
+                amount = any(),
+                fee = any(),
+                feeCurrencyBalanceAfterTransaction = any(),
+                recipientAddress = any(),
+            )
+        } returns buildCurrencyCheck()
+        coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns false.right()
+
+        // Act
+        val result = sut.updateTransfer(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus,
+            fromTokenAmount = "1,5",
+            feePaidCurrencyStatus = null,
+            fee = fee,
+        ) as SwapState.Transfer
+
+        // Assert
+        assertThat(result.minAdaValue).isEqualTo(expectedMinAdaValue)
+    }
 
     // endregion
 
