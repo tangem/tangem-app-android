@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.ethpool
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolTransactionRequest
 import com.tangem.datasource.api.ethpool.models.response.*
@@ -94,4 +95,20 @@ interface P2PEthPoolApi {
         @Path("delegatorAddress") delegatorAddress: String,
         @Path("vaultAddress") vaultAddress: String,
     ): ApiResponse<P2PEthPoolResponse<P2PEthPoolAccountResponse>>
+
+    /**
+     * Get account summaries for multiple delegators in a vault (batch).
+     *
+     * Designed to be called once per client to avoid rate-limit bursts.
+     *
+     * @param network Ethereum pool network: "mainnet" or "hoodi"
+     * @param vaultAddress Ethereum address of the vault
+     * @param body Delegator addresses to fetch (up to 255)
+     */
+    @POST("api/v1/staking/pool/{network}/vaults/{vaultAddress}/accounts/list")
+    suspend fun getAccountsList(
+        @Path("network") network: String,
+        @Path("vaultAddress") vaultAddress: String,
+        @Body body: P2PEthPoolAccountsListRequest,
+    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolAccountsListResponse>>
 }
