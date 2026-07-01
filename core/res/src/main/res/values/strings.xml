@@ -1955,6 +1955,13 @@
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
   <string name="tangempay_current_plan_change">Change plan</string>
+  <string name="tangempay_select_plan_title">Select plan</string>
+  <string name="tangempay_select_plan_confirm_title">Confirm selection</string>
+  <string name="tangempay_select_plan_compare">Compare plans</string>
+  <string name="tangempay_select_plan_btn_select">Select</string>
+  <string name="tangempay_select_plan_btn_cancel">Cancel</string>
+  <string name="tangempay_select_plan_btn_upgrade">Upgrade plan</string>
+  <string name="tangempay_select_plan_btn_downgrade">Downgrade plan</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_reissue_card_confirm">Replace card</string>
   <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
