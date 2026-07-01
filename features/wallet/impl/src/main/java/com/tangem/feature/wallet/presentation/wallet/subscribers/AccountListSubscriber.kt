@@ -12,6 +12,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoU
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.coroutines.combine7
 import com.tangem.utils.logging.TangemLogger
@@ -19,12 +20,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
 /**
@@ -44,6 +40,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val designFeatureToggles: DesignFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
     override val isAddAndManageTokensEnabled: Boolean
@@ -100,6 +97,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     yieldSupplyApyMap = yieldSupplyApyMap,
                     stakingAvailabilityMap = stakingAvailabilityMap,
                     shouldShowMainPromo = shouldShowMainPromo,
+                    isMultipleCardsEnabled = tangemPayFeatureToggles.isMultipleCardsEnabled,
                 )
             } else {
                 updateState(

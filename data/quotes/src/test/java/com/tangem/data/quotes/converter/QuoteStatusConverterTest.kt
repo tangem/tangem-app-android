@@ -97,7 +97,7 @@ internal class QuoteStatusConverterTest {
                     priceChange24h = BigDecimal.ONE,
                     priceChange1w = null,
                     priceChange30d = null,
-                    priceUsd = BigDecimal.ONE
+                    priceUsd = BigDecimal.ONE,
                 ),
             ),
             expected = QuoteStatus(
