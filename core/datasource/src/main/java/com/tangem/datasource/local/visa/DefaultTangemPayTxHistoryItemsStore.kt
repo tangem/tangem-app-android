@@ -1,23 +1,37 @@
 package com.tangem.datasource.local.visa
 
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
+import androidx.datastore.core.DataStore
+import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemDM
+import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemToDMConverter
+import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemToDomainConverter
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import kotlinx.coroutines.flow.first
+
+internal typealias StoredTangemPayTxHistory = Map<String, Map<String, List<TangemPayTxHistoryItemDM>>>
 
 internal class DefaultTangemPayTxHistoryItemsStore(
-    dataStore: StringKeyDataStore<Map<String, List<TangemPayTxHistoryItem>>>,
-) : TangemPayTxHistoryItemsStore,
-    StringKeyDataStoreDecorator<String, Map<String, List<TangemPayTxHistoryItem>>>(dataStore) {
-    override fun provideStringKey(key: String): String = key
+    private val dataStore: DataStore<StoredTangemPayTxHistory>,
+    private val toDMConverter: TangemPayTxHistoryItemToDMConverter,
+    private val toDomainConverter: TangemPayTxHistoryItemToDomainConverter,
+) : TangemPayTxHistoryItemsStore {
 
     override suspend fun getSyncOrNull(key: String, cursor: String): List<TangemPayTxHistoryItem>? {
-        val storedValue = getSyncOrNull(key)
-        return storedValue?.get(cursor)
+        return dataStore.data.first()[key]?.get(cursor)?.let { toDomainConverter.convertList(it) }
     }
 
     override suspend fun store(key: String, cursor: String, value: List<TangemPayTxHistoryItem>) {
-        val oldValue = getSyncOrNull(key).orEmpty()
-        val newValue = oldValue.toMutableMap().apply { put(cursor, value) }
-        store(key, newValue)
+        val page = toDMConverter.convertList(value)
+        dataStore.updateData { stored ->
+            val walletPages = stored[key].orEmpty()
+            stored + (key to walletPages + (cursor to page))
+        }
+    }
+
+    override suspend fun remove(key: String) {
+        remove(keys = listOf(key))
+    }
+
+    override suspend fun remove(keys: List<String>) {
+        dataStore.updateData { stored -> stored - keys.toSet() }
     }
 }
