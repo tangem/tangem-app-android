@@ -5,12 +5,14 @@ plugins {
 }
 
 dependencies {
-    // region Domain modules
-    api(projects.domain.models)
+
+    // region Kotlin
+    api(deps.kotlin.datetime)
+    api(deps.kotlin.serialization)
     // endregion
 
-    // region Other libraries
-    implementation(deps.kotlin.serialization)
-    api(deps.kotlin.datetime)
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }
 
