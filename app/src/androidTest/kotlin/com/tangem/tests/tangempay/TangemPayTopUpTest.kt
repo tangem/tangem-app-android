@@ -9,6 +9,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
+import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
@@ -26,7 +27,7 @@ class TangemPayTopUpTest : BaseTestCase() {
     @AllureId("4973")
     @DisplayName("Tangem Pay: top up swaps Bitcoin to USDC and appends deposit to history")
     @Test
-    fun topUpFromTangemPay_SwapsBitcoinToUSDC_AppendsDepositToHistory() {
+    fun topUpFromTangemPaySwapsBitcoinToUSDCAppendsDepositToHistoryTest() {
         val bitcoinScenario = "bitcoin_utxo"
         val expressAssetsScenario = "express_api_assets"
         val balanceScenario = "tangem_pay_balance_update"
@@ -43,6 +44,7 @@ class TangemPayTopUpTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
+                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(bitcoinScenario, bitcoinBalanceState)
                 setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
@@ -62,6 +64,7 @@ class TangemPayTopUpTest : BaseTestCase() {
                 onTangemPayMainScreen { balance.assertTextContainsSafe("10", substring = true) }
             }
             step("Click on 'Top Up' action chip") {
+                waitForIdle()
                 onTangemPayMainScreen { topUpButton.clickWithAssertion() }
             }
             step("Assert 'Add Funds' sheet is displayed") {

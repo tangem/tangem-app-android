@@ -31,8 +31,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
