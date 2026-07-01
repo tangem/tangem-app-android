@@ -12,8 +12,8 @@ import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]
@@ -35,7 +35,7 @@ internal class BlockchainProvidersResponseLoaderTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    @Before
+    @BeforeEach
     fun setup() {
         mockkStatic(FirebaseCrashlytics::class)
         val firebaseCrashlytics = mockk<FirebaseCrashlytics>()
