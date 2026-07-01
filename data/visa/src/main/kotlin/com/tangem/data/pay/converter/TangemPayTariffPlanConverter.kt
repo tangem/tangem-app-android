@@ -5,24 +5,33 @@ import com.tangem.domain.models.account.TangemPayTariffPlan
 
 internal object TangemPayTariffPlanConverter {
 
-    private const val MAIN_IMAGE_TYPE = "MAIN"
-
     fun convert(value: CustomerMeResponse.TariffPlan?): TangemPayTariffPlan? {
-        val name = value?.name ?: return null
+        val id = value?.id ?: return null
+        val name = value.name ?: return null
         return TangemPayTariffPlan(
+            id = id,
             type = TangemPayTariffPlan.Type.fromString(value.type),
             name = name,
-            descriptionItems = value.descriptionItems.orEmpty().map(::convertDescriptionItem),
-            imageUrl = value.images?.firstOrNull { it.type == MAIN_IMAGE_TYPE }?.url,
+            descriptionItems = value.descriptionItems.orEmpty().mapNotNull(::convertDescriptionItem),
+            images = value.images.orEmpty().mapNotNull(::convertImage),
         )
     }
 
-    private fun convertDescriptionItem(item: CustomerMeResponse.DescriptionItem): TangemPayTariffPlan.DescriptionItem {
+    private fun convertDescriptionItem(item: CustomerMeResponse.DescriptionItem): TangemPayTariffPlan.DescriptionItem? {
+        val title = item.title ?: return null
         return TangemPayTariffPlan.DescriptionItem(
             section = TangemPayTariffPlan.Section.fromString(item.type),
             order = item.order ?: 0,
-            title = item.title.orEmpty(),
+            title = title,
             body = item.body.orEmpty(),
+        )
+    }
+
+    private fun convertImage(image: CustomerMeResponse.Image): TangemPayTariffPlan.Image? {
+        val url = image.url ?: return null
+        return TangemPayTariffPlan.Image(
+            type = TangemPayTariffPlan.Image.Type.fromString(image.type),
+            url = url,
         )
     }
 }
