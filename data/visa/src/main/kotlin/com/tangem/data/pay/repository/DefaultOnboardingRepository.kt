@@ -16,6 +16,7 @@ import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -49,6 +50,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusStore: PaymentAccountStatusesStore,
+    private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
 ) : OnboardingRepository {
 
     // Save data for a session
@@ -271,6 +273,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }.map {
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
+            txHistoryItemsStore.remove(userWalletId.stringValue)
             setHideMainOnboardingBanner(userWalletId)
         }
     }
