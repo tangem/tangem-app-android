@@ -210,7 +210,6 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-        swapFeatureToggles = swapFeatureToggles,
         appRouter = appRouter,
     )
 

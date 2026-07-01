@@ -36,7 +36,6 @@ internal data class SwapStateHolder(
     val predefinedButtons: ImmutableList<PredefinedPercentButtonUM> = persistentListOf(),
     val tosState: TosState? = null,
     val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
-    val shouldShowAbMenu: Boolean = false,
 
     val transferFooter: TextReference? = null,
 

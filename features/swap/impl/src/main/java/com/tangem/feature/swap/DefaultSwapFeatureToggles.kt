@@ -24,25 +24,6 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.AND_15120_SWAP_INTEGRATED_APPROVE,
         )
 
-    override val isSwapAbEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.SWAP_AB_ENABLED,
-        )
-
-    override val isSwapProviderFilterEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_15009_SWAP_PROVIDER_FILTER_ENABLED,
-        )
-
-    override val isSwapRateExperienceEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_15103_SWAP_RATE_EXPERIENCE_ENABLED,
-        )
-
-    override val isSwapPredefinedButtonsEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED,
-        )
     override val isExpressShareButtonEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_15489_EXPRESS_SHARE_BUTTON_ENABLED,

@@ -46,7 +46,6 @@ internal class FeatureTogglesNamingConventionTest {
             "NEW_CARD_SCANNING_ENABLED",
             "SOLANA_SCALED_UI_AMOUNT_ENABLED",
             "SOLANA_TX_HISTORY_ENABLED",
-            "SWAP_AB_ENABLED",
             "VIRTUAL_ACCOUNTS_ENABLED",
             "VISA_ONBOARDING_ENABLED",
             "WALLET_CONNECT_BITCOIN_ENABLED",
