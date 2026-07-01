@@ -72,6 +72,7 @@ object TangemColorPalette {
     // region Amaranth
     val Amaranth = Color(0xFFFF3333)
     val Amaranth_50 = Color(0x80FF3333)
+    val Amaranth_30 = Color(0x4DFF3333)
     val Amaranth_20 = Color(0x33FF3333)
     val Amaranth_10 = Color(0x1AFF3333)
     // endregion Amaranth

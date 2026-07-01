@@ -227,7 +227,7 @@ class RecentBlockTest : BaseTestCase() {
         val sendAmount = "1"
         val txHistoryScenarioState = "11OutgoingTransactions"
         val recipientAddressBase = "DJ2TaZ5vvp3mBLugUpKjVM3pRBLi4uYaq"
-        val shortenedRecipientAddress = "DJ2TaZ5vvp3mBLugU...Li4uYaq123456789b"
+        val longRecipientAddress = recipientAddressBase + "123456789b"
 
         setupHooks(
             additionalAfterSection = {
@@ -261,7 +261,7 @@ class RecentBlockTest : BaseTestCase() {
                 checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = recentTransactionAmount1)
             }
             step("Check recent address item №2") {
-                checkRecentAddressItem(address = shortenedRecipientAddress, description = recentTransactionAmount2)
+                checkRecentAddressItem(address = longRecipientAddress, description = recentTransactionAmount2)
             }
             step("Check recent address item №3") {
                 checkRecentAddressItem(address = recipientAddressBase + "k", description = recentTransactionAmount2)
