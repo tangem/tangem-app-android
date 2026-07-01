@@ -1251,6 +1251,7 @@
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Общая сумма транзакций свыше %1s может потребовать верификации личности через %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Общая сумма транзакций, превышающая эквивалент %1s, может потребовать верификации личности через %2s</string>
+  <string name="onramp_native_payment_identity_verification">Для транзакций через Apple Pay может потребоваться верификация личности в %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">Нажимая «Оплатить», вы соглашаетесь с %1s\'s %2s и %3s.</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
   <string name="onramp_offer_type_fastet">Самый быстрый</string>
