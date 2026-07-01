@@ -14,6 +14,7 @@ sealed class AddressValidation {
     sealed class Error : AddressValidation() {
         data object AddressInWallet : Error()
         data object InvalidAddress : Error()
+        data object RecipientWalletBackupError : Error()
         data class DataError(val throwable: Throwable) : Error()
     }
 }

@@ -25,7 +25,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
@@ -36,14 +36,16 @@ import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
-import com.tangem.features.send.v2.api.NetworkSelectionComponent
+import com.tangem.features.send.api.NetworkSelectionComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -57,6 +59,7 @@ internal class WalletComponent @AssistedInject constructor(
     @Assisted navigate: (WalletRoute) -> Unit,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
+    virtualAccountMainBlockComponentFactory: VirtualAccountMainBlockComponent.Factory,
     private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
@@ -67,6 +70,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -81,6 +85,12 @@ internal class WalletComponent @AssistedInject constructor(
     private val tangemPayMainBlockComponent by lazy {
         tangemPayMainBlockComponentFactory.create(
             context = child("tangemPayMainBlockComponent"),
+            params = Unit,
+        )
+    }
+    private val virtualAccountMainBlockComponent by lazy {
+        virtualAccountMainBlockComponentFactory.create(
+            context = child("virtualAccountMainBlockComponent"),
             params = Unit,
         )
     }
@@ -180,6 +190,25 @@ internal class WalletComponent @AssistedInject constructor(
                         ),
                     )
                 }
+                is WalletDialogConfig.AddFunds -> {
+                    manageFundsComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = ManageFundsComponent.Params(
+                            launchMode = ManageFundsComponent.LaunchMode.ChooseToken(dialogConfig.userWalletId),
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.Transfer -> {
+                    manageFundsComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = ManageFundsComponent.Params(
+                            launchMode = ManageFundsComponent.LaunchMode.ChooseToken(dialogConfig.userWalletId),
+                            flowType = ManageFundsComponent.FlowType.Transfer,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
                 is WalletDialogConfig.AddAndManage -> {
                     AddAndManageBottomSheetComponent(
                         appComponentContext = childByContext(componentContext),
@@ -266,11 +295,16 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
+        val promoBannersBlockComponentContentComponent = ComposableContentComponent { promoModifier ->
+            promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 12.dp)
+        }
 
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
                 state = uiState,
+                promoBannersBlockComponent = promoBannersBlockComponentContentComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
+                virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
@@ -285,8 +319,9 @@ internal class WalletComponent @AssistedInject constructor(
         } else {
             WalletScreen(
                 state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponent,
+                promoBannersBlockComponent = promoBannersBlockComponentContentComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
+                virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,

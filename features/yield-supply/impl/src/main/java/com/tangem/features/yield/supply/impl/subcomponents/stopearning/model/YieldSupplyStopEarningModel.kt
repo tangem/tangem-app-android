@@ -73,7 +73,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val cryptoCurrencyStatus
         get() = params.cryptoCurrencyStatusFlow.value
     private val cryptoCurrency = cryptoCurrencyStatus.currency
-    private var userWallet = params.userWallet
+    private val userWallet = params.userWallet
 
     val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
         field = MutableStateFlow(
@@ -270,15 +270,15 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 }
             },
             ifRight = { fee ->
-                val fee = fee.normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY)
-                val feeCryptoValue = fee.amount.value.orZero()
+                val adjustedFee = fee.normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY)
+                val feeCryptoValue = adjustedFee.amount.value.orZero()
 
                 uiState.update(
                     YieldSupplyStopEarningFeeContentTransformer(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                         appCurrency = appCurrency,
-                        transactions = listOf(exitTransitionData.copy(fee = fee)),
+                        transactions = listOf(exitTransitionData.copy(fee = adjustedFee)),
                         feeValue = feeCryptoValue,
                     ),
                 )

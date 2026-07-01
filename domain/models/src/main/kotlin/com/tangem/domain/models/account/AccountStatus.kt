@@ -44,6 +44,12 @@ sealed interface AccountStatus {
         override val account: Account.Payment,
         val value: PaymentAccountStatusValue,
     ) : AccountStatus
+
+    @Serializable
+    data class Virtual(
+        override val account: Account.Virtual,
+        val value: VirtualAccountStatusValue,
+    ) : AccountStatus
 }
 
 fun Iterable<AccountStatus>.filterCryptoPortfolio(): List<AccountStatus.CryptoPortfolio> {

@@ -60,6 +60,7 @@ internal class DefaultAuthProvider(
     override fun getGaslessServiceApiKey(apiEnvironment: Provider<ApiEnvironment>): ProviderSuspend<String> {
         return ProviderSuspend {
             when (apiEnvironment.invoke()) {
+                ApiEnvironment.MOCK,
                 ApiEnvironment.DEV,
                 -> environmentConfig.gaslessTxApiKeyDev
                 ApiEnvironment.PROD -> environmentConfig.gaslessTxApiKey

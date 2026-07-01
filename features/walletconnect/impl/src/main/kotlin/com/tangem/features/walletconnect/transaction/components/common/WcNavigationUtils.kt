@@ -3,10 +3,10 @@ package com.tangem.features.walletconnect.transaction.components.common
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.walletconnect.WcAnalyticEvents
-import com.tangem.features.send.v2.api.FeeSelectorComponent
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeDisplaySource
-import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeSelectorDetailsParams
+import com.tangem.features.send.api.FeeSelectorComponent
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.params.FeeSelectorParams.FeeDisplaySource
+import com.tangem.features.send.api.params.FeeSelectorParams.FeeSelectorDetailsParams
 import com.tangem.features.walletconnect.connections.components.AlertsComponentV2
 import com.tangem.features.walletconnect.connections.utils.WcAlertsFactory.createCommonTransactionAppInfoAlertUM
 import com.tangem.features.walletconnect.transaction.components.send.WcCustomAllowanceComponent

@@ -9,9 +9,11 @@ import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -36,13 +38,17 @@ internal object ExpressDataModule {
     @Singleton
     fun provideExpressRepository(
         tangemExpressApi: TangemExpressApi,
+        expressHistoryDao: ExpressHistoryDao,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
+        txHistoryFeatureToggles: TxHistoryFeatureToggles,
     ): ExpressRepository {
         return DefaultExpressRepository(
             tangemExpressApi = tangemExpressApi,
+            expressHistoryDao = expressHistoryDao,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
+            txHistoryFeatureToggles = txHistoryFeatureToggles,
         )
     }
 

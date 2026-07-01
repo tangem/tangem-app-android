@@ -9,11 +9,6 @@ plugins {
 android {
     namespace = "com.tangem.lib.crypto"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     // region Project
@@ -32,6 +27,5 @@ dependencies {
 
     // region Test libraries
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
     // endregion
 }

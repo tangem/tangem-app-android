@@ -10,11 +10,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.AppSettingsScreenTestTags
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 import com.tangem.tap.features.details.ui.appsettings.components.*
@@ -55,7 +57,15 @@ private fun AppSettings(state: AppSettingsScreenState.Content) {
                     item = item,
                 )
                 is Item.Button -> SettingsButtonItem(
-                    modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8),
+                    modifier = Modifier
+                        .padding(vertical = TangemTheme.dimens.spacing8)
+                        .then(
+                            if (item.id == AppSettingsItemsFactory.ID_SELECT_APP_CURRENCY_BUTTON) {
+                                Modifier.testTag(AppSettingsScreenTestTags.CURRENCY_BUTTON)
+                            } else {
+                                Modifier
+                            },
+                        ),
                     item = item,
                 )
                 is Item.Switch -> SettingsSwitchItem(

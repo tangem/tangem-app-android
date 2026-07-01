@@ -27,19 +27,20 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenElementsTestTags
-import org.burnoutcrew.reorderable.ReorderableLazyListState
 
 /**
  * UI model for header row component
  *
- * @param headerRowUM UI model for the header row
- * @param modifier    Modifier for the composable
+ * @param headerRowUM        UI model for the header row
+ * @param modifier           Modifier for the composable
+ * @param dragHandleModifier Modifier applied to the drag handle in the row's tail (e.g. a reorderable
+ * drag-handle modifier). Defaults to [Modifier] for non-reorderable rows.
  */
 @Composable
 fun TangemHeaderRow(
     headerRowUM: TangemHeaderRowUM,
     modifier: Modifier = Modifier,
-    reorderableState: ReorderableLazyListState? = null,
+    dragHandleModifier: Modifier = Modifier,
     isBalanceHidden: Boolean = false,
 ) {
     TangemHeaderRow(
@@ -48,7 +49,7 @@ fun TangemHeaderRow(
         title = headerRowUM.title,
         subtitle = headerRowUM.subtitle,
         isBalanceHidden = isBalanceHidden,
-        reorderableState = reorderableState,
+        dragHandleModifier = dragHandleModifier,
         modifier = modifier,
     )
 }
@@ -129,7 +130,7 @@ fun TangemHeaderRow(
     subtitle: TextReference? = null,
     headTangemIconUM: TangemIconUM? = null,
     tailUM: TangemRowTailUM = TangemRowTailUM.Empty,
-    reorderableState: ReorderableLazyListState? = null,
+    dragHandleModifier: Modifier = Modifier,
     isEnabled: Boolean = false,
     onItemClick: (() -> Unit)? = null,
 ) {
@@ -181,7 +182,7 @@ fun TangemHeaderRow(
         SpacerWMax()
         TangemRowTail(
             tangemRowTailUM = tailUM,
-            reorderableState = reorderableState,
+            dragHandleModifier = dragHandleModifier,
         )
     }
 }

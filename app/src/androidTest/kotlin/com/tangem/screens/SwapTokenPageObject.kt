@@ -54,6 +54,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun feeBlockCurrency(symbol: String): KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK)
+        hasAnyDescendant(withText(symbol))
+        useUnmergedTree = true
+    }
+
     val receiveAmountShimmer: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_AMOUNT_SHIMMER)
     }
@@ -69,6 +75,11 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val providersBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val bestRateText: KNode = child {
+        hasText(getResourceString(R.string.express_provider_best_rate))
         useUnmergedTree = true
     }
 
@@ -119,6 +130,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun insufficientFeeForTransferNotificationTitle(feeCoinName: String): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_send_blocked_funds_for_fee_title, feeCoinName))
+        useUnmergedTree = true
+    }
+
     fun warningTitle(title: String): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(title)
@@ -145,6 +162,23 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     val swapButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_swap))
+    }
+
+    val transferButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.swapping_transfer_action))
+    }
+
+    val transferTitle: KNode = child {
+        hasTestTag(TopAppBarTestTags.TITLE)
+        hasText(getResourceString(R.string.common_transfer))
+        useUnmergedTree = true
+    }
+
+    // PercentPill testTag is the PredefinedPercentAmount enum name; MAX == "MAX".
+    val maxAmountButton: KNode = child {
+        hasTestTag("MAX")
+        useUnmergedTree = true
     }
 
     val youSwapBlock: KNode = child {
@@ -178,6 +212,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val swapFiatAmount: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
     }
 
     val swapSelectTokenIcon: KNode = child {
@@ -208,6 +243,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val chooseTokenButton: KNode = child {
         hasText(getResourceString(R.string.common_choose_token))
+        useUnmergedTree = true
+    }
+
+    // Transfer mode auto-fills the memo/destination tag — the manual Send-address field must never render here.
+    val destinationTagField: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD)
         useUnmergedTree = true
     }
 }

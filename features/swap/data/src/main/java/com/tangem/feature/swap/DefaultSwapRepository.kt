@@ -18,15 +18,18 @@ import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -52,13 +55,15 @@ internal class DefaultSwapRepository(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
     private val rampStateManager: RampStateManager,
+    private val expressHistoryDao: ExpressHistoryDao,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : SwapRepository {
 
     private val expressDataConverter = ExpressDataConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
-    private val exchangeStatusConverter = ExchangeStatusConverter()
+    private val exchangeStatusConverter = ExchangeStatusConverter(moshi)
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
     override suspend fun getPairs(
@@ -238,18 +243,23 @@ internal class DefaultSwapRepository(
             either {
                 catch(
                     block = {
-                        exchangeStatusConverter.convert(
-                            tangemExpressApi
-                                .getExchangeStatus(
-                                    userWalletId = userWalletId.stringValue,
-                                    refCode = ExpressUtils.getRefCode(
-                                        userWallet = userWallet,
-                                        appPreferencesStore = appPreferencesStore,
-                                    ),
-                                    txId = txId,
-                                )
-                                .getOrThrow(),
-                        )
+                        val response = tangemExpressApi
+                            .getExchangeStatus(
+                                userWalletId = userWalletId.stringValue,
+                                refCode = ExpressUtils.getRefCode(
+                                    userWallet = userWallet,
+                                    appPreferencesStore = appPreferencesStore,
+                                ),
+                                txId = txId,
+                            )
+                            .getOrThrow()
+
+                        val entity = response.toEntity(ownerAddress = response.fromAddress.orEmpty())
+                        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+                            expressHistoryDao.upsertExchanges(listOf(entity))
+                        }
+
+                        exchangeStatusConverter.convert(response)
                     },
                     catch = { exception ->
                         TangemLogger.e("getExchangeStatus error", exception)

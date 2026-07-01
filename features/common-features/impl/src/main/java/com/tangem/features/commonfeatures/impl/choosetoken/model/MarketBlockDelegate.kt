@@ -6,7 +6,10 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketListConfig
@@ -14,22 +17,22 @@ import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.impl.choosetoken.AddToPortfolioRoute
 import com.tangem.features.commonfeatures.impl.choosetoken.market.MarketsListBatchFlowManager
+import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketCategoriesUM
+import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketCategory
 import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMarketState
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlin.collections.filter
-import kotlin.collections.map
-import kotlin.collections.orEmpty
 
 @Suppress("LongParameterList")
 internal class MarketBlockDelegate @AssistedInject constructor(
@@ -37,13 +40,18 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val searchQueryState: StateFlow<SearchQuery>,
     @Assisted private val screensSourcesName: String,
+    @Assisted private val selectedWalletFlow: SharedFlow<UserWallet>,
+    @Assisted private val shouldShowSingleCurrencyWallets: Boolean,
 ) {
 
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
     private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+
+    private val selectedCategoryFlow = MutableStateFlow(SwapMarketCategory.Trending)
 
     val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
@@ -52,7 +60,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         analyticsParams = AddToPortfolioManager.AnalyticsParams(source = screensSourcesName),
     )
 
-    val marketsStateFlow: Flow<SwapMarketState> = searchQueryState
+    private val baseMarketsStateFlow: Flow<SwapMarketState> = searchQueryState
         // Switch between default and search market flows
         .map { it.value.isEmpty() }
         .distinctUntilChanged()
@@ -66,10 +74,28 @@ internal class MarketBlockDelegate @AssistedInject constructor(
             }
         }
 
+    /**
+     * Market block constrained by the currently selected wallet:
+     * - single-currency wallet: hidden entirely (`null`) - no market tokens can be added;
+     * - single-currency-with-token wallet (e.g. NODL): items filtered to the wallet's network,
+     *   block hidden when nothing remains;
+     * - multi-currency wallet: shown as is.
+     *
+     * When single-currency wallets aren't selectable here (e.g. swap), the wallet is always
+     * multi-currency, so we skip the per-wallet logic entirely and return [baseMarketsStateFlow].
+     */
+    val marketsStateFlow: Flow<SwapMarketState?> = if (!shouldShowSingleCurrencyWallets) {
+        baseMarketsStateFlow
+    } else {
+        selectedWalletFlow
+            .flatMapLatest(::marketsFlowForWallet)
+            .distinctUntilChanged()
+    }
+
     private val defaultMarketsListManager by lazy {
         marketsListBatchFlowManagerFactory.create(
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
-            order = TokenMarketListConfig.Order.Trending,
+            currentOrder = Provider { selectedCategoryFlow.value.order },
             currentSearchText = Provider { null },
             modelScope = modelScope,
         )
@@ -78,7 +104,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val searchMarketsListManager by lazy {
         marketsListBatchFlowManagerFactory.create(
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
-            order = TokenMarketListConfig.Order.ByRating,
+            currentOrder = Provider { TokenMarketListConfig.Order.ByRating },
             currentSearchText = Provider { searchQueryState.value.value },
             modelScope = modelScope,
         )
@@ -126,19 +152,26 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     }
 
     private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
-        val marketsTitle = TextReference.Res(R.string.feed_trending_now)
+        val marketsTitle = TextReference.Res(R.string.markets_pulse_common_title)
         return combine(
-            defaultMarketsListManager.uiItems,
-            defaultMarketsListManager.isInInitialLoadingErrorState,
-            defaultMarketsListManager.totalCount,
-        ) { uiItems, isError, total ->
+            flow = defaultMarketsListManager.uiItems,
+            flow2 = defaultMarketsListManager.isInInitialLoadingErrorState,
+            flow3 = defaultMarketsListManager.totalCount,
+            flow4 = selectedCategoryFlow,
+        ) { uiItems, isError, total, selectedCategory ->
+            val categories = buildCategoriesUM(selectedCategory)
             when {
                 isError -> SwapMarketState.LoadingError(
                     onRetryClicked = { defaultMarketsListManager.reload() },
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = false,
+                    categories = categories,
                 )
-                uiItems.isEmpty() -> SwapMarketState.DefaultLoading
+                uiItems.isEmpty() -> SwapMarketState.Loading(
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                    categories = categories,
+                )
                 else -> SwapMarketState.Content(
                     items = uiItems,
                     loadMore = { defaultMarketsListManager.loadMore() },
@@ -147,9 +180,22 @@ internal class MarketBlockDelegate @AssistedInject constructor(
                     total = total ?: uiItems.size,
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = false,
+                    categories = categories,
                 )
             }
         }
+    }
+
+    private fun buildCategoriesUM(selected: SwapMarketCategory): SwapMarketCategoriesUM = SwapMarketCategoriesUM(
+        items = SwapMarketCategory.entries.toImmutableList(),
+        selected = selected,
+        onCategoryClick = ::onCategorySelected,
+    )
+
+    private fun onCategorySelected(category: SwapMarketCategory) {
+        if (selectedCategoryFlow.value == category) return
+        selectedCategoryFlow.value = category
+        defaultMarketsListManager.reload()
     }
 
     private fun createSearchMarketsFlow(): Flow<SwapMarketState> {
@@ -178,6 +224,44 @@ internal class MarketBlockDelegate @AssistedInject constructor(
                     shouldAssetsCount = true,
                 )
             }
+        }
+    }
+
+    private fun marketsFlowForWallet(wallet: UserWallet): Flow<SwapMarketState?> {
+        if (wallet !is UserWallet.Cold) return baseMarketsStateFlow
+        val resolver = wallet.scanResponse.cardTypesResolver
+        return when {
+            // Single-currency wallet can't hold market tokens - hide the whole block.
+            resolver.isSingleWallet() -> flowOf(null)
+            // Single-currency-with-token wallet (NODL) - keep only tokens available on the wallet's network(s).
+            resolver.isSingleWalletWithToken() -> combine(
+                baseMarketsStateFlow,
+                singleAccountStatusListSupplier(wallet.walletId),
+            ) { state, accountStatusList ->
+                filterStateByNetwork(state, accountStatusList.allowedNetworkIds())
+            }
+            // Multi-currency wallet - the common case, no filtering needed.
+            else -> baseMarketsStateFlow
+        }
+    }
+
+    private fun AccountStatusList.allowedNetworkIds(): Set<String> =
+        flattenCurrencies().mapTo(hashSetOf()) { it.currency.network.rawId }
+
+    private fun filterStateByNetwork(state: SwapMarketState, allowedNetworkIds: Set<String>): SwapMarketState? {
+        if (state !is SwapMarketState.Content) return state
+        if (allowedNetworkIds.isEmpty()) return null
+
+        val filteredItems = state.items.filter { item ->
+            val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
+                ?: searchMarketsListManager.getTokenMarketById(item.id)
+            tokenMarket?.networks?.any { allowedNetworkIds.contains(it.networkId) } == true
+        }.toImmutableList()
+
+        return if (filteredItems.isEmpty()) {
+            null
+        } else {
+            state.copy(items = filteredItems, total = filteredItems.size)
         }
     }
 
@@ -218,6 +302,8 @@ internal class MarketBlockDelegate @AssistedInject constructor(
             searchQueryState: StateFlow<SearchQuery>,
             modelScope: CoroutineScope,
             screensSourcesName: String,
+            selectedWalletFlow: SharedFlow<UserWallet>,
+            shouldShowSingleCurrencyWallets: Boolean,
         ): MarketBlockDelegate
     }
 }

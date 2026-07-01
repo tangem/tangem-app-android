@@ -30,4 +30,6 @@ data class SwapCurrencyStatus(
         get() = status.currency
     val userWalletId: UserWalletId
         get() = userWallet.walletId
+    val isYieldSupplyActive: Boolean
+        get() = status.value.yieldSupplyStatus?.isActive == true
 }

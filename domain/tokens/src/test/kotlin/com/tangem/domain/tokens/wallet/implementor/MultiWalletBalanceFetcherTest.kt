@@ -7,10 +7,10 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.WalletFetchingSource
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -54,6 +54,7 @@ class MultiWalletBalanceFetcherTest {
                 sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
             ),
             WalletFetchingSource.TangemPay,
+            WalletFetchingSource.VirtualAccount,
         )
         Truth.assertThat(actual).isEqualTo(expected)
     }

@@ -2,10 +2,10 @@ package com.tangem.features.details.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -13,17 +13,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
+import com.tangem.core.ui.components.inputrow.InputRowImageBase
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -155,10 +159,44 @@ private fun Block(
                     onClick = model.onClick,
                 )
             }
+            is DetailsItemUM.WalletConnectAddressBookBlock -> {
+                BlockCard {
+                    WalletConnectAddressBookBlockItems(
+                        items = model.items,
+                        modifier = itemModifier,
+                    )
+                }
+            }
             is DetailsItemUM.UserWalletList -> {
                 userWalletListBlockContent.Content(modifier = itemModifier)
             }
-            is DetailsItemUM.UnderSectionText -> { /* Handled above */ }
+            is DetailsItemUM.UnderSectionText -> { /* Handled above */
+            }
+        }
+    }
+}
+
+@Composable
+private fun WalletConnectAddressBookBlockItems(
+    items: List<DetailsItemUM.WalletConnectAddressBookBlock.Item>,
+    modifier: Modifier = Modifier,
+) {
+    items.fastForEach { item ->
+        when (item) {
+            is DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect -> InputRowImageBase(
+                modifier = modifier.clickable(onClick = item.onClick).padding(12.dp),
+                iconResVector = R.drawable.ic_wallet_connect_24,
+                iconTint = TangemTheme.colors.icon.primary1,
+                subtitle = TextReference.Res(R.string.wallet_connect_title),
+                caption = TextReference.Res(R.string.wallet_connect_subtitle),
+            )
+            is DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook -> InputRowImageBase(
+                modifier = modifier.clickable(onClick = item.onClick).padding(12.dp),
+                iconResVector = R.drawable.ic_contact_20,
+                iconTint = TangemTheme.colors.icon.accent,
+                subtitle = TextReference.Res(R.string.address_book_title),
+                caption = TextReference.Res(R.string.address_book_description),
+            )
         }
     }
 }

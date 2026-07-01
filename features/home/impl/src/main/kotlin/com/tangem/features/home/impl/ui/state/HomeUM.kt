@@ -5,7 +5,6 @@ import kotlinx.collections.immutable.ImmutableList
 data class HomeUM(
     val scanInProgress: Boolean,
     val stories: ImmutableList<Stories>,
-    val onScanClick: () -> Unit,
     val onShopClick: () -> Unit,
     val onSearchTokensClick: () -> Unit,
     val onGetStartedClick: () -> Unit,

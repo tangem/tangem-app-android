@@ -79,7 +79,7 @@ internal class CreateWalletStartModelTest {
         coEvery { appsFlyerStore.get() } returns null
         coEvery { settingsRepository.shouldSaveAccessCodes() } returns false
         every { coldUserWalletBuilderFactory.create(any()) } returns coldUserWalletBuilder
-        every { coldUserWalletBuilder.build() } returns testColdWallet
+        coEvery { coldUserWalletBuilder.build() } returns testColdWallet
         every { onboardingV2FeatureToggles.isAddressSyncEnabled } returns false
         coEvery {
             scanCardProcessor.scan(
@@ -112,7 +112,7 @@ internal class CreateWalletStartModelTest {
         }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
                 shouldCheckIsAlreadyActivated = true,
                 cardId = null,
                 onProgressStateChange = any(),
@@ -141,7 +141,7 @@ internal class CreateWalletStartModelTest {
         }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
                 shouldCheckIsAlreadyActivated = true,
                 cardId = null,
                 onProgressStateChange = any(),
@@ -258,7 +258,7 @@ internal class CreateWalletStartModelTest {
         verify { cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = true) }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
                 shouldCheckIsAlreadyActivated = true,
                 cardId = null,
                 onProgressStateChange = any(),
@@ -356,7 +356,7 @@ internal class CreateWalletStartModelTest {
 
     @Test
     fun `GIVEN builder returns null WHEN proceedWithScanResponse THEN saveWalletUseCase not called`() = runTest {
-        every { coldUserWalletBuilder.build() } returns null
+        coEvery { coldUserWalletBuilder.build() } returns null
         coEvery {
             scanCardProcessor.scan(
                 analyticsSource = any(),

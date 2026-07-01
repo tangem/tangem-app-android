@@ -93,7 +93,7 @@ swipeRefreshLayout = "1.1.0"
 web3j = "4.12.3-SNAPSHOT"
 leakcanary = "2.13"
 decompose = "3.3.0"
-room = "2.6.1"
+room = "2.7.2"
 markdown = "0.7.2"
 markdownComposeView = "0.5.4"
 usedesk = "4.4.0"
@@ -170,6 +170,7 @@ lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", v
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
 lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compose-lifecycle-runtime" }
 androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
+androidx-datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "androidx-datastore" }
 androidx-workmanager = { module = "androidx.work:work-runtime", version.ref = "androidxWorkManager" }
 hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-work" }
 # region AndroidX

@@ -30,6 +30,7 @@ dependencies {
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
     /** Other */
@@ -42,6 +43,5 @@ dependencies {
 
     /** Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.truth)
 }

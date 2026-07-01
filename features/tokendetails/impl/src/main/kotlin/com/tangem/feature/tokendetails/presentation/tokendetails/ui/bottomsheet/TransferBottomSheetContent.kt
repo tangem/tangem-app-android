@@ -36,6 +36,7 @@ internal fun TransferBottomSheetContent(state: TransferUM, onCloseClick: () -> U
     ) {
         SendActionRow(state = state)
         SwapActionRow(state = state)
+        SwapAndSendActionRow(state = state)
         SellActionRow(state = state)
 
         SpacerH(TangemTheme.dimens2.x2)
@@ -75,6 +76,19 @@ private fun SwapActionRow(state: TransferUM) {
         iconRes = CoreR.drawable.ic_exchange_mini_24,
         title = resourceReference(CoreR.string.common_swap),
         description = resourceReference(CoreR.string.quick_action_swap_description),
+        row = row,
+        isLoading = state is TransferUM.Loading,
+    )
+}
+
+@Composable
+private fun SwapAndSendActionRow(state: TransferUM) {
+    val row = (state as? TransferUM.Content)?.swapAndSend
+    if (state is TransferUM.Content && row == null) return
+    ActionRow(
+        iconRes = CoreR.drawable.ic_exchange_mini_24,
+        title = resourceReference(CoreR.string.common_send_with_swap),
+        description = resourceReference(CoreR.string.quick_action_send_and_swap_description),
         row = row,
         isLoading = state is TransferUM.Loading,
     )
@@ -149,16 +163,19 @@ private class TransferPreviewProvider : PreviewParameterProvider<TransferUM> {
         TransferUM.Content(
             send = TransferUM.Row(isLoading = false, isEnabled = true, onClick = {}),
             swap = TransferUM.Row(isLoading = false, isEnabled = true, onClick = {}),
+            swapAndSend = TransferUM.Row(isLoading = false, isEnabled = true, onClick = {}),
             sell = TransferUM.Row(isLoading = false, isEnabled = true, onClick = {}),
         ),
         TransferUM.Content(
             send = TransferUM.Row(isLoading = false, isEnabled = true, onClick = {}),
             swap = TransferUM.Row(isLoading = false, isEnabled = false, onClick = {}),
+            swapAndSend = TransferUM.Row(isLoading = false, isEnabled = false, onClick = {}),
             sell = TransferUM.Row(isLoading = false, isEnabled = false, onClick = {}),
         ),
         TransferUM.Content(
             send = TransferUM.Row(isLoading = false, isEnabled = true, onClick = {}),
             swap = null,
+            swapAndSend = null,
             sell = null,
         ),
     )

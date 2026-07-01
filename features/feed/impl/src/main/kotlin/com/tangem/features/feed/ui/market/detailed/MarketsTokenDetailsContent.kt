@@ -17,6 +17,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -39,6 +41,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.components.*
@@ -116,6 +119,7 @@ private fun Content(
             LazyColumn(
                 state = lazyListState,
                 contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
+                modifier = Modifier.testTag(MarketsTestTags.TOKEN_DETAILS_CONTENT),
             ) {
                 item("header") {
                     Header(state = state)
@@ -264,14 +268,26 @@ private fun HeaderV2(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
             ) {
                 Text(
+                    modifier = Modifier.weight(weight = 1f, fill = false),
                     text = state.tokenName,
                     style = TangemTheme.typography2.bodySemibold16,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
                     color = TangemTheme.colors2.text.neutral.primary,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = TangemTheme.typography2.captionSemibold12.fontSize,
+                        maxFontSize = TangemTheme.typography2.bodySemibold16.fontSize,
+                    ),
                 )
                 Text(
+                    maxLines = 1,
                     text = state.symbol,
                     style = TangemTheme.typography2.captionMedium12,
                     color = TangemTheme.colors2.text.neutral.tertiary,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = TangemTheme.typography2.captionRegular11.fontSize,
+                        maxFontSize = TangemTheme.typography2.captionMedium12.fontSize,
+                    ),
                 )
             }
             SpacerH(TangemTheme.dimens2.x1)

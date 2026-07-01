@@ -13,7 +13,7 @@ import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapSupportedPairsUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkComponent
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkUM
@@ -99,12 +99,18 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
             }
             delay(MINIMUM_LOADING_TIME)
             if (pairs.fromGroup.available.isEmpty()) {
-                analyticsEventHandler.send(
+                val analyticsEvent = if (pairs.fromGroup.availableForSwap.isNotEmpty()) {
+                    SendWithSwapAnalyticEvents.NoticeSwapAvailable(
+                        fromToken = params.initialCurrency,
+                        toTokenSymbol = params.token.symbol,
+                    )
+                } else {
                     SendWithSwapAnalyticEvents.NoticeCanNotSwapToken(
                         fromToken = params.initialCurrency,
                         toTokenSymbol = params.token.symbol,
-                    ),
-                )
+                    )
+                }
+                analyticsEventHandler.send(analyticsEvent)
             }
             uiState.update(
                 SwapChooseContentStateTransformer(
@@ -112,6 +118,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                     onNetworkClick = ::onSwapTokenClick,
                     tokenName = params.token.name,
                     onDismiss = params.onDismiss,
+                    onSwapClick = params.onSwapClick,
                 ),
             )
         }

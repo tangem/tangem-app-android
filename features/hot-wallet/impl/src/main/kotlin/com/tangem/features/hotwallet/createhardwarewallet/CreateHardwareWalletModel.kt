@@ -4,11 +4,11 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -27,6 +27,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.hotwallet.CreateHardwareWalletComponent
 import com.tangem.features.hotwallet.createhardwarewallet.entity.CreateHardwareWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -42,6 +43,7 @@ private const val HIDE_PROGRESS_DELAY = 400L
 @Suppress("LongParameterList")
 @ModelScoped
 internal class CreateHardwareWalletModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
@@ -56,6 +58,8 @@ internal class CreateHardwareWalletModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
+
+    private val params = paramsContainer.require<CreateHardwareWalletComponent.Params>()
 
     val uiState: StateFlow<CreateHardwareWalletUM>
         field = MutableStateFlow(
@@ -77,7 +81,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
     }
 
     private fun onBuyTangemWalletClick() {
-        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.CreateWallet))
+        analyticsEventHandler.send(Basic.ButtonBuy(source = params.source))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase
                 .invoke(GenerateBuyTangemCardLinkUseCase.Source.Upgrade).let { urlOpener.openUrl(it) }
@@ -86,7 +90,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
 
     private fun onScanDeviceClick() {
         analyticsEventHandler.send(
-            event = IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.CreateWallet),
+            event = IntroductionProcess.ButtonScanCard(params.source),
         )
         scanCard()
     }
@@ -100,10 +104,8 @@ internal class CreateHardwareWalletModel @Inject constructor(
                 isBiometricsRequestPolicy = shouldSaveAccessCodes,
             )
 
-            val analyticsSource = AnalyticsParam.ScreensSources.Intro
-
             scanCardProcessor.scan(
-                analyticsSource = analyticsSource,
+                analyticsSource = params.source,
                 shouldCheckIsAlreadyActivated = true,
                 onProgressStateChange = { showProgress ->
                     if (!showProgress) {
@@ -136,7 +138,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
 
         saveWalletUseCase(
             userWallet = userWallet,
-            analyticsSource = AnalyticsParam.ScreensSources.AddNew,
+            analyticsSource = params.source,
         ).fold(
             ifLeft = { saveWalletError ->
                 delay(HIDE_PROGRESS_DELAY)
@@ -183,7 +185,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
             userWalletId = walletId,
             unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
                 scanResponse = scanResponse,
-                source = AnalyticsParam.ScreensSources.AddNew,
+                source = params.source,
             ),
         ).onRight {
             router.replaceAll(AppRoute.Wallet)

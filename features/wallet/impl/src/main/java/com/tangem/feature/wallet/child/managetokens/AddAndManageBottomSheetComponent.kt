@@ -10,10 +10,12 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.managetokens.model.AddAndManageModel
 import com.tangem.feature.wallet.child.managetokens.ui.AddAndManageBottomSheetContent
+import com.tangem.feature.wallet.child.managetokens.ui.AddAndManageBottomSheetContentLegacy
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import kotlinx.serialization.builtins.serializer
 
@@ -51,12 +53,21 @@ internal class AddAndManageBottomSheetComponent(
         val portfolioSelectorSlot by portfolioSelectorSlot.subscribeAsState()
         val state by model.state.collectAsStateWithLifecycle()
 
-        AddAndManageBottomSheetContent(
-            onAddTokensClick = model::onAddTokensClick,
-            shouldShowOrganizeButton = state.shouldShowOrganize,
-            onOrganizeTokensClick = model::onOrganizeTokensClick,
-            onDismiss = ::dismiss,
-        )
+        if (LocalRedesignEnabled.current) {
+            AddAndManageBottomSheetContent(
+                onAddTokensClick = model::onAddTokensClick,
+                shouldShowOrganizeButton = state.shouldShowOrganize,
+                onOrganizeTokensClick = model::onOrganizeTokensClick,
+                onDismiss = ::dismiss,
+            )
+        } else {
+            AddAndManageBottomSheetContentLegacy(
+                onAddTokensClick = model::onAddTokensClick,
+                shouldShowOrganizeButton = state.shouldShowOrganize,
+                onOrganizeTokensClick = model::onOrganizeTokensClick,
+                onDismiss = ::dismiss,
+            )
+        }
 
         portfolioSelectorSlot.child?.instance?.BottomSheet()
     }

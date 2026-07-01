@@ -86,11 +86,6 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
             .joinToString("") { b: Byte -> b.toInt().and(0xFF).toString(16).padStart(2, '0') }
     }
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 android {
     namespace = "com.tangem.core.ui"
 
@@ -171,10 +166,7 @@ dependencies {
     }
 
     /** Tests */
-    testImplementation(deps.test.junit)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
-    testRuntimeOnly(deps.test.junit5.vintage.engine)
 }

@@ -12,6 +12,7 @@ internal data class ReceiveAddress(
     sealed interface Type {
         data object Ens : Type
 
+        @Immutable
         sealed interface Primary : Type {
 
             val displayName: TextReference

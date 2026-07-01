@@ -119,7 +119,7 @@ internal class UserWalletSaver @Inject constructor(
         )
     }
 
-    private fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
+    private suspend fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse = response).build()
 
         return ensureNotNull(userWallet) { Error.Unknown }

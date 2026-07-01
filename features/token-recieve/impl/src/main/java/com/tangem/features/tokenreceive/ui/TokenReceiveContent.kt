@@ -2,22 +2,32 @@ package com.tangem.features.tokenreceive.ui
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_left_24
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
+import dev.chrisbanes.haze.rememberHazeState
 
 @Composable
 internal fun TokenReceiveContentSheet(
@@ -26,59 +36,89 @@ internal fun TokenReceiveContentSheet(
     onBackClick: () -> Unit,
     contentStack: ChildStack<TokenReceiveRoutes, ComposableContentComponent>,
 ) {
-    TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
-        config = TangemBottomSheetConfig(
-            isShown = true,
-            onDismissRequest = onCloseClick,
-            content = TangemBottomSheetConfigContent.Empty,
-        ),
-        onBack = onBackClick,
-        containerColor = TangemTheme.colors.background.tertiary,
-        title = {
-            Title(
-                route = route,
-                onBackClick = onBackClick,
-                onCloseClick = onCloseClick,
-            )
-        },
-        content = {
-            TokenReceiveContent(
-                stackState = contentStack,
-                modifier = Modifier,
-            )
-        },
-    )
+    CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
+        TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+            type = TangemBottomSheetType.Modal,
+            onBack = onBackClick,
+            config = TangemBottomSheetConfig(
+                isShown = true,
+                onDismissRequest = onCloseClick,
+                content = TangemBottomSheetConfigContent.Empty,
+            ),
+            containerColor = TangemTheme.colors3.bg.secondary,
+            title = {
+                Title(
+                    route = route,
+                    onBackClick = onBackClick,
+                    onCloseClick = onCloseClick,
+                )
+            },
+            content = {
+                TokenReceiveContent(
+                    stackState = contentStack,
+                    modifier = Modifier,
+                )
+            },
+        )
+    }
 }
 
 @Composable
 private fun Title(route: TokenReceiveRoutes, onBackClick: () -> Unit, onCloseClick: () -> Unit) {
     when (route) {
         is TokenReceiveRoutes.QrCode -> {
-            TangemModalBottomSheetTitle(
-                startIconRes = R.drawable.ic_back_24,
-                onStartClick = onBackClick,
-                endIconRes = R.drawable.ic_close_24,
-                onEndClick = onCloseClick,
+            TangemTopBar(
+                type = TangemTopBarType.BottomSheet,
+                endContent = {
+                    TangemButton(
+                        iconStart = TangemIconUM.Icon(Icons.ic_cross_24),
+                        onClick = onCloseClick,
+                        size = TangemButton.Size.X11,
+                        variant = TangemButton.Variant.Material,
+                    )
+                },
+                startContent = {
+                    TangemButton(
+                        iconStart = TangemIconUM.Icon(imageVector = Icons.ic_chevron_left_24),
+                        onClick = onBackClick,
+                        size = TangemButton.Size.X11,
+                        variant = TangemButton.Variant.Material,
+                    )
+                },
             )
         }
         TokenReceiveRoutes.ReceiveAssets -> {
-            TangemModalBottomSheetTitle(
+            TangemTopBar(
                 title = resourceReference(R.string.domain_receive_assets_navigation_title),
-                endIconRes = R.drawable.ic_close_24,
-                onEndClick = onCloseClick,
+                type = TangemTopBarType.BottomSheet,
+                endContent = {
+                    TangemButton(
+                        iconStart = TangemIconUM.Icon(Icons.ic_cross_24),
+                        onClick = onCloseClick,
+                        size = TangemButton.Size.X11,
+                        variant = TangemButton.Variant.Material,
+                    )
+                },
             )
         }
         TokenReceiveRoutes.Warning -> {
-            TangemModalBottomSheetTitle(
-                endIconRes = R.drawable.ic_close_24,
-                onEndClick = onCloseClick,
+            TangemTopBar(
+                type = TangemTopBarType.BottomSheet,
+                endContent = {
+                    TangemButton(
+                        iconStart = TangemIconUM.Icon(Icons.ic_cross_24),
+                        onClick = onCloseClick,
+                        size = TangemButton.Size.X11,
+                        variant = TangemButton.Variant.Material,
+                    )
+                },
             )
         }
     }
 }
 
 @Composable
-internal fun TokenReceiveContent(
+private fun TokenReceiveContent(
     stackState: ChildStack<TokenReceiveRoutes, ComposableContentComponent>,
     modifier: Modifier = Modifier,
 ) {
@@ -86,9 +126,9 @@ internal fun TokenReceiveContent(
         stack = stackState,
         animation = stackAnimation(fade(animationSpec = tween(durationMillis = 100))),
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .animateContentSize(),
     ) {
-        it.instance.Content(Modifier.fillMaxSize())
+        it.instance.Content(Modifier.fillMaxWidth())
     }
 }

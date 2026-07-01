@@ -28,6 +28,7 @@ import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUse
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.QrSendTarget
@@ -47,7 +48,6 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWal
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
-import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -62,8 +62,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
+import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
@@ -566,6 +566,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
@@ -613,6 +614,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
     }
@@ -635,6 +637,7 @@ internal class WalletModel @Inject constructor(
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
                     isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                    isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
                 ),
             )
         }
@@ -650,6 +653,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
@@ -712,6 +716,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
+                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 

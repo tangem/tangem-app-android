@@ -18,6 +18,12 @@ internal class DefaultAssetsDiscoveryStore(
         }
     }
 
+    override suspend fun removeMatching(predicate: (UserTokensResponse.Token) -> Boolean) {
+        persistenceStore.updateData { existing ->
+            existing.filterNot(predicate)
+        }
+    }
+
     override suspend fun clear() {
         persistenceStore.updateData { emptyList() }
     }

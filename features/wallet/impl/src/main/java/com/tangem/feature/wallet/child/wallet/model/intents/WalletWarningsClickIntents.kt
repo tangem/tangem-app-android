@@ -60,7 +60,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseAlreadySignedHashesWarningClick()
 
-    fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>)
+    fun onGenerateMissedAddressesClick(userWalletId: UserWalletId, missedAddressCurrencies: List<CryptoCurrency>)
 
     fun onOpenUnlockWalletsBottomSheetClick()
 
@@ -164,19 +164,20 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
+    override fun onGenerateMissedAddressesClick(
+        userWalletId: UserWalletId,
+        missedAddressCurrencies: List<CryptoCurrency>,
+    ) {
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped())
 
         modelScope.launch {
-            val userWallet = getSelectedUserWallet() ?: return@launch
-
             derivePublicKeysUseCase(
-                userWalletId = userWallet.walletId,
+                userWalletId = userWalletId,
                 currencies = missedAddressCurrencies,
             ).fold(
                 ifLeft = { TangemLogger.e("Failed to derive public keys", it) },
                 ifRight = {
-                    fetchCryptoCurrencies(userWalletId = userWallet.walletId, currencies = missedAddressCurrencies)
+                    fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
                 },
             )
         }

@@ -32,6 +32,8 @@ internal data class MarketsTokenDetailsUM(
     val onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
     val relatedNews: RelatedNews,
     val onShareClick: () -> Unit,
+    val isAddToPortfolioButtonVisible: Boolean,
+    val onAddToPortfolioClick: () -> Unit,
     val scrollToSection: StateEvent<String> = consumedEvent(),
 ) {
 

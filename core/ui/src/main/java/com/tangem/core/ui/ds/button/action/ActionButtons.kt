@@ -3,16 +3,22 @@ package com.tangem.core.ui.ds.button.action
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
@@ -25,8 +31,11 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+
+private val ACTION_BUTTONS_SPACING = 10.dp
 
 /**
  * Action buttons row
@@ -38,39 +47,73 @@ import kotlinx.collections.immutable.persistentListOf
  */
 @Composable
 fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val spacingPx = with(LocalDensity.current) { ACTION_BUTTONS_SPACING.roundToPx() }
+
+    Layout(
         modifier = modifier,
-    ) {
-        buttons.forEachIndexed { index, button ->
-            key(button.text to index) {
-                val textColor = if (button.isEnabled) {
-                    TangemTheme.colors2.text.neutral.primary
-                } else {
-                    TangemTheme.colors2.text.status.disabled
-                }
-                Column(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2_5),
-                    verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    SecondaryTangemButton(
-                        tangemIconUM = button.tangemIconUM,
-                        onClick = button.onClick,
-                        isEnabled = button.isEnabled,
-                        shape = TangemButtonShape.Rounded,
-                        onLongClick = button.onLongClick,
-                    )
-                    Text(
-                        text = button.text.orEmpty().resolveReference(),
-                        style = TangemTheme.typography2.subheadlineMedium14,
-                        color = textColor,
-                        maxLines = 1,
-                    )
+        content = {
+            buttons.forEachIndexed { index, button ->
+                key(button.text to index) {
+                    ActionButton(button = button)
                 }
             }
+        },
+    ) { measurables, constraints ->
+        if (measurables.isEmpty()) {
+            return@Layout layout(constraints.minWidth, constraints.minHeight) {}
         }
+        val cellWidth = measurables.maxOf { it.maxIntrinsicWidth(constraints.maxHeight) }
+        val cellConstraints = Constraints(
+            minWidth = cellWidth,
+            maxWidth = cellWidth,
+            minHeight = 0,
+            maxHeight = constraints.maxHeight,
+        )
+        val placeables = measurables.map { it.measure(cellConstraints) }
+
+        val contentWidth = cellWidth * placeables.size + spacingPx * (placeables.size - 1)
+        val width = if (constraints.hasBoundedWidth) maxOf(constraints.maxWidth, contentWidth) else contentWidth
+        val height = placeables.maxOf { it.height }
+
+        layout(width, height) {
+            var x = (width - contentWidth) / 2
+            placeables.forEach { placeable ->
+                placeable.place(x = x, y = (height - placeable.height) / 2)
+                x += cellWidth + spacingPx
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) {
+    val textColor = if (button.isEnabled) {
+        TangemTheme.colors2.text.neutral.primary
+    } else {
+        TangemTheme.colors2.text.status.disabled
+    }
+    Column(
+        modifier = modifier
+            .padding(horizontal = TangemTheme.dimens2.x2_5)
+            .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+            .semantics { if (!button.isEnabled) disabled() },
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        SecondaryTangemButton(
+            tangemIconUM = button.tangemIconUM,
+            onClick = button.onClick,
+            isEnabled = button.isEnabled,
+            shape = TangemButtonShape.Rounded,
+            onLongClick = button.onLongClick,
+        )
+        Text(
+            text = button.text.orEmpty().resolveReference(),
+            style = TangemTheme.typography2.subheadlineMedium14,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
     }
 }
 

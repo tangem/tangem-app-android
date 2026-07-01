@@ -86,6 +86,8 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val tokensScenarioState = "SolanaUSDC"
         val balanceScenarioName = "solana_balance"
         val balanceScenarioState = "Empty"
+        val pairsScenarioName = "solana_from_pairs"
+        val pairsScenarioState = "DexProvider"
         val networkName = "Solana"
         val currencySymbol = "SOL"
 
@@ -94,6 +96,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
                 resetWireMockScenarioState(balanceScenarioName)
+                resetWireMockScenarioState(pairsScenarioName)
             }
         ).run {
 
@@ -105,6 +108,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             }
             step("Set WireMock scenario: '$balanceScenarioName' to state: $balanceScenarioState") {
                 setWireMockScenarioState(scenarioName = balanceScenarioName, state = balanceScenarioState)
+            }
+            step("Set WireMock scenario: '$pairsScenarioName' to state: $pairsScenarioState") {
+                setWireMockScenarioState(scenarioName = pairsScenarioName, state = pairsScenarioState)
             }
 
             step("Open 'Main Screen'") {

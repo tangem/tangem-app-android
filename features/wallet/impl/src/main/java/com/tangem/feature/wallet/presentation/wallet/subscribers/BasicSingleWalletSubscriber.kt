@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.mapNotNull
 [REDACTED_AUTHOR]
  */
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 internal abstract class BasicSingleWalletSubscriber : BasicWalletSubscriber() {
 
     /** Account ID for the main crypto portfolio of the user wallet */

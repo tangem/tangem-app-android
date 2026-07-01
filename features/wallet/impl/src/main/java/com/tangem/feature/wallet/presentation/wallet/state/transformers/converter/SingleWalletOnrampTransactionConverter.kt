@@ -63,6 +63,7 @@ internal class SingleWalletOnrampTransactionConverter(
                 timestampAgoFormatted = mapFormattedDate(value.timestamp),
                 activeStatus = value.status.toActiveStatusText(currency.name),
                 toAmount = stringReference(value.toAmount.format { crypto(currency) }),
+                toAmountValue = value.toAmount,
                 toFiatAmount = stringReference(
                     status.fiatRate?.multiply(value.toAmount).format {
                         fiat(
@@ -72,7 +73,9 @@ internal class SingleWalletOnrampTransactionConverter(
                     },
                 ),
                 toAmountSymbol = currency.symbol,
+                toAmountDecimals = currency.decimals,
                 toCurrencyIcon = iconStateConverter.convert(currency),
+                toAddress = status.networkAddress?.defaultAddress?.value.orEmpty(),
                 fromAmount = stringReference(
                     value.fromAmount.format {
                         fiat(
@@ -81,12 +84,15 @@ internal class SingleWalletOnrampTransactionConverter(
                         )
                     },
                 ),
+                fromAmountValue = value.fromAmount,
                 fromFiatAmount = null,
                 fromAmountSymbol = value.fromCurrency.code,
+                fromAmountDecimals = value.fromCurrency.precision,
                 fromCurrencyIcon = CurrencyIconState.FiatIcon(
                     url = value.fromCurrency.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
+                fromAddress = null,
                 iconState = value.status.toIconState(),
                 onGoToProviderClick = { url ->
                     analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())

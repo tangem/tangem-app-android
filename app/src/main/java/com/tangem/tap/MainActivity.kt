@@ -177,12 +177,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         val splashScreen = installSplashScreen()
         TangemLogger.i("Splash screen installed")
 
-        enableEdgeToEdge(
-            navigationBarStyle = SystemBarStyle.auto(
-                Color.Transparent.toArgb(),
-                Color.Transparent.toArgb(),
-            ),
-        )
+        applyEdgeToEdge()
 
         super.onCreate(savedInstanceState)
 
@@ -200,6 +195,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
+        splashScreen.setOnExitAnimationListener { provider ->
+            provider.remove()
+            applyEdgeToEdge()
+        }
 
         installActivityDependencies()
         observeAppThemeModeUpdates()
@@ -221,6 +220,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         if (intent != null) {
             handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
+    }
+
+    private fun applyEdgeToEdge() {
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+        )
     }
 
     private fun setRootContent() {

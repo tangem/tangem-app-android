@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.DesignFeatureToggles
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -19,34 +20,32 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
+import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
+import com.tangem.features.txhistory.utils.HistoryTxListManager
 import com.tangem.features.txhistory.utils.TxHistoryListManager
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -64,6 +63,8 @@ internal class TxHistoryModel @Inject constructor(
     private val txHistoryUpdateListener: TxHistoryUpdateListener,
     private val stateController: TxHistoryStateController,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
+    private val historyTxListManagerFactory: HistoryTxListManager.Factory,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
@@ -101,16 +102,30 @@ internal class TxHistoryModel @Inject constructor(
 
     private val legacyTxHistoryItemConverter =
         TxHistoryItemToTransactionStateConverter(currency = params.currency, txHistoryUiActions = this)
-    private val txHistoryListManager = TxHistoryListManager(
-        repository = repository,
-        dispatchers = dispatchers,
-        userWalletId = params.userWalletId,
-        currency = params.currency,
-        designFeatureToggles = designFeatureToggles,
-        txHistoryUiActions = this,
-        lookupDataFlow = lookupDataFlow,
-        legacyTxHistoryItemConverter = legacyTxHistoryItemConverter,
-    )
+
+    private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+        TxHistoryListManager(
+            repository = repository,
+            dispatchers = dispatchers,
+            userWalletId = params.userWalletId,
+            currency = params.currency,
+            designFeatureToggles = designFeatureToggles,
+            txHistoryUiActions = this,
+            lookupDataFlow = lookupDataFlow,
+            legacyTxHistoryItemConverter = legacyTxHistoryItemConverter,
+        )
+    } else {
+        null
+    }
+
+    private val historyTxListManager: HistoryTxListManager? = if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+        historyTxListManagerFactory.create(
+            userWalletId = params.userWalletId,
+            currency = params.currency,
+        )
+    } else {
+        null
+    }
 
     val legacyUiState = stateController.legacyUiState
     val uiState = stateController.uiState
@@ -143,18 +158,65 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun subscribeToUiItemChanges() {
-        txHistoryListManager.uiItems
-            .onEach { snapshot ->
-                stateController.setContent(
-                    snapshot = snapshot,
-                    loadMore = ::loadMoreItems,
-                    onExploreClick = ::openExplorer,
-                )
+        txHistoryListManager
+            ?.uiItems
+            ?.onEach { snapshot -> stateController.setContent(
+                snapshot = snapshot,
+                loadMore = ::loadMoreItems,
+                onExploreClick = ::openExplorer,
+            ) }
+            ?.launchIn(modelScope)
+        txHistoryListManager
+            ?.paginationStatus
+            ?.onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
+            ?.launchIn(modelScope)
+
+        if (historyTxListManager != null) {
+            combine(
+                flow = historyTxListManager.items,
+                flow2 = lookupDataFlow,
+                transform = { merged, lookup -> merged to lookup },
+            )
+                .onEach { (merged, lookup) ->
+                    stateController.setContent(
+                        snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(merged, lookup)),
+                        loadMore = ::loadMoreItems,
+                        onExploreClick = ::openExplorer,
+                    )
+                }
+                .flowOn(dispatchers.default)
+                .launchIn(modelScope)
+
+            historyTxListManager.paginationStatus
+                .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
+                .launchIn(modelScope)
+        }
+    }
+
+    // Temporary: express rows are mapped to UI via a synthesized TxInfo (see ExpressTx.toSyntheticTxInfo).
+    private fun buildUiItems(
+        merged: List<TxHistoryInfo>,
+        lookup: TxHistoryLookupContext,
+    ): ImmutableList<TxHistoryItemsUM.TxHistoryItemUM> {
+        val converter = TxHistoryInfoToTransactionItemUMConverter(
+            txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
+                currency = params.currency,
+                txHistoryUiActions = this,
+                lookupContext = lookup,
+            ),
+        )
+
+        val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
+        var lastDate: String? = null
+        merged.forEach { tx ->
+            val date = tx.timestampMillis.toDateFormatWithTodayYesterday()
+            if (date != lastDate) {
+                items += TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(title = date, itemKey = "group-$date")
+                lastDate = date
             }
-            .launchIn(modelScope)
-        txHistoryListManager.paginationStatus
-            .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
-            .launchIn(modelScope)
+            items += TxHistoryItemsUM.TxHistoryItemUM.Transaction(converter.convert(tx))
+        }
+        return items.toImmutableList()
     }
 
     private fun subscribeToUpdateListener() {
@@ -164,7 +226,10 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun initListManager() {
-        modelScope.launch { txHistoryListManager.init() }
+        modelScope.launch {
+            txHistoryListManager?.init()
+            historyTxListManager?.init()
+        }
     }
 
     private fun loadTxInfo() {
@@ -172,7 +237,10 @@ internal class TxHistoryModel @Inject constructor(
         modelScope.launch {
             txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
                 .onLeft(::handleErrorState)
-                .onRight { txHistoryListManager.startLoading() }
+                .onRight {
+                    txHistoryListManager?.startLoading()
+                    historyTxListManager?.startLoading()
+                }
         }
     }
 
@@ -183,7 +251,10 @@ internal class TxHistoryModel @Inject constructor(
         modelScope.launch {
             txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
                 .onLeft(::handleErrorState)
-                .onRight { txHistoryListManager.reload() }
+                .onRight {
+                    txHistoryListManager?.reload()
+                    historyTxListManager?.reload()
+                }
         }
     }
 
@@ -196,7 +267,10 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
-        modelScope.launch { txHistoryListManager.loadMore(params.userWalletId, params.currency) }
+        modelScope.launch {
+            txHistoryListManager?.loadMore(params.userWalletId, params.currency)
+            historyTxListManager?.loadMore(params.userWalletId, params.currency)
+        }
         return true
     }
 

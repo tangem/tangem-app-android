@@ -280,6 +280,35 @@ class GetAccountCurrencyByAddressUseCaseTest {
         }
     }
 
+    @Test
+    fun `returns Some when query address case differs from stored network address`() = runTest {
+        // Arrange
+        val currency = MockCryptoCurrencyFactory().ethereum
+        val networkStatus = NetworkStatus(
+            network = currency.network,
+            // Stored address is lower-case
+            value = NetworkStatus.Unreachable(address = validNetworkAddress),
+        )
+        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = listOf(currency))
+
+        every { userWalletsListRepository.userWallets.value } returns listOf(multiUserWallet)
+        coEvery {
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
+        } returns setOf(networkStatus)
+        coEvery {
+            singleAccountListSupplier.getSyncOrNull(
+                params = SingleAccountListProducer.Params(userWalletId = userWalletId),
+            )
+        } returns accountList
+
+        // Act — query with an EIP-55 checksummed (mixed/upper-case) variant of the same address
+        val actual = useCase(validAddress.uppercase())
+
+        // Assert
+        val expected = AccountCryptoCurrency(account = accountList.mainAccount, cryptoCurrency = currency)
+        assertSome(actual, expected)
+    }
+
     private companion object Companion {
         const val validAddress = "0x1234567890abcdef"
         val validNetworkAddress = NetworkAddress.Single(

@@ -8,12 +8,9 @@ plugins {
 android {
     namespace = "com.tangem.data.account"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
+
+    implementation(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
 
     // region Project - Common
     implementation(projects.common.ui) // It's needed for getting AccountName.DefaultMain value
@@ -70,7 +67,6 @@ dependencies {
     // region Test
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.turbine)
     // endregion
 }

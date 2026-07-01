@@ -78,6 +78,23 @@ internal class DefaultAssetsDiscoveryRepository(
         assetsDiscoveryStore.clear()
     }
 
+    override suspend fun removeAppliedCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
+
+        val appliedIds = currencies.mapTo(hashSetOf(), CryptoCurrency::id)
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        val assetsDiscoveryStore = assetsDiscoveryStoreFactory.provide(userWalletId)
+
+        assetsDiscoveryStore.removeMatching { token ->
+            val currency = responseCryptoCurrenciesFactory.createCurrency(
+                responseToken = token,
+                userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
+            )
+            currency != null && currency.id in appliedIds
+        }
+    }
+
     override suspend fun clearPendingFlag(userWalletId: UserWalletId) {
         setPendingFlag(userWalletId, value = false)
     }

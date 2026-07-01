@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -15,7 +17,9 @@ import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.ForceDarkTheme
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.WalletNotificationTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -63,6 +67,16 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         subtitleColor = TangemTheme.colors.text.secondary,
                     )
                 }
+                is WalletNotification.Critical.BackupError -> {
+                    Notification(
+                        config = item.config,
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        containerColor = TangemColorPalette.Amaranth_30,
+                        borderColor = TangemColorPalette.Amaranth,
+                        iconTint = TangemTheme.colors.icon.warning,
+                        subtitleColor = TangemTheme.colors.text.primary1,
+                    )
+                }
                 is WalletNotification.CreateTangemPayAccount -> {
                     CreatePaymentAccountNotification(
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
@@ -73,23 +87,32 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         subtitle = resourceReference(R.string.tangempay_onboarding_banner_description),
                     )
                 }
-                else -> {
-                    Notification(
-                        config = item.config,
-                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                        iconTint = when (item) {
-                            is WalletNotification.Critical -> TangemTheme.colors.icon.warning
-                            is WalletNotification.Informational -> TangemTheme.colors.icon.accent
-                            is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
-                            is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
-                            is WalletNotification.UsedOutdatedData -> TangemTheme.colors.text.attention
-                            else -> null
-                        },
-                        subtitleColor = TangemTheme.colors.text.secondary,
-                    )
-                }
+                else -> DefaultWalletNotification(item = item, modifier = modifier)
             }
         },
+    )
+}
+
+@Composable
+private fun LazyItemScope.DefaultWalletNotification(item: WalletNotification, modifier: Modifier = Modifier) {
+    val itemModifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
+    val taggedModifier = when (item) {
+        is WalletNotification.AssetsDiscoveryCompleted ->
+            itemModifier.testTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER)
+        else -> itemModifier
+    }
+    Notification(
+        config = item.config,
+        modifier = taggedModifier,
+        iconTint = when (item) {
+            is WalletNotification.Critical -> TangemTheme.colors.icon.warning
+            is WalletNotification.Informational -> TangemTheme.colors.icon.accent
+            is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
+            is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
+            is WalletNotification.UsedOutdatedData -> TangemTheme.colors.text.attention
+            else -> null
+        },
+        subtitleColor = TangemTheme.colors.text.secondary,
     )
 }
 

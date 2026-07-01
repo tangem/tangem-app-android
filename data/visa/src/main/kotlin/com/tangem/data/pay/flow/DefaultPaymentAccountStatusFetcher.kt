@@ -7,9 +7,12 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.hasAccountData
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimitData
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -19,16 +22,14 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayEntryPoint
-import com.tangem.domain.pay.repository.CustomerOrderRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.pay.repository.*
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -39,7 +40,19 @@ import kotlin.time.Duration.Companion.minutes
 
 private const val TAG = "PaymentAccountStatusFetcher"
 
-@Suppress("LongParameterList")
+/**
+ * Reorders cards to match [previousOrder] (by [TangemPayCard.id]), appending any card absent from it at the
+ * end while preserving the relative order among the new ones. Keeps the card layout stable when the backend
+ * reorders `productInstances` (e.g. after a rename bumps `updated_at`). Returns the receiver unchanged when
+ * [previousOrder] is empty (first load → backend order).
+ */
+internal fun List<TangemPayCard>.stableOrder(previousOrder: List<String>): List<TangemPayCard> {
+    if (previousOrder.isEmpty()) return this
+    val indexById = previousOrder.withIndex().associate { (index, id) -> id to index }
+    return sortedBy { indexById[it.id] ?: Int.MAX_VALUE }
+}
+
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val onboardingRepository: OnboardingRepository,
@@ -50,6 +63,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val eligibilityManager: TangemPayEligibilityManager,
     private val reissueCardRepository: TangemPayReissueCardRepository,
     private val singleQuoteSupplier: SingleQuoteStatusSupplier,
+    private val closeCardRepository: TangemPayCloseCardRepository,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val issueCardRepository: TangemPayIssueCardRepository,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -149,8 +165,19 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {
         return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
-                logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
-                error.mapToPaymentAccountStatus(account.userWalletId)
+                val cache = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
+                if (cache != null && cache.value.hasAccountData()) {
+                    cache.value.copySealed(
+                        source = StatusSource.ONLY_CACHE,
+                        error = when (error) {
+                            is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
+                            else -> PaymentAccountStatusValue.Error.Unavailable
+                        },
+                    )
+                } else {
+                    logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
+                    error.mapToPaymentAccountStatus(account.userWalletId)
+                }
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
@@ -265,8 +292,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val quotesData = singleQuoteSupplier.getSyncOrNull(
             params = SingleQuoteStatusProducer.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID),
         )?.value as? QuoteStatus.Data
-        val cardInfo = this.cardInfo
-        val productInstance = this.productInstance
 
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
@@ -281,19 +306,26 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     customerId = requireNotNull(customerId) { "CustomerId must not be null" },
                 )
             }
-            fiatBalance != null && cryptoBalance != null && (isDeactivated || isFormer) -> {
+            fiatBalance != null && cryptoBalance != null && !customerId.isNullOrEmpty() &&
+                (isDeactivated || isFormer) -> {
                 PaymentAccountStatusValue.Deactivated(
                     source = StatusSource.ACTUAL,
-                    fiatBalance = fiatBalance,
-                    cryptoBalance = cryptoBalance,
+                    customerId = requireNotNull(customerId) { "CustomerId must not be null" },
+                    balance = PaymentAccountStatusValue.Balance(
+                        fiatBalance = fiatBalance,
+                        cryptoBalance = cryptoBalance,
+                        availableForWithdrawal = availableForWithdrawal.orZero(),
+                    ),
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                     fiatRate = quotesData?.fiatRate,
+                    error = null,
                 )
             }
-            cardInfo != null && productInstance != null && !customerId.isNullOrEmpty() -> convertToContentState(
+            cards.isNotEmpty() && productInstances.isNotEmpty() &&
+                fiatBalance != null && cryptoBalance != null && !customerId.isNullOrEmpty() -> convertToContentState(
                 userWalletId = userWalletId,
-                productInstance = productInstance,
-                cardInfo = cardInfo,
+                fiatBalance = fiatBalance,
+                cryptoBalance = cryptoBalance,
                 fiatRate = quotesData?.fiatRate,
                 customerId = requireNotNull(customerId) { "CustomerId must not be null" },
             )
@@ -301,49 +333,139 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
     }
 
-    private suspend fun convertToContentState(
+    /**
+     * Builds the [PaymentAccountStatusValue.Loaded] content state with the full list of cards.
+     * Each card is the join of a product instance with its card info by `cardId`; balances are
+     * payment-account-level (shared across cards). Falls back to [PaymentAccountStatusValue.IssuingCard]
+     * when no card has both a product instance and card info yet (e.g. issuance in progress).
+     */
+    private suspend fun CustomerInfo.convertToContentState(
         userWalletId: UserWalletId,
-        productInstance: CustomerInfo.ProductInstance,
-        cardInfo: CustomerInfo.CardInfo,
+        fiatBalance: PaymentAccountStatusValue.FiatBalance,
+        cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
         customerId: String,
         fiatRate: BigDecimal?,
     ): PaymentAccountStatusValue {
-        val reissueOrder = reissueCardRepository.getReissueOrderInfo(
-            userWalletId = userWalletId,
-            cardId = productInstance.cardId,
-        ).getOrNull()
+        val cardsById = cards.associateBy { it.cardId }
+        val tangemPayCards = productInstances.mapNotNull { productInstance ->
+            val cardInfo = cardsById[productInstance.cardId] ?: return@mapNotNull null
+            val cardId = productInstance.cardId
+            val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
+            TangemPayCard(
+                id = cardId,
+                productInstanceId = productInstance.id,
+                cardStatus = cardInfo.cardStatus,
+                hasPinCode = cardInfo.isPinSet,
+                displayName = productInstance.displayName,
+                limit = TangemPayCardLimitData(
+                    actualCardLimit = productInstance.actualCardLimit,
+                    adminCardLimit = productInstance.adminCardLimit,
+                ),
+                frozenState = if (cardFrozenState == TangemPayCardFrozenState.Pending) {
+                    TangemPayCardFrozenState.Pending
+                } else {
+                    productInstance.frozenState
+                },
+                lastDigits = cardInfo.lastFourDigits,
+                state = getCardState(cardId, userWalletId),
+            )
+        }
 
-        val isReissuing = reissueOrder != null &&
-            reissueOrder.orderStatus != OrderStatus.CANCELED &&
-            reissueOrder.orderStatus != OrderStatus.COMPLETED
+        if (tangemPayCards.isEmpty()) return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
 
-        val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
+        // Additional-card issuance: the backend omits the new card until it is provisioned, so surface a
+        // placeholder for every locally tracked in-flight issuance order alongside the real cards.
+        val issuingCards = buildIssuingCards(userWalletId)
+
+        // Keep the card order stable across refetches: the backend orders `productInstances` by a mutable
+        // field (a rename bumps `updated_at`), which would otherwise make the renamed card jump. Anchor on
+        // the previously shown order and append newly seen cards at the end.
+        val orderedCards = tangemPayCards.stableOrder(previousRealCardOrder(userWalletId))
+
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = customerId,
-            currencyCode = cardInfo.currencyCode,
-            depositAddress = cardInfo.depositAddress,
-            fiatBalance = cardInfo.fiatBalance,
-            cryptoBalance = cardInfo.cryptoBalance,
-            availableForWithdrawal = cardInfo.availableForWithdrawal,
-            cryptoCurrency = cryptoCurrency,
+            depositAddress = cryptoBalance.depositAddress,
+            cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             fiatRate = fiatRate,
-            cards = listOf(
-                TangemPayCard(
-                    id = productInstance.cardId,
-                    hasPinCode = cardInfo.isPinSet,
-                    displayName = productInstance.displayName,
-                    limit = TangemPayCardLimitData(
-                        actualCardLimit = productInstance.actualCardLimit,
-                        adminCardLimit = productInstance.adminCardLimit,
-                    ),
-                    isFrozen = productInstance.frozenState is TangemPayCardFrozenState.Frozen,
-                    lastDigits = cardInfo.lastFourDigits,
-                    isReissuing = isReissuing,
-                ),
+            cards = orderedCards + issuingCards,
+            balance = PaymentAccountStatusValue.Balance(
+                fiatBalance = fiatBalance,
+                cryptoBalance = cryptoBalance,
+                availableForWithdrawal = availableForWithdrawal.orZero(),
             ),
+            error = null,
         )
     }
+
+    /**
+     * Order of real (product-instance-backed) cards from the previously stored status, used as the stable
+     * anchor for [stableOrder]. Issuing placeholders are excluded — they carry synthetic order ids and are
+     * always appended last. Empty on the first load (no prior [PaymentAccountStatusValue.Loaded]), which makes
+     * [stableOrder] fall back to the backend order.
+     */
+    private suspend fun previousRealCardOrder(userWalletId: UserWalletId): List<String> {
+        val previousValue = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value
+        return (previousValue as? PaymentAccountStatusValue.Loaded)
+            ?.cards
+            ?.filterNot { it.state == TangemPayCardState.Issuing }
+            ?.map { it.id }
+            .orEmpty()
+    }
+
+    private suspend fun getCardState(cardId: String, userWalletId: UserWalletId): TangemPayCardState {
+        val closingOrderId = closeCardRepository.getCloseOrderId(userWalletId, cardId).getOrNull()
+        val reissueOrderId = reissueCardRepository.getReissueOrderId(userWalletId, cardId).getOrNull()
+        return if (closingOrderId != null) {
+            val order = cardDetailsRepository.getOrderInfo(userWalletId, closingOrderId).getOrNull()
+            if (order != null && order.orderStatus.isTerminal) {
+                closeCardRepository.setCloseOrderId(cardId, null)
+                TangemPayCardState.Active
+            } else {
+                TangemPayCardState.Closing
+            }
+        } else if (reissueOrderId != null) {
+            val order = cardDetailsRepository.getOrderInfo(userWalletId, reissueOrderId).getOrNull()
+            if (order != null && order.orderStatus.isTerminal) {
+                TangemPayCardState.Active
+            } else {
+                TangemPayCardState.Reissuing
+            }
+        } else {
+            TangemPayCardState.Active
+        }
+    }
+
+    /**
+     * Builds the issuing placeholder cards from locally tracked additional-card orders. Each order is
+     * re-checked against the backend; terminal orders are dropped (and forgotten) because the real card
+     * is now part of [CustomerInfo], while in-flight orders surface as an issuing placeholder card.
+     */
+    private suspend fun buildIssuingCards(userWalletId: UserWalletId): List<TangemPayCard> {
+        val orderIds = issueCardRepository.getIssueOrderIds(userWalletId)
+        return orderIds.mapNotNull { orderId ->
+            val order = cardDetailsRepository.getOrderInfo(userWalletId, orderId).getOrNull()
+            if (order != null && order.orderStatus.isTerminal) {
+                issueCardRepository.removeIssueOrderId(userWalletId, orderId)
+                null
+            } else {
+                issuingPlaceholderCard(orderId)
+            }
+        }
+    }
+
+    /** Placeholder card for an additional card that is still being issued (no backend card yet). */
+    private fun issuingPlaceholderCard(orderId: String): TangemPayCard = TangemPayCard(
+        id = orderId,
+        productInstanceId = orderId,
+        cardStatus = TangemPayCard.Status.INACTIVE,
+        hasPinCode = false,
+        displayName = null,
+        limit = null,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
+        lastDigits = "",
+        state = TangemPayCardState.Issuing,
+    )
 
     private suspend fun VisaApiError.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         return when (this) {

@@ -4,6 +4,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLKADOT_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -46,8 +47,11 @@ class SendConfirmScreenTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Click on 'Transfer' button") {
+                onTokenDetailsScreen { transferButton.clickWithAssertion() }
+            }
+            step("Click on 'Send' button in bottom sheet") {
+                onTransferBottomSheet { sendButton.clickWithAssertion() }
             }
             step("Type '$inputAmount' in input text field") {
                 onSendScreen {
@@ -123,8 +127,11 @@ class SendConfirmScreenTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Click on 'Transfer' button") {
+                onTokenDetailsScreen { transferButton.clickWithAssertion() }
+            }
+            step("Click on 'Send' button in bottom sheet") {
+                onTransferBottomSheet { sendButton.clickWithAssertion() }
             }
             step("Type '$inputAmount' in input text field") {
                 onSendScreen {
@@ -317,6 +324,44 @@ class SendConfirmScreenTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     checkNetworkFeeBlock(currentFeeAmount = currentFeeAmount, withFeeSelector = false)
                 }
+            }
+        }
+    }
+
+    @AllureId("557")
+    @DisplayName("Send (Confirm screen): send a second transaction while the first is still pending")
+    @Test
+    fun sendSecondTransactionWhileFirstActiveTest() {
+        val tokenName = "Ethereum"
+        val inputAmount = "0.001"
+
+        setupHooks().run {
+            step("Open the send flow for '$tokenName' on an existing hot wallet") {
+                openSendScreenWithHotWallet(seedPhrase = SVS_SEED_PHRASE_12, tokenName = tokenName)
+            }
+            step("Enter amount '$inputAmount' and open the 'Send confirm' screen") {
+                enterAmountAndOpenSendConfirm(amount = inputAmount, recipientAddress = ETHEREUM_RECIPIENT_ADDRESS)
+            }
+            // Hold-to-confirm is swallowed while the fee is still settling — wait for it to load first.
+            waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
+            step("Sign, send and open the 'Transaction sent' screen") {
+                openSendSuccessScreenViaLongClickOnSendButton()
+            }
+            step("Click on 'Close' button") {
+                onSendSuccessScreen { closeButton.clickWithAssertion() }
+            }
+            step("Assert 'Token details' screen is displayed") {
+                onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
+            }
+            step("Open the send flow again from token details") {
+                openSendFromTokenDetails()
+            }
+            step("Enter amount '$inputAmount' and open the 'Send confirm' screen") {
+                enterAmountAndOpenSendConfirm(amount = inputAmount, recipientAddress = ETHEREUM_RECIPIENT_ADDRESS)
+            }
+            waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
+            step("Sign, send and open the 'Transaction sent' screen") {
+                openSendSuccessScreenViaLongClickOnSendButton()
             }
         }
     }

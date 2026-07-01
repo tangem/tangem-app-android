@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.features.tokendetails.impl"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -73,6 +68,7 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.dynamicAddresses.models)
+    implementation(projects.domain.feedback)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
@@ -109,15 +105,15 @@ dependencies {
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.txhistory.api)
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.commonFeatures.api)
 
     implementation(deps.decompose.ext.compose)
 
     /** Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)

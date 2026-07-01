@@ -1,0 +1,6 @@
+package com.tangem.features.pushnotificationsettings.impl.entity
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal object NetworksAvailableForNotificationBSConfig

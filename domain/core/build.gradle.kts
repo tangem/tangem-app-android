@@ -12,7 +12,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
 
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
 }

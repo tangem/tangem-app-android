@@ -25,6 +25,14 @@ internal sealed class SwapChooseTokenNetworkContentUM : TangemBottomSheetConfigC
         override val messageContent: MessageBottomSheetUM,
     ) : SwapChooseTokenNetworkContentUM()
 
+    /**
+     * Token has no networks available for Send with Swap, but the pair is available in the regular Swap flow.
+     * Informs the user (rendered like [Error], with a different message).
+     */
+    data class SwapAvailable(
+        override val messageContent: MessageBottomSheetUM,
+    ) : SwapChooseTokenNetworkContentUM()
+
     data class Content(
         override val messageContent: MessageBottomSheetUM,
         val swapNetworks: ImmutableList<SwapChooseNetworkUM>,

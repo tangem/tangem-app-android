@@ -8,16 +8,24 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 
 internal class TangemPayCardLimitSetupSuccessComponent(
+    private val isRedesignEnabled: Boolean,
     appComponentContext: AppComponentContext,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     @Composable
     override fun Content(modifier: Modifier) {
         BackHandler(onBack = ::backToDetails)
-        TangemPayCardLimitSetupSuccessScreen(
-            modifier = modifier,
-            onDoneClick = ::backToDetails,
-        )
+        if (isRedesignEnabled) {
+            TangemPayCardLimitSetupSuccessScreenV2(
+                modifier = modifier,
+                onDoneClick = ::backToDetails,
+            )
+        } else {
+            TangemPayCardLimitSetupSuccessScreen(
+                modifier = modifier,
+                onDoneClick = ::backToDetails,
+            )
+        }
     }
 
     private fun backToDetails() {

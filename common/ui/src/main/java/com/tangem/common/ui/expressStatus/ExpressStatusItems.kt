@@ -3,13 +3,7 @@ package com.tangem.common.ui.expressStatus
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -18,14 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.R
-import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -35,6 +26,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -78,7 +70,8 @@ private fun ExpressTransactionItem(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors2.surface.level3)
             .clickable(onClick = info.onClick)
-            .padding(TangemTheme.dimens2.x4),
+            .padding(TangemTheme.dimens2.x4)
+            .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM),
     ) {
         TitleRow(
             title = info.title.resolveReference(),
@@ -104,7 +97,9 @@ private fun TitleRow(title: String, infoIconRes: Int?, infoIconTint: Color?) {
             text = title,
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors3.text.primary,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TITLE),
         )
         if (infoIconRes != null && infoIconTint != null) {
             Icon(
@@ -126,32 +121,42 @@ private fun AmountsRow(info: ExpressTransactionStateInfoUM) {
         CurrencyIcon(
             state = info.fromCurrencyIcon,
             shouldDisplayNetwork = false,
-            modifier = Modifier.size(TangemTheme.dimens.size18),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size18)
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_ICON),
         )
         EllipsisText(
             text = info.fromAmount.resolveReference(),
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors3.text.primary,
             ellipsis = TextEllipsis.OffsetEnd(info.fromAmountSymbol.length),
-            modifier = Modifier.weight(weight = 1f, fill = false),
+            modifier = Modifier
+                .weight(weight = 1f, fill = false)
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_AMOUNT),
         )
         Icon(
             painter = painterResource(R.drawable.ic_forward_24),
             contentDescription = null,
             tint = TangemTheme.colors3.icon.tertiary,
-            modifier = Modifier.size(TangemTheme.dimens.size18),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size18)
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_SWAP_ICON),
         )
         CurrencyIcon(
             state = info.toCurrencyIcon,
             shouldDisplayNetwork = false,
-            modifier = Modifier.size(TangemTheme.dimens.size18),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size18)
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_ICON),
         )
         EllipsisText(
             text = info.toAmount.resolveReference(),
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors3.text.primary,
             ellipsis = TextEllipsis.OffsetEnd(info.toAmountSymbol.length),
-            modifier = Modifier.weight(weight = 1f, fill = false),
+            modifier = Modifier
+                .weight(weight = 1f, fill = false)
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_AMOUNT),
         )
     }
 }
@@ -206,13 +211,19 @@ private val PreviewExpressTransactionState: ExpressTransactionStateUM = object :
         onDisposeExpressStatus = {},
         iconState = ExpressTransactionStateIconUM.None,
         toAmount = stringReference("0,11441958 BTC"),
+        toAmountValue = "0.11441958".toBigDecimal(),
         toFiatAmount = null,
         toAmountSymbol = "BTC",
         toCurrencyIcon = CurrencyIconState.Loading,
+        toAddress = "0x",
+        toAmountDecimals = 2,
         fromAmount = stringReference("100 SOL"),
+        fromAmountValue = "100".toBigDecimal(),
         fromFiatAmount = null,
         fromAmountSymbol = "SOL",
         fromCurrencyIcon = CurrencyIconState.Loading,
+        fromAddress = "0x",
+        fromAmountDecimals = 2,
     )
 }
 // endregion

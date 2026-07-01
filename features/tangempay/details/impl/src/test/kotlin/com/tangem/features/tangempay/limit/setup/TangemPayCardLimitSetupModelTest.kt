@@ -6,18 +6,14 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardLimit
-import com.tangem.domain.models.pay.TangemPayCardLimitData
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -40,34 +36,32 @@ internal class TangemPayCardLimitSetupModelTest {
     private val setLimitUseCase: SetTangemPayCardLimitUseCase = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val featureToggles: TangemPayFeatureToggles = mockk()
 
     private val initialCard = TangemPayCard(
         id = cardId,
+        productInstanceId = "pi_$cardId",
+        cardStatus = TangemPayCard.Status.ACTIVE,
         hasPinCode = false,
         displayName = null,
-        isFrozen = false,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
         limit = null,
-        isReissuing = false,
+        state = TangemPayCardState.Active,
     )
 
-    private val initialStatus: AccountStatus.Payment = AccountStatus.Payment(
-        account = Account.Payment(userWalletId = userWalletId),
-        value = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
-            every { cards } returns listOf(initialCard)
-        },
-    )
-
-    private val params = TangemPayDetailsContainerComponent.Params(initialStatus = initialStatus)
+    private val params = TangemPayCardLimitSetupComponent.Params(card = initialCard, userWalletId = userWalletId)
 
     private fun createModel(
         adminLimit: BigDecimal? = BigDecimal("1000"),
     ): TangemPayCardLimitSetupModel {
         val cardWithLimit = TangemPayCard(
             id = cardId,
+            productInstanceId = "pi_$cardId",
+            cardStatus = TangemPayCard.Status.ACTIVE,
             hasPinCode = false,
             displayName = null,
-            isFrozen = false,
+            frozenState = TangemPayCardFrozenState.Unfrozen,
             lastDigits = "1234",
             limit = TangemPayCardLimitData(
                 actualCardLimit = null,
@@ -78,12 +72,16 @@ internal class TangemPayCardLimitSetupModelTest {
                     )
                 }
             ),
-            isReissuing = false,
+            state = TangemPayCardState.Active,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
             every { cards } returns listOf(cardWithLimit)
-            every { currencyCode } returns "USD"
+            every { balance } returns mockk(relaxed = true) {
+                every { fiatBalance } returns mockk(relaxed = true) {
+                    every { currency } returns "USD"
+                }
+            }
         }
         val paymentStatusWithLimit: AccountStatus.Payment = mockk(relaxed = true) {
             every { value } returns statusWithLimit
@@ -98,6 +96,7 @@ internal class TangemPayCardLimitSetupModelTest {
             setTangemPayCardLimitUseCase = setLimitUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
+            featureToggles = featureToggles,
         )
     }
 

@@ -10,10 +10,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -56,7 +59,6 @@ internal fun TokenActionContent(
             TangemTokenRow(
                 tokenRowUM = tokenRowUM,
                 isBalanceHidden = isBalanceHidden,
-                reorderableState = null,
                 modifier = Modifier
                     .padding(horizontal = TangemTheme.dimens2.x3)
                     .clip(RoundedCornerShape(18.dp))
@@ -91,16 +93,17 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
     Column(
         modifier = Modifier
             .widthIn(min = 206.dp)
-            .padding(
-                vertical = TangemTheme.dimens2.x2_5,
-                horizontal = TangemTheme.dimens2.x4,
-            ),
+            .padding(TangemTheme.dimens2.x1_5),
     ) {
         actions.fastForEach { item ->
             Column {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2_5),
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
+                        .testTag(BaseBottomSheetTestTags.ACTION_BUTTON)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(TangemTheme.dimens2.x2_5))
                         .clickable(
                             enabled = item.isEnabled,
                             onClick = {
@@ -109,10 +112,8 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                             },
                         )
                         .padding(
-                            start = TangemTheme.dimens2.x1_5,
-                            end = TangemTheme.dimens2.x2,
-                            top = TangemTheme.dimens2.x2_5,
-                            bottom = TangemTheme.dimens2.x2_5,
+                            horizontal = TangemTheme.dimens2.x2_5,
+                            vertical = TangemTheme.dimens2.x2_5,
                         ),
                 ) {
                     Icon(
@@ -123,7 +124,9 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                         } else {
                             TangemTheme.colors2.graphic.neutral.primary
                         },
-                        modifier = Modifier.size(TangemTheme.dimens2.x5),
+                        modifier = Modifier
+                            .size(TangemTheme.dimens2.x5)
+                            .testTag(BaseBottomSheetTestTags.ACTION_ICON),
                     )
                     Text(
                         text = item.text.resolveReference(),
@@ -138,10 +141,7 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                 if (item.hasDivider) {
                     Spacer(
                         modifier = Modifier
-                            .padding(
-                                vertical = TangemTheme.dimens2.x2_5,
-                                horizontal = TangemTheme.dimens2.x2,
-                            )
+                            .padding(vertical = TangemTheme.dimens2.x1)
                             .fillMaxWidth()
                             .height(1.dp)
                             .background(TangemTheme.colors2.border.neutral.primary),

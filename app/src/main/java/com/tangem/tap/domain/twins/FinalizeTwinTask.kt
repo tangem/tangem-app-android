@@ -13,7 +13,6 @@ import com.tangem.tap.domain.tasks.product.ScanProductTask
 class FinalizeTwinTask(
     private val twinPublicKey: ByteArray,
     private val issuerKeys: KeyPair,
-    private val isDynamicAddressesEnabled: Boolean,
     private val cardRepository: CardRepository,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -31,11 +30,9 @@ class FinalizeTwinTask(
                             is CompletionResult.Success ->
                                 ScanProductTask(
                                     card = readResult.data,
-                                    blockchainToDeriveFinder = null,
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
                                     shouldCheckIsAlreadyActivated = false,
-                                    isDynamicAddressesEnabled = isDynamicAddressesEnabled,
                                     onboardingV2FeatureToggles = null,
                                     cardRepository = cardRepository,
                                 ).run(session, callback)

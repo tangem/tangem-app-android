@@ -1,7 +1,7 @@
 package com.tangem.core.ui.format.bigdecimal
 
 import com.google.common.truth.Truth
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -98,6 +98,38 @@ internal class BigDecimalFiatFormatTest {
 
         Truth.assertThat(formatted)
             .isEqualTo("<" + "0,01".addSymbolWithSpaceRight(usdSymbol))
+    }
+
+    @Test
+    fun `defaultAmount tiny negative rounding to zero is formatted without sign`() {
+        val testValue = BigDecimal("-0.0001")
+
+        val formatted = testValue.format {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                locale = testLocale,
+            ).defaultAmount()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("0.00".addUsdSymbolLeft())
+    }
+
+    @Test
+    fun `defaultAmount negative rounding away from zero keeps sign`() {
+        val testValue = BigDecimal("-0.005")
+
+        val formatted = testValue.format {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                locale = testLocale,
+            ).defaultAmount()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("-" + "0.01".addUsdSymbolLeft())
     }
 
     // === approximateAmount() ===

@@ -52,6 +52,7 @@ private fun EarnBlockV1(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modif
             onSeeAllClick = onSeeAllClick,
             isLoading = earnListUM is EarnListUM.Loading,
             shouldShowSeeAll = earnListUM is EarnListUM.Content,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
         SpacerH(12.dp)
@@ -96,6 +97,7 @@ private fun EarnBlockV2(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modif
             onSeeAllClick = onSeeAllClick,
             isLoading = earnListUM is EarnListUM.Loading,
             shouldShowSeeAll = earnListUM is EarnListUM.Content,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
         SpacerH(12.dp)
@@ -152,7 +154,7 @@ private fun EarnContentBlock(items: ImmutableList<EarnListItemUM>) {
         ) {
             items(
                 items = items,
-                key = { item -> "${item.tokenName}-${item.network}" },
+                key = { item -> item.id },
             ) { item ->
                 MostlyUsedCard(
                     item = item,

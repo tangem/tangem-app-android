@@ -10,10 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.expressStatus.ExpressEstimate
 import com.tangem.common.ui.expressStatus.ExpressHideButton
 import com.tangem.common.ui.expressStatus.ExpressProvider
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH16
@@ -28,7 +30,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 
 @Composable
-internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (@Composable () -> Unit)? = null) {
+internal fun ExchangeStatusBottomSheetContent(
+    state: ExchangeUM,
+    isExpressShareButtonEnabled: Boolean,
+    extraContent: (@Composable () -> Unit)? = null,
+) {
     Column(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -87,7 +93,11 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (
             isAutoDisposable = state.activeStatus?.isAutoDisposable == true,
             onClick = state.info.onDisposeExpressStatus,
         )
-        SpacerH24()
+        if (isExpressShareButtonEnabled) {
+            SpacerH(80.dp)
+        } else {
+            SpacerH24()
+        }
     }
 }
 

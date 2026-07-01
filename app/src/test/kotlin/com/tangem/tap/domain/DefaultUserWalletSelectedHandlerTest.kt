@@ -1,7 +1,7 @@
 package com.tangem.tap.domain
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.utils.TrackingContextProxy

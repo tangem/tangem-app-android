@@ -11,6 +11,7 @@ import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -27,10 +28,12 @@ import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
@@ -41,9 +44,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.models.StoryContentIds
-import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
@@ -58,15 +61,11 @@ import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -149,6 +148,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -200,6 +202,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         event?.let { analyticsEventHandler.send(it) }
+
+        if (isTopUpBlockedByBackupError(accountId.userWalletId)) return
 
         modelScope.launch(dispatchers.main) {
             if (needShowYieldSupplyWarning(cryptoCurrencyStatus)) {
@@ -316,9 +320,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        showErrorIfDemoModeOrElse {
+        showErrorIfDemoModeOrElse { userWallet ->
             modelScope.launch(dispatchers.main) {
                 getOfframpUrlUseCase(
+                    userWalletId = userWallet.walletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
                 ).onRight { url ->
@@ -343,6 +348,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
+        if (isTopUpBlockedByBackupError(accountId.userWalletId)) return
 
         appRouter.push(
             AppRoute.Onramp(
@@ -473,6 +479,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId, screenType: String) {
+        if (isTopUpBlockedByBackupError(userWalletId)) return
+
         onMultiWalletActionClick(
             statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
             route = AppRoute.BuyCrypto(userWalletId = userWalletId),
@@ -480,8 +488,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
     }
 
-    private fun openExplorer() {
-        val userWalletId = stateHolder.getSelectedWalletId()
+    private fun openExplorer(userWallet: UserWallet) {
+        val userWalletId = userWallet.walletId
 
         modelScope.launch(dispatchers.main) {
             val currencyStatus = singleAccountStatusListSupplier.unwrap(userWalletId) ?: return@launch
@@ -545,7 +553,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
+    private fun showErrorIfDemoModeOrElse(action: (UserWallet) -> Unit) {
         val selectedWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         if (selectedWallet is UserWallet.Cold && isDemoCardUseCase(cardId = selectedWallet.cardId)) {
@@ -557,7 +565,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
             )
         } else {
-            action()
+            action(selectedWallet)
         }
     }
 
@@ -567,6 +575,26 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(DialogMessage(message = unavailabilityReason.getUnavailabilityReasonText()))
 
         return true
+    }
+
+    private fun isTopUpBlockedByBackupError(userWalletId: UserWalletId): Boolean {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return false
+        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+
+        stateHolder.hideBottomSheet()
+        uiMessageSender.send(
+            WalletAlertUM.addFundsDisabledForBackupError(
+                onContactSupport = { contactBackupSupport(userWallet) },
+            ),
+        )
+        return true
+    }
+
+    private fun contactBackupSupport(userWallet: UserWallet) {
+        analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
+        modelScope.launch {
+            sendBackupProblemEmailUseCase(userWallet.walletId)
+        }
     }
 
     private fun isMultiWalletTokensLoaded(): Boolean {
@@ -670,7 +698,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun navigateToSwap(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
         appRouter.push(
             AppRoute.Swap(
-                cryptoCurrency = cryptoCurrencyStatus.currency,
+                fromCryptoCurrency = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.LongTap.value,
             ),

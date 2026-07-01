@@ -4,11 +4,13 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Use case to determine if the accounts mode is enabled.
@@ -24,10 +26,23 @@ import kotlinx.coroutines.flow.*
 class IsAccountsModeEnabledUseCase(
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    appCoroutineScope: AppCoroutineScope,
 ) {
 
+    private val flow = createFlow()
+        .retry {
+            delay(timeMillis = TimeUnit.SECONDS.toMillis(1))
+            true
+        }
+        .distinctUntilChanged()
+        .shareIn(
+            scope = appCoroutineScope,
+            started = SharingStarted.WhileSubscribed(0, 0),
+            replay = 1,
+        )
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(): Flow<Boolean> {
+    private fun createFlow(): Flow<Boolean> {
         TangemLogger.i("$TAG: invoke() started")
 
         val cryptoMode = multiAccountListSupplier.invoke()
@@ -73,25 +88,14 @@ class IsAccountsModeEnabledUseCase(
             TangemLogger.i("$TAG: final combine crypto=$crypto, payment=$payment, result=$isEnabled")
             isEnabled
         }
-            .distinctUntilChanged()
+    }
+
+    operator fun invoke(): Flow<Boolean> {
+        return flow
     }
 
     suspend fun invokeSync(): Boolean {
-        val accountLists = multiAccountListSupplier.getSyncOrNull(Unit).orEmpty()
-        if (accountLists.any { it.hasMultipleCryptoPortfolios() }) return true
-
-        val walletIdsWithPayment = accountLists.mapNotNull { list ->
-            if (list.accounts.any { it is Account.Payment }) list.userWalletId else null
-        }
-        return walletIdsWithPayment.any { walletId ->
-            paymentAccountStatusSupplier
-                .getSyncOrNull(
-                    params = PaymentAccountStatusProducer.Params(walletId),
-                    timeMillis = PAYMENT_STATUS_SYNC_TIMEOUT_MS,
-                )
-                ?.value
-                ?.isActivePayment() == true
-        }
+        return flow.first()
     }
 
     private fun AccountList.hasMultipleCryptoPortfolios(): Boolean =
@@ -113,7 +117,6 @@ class IsAccountsModeEnabledUseCase(
     }
 
     private companion object {
-        const val PAYMENT_STATUS_SYNC_TIMEOUT_MS = 1_000L
         const val TAG = "IsAccountsModeEnabledUseCase"
     }
 }

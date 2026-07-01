@@ -7,15 +7,13 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -33,6 +31,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -47,10 +46,12 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AllowanceInfo
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
@@ -61,6 +62,10 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainFeeUtils.patchIntegratedApprovalPriorityFee
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
@@ -70,6 +75,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Collections.newSetFromMap
+import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("LargeClass", "LongParameterList")
 internal class SwapInteractorImpl @Inject constructor(
@@ -77,8 +84,11 @@ internal class SwapInteractorImpl @Inject constructor(
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val signAndBroadcastPsbtUseCase: SignAndBroadcastPsbtUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val quotesRepository: QuotesRepository,
@@ -99,10 +109,49 @@ internal class SwapInteractorImpl @Inject constructor(
     private val getSwapPairUseCase: GetSwapPairUseCase,
     private val dexSwapFeeCalculator: DexSwapFeeCalculator,
     private val cexSwapFeeCalculator: CexSwapFeeCalculator,
+    private val swapFeatureToggles: SwapFeatureToggles,
+    private val yieldModuleAddressProvider: YieldModuleAddressProvider,
 ) : SwapInteractor {
 
     private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
         GetSelectedAppCurrencyUseCase(appCurrencyRepository)
+    }
+
+    private val SwapCurrencyStatus.isYieldSwapActive: Boolean
+        get() = swapFeatureToggles.isYieldSwapEnabled && isYieldSupplyActive
+
+    /**
+     * Set of integrated-approve contexts for which the simulated swap-fee estimation
+     * failed with [GetFeeError.EstimateOverrideError]. Once a context is recorded here, the
+     * integrated path is abandoned for the remainder of the session: the permission state is
+     * derived as [PermissionDataState.PermissionRequired] (legacy separate-approval flow).
+     * This survives the periodic quote-refresh task so the failing simulated estimation is not retried every cycle.
+     */
+    private val integratedApprovalFallbackContexts = newSetFromMap(
+        ConcurrentHashMap<IntegratedApprovalFallbackKey, Boolean>(),
+    )
+
+    private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
+
+    private fun hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String?) =
+        integratedApprovalFallbackContexts.contains(
+            IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress),
+        )
+
+    private suspend fun isYieldSwapRouterAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        routerAddress: String,
+    ): Boolean {
+        val network = fromSwapCurrencyStatus.currency.network
+        val key = "${network.rawId}:${routerAddress.lowercase()}"
+        if (yieldSwapAllowedRouters.contains(key)) return true
+        val isAllowed = walletManagersFacade.isSwapSpenderAllowed(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = network,
+            spenderAddress = routerAddress,
+        )
+        if (isAllowed) yieldSwapAllowedRouters.add(key)
+        return isAllowed
     }
 
     override suspend fun getPair(
@@ -178,12 +227,14 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         pairs: List<SwapPairLeast>,
     ): List<SwapProvider> {
-        val requirements = getAssetRequirementsUseCase.invoke(
+        val fromRequirements = getAssetRequirementsUseCase.invoke(
             fromSwapCurrencyStatus.userWalletId,
             fromSwapCurrencyStatus.currency,
         ).getOrNull()
 
-        if (!rampStateManager.checkAssetRequirements(requirements)) {
+        val isToFulfilled = getUnfulfilledReceiveRequirement(toSwapCurrencyStatus) == null
+
+        if (!rampStateManager.checkAssetRequirements(fromRequirements) || !isToFulfilled) {
             return emptyList()
         }
 
@@ -192,6 +243,17 @@ internal class SwapInteractorImpl @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             pairs = pairs,
         )
+    }
+
+    override suspend fun getUnfulfilledReceiveRequirement(
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): AssetRequirementsCondition? {
+        val requirements = getAssetRequirementsUseCase.invoke(
+            toSwapCurrencyStatus.userWalletId,
+            toSwapCurrencyStatus.currency,
+        ).getOrNull()
+
+        return requirements?.takeUnless { rampStateManager.checkAssetRequirements(it) }
     }
 
     override suspend fun findBestQuote(
@@ -260,11 +322,11 @@ internal class SwapInteractorImpl @Inject constructor(
                         }
                     }
                 }
-            }.awaitAll().toMap()
+            }.awaitAll().filterNotNull().toMap()
         }
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private suspend fun manageDex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -272,8 +334,10 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
-    ): Pair<SwapProvider, SwapState> {
-        if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true) {
+    ): Pair<SwapProvider, SwapState>? {
+        if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true &&
+            !swapFeatureToggles.isYieldSwapEnabled
+        ) {
             return provider to produceDexSwapDataError(
                 error = ExpressDataError.DexActiveSupplyError(),
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -281,7 +345,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         }
 
-        val maybeQuotes = repository.findBestQuote(
+        val maybeQuote = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
             fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
             fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
@@ -294,7 +358,7 @@ internal class SwapInteractorImpl @Inject constructor(
             rateType = RateType.FLOAT,
         )
 
-        if (maybeQuotes.getOrNull()?.txType == ExpressTxType.SEND) {
+        if (maybeQuote.getOrNull()?.txType == ExpressTxType.SEND) {
             return manageCex(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -305,21 +369,39 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
         val fromTokenAddress = getTokenAddress(fromSwapCurrencyStatus.currency)
-        val isAllowedToSpend = maybeQuotes.fold(
-            ifRight = { quotes ->
-                quotes.allowanceContract?.let { allowanceContract ->
-                    getAllowanceInfoUseCase(
-                        userWalletId = fromSwapCurrencyStatus.userWalletId,
-                        cryptoCurrency = fromSwapCurrencyStatus.currency,
-                        spenderAddress = allowanceContract,
-                        requiredAmount = amount.value,
-                    ).getOrNull() is AllowanceInfo.Enough
-                } != false
-            },
-            ifLeft = { false },
-        )
 
-        if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
+        val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
+            fromSwapCurrencyStatus.currency is CryptoCurrency.Token
+
+        val spenderAddress = if (isYieldSwap) {
+            yieldModuleAddressProvider.getOrFetch(
+                userWalletId = fromSwapCurrencyStatus.userWalletId,
+                network = fromSwapCurrencyStatus.currency.network,
+            )
+        } else {
+            maybeQuote.getOrNull()?.allowanceContract
+        }
+
+        val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
+
+        if (isYieldSwap && dexRouterSpenderAddress != null &&
+            !isYieldSwapRouterAllowed(fromSwapCurrencyStatus, dexRouterSpenderAddress)
+        ) {
+            return null
+        }
+
+        val allowanceInfo = spenderAddress?.let { allowanceContract ->
+            getAllowanceInfoUseCase(
+                userWalletId = fromSwapCurrencyStatus.userWalletId,
+                cryptoCurrency = fromSwapCurrencyStatus.currency,
+                spenderAddress = allowanceContract,
+                requiredAmount = amount.value,
+            ).getOrNull()
+        } ?: AllowanceInfo.Enough(allowance = BigDecimal.ZERO)
+
+        if (allowanceInfo is AllowanceInfo.Enough &&
+            allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)
+        ) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             cryptoCurrencyBalanceFetcher(
                 userWalletId = fromSwapCurrencyStatus.userWalletId,
@@ -327,6 +409,23 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         }
         val isBalanceWithoutFeeEnough = isBalanceEnough(fromSwapCurrencyStatus, amount, null)
+        val isIntegratedApproveActive = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+            !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
+
+        val isAllowanceSatisfied = if (isIntegratedApproveActive) {
+            allowanceInfo !is AllowanceInfo.ResetNeeded
+        } else {
+            allowanceInfo is AllowanceInfo.Enough
+        }
+        // For yield swaps the on-chain allowance is not sufficient on its own: spending also
+        // requires the yield-module proxy approval (yieldSupplyStatus.isAllowedToSpend).
+        // For regular swaps a failed quote must not proceed to exchange-data loading.
+        val isAllowedToSpend = if (isYieldSwap) {
+            isAllowanceSatisfied &&
+                fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isAllowedToSpend == true
+        } else {
+            isAllowanceSatisfied && maybeQuote.isRight()
+        }
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
             provider to loadDexSwapDataNoFee(
                 provider = provider,
@@ -334,6 +433,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 amount = amount,
                 expressOperationType = expressOperationType,
+                allowanceInfo = allowanceInfo,
+                spenderAddress = spenderAddress,
+                dexRouterSpenderAddress = dexRouterSpenderAddress,
             )
         } else {
             val quoteBalanceStatus = if (isBalanceWithoutFeeEnough) {
@@ -343,7 +445,7 @@ internal class SwapInteractorImpl @Inject constructor(
             }
             provider to getQuotesState(
                 provider = provider,
-                quoteDataModel = maybeQuotes,
+                quoteDataModel = maybeQuote,
                 amount = amount,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -396,6 +498,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 amount = amount,
                 expressOperationType = expressOperationType,
+                allowanceInfo = null,
+                spenderAddress = null,
+                dexRouterSpenderAddress = null,
             )
         } else {
             provider to getQuotesState(
@@ -567,7 +672,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return result
     }
 
-    @Suppress("NullableToStringCall")
+    @Suppress("NullableToStringCall", "LongParameterList")
     override suspend fun onSwap(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -578,6 +683,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fee: SwapFee?,
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
+        integratedApproval: IntegratedApprovalData?,
     ): SwapTransactionState {
         TangemLogger.i(
             """
@@ -620,31 +726,64 @@ internal class SwapInteractorImpl @Inject constructor(
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                 )
             }
-            ResolvedFlow.DexLike -> {
-                val networkId = fromSwapCurrencyStatus.currency.network.rawId
-                if (isSolana(networkId)) {
-                    onSwapSolanaDex(
-                        provider = swapProvider,
-                        swapData = requireNotNull(swapData),
-                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
-                        amountToSwap = amountToSwap,
-                    )
-                } else {
-                    if (fee == null) return SwapTransactionState.Error.UnknownError
-                    onSwapDex(
-                        provider = swapProvider,
-                        swapData = requireNotNull(swapData),
-                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
-                        swapFee = fee,
-                        amountToSwap = amountToSwap,
-                    )
-                }
+            ResolvedFlow.DexLike -> onSwapDexLike(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                swapProvider = swapProvider,
+                swapData = requireNotNull(swapData),
+                amountToSwap = amountToSwap,
+                fee = fee,
+                integratedApproval = integratedApproval,
+            )
+        }
+    }
+
+    /**
+     * Dispatches a DEX-like swap by from-network: Solana (compiled tx) and Bitcoin (PSBT) get their
+     * own signing paths; everything else goes through the EVM [onSwapDex] (which requires a [fee]).
+     */
+    @Suppress("LongParameterList")
+    private suspend fun onSwapDexLike(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        swapProvider: SwapProvider,
+        swapData: SwapDataModel,
+        amountToSwap: String,
+        fee: SwapFee?,
+        integratedApproval: IntegratedApprovalData?,
+    ): SwapTransactionState {
+        val networkId = fromSwapCurrencyStatus.currency.network.rawId
+        return when {
+            isSolana(networkId) -> onSwapSolanaDex(
+                provider = swapProvider,
+                swapData = swapData,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                amountToSwap = amountToSwap,
+            )
+            isBitcoin(networkId) -> onSwapBitcoinPsbt(
+                provider = swapProvider,
+                swapData = swapData,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                amountToSwap = amountToSwap,
+            )
+            else -> {
+                if (fee == null) return SwapTransactionState.Error.UnknownError
+                onSwapDex(
+                    provider = swapProvider,
+                    swapData = swapData,
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    swapFee = fee,
+                    amountToSwap = amountToSwap,
+                    integratedApproval = integratedApproval,
+                )
             }
         }
     }
 
+    @Suppress("LongParameterList")
     private suspend fun onSwapDex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -652,39 +791,142 @@ internal class SwapInteractorImpl @Inject constructor(
         swapData: SwapDataModel,
         amountToSwap: String,
         swapFee: SwapFee,
+        integratedApproval: IntegratedApprovalData?,
     ): SwapTransactionState {
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
-        val txValue = requireNotNull(swapData.transaction.txValue) { "txValue is null" }
         val amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
         val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
         val dataToSign = dexTransaction.txData
-        val amountToSend = createNativeAmountForDex(txValue, fromSwapCurrencyStatus.currency.network)
-        val txData = createTransactionUseCase(
-            amount = amountToSend,
-            fee = swapFee.fee,
-            memo = null,
-            destination = swapData.transaction.txTo,
-            userWalletId = fromSwapCurrencyStatus.userWalletId,
-            network = toSwapCurrencyStatus.currency.network,
-            txExtras = createDexTxExtras(
-                dataToSign,
-                fromSwapCurrencyStatus.currency.network,
-                swapFee.fee.getGasLimit(),
-            ),
-        ).getOrElse { error ->
+        val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive
+        val fromCurrency = fromSwapCurrencyStatus.currency
+
+        val txDataResult = if (isYieldSwap && fromCurrency is CryptoCurrency.Token) {
+            val spenderAddress = dexTransaction.allowanceContract ?: return SwapTransactionState.Error.UnknownError
+            createYieldSwapDexTransaction(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                swapData = swapData,
+                dexCallData = dataToSign,
+                amount = amountDecimal,
+                fee = swapFee.fee,
+                spenderAddress = spenderAddress,
+            )
+        } else {
+            val txValue = requireNotNull(swapData.transaction.txValue) { "txValue is null" }
+            val amountToSend = createNativeAmountForDex(txValue, fromCurrency.network)
+            createTransactionUseCase(
+                amount = amountToSend,
+                fee = swapFee.fee,
+                memo = null,
+                destination = swapData.transaction.txTo,
+                userWalletId = fromSwapCurrencyStatus.userWalletId,
+                network = fromCurrency.network,
+                txExtras = createDexTxExtras(
+                    dataToSign,
+                    fromCurrency.network,
+                    swapFee.fee.getGasLimit(),
+                ),
+            )
+        }
+
+        val txData = txDataResult.getOrElse { error ->
             TangemLogger.e("Failed to create swap dex tx data", error)
             return SwapTransactionState.Error.UnknownError
         }
 
-        return handleSwapResult(
+        val payInAddress = if (isYieldSwap && fromCurrency is CryptoCurrency.Token) {
+            swapData.transaction.txTo
+        } else {
+            getPayoutAddress(txData)
+        }
+
+        return if (integratedApproval != null) {
+            sendIntegratedApproveAndSwap(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = provider,
+                swapData = swapData,
+                amount = amount,
+                swapTxData = txData,
+                swapFee = swapFee,
+                integratedApproval = integratedApproval,
+                payInAddress = payInAddress,
+            )
+        } else {
+            handleSwapResult(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = provider,
+                swapData = swapData,
+                amount = amount,
+                txData = txData,
+                payInAddress = payInAddress,
+            )
+        }
+    }
+
+    /**
+     * Integrated approve+swap submission. Selects the approval-fee bucket matching
+     * the user's swap-fee selection, attaches it to the prepared approval tx, and sends both
+     * transactions in a single [TransactionSender.MultipleTransactionSendMode.DEFAULT] batch.
+     *
+     * The success path is identical to the standalone swap path — only the approval-side hash
+     * is dropped (the swap tx hash is what surfaces as the transaction result).
+     */
+    @Suppress("LongParameterList")
+    private suspend fun sendIntegratedApproveAndSwap(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        amount: SwapAmount,
+        swapTxData: TransactionData.Uncompiled,
+        swapFee: SwapFee,
+        integratedApproval: IntegratedApprovalData,
+        payInAddress: String,
+    ): SwapTransactionState {
+        val approvalFee = selectFeeForBucket(integratedApproval.approvalFee, swapFee.feeBucket)
+        val approvalTx = integratedApproval.approvalTransaction.copy(fee = approvalFee)
+
+        val sendResult = sendTransactionUseCase(
+            txsData = listOf(approvalTx, swapTxData),
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            network = fromSwapCurrencyStatus.currency.network,
+            sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
+        ).fold(
+            ifLeft = { error -> return SwapTransactionState.Error.TransactionError(error) },
+            ifRight = { hashes -> hashes },
+        )
+
+        // The swap tx is the second (and last) hash; the approval hash is intentionally dropped.
+        val swapTxHash = sendResult.lastOrNull() ?: return SwapTransactionState.Error.UnknownError
+
+        return finalizeDexSwapSuccess(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             provider = provider,
             swapData = swapData,
             amount = amount,
-            txData = txData,
-            payInAddress = getPayoutAddress(txData),
+            txHash = swapTxHash,
+            payInAddress = payInAddress,
         )
+    }
+
+    /**
+     * [REDACTED_TASK_KEY] — selects the approval [Fee] matching the user-picked [FeeBucket] tier. Mirrors
+     * the bucket-to-field mapping used by `GiveApprovalModel.sendApprovalTransaction`:
+     *  - `SLOW`  → `Choosable.minimum`  (fallback `Single.normal`)
+     *  - `FAST`  → `Choosable.priority` (fallback `Single.normal`)
+     *  - all other buckets → `normal`
+     */
+    private fun selectFeeForBucket(transactionFee: TransactionFee, bucket: FeeBucket): Fee {
+        return when (transactionFee) {
+            is TransactionFee.Choosable -> when (bucket) {
+                FeeBucket.SLOW -> transactionFee.minimum
+                FeeBucket.FAST -> transactionFee.priority
+                else -> transactionFee.normal
+            }
+            is TransactionFee.Single -> transactionFee.normal
+        }
     }
 
     /**
@@ -871,6 +1113,44 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    /**
+     * Bitcoin DEX swap: the provider returns an almost-complete transaction as a Base64 PSBT in
+     * `txData`. We derive our inputs, sign and broadcast it ourselves (see [SignAndBroadcastPsbtUseCase]),
+     * then reuse the shared DEX success path. No fee handling: the fee is already embedded in the PSBT.
+     */
+    private suspend fun onSwapBitcoinPsbt(
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        amountToSwap: String,
+    ): SwapTransactionState {
+        val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val psbtBase64 = requireNotNull(dexTransaction?.txData) { "txData is null" }
+        val amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
+
+        val result = signAndBroadcastPsbtUseCase(
+            psbtBase64 = psbtBase64,
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            network = fromSwapCurrencyStatus.currency.network,
+        )
+        return result.fold(
+            ifRight = { txHash ->
+                finalizeDexSwapSuccess(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    provider = provider,
+                    swapData = swapData,
+                    amount = amount,
+                    txHash = txHash,
+                    payInAddress = swapData.transaction.txTo,
+                )
+            },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
+        )
+    }
+
     private suspend fun handleSwapResult(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -887,43 +1167,69 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         return result.fold(
             ifRight = { txHash ->
-                val networkAddress = fromSwapCurrencyStatus.status.value.networkAddress
-                val fromAddress = networkAddress?.defaultAddress?.value.orEmpty()
-                repository.exchangeSent(
-                    userWallet = fromSwapCurrencyStatus.userWallet,
-                    txId = swapData.transaction.txId,
-                    fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
-                    fromAddress = fromAddress,
-                    payInAddress = payInAddress,
-                    txHash = txHash,
-                    payInExtraId = swapData.transaction.txExtraId,
-                )
-                val timestamp = System.currentTimeMillis()
-                storeSwapTransaction(
+                finalizeDexSwapSuccess(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    provider = provider,
+                    swapData = swapData,
                     amount = amount,
-                    swapProvider = provider,
-                    swapDataModel = swapData,
-                    timestamp = timestamp,
-                )
-                storeLastCryptoCurrencyId(fromSwapCurrencyStatus)
-                SwapTransactionState.TxSent(
-                    fromAmount = amountFormatter.formatSwapAmountToUI(
-                        amount,
-                        fromSwapCurrencyStatus.currency.symbol,
-                    ),
-                    fromAmountValue = amount.value,
-                    toAmount = amountFormatter.formatSwapAmountToUI(
-                        swapData.toTokenAmount,
-                        toSwapCurrencyStatus.currency.symbol,
-                    ),
-                    toAmountValue = swapData.toTokenAmount.value,
                     txHash = txHash,
-                    timestamp = timestamp,
+                    payInAddress = payInAddress,
                 )
             },
             ifLeft = { SwapTransactionState.Error.TransactionError(it) },
+        )
+    }
+
+    /**
+     * Shared success path for DEX (single-tx and integrated approve+swap multi-tx). Notifies the
+     * exchange backend, stores the transaction locally for status tracking, records the last-used
+     * crypto currency id, and returns the [SwapTransactionState.TxSent] payload.
+     */
+    @Suppress("LongParameterList")
+    private suspend fun finalizeDexSwapSuccess(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        amount: SwapAmount,
+        txHash: String,
+        payInAddress: String,
+    ): SwapTransactionState.TxSent {
+        val networkAddress = fromSwapCurrencyStatus.status.value.networkAddress
+        val fromAddress = networkAddress?.defaultAddress?.value.orEmpty()
+        repository.exchangeSent(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            txId = swapData.transaction.txId,
+            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+            fromAddress = fromAddress,
+            payInAddress = payInAddress,
+            txHash = txHash,
+            payInExtraId = swapData.transaction.txExtraId,
+        )
+        val timestamp = System.currentTimeMillis()
+        storeSwapTransaction(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            toSwapCurrencyStatus = toSwapCurrencyStatus,
+            amount = amount,
+            swapProvider = provider,
+            swapDataModel = swapData,
+            timestamp = timestamp,
+        )
+        storeLastCryptoCurrencyId(fromSwapCurrencyStatus)
+        return SwapTransactionState.TxSent(
+            fromAmount = amountFormatter.formatSwapAmountToUI(
+                amount,
+                fromSwapCurrencyStatus.currency.symbol,
+            ),
+            fromAmountValue = amount.value,
+            toAmount = amountFormatter.formatSwapAmountToUI(
+                swapData.toTokenAmount,
+                toSwapCurrencyStatus.currency.symbol,
+            ),
+            toAmountValue = swapData.toTokenAmount.value,
+            txHash = txHash,
+            timestamp = timestamp,
         )
     }
 
@@ -979,7 +1285,7 @@ internal class SwapInteractorImpl @Inject constructor(
      */
     @Suppress("LongParameterList")
     override suspend fun loadSwapFee(
-        provider: SwapProvider,
+        quotesLoadedState: SwapState.QuotesLoadedState,
         fromStatus: SwapCurrencyStatus,
         toStatus: SwapCurrencyStatus,
         amount: SwapAmount,
@@ -991,11 +1297,12 @@ internal class SwapInteractorImpl @Inject constructor(
         if (amount.value.signum() == 0) {
             raise(GetFeeError.UnknownError)
         }
-        return when (resolveQuoteFlow(provider, txType)) {
+        return when (resolveQuoteFlow(quotesLoadedState.swapProvider, txType)) {
             ResolvedFlow.DexLike -> loadDexSwapFee(
                 fromStatus = fromStatus,
                 swapData = swapData,
                 selectedFeeToken = selectedFeeToken,
+                permissionState = quotesLoadedState.permissionState,
             )
             ResolvedFlow.CexLike -> loadCexSwapFee(
                 fromStatus = fromStatus,
@@ -1007,7 +1314,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     /**
-     * [REDACTED_TASK_KEY] — DEX branch of [loadSwapFee]. Pulls the cached `ExpressTransactionModel.DEX`
+     * DEX branch of [loadSwapFee]. Pulls the cached `ExpressTransactionModel.DEX`
      * out of [swapData] and hands it to [DexSwapFeeCalculator]. Maps [ExpressDataError] →
      * `Left(GetFeeError.UnknownError)` to keep the unified surface a single error type, matching
      * what the legacy `loadFeeForSwapTransaction` overload 2 does for DEX failures (line 1027 of
@@ -1017,16 +1324,41 @@ internal class SwapInteractorImpl @Inject constructor(
         fromStatus: SwapCurrencyStatus,
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
+        permissionState: PermissionDataState,
     ): Either<GetFeeError, SwapFee> {
         val transaction = swapData?.transaction as? ExpressTransactionModel.DEX
             ?: return GetFeeError.UnknownError.left()
 
-        return dexSwapFeeCalculator.calculate(
-            fromSwapCurrencyStatus = fromStatus,
-            transaction = transaction,
-            selectedToken = selectedFeeToken,
-        ).fold(
-            ifLeft = { error -> GetFeeError.DataError(error).left() },
+        // If the integrated-approve simulation already failed for this context, skip the
+        // simulated estimation entirely and use the plain getFee path (legacy separate-approval flow).
+        val effectivePermissionState = if (
+            permissionState is PermissionDataState.PermissionSettings &&
+            hasIntegratedApprovalFallenBack(fromStatus, permissionState.spenderAddress)
+        ) {
+            PermissionDataState.Empty
+        } else {
+            permissionState
+        }
+
+        val dexFeeResultEither = if (fromStatus.isYieldSwapActive && fromStatus.currency is CryptoCurrency.Token) {
+            val network = (fromStatus.currency as CryptoCurrency.Token).network
+            val yieldModuleAddress = yieldModuleAddressProvider.getOrFetch(fromStatus.userWalletId, network)
+            dexSwapFeeCalculator.calculateYield(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = transaction,
+                yieldModuleAddress = yieldModuleAddress,
+            )
+        } else {
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = transaction,
+                selectedToken = selectedFeeToken,
+                permissionState = effectivePermissionState,
+            )
+        }
+
+        return dexFeeResultEither.fold(
+            ifLeft = { error -> error.left() },
             ifRight = { dexFeeResult ->
                 val feeToken = selectedFeeToken
                     ?: resolveNativeFeeTokenStatus(fromStatus)
@@ -1041,8 +1373,44 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    private suspend fun createYieldSwapDexTransaction(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        swapData: SwapDataModel,
+        dexCallData: String,
+        amount: BigDecimal,
+        fee: Fee,
+        spenderAddress: String,
+    ): Either<Throwable, TransactionData.Uncompiled> {
+        val fromCurrency = fromSwapCurrencyStatus.currency as CryptoCurrency.Token
+        val network = fromCurrency.network
+        val yieldModuleAddress = yieldModuleAddressProvider.getOrFetch(fromSwapCurrencyStatus.userWalletId, network)
+            ?: return Either.Left(IllegalStateException("Yield module address is not available for ${network.id}"))
+        val wrappedCallData = dexSwapFeeCalculator.buildYieldSwapCallData(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            txTo = swapData.transaction.txTo,
+            dexCallData = dexCallData,
+            amount = amount,
+            spenderAddress = spenderAddress,
+        )
+        val txExtras = createTransactionExtrasUseCase(
+            callData = wrappedCallData,
+            network = network,
+            gasLimit = fee.getGasLimit()?.toBigInteger(),
+        ).getOrNull() ?: error("Failed to create yield swap extras")
+
+        return createTransactionUseCase(
+            amount = createNativeAmountForDex("0", network),
+            fee = fee,
+            memo = null,
+            destination = yieldModuleAddress,
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = network,
+            txExtras = txExtras,
+        )
+    }
+
     /**
-     * [REDACTED_TASK_KEY] — CEX branch of [loadSwapFee]. Native-fallback behavior is preserved: when
+     * CEX branch of [loadSwapFee]. Native-fallback behavior is preserved: when
      * [selectedFeeToken] is null the gasless use case (invoked inside [CexSwapFeeCalculator])
      * decides native vs token. The resulting `SwapFee.selectedFeeToken` is the explicit choice
      * if provided, otherwise the native coin status of the from-token's network.
@@ -1075,8 +1443,63 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    override fun integratedApprovalFallback(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String) {
+        integratedApprovalFallbackContexts.add(
+            element = IntegratedApprovalFallbackKey(
+                userWalletId = fromSwapCurrencyStatus.userWalletId,
+                fromCurrencyId = fromSwapCurrencyStatus.currency.id,
+                spenderAddress = spenderAddress,
+            ),
+        )
+    }
+
     /**
-     * [REDACTED_TASK_KEY] — resolves the native-coin [CryptoCurrencyStatus] for the from-token's network.
+     * Builds the approval [TransactionData.Uncompiled] for the integrated
+     * approval + swap path and loads its [TransactionFee] via [getFeeUseCase]. The amount honors
+     * [ApproveType]: `UNLIMITED` → null (unbounded allowance), `LIMITED` → the swap amount.
+     */
+    override suspend fun loadIntegratedApprovalData(
+        fromStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        approveType: ApproveType,
+        approvalAmount: BigDecimal,
+    ): Either<GetFeeError, IntegratedApprovalData> = either {
+        val tokenCurrency = fromStatus.currency as? CryptoCurrency.Token
+            ?: raise(GetFeeError.DataError(IllegalStateException("Integrated approval requires a Token from-currency")))
+
+        val amountForApprove: BigDecimal? = when (approveType) {
+            ApproveType.LIMITED -> approvalAmount
+            ApproveType.UNLIMITED -> null
+        }
+
+        val approvalTx = createApprovalTransactionUseCase(
+            userWalletId = fromStatus.userWalletId,
+            cryptoCurrencyStatus = fromStatus.status,
+            amount = amountForApprove,
+            contractAddress = tokenCurrency.contractAddress,
+            spenderAddress = spenderAddress,
+        ).getOrElse { error ->
+            TangemLogger.e("loadIntegratedApprovalData: failed to create approval tx", error)
+            raise(GetFeeError.DataError(error))
+        }
+
+        val approvalFee = runSuspendCatching {
+            getFeeUseCase(
+                transactionData = approvalTx,
+                userWallet = fromStatus.userWallet,
+                network = fromStatus.currency.network,
+            ).bind().patchIntegratedApprovalPriorityFee(INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL)
+        }.getOrElse { error -> raise(GetFeeError.DataError(error)) }
+
+        IntegratedApprovalData(
+            approvalTransaction = approvalTx,
+            approvalFee = approvalFee,
+            approveType = approveType,
+        )
+    }
+
+    /**
+     * Resolves the native-coin [CryptoCurrencyStatus] for the from-token's network.
      * Used as the default `selectedFeeToken` of [SwapFee] when the caller did not provide an
      * explicit choice. Mirrors how `SwapModel.updateFeePaidCryptoCurrencyFor` populates
      * `dataState.feePaidCryptoCurrency`.
@@ -1517,13 +1940,16 @@ internal class SwapInteractorImpl @Inject constructor(
      *    `applySwapFee` is called.
      *  - `currencyCheck`, `validationResult`, `minAdaValue` populated with `fee = 0` (re-derived once fee is known).
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "LongParameterList")
     private suspend fun loadDexSwapDataNoFee(
         provider: SwapProvider,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         amount: SwapAmount,
         expressOperationType: ExpressOperationType,
+        allowanceInfo: AllowanceInfo?,
+        spenderAddress: String?,
+        dexRouterSpenderAddress: String?,
     ): SwapState {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val dexFromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
@@ -1544,7 +1970,14 @@ internal class SwapInteractorImpl @Inject constructor(
             toAddress = dexToAddress,
             refundAddress = fromNetworkAddress?.defaultAddress?.value,
             expressOperationType = expressOperationType,
-        ).fold(
+        ).map { swapData ->
+            val dexTx = swapData.transaction as? ExpressTransactionModel.DEX
+            if (dexTx != null && dexRouterSpenderAddress != null && dexTx.allowanceContract == null) {
+                swapData.copy(transaction = dexTx.copy(allowanceContract = dexRouterSpenderAddress))
+            } else {
+                swapData
+            }
+        }.fold(
             ifRight = { swapData ->
                 val preparedSwapConfigState = PreparedSwapConfigState(
                     balanceStatus = SwapBalanceStatus.Pending,
@@ -1558,8 +1991,32 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapData = swapData,
                     provider = provider,
                 )
+
+                val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
+                    fromSwapCurrencyStatus.currency is CryptoCurrency.Token
+                val isIntegratedApprovalNeeded = !isYieldSwap &&
+                    swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+                    allowanceInfo is AllowanceInfo.NotEnough &&
+                    !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
                 swapState.copy(
-                    permissionState = PermissionDataState.Empty,
+                    permissionState = if (isIntegratedApprovalNeeded) {
+                        PermissionDataState.PermissionSettings(
+                            type = ApproveType.LIMITED,
+                            spenderAddress = spenderAddress.orEmpty(),
+                        )
+                    } else if (
+                        allowanceInfo is AllowanceInfo.NotEnough &&
+                        hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
+                    ) {
+                        // Integrated estimation failed earlier this session — show the legacy
+                        // separate-approval UI so the user approves before swapping.
+                        PermissionDataState.PermissionRequired(
+                            isResetApproval = false,
+                            spenderAddress = spenderAddress.orEmpty(),
+                        )
+                    } else {
+                        PermissionDataState.Empty
+                    },
                     currencyCheck = manageWarnings(
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                         amount = amount,
@@ -1663,18 +2120,43 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         }
 
+        val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive && fromToken is CryptoCurrency.Token
+        val spenderAddress = if (isYieldSwap) {
+            yieldModuleAddressProvider.getOrFetch(fromSwapCurrencyStatus.userWalletId, fromToken.network)
+                ?: run {
+                    TangemLogger.e(
+                        "Yield-swap approval skipped: yield-module address unresolved for " +
+                            "walletId=${fromSwapCurrencyStatus.userWalletId} network=${fromToken.network.rawId}",
+                    )
+                    return quotesLoadedState.copy(permissionState = PermissionDataState.Empty)
+                }
+        } else {
+            requireNotNull(quoteModel.allowanceContract) { "spenderAddress cant be null" }
+        }
+
         val allowanceInfo = getAllowanceInfoUseCase(
             userWalletId = fromSwapCurrencyStatus.userWalletId,
             cryptoCurrency = fromToken,
-            spenderAddress = requireNotNull(quoteModel.allowanceContract) { "spenderAddress cant be null" },
+            spenderAddress = spenderAddress,
             requiredAmount = swapAmount.value,
-        ).getOrNull()
+        ).getOrNull() ?: return quotesLoadedState.copy(permissionState = PermissionDataState.Empty)
 
+        val isIntegratedApprovalNeeded = !isYieldSwap &&
+            swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+            allowanceInfo is AllowanceInfo.NotEnough &&
+            !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, quoteModel.allowanceContract)
         return quotesLoadedState.copy(
-            permissionState = PermissionDataState.PermissionRequired(
-                isResetApproval = allowanceInfo is AllowanceInfo.ResetNeeded,
-                spenderAddress = quoteModel.allowanceContract,
-            ),
+            permissionState = if (isIntegratedApprovalNeeded) {
+                PermissionDataState.PermissionSettings(
+                    type = ApproveType.LIMITED,
+                    spenderAddress = spenderAddress,
+                )
+            } else {
+                PermissionDataState.PermissionRequired(
+                    isResetApproval = allowanceInfo is AllowanceInfo.ResetNeeded,
+                    spenderAddress = spenderAddress,
+                )
+            },
         )
     }
 
@@ -1916,10 +2398,6 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private fun isSolana(networkId: String): Boolean {
-        return networkId == Blockchain.Solana.toNetworkId()
-    }
-
     private fun getPayoutAddress(txData: TransactionData.Uncompiled): String {
         val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
         return if (ethereumCallData is EthereumYieldSupplySendCallData) {
@@ -1997,11 +2475,35 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
     companion object {
+        private const val INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL = 115 // 15% increase
+
         private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_LOW_THRESHOLD = 100_000.toBigDecimal() // in USD
         private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
         private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
+    }
+}
+
+/**
+ * Identity of an integrated-approve fee context, used to remember that the simulated
+ * swap-fee estimation failed (and hence the legacy separate-approval flow must be used). Keyed by
+ * wallet + from-currency + spender; intentionally amount-independent because the estimate-override
+ * failure is structural (the approval simply does not exist yet) and changing the amount cannot fix
+ * it — so we must not retry the simulation on every amount change either.
+ */
+private data class IntegratedApprovalFallbackKey(
+    val userWalletId: UserWalletId,
+    val fromCurrencyId: CryptoCurrency.ID,
+    val spenderAddress: String?,
+) {
+    companion object {
+        fun of(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String?): IntegratedApprovalFallbackKey =
+            IntegratedApprovalFallbackKey(
+                userWalletId = fromSwapCurrencyStatus.userWalletId,
+                fromCurrencyId = fromSwapCurrencyStatus.currency.id,
+                spenderAddress = spenderAddress,
+            )
     }
 }
 

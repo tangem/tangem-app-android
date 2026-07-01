@@ -18,13 +18,11 @@ import com.tangem.feature.swap.domain.fee.DexFeeResult
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
-import com.tangem.feature.swap.domain.models.domain.ExpressTxType
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
-import com.tangem.feature.swap.domain.models.ui.FeeBucket
+import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.ui.*
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -82,7 +80,12 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         )
         val rawFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true))
         coEvery {
-            dexSwapFeeCalculator.calculate(any(), any(), any())
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = any(),
+                transaction = any(),
+                selectedToken = any(),
+                permissionState = any(),
+            )
         } returns DexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(rawFee),
             otherNativeFee = BigDecimal.ZERO,
@@ -90,7 +93,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         ).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -107,7 +110,12 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             assertThat(swapFee.selectedFeeToken).isSameInstanceAs(nativeFeeTokenStatus)
         }
         coVerify(exactly = 1) {
-            dexSwapFeeCalculator.calculate(fromStatus, transaction, null)
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = transaction,
+                selectedToken = null,
+                permissionState = any(),
+            )
         }
     }
 
@@ -126,7 +134,12 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             ),
         )
         coEvery {
-            dexSwapFeeCalculator.calculate(any(), any(), any())
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = any(),
+                transaction = any(),
+                selectedToken = any(),
+                permissionState = any(),
+            )
         } returns DexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(solanaFee),
             otherNativeFee = BigDecimal.ZERO,
@@ -134,7 +147,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         ).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 9),
@@ -160,7 +173,12 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             transaction = transaction,
         )
         coEvery {
-            dexSwapFeeCalculator.calculate(any(), any(), any())
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = any(),
+                transaction = any(),
+                selectedToken = any(),
+                permissionState = any(),
+            )
         } returns DexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(
                 TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
@@ -170,7 +188,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         ).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX_BRIDGE),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -191,7 +209,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -204,7 +222,14 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         result.onLeft { error ->
             assertThat(error).isInstanceOf(GetFeeError.UnknownError::class.java)
         }
-        coVerify(exactly = 0) { dexSwapFeeCalculator.calculate(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = any(),
+                transaction = any(),
+                selectedToken = any(),
+                permissionState = any(),
+            )
+        }
     }
 
     @Test
@@ -213,7 +238,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX_BRIDGE),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -244,7 +269,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         } returns CexFeeResult(transactionFee = TransactionFeeResult.LoadedExtended(extendedFee)).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX_BRIDGE),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -271,7 +296,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         } returns CexFeeResult(transactionFee = TransactionFeeResult.LoadedExtended(extendedFee)).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX_BRIDGE),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -296,16 +321,16 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         )
         coEvery {
             dexSwapFeeCalculator.calculate(any(), any(), any())
-        } returns ExpressDataError.UnknownError().left()
+        } returns GetFeeError.DataError(cause = ExpressDataError.UnknownError()).left()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX_BRIDGE),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = swapData,
-            selectedFeeToken = null, isGasless = false,
-
+            selectedFeeToken = null,
+            isGasless = false,
             )
 
         assertThat(result.isLeft()).isTrue()
@@ -325,18 +350,24 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         val extendedFee = mockk<TransactionFeeExtended>(relaxed = true) {
             // Gasless picked native — feeTokenId points at the network's coin.
-            io.mockk.every { transactionFee } returns TransactionFee.Single(
+            every { transactionFee } returns TransactionFee.Single(
                 normal = mockk<Fee.Common>(relaxed = true),
             )
         }
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(
+                userWallet = any(),
+                fromSwapCurrencyStatus = any(),
+                amount = any(),
+                selectedFeeToken = any(),
+                isGasless = any(),
+            )
         } returns CexFeeResult(
             transactionFee = TransactionFeeResult.LoadedExtended(extendedFee),
         ).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.CEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.CEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -358,8 +389,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 amount = BigDecimal.ONE,
                 selectedFeeToken = null,
                 isGasless = true,
-
-                )
+            )
         }
     }
 
@@ -375,13 +405,19 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
             val extendedFee = mockk<TransactionFeeExtended>(relaxed = true)
             coEvery {
-                cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+                cexSwapFeeCalculator.calculate(
+                    userWallet = any(),
+                    fromSwapCurrencyStatus = any(),
+                    amount = any(),
+                    selectedFeeToken = any(),
+                    isGasless = any(),
+                )
             } returns CexFeeResult(
                 transactionFee = TransactionFeeResult.LoadedExtended(extendedFee),
             ).right()
 
             val result = sut.loadSwapFee(
-                provider = buildSwapProvider(ExchangeProviderType.CEX),
+                quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.CEX),
                 fromStatus = fromStatus,
                 toStatus = toStatus,
                 amount = SwapAmount(BigDecimal.ONE, 18),
@@ -402,17 +438,23 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false)
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         val explicitTokenStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
-            io.mockk.every { currency } returns mockk<CryptoCurrency.Token>(relaxed = true)
+            every { currency } returns mockk<CryptoCurrency.Token>(relaxed = true)
         }
         val extendedFee = mockk<TransactionFeeExtended>(relaxed = true)
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(
+                userWallet = any(),
+                fromSwapCurrencyStatus = any(),
+                amount = any(),
+                selectedFeeToken = any(),
+                isGasless = any(),
+            )
         } returns CexFeeResult(
             transactionFee = TransactionFeeResult.LoadedExtended(extendedFee),
         ).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.CEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.CEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -441,17 +483,23 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         val explicitNativeStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
-            io.mockk.every { currency } returns mockk<CryptoCurrency.Coin>(relaxed = true)
+            every { currency } returns mockk<CryptoCurrency.Coin>(relaxed = true)
         }
         val rawFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true))
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(
+                userWallet = any(),
+                fromSwapCurrencyStatus = any(),
+                amount = any(),
+                selectedFeeToken = any(),
+                isGasless = any(),
+            )
         } returns CexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(rawFee),
         ).right()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.CEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.CEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -472,11 +520,17 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(
+                userWallet = any(),
+                fromSwapCurrencyStatus = any(),
+                amount = any(),
+                selectedFeeToken = any(),
+                isGasless = any(),
+            )
         } returns GetFeeError.UnknownError.left()
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.CEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.CEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
@@ -501,7 +555,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.CEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.CEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ZERO, 18),
@@ -514,7 +568,15 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         result.onLeft { error ->
             assertThat(error).isInstanceOf(GetFeeError.UnknownError::class.java)
         }
-        coVerify(exactly = 0) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) {
+            cexSwapFeeCalculator.calculate(
+                userWallet = any(),
+                fromSwapCurrencyStatus = any(),
+                amount = any(),
+                selectedFeeToken = any(),
+                isGasless = any(),
+            )
+        }
     }
 
     @Test
@@ -527,7 +589,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         )
 
         val result = sut.loadSwapFee(
-            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX),
             fromStatus = fromStatus,
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ZERO, 18),
@@ -541,7 +603,14 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         result.onLeft { error ->
             assertThat(error).isInstanceOf(GetFeeError.UnknownError::class.java)
         }
-        coVerify(exactly = 0) { dexSwapFeeCalculator.calculate(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            dexSwapFeeCalculator.calculate(
+                fromSwapCurrencyStatus = any(),
+                transaction = any(),
+                selectedToken = any(),
+                permissionState = any(),
+            )
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -559,11 +628,16 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 transaction = transaction,
             )
             val explicitTokenStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
-                io.mockk.every { currency } returns mockk<CryptoCurrency.Token>(relaxed = true)
+                every { currency } returns mockk<CryptoCurrency.Token>(relaxed = true)
             }
             val rawFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true))
             coEvery {
-                dexSwapFeeCalculator.calculate(any(), any(), any())
+                dexSwapFeeCalculator.calculate(
+                    fromSwapCurrencyStatus = any(),
+                    transaction = any(),
+                    selectedToken = any(),
+                    permissionState = any(),
+                )
             } returns DexFeeResult(
                 transactionFee = TransactionFeeResult.Loaded(rawFee),
                 otherNativeFee = BigDecimal.ZERO,
@@ -571,7 +645,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             ).right()
 
             val result = sut.loadSwapFee(
-                provider = buildSwapProvider(ExchangeProviderType.DEX),
+                quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX),
                 fromStatus = fromStatus,
                 toStatus = toStatus,
                 amount = SwapAmount(BigDecimal.ONE, 18),
@@ -586,7 +660,12 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 assertThat(swapFee.selectedFeeToken).isSameInstanceAs(explicitTokenStatus)
             }
             coVerify(exactly = 1) {
-                dexSwapFeeCalculator.calculate(fromStatus, transaction, explicitTokenStatus)
+                dexSwapFeeCalculator.calculate(
+                    fromSwapCurrencyStatus = fromStatus,
+                    transaction = transaction,
+                    selectedToken = explicitTokenStatus,
+                    permissionState = any(),
+                )
             }
         }
 
@@ -603,7 +682,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
      * This exercises the `resolveNativeFeeTokenStatus` fallback path in loadDexSwapFee.
      */
     @Test
-    fun `DEX with null selectedFeeToken — resolveNativeFeeTokenStatus returns null when networkAddress is null`() =
+    fun `DEX with null selectedFeeToken - resolveNativeFeeTokenStatus returns null when networkAddress is null`() =
         runTest {
             // Primary resolve: getFeePaidCryptoCurrencyStatusSyncUseCase returns Right(null)
             // → triggers the fallback block in resolveNativeFeeTokenStatus
@@ -618,7 +697,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 networkRawId = ethNetwork,
                 isCoin = true,
             )
-            io.mockk.every {
+            every {
                 fromStatusWithNullAddr.status.value.networkAddress
             } returns null
 
@@ -634,7 +713,12 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             // quotesRepository returns null → NoQuote path → networkAddress null → return@run null
             coEvery { quotesRepository.getMultiQuoteSyncOrNull(any()) } returns null
             coEvery {
-                dexSwapFeeCalculator.calculate(any(), any(), any())
+                dexSwapFeeCalculator.calculate(
+                    fromSwapCurrencyStatus = any(),
+                    transaction = any(),
+                    selectedToken = any(),
+                    permissionState = any(),
+                )
             } returns DexFeeResult(
                 transactionFee = TransactionFeeResult.Loaded(
                     TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
@@ -644,7 +728,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             ).right()
 
             val result = sut.loadSwapFee(
-                provider = buildSwapProvider(ExchangeProviderType.DEX),
+                quotesLoadedState = buildQuotesLoadedState(ExchangeProviderType.DEX),
                 fromStatus = fromStatusWithNullAddr,
                 toStatus = toStatus,
                 amount = SwapAmount(BigDecimal.ONE, 18),
@@ -664,19 +748,49 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
     // Helpers
     // -------------------------------------------------------------------------
 
-    private fun buildDexTransaction(
-        otherNativeFeeWei: BigDecimal? = null,
-    ): ExpressTransactionModel.DEX = ExpressTransactionModel.DEX(
-        fromAmount = SwapAmount(BigDecimal.ONE, 18),
-        toAmount = SwapAmount(BigDecimal("0.5"), 18),
-        txValue = "1000000000000000",
-        txId = "tx-id",
-        txTo = "0xTo",
-        txExtraId = null,
-        txFrom = "0xFrom",
-        txData = "dGVzdA==",
-        otherNativeFeeWei = otherNativeFeeWei,
-        gas = BigInteger.valueOf(21_000L),
-        allowanceContract = null,
-    )
+    private fun buildQuotesLoadedState(
+        providerType: ExchangeProviderType,
+        permissionState: PermissionDataState = PermissionDataState.Empty,
+    ): SwapState.QuotesLoadedState {
+        val from = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val to = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        return SwapState.QuotesLoadedState(
+            fromTokenInfo = TokenSwapInfo(
+                tokenAmount = SwapAmount(BigDecimal.ONE, 18),
+                swapCurrencyStatus = from,
+                amountFiat = BigDecimal.ZERO,
+            ),
+            toTokenInfo = TokenSwapInfo(
+                tokenAmount = SwapAmount(BigDecimal("0.5"), 18),
+                swapCurrencyStatus = to,
+                amountFiat = BigDecimal.ZERO,
+            ),
+            priceImpact = PriceImpact.Empty,
+            preparedSwapConfigState = PreparedSwapConfigState(
+                balanceStatus = SwapBalanceStatus.Pending,
+                hasOutgoingTransaction = false,
+            ),
+            permissionState = permissionState,
+            swapDataModel = null,
+            currencyCheck = null,
+            validationResult = null,
+            minAdaValue = null,
+            swapProvider = buildSwapProvider(providerType),
+        )
+    }
+
+    private fun buildDexTransaction(otherNativeFeeWei: BigDecimal? = null): ExpressTransactionModel.DEX =
+        ExpressTransactionModel.DEX(
+            fromAmount = SwapAmount(BigDecimal.ONE, 18),
+            toAmount = SwapAmount(BigDecimal("0.5"), 18),
+            txValue = "1000000000000000",
+            txId = "tx-id",
+            txTo = "0xTo",
+            txExtraId = null,
+            txFrom = "0xFrom",
+            txData = "dGVzdA==",
+            otherNativeFeeWei = otherNativeFeeWei,
+            gas = BigInteger.valueOf(21_000L),
+            allowanceContract = null,
+        )
 }

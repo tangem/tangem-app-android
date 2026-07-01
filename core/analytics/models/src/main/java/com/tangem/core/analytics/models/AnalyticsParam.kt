@@ -71,6 +71,7 @@ sealed class AnalyticsParam {
     @Serializable
     enum class ScreensSources(val value: String) {
         Settings("Settings"),
+        CardSettings("Card Settings"),
         Main("Main"),
         SignIn("Sign In"),
         Send("Send"),
@@ -328,6 +329,7 @@ sealed class AnalyticsParam {
         const val WALLET_TYPE = "Wallet Type"
         const val BACKUPED = "Backuped"
         const val MEMO = "Memo"
+        const val VALUE = "Value"
     }
 }
 

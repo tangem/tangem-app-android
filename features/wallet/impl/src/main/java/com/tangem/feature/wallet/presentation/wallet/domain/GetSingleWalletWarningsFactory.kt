@@ -19,6 +19,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 @ModelScoped
 @Suppress("LongParameterList")
 internal class GetSingleWalletWarningsFactory @Inject constructor(
@@ -126,7 +128,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             element = WalletNotification.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
             ),
-            condition = cardTypesResolver.isTangemNote() && !hasWalletOrWallet2,
+            condition = cardTypesResolver.isSingleCurrency() && !hasWalletOrWallet2,
         )
 
         addIf(

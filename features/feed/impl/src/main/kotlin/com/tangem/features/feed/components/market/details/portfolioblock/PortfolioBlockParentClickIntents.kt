@@ -5,4 +5,5 @@ import com.tangem.domain.models.currency.CryptoCurrency
 internal interface PortfolioBlockParentClickIntents {
     fun openAddToPortfolioDirect()
     fun openAddToPortfolioViaUserPortfolio(rawCurrencyId: CryptoCurrency.RawID)
+    fun openAddFunds(rawCurrencyId: CryptoCurrency.RawID)
 }

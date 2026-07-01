@@ -189,7 +189,7 @@ internal class CreateWalletStartModel @Inject constructor(
                 isBiometricsRequestPolicy = shouldSaveAccessCodes,
             )
 
-            val analyticsSource = AnalyticsParam.ScreensSources.Intro
+            val analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro
 
             scanCardProcessor.scan(
                 analyticsSource = analyticsSource,

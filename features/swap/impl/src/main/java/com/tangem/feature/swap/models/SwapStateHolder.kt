@@ -1,14 +1,16 @@
 package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.ProviderState
@@ -16,6 +18,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal data class SwapStateHolder(
+    @param:StringRes val titleId: Int,
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),
@@ -46,6 +49,7 @@ internal data class SwapStateHolder(
     val onShowPermissionBottomSheet: () -> Unit = {},
     val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
     val onSwapTypeMenuOpened: () -> Unit = {},
+    val onTronBannerShown: () -> Unit = {},
 )
 
 @Immutable
@@ -58,15 +62,16 @@ sealed class SwapCardState {
         val currencyIconState: CurrencyIconState,
         val tokenSymbol: TextReference,
         val amountEquivalent: TextReference?,
-        val amountTextFieldValue: TextFieldValue?,
         val balance: TextReference,
         val isBalanceHidden: Boolean,
+        val appCurrency: AppCurrency,
+        val amountField: AmountFieldModel? = null,
     ) : SwapCardState()
 
     data class Empty(
         override val type: TransactionCardType,
         val amountEquivalent: TextReference,
-        val amountTextFieldValue: TextFieldValue?,
+        val amountField: AmountFieldModel? = null,
     ) : SwapCardState()
 
     data class Loading(
@@ -99,11 +104,12 @@ sealed interface TransactionCardType {
     val inputError: InputError
 
     data class Inputtable(
-        val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
         override val inputError: InputError,
         override val accountTitleUM: AccountTitleUM,
         val isEnabled: Boolean,
+        /** Switches the input field between crypto and fiat entry. Argument is the new `isFiatValue`. */
+        val onCurrencyChange: (Boolean) -> Unit = {},
     ) : TransactionCardType
 
     data class ReadOnly(

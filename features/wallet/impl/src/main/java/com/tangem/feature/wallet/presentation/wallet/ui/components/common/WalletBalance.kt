@@ -16,11 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
@@ -32,11 +36,7 @@ import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MainScreenTestTags
@@ -58,14 +58,17 @@ internal fun WalletBalance(
     buttons: ImmutableList<TangemButtonUM>,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
+    onSubtitleBottomChange: (Dp) -> Unit = {},
 ) {
     val collapsedFraction = behavior.state.collapsedFraction
     val alpha = 1f - collapsedFraction
     val scale = alpha.coerceIn(MIN_SCALE, MAX_SCALE)
+    val density = LocalDensity.current
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
+            .testTag(MainScreenTestTags.WALLET_LIST_ITEM)
             .alpha(alpha)
             .scale(scale)
             .snapToExitUntilCollapsed(behavior)
@@ -85,10 +88,18 @@ internal fun WalletBalance(
                 isBalanceHidden = isBalanceHidden,
             )
             SpacerH(TangemTheme.dimens2.x3)
-            SubtitleRow(walletBalanceUM = walletBalanceUM)
+            Box(
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    val rawBottomPx = coordinates.boundsInRoot().bottom
+                    if (rawBottomPx <= 0f) return@onGloballyPositioned
+                    onSubtitleBottomChange(with(density) { rawBottomPx.toDp() })
+                },
+            ) {
+                SubtitleRow(walletBalanceUM = walletBalanceUM)
+            }
         }
         SpacerH(TangemTheme.dimens2.x2)
-        ActionButtons(buttons)
+        ActionButtons(buttons, modifier = Modifier.fillMaxWidth())
         SpacerH(TangemTheme.dimens2.x6)
     }
 }
@@ -123,6 +134,7 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
                         ).resolveReference(),
                         style = TangemTheme.typography2.bodyRegular14,
                         color = TangemTheme.colors2.text.neutral.tertiary,
+                        modifier = Modifier.testTag(MainScreenTestTags.SYNC_PROGRESS_TEXT),
                     )
                     CircularProgressIndicator(
                         modifier = Modifier.size(19.dp),
@@ -140,8 +152,12 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
                         text = walletBalanceUM.name,
                         style = TangemTheme.typography2.bodyRegular14,
                         color = TangemTheme.colors2.text.neutral.tertiary,
+                        modifier = Modifier.testTag(MainScreenTestTags.CARD_TITLE),
                     )
-                    TangemDeviceIcon(state = walletBalanceUM.deviceIcon)
+                    TangemDeviceIcon(
+                        state = walletBalanceUM.deviceIcon,
+                        modifier = Modifier.testTag(MainScreenTestTags.CARD_IMAGE),
+                    )
                 }
             }
         }
@@ -152,6 +168,7 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
 private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = walletBalanceUM,
+        contentKey = { it::class },
         label = "Update the balance",
         modifier = modifier.testTag(MainScreenTestTags.WALLET_BALANCE),
         transitionSpec = {

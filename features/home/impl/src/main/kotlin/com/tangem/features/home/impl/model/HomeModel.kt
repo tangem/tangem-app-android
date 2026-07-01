@@ -78,7 +78,6 @@ internal class HomeModel @Inject constructor(
         HomeUM(
             scanInProgress = false,
             stories = getRestrictedStories().toImmutableList(),
-            onScanClick = ::onScanClick,
             onShopClick = ::onShopClick,
             onSearchTokensClick = ::onSearchTokensClick,
             onGetStartedClick = ::onGetStartedClick,
@@ -119,11 +118,6 @@ internal class HomeModel @Inject constructor(
         _uiState.update {
             it.copy(stories = stories.toImmutableList())
         }
-    }
-
-    private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCardLegacy())
-        scanCard()
     }
 
     private fun onShopClick() {

@@ -80,6 +80,24 @@ object Dialogs {
     }
 
     /**
+     * Dialog shown when adding funds (buy / receive / swap) is blocked because the wallet has a backup problem.
+     * Centralizes the wording and button behavior reused across wallet actions, token details, markets and swap.
+     *
+     * @param onContactSupport lambda invoked when the "Contact support" action is clicked
+     */
+    fun backupErrorAddFundsDisabled(onContactSupport: () -> Unit): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.warning_backup_error_add_funds_title),
+        message = resourceReference(R.string.warning_backup_error_add_funds_message),
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.common_contact_support),
+                onClick = onContactSupport,
+            )
+        },
+        secondActionBuilder = { cancelAction() },
+    )
+
+    /**
      * Universal error dialog
      */
     fun universalErrorDialog(universalError: UniversalError, onDismiss: () -> Unit): DialogMessage {

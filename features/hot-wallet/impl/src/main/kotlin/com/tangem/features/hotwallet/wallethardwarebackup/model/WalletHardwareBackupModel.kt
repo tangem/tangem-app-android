@@ -126,7 +126,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
 
     private fun onCreateNewWalletClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet())
-        router.push(AppRoute.CreateHardwareWallet)
+        router.push(AppRoute.CreateHardwareWallet(source = AnalyticsParam.ScreensSources.CreateWallet))
     }
 
     private fun onUpgradeCurrentWalletClick() {

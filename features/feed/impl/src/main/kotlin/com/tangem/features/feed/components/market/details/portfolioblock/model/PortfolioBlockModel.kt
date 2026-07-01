@@ -171,7 +171,7 @@ internal class PortfolioBlockModel @Inject constructor(
             tokenSymbol = firstCurrency.symbol,
             isBalanceHidden = isBalanceHidden,
             onRowClick = { parentRouter?.openAddToPortfolioViaUserPortfolio(currencyRawId) },
-            onAddFundsClick = {},
+            onAddFundsClick = { parentRouter?.openAddFunds(currencyRawId) },
         )
     }
 }

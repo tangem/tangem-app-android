@@ -2,60 +2,47 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import com.tangem.common.ui.earn.EarnBlock
-import com.tangem.common.ui.notifications.notifications
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.earn.EarnBlock
+import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
-import com.tangem.core.ui.components.BottomFade
+import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.topFade
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.themedColor
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
@@ -65,6 +52,7 @@ import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +60,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 private val TopBarHeight: Dp = 64.dp
 private val MarketBlockHorizontalPadding: Dp = 14.dp
+
+private const val TOP_FADE_MID_STOP = 0.8f
+private const val TOP_FADE_MID_ALPHA = 0.8f
 
 @Suppress("LongParameterList")
 @Composable
@@ -87,20 +78,17 @@ internal fun TokenDetailsScreen(
     val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val topBarTotalHeight = TopBarHeight + statusBarHeight
+    val hazeState = rememberHazeState()
 
     val rootBackground = TangemTheme.colors2.surface.level2
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
     val effectiveBottomPadding = marketBlockHeight + TangemTheme.dimens2.x4
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(rootBackground),
-    ) {
+    CompositionLocalProvider(LocalHazeState provides hazeState) {
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .hazeSourceTangem(zIndex = -2f),
+                .background(rootBackground),
         ) {
             TangemPullToRefreshSlidingContainer(
                 config = tokenDetailsUM.pullToRefreshConfig,
@@ -118,29 +106,20 @@ internal fun TokenDetailsScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-        }
 
-        TokenDetailsTopBarOverlay(topAppBarUM = tokenDetailsUM.topAppBarUM)
+            TokenDetailsTopBar(topAppBarUM = tokenDetailsUM.topAppBarUM)
 
-        if (tokenMarketBlockComponent != null) {
-            TokenDetailsMarketBlockOverlay(
-                component = tokenMarketBlockComponent,
-                onHeightChange = { marketBlockHeight = it },
+            if (tokenMarketBlockComponent != null) {
+                TokenDetailsMarketBlockOverlay(
+                    component = tokenMarketBlockComponent,
+                    onHeightChange = { marketBlockHeight = it },
+                )
+            }
+
+            expressState.bottomSheetSlot?.content(
+                ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
             )
         }
-
-        expressState.bottomSheetSlot?.content(
-            ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
-        )
-    }
-}
-
-@Composable
-private fun TokenDetailsTopBarOverlay(topAppBarUM: TokenDetailsTopAppBarUM) {
-    Box(
-        modifier = Modifier.background(TangemTheme.colors2.surface.level2),
-    ) {
-        TokenDetailsTopBar(topAppBarUM = topAppBarUM)
     }
 }
 
@@ -151,9 +130,13 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
 ) {
     val density = LocalDensity.current
 
-    BottomFade(
-        backgroundColor = TangemTheme.colors2.surface.level2,
-        modifier = Modifier.align(Alignment.BottomCenter),
+    TangemFade(
+        variant = TangemFade.Variant.Hard,
+        position = TangemFade.Position.Bottom,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(174.dp)
+            .align(Alignment.BottomCenter),
     )
 
     component.Content(
@@ -170,7 +153,7 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
     )
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
@@ -194,7 +177,15 @@ private fun TokenDetailsBody(
         .padding(start = TangemTheme.dimens2.x4, end = TangemTheme.dimens2.x4, top = TangemTheme.dimens2.x4)
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier
+            .testTag(TokenDetailsScreenTestTags.SCREEN_CONTAINER)
+            .hazeSourceTangem(state = LocalHazeState.current)
+            .topFade(
+                height = topContentPadding,
+                0f to rootBackground,
+                TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
+                1f to Color.Transparent,
+            ),
         state = listState,
         contentPadding = PaddingValues(top = topContentPadding, bottom = bottomContentPadding),
     ) {
@@ -206,14 +197,6 @@ private fun TokenDetailsBody(
             )
         }
         val balance = tokenDetailsUM.balanceBlockUM
-        if (balance is TokenDetailsBalanceBlockUM.Content && balance.isBalanceZero) {
-            item(key = "zero_balance_actions") {
-                ZeroBalanceActionsBlock(
-                    state = tokenDetailsUM.zeroBalanceActionsUM,
-                    modifier = itemModifier,
-                )
-            }
-        }
         notifications(
             notifications = tokenDetailsUM.notifications,
             contentColor = rootBackground,
@@ -221,14 +204,39 @@ private fun TokenDetailsBody(
         )
         tokenDetailsUM.earnBlockState?.let { earnBlock ->
             item(key = "staking_block") {
+                val stakingTag = when {
+                    earnBlock is EarnBlockUM.Content &&
+                        earnBlock.type == EarnBlockUM.Type.Staking &&
+                        earnBlock.trailingUM is EarnBlockUM.TrailingUM.Button ->
+                        TokenDetailsScreenTestTags.STAKING_AVAILABLE_BLOCK
+                    else -> TokenDetailsScreenTestTags.STAKING_BLOCK
+                }
                 EarnBlock(
                     state = earnBlock,
-                    modifier = itemModifier,
+                    modifier = itemModifier
+                        .padding(vertical = TangemTheme.dimens2.x3)
+                        .testTag(stakingTag),
                 )
             }
         }
         item(key = "yield_supply_block") {
-            yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2))
+            yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x3))
+        }
+        tokenDetailsUM.quickTopUpBlock?.let { quickTopUpBlock ->
+            item(key = "quick_top_up_block") {
+                QuickTopUpBlock(
+                    state = quickTopUpBlock,
+                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x0),
+                )
+            }
+        }
+        if (balance is TokenDetailsBalanceBlockUM.Content && balance.isBalanceZero) {
+            item(key = "zero_balance_actions") {
+                ZeroBalanceActionsBlock(
+                    state = tokenDetailsUM.zeroBalanceActionsUM,
+                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2),
+                )
+            }
         }
         with(expressTransactionsComponent) {
             expressTransactionsContent(

@@ -18,9 +18,9 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 internal class ValidateWalletAddressUseCaseTest {
 
@@ -34,14 +34,14 @@ internal class ValidateWalletAddressUseCaseTest {
     private val userWalletId: UserWalletId = mockk()
     private val network: Network = mockk()
 
-    @Before
+    @BeforeEach
     fun setUp() {
         mockkObject(BlockchainUtils)
         every { BlockchainUtils.decodeRippleXAddress(any(), any()) } returns null
         every { network.rawId } returns "ethereum"
     }
 
-    @After
+    @AfterEach
     fun tearDown() {
         unmockkObject(BlockchainUtils)
     }

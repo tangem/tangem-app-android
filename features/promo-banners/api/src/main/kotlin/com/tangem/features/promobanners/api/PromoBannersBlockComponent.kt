@@ -1,9 +1,14 @@
 package com.tangem.features.promobanners.api
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.core.ui.decompose.ComposableContentComponent
 
-interface PromoBannersBlockComponent : ComposableContentComponent {
+interface PromoBannersBlockComponent {
+
+    @Composable
+    fun ContentWithPadding(horizontalItemPadding: Dp, modifier: Modifier)
 
     fun setVisibleOnScreen(isVisible: Boolean)
 

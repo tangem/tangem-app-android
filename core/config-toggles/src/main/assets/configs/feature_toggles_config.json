@@ -17,7 +17,7 @@
     },
     {
         "name": "APP_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "6.0"
     },
     {
         "name": "GASLESS_APPROVAL_ENABLED",
@@ -56,16 +56,20 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1326_YIELD_MODE_SWAP_ENABLED",
+        "version": "6.0"
+    },
+    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_15207_SWAP_SWITCH_TO_TRANSFER_ENABLED",
-        "version": "undefined"
+        "version": "6.0"
     },
     {
-        "name": "SWAP_INTEGRATED_APPROVE",
-        "version": "undefined"
+        "name": "AND_15120_SWAP_INTEGRATED_APPROVE",
+        "version": "6.0"
     },
     {
         "name": "SWAP_AB_ENABLED",
@@ -76,8 +80,16 @@
         "version": "undefined"
     },
     {
+        "name": "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
+        "version": "6.0"
+    },
+    {
         "name": "AND_15310_ADD_FUNDS_STAGE1",
         "version": "5.39"
+    },
+    {
+        "name": "TWI_1377_MANAGE_FUNDS",
+        "version": "6.0"
     },
     {
         "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
@@ -106,5 +118,53 @@
     {
         "name": "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED",
         "version": "5.39"
+    },
+    {
+        "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15482_SURVEYSPARROW_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15258_QUICK_TOP_UP_ENABLED",
+        "version": "6.0"
+    },
+    {
+        "name": "AND_15368_VISA_PAY_REDESIGN",
+        "version": "6.0"
+    },
+    {
+        "name": "AND_15364_VISA_PAY_CARD_CLOSE",
+        "version": "6.0"
+    },
+    {
+        "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_83_ADDRESS_BOOK_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED",
+        "version": "6.0"
+    },
+    {
+        "name": "AND_15235_VISA_MULTIPLE_CARDS",
+        "version": "6.0"
+    },
+    {
+        "name": "AND_15715_SWAP_BEST_DEX_RATE_ENABLED",
+        "version": "6.0"
+    },
+    {
+        "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
+        "version": "undefined"
     }
 ]

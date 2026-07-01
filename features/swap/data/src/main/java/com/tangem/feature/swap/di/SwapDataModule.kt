@@ -10,8 +10,10 @@ import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
 import com.tangem.feature.swap.DefaultSwapRepository
@@ -43,6 +45,8 @@ internal class SwapDataModule {
         @NetworkMoshi moshi: Moshi,
         appPreferencesStore: AppPreferencesStore,
         rampStateManager: RampStateManager,
+        expressHistoryDao: ExpressHistoryDao,
+        txHistoryFeatureToggles: TxHistoryFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -53,6 +57,8 @@ internal class SwapDataModule {
             moshi = moshi,
             appPreferencesStore = appPreferencesStore,
             rampStateManager = rampStateManager,
+            expressHistoryDao = expressHistoryDao,
+            txHistoryFeatureToggles = txHistoryFeatureToggles,
         )
     }
 
