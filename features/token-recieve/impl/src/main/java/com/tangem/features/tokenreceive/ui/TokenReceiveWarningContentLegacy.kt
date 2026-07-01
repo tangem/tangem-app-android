@@ -1,6 +1,7 @@
 package com.tangem.features.tokenreceive.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,27 +16,31 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
-import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenReceiveWarningBottomSheetTestTags
 import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.WarningUM
 
 @Composable
-internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
+internal fun TokenReceiveWarningContentLegacy(warningUM: WarningUM) {
     val hapticFeedback = LocalHapticFeedback.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .background(color = TangemTheme.colors.background.tertiary)
             .padding(
-                top = 28.dp,
                 start = 16.dp,
                 end = 16.dp,
                 bottom = 16.dp,
@@ -45,34 +50,35 @@ internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
     ) {
         CurrencyIcon(
             modifier = Modifier
-                .size(size = 76.dp),
+                .padding(8.dp)
+                .size(size = 64.dp),
             state = warningUM.iconState,
             shouldDisplayNetwork = true,
-            networkBadgeSize = 24.dp,
-            iconSize = 72.dp,
+            iconSize = 56.dp,
         )
-        SpacerH(32.dp)
+
+        SpacerH24()
+
         WarningBlock(networkName = warningUM.network)
-        SpacerH(8.dp)
+
+        SpacerH12()
+
         Text(
-            modifier = Modifier.padding(horizontal = 16.dp),
             textAlign = TextAlign.Center,
             text = stringResourceSafe(R.string.domain_receive_assets_onboarding_description),
-            style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.secondary,
         )
+
         SpacerH(48.dp)
-        TangemButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            variant = TangemButton.Variant.Secondary,
-            text = resourceReference(R.string.common_got_it),
+
+        SecondaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResourceSafe(R.string.common_got_it),
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 warningUM.onWarningAcknowledged()
             },
-            size = TangemButton.Size.X12,
         )
     }
 }
@@ -86,15 +92,17 @@ private fun WarningBlock(networkName: String, modifier: Modifier = Modifier) {
         Text(
             textAlign = TextAlign.Center,
             text = stringResourceSafe(R.string.domain_receive_assets_onboarding_title),
-            style = TangemTheme.typography3.heading.small,
-            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors.text.primary1,
         )
+
+        SpacerH(6.dp)
 
         Text(
             textAlign = TextAlign.Center,
             text = stringResourceSafe(R.string.domain_receive_assets_onboarding_network_name, networkName),
-            style = TangemTheme.typography3.heading.small,
-            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors.text.primary1,
         )
     }
 }
@@ -105,7 +113,27 @@ private fun WarningBlock(networkName: String, modifier: Modifier = Modifier) {
 private fun Preview_TokenReceiveWarningContent(
     @PreviewParameter(TokenReceiveWarningContentProvider::class) warningUM: WarningUM,
 ) {
-    TangemThemePreviewRedesign {
-        TokenReceiveWarningContent(warningUM = warningUM)
+    TangemThemePreview {
+        TokenReceiveWarningContentLegacy(warningUM = warningUM)
     }
+}
+
+internal class TokenReceiveWarningContentProvider : PreviewParameterProvider<WarningUM> {
+    val iconState = CurrencyIconState.TokenIcon(
+        url = null,
+        topBadgeIconResId = null,
+        fallbackTint = TangemColorPalette.Black,
+        fallbackBackground = TangemColorPalette.Meadow,
+        isGrayscale = false,
+        shouldShowCustomBadge = false,
+    )
+
+    override val values: Sequence<WarningUM>
+        get() = sequenceOf(
+            WarningUM(
+                iconState = iconState,
+                onWarningAcknowledged = {},
+                network = "Etherium",
+            ),
+        )
 }
