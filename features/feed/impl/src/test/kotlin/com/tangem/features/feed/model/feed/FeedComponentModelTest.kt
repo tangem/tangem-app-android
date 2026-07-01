@@ -154,7 +154,7 @@ internal class FeedComponentModelTest {
             val model = createModel(forYouFeatureToggles = toggles)
             advanceUntilIdle()
             val banner = model.state.value.forYouBannerUM
-            (banner as? ForYouBannerUM.Content)?.banner?.onClick?.invoke()
+            (banner as? ForYouBannerUM.Content)?.onClick?.invoke()
 
             // Assert – onClick must be wired to feedClickIntents::openForYou, not just any lambda
             assertThat(banner).isInstanceOf(ForYouBannerUM.Content::class.java)
