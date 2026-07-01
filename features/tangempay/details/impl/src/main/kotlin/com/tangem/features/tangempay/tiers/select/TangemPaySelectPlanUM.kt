@@ -13,6 +13,7 @@ internal data class TangemPaySelectPlanUM(
     val onBackClick: () -> Unit,
     val onCloseClick: () -> Unit,
     val content: Content,
+    val compare: ComparePlans? = null,
 ) {
 
     @Immutable
@@ -21,6 +22,19 @@ internal data class TangemPaySelectPlanUM(
         val imageUrl: String?,
         val points: ImmutableList<PointUM>,
     )
+
+    @Immutable
+    data class ComparePlans(
+        val attributes: ImmutableList<TextReference>,
+        val plans: ImmutableList<Plan>,
+        val onDismiss: () -> Unit,
+    ) {
+        @Immutable
+        data class Plan(
+            val name: TextReference,
+            val values: ImmutableList<TextReference>,
+        )
+    }
 
     @Immutable
     data class PointUM(

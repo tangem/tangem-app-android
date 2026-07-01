@@ -82,6 +82,8 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
                 }
             }
         }
+
+        ComparePlansBottomSheet(compare = state.compare)
     }
 }
 
@@ -229,7 +231,7 @@ private fun SelectFooter(content: TangemPaySelectPlanUM.Content.Select, modifier
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.tangempay_select_plan_select),
+            text = resourceReference(R.string.tangempay_select_plan_btn_select),
             onClick = content.onSelectClick,
         )
     }
@@ -248,7 +250,7 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.tangempay_select_plan_cancel),
+            text = resourceReference(R.string.tangempay_select_plan_btn_cancel),
             onClick = content.onCancelClick,
         )
         TangemButton(
