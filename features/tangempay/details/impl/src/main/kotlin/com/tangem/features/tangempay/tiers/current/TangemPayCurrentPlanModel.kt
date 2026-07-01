@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -34,7 +35,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         notification = null,
         sections = buildSections(plan),
         onBackClick = router::pop,
-        onChangePlanClick = {},
+        onChangePlanClick = { router.push(TangemPayAccountDetailsInnerRoute.SelectPlan) },
     )
 
     private fun buildSections(plan: TangemPayTariffPlan) = persistentListOf(

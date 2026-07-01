@@ -6,6 +6,7 @@ import com.tangem.features.tangempay.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupModel
 import com.tangem.features.tangempay.model.*
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
+import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -85,4 +86,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayCurrentPlanModel::class)
     fun bindTangemPayCurrentPlanModel(model: TangemPayCurrentPlanModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPaySelectPlanModel::class)
+    fun bindTangemPaySelectPlanModel(model: TangemPaySelectPlanModel): Model
 }
