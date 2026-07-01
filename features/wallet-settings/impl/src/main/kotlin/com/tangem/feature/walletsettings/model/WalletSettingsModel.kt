@@ -51,6 +51,7 @@ import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
+import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
@@ -92,6 +93,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val accountListSortingSaver: AccountListSortingSaver,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -203,6 +205,8 @@ internal class WalletSettingsModel @Inject constructor(
             is UserWallet.Cold -> userWallet.isMultiCurrency
             is UserWallet.Hot -> true
         }
+        val isPushNotificationSettingsEnabled =
+            pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled
         return itemsBuilder.buildItems(
             userWallet = userWallet,
             cardItem = cardItem,
@@ -245,11 +249,17 @@ internal class WalletSettingsModel @Inject constructor(
             isNotificationsPermissionGranted = isNotificationsPermissionGranted,
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
+            isPushNotificationSettingsEnabled = isPushNotificationSettingsEnabled,
+            onNotificationSettingsClick = ::onNotificationSettingsClick,
             onAccessCodeClick = { onAccessCodeClick(userWallet) },
             onBackupClick = ::onBackupClick,
             onCardSettingsClick = ::onCardSettingsClick,
             accountsUM = accountList,
         )
+    }
+
+    private fun onNotificationSettingsClick() {
+        router.push(AppRoute.PushNotificationSettings(userWalletId = params.userWalletId))
     }
 
     private fun forgetWallet() = modelScope.launch {

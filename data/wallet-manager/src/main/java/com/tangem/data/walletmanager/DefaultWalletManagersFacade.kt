@@ -465,6 +465,27 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return getEnabledDynamicAddressesManagerOrNull(userWalletId, network) != null
     }
 
+    override suspend fun getPsbtFee(userWalletId: UserWalletId, network: Network, psbtBase64: String): BigDecimal? =
+        withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+                ?: return@withContext null
+
+            when (val result = walletManager.getPsbtFee(psbtBase64)) {
+                is Result.Success -> result.data.toBigDecimal()
+                is Result.Failure -> null
+            }
+        }
+
+    override suspend fun isSwapSpenderAllowed(
+        userWalletId: UserWalletId,
+        network: Network,
+        spenderAddress: String,
+    ): Boolean = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?: return@withContext false
+        walletManager.isSwapSpenderAllowed(spenderAddress)
+    }
+
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
         val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
         return dynamicAddressesManager.findFirstUnusedReceiveAddress()?.address
