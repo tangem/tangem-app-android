@@ -61,7 +61,6 @@ internal fun TangemTokenRowStory(state: TangemTokenRowStory, modifier: Modifier 
             TangemTokenRow(
                 tokenRowUM = um,
                 isBalanceHidden = state.isBalanceHidden,
-                reorderableState = null,
                 modifier = Modifier.background(TangemTheme.colors2.surface.level1),
             )
             HorizontalDivider(

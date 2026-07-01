@@ -1,33 +1,30 @@
 package com.tangem.core.ui.ds2.surface
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.RippleConfiguration
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.NonRestartableComposable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.LinearGradientShader
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
-import com.tangem.core.ui.components.haze.isHazeBlurEffectivelyEnabled
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.softLayerShadow
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -69,7 +66,7 @@ fun TangemSurface(
     color: Color = TangemTheme.colors3.bg.primary,
     isMaterial: Boolean = false,
     border: BorderStroke? = null,
-    shape: Shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.b200),
+    shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
@@ -94,6 +91,7 @@ fun TangemSurface(
                         onClick = onClick!!,
                     )
                 },
+            contentAlignment = Alignment.Center,
         ) {
             content()
         }
@@ -110,20 +108,26 @@ fun TangemSurface(
 
 // region material rendering
 
-/** Drop shadow for the material variant. */
+/**
+ * Drop shadow for the material variant.
+ *
+ * The material fill is translucent, so the shadow is clipped to the area outside [shape] (via
+ * `isAlphaContentClip`) to avoid the dark blur bleeding through the surface.
+ */
 @Composable
 private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
     radius = 40.dp,
-    color = Color.Black.copy(alpha = 0.10f),
+    color = Color.Black.copy(alpha = 0.12f),
     shape = shape,
     spread = 0.dp,
     offset = DpOffset(x = 0.dp, y = 8.dp),
+    isAlphaContentClip = true,
 )
 
 /** Diagonal gradient stroke that wraps the material variant. */
 @Composable
 private fun Modifier.materialBorder(shape: Shape): Modifier = border(
-    width = TangemTheme.dimens3.borderWidth.sm,
+    width = 1.dp,
     brush = materialBorderBrush(),
     shape = shape,
 )
@@ -134,27 +138,29 @@ private fun Modifier.materialBorder(shape: Shape): Modifier = border(
  * When the haze state is enabled, paints a haze-blurred backdrop. When disabled, layers two
  * solid colors so the result still reads as "tinted fill" instead of going transparent.
  *
- * Uses [isHazeBlurEffectivelyEnabled] (rather than [LocalHazeState]'s `blurEnabled` directly) so
- * the solid fallback is also applied when blur is suppressed for reasons other than the haze flag
- * — most notably when the device is in power-saving mode. Otherwise the haze modifier's
- * `fallbackTint = HazeTint(Color.Transparent)` would leave the surface fully transparent.
+ * Reads [LocalHazeState]'s `blurEnabled` so the solid fallback is applied whenever blur is off —
+ * otherwise the haze modifier's `fallbackTint = HazeTint(Color.Transparent)` would leave the
+ * surface fully transparent.
  */
 @Composable
 private fun Modifier.materialFill(): Modifier {
-    val isBlurEnabled = isHazeBlurEffectivelyEnabled()
+    val isBlurEnabled = LocalHazeState.current.blurEnabled
+    val material = TangemTheme.colors3.material
     val hazed = hazeEffectTangem(
         style = HazeStyle(
-            backgroundColor = TangemTheme.colors3.material.fill.blur,
-            blurRadius = TangemTheme.dimens3.blur.Button,
-            tints = emptyList(),
+            backgroundColor = Color.Transparent,
+            blurRadius = 32.dp,
+            tints = listOf(
+                HazeTint(material.fill.blur),
+            ),
         ),
     ) {
         fallbackTint = HazeTint(Color.Transparent)
     }
     return hazed.conditionalCompose(!isBlurEnabled) {
         // Paint the opaque fill first, then layer the translucent tint on top so both are visible.
-        background(TangemTheme.colors3.material.fill.solid)
-            .background(TangemTheme.colors3.material.tint.solid)
+        background(material.fill.solid)
+            .background(material.tint.solid)
     }
 }
 
@@ -163,13 +169,22 @@ private fun Modifier.materialFill(): Modifier {
 @ReadOnlyComposable
 private fun materialBorderBrush(): Brush {
     val border = TangemTheme.colors3.material.border
-    return Brush.linearGradient(
-        0f to border.start,
-        0.5f to border.mid,
-        1f to border.end,
-        start = Offset.Zero,
-        end = Offset.Infinite,
-    )
+    val startColor = border.start
+    val midColor = Color.Transparent
+    val endColor = border.end
+    return object : ShaderBrush() {
+        override fun createShader(size: Size): Shader {
+            val w = size.width
+            val h = size.height
+            val k = 2f * w * h / (w * w + h * h)
+            return LinearGradientShader(
+                from = Offset.Zero,
+                to = Offset(x = k * h, y = k * w),
+                colors = listOf(startColor, midColor, midColor, endColor),
+                colorStops = listOf(0f, 0.40f, 0.60f, 1f),
+            )
+        }
+    }
 }
 
 // endregion

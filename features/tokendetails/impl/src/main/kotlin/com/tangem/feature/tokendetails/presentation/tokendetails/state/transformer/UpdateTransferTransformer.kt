@@ -43,6 +43,16 @@ internal class UpdateTransferTransformer(
                 },
             )
         }
+        val swapAndSendRow = swapAction?.let { action ->
+            TransferUM.Row(
+                isLoading = action.unavailabilityReason.isLoading,
+                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                onClick = {
+                    onActionDispatched()
+                    clickIntents.onSwapAndSendClick(action.unavailabilityReason)
+                },
+            )
+        }
         val sellRow = sellAction?.let { action ->
             TransferUM.Row(
                 isLoading = action.unavailabilityReason.isOutdatedLoading(),
@@ -55,7 +65,12 @@ internal class UpdateTransferTransformer(
         }
 
         return prevState.copy(
-            transferUM = TransferUM.Content(send = sendRow, swap = swapRow, sell = sellRow),
+            transferUM = TransferUM.Content(
+                send = sendRow,
+                swap = swapRow,
+                swapAndSend = swapAndSendRow,
+                sell = sellRow,
+            ),
         )
     }
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
@@ -14,7 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -24,25 +25,17 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Design-system rectangle shimmer placeholder.
+ * Design-system v2 shimmer placeholder — a rounded rectangle with a sweeping highlight.
  *
- * A rounded rectangle painted with `bg.opaque.secondary`. A tilted band sweeps across it where
- * the base color's alpha is gradually dimmed toward the center of the band and restored at the
- * edges, producing a soft "blade" highlight passing through the placeholder. The alpha profile
- * matches [com.tangem.core.ui.components.text.BladeAnimation].
- *
- * Cycle: 1.5s hold → 0.8s linear sweep → restart.
- *
- * Version 1.0
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3398-625&p=f&m=dev)
  *
- * Sizing is the caller's responsibility — set width and height via [modifier].
+ * For a placeholder sized after a typography line, use the [TangemShimmer] text overload instead.
  *
- * @param modifier Modifier applied to the shimmer's root.
+ * @param modifier Modifier applied to the shimmer's root. Set the width and height here.
  * @param radius Corner radius of the rectangle.
  */
 @Composable
-fun RectangleShimmer(modifier: Modifier = Modifier, radius: Dp = 6.dp) {
+fun TangemShimmer(modifier: Modifier = Modifier, radius: Dp = TangemShimmer.DefaultRadius) {
     val baseColor = TangemTheme.colors3.bg.opaque.secondary
     val progress = LocalTangemShimmerProgress.current ?: rememberShimmerProgressInstance()
     val colorStops = remember(baseColor) { buildColorStops(baseColor) }
@@ -77,63 +70,76 @@ fun RectangleShimmer(modifier: Modifier = Modifier, radius: Dp = 6.dp) {
 }
 
 /**
- * Text-sized shimmer placeholder. Sizes itself to the bounding box of the [text] measured in the
- * typography preset selected by [style], plus the preset's vertical padding (top + bottom).
+ * Text-line shimmer placeholder, sized and styled after the typography line described by [style].
  *
- * @param text Text used to determine the shimmer's size. Not drawn.
- * @param style Typography preset — drives both the measurement style and the vertical padding.
- * @param radius Corner radius of the rectangle.
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3398-625&p=f&m=dev)
+ *
+ * @param style A [TangemTheme.typography3] style (e.g. `TangemTheme.typography3.body.medium`) the
+ * placeholder is sized after. Unrecognized styles fall back to `body.medium`.
  * @param modifier Modifier applied to the shimmer's root.
+ * @param textAlign Horizontal position of the block within the parent width.
  */
 @Composable
-fun TextShimmer(text: String, style: TextShimmerStyle, radius: Dp, modifier: Modifier = Modifier) {
-    val textStyle = style.toTextStyle()
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    val (widthDp, heightDp) = remember(text, textStyle, measurer, density) {
-        val measured = measurer.measure(text = text, style = textStyle)
-        with(density) { measured.size.width.toDp() to measured.size.height.toDp() }
+fun TangemShimmer(style: TextStyle, modifier: Modifier = Modifier, textAlign: TextAlign = TextAlign.Start) {
+    val preset = TangemShimmer.TextPreset.forStyle(style)
+    val lineHeightDp = with(LocalDensity.current) { style.lineHeight.toDp() }
+    val alignment = when (textAlign) {
+        TextAlign.Center -> Alignment.Center
+        TextAlign.End -> Alignment.CenterEnd
+        else -> Alignment.CenterStart
     }
 
-    RectangleShimmer(
-        modifier = modifier.size(
-            width = widthDp,
-            height = heightDp + style.verticalPadding * 2,
-        ),
-        radius = radius,
-    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = alignment,
+    ) {
+        TangemShimmer(
+            modifier = Modifier
+                .fillMaxWidth(preset.widthFraction)
+                .height(lineHeightDp)
+                .padding(vertical = preset.verticalPadding),
+            radius = preset.radius,
+        )
+    }
+}
+
+/** Public API namespace for [TangemShimmer]. */
+object TangemShimmer {
+
+    /** Default corner radius of the rectangle shimmer. */
+    val DefaultRadius: Dp = 6.dp
+
+    /** Per-typography sizing for the [TangemShimmer] text overload. */
+    internal enum class TextPreset(val widthFraction: Float, val verticalPadding: Dp, val radius: Dp) {
+        Display(widthFraction = 0.5f, verticalPadding = 4.dp, radius = 12.dp),
+        HeadingMedium(widthFraction = 0.7f, verticalPadding = 2.dp, radius = 8.dp),
+        HeadingSmall(widthFraction = 0.6f, verticalPadding = 2.dp, radius = 16.dp),
+        Body(widthFraction = 0.5f, verticalPadding = 2.dp, radius = 16.dp),
+        Subheading(widthFraction = 0.4f, verticalPadding = 2.dp, radius = 16.dp),
+        Caption(widthFraction = 0.3f, verticalPadding = 2.dp, radius = 16.dp),
+        ;
+
+        companion object {
+            @Composable
+            @ReadOnlyComposable
+            fun forStyle(style: TextStyle): TextPreset {
+                val typography = TangemTheme.typography3
+                return when (style) {
+                    typography.display.medium -> Display
+                    typography.heading.medium -> HeadingMedium
+                    typography.heading.small -> HeadingSmall
+                    typography.subheading.medium -> Subheading
+                    typography.caption.medium -> Caption
+                    else -> Body
+                }
+            }
+        }
+    }
 }
 
 /**
- * Typography preset for [TextShimmer]. Each preset maps to a [TangemTheme.typography3] style
- * and contributes additional [verticalPadding] applied to both top and bottom — the shimmer
- * block ends up `2 * verticalPadding` taller than the raw measured text.
- */
-enum class TextShimmerStyle(val verticalPadding: Dp) {
-    DISPLAY(verticalPadding = 4.dp),
-    HEADING_MEDIUM(verticalPadding = 2.dp),
-    HEADING_SMALL(verticalPadding = 2.dp),
-    BODY(verticalPadding = 2.dp),
-    SUBHEADING(verticalPadding = 2.dp),
-    CAPTION(verticalPadding = 2.dp),
-}
-
-@Composable
-@ReadOnlyComposable
-private fun TextShimmerStyle.toTextStyle(): TextStyle = when (this) {
-    TextShimmerStyle.DISPLAY -> TangemTheme.typography3.display.medium
-    TextShimmerStyle.HEADING_MEDIUM -> TangemTheme.typography3.heading.medium
-    TextShimmerStyle.HEADING_SMALL -> TangemTheme.typography3.heading.small
-    TextShimmerStyle.BODY -> TangemTheme.typography3.body.medium
-    TextShimmerStyle.SUBHEADING -> TangemTheme.typography3.subheading.medium
-    TextShimmerStyle.CAPTION -> TangemTheme.typography3.caption.medium
-}
-
-/**
- * Wraps [content] so every [RectangleShimmer] / [TextShimmer] inside reuses a single shimmer
- * animation driver. Without this provider each shimmer creates its own
- * [rememberInfiniteTransition] — that scales poorly in lists and lets sweeps drift out of phase.
- * Safe to nest; safe to omit (each shimmer falls back to its own driver).
+ * Wraps [content] so every [TangemShimmer] inside shares a single, in-phase animation driver —
+ * use it around lists of shimmers. Safe to nest; safe to omit.
  */
 @Composable
 fun ProvideTangemShimmer(content: @Composable () -> Unit) {
@@ -198,24 +204,16 @@ private fun TangemShimmerPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            RectangleShimmer(
+            TangemShimmer(
                 modifier = Modifier.size(width = 200.dp, height = 24.dp),
                 radius = 6.dp,
             )
-            RectangleShimmer(
+            TangemShimmer(
                 modifier = Modifier.size(width = 120.dp, height = 16.dp),
                 radius = 4.dp,
             )
-            TextShimmer(
-                text = "Account balance",
-                style = TextShimmerStyle.BODY,
-                radius = 4.dp,
-            )
-            TextShimmer(
-                text = "$12,345.67",
-                style = TextShimmerStyle.HEADING_MEDIUM,
-                radius = 6.dp,
-            )
+            TangemShimmer(style = TangemTheme.typography3.body.medium)
+            TangemShimmer(style = TangemTheme.typography3.heading.medium)
         }
     }
 }
