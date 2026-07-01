@@ -8,15 +8,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.tangem.core.ui.components.AdditionalTextInputDialogUM
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.SelectorDialog
+import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -25,12 +33,19 @@ import com.tangem.core.ui.utils.findActivity
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleHotWalletRestrictionUM
+import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.UsedeskTokenTtlUM
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.toImmutableList
 import java.io.File
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Modifier = Modifier) {
+    var shouldShowTtlSelector by remember { mutableStateOf(value = false) }
+    var shouldShowTtlCustomInput by remember { mutableStateOf(value = false) }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -66,6 +81,13 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
         }
 
         item {
+            TesterActionItem(
+                name = stringResourceSafe(id = R.string.usedesk_token_ttl, state.usedeskTokenTtlUM.currentLabel),
+                onClick = { shouldShowTtlSelector = true },
+            )
+        }
+
+        item {
             val activity = LocalContext.current.findActivity()
 
             TesterActionItem(
@@ -74,6 +96,24 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
                 enabled = state.shareLogsUM.file != null,
             )
         }
+    }
+
+    if (shouldShowTtlSelector) {
+        UsedeskTtlSelectorDialog(
+            um = state.usedeskTokenTtlUM,
+            onCustomRequest = {
+                shouldShowTtlSelector = false
+                shouldShowTtlCustomInput = true
+            },
+            onDismiss = { shouldShowTtlSelector = false },
+        )
+    }
+
+    if (shouldShowTtlCustomInput) {
+        UsedeskTtlCustomInputDialog(
+            um = state.usedeskTokenTtlUM,
+            onDismiss = { shouldShowTtlCustomInput = false },
+        )
     }
 }
 
@@ -87,6 +127,62 @@ private fun TesterActionItem(name: String, onClick: () -> Unit, progress: Boolea
         onClick = onClick,
         showProgress = progress,
         enabled = enabled,
+    )
+}
+
+@Composable
+private fun UsedeskTtlSelectorDialog(um: UsedeskTokenTtlUM, onCustomRequest: () -> Unit, onDismiss: () -> Unit) {
+    val customLabel = stringResourceSafe(R.string.usedesk_token_ttl_custom)
+    val items = remember(um.presets, customLabel) {
+        (um.presets.map(UsedeskTokenTtlUM.Preset::label) + customLabel).toImmutableList()
+    }
+    val selectedIndex = remember(um.presets, um.currentLabel) {
+        um.presets.indexOfFirst { it.label == um.currentLabel }
+            .takeIf { it >= 0 }
+            ?: um.presets.size
+    }
+
+    SelectorDialog(
+        title = stringResourceSafe(R.string.usedesk_token_ttl_title),
+        items = items,
+        selectedItemIndex = selectedIndex,
+        confirmButton = DialogButtonUM(title = stringResourceSafe(id = R.string.common_close), onClick = onDismiss),
+        onSelect = { index ->
+            val preset = um.presets.getOrNull(index)
+            if (preset != null) {
+                um.onPresetSelected(preset.millis)
+                onDismiss()
+            } else {
+                onCustomRequest()
+            }
+        },
+        onDismissDialog = onDismiss,
+    )
+}
+
+@Composable
+private fun UsedeskTtlCustomInputDialog(um: UsedeskTokenTtlUM, onDismiss: () -> Unit) {
+    var value by remember { mutableStateOf(TextFieldValue()) }
+    val minutes = value.text.toLongOrNull()
+    val isValid = minutes != null && minutes > 0
+
+    TextInputDialog(
+        title = stringResourceSafe(R.string.usedesk_token_ttl_title),
+        fieldValue = value,
+        onValueChange = { newValue -> value = newValue.copy(text = newValue.text.filter(Char::isDigit)) },
+        textFieldParams = AdditionalTextInputDialogUM(
+            label = stringResourceSafe(R.string.usedesk_token_ttl_custom),
+            placeholder = "15",
+        ),
+        confirmButton = DialogButtonUM(
+            isEnabled = isValid,
+            onClick = {
+                if (isValid) um.onCustomMinutesSelected(minutes)
+                onDismiss()
+            },
+        ),
+        dismissButton = DialogButtonUM(title = stringResourceSafe(id = R.string.common_close), onClick = onDismiss),
+        onDismissDialog = onDismiss,
     )
 }
 
@@ -126,6 +222,15 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
             state = TesterActionsContentState(
                 hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable {},
                 toggleHotWalletRestrictionUM = ToggleHotWalletRestrictionUM(isEnabled = true) {},
+                usedeskTokenTtlUM = UsedeskTokenTtlUM(
+                    currentLabel = "7 days",
+                    presets = listOf(
+                        UsedeskTokenTtlUM.Preset(label = "7 days", millis = 7.days.inWholeMilliseconds),
+                        UsedeskTokenTtlUM.Preset(label = "15 minutes", millis = 15.minutes.inWholeMilliseconds),
+                    ).toImmutableList(),
+                    onPresetSelected = {},
+                    onCustomMinutesSelected = {},
+                ),
                 shareLogsUM = TesterActionsContentState.ShareLogsUM(file = null),
                 onBackClick = {},
             ),
