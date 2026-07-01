@@ -1,4 +1,4 @@
-package com.tangem.features.send.send.confirm.model.transformers
+package com.tangem.features.send.v2.send.confirm.model.transformers
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
@@ -8,6 +8,11 @@ import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -18,7 +23,9 @@ import com.tangem.features.send.api.entity.FeeFiatRateUM
 import com.tangem.features.send.api.entity.FeeItem
 import com.tangem.features.send.api.entity.FeeNonce
 import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
 import io.mockk.mockk
 import io.mockk.verify
@@ -77,6 +84,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState: ConfirmUM = ConfirmUM.Empty
 
@@ -99,6 +108,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -121,6 +132,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -135,6 +148,58 @@ class SendConfirmationNotificationsTransformerV2Test {
     }
 
     @Test
+    fun `GIVEN fee subtracted from amount WHEN transform THEN footer sending excludes the fee`() = runTest {
+        // GIVEN: fee is taken out of the entered amount, so the footer must show the amount alone (not amount + fee).
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val amountUM = createTestAmountUM()
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = amountUM,
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = true,
+            isFeeExceedingBalance = false,
+        )
+
+        // WHEN
+        val result = transformer.transform(createTestConfirmUM())
+
+        // THEN: sending = entered fiat amount (50.00), fee NOT added on top.
+        val content = result as ConfirmUM.Content
+        assertThat(content.sendingFooter).isEqualTo(
+            expectedFiatFooter(sendingValue = BigDecimal("50.00"), feeSelectorUM = feeSelectorUM),
+        )
+    }
+
+    @Test
+    fun `GIVEN fee exceeds balance WHEN transform THEN footer sending is zero`() = runTest {
+        // GIVEN: the fee alone exceeds the balance → nothing can be sent.
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val amountUM = createTestAmountUM()
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = amountUM,
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = true,
+            isFeeExceedingBalance = true,
+        )
+
+        // WHEN
+        val result = transformer.transform(createTestConfirmUM())
+
+        // THEN: sending = $0.
+        val content = result as ConfirmUM.Content
+        assertThat(content.sendingFooter).isEqualTo(
+            expectedFiatFooter(sendingValue = BigDecimal.ZERO, feeSelectorUM = feeSelectorUM),
+        )
+    }
+
+    @Test
     fun `GIVEN fee too high WHEN transform THEN returns state with too high notification`() = runTest {
         // GIVEN
         val feeSelectorUM = createFeeTooHighUM()
@@ -146,6 +211,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -171,6 +238,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -197,6 +266,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -261,6 +332,43 @@ class SendConfirmationNotificationsTransformerV2Test {
             isEditingDisabled = false,
             reduceAmountBy = BigDecimal.ZERO,
             isIgnoreReduce = false,
+        )
+    }
+
+    private fun createFiatConvertibleFeeSelectorUM(feeValue: BigDecimal): FeeSelectorUM.Content {
+        val fee = Fee.Common(amount = Amount(currencySymbol = "SOL", value = feeValue, decimals = 8))
+        return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
+            fees = TransactionFee.Single(fee),
+            feeItems = persistentListOf(FeeItem.Market(fee)),
+            selectedFeeItem = FeeItem.Market(fee),
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
+            ),
+            feeFiatRateUM = FeeFiatRateUM(rate = BigDecimal("50000"), appCurrency = appCurrency),
+            feeNonce = FeeNonce.Nonce(nonce = BigInteger.ZERO, onNonceChange = {}),
+        )
+    }
+
+    /** Builds the expected footer reference for a fiat-convertible fee, mirroring the transformer's formatting. */
+    private fun expectedFiatFooter(sendingValue: BigDecimal, feeSelectorUM: FeeSelectorUM.Content): TextReference {
+        val fee = feeSelectorUM.selectedFeeItem.fee
+        val fiatFeeValue = fee.amount.value?.multiply(feeSelectorUM.feeFiatRateUM!!.rate)
+        val sending = sendingValue.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        val feeText = formatFooterFiatFee(
+            amount = fee.amount.copy(value = fiatFeeValue),
+            isFeeConvertibleToFiat = true,
+            isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
+            appCurrency = appCurrency,
+        )
+        return resourceReference(
+            id = R.string.send_summary_transaction_description,
+            formatArgs = wrappedList(sending, feeText),
         )
     }
 

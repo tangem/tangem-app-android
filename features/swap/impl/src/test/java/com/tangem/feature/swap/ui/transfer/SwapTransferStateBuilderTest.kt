@@ -591,6 +591,104 @@ internal class SwapTransferStateBuilderTest {
         }
 
     @Test
+    fun `GIVEN fee subtracted from amount WHEN updateTransferButtonEnableState THEN footer sending excludes the fee`() =
+        runTest {
+            // Arrange: subtraction available + amount + fee exceeds balance (1.0), but fee (0.5) <= balance.
+            // The entered amount is the gross that already includes the fee, so the footer must not add it again.
+            val fromAmount = BigDecimal("1.0")
+            val transferState = buildTransferState(
+                fromAmount = fromAmount,
+                toAmount = fromAmount,
+                isAccountsMode = false,
+                isAmountSubtractAvailable = true,
+            )
+            val feePaidStatus = buildSwapCurrencyStatus(coldWallet)
+            val feePaidRate = feePaidStatus.status.value.fiatRate!!
+            val dataState = SwapProcessDataState(
+                fromSwapCurrencyStatus = buildStatusWithNetwork(hasFiatFeeRate = true),
+                feePaidCryptoCurrency = feePaidStatus.status,
+            )
+            val feeValue = BigDecimal("0.5")
+            val fee = Fee.Common(amount = Amount(currencySymbol = "ETH", value = feeValue, decimals = 18))
+            val appCurrency = transferState.appCurrency
+            // Sending is the entered amount only — the fee is NOT added on top.
+            val expectedFiatSending = (fromAmount * QUOTE).format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            }
+            val expectedFiatFee = feePaidRate.multiply(feeValue).format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            }
+
+            // Act
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = fee,
+                isTangemPayWithdrawal = false,
+                feeSelectorUM = null,
+            )
+
+            // Assert
+            assertThat(result.transferFooter).isEqualTo(
+                resourceReference(
+                    id = com.tangem.features.send.impl.R.string.send_summary_transaction_description,
+                    formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN fee exceeds balance WHEN updateTransferButtonEnableState THEN footer sending is zero`() =
+        runTest {
+            // Arrange: subtraction available + fee (2.0) exceeds balance (1.0) → nothing can be sent.
+            val fromAmount = BigDecimal("1.0")
+            val transferState = buildTransferState(
+                fromAmount = fromAmount,
+                toAmount = fromAmount,
+                isAccountsMode = false,
+                isAmountSubtractAvailable = true,
+            )
+            val feePaidStatus = buildSwapCurrencyStatus(coldWallet)
+            val feePaidRate = feePaidStatus.status.value.fiatRate!!
+            val dataState = SwapProcessDataState(
+                fromSwapCurrencyStatus = buildStatusWithNetwork(hasFiatFeeRate = true),
+                feePaidCryptoCurrency = feePaidStatus.status,
+            )
+            val feeValue = BigDecimal("2.0")
+            val fee = Fee.Common(amount = Amount(currencySymbol = "ETH", value = feeValue, decimals = 18))
+            val appCurrency = transferState.appCurrency
+            val expectedFiatSending = BigDecimal.ZERO.format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            }
+            val expectedFiatFee = feePaidRate.multiply(feeValue).format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            }
+
+            // Act
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = fee,
+                isTangemPayWithdrawal = false,
+                feeSelectorUM = null,
+            )
+
+            // Assert
+            assertThat(result.transferFooter).isEqualTo(
+                resourceReference(
+                    id = com.tangem.features.send.impl.R.string.send_summary_transaction_description,
+                    formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
+                ),
+            )
+        }
+
+    @Test
     fun `GIVEN non-Tron fee and non-fiat-convertible network WHEN updateTransferButtonEnableState THEN transferFooter uses no-fiat-fee description`() =
         runTest {
             val fromAmount = BigDecimal("1")
@@ -919,6 +1017,7 @@ internal class SwapTransferStateBuilderTest {
         isInsufficientBalance: Boolean = false,
         isFeeCoverage: Boolean = false,
         isSendingAmountLoading: Boolean = false,
+        isAmountSubtractAvailable: Boolean = false,
     ): SwapState.Transfer {
         val fromInfo = TokenSwapInfo(
             tokenAmount = SwapAmount(value = fromAmount, decimals = fromCurrencyStatus.currency.decimals),
@@ -942,7 +1041,7 @@ internal class SwapTransferStateBuilderTest {
             isFeeCoverage = isFeeCoverage,
             sendingAmount = toAmount,
             tronFeeNotificationShowCount = 0,
-            isAmountSubtractAvailable = false,
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
             isSendingAmountLoading = isSendingAmountLoading,
         )
     }

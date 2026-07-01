@@ -515,6 +515,13 @@ internal class SendConfirmModel @Inject constructor(
                     feeCryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
                 ),
             )
+            val balance = cryptoCurrencyStatus.value.amount.orZero()
+            val feeValue = confirmData.fee?.amount?.value.orZero()
+            val isTotalSendingMoreThanBalance = confirmData.enteredAmount.orZero() + feeValue > balance
+            val isFeeSubtractedFromAmount = isAmountSubtractAvailable && isTotalSendingMoreThanBalance
+            // Fee alone can't be covered by the balance → nothing can be sent, footer must show $0.
+            val isFeeExceedingBalance = isAmountSubtractAvailable && feeValue > balance
+
             _uiState.update { state ->
                 state.copy(
                     confirmUM = SendConfirmationNotificationsTransformerV2(
@@ -524,6 +531,8 @@ internal class SendConfirmModel @Inject constructor(
                         cryptoCurrency = cryptoCurrencyStatus.currency,
                         appCurrency = appCurrency,
                         analyticsCategoryName = params.analyticsCategoryName,
+                        isFeeSubtractedFromAmount = isFeeSubtractedFromAmount,
+                        isFeeExceedingBalance = isFeeExceedingBalance,
                     ).transform(uiState.value.confirmUM),
                 )
             }

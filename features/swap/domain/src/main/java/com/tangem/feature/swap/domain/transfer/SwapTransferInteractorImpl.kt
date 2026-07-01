@@ -37,6 +37,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -69,6 +70,7 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
+    private val validateTransactionUseCase: ValidateTransactionUseCase,
 ) : SwapTransferInteractor {
 
     @Suppress("LongMethod")
@@ -139,6 +141,13 @@ class SwapTransferInteractorImpl @Inject constructor(
             userWalletId = toSwapCurrencyStatus.userWalletId,
             currency = toToken,
         ).getOrNull() is AssetRequirementsCondition.RequiredTrustline
+        val validationResult = manageTransactionValidationWarnings(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            destinationAddress = toSwapCurrencyStatus.destinationAddress(),
+            amount = fromTokenInfo.tokenAmount,
+            fee = fee,
+        )
+        val minAdaValue = (fee as? Fee.CardanoToken)?.minAdaValue
         return SwapState.Transfer(
             userWallet = userWallet,
             fromTokenInfo = fromTokenInfo,
@@ -154,8 +163,27 @@ class SwapTransferInteractorImpl @Inject constructor(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
             isSendingAmountLoading = coverageState.isSendingAmountLoading,
             currencyCheck = currencyCheck,
+            validationResult = validationResult,
+            minAdaValue = minAdaValue,
             hasRequiredTrustline = hasRequiredTrustline,
         )
+    }
+
+    private suspend fun manageTransactionValidationWarnings(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        destinationAddress: String?,
+        amount: SwapAmount,
+        fee: Fee?,
+    ): Throwable? {
+        destinationAddress ?: return null
+        return validateTransactionUseCase(
+            amount = amount.value.convertToSdkAmount(fromSwapCurrencyStatus.status),
+            fee = fee,
+            memo = null,
+            destination = destinationAddress,
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = fromSwapCurrencyStatus.currency.network,
+        ).leftOrNull()
     }
 
     private suspend fun getCryptoCurrencyWarning(

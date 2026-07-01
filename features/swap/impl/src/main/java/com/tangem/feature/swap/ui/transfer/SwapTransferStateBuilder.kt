@@ -364,6 +364,8 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 fee = fee,
                 tokenSwapInfo = transferState.fromTokenInfo,
                 appCurrency = transferState.appCurrency,
+                isFeeSubtractedFromAmount = isFeeSubtractedFromAmount(transferState, fee),
+                isFeeExceedingBalance = isFeeExceedingBalance(transferState, fee),
             ),
         )
     }
@@ -384,11 +386,34 @@ internal class SwapTransferStateBuilder @Inject constructor(
         }
     }
 
+    private fun isFeeSubtractedFromAmount(transferState: SwapState.Transfer, fee: Fee?): Boolean {
+        if (!transferState.isAmountSubtractAvailable || fee == null) return false
+        val swapCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus
+        val balance = swapCurrencyStatus.status.value.amount.orZero()
+        val amountValue = transferState.fromTokenInfo.tokenAmount.value
+        return amountValue + fee.amount.value.orZero() > balance
+    }
+
+    /**
+     * True when the fee alone exceeds the balance: nothing can be sent (not even enough to cover the fee), so
+     * the footer must show $0 instead of a positive total. Only meaningful when the fee is paid from the same
+     * balance (subtraction available).
+     */
+    private fun isFeeExceedingBalance(transferState: SwapState.Transfer, fee: Fee?): Boolean {
+        if (!transferState.isAmountSubtractAvailable || fee == null) return false
+        val swapCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus
+        val balance = swapCurrencyStatus.status.value.amount.orZero()
+        return fee.amount.value.orZero() > balance
+    }
+
+    @Suppress("LongParameterList")
     private fun getSendingFooterText(
         dataState: SwapProcessDataState,
         fee: Fee?,
         tokenSwapInfo: TokenSwapInfo,
         appCurrency: AppCurrency,
+        isFeeSubtractedFromAmount: Boolean,
+        isFeeExceedingBalance: Boolean,
     ): TextReference? {
         if (fee == null) return null
 
@@ -398,10 +423,13 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val fiatFeeValue = value?.fiatRate?.multiply(fee.amount.value)
         val isFeeConvertibleToFiat = status.currency.network.hasFiatFeeRate
 
-        val fiatSendingValue = if (isFeeConvertibleToFiat) {
-            fiatFeeValue?.let { fiatAmountValue.plus(it) }
-        } else {
-            fiatAmountValue
+        val fiatSendingValue = when {
+            !isFeeConvertibleToFiat -> fiatAmountValue
+            // Fee alone exceeds the balance → the transaction can't go through, nothing is sent.
+            isFeeExceedingBalance -> BigDecimal.ZERO
+            // Fee is taken out of the entered amount → it already includes the fee, don't add it again.
+            isFeeSubtractedFromAmount -> fiatAmountValue
+            else -> fiatFeeValue?.let { fiatAmountValue.plus(it) }
         }
 
         val fiatSending = fiatSendingValue.format {
