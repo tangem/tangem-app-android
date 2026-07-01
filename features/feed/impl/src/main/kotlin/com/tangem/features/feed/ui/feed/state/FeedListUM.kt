@@ -2,7 +2,6 @@ package com.tangem.features.feed.ui.feed.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
-import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
@@ -86,7 +85,7 @@ internal data class SortChartConfigUM(
 internal sealed interface ForYouBannerUM {
 
     data class Content(
-        val banner: TangemMessageUM,
+        val onClick: () -> Unit,
     ) : ForYouBannerUM
 
     data object Empty : ForYouBannerUM
