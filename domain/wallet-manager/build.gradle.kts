@@ -1,7 +1,6 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -10,34 +9,32 @@ android {
 }
 
 dependencies {
-    /** Domain models */
-    api(projects.domain.walletManager.models)
 
-    /** Project - Domain */
-    implementation(projects.core.utils)
-    implementation(projects.core.error)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain)
+    // endregion
+
+    // region Core modules
+    api(projects.core.utils)
+    // endregion
+
+    // region Domain models
     api(projects.domain.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.demo.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.txhistory.models)
+    api(projects.domain.transaction.models)
+    api(projects.domain.txhistory.models)
+    api(projects.domain.walletManager.models)
+    // endregion
 
-    /** Tangem libs */
-    implementation(tangemDeps.card.core)
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    // endregion
 
-    /** Libs - Other */
-    implementation(projects.libs.blockchainSdk)
-    implementation(tangemDeps.blockchain)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    ksp(deps.moshi.kotlin.codegen)
-
-    /** Testing libraries */
-    testImplementation(deps.test.junit5)
+    // region Tests
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
+    // endregion
 }
