@@ -8,5 +8,7 @@ interface TangemPayTxHistoryItemsStore {
 
     suspend fun remove(key: String)
 
+    suspend fun remove(keys: List<String>)
+
     suspend fun store(key: String, cursor: String, value: List<TangemPayTxHistoryItem>)
 }

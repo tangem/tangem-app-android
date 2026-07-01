@@ -14,11 +14,14 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.converter.TxHistoryStatusPillConverter.Input as PillInput
+import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -98,7 +101,14 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private fun transferContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content {
         val counterpartyAddress = (tx.interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
         val direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM
-        val ownSubtitle = counterpartyAddress?.let { resolveOwnSubtitle(lookupContext, it, direction) }
+        val ownSubtitle = counterpartyAddress?.let { address ->
+            resolveOwnSubtitle(
+                lookupContext = lookupContext,
+                networkRawId = currency.network.id.rawId,
+                address = address,
+                direction = direction,
+            )
+        }
 
         val title = when {
             ownSubtitle != null -> tx.statusAwareTitle(R.string.common_transfer, R.string.common_transferred)
@@ -261,25 +271,25 @@ private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
 
 private fun resolveOwnSubtitle(
     lookupContext: TxHistoryLookupContext?,
+    networkRawId: Network.RawID,
     address: String,
     direction: ContentSubtitle.Direction,
 ): ContentSubtitle? {
     val ctx = lookupContext ?: return null
-    val account = ctx.ownAccountByAddress[address] ?: return null
-    return if (ctx.isAccountsModeEnabled) {
-        ContentSubtitle.OwnAccount(
+    return when (val resolved = ctx.resolveOwner(address, networkRawId)) {
+        is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
             direction = direction,
-            accountName = account.accountName.toUM().value,
-            iconResId = account.icon.value.getResId(),
-            iconBackgroundColor = account.icon.color.getUiColor(),
+            accountName = resolved.account.accountName.toUM().value,
+            iconResId = resolved.account.icon.value.getResId(),
+            iconBackgroundColor = resolved.account.icon.color.getUiColor(),
         )
-    } else {
-        val walletInfo = ctx.walletInfoById[account.accountId.userWalletId] ?: return null
-        ContentSubtitle.OwnWallet(
+        is ResolvedOwner.OwnWallet -> ContentSubtitle.OwnWallet(
             direction = direction,
-            walletName = walletInfo.name,
-            deviceIconUM = walletInfo.deviceIconUM,
+            walletName = resolved.walletInfo.name,
+            deviceIconUM = resolved.walletInfo.deviceIconUM,
         )
+        // External counterparty: caller falls back to ContentSubtitle.ExternalAddress.
+        is ResolvedOwner.External -> null
     }
 }
 

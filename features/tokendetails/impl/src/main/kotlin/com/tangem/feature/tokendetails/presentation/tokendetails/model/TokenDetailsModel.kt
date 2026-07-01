@@ -21,7 +21,6 @@ import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.features.rating.RatingComponent
 import com.tangem.feature.swap.domain.SwapFeedbackUseCase
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -202,7 +201,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val designFeatureToggles: DesignFeatureToggles,
     private val redesignStateController: TokenDetailsStateController,
     private val swapFeedbackUseCase: SwapFeedbackUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
@@ -1182,7 +1180,6 @@ internal class TokenDetailsModel @Inject constructor(
         txExternalUrl: String,
         userWalletIdStringValue: String,
     ) {
-        if (!swapFeatureToggles.isSwapRateExperienceEnabled) return
         ratingSlotNavigation.activate(
             RatingComponent.Params(
                 onLoadRating = {

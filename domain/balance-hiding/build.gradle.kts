@@ -4,8 +4,16 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.domain.core)
-    implementation(deps.kotlin.coroutines)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.balanceHiding.models)
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.balanceHiding.models)
+    // endregion
 }

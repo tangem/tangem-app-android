@@ -24,6 +24,7 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.lib.crypto.BlockchainUtils.isTron
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -112,7 +113,7 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 onReduceToAmount(amount.copy(value = reduceTo))
             },
         )
-        if (!isCardano) {
+        if (!isCardano && !feeValue.isZero()) {
             addDustWarningNotification(
                 dustValue = state.currencyCheck?.dustValue,
                 feeValue = feeValue,

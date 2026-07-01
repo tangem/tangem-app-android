@@ -4,7 +4,13 @@ plugins {
 }
 
 dependencies {
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Domain
     api(projects.domain.core)
     api(projects.domain.models)
-    api(projects.domain.wallets.models)
+    // endregion
 }

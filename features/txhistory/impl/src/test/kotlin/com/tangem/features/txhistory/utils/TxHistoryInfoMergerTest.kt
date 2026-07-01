@@ -110,6 +110,8 @@ internal class TxHistoryInfoMergerTest {
             provider = null,
             payinHash = matchHash.takeIf { isOutgoing },
             payoutHash = matchHash.takeUnless { isOutgoing },
+            fromAddress = null,
+            payoutAddress = null,
             fromAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "eth", contractAddress = "0"),
                 amount = BigDecimal("1.5"),

@@ -5,8 +5,15 @@ plugins {
 
 dependencies {
 
-    /** Project - Domain */
-    implementation(projects.core.utils)
-    implementation(projects.domain.core)
-    implementation(projects.domain.appCurrency.models)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.appCurrency.models)
+    // endregion
 }

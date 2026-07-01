@@ -6,12 +6,13 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.domain.models)
 
-    implementation(deps.moshi.kotlin)
+    // region Other libraries
+    api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
-    implementation(deps.moshi.adapters)
-    implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
-    implementation(projects.core.error)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

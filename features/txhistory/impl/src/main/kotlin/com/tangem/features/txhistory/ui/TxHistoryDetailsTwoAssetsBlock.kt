@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
+import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -45,9 +46,9 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.AssetOwnerUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.AssetUM
 
 /**
- * Two-asset ("exchange") block of the details card, used by Swap (and later Onramp): one `bg.tertiary` rounded cell
- * with the [from] ("You sent") side over the [to] ("You receive") side, split by an inset dashed divider with a
- * centered down-arrow masking the line. Each side is a [TangemRow]: label over the signed amount, avatar trailing.
+ * Two-asset ("exchange") block of the details card, used by Swap and Onramp: one `bg.tertiary` rounded cell
+ * with the [from] side over the [to] side, split by an inset dashed divider with a centered down-arrow masking the
+ * line. Each side is a [TangemRow]: label (with an optional owner) over the signed amount, currency icon trailing.
  *
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=1265-87546)
  *
@@ -124,9 +125,9 @@ private fun TwoAssetsSideRow(asset: AssetUM, modifier: Modifier = Modifier) {
 }
 
 /**
- * Caption label above a leg amount. Renders the [label] prefix ("You sent" / "You receive", or "From" / "To" when an
- * [owner] is present) and, for a resolved [owner], its inline 16dp decoration in the Figma order — the account avatar
- * leads its name, the wallet key-card icon trails its name.
+ * Caption label above a leg amount. Renders the [label] prefix ("You sent" / "You receive" / "You paid", or "From" /
+ * "To" when an [owner] is present) and, for a resolved [owner], its inline 16dp decoration in the Figma order — the
+ * account avatar and the external-address identicon lead their name, the wallet key-card icon trails its name.
  */
 @Composable
 private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modifier: Modifier = Modifier) {
@@ -137,7 +138,9 @@ private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modif
     ) {
         LabelText(text = label)
         when (owner) {
-            is AssetOwnerUM.Account -> {
+            is AssetOwnerUM.Account,
+            is AssetOwnerUM.Address,
+            -> {
                 AssetOwnerIcon(owner = owner)
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
             }
@@ -162,7 +165,7 @@ private fun LabelText(text: TextReference, modifier: Modifier = Modifier) {
     )
 }
 
-/** 16dp inline owner decoration: the account glyph over its color, or the wallet device card. */
+/** 16dp inline owner decoration: the account glyph over its color, the wallet device card, or an address identicon. */
 @Composable
 private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
     val iconModifier = modifier.size(16.dp)
@@ -185,6 +188,10 @@ private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
         is AssetOwnerUM.Wallet -> TangemDeviceIcon(
             state = owner.deviceIconUM,
             modifier = iconModifier,
+        )
+        is AssetOwnerUM.Address -> IdentIcon(
+            address = owner.rawAddress,
+            modifier = iconModifier.clip(CircleShape),
         )
     }
 }
@@ -217,7 +224,7 @@ private fun DashedDivider(modifier: Modifier = Modifier) {
 
 // region Preview
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LongMethod")
 @Preview(name = "Light", showBackground = true, widthDp = 360)
 @Preview(name = "Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
 @Composable
@@ -281,6 +288,27 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     owner = AssetOwnerUM.Wallet(
                         name = stringReference("My Wallet"),
                         deviceIconUM = DeviceIconUM.Ring(mainColor = Color(0xFF9F86FF)),
+                    ),
+                ),
+            )
+            // Send-and-swap — the payout went to an external (non-user) address.
+            TxHistoryDetailsTwoAssetsBlock(
+                from = previewAsset(
+                    label = "From",
+                    amount = "- 390 USDT",
+                    isFaded = false,
+                    owner = AssetOwnerUM.Wallet(
+                        name = stringReference("Tangem 2.0"),
+                        deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
+                    ),
+                ),
+                to = previewAsset(
+                    label = "To",
+                    amount = "+ 1,800.00 POL",
+                    isFaded = false,
+                    owner = AssetOwnerUM.Address(
+                        name = stringReference("33Bd3…a21412B"),
+                        rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
                     ),
                 ),
             )

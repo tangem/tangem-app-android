@@ -268,7 +268,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             currency = coin,
             txHistoryUiActions = txHistoryUiActions,
             lookupContext = TxHistoryLookupContext(
-                ownAccountByAddress = mapOf(USER_ADDRESS to ownAccount),
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = true,
                 walletInfoById = emptyMap(),
             ),
@@ -296,7 +296,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             currency = coin,
             txHistoryUiActions = txHistoryUiActions,
             lookupContext = TxHistoryLookupContext(
-                ownAccountByAddress = mapOf(USER_ADDRESS to ownAccount),
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = false,
                 walletInfoById = mapOf(userWalletId to walletInfo),
             ),
@@ -323,7 +323,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             currency = coin,
             txHistoryUiActions = txHistoryUiActions,
             lookupContext = TxHistoryLookupContext(
-                ownAccountByAddress = mapOf(USER_ADDRESS to ownAccount),
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = false,
                 walletInfoById = emptyMap(),
             ),

@@ -52,7 +52,6 @@ import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -73,7 +72,6 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val appRouter: AppRouter,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -124,7 +122,6 @@ internal class StateBuilder(
             onSwapUIModeChange = actions.onSwapUIModeChange,
             onSwapTypeMenuOpened = actions.onSwapTypeMenuOpened,
             onTronBannerShown = actions.onTronBannerShown,
-            shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
         )
     }
 
@@ -737,16 +734,15 @@ internal class StateBuilder(
 
     /**
      * Builds the predefined percent buttons once per state update (off the composition path).
-     * The row is gated by the feature toggle; the MAX button is included only when
-     * [shouldShowMaxAmount] is `true` (e.g. it is dropped for a native coin swapped within the same
-     * network, where spending the full balance would leave nothing for the network fee).
+     * The MAX button is included only when [shouldShowMaxAmount] is `true` (e.g. it is dropped for a
+     * native coin swapped within the same network, where spending the full balance would leave nothing
+     * for the network fee).
      */
     private fun createPredefinedButtons(
         fromToken: CryptoCurrency?,
         toCurrency: CryptoCurrency?,
         isTransferMode: Boolean = false,
     ): ImmutableList<PredefinedPercentButtonUM> {
-        if (!swapFeatureToggles.isSwapPredefinedButtonsEnabled) return persistentListOf()
         val shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrency, isTransferMode)
         return PredefinedPercentAmount.entries
             .filter { it != PredefinedPercentAmount.MAX || shouldShowMaxAmount }
@@ -1259,7 +1255,7 @@ internal class StateBuilder(
             providerType == ExchangeProviderType.DEX.providerName ||
                 providerType == ExchangeProviderType.DEX_BRIDGE.providerName
         }
-        val availableFilters = if (swapFeatureToggles.isSwapProviderFilterEnabled && hasCex && hasDex) {
+        val availableFilters = if (hasCex && hasDex) {
             persistentListOf(ProviderFilterType.ALL, ProviderFilterType.CEX, ProviderFilterType.DEX)
         } else {
             persistentListOf()

@@ -8,47 +8,58 @@ android {
     namespace = "com.tangem.domain.transaction"
 }
 
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
+
+    // region Kotlin
+    api(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
+    // endregion
 
-    implementation(projects.core.utils)
-    implementation(projects.core.ui)
-    implementation(projects.core.datasource)
-
-    /** Tangem SDKs */
-    implementation(tangemDeps.card.core)
+    // region Tangem SDK
+    api(tangemDeps.blockchain)
+    api(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
-    implementation(tangemDeps.blockchain)
+    // endregion
 
+    // region Core modules
+    api(projects.core.utils)
+    implementation(projects.core.ui)
+    // endregion
+
+    // region Libs
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
+    // endregion
 
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.common)
-    implementation(projects.domain.dynamicAddresses)
-    implementation(projects.domain.dynamicAddresses.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.card)
-    implementation(projects.domain.notifications)
+    // region Domain
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.demo)
+    api(projects.domain.dynamicAddresses)
     api(projects.domain.networks)
+    api(projects.domain.notifications)
+    api(projects.domain.tokens)
+    api(projects.domain.walletManager)
+    implementation(projects.domain.core)
+    implementation(projects.domain.dynamicAddresses.models)
+    implementation(projects.domain.legacy)
+    // endregion
 
-    testRuntimeOnly(deps.test.junit5.engine)
+    // region Domain models
+    api(projects.domain.demo.models)
+    api(projects.domain.models)
+    api(projects.domain.transaction.models)
+    api(projects.domain.wallets.models)
+    // endregion
+
+    // region Tests
     testRuntimeOnly(deps.test.junit5.vintage.engine)
+    testImplementation(deps.test.junit)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testImplementation(projects.test.mock)
+    // endregion
 }

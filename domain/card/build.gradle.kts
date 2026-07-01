@@ -8,30 +8,43 @@ android {
     namespace = "com.tangem.domain.card"
 }
 dependencies {
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.error)
-    implementation(projects.core.error.ext)
 
-    implementation(projects.domain.demo)
-    implementation(projects.domain.core)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager) // TODO refactor to use from data module
-    implementation(projects.libs.blockchainSdk)
-    // TODO: Remove after new card scan result was implemented
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.visa.models)
-    implementation(projects.core.utils)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(projects.libs.tangemSdkApi)
-
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain) {
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+    api(tangemDeps.card.core)
+    // endregion
 
-    /** Testing libraries */
-    testImplementation(projects.common.test)
+    // region Core modules
+    api(projects.core.analytics.models)
+    api(projects.core.utils)
+    // core:error provides UniversalError — a supertype of VisaActivationError (used via
+    // domain:visa:models) the compiler needs on the classpath, though never referenced directly.
+    implementation(projects.core.error)
+    // endregion
+
+    // region Domain
+    implementation(projects.domain.core)
+    implementation(projects.domain.demo.models)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.visa.models)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    api(projects.libs.tangemSdkApi)
+    // endregion
+
+    // region Tests
     testImplementation(projects.test.core)
+    // endregion
 }

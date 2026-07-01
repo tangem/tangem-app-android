@@ -220,6 +220,8 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             provider = null,
             payinHash = null,
             payoutHash = null,
+            fromAddress = null,
+            payoutAddress = null,
             fromAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "eth", contractAddress = "0"),
                 amount = fromAmount,
@@ -245,6 +247,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             createdAtMillis = 100,
             provider = null,
             payoutHash = null,
+            payoutAddress = null,
             fromFiat = Amount(
                 currencySymbol = "SEK",
                 value = BigDecimal("100"),

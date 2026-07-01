@@ -9,7 +9,6 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.features.swap.v2.api.SwapFeatureToggles
 import com.tangem.features.swap.v2.impl.chooseprovider.SwapChooseProviderComponent
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapChooseProviderBottomSheetContent
 import com.tangem.features.swap.v2.impl.chooseprovider.model.converter.SwapProviderListItemConverter
@@ -27,7 +26,6 @@ import javax.inject.Inject
 internal class SwapChooseProviderModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -80,7 +78,7 @@ internal class SwapChooseProviderModel @Inject constructor(
         val hasDex = displayableProviders.any {
             it.provider?.type == ExpressProviderType.DEX || it.provider?.type == ExpressProviderType.DEX_BRIDGE
         }
-        val availableFilters = if (swapFeatureToggles.isSwapProviderFilterEnabled && hasCex && hasDex) {
+        val availableFilters = if (hasCex && hasDex) {
             persistentListOf(ProviderFilterType.ALL, ProviderFilterType.CEX, ProviderFilterType.DEX)
         } else {
             persistentListOf()

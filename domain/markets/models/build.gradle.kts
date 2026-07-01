@@ -5,10 +5,16 @@ plugins {
 }
 
 dependencies {
-    api(projects.domain.models)
-    api(projects.domain.tokens.models)
-    implementation(projects.domain.core)
 
-    implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
+
+    // region Other libraries
+    api(deps.jodatime)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

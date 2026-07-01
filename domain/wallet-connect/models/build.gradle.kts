@@ -6,17 +6,19 @@ plugins {
 }
 dependencies {
 
-    /* Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.blockaid.models)
-    implementation(projects.domain.transaction.models)
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
 
-    /* Other */
-    implementation(deps.moshi)
+    // region Other libraries
+    api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
+    // endregion
 
-    /* Utils */
-    implementation(deps.kotlin.serialization)
+    // region Domain models
+    api(projects.domain.blockaid.models)
+    api(projects.domain.models)
+    api(projects.domain.tokens.models)
+    api(projects.domain.transaction.models)
+    // endregion
 }

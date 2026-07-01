@@ -5,10 +5,26 @@ plugins {
 }
 
 dependencies {
-    api(projects.domain.core)
-    api(projects.domain.models)
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.serialization)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Core modules
     api(projects.core.pagination)
-    implementation(projects.domain.account)
-    implementation(projects.domain.common)
-    implementation(deps.kotlin.serialization)
+    // endregion
+
+    // region Domain
+    api(projects.domain.account)
+    api(projects.domain.common)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

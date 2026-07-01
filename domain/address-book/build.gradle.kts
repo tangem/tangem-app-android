@@ -11,21 +11,35 @@ android {
 
 dependencies {
 
-    api(projects.domain.core)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.serialization)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    api(deps.jodatime)
+    // endregion
+
+    // region Core modules
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.tokens)
+    api(projects.domain.transaction)
+    // endregion
+
+    // region Domain models
     api(projects.domain.models)
+    // endregion
 
-    implementation(projects.domain.common)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.tokens)
-
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
-
-    // region Test libraries
-    testImplementation(projects.test.core)
-    testImplementation(projects.test.mock)
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
     // endregion
 }

@@ -64,10 +64,6 @@
         "version": "6.0"
     },
     {
-        "name": "SWAP_AB_ENABLED",
-        "version": "5.39"
-    },
-    {
         "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
         "version": "undefined"
     },
@@ -84,23 +80,11 @@
         "version": "6.0"
     },
     {
-        "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
-        "version": "5.39"
-    },
-    {
         "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
         "version": "5.39"
     },
     {
         "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED",
         "version": "5.39"
     },
     {

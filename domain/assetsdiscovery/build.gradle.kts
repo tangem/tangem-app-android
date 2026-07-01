@@ -8,24 +8,29 @@ android {
     namespace = "com.tangem.domain.assetsdiscovery"
 }
 
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
-    api(projects.domain.core)
-    implementation(projects.domain.models)
-    implementation(projects.domain.account.status)
-    implementation(projects.core.utils)
 
-    implementation(projects.libs.blockchainSdk)
-    implementation(tangemDeps.blockchain)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain)
+    // endregion
+
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    // endregion
+
+    // region Domain
+    api(projects.domain.account.status)
+    api(projects.domain.models)
+    // endregion
 
     // region Tests
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     // endregion

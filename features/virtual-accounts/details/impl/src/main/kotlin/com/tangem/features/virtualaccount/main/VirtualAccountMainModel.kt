@@ -10,10 +10,10 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
 import com.tangem.features.virtualaccount.details.component.VirtualAccountMainComponent
 import com.tangem.features.virtualaccount.details.impl.R
-import com.tangem.features.virtualaccount.main.addfunds.VirtualAccountAddFundsBottomSheetComponent
-import com.tangem.features.virtualaccount.main.addfunds.VirtualAccountAddFundsListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,22 +57,22 @@ internal class VirtualAccountMainModel @Inject constructor(
 
     private fun buildRequisites(details: VirtualAccountDepositDetails) = listOf(
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = stringReference("Beneficiary name and address"),
+            title = "Beneficiary name and address",
             titleForShare = "Beneficiary name and address",
             value = "${details.beneficiaryName}\n${details.beneficiaryAddress}",
         ),
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = stringReference("Bank name and address"),
+            title = "Bank name and address",
             titleForShare = "Bank name and address",
             value = "${details.bankName}\n${details.bankAddress}",
         ),
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = stringReference("Account number"),
+            title = "Account number",
             titleForShare = "Account number",
             value = details.accountNumber,
         ),
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = stringReference("Routing number"),
+            title = "Routing number",
             titleForShare = "Routing number",
             value = details.routingNumber,
         ),

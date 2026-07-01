@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.projects
-
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -11,28 +9,31 @@ android {
     namespace = "com.tangem.domain.swap"
 }
 
-
 dependencies {
 
-    /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.swap.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    /** Util */
-    implementation(projects.core.utils)
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Core modules
     implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+    // endregion
 
-    /** Other */
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.jodatime)
+    // region Domain models
+    api(projects.domain.express.models)
+    api(projects.domain.models)
+    api(projects.domain.swap.models)
+    // endregion
 
-    /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.mockk)
+    // region Tests
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }

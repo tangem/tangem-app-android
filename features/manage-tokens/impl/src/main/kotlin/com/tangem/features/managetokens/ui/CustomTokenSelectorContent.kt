@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,6 +31,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.AddCustomTokenScreenTestTags
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.AddCustomTokenMode
@@ -50,6 +52,7 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
 
     LazyColumn(
         modifier = modifier
+            .testTag(AddCustomTokenScreenTestTags.SELECTOR_LIST)
             .background(color = TangemTheme.colors.background.secondary)
             .bottomFade(),
         contentPadding = PaddingValues(
@@ -92,7 +95,7 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
             when (item) {
                 is CurrencyNetworkUM -> {
                     NetworkItem(
-                        modifier = itemModifier,
+                        modifier = itemModifier.testTag(AddCustomTokenScreenTestTags.networkRow(item.name)),
                         model = item,
                     )
                 }
@@ -112,7 +115,9 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
     when (header) {
         is CustomTokenSelectorUM.HeaderUM.CustomDerivationButton -> {
             CustomDerivationButton(
-                modifier = modifier.padding(vertical = TangemTheme.dimens.spacing16),
+                modifier = modifier
+                    .padding(vertical = TangemTheme.dimens.spacing16)
+                    .testTag(AddCustomTokenScreenTestTags.CUSTOM_DERIVATION_BUTTON),
                 enteredDerivationPath = header.value,
                 isSelected = header.value != null,
                 onClick = header.onClick,

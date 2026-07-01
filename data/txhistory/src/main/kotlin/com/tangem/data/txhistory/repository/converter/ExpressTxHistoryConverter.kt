@@ -53,6 +53,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                 createdAtMillis = parseIsoMillis(entity.createdAt),
                 provider = value.provider,
                 payoutHash = entity.payoutHash,
+                payoutAddress = entity.payoutAddress,
                 fromFiat = Amount(
                     currencySymbol = entity.fromCurrencyCode,
                     value = entity.fromAmount.toScaledBigDecimal(entity.fromPrecision),
@@ -89,6 +90,8 @@ private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): Excha
         provider = value.provider,
         payinHash = entity.payinHash,
         payoutHash = entity.payoutHash,
+        fromAddress = entity.fromAddress,
+        payoutAddress = entity.payoutAddress,
         fromAsset = ExpressTransactionAsset(
             id = ExpressAssetId(networkId = entity.from.network, contractAddress = entity.from.contractAddress),
             amount = entity.from.amount.toScaledBigDecimal(entity.from.decimals),

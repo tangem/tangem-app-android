@@ -2085,6 +2085,7 @@
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
   <string name="tx_history_onramp_top_up">Top up</string>
   <string name="tx_history_onramp_topped_up">Topped up</string>
+  <string name="tx_history_you_paid">You paid</string>
   <string name="unexpected_error_description">Please try again later. If the issue persists, please contact support.</string>
   <string name="unexpected_error_title">Something went wrong!</string>
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>

@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
@@ -37,6 +38,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val hotAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
@@ -224,7 +226,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             startAssetsDiscoveryUseCase.cancel(userWallet.walletId)
         }
 
-        userWalletsListRepository.delete(listOf(userWallet.walletId))
+        deleteWalletUseCase(userWallet.walletId)
         dismiss()
     }
 

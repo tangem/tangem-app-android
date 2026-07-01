@@ -6,13 +6,17 @@ plugins {
 }
 
 dependencies {
-    api(projects.domain.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
 
-    implementation(deps.moshi.kotlin)
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
+
+    // region Other libraries
+    api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
-    implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

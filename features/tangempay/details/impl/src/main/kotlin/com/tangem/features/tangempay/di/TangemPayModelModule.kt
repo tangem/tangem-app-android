@@ -49,6 +49,11 @@ internal interface TangemPayModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(TangemPayVirtualAccountDepositModel::class)
+    fun bindTangemPayVirtualAccountDepositModel(model: TangemPayVirtualAccountDepositModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(TangemPayViewPinModel::class)
     fun bindTangemPayViewPinModel(model: TangemPayViewPinModel): Model
 

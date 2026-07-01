@@ -10,15 +10,17 @@ android {
 }
 
 dependencies {
-    /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.tokens.models)
 
-    /** Core */
-    implementation(projects.core.datasource)
+    // region Other libraries
+    api(deps.jodatime)
+    // endregion
 
-    /** Other */
-    implementation(deps.jodatime)
-    implementation(deps.moshi)
+    // region Core modules
+    api(projects.core.datasource)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.express.models)
+    api(projects.domain.models)
+    // endregion
 }

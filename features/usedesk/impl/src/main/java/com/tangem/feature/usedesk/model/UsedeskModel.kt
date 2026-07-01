@@ -2,7 +2,7 @@ package com.tangem.feature.usedesk.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -52,6 +52,8 @@ internal class UsedeskModel @Inject constructor(
                     channelId = CHANNEL_ID,
                     clientId = clientId,
                     clientEmail = params.userWalletId,
+                    clientInitMessage = params.prefilledMessage,
+                    additionalFields = additionalFieldsFor(params.source),
                 ),
             )
         }
@@ -61,7 +63,7 @@ internal class UsedeskModel @Inject constructor(
         if (isScreenLoadEventSent) return
         isScreenLoadEventSent = true
         analyticsEventHandler.send(
-            UsedeskAnalyticsEvents.ChatScreenOpened(source = AnalyticsParam.ScreensSources.Settings),
+            UsedeskAnalyticsEvents.ChatScreenOpened(source = params.source),
         )
     }
 
@@ -87,6 +89,11 @@ internal class UsedeskModel @Inject constructor(
         super.onDestroy()
     }
 
+    private fun additionalFieldsFor(source: ScreensSources): Map<Long, String> = when (source) {
+        ScreensSources.Swap -> mapOf(SWAP_ADDITIONAL_FIELD_ID to SWAP_ADDITIONAL_FIELD_VALUE)
+        else -> emptyMap()
+    }
+
     private suspend fun getOrCreateClientId(): String {
         var clientId = ""
         appPreferencesStore.editData { preferences ->
@@ -105,5 +112,8 @@ internal class UsedeskModel @Inject constructor(
         const val URL_CHAT_API = "https://ud.tangem.org"
         const val COMPANY_ID = "2"
         const val CHANNEL_ID = "54"
+
+        const val SWAP_ADDITIONAL_FIELD_ID = 245L
+        const val SWAP_ADDITIONAL_FIELD_VALUE = "swap"
     }
 }

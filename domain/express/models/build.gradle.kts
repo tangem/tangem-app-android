@@ -1,13 +1,24 @@
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.serialization)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
 dependencies {
-    implementation(deps.moshi.adapters)
-    implementation(deps.kotlin.serialization)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.onramp.models)
+
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
+
+    // region Other libraries
+    api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.onramp.models)
+    api(projects.domain.tokens.models)
+    // endregion
 }
