@@ -30,6 +30,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
     private val childFactory: AddressBookChildFactory,
     private val resultHolder: AddressBookResultHolder,
     private val selectNetworksResultHolder: SelectNetworksResultHolder,
+    private val analyticsSender: AddressBookAnalyticsSender,
 ) : AddressBookComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<AddressBookRoute>()
@@ -38,6 +39,8 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         // Drop any results left over from a previous session before the (possibly preloaded) stack starts collecting.
         resultHolder.clear()
         selectNetworksResultHolder.clear()
+
+        analyticsSender.sendContactListScreenOpened(mode = params.addressBookOpenMode, scope = componentScope)
     }
 
     private val clickIntents = object : AddressBookClickIntents {
