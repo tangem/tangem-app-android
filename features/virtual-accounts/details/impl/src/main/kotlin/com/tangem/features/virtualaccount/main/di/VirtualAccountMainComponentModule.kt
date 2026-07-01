@@ -1,7 +1,9 @@
 package com.tangem.features.virtualaccount.main.di
 
-import com.tangem.features.virtualaccount.main.DefaultVirtualAccountMainComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountMainComponent
+import com.tangem.features.virtualaccount.main.DefaultVirtualAccountMainComponent
+import com.tangem.features.virtualaccount.main.addfunds.DefaultVirtualAccountAddFundsBottomSheetComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,4 +17,9 @@ internal interface VirtualAccountMainComponentModule {
     fun bindVirtualAccountMainComponentFactory(
         factory: DefaultVirtualAccountMainComponent.Factory,
     ): VirtualAccountMainComponent.Factory
+
+    @Binds
+    fun bindVirtualAccountAddFundsComponentFactory(
+        factory: DefaultVirtualAccountAddFundsBottomSheetComponent.Factory,
+    ): VirtualAccountAddFundsBottomSheetComponent.Factory
 }

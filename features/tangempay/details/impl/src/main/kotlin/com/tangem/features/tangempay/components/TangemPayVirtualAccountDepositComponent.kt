@@ -31,5 +31,6 @@ internal class TangemPayVirtualAccountDepositComponent(
     data class Params(
         val virtualAccountOnramp: VirtualAccountOnramp,
         val onDismiss: () -> Unit,
+        val onShowDetails: (VirtualAccountOnramp.Available) -> Unit,
     )
 }

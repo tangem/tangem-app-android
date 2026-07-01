@@ -40,7 +40,10 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     }
 
     private fun onShowDetailsClick() {
-        // TODO([REDACTED_TASK_KEY]): VA MVP0 — open the bank-transfer requisites screen (separate PR).
+        when (params.virtualAccountOnramp) {
+            is VirtualAccountOnramp.Available -> params.onShowDetails(params.virtualAccountOnramp)
+            VirtualAccountOnramp.Eligible -> TODO()
+        }
     }
 
     private companion object {

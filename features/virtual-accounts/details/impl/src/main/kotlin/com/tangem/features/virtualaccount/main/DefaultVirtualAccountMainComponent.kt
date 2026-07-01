@@ -11,8 +11,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountMainComponent
-import com.tangem.features.virtualaccount.main.addfunds.VirtualAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,6 +20,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultVirtualAccountMainComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: VirtualAccountMainComponent.Params,
+    private val addFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
 ) : VirtualAccountMainComponent, AppComponentContext by appComponentContext {
 
     private val model: VirtualAccountMainModel = getOrCreateModel(params = params)
@@ -44,8 +45,8 @@ internal class DefaultVirtualAccountMainComponent @AssistedInject constructor(
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent {
         return when (config) {
-            is VirtualAccountMainNavigationBottomSheetConfig.AddFunds -> VirtualAccountAddFundsBottomSheetComponent(
-                appComponentContext = childByContext(componentContext),
+            is VirtualAccountMainNavigationBottomSheetConfig.AddFunds -> addFundsComponentFactory.create(
+                context = childByContext(componentContext),
                 params = VirtualAccountAddFundsBottomSheetComponent.Params(
                     userWalletId = params.userWalletId,
                     listener = model,

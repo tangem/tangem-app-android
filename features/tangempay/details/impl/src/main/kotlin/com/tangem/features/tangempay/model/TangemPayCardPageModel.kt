@@ -28,6 +28,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
@@ -489,6 +490,16 @@ internal class TangemPayCardPageModel @Inject constructor(
         val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount } ?: return
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(TangemPayCardNavigation.VirtualAccountDeposit(onramp))
+    }
+
+    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.VirtualAccountRequisites(
+                userWalletId = userWalletId,
+                bankCredentials = onramp.bankCredentials,
+            ),
+        )
     }
 
     override fun onDismissAddFunds() {

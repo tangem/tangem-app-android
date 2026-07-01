@@ -20,13 +20,18 @@ import com.tangem.features.tangempay.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.entity.TangemPayCardNavigation
 import com.tangem.features.tangempay.model.TangemPayCardPageModel
 import com.tangem.features.tangempay.ui.TangemPayCardPageScreen
+import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
+import com.tangem.features.tangempay.utils.toRequisitesRows
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
 
 internal class TangemPayCardPageScreenComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayCardPageComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayCardPageModel = getOrCreateModel(params = params)
@@ -105,6 +110,17 @@ internal class TangemPayCardPageScreenComponent(
                 params = TangemPayVirtualAccountDepositComponent.Params(
                     virtualAccountOnramp = navigation.virtualAccountOnramp,
                     onDismiss = model.bottomSheetNavigation::dismiss,
+                    onShowDetails = model::onShowVirtualAccountRequisites,
+                ),
+            )
+            is TangemPayCardNavigation.VirtualAccountRequisites -> virtualAccountAddFundsComponentFactory.create(
+                context = context,
+                params = VirtualAccountAddFundsBottomSheetComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    requisites = navigation.bankCredentials.toRequisitesRows(),
+                    dailyDepositLimit = VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER,
+                    shouldSkipIntro = true,
+                    listener = VirtualAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
                 ),
             )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(
