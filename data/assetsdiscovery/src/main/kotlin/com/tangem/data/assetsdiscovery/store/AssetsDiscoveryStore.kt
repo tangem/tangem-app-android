@@ -8,5 +8,7 @@ interface AssetsDiscoveryStore {
 
     suspend fun append(tokens: List<UserTokensResponse.Token>)
 
+    suspend fun removeMatching(predicate: (UserTokensResponse.Token) -> Boolean)
+
     suspend fun clear()
 }

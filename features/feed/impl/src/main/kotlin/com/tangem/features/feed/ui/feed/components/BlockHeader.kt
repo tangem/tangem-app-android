@@ -28,17 +28,19 @@ internal fun ColumnScope.Header(
     onSeeAllClick: () -> Unit,
     isLoading: Boolean,
     shouldShowSeeAll: Boolean,
+    modifier: Modifier = Modifier,
     title: @Composable () -> Unit,
 ) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     if (isRedesignEnabled) {
         SpacerH(12.dp)
     }
-    AnimatedContent(isLoading) { animatedState ->
+    AnimatedContent(
+        targetState = isLoading,
+        modifier = modifier,
+    ) { animatedState ->
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

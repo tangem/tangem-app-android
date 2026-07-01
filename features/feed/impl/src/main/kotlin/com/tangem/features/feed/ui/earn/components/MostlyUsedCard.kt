@@ -17,8 +17,6 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.opportunities.OpportunitiesBG
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
@@ -44,53 +42,52 @@ internal fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier:
 
 @Composable
 private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    OpportunitiesBG(
+    Column(
         modifier = modifier
             .width(178.dp)
             .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
-            .clickable(onClick = onClick),
-        icon = TangemIconUM.Currency(item.currencyIconState),
+            .background(TangemTheme.colors2.surface.level3)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            CurrencyIcon(
-                state = item.currencyIconState,
-                shouldDisplayNetwork = true,
-                networkBadgeSize = TangemTheme.dimens2.x4,
-                iconSize = TangemTheme.dimens2.x10,
-                networkBadgeBackground = TangemTheme.colors.background.action,
-            )
+        CurrencyIcon(
+            state = item.currencyIconState,
+            shouldDisplayNetwork = true,
+            networkBadgeSize = TangemTheme.dimens2.x4,
+            iconSize = TangemTheme.dimens2.x10,
+            networkBadgeBackground = TangemTheme.colors.background.action,
+        )
 
-            SpacerH(22.dp)
+        SpacerH(22.dp)
 
-            Row(
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                Text(
-                    modifier = Modifier.weight(weight = 1f, fill = false),
-                    text = item.tokenName.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography2.bodySemibold16,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                )
-                SpacerW(4.dp)
-                Text(
-                    text = item.symbol.resolveReference(),
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography2.captionMedium12,
-                    maxLines = 1,
-                )
-            }
-
-            SpacerH(2.dp)
-
+        Row(
+            verticalAlignment = Alignment.Bottom,
+        ) {
             Text(
-                text = item.earnValue.resolveReference(),
-                color = TangemTheme.colors2.text.status.positive,
+                modifier = Modifier.weight(weight = 1f, fill = false),
+                text = item.tokenName.resolveReference(),
+                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography2.bodySemibold16,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+            SpacerW(4.dp)
+            Text(
+                text = item.symbol.resolveReference(),
+                color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography2.captionMedium12,
                 maxLines = 1,
             )
         }
+
+        SpacerH(2.dp)
+
+        Text(
+            text = item.earnValue.resolveReference(),
+            color = TangemTheme.colors2.text.status.positive,
+            style = TangemTheme.typography2.captionMedium12,
+            maxLines = 1,
+        )
     }
 }
 

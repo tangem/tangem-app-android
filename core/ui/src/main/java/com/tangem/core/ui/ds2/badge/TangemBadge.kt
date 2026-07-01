@@ -87,8 +87,8 @@ fun TangemBadge(
             .heightIn(min = sizeTokens.minHeight),
         onClick = onClick,
         color = colorTokens.backgroundColor,
-        border = colorTokens.borderColor?.let { BorderStroke(TangemTheme.dimens3.borderWidth.sm, it) },
-        shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.full),
+        border = colorTokens.borderColor?.let { BorderStroke(1.dp, it) },
+        shape = RoundedCornerShape(999.dp),
     ) {
         BadgeContent(
             iconStart = iconStart,
@@ -206,30 +206,29 @@ private data class BadgeSizeTokens(
 @Composable
 @ReadOnlyComposable
 private fun TangemBadge.Size.tokens(): BadgeSizeTokens {
-    val dimens = TangemTheme.dimens3
     val typography = TangemTheme.typography3
     return when (this) {
         TangemBadge.Size.X9 -> BadgeSizeTokens(
-            minHeight = dimens.size.s450,
-            containerHorizontalPadding = dimens.spacing.s100,
-            containerVerticalPadding = dimens.spacing.s100,
-            labelPadding = dimens.spacing.s050,
+            minHeight = 36.dp,
+            containerHorizontalPadding = 8.dp,
+            containerVerticalPadding = 8.dp,
+            labelPadding = 4.dp,
             iconSize = 20.dp,
             textStyle = typography.subheading.medium,
         )
         TangemBadge.Size.X6 -> BadgeSizeTokens(
-            minHeight = dimens.size.s300,
-            containerHorizontalPadding = dimens.spacing.s050,
-            containerVerticalPadding = dimens.spacing.s050,
-            labelPadding = dimens.spacing.s050,
+            minHeight = 24.dp,
+            containerHorizontalPadding = 4.dp,
+            containerVerticalPadding = 4.dp,
+            labelPadding = 4.dp,
             iconSize = 16.dp,
             textStyle = typography.caption.medium,
         )
         TangemBadge.Size.X4 -> BadgeSizeTokens(
-            minHeight = dimens.size.s200,
-            containerHorizontalPadding = dimens.spacing.s025,
-            containerVerticalPadding = dimens.spacing.none,
-            labelPadding = dimens.spacing.s025,
+            minHeight = 16.dp,
+            containerHorizontalPadding = 2.dp,
+            containerVerticalPadding = 0.dp,
+            labelPadding = 2.dp,
             iconSize = 12.dp,
             textStyle = typography.caption.medium,
         )

@@ -8,4 +8,10 @@ internal interface PushNotificationsClickIntents {
     fun onAllowPermission()
 
     fun onDenyPermission()
+
+    fun onDoubleAskEnableClick()
+
+    fun onDoubleAskSkipClick()
+
+    fun onDoubleAskDismiss()
 }
