@@ -24,6 +24,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.config.curvesConfig
+import com.tangem.lib.crypto.derivation.supportsDerivationPath
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -215,6 +217,20 @@ internal class DefaultCustomTokensRepository(
                 contractAddress = currency.contractAddress,
             )
         }
+    }
+
+    override suspend fun isDerivationPathSupported(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): Boolean = withContext(dispatchers.io) {
+        val rawPath = derivationPath.value ?: return@withContext true
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        val blockchain = networkId.toBlockchain()
+        val curve = userWallet.curvesConfig.primaryCurve(blockchain) ?: return@withContext false
+        val path = runCatching { DerivationPath(rawPath) }.getOrNull() ?: return@withContext false
+
+        curve.supportsDerivationPath(path)
     }
 
     override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {

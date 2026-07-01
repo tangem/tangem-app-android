@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.managetokens.CheckDerivationPathSupportedUseCase
 import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
 import com.tangem.domain.managetokens.FindTokenUseCase
 import com.tangem.domain.managetokens.ValidateTokenFormUseCase
@@ -51,6 +52,7 @@ internal class CustomTokenFormModel @Inject constructor(
     private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
     private val findTokenUseCase: FindTokenUseCase,
     private val validateTokenFormUseCase: ValidateTokenFormUseCase,
+    private val checkDerivationPathSupportedUseCase: CheckDerivationPathSupportedUseCase,
     paramsContainer: ParamsContainer,
     customTokenFormUseCasesFacadeFactory: CustomTokenFormUseCasesFacade.Factory,
 ) : Model() {
@@ -238,6 +240,14 @@ internal class CustomTokenFormModel @Inject constructor(
         }
     }
 
+    private fun showDerivationPathNotSupportedDialog() {
+        val dialog = DialogMessage(
+            message = resourceReference(R.string.custom_token_invalid_derivation_path),
+        )
+
+        messageSender.send(dialog)
+    }
+
     private fun showErrorDialog(throwable: Throwable) {
         TangemLogger.e("Error", throwable)
         val message = when (throwable) {
@@ -352,6 +362,19 @@ internal class CustomTokenFormModel @Inject constructor(
         val currency = createdCurrency
         if (currency == null) {
             showErrorDialog(IllegalStateException("Trying to add currency without validation"))
+            return@resource
+        }
+
+        val isDerivationSupported = checkDerivationPathSupportedUseCase(
+            userWalletId = params.mode.userWalletId,
+            networkId = currency.network.id,
+            derivationPath = currency.network.derivationPath,
+        ).getOrElse { throwable ->
+            showErrorDialog(throwable)
+            return@resource
+        }
+        if (!isDerivationSupported) {
+            showDerivationPathNotSupportedDialog()
             return@resource
         }
 
