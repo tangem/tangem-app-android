@@ -9,55 +9,62 @@ android {
 }
 dependencies {
 
-    /** Project - Domain */
-    api(projects.domain.core)
-    implementation(projects.domain.common)
-    implementation(projects.domain.card)
-    implementation(projects.domain.express)
-    implementation(projects.domain.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.visa)
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.onramp.models)
-    implementation(projects.domain.settings)
-    implementation(projects.features.swap.domain.api)
-    implementation(projects.features.swap.domain.models)
-    implementation(projects.domain.stories.models)
-    implementation(projects.domain.stories)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.quotes)
-    implementation(projects.domain.yieldSupply.models)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    /** Project - Api */
-    implementation(projects.features.staking.api)
-    implementation(projects.features.markets.api)
-    implementation(projects.features.swap.api)
-    implementation(projects.features.virtualAccounts.details.api) //VIRTUAL_ACCOUNTS_ENABLED
-
-    /** Project - Other */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.utils)
-    implementation(projects.libs.crypto)
-    implementation(projects.common)
-
-    /** Android - Other */
-    implementation(deps.androidx.paging.runtime)
-
-    /** Utils */
-    implementation(deps.jodatime)
-
-    implementation(tangemDeps.blockchain) {
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+    // endregion
 
-    /** Tests */
+    // region Core modules
+    api(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.core)
+    api(projects.domain.express)
+    api(projects.domain.legacy)
+    api(projects.domain.networks)
+    api(projects.domain.quotes)
+    api(projects.domain.staking)
+    api(projects.domain.stories)
+    api(projects.domain.visa)
+    api(projects.domain.walletManager)
+    implementation(projects.domain.card)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.tokens.models)
+    api(projects.domain.transaction.models)
+    api(projects.domain.yieldSupply.models)
+    implementation(projects.domain.express.models)
+    implementation(projects.domain.stories.models)
+    // endregion
+
+    // region Features
+    api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region Common
+    implementation(projects.common)
+    // endregion
+
+    // region Runtime
+    runtimeOnly(projects.domain.settings)
+    // endregion
+
+    // region Tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    // endregion
 }

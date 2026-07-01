@@ -1,8 +1,6 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -12,54 +10,56 @@ android {
 
 dependencies {
 
-    // region Core modules
-    implementation(projects.core.res)
-    implementation(projects.core.utils)
-    implementation(projects.core.analytics)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
     // endregion
 
-    // region Domain modules
-    api(projects.domain.core)
-    api(projects.domain.common)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.libs.tangemSdkApi)
-    implementation(projects.domain.account)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.card)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.notifications.models)
-    implementation(projects.domain.demo.models)
-    implementation(projects.domain.hotWallet)
-    implementation(projects.domain.qrScanning)
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain) // android-library
+    api(tangemDeps.card.core)
+    api(tangemDeps.hot.core)
+    implementation(deps.hilt.android)
     // endregion
 
-    // region Domain modules
-    implementation(projects.domain.qrScanning.models)
-    // endregion
-
-    implementation(projects.common)
-
-    // region Tangem libraries
-    implementation(tangemDeps.blockchain) // android-library
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.hot.core)
-    // endregion
-
-    /** Other libraries */
+    // region Firebase
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
+    // endregion
 
-    // region DI
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-    // end
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    api(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.account)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.hotWallet)
+    api(projects.domain.walletManager)
+    api(projects.domain.core)
+    implementation(projects.domain.legacy)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.wallets.models)
+    implementation(projects.domain.demo.models)
+    implementation(projects.domain.notifications.models)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Common
+    implementation(projects.common)
+    // endregion
 
     // region Tests
-    testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    // end
+    testImplementation(projects.test.core)
+    // endregion
 }
