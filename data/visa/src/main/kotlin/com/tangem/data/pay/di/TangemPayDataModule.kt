@@ -117,7 +117,20 @@ internal interface TangemPayDataModule {
     @Singleton
     fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
 
+    @Binds
+    @Singleton
+    fun bindTariffPlanTransitionsRepository(
+        repository: DefaultTariffPlanTransitionsRepository,
+    ): TangemPayTariffPlanTransitionsRepository
+
     companion object {
+
+        @Provides
+        fun provideGetTangemPayTariffPlanTransitionsUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+        ): GetTangemPayTariffPlanTransitionsUseCase {
+            return GetTangemPayTariffPlanTransitionsUseCase(repository)
+        }
 
         @Provides
         @Singleton

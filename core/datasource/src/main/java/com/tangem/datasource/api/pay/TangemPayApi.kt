@@ -23,6 +23,11 @@ interface TangemPayApi {
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
 
+    @GET("v1/customer/tariff-plan/transitions")
+    suspend fun getTariffPlanTransitions(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<TariffPlanTransitionsResponse>
+
     /** Fiat bank requisites for the Virtual Account on-ramp (VA MVP0, TWI-1638). */
     @GET("v1/account/bank-credentials/{product_instance_id}")
     suspend fun getBankCredentials(
