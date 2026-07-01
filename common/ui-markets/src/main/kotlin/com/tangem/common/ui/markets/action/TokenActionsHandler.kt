@@ -12,9 +12,12 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
@@ -24,6 +27,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 class TokenActionsHandler @AssistedInject constructor(
@@ -34,8 +39,11 @@ class TokenActionsHandler @AssistedInject constructor(
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val currentAppCurrency: Provider<AppCurrency>,
-    @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
+    @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
+    @Assisted private val coroutineScope: CoroutineScope,
     private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val messageSender: UiMessageSender,
 ) {
 
@@ -43,19 +51,49 @@ class TokenActionsHandler @AssistedInject constructor(
         add(TokenActionsBSContentUM.Action.Sell)
     }
 
-    fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: CryptoCurrencyData) {
+    fun handle(
+        action: TokenActionsBSContentUM.Action,
+        cryptoCurrencyData: CryptoCurrencyData,
+        context: TokenActionsContext = TokenActionsContext.Markets,
+    ) {
+        if (isTopUpBlockedByBackupError(action, cryptoCurrencyData.userWallet)) return
+
         onHandleQuickAction(
             HandledQuickAction(
                 action = action,
                 cryptoCurrencyData = cryptoCurrencyData,
             ),
+            action.shouldDismissBottomSheet(),
         )
         val userWallet = cryptoCurrencyData.userWallet
         if (userWallet is UserWallet.Cold && handleDemoMode(action, userWallet)) return
 
+        dispatchAction(action, cryptoCurrencyData, context)
+    }
+
+    private fun TokenActionsBSContentUM.Action.shouldDismissBottomSheet(): Boolean = when (this) {
+        TokenActionsBSContentUM.Action.Receive,
+        TokenActionsBSContentUM.Action.CopyAddress,
+        TokenActionsBSContentUM.Action.Sell,
+        -> false
+        TokenActionsBSContentUM.Action.Send,
+        TokenActionsBSContentUM.Action.Stake,
+        TokenActionsBSContentUM.Action.YieldMode,
+        TokenActionsBSContentUM.Action.Buy,
+        TokenActionsBSContentUM.Action.Exchange,
+        TokenActionsBSContentUM.Action.SendWithSwap,
+        -> true
+    }
+
+    private fun dispatchAction(
+        action: TokenActionsBSContentUM.Action,
+        cryptoCurrencyData: CryptoCurrencyData,
+        context: TokenActionsContext,
+    ) {
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
-            TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData, context)
+            TokenActionsBSContentUM.Action.SendWithSwap -> onSwapAndSendClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Receive -> Unit
             TokenActionsBSContentUM.Action.CopyAddress -> onCopyAddress(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Sell -> onSellClick(cryptoCurrencyData)
@@ -63,6 +101,20 @@ class TokenActionsHandler @AssistedInject constructor(
             TokenActionsBSContentUM.Action.Stake -> onStakeClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.YieldMode -> onYieldModeClick(cryptoCurrencyData)
         }
+    }
+
+    private fun isTopUpBlockedByBackupError(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
+        val isBlockedAction = action == TokenActionsBSContentUM.Action.Buy ||
+            action == TokenActionsBSContentUM.Action.Receive
+        if (!isBlockedAction) return false
+        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+
+        messageSender.send(
+            Dialogs.backupErrorAddFundsDisabled(
+                onContactSupport = { coroutineScope.launch { sendBackupProblemEmailUseCase(userWallet.walletId) } },
+            ),
+        )
+        return true
     }
 
     private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
@@ -106,21 +158,25 @@ class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun onSellClick(cryptoCurrencyData: CryptoCurrencyData) {
-        getOfframpUrlUseCase(
-            cryptoCurrencyStatus = cryptoCurrencyData.status,
-            appCurrencyCode = currentAppCurrency().code,
-        ).onRight { url ->
-            urlOpener.openUrl(url)
-            analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+        coroutineScope.launch {
+            getOfframpUrlUseCase(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                cryptoCurrencyStatus = cryptoCurrencyData.status,
+                appCurrencyCode = currentAppCurrency().code,
+            ).onRight { url ->
+                urlOpener.openUrl(url)
+                analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+            }
         }
     }
 
-    private fun onExchangeClick(cryptoCurrencyData: CryptoCurrencyData) {
+    private fun onExchangeClick(cryptoCurrencyData: CryptoCurrencyData, context: TokenActionsContext) {
         router.push(
             AppRoute.Swap(
-                cryptoCurrency = cryptoCurrencyData.status.currency,
+                fromCryptoCurrency = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 screenSource = AnalyticsParam.ScreensSources.Markets.value,
+                fromCurrencyPosition = context.swapPosition,
             ),
         )
     }
@@ -131,6 +187,16 @@ class TokenActionsHandler @AssistedInject constructor(
             currency = cryptoCurrencyData.status.currency,
         )
         router.push(route)
+    }
+
+    private fun onSwapAndSendClick(cryptoCurrencyData: CryptoCurrencyData) {
+        router.push(
+            AppRoute.SendEntryPoint(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                currency = cryptoCurrencyData.status.currency,
+                shouldStartWithSwap = true,
+            ),
+        )
     }
 
     private fun onStakeClick(cryptoCurrencyData: CryptoCurrencyData) {
@@ -164,7 +230,8 @@ class TokenActionsHandler @AssistedInject constructor(
     interface Factory {
         fun create(
             currentAppCurrency: Provider<AppCurrency>,
-            onHandleQuickAction: (HandledQuickAction) -> Unit,
+            onHandleQuickAction: (HandledQuickAction, shouldDismiss: Boolean) -> Unit,
+            coroutineScope: CoroutineScope,
         ): TokenActionsHandler
     }
 

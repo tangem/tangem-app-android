@@ -27,7 +27,6 @@ internal class StoreAdaptiveThrottleTest {
         val upstream = MutableSharedFlow<Set<Int>>()
 
         upstream.adaptiveThrottle().test {
-
             upstream.emit(setOf(1, 2))
             assertThat(awaitItem()).isEqualTo(setOf(1, 2))
 
@@ -44,7 +43,6 @@ internal class StoreAdaptiveThrottleTest {
         val upstream = MutableSharedFlow<Set<Int>>()
 
         upstream.adaptiveThrottle().test {
-
             upstream.emit(setOf(1, 2))
             awaitItem()
 
@@ -64,7 +62,6 @@ internal class StoreAdaptiveThrottleTest {
         val upstream = MutableSharedFlow<Set<Int>>()
 
         upstream.adaptiveThrottle().test {
-
             upstream.emit(setOf(1, 2))
             awaitItem()
 
@@ -88,7 +85,6 @@ internal class StoreAdaptiveThrottleTest {
         val upstream = MutableSharedFlow<Set<Int>>()
 
         upstream.adaptiveThrottle().test {
-
             upstream.emit(setOf(1, 2))
             awaitItem()
 

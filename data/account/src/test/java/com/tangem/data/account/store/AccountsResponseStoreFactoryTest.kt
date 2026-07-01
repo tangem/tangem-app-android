@@ -3,7 +3,7 @@ package com.tangem.data.account.store
 import android.content.Context
 import com.google.common.truth.Truth
 import com.squareup.moshi.Moshi
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.mockk
