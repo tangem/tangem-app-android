@@ -336,7 +336,10 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 tangemIcon = walletInterationIcon(userWallet),
                 missingAddressesCount = currencies.count(),
                 onGenerateClick = {
-                    clickIntents.onGenerateMissedAddressesClick(missedAddressCurrencies = currencies)
+                    clickIntents.onGenerateMissedAddressesClick(
+                        userWalletId = userWallet.walletId,
+                        missedAddressCurrencies = currencies,
+                    )
                 },
             ),
             condition = currencies.isNotEmpty(),
