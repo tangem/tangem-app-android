@@ -25,6 +25,7 @@ import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
@@ -143,6 +144,11 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 apiResponse.bind().enrichByAccountId()
             },
             onError = { error ->
+                TangemLogger.e(
+                    "pushInternal wallet=$userWalletId: PUT /accounts failed, " +
+                        "isPreconditionFailed=${error.isNetworkError(code = Code.PRECONDITION_FAILED)}, error=$error",
+                )
+
                 if (error.isNetworkError(code = Code.PRECONDITION_FAILED)) {
                     throw error
                 }
