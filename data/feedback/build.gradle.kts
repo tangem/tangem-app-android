@@ -10,8 +10,9 @@ android {
 }
 
 dependencies {
-    // region AndroidX libraries
-    implementation(deps.androidx.datastore)
+
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
     // endregion
 
     // region DI
@@ -24,27 +25,23 @@ dependencies {
     implementation(tangemDeps.card.core)
     // endregion
 
-    // Other libraries
-    // endregion
-
     // region Core modules
-    implementation(projects.core.configToggles)
-    implementation(projects.core.datasource)
-    implementation(projects.core.navigation)
-    implementation(projects.core.utils)
-
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     // endregion
 
-    // Feature modules
-    implementation(projects.features.hotWallet.api)
-
-    implementation(projects.domain.feedback)
-    implementation(projects.domain.feedback.models)
-    implementation(projects.domain.legacy)
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.feedback)
     implementation(projects.domain.card)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
+    // endregion
 
+    // region Libs
     implementation(projects.libs.blockchainSdk)
+    // endregion
 }

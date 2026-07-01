@@ -11,27 +11,16 @@ android {
 }
 
 dependencies {
-    // region Project - Core
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    // endregion
 
-    // region Project - Data
-    implementation(projects.data.common)
-    // endregion
-
-    // region Project - Domain
-    implementation(projects.domain.addressBook)
-    implementation(projects.domain.common)
-    implementation(projects.domain.models)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
     // endregion
 
     // region SDK
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization)
     // endregion
 
     // region DI
@@ -39,8 +28,22 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
+    // region Project - Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
+
+    // region Project - Data
+    api(projects.data.common)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.addressBook)
+    api(projects.domain.common)
+    api(projects.domain.models)
+    // endregion
+
     // region Testing
     testImplementation(projects.test.core)
-    testImplementation(deps.moshi.kotlin)
     // endregion
 }

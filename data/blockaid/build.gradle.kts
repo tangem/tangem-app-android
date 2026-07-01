@@ -10,35 +10,43 @@ android {
 }
 
 dependencies {
-    /* Project - Domain */
-    implementation(projects.data.common)
-    implementation(projects.domain.models)
-    implementation(projects.domain.blockaid)
-    implementation(projects.domain.blockaid.models)
 
-    /* Project - Data */
-    implementation(projects.core.datasource)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /* Project - Core */
-    implementation(projects.core.utils)
-    implementation(projects.libs.blockchainSdk)
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
 
-    /* DI */
+    // region Tangem libraries
+    api(tangemDeps.blockchain)
+    // endregion
+
+    // region DI
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /* Tangem libraries */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
+    // region Core modules
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
 
-    /* Other */
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
+    // region Domain
+    api(projects.domain.blockaid)
+    api(projects.domain.blockaid.models)
+    api(projects.domain.models)
+    // endregion
 
-    /* Tests */
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.turbine)
     testImplementation(deps.test.truth)
+    // endregion
 }

@@ -11,26 +11,27 @@ android {
 
 dependencies {
 
-    /** Project - Domain */
-    implementation(projects.domain.analytics)
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /** Project - Analytics */
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-
-    /** Project - Data */
-    implementation(projects.core.datasource)
-    implementation(projects.data.common)
-
-    /** AndroidX */
+    // region Other libraries
     implementation(deps.androidx.datastore)
+    implementation(deps.moshi)
+    // endregion
 
-    /** DI */
+    // region DI
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Other */
-    implementation(deps.kotlin.coroutines)
+    // region Project - Core
+    api(projects.core.datasource)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.analytics)
+    implementation(projects.domain.models)
+    // endregion
 }

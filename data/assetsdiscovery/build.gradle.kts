@@ -11,27 +11,45 @@ android {
 }
 
 dependencies {
-    api(projects.domain.assetsdiscovery)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets)
-    implementation(projects.data.common)
-    implementation(projects.data.walletManager)
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.libs.tangemSdkApi)
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
 
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.moshi)
+    implementation(deps.androidx.datastore)
+    // endregion
+
+    // region Tangem SDK
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    // endregion
 
-    implementation(deps.androidx.datastore)
-
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.moshi)
+    // region Core modules
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
+
+    // region Data
+    api(projects.data.common)
+    implementation(projects.data.walletManager)
+    // endregion
+
+    // region Domain
+    api(projects.domain.assetsdiscovery)
+    api(projects.domain.common)
+    api(projects.domain.models)
+    implementation(projects.domain.wallets)
+    runtimeOnly(projects.domain.tokens)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    // endregion
 }
