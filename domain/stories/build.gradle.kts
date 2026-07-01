@@ -4,11 +4,20 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.domain.models)
-    implementation(projects.domain.stories.models)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.wallets.models)
 
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Domain
+    api(projects.domain.settings)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.stories.models)
+    // endregion
 }

@@ -10,14 +10,22 @@ android {
 
 dependencies {
 
-    /** Domain */
-    api(projects.domain.models)
-    implementation(projects.domain.account)
-    implementation(projects.domain.common)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.qrScanning.models)
-    implementation(projects.domain.tokens.models)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Domain
+    api(projects.domain.account)
+    api(projects.domain.common)
+    api(projects.domain.networks)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.qrScanning.models)
+    // endregion
 }

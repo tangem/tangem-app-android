@@ -9,28 +9,42 @@ android {
     namespace = "com.tangem.domain.staking"
 }
 dependencies {
-    api(projects.domain.staking.models)
-    api(projects.domain.core)
-    api(projects.core.analytics)
-    api(projects.core.utils)
 
+    // region Kotlin
+    api(deps.kotlin.coroutines)
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
+    // endregion
 
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager) // TODO refactor to use from data module
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-
-    implementation(tangemDeps.blockchain) {
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(projects.libs.crypto)
-    implementation(projects.libs.blockchainSdk)
+    // endregion
 
-    testImplementation(tangemDeps.card.core)
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.core)
+    api(projects.domain.models)
+    api(projects.domain.walletManager) // TODO refactor to use from data module
+    // endregion
+
+    // region Domain models
+    api(projects.domain.staking.models)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    // endregion
 }
