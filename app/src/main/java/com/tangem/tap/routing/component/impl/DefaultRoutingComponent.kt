@@ -43,7 +43,6 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
-import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -102,7 +101,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val featureTogglesManager: FeatureTogglesManager,
-    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -210,23 +208,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
-        val isHotWalletOnboardingEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
-        )
-        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isHotWalletOnboardingEnabled")
-        val afterEmptyRoute: AppRoute = if (isHotWalletOnboardingEnabled) {
-            val tangemPayHotWalletOnboardingDeepLink = withTimeoutOrNull(2.seconds) {
-                appsFlyerReferralParamsHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
-            }
-            TangemLogger.i("[TangemPay][HWO] Deep link present=${tangemPayHotWalletOnboardingDeepLink != null}")
-            if (tangemPayHotWalletOnboardingDeepLink != null) {
-                AppRoute.TangemPayHotWalletOnboarding
-            } else {
-                getDefaultRoute()
-            }
-        } else {
-            getDefaultRoute()
-        }
+        val afterEmptyRoute = resolveTangemPayHotWalletOnboardingRoute()
+            ?: resolveReferralRoute()
+            ?: AppRoute.Home(launchMode = launchMode)
 
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
             ?: return afterEmptyRoute
@@ -246,16 +230,35 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         }
     }
 
-    private suspend fun getDefaultRoute(): AppRoute {
-        val isHideStoriesForReferralEnabled = featureTogglesManager.isFeatureEnabled(
+    private suspend fun resolveTangemPayHotWalletOnboardingRoute(): AppRoute? {
+        val isEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
+        )
+        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isEnabled")
+        if (!isEnabled) return null
+
+        val deepLink = awaitAppsFlyerDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+        TangemLogger.i("[TangemPay][HWO] Deep link present=${deepLink != null}")
+        return if (deepLink != null) AppRoute.TangemPayHotWalletOnboarding else null
+    }
+
+    private suspend fun resolveReferralRoute(): AppRoute? {
+        val isEnabled = featureTogglesManager.isFeatureEnabled(
             FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
         )
-        // Referral users skip the Home stories screen and land directly on the
-        // mobile wallet creation flow.
-        return if (isHideStoriesForReferralEnabled && shouldShowMobileWalletPromoUseCase()) {
+        if (!isEnabled) return null
+
+        val referralDeepLink = awaitAppsFlyerDeeplink(AppsFlyerDeeplinkSource.Referral)
+        return if (referralDeepLink != null) {
             AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
         } else {
-            AppRoute.Home(launchMode = launchMode)
+            null
+        }
+    }
+
+    private suspend fun awaitAppsFlyerDeeplink(source: AppsFlyerDeeplinkSource): String? {
+        return withTimeoutOrNull(2.seconds) {
+            appsFlyerReferralParamsHandler.waitForDeeplink(source)
         }
     }
 

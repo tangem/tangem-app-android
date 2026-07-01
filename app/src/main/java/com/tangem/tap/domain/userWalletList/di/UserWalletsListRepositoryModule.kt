@@ -9,6 +9,7 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
@@ -17,7 +18,6 @@ import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.feature.referral.domain.MobileWalletPromoRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -57,7 +57,7 @@ internal object UserWalletsListRepositoryModule {
         trackingContextProxy: TrackingContextProxy,
         analyticsEventHandler: AnalyticsEventHandler,
         hotWalletRepository: HotWalletRepository,
-        mobileWalletPromoRepository: MobileWalletPromoRepository,
+        clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
         userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
@@ -109,7 +109,7 @@ internal object UserWalletsListRepositoryModule {
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
-            mobileWalletPromoRepository = mobileWalletPromoRepository,
+            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             userWalletSelectedHandler = userWalletSelectedHandler,
         )
     }

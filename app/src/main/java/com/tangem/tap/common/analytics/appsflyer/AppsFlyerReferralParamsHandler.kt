@@ -4,13 +4,10 @@ import com.appsflyer.deeplink.DeepLink
 import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
-import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.contracts.ExperimentalContracts
@@ -19,11 +16,9 @@ import kotlin.contracts.contract
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
-    private val setShouldShowMobileWalletPromoUseCase: SetShouldShowMobileWalletPromoUseCase,
     private val coroutineScope: AppCoroutineScope,
 ) {
 
-    private val mutex = Mutex()
     private val deepLinkDeferred = CompletableDeferred<String?>()
 
     fun handle(params: Map<String?, Any?>) {
@@ -52,6 +47,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         return if (deeplinkFromCache == null) {
             val value = when (deeplinkSource) {
                 AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding -> TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE
+                AppsFlyerDeeplinkSource.Referral -> REFERRAL_DEEP_LINK_VALUE
             }
             deepLinkDeferred.await().takeIf { it == value }
         } else {
@@ -79,6 +75,10 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         @Suppress("NullableToStringCall")
         TangemLogger.i("refcode=$deepLinkSub1\ncampaign=$deepLinkSub2")
 
+        coroutineScope.launch {
+            appsFlyerStore.storeDeeplink(AppsFlyerDeeplinkSource.Referral, REFERRAL_DEEP_LINK_VALUE)
+        }
+
         if (!isValidParam(deepLinkSub1)) {
             TangemLogger.e("Deeplink conversion data is invalid")
             return
@@ -98,13 +98,9 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
 
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
-            mutex.withLock {
-                setShouldShowMobileWalletPromoUseCase(true)
-                    .onLeft { TangemLogger.e("Error", it) }
-                appsFlyerStore.storeIfAbsent(
-                    value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
-                )
-            }
+            appsFlyerStore.storeIfAbsent(
+                value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
+            )
         }
     }
 

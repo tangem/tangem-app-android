@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.common.routing)
     
     /** Domain */
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
@@ -40,9 +41,6 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.referral)
-
-    /** Referral */
-    implementation(projects.features.referral.domain)
 
     /** AndroidX libraries */
     implementation(deps.androidx.activity.compose)
