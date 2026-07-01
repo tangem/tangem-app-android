@@ -17,6 +17,10 @@ sealed class AddressBookEvents(
 ) : AnalyticsEvent(ADDRESS_BOOK_CATEGORY, event, params) {
 
     // region Contact creation
+    data object SaveToButtonClicked : AddressBookEvents(event = "Button - Save To")
+
+    data object AddressScreenOpened : AddressBookEvents(event = "Address Screen Opened")
+
     class ContactListScreenOpened(
         walletId: UserWalletId,
         source: Source,
