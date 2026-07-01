@@ -92,7 +92,9 @@ private fun SimpleProviderTrailing(state: ProviderState) {
                         .size(TangemTheme.dimens.size20)
                         .clip(RoundedCornerShape(TangemTheme.dimens.radius4)),
                 )
-                if (state.additionalBadge is ProviderState.AdditionalBadge.BestTrade) {
+                if (state.additionalBadge is ProviderState.AdditionalBadge.BestTrade ||
+                    state.additionalBadge is ProviderState.AdditionalBadge.BestDexRate
+                ) {
                     SimpleBestRateBadge(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -173,6 +175,7 @@ private class SimpleProviderPreview : PreviewParameterProvider<ProviderState> {
             additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = {},
         ),
         ProviderState.Content(

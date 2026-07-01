@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -9,18 +10,16 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
-import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
+import com.tangem.core.ui.res.LocalVisaRedesignEnabled
+import com.tangem.features.tangempay.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.entity.TangemPayCardNavigation
 import com.tangem.features.tangempay.model.TangemPayCardPageModel
 import com.tangem.features.tangempay.ui.TangemPayCardPageScreen
-import com.tangem.features.tangempay.utils.firstCard
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
@@ -32,15 +31,6 @@ internal class TangemPayCardPageScreenComponent(
 
     private val model: TangemPayCardPageModel = getOrCreateModel(params = params)
 
-    private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
-        appComponentContext = child("cardDetailsBlockComponent"),
-        params = TangemPayCardDetailsBlockComponent.Params(
-            card = params.initialStatus.firstCard(),
-            userWalletId = params.initialStatus.userWalletId,
-            isEditingNameEnabled = true,
-        ),
-    )
-
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
         serializer = TangemPayCardNavigation.serializer(),
@@ -51,17 +41,21 @@ internal class TangemPayCardPageScreenComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
+        val cardControllers by model.cardControllersState.collectAsStateWithLifecycle()
+        val selectedCardId by model.selectedCardIdState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        NavigationBar3ButtonsScrim()
-        TangemPayCardPageScreen(
-            state = state,
-            cardDetailsBlockComponent = cardDetailsBlockComponent,
-            cardDetailsState = cardDetailsState,
-            modifier = modifier,
-        )
-        bottomSheet.child?.instance?.BottomSheet()
+        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
+            NavigationBar3ButtonsScrim()
+            TangemPayCardPageScreen(
+                state = state,
+                cardControllers = cardControllers,
+                selectedCardId = selectedCardId,
+                onCardSelect = model::onCardPageSelected,
+                modifier = modifier,
+            )
+            bottomSheet.child?.instance?.BottomSheet()
+        }
     }
 
     private fun bottomSheetChild(
@@ -83,7 +77,15 @@ internal class TangemPayCardPageScreenComponent(
                 params = TangemPayReissueCardComponent.Params(
                     listener = model,
                     userWalletId = params.initialStatus.userWalletId,
-                    cardId = params.initialStatus.firstCard().id,
+                    cardId = navigation.cardId,
+                ),
+            )
+            is TangemPayCardNavigation.CloseCard -> TangemPayCloseCardComponent(
+                appComponentContext = context,
+                params = TangemPayCloseCardComponent.Params(
+                    listener = model,
+                    userWalletId = navigation.userWalletId,
+                    cardId = navigation.cardId,
                 ),
             )
             is TangemPayCardNavigation.AddFunds -> TangemPayAddFundsComponent(

@@ -21,6 +21,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,6 +41,7 @@ import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.res.*
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 
 const val MODAL_SHEET_MAX_HEIGHT = 0.8f
@@ -205,7 +207,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> BsContent(
             .background(containerColor)
             .heightIn(max = maxHeight.dp)
             .fillMaxWidth()
-            .nestedScroll(nestedScrollConnection),
+            .nestedScroll(nestedScrollConnection)
+            .testTag(BaseBottomSheetTestTags.CONTAINER),
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             title(model)

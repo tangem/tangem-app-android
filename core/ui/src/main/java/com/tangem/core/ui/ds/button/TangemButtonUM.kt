@@ -14,7 +14,7 @@ import com.tangem.core.ui.extensions.TextReference
  * @param isEnabled          Boolean indicating whether the button is enabled.
  * @param isLoading          Boolean indicating whether the button is in a loading state.
  * @param size               TangemButtonSize defining the size of the button.
- * @param shape              TangemButtonShape defining the shape of the button.
+ * @param shape              TangemButtonShape defining the shape of the button. UPD all buttons are rounded.
  * @param type               TangemButtonType defining the style type of the button.
  * @param onClick            Lambda to be invoked when the button is clicked.
  * @param onLongClick        Lambda to be invoked when the button is long-clicked.

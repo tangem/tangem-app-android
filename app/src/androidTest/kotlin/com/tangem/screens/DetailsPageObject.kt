@@ -9,6 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
 
 class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -22,17 +23,13 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasText(getResourceString(R.string.wallet_connect_title))
     }
 
-    private val walletBlock: KNode = child {
-        hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
+    val walletNameButton: KNode = child {
+        hasTestTag(DetailsScreenTestTags.USER_WALLET_ITEM)
+        useUnmergedTree = true
     }
 
-    val walletNameButton: KNode = walletBlock.child {
-        hasClickAction()
-        hasPosition(0)
-    }
-
-    val scanCardButton: KNode = walletBlock.child {
-        hasText(getResourceString(R.string.scan_card_settings_button))
+    val addWalletButton: KNode = child {
+        hasTestTag(DetailsScreenTestTags.ADD_WALLET_BUTTON)
     }
 
     val buyTangemButton: KNode = child {
@@ -56,6 +53,12 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val versionName: KNode = child {
         hasTestTag(DetailsScreenTestTags.VERSION_NAME)
+        useUnmergedTree = true
+    }
+
+    fun walletNameValue(name: String): KNode = child {
+        hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
+        hasAnyDescendant(withText(name))
         useUnmergedTree = true
     }
 }

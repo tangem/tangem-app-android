@@ -15,11 +15,14 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioModel
+import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.UserPortfolioComponent
+import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
+import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.flowOf
 
 @Suppress("LongParameterList")
 internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
@@ -60,6 +63,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
             params = TokenActionsComponent.Params(
                 callbacks = model,
                 data = model.tokenActionsData,
+                bottomAction = flowOf(BottomAction.GoToToken),
             ),
         )
     }

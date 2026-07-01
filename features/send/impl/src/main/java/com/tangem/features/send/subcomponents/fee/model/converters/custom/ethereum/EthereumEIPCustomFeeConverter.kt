@@ -1,0 +1,242 @@
+package com.tangem.features.send.subcomponents.fee.model.converters.custom.ethereum
+
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.send.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkExceedBalance
+import com.tangem.features.send.subcomponents.fee.model.converters.custom.setEmpty
+import com.tangem.features.send.impl.R
+import com.tangem.features.send.subcomponents.fee.model.converters.custom.ethereum.EthereumCustomFeeConverter.Companion.FEE_AMOUNT
+import com.tangem.utils.extensions.isZero
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import java.math.RoundingMode
+
+internal class EthereumEIPCustomFeeConverter(
+    private val onCustomFeeValueChange: (Int, String) -> Unit,
+    private val appCurrency: AppCurrency,
+    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+) : BaseEthereumCustomFeeConverter<Fee.Ethereum.EIP1559> {
+
+    private val currencyStatus = feeCryptoCurrencyStatus.value
+
+    override fun convert(value: Fee.Ethereum.EIP1559): ImmutableList<CustomFeeFieldUM> {
+        return persistentListOf(
+            CustomFeeFieldUM(
+                value = value.maxFeePerGas.toBigDecimal().movePointLeft(
+                    EthereumCustomFeeConverter.GIGA_DECIMALS,
+                ).parseBigDecimal(
+                    EthereumCustomFeeConverter.GIGA_DECIMALS,
+                ),
+                decimals = EthereumCustomFeeConverter.GIGA_DECIMALS,
+                symbol = EthereumCustomFeeConverter.ETHEREUM_GAS_UNIT,
+                title = resourceReference(R.string.send_custom_evm_max_fee),
+                footer = resourceReference(R.string.send_custom_evm_max_fee_footer),
+                onValueChange = { onCustomFeeValueChange(MAX_FEE, it) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Number),
+                keyboardActions = KeyboardActions(),
+            ),
+            CustomFeeFieldUM(
+                value = value.priorityFee.toBigDecimal().movePointLeft(
+                    EthereumCustomFeeConverter.GIGA_DECIMALS,
+                ).parseBigDecimal(
+                    EthereumCustomFeeConverter.GIGA_DECIMALS,
+                ),
+                decimals = EthereumCustomFeeConverter.GIGA_DECIMALS,
+                symbol = EthereumCustomFeeConverter.ETHEREUM_GAS_UNIT,
+                title = resourceReference(R.string.send_custom_evm_priority_fee),
+                footer = resourceReference(R.string.send_custom_evm_priority_fee_footer),
+                onValueChange = { onCustomFeeValueChange(PRIORITY_FEE, it) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Number),
+                keyboardActions = KeyboardActions(),
+            ),
+        )
+    }
+
+    override fun convertBack(
+        normalFee: Fee.Ethereum.EIP1559,
+        value: ImmutableList<CustomFeeFieldUM>,
+    ): Fee.Ethereum.EIP1559 {
+        val feeAmount = value[EthereumCustomFeeConverter.FEE_AMOUNT].value.parseToBigDecimal(
+            value[EthereumCustomFeeConverter.FEE_AMOUNT].decimals,
+        )
+        val maxFeeDecimals = value[MAX_FEE].decimals
+        val maxFee = value[MAX_FEE].value.parseToBigDecimal(maxFeeDecimals)
+            .movePointRight(maxFeeDecimals)
+            .toBigInteger()
+        val priorityFeeDecimals = value[PRIORITY_FEE].decimals
+        val priorityFee = value[PRIORITY_FEE].value.parseToBigDecimal(priorityFeeDecimals)
+            .movePointRight(priorityFeeDecimals)
+            .toBigInteger()
+        val gasLimit = value[GAS_LIMIT].value.parseToBigDecimal(EthereumCustomFeeConverter.GAS_DECIMALS).toBigInteger()
+
+        return normalFee.copy(
+            amount = normalFee.amount.copy(value = feeAmount),
+            maxFeePerGas = maxFee,
+            priorityFee = priorityFee,
+            gasLimit = gasLimit,
+        )
+    }
+
+    override fun getGasLimitIndex(feeValue: Fee.Ethereum.EIP1559): Int = GAS_LIMIT
+
+    override fun onValueChange(
+        feeValue: Fee.Ethereum.EIP1559,
+        customValues: ImmutableList<CustomFeeFieldUM>,
+        index: Int,
+        value: String,
+    ): ImmutableList<CustomFeeFieldUM> {
+        val mutableCustomValues = customValues.toMutableList()
+        return mutableCustomValues.apply {
+            when (index) {
+                EthereumCustomFeeConverter.FEE_AMOUNT -> setOnAmountChange(feeValue, value, index)
+                MAX_FEE -> setOnMaxFeeChange(value, index)
+                GAS_LIMIT -> setOnGasLimitChange(value, index)
+                else -> set(index, this[index].copy(value = value))
+            }
+        }.toImmutableList()
+    }
+
+    private fun MutableList<CustomFeeFieldUM>.setOnAmountChange(
+        feeValue: Fee.Ethereum.EIP1559,
+        value: String,
+        index: Int,
+    ) {
+        val gasLimitRaw = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(MAX_FEE)
+        } else {
+            val newFeeAmountDecimal = value.parseToBigDecimal(this[EthereumCustomFeeConverter.FEE_AMOUNT].decimals)
+            val newFeeAmount = newFeeAmountDecimal.movePointRight(
+                EthereumCustomFeeConverter.GIGA_DECIMALS,
+            ) // from ETH to GWEI
+
+            val gasLimit = if (gasLimitRaw.isZero()) {
+                val gasLimitTemp = feeValue.gasLimit.toBigDecimal()
+                set(
+                    index = GAS_LIMIT,
+                    element = this[GAS_LIMIT].copy(
+                        value = gasLimitTemp.parseBigDecimal(EthereumCustomFeeConverter.GIGA_DECIMALS),
+                    ),
+                )
+                gasLimitTemp
+            } else {
+                gasLimitRaw
+            }
+
+            if (this[PRIORITY_FEE].value.isBlank()) {
+                set(
+                    index = PRIORITY_FEE,
+                    element = this[PRIORITY_FEE].copy(
+                        value = feeValue.priorityFee.toBigDecimal().movePointLeft(
+                            EthereumCustomFeeConverter.GIGA_DECIMALS,
+                        )
+                            .parseBigDecimal(EthereumCustomFeeConverter.GIGA_DECIMALS),
+                    ),
+                )
+            }
+
+            val newMaxFee = newFeeAmount.divide(gasLimit, this[MAX_FEE].decimals, RoundingMode.HALF_UP)
+
+            set(
+                index = MAX_FEE,
+                element = this[MAX_FEE].copy(value = newMaxFee.parseBigDecimal(this[MAX_FEE].decimals)),
+            )
+
+            set(
+                index = index,
+                element = this[index].copy(
+                    value = value,
+                    label = getFiatReference(
+                        rate = feeCryptoCurrencyStatus.value.fiatRate,
+                        value = newFeeAmountDecimal,
+                        appCurrency = appCurrency,
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<CustomFeeFieldUM>.setOnMaxFeeChange(value: String, index: Int) {
+        val gasLimit = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(MAX_FEE)
+        } else {
+            val newMaxFee = value.parseToBigDecimal(this[MAX_FEE].decimals).movePointLeft(this[MAX_FEE].decimals)
+            val newFeeAmount = gasLimit * newMaxFee
+            set(
+                EthereumCustomFeeConverter.FEE_AMOUNT,
+                this[EthereumCustomFeeConverter.FEE_AMOUNT].copy(
+                    value = newFeeAmount.parseBigDecimal(this[EthereumCustomFeeConverter.FEE_AMOUNT].decimals),
+                    label = getFiatReference(
+                        rate = currencyStatus.fiatRate,
+                        value = newFeeAmount,
+                        appCurrency = appCurrency,
+                    ),
+                ),
+            )
+            set(index, this[index].copy(value = value))
+        }
+    }
+
+    private fun MutableList<CustomFeeFieldUM>.setOnGasLimitChange(value: String, index: Int) {
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(GAS_LIMIT)
+        } else {
+            val newGasLimit = value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+
+            val maxFee = this[MAX_FEE].value.parseToBigDecimal(this[MAX_FEE].decimals)
+                .movePointLeft(this[MAX_FEE].decimals) // from GWEI to ETH
+
+            val newFeeAmount = newGasLimit * maxFee
+
+            set(
+                index = EthereumCustomFeeConverter.FEE_AMOUNT,
+                element = this[EthereumCustomFeeConverter.FEE_AMOUNT].copy(
+                    value = newFeeAmount.parseBigDecimal(this[EthereumCustomFeeConverter.FEE_AMOUNT].decimals),
+                    label = getFiatReference(
+                        rate = currencyStatus.fiatRate,
+                        value = newFeeAmount,
+                        appCurrency = appCurrency,
+                    ),
+                ),
+            )
+
+            val isNotExceedBalance = checkExceedBalance(
+                feeBalance = currencyStatus.amount,
+                feeAmount = newFeeAmount,
+            )
+
+            set(
+                index = index,
+                element = this[index].copy(
+                    value = value,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (!isNotExceedBalance) ImeAction.None else ImeAction.Done,
+                        keyboardType = KeyboardType.Number,
+                    ),
+                ),
+            )
+        }
+    }
+
+    private companion object {
+        const val MAX_FEE = 1
+        const val PRIORITY_FEE = 2
+        const val GAS_LIMIT = 3
+    }
+}
