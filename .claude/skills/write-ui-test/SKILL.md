@@ -32,6 +32,34 @@ different setup.
 5. **Write the test** per Conventions below.
 6. **Build BOTH APKs, install, run, and classify the result** correctly — Allure post-run hook
    failures are not test failures (see `reference/running-and-debugging.md`).
+7. **Final cleanup pass — remove what you no longer use.** Before declaring done, review every file you
+   touched for leftovers from iteration (see "Final cleanup" below). This is a required step, not optional.
+
+## Final cleanup (required before done)
+
+Iterating on a test typically leaves dead code behind — an import for a helper you swapped out, an
+`@OptIn` for an API you stopped calling directly, a matcher you replaced. Reviewers flag these, and a
+stray `@OptIn` reads as "this code needs an experimental API" when it doesn't. For **every file you
+added or edited** (production `testTag` files included), check and remove:
+
+- **Unused imports.** Any leftover after swapping an approach (e.g. `performTextReplacement` →
+  `performTextInputInChunks`, `onDialog` after extracting a scenario). Diff-check each import against
+  the body: `for f in <changed .kt>; do grep '^import' "$f" | while read -r i; do n=${i##*.}; n=${n%% *};
+  grep -q "\b$n\b" <(grep -v '^import' "$f") || echo "$f: unused? $i"; done; done`
+  (heuristic — `foundation.layout.*` wildcards and `getValue`/`setValue` used only by `by` delegates
+  are false positives; verify before deleting).
+- **Redundant `@OptIn(ExperimentalTestApi::class)`.** Needed **only** where you call an experimental
+  API *directly* (`performScrollToNode`, `waitUntilAtLeastOneExists`, `waitUntilDoesNotExist`, …).
+  It is **not** needed just to call your own helper that is already annotated (e.g. a page-object
+  `scrollToNetwork` that wraps `performScrollToNode`), nor for the stable `composeTestRule.waitUntil(timeoutMillis, condition)`.
+  A `BaseTestCase`-extension scenario that only calls annotated page-object methods + stable `waitUntil`
+  needs no `@OptIn` — drop it (and its `import androidx.compose.ui.test.ExperimentalTestApi`).
+- **Dead vals / matchers / page-object members** you introduced and then stopped referencing.
+
+Then recompile the changed module(s) to confirm the removals are valid — the androidTest APK
+(`:app:assembleGoogleMockedAndroidTest`) for test-side edits, or the touched production module
+(e.g. `:core:ui:compileDebugKotlin`) for `testTag` edits. A clean compile with no opt-in / unused-symbol
+warnings is the pass criterion. Behavior-only-neutral cleanups don't need a re-run of the suite.
 
 ## Porting a test from iOS
 
@@ -139,6 +167,22 @@ Scenario files orchestrate flows; they must not define page objects or duplicate
 - **In scenario / `BaseTestCase`-extension code, `flakySafely` is NOT available** regardless — use the
   same `composeTestRule.waitUntil` fallback (or `waitUntilAtLeastOneExists(matcher, timeout)` to wait for
   appearance, `{ a exists || b exists }` for either/or).
+- **Don't repeat the `composeTestRule.waitUntil(timeoutMillis = …) { runCatching { … }.isSuccess }`
+  block across steps — extract a one-line private helper** in the scenario file and call that instead.
+  A multi-step scenario that gates every async step this way turns into copy-paste noise (and reviewers
+  flag it). Add once, near the top of the file:
+  ```kotlin
+  // flakySafely is unavailable in BaseTestCase extensions — wait until the assertion/action stops throwing.
+  private fun BaseTestCase.awaitSuccess(block: () -> Unit) {
+      composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT) { runCatching(block).isSuccess }
+  }
+  ```
+  then each step reads `awaitSuccess { onXxxScreen { field.assertExists() } }` before the action.
+- **Right-size the timeout — don't stamp `WAIT_UNTIL_TIMEOUT_LONG` on every step.** The timeout is a
+  *ceiling*, not a sleep (`waitUntil` returns the moment the condition holds), but the default
+  `WAIT_UNTIL_TIMEOUT` (20 s) already dwarfs a normal async transition. Reserve `…_LONG` / `…_VERY_LONG`
+  for steps that are genuinely slow (a real network round-trip + debounce that can approach 20 s);
+  using LONG uniformly is lazy and hides which step is actually the slow one.
 
 ### Comment hygiene
 
