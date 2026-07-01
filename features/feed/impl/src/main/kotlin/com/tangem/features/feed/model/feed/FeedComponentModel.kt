@@ -14,12 +14,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.DesignFeatureToggles
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.message.TangemMessageEffect
-import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_heart_28
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -281,16 +276,7 @@ internal class FeedComponentModel @Inject constructor(
             globalState = GlobalFeedState.Loading,
             earnListUM = EarnListUM.Loading,
             forYouBannerUM = if (forYouFeatureToggles.isForYouEnabled) {
-                ForYouBannerUM.Content(
-                    TangemMessageUM(
-                        id = ForYouBannerUM.Content::class.java.simpleName,
-                        title = resourceReference(R.string.for_you_title),
-                        subtitle = resourceReference(R.string.for_you_description),
-                        iconUM = TangemIconUM.Icon(Icons.ic_heart_28), //  TODO ForYou update icon,
-                        messageEffect = TangemMessageEffect.Magic,
-                        onClick = params.feedClickIntents::openForYou,
-                    ),
-                )
+                ForYouBannerUM.Content(onClick = params.feedClickIntents::openForYou)
             } else {
                 ForYouBannerUM.Empty
             },
