@@ -2,9 +2,11 @@ package com.tangem.features.tokenreceive.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -16,54 +18,59 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.res.getStringSafe
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_copy_24
-import com.tangem.core.ui.res.generated.icons.ic_share_android_24
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenReceiveQrCodeBottomSheetTestTags
 import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.QrCodeUM
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun TokenReceiveQrCodeContent(qrCodeUM: QrCodeUM) {
+internal fun TokenReceiveQrCodeContentLegacy(qrCodeUM: QrCodeUM) {
+    val snackbarHostState = remember(::SnackbarHostState)
     val qrCodePainter = rememberQrPainter(content = qrCodeUM.addressValue)
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        QrCodePage(
-            addressFullName = qrCodeUM.addressName,
-            addressValue = qrCodeUM.addressValue,
-            network = qrCodeUM.network,
-            qrCodePainter = qrCodePainter,
-        )
+    ContainerWithSnackbarHost(snackbarHostState = snackbarHostState) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = TangemTheme.colors.background.tertiary)
+                .padding(bottom = 16.dp)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            SpacerH8()
 
-        SpacerH(24.dp)
+            QrCodePage(
+                addressFullName = qrCodeUM.addressName,
+                addressValue = qrCodeUM.addressValue,
+                network = qrCodeUM.network,
+                qrCodePainter = qrCodePainter,
+            )
+            SpacerH24()
 
-        Buttons(
-            modifier = Modifier.padding(top = 8.dp),
-            onShareClick = { qrCodeUM.onShareClick(qrCodeUM.addressValue) },
-            onCopyClick = qrCodeUM.onCopyClick,
-        )
+            Buttons(
+                onShareClick = { qrCodeUM.onShareClick(qrCodeUM.addressValue) },
+                onCopyClick = qrCodeUM.onCopyClick,
+                snackbarHostState = snackbarHostState,
+            )
+        }
     }
 }
 
@@ -74,12 +81,7 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
-            modifier = Modifier.padding(
-                start = 16.dp,
-                end = 16.dp,
-                top = 24.dp,
-                bottom = 16.dp,
-            ),
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.size36),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -88,22 +90,22 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
                     addressFullName.resolveReference(),
                     network,
                 ),
-                color = TangemTheme.colors3.text.primary,
+                color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
-                style = TangemTheme.typography3.heading.small,
+                style = TangemTheme.typography.h3,
                 modifier = Modifier.testTag(TokenReceiveQrCodeBottomSheetTestTags.TITLE),
             )
 
-            SpacerH(32.dp)
+            SpacerH(20.dp)
 
             Box(
                 modifier = Modifier
                     .border(
-                        width = 16.dp,
-                        color = TangemTheme.colors3.bg.secondary,
-                        shape = RoundedCornerShape(12.dp),
+                        width = 8.dp,
+                        color = TangemTheme.colors.icon.constant,
+                        shape = RoundedCornerShape(8.dp),
                     )
-                    .padding(16.dp)
+                    .padding(8.dp)
                     .testTag(TokenReceiveQrCodeBottomSheetTestTags.QR_CODE),
 
             ) {
@@ -114,66 +116,79 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
                     modifier = Modifier.sizeIn(minWidth = 148.dp),
                 )
             }
+
+            SpacerH24()
         }
         Text(
             text = stringResourceSafe(R.string.wc_common_address),
-            color = TangemTheme.colors3.text.secondary,
+            color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography3.caption.medium,
+            style = TangemTheme.typography.subtitle2,
         )
 
-        SpacerH(4.dp)
+        SpacerH2()
 
         Text(
             text = addressValue,
-            color = TangemTheme.colors3.text.primary,
+            color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography3.body.medium,
+            style = TangemTheme.typography.subtitle1,
             modifier = Modifier.testTag(TokenReceiveQrCodeBottomSheetTestTags.ADDRESS),
         )
     }
 }
 
 @Composable
-private fun Buttons(onShareClick: () -> Unit, onCopyClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun Buttons(
+    snackbarHostState: SnackbarHostState,
+    onShareClick: () -> Unit,
+    onCopyClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val hapticFeedback = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val resources = context.resources
+
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val tangemTopSnackbarHostState = LocalTopSnackbarHostState.current
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        TangemButton(
+        SecondaryButtonIconStart(
             modifier = Modifier.weight(1f),
+            text = stringResourceSafe(id = R.string.common_copy),
+            iconResId = R.drawable.ic_copy_24,
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onCopyClick()
                 coroutineScope.launch {
-                    tangemTopSnackbarHostState.showSnackbar(
-                        SnackbarMessage(
-                            startIconId = R.drawable.ic_check_24,
-                            message = resourceReference(R.string.wallet_notification_address_copied),
-                        ),
-                    )
+                    if (isRedesignEnabled) {
+                        tangemTopSnackbarHostState.showSnackbar(
+                            SnackbarMessage(
+                                startIconId = R.drawable.ic_check_24,
+                                message = resourceReference(R.string.wallet_notification_address_copied),
+                            ),
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            message = resources.getStringSafe(R.string.wallet_notification_address_copied),
+                        )
+                    }
                 }
             },
-            text = resourceReference(R.string.common_copy),
-            iconStart = TangemIconUM.Icon(Icons.ic_copy_24),
-            size = TangemButton.Size.X12,
-            variant = TangemButton.Variant.Secondary,
         )
 
-        TangemButton(
+        SecondaryButtonIconStart(
             modifier = Modifier.weight(1f),
+            text = stringResourceSafe(id = R.string.common_share),
+            iconResId = R.drawable.ic_share_24,
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onShareClick()
             },
-            text = resourceReference(R.string.common_share),
-            iconStart = TangemIconUM.Icon(Icons.ic_share_android_24),
-            size = TangemButton.Size.X12,
-            variant = TangemButton.Variant.Secondary,
         )
     }
 }
@@ -197,7 +212,20 @@ private fun rememberQrPainter(content: String, size: Dp = 248.dp, padding: Dp = 
 private fun Preview_TokenReceiveQrCodeContent(
     @PreviewParameter(TokenReceiveQrCodeContentPreviewProvider::class) qrCodeUM: QrCodeUM,
 ) {
-    TangemThemePreviewRedesign {
-        TokenReceiveQrCodeContent(qrCodeUM = qrCodeUM)
+    TangemThemePreview {
+        TokenReceiveQrCodeContentLegacy(qrCodeUM = qrCodeUM)
     }
+}
+
+internal class TokenReceiveQrCodeContentPreviewProvider : PreviewParameterProvider<QrCodeUM> {
+    private val config = QrCodeUM(
+        network = "Ethereum",
+        addressName = stringReference("Etherium"),
+        addressValue = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
+        onCopyClick = {},
+        onShareClick = {},
+    )
+
+    override val values: Sequence<QrCodeUM>
+        get() = sequenceOf(config)
 }
