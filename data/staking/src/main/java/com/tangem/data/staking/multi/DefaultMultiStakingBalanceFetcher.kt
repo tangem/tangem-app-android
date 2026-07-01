@@ -8,7 +8,6 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
-import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -25,7 +24,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -64,6 +62,11 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiStakingBalanceFetcher {
+
+    private val p2pAccountsFetcher = P2PEthPoolAccountsFetcher(
+        p2pEthPoolApi = p2pEthPoolApi,
+        dispatchers = dispatchers,
+    )
 
     override suspend fun invoke(params: MultiStakingBalanceFetcher.Params): Either<Throwable, Unit> {
         TangemLogger.i("Start fetching staking balances for params:\n$params")
@@ -195,50 +198,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
         vaults: List<P2PEthPoolVault>,
         addresses: Set<String>,
     ): Set<P2PEthPoolAccountResponse> {
-        val responses = mutableSetOf<P2PEthPoolAccountResponse>()
-
-        for (vault in vaults) {
-            for (address in addresses) {
-                runSuspendCatching {
-                    val response = p2pEthPoolApi.getAccountInfo(
-                        network = P2PEthPoolStakingConfig.activeNetwork.value,
-                        delegatorAddress = address,
-                        vaultAddress = vault.vaultAddress,
-                    )
-
-                    when (response) {
-                        is ApiResponse.Success -> {
-                            val data = response.data
-                            if (data.error != null) {
-                                TangemLogger.w(
-                                    "P2PEthPool API returned error for vault ${vault.vaultAddress}, " +
-                                        "address $address: ${data.error ?: "error"}",
-                                )
-                            } else {
-                                val result = requireNotNull(data.result) {
-                                    "Result is null in successful response"
-                                }
-                                responses.add(result)
-                            }
-                        }
-                        is ApiResponse.Error -> {
-                            TangemLogger.w(
-                                "Failed to fetch P2PEthPool balance for vault ${vault.vaultAddress}, " +
-                                    "address $address",
-                                response.cause,
-                            )
-                        }
-                    }
-                }.onFailure { error ->
-                    TangemLogger.w(
-                        "Failed to fetch P2PEthPool balance for vault ${vault.vaultAddress}, address $address",
-                        error,
-                    )
-                }
-            }
-        }
-
-        return responses
+        return p2pAccountsFetcher.fetchBatch(vaults = vaults, addresses = addresses)
     }
 
     private inline fun checkIsSupportedByWalletOrElse(userWalletId: UserWalletId, ifNotSupported: (Throwable) -> Unit) {
