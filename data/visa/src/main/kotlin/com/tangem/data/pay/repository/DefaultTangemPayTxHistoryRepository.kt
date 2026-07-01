@@ -18,6 +18,7 @@ import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.fetcher.CursorBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import javax.inject.Inject
 
 private const val INITIAL_CURSOR = "initial_cursor_key"
@@ -76,16 +77,22 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         cursor: String?,
         limit: Int,
     ): List<TangemPayTxHistoryItem> {
-        cacheRegistry.invokeOnExpire(
-            key = getCacheKey(userWalletId = userWalletId, cursor = cursor),
-            skipCache = config.shouldRefresh,
-            block = { fetch(userWalletId = userWalletId, cursor = cursor, pageSize = limit) },
-        )
+        val storeKey = userWalletId.stringValue
+        val storeCursor = cursor ?: INITIAL_CURSOR
 
-        return txHistoryItemsStore.getSyncOrNull(
-            key = userWalletId.stringValue,
-            cursor = cursor ?: INITIAL_CURSOR,
-        ).orEmpty()
+        val fetchResult = runSuspendCatching {
+            cacheRegistry.invokeOnExpire(
+                key = getCacheKey(userWalletId = userWalletId, cursor = cursor),
+                skipCache = config.shouldRefresh,
+                block = { fetch(userWalletId = userWalletId, cursor = cursor, pageSize = limit) },
+            )
+        }
+        val storedPage = txHistoryItemsStore.getSyncOrNull(key = storeKey, cursor = storeCursor)
+
+        return fetchResult.fold(
+            onSuccess = { storedPage.orEmpty() },
+            onFailure = { e -> storedPage?.takeIf { it.isNotEmpty() } ?: throw e },
+        )
     }
 
     private fun getCacheKey(userWalletId: UserWalletId, cursor: String?): String {
