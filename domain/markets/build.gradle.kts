@@ -11,34 +11,34 @@ android {
 
 
 dependencies {
-    /* Domain */
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    implementation(tangemDeps.blockchain)
+    // endregion
+
+    // region Core modules
+    api(projects.core.pagination)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.quotes)
+    implementation(projects.domain.card)
+    // endregion
+
+    // region Domain models
     api(projects.domain.appCurrency.models)
-    api(projects.domain.card)
-    api(projects.domain.core)
-    api(projects.domain.legacy)
     api(projects.domain.markets.models)
     api(projects.domain.models)
-    api(projects.domain.networks)
-    api(projects.domain.staking)
-    api(projects.domain.quotes)
-    api(projects.domain.walletManager)
-    api(projects.domain.wallets)
-    api(projects.domain.wallets.models)
-    api(projects.domain.stories)
+    // endregion
 
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.settings)
-
-    api(projects.core.pagination)
-
-    /* Libs */
+    // region Libs
     api(projects.libs.blockchainSdk)
-
-    /* SDK */
-    implementation(tangemDeps.blockchain)
-
-    /* Utils */
-    implementation(deps.kotlin.serialization)
-    implementation(projects.core.utils)
+    // endregion
 }

@@ -9,15 +9,28 @@ android {
 }
 
 dependencies {
-    implementation(deps.arrow.core)
+
+    // region Other libraries
+    api(deps.arrow.core)
     implementation(deps.jodatime)
+    // endregion
 
+    // region Core modules
     implementation(projects.core.res)
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.visa.models)
-    implementation(projects.domain.feedback.models)
+    // endregion
 
-    /** Testing libraries */
-    testImplementation(projects.test.core)
+    // region Domain
+    api(projects.domain.models)
+    implementation(projects.domain.visa.models)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.feedback.models)
+    // endregion
+
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    // endregion
 }

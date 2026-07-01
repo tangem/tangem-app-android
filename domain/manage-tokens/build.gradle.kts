@@ -10,28 +10,37 @@ android {
 
 dependencies {
 
-    /* Domain */
-    api(projects.domain.core)
-    api(projects.domain.manageTokens.models)
-    api(projects.domain.networks)
-    api(projects.domain.quotes)
-    api(projects.domain.walletManager)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.card)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.legacy)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    runtimeOnly(deps.kotlin.coroutines.android)
+    // endregion
 
-    implementation(tangemDeps.blockchain)
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
 
-    /* Core */
+    // region Core modules
     api(projects.core.pagination)
-    testImplementation(projects.core.pagination)
+    api(projects.core.utils)
+    // endregion
 
-    /* Tests */
-    testImplementation(deps.test.junit5)
+    // region Domain
+    api(projects.domain.models)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.manageTokens.models)
+    // endregion
+
+    // region Runtime
+    // room/coroutines-android reach the runtime classpath through transitive consumers that no longer
+    // arrive via a compile dependency — declare them runtimeOnly so the runtime graph stays complete.
+    runtimeOnly(deps.room.runtime)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
+    // endregion
 }

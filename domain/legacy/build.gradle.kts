@@ -1,48 +1,41 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.domain.features"
 }
+
 dependencies {
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    implementation(projects.core.error)
-    implementation(projects.common)
-    implementation(projects.libs.auth)
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.domain.core)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.wallets.models)
-    /** Tangem libraries */
-    implementation(tangemDeps.blockchain) {
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
+    // endregion
 
-    /** Other libraries */
-    implementation(deps.arrow.core)
-    implementation(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    ksp(deps.moshi.kotlin.codegen)
+    // region Domain
+    api(projects.domain.core)
+    // endregion
 
-    /** Testing libraries */
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.tokens.models)
+    api(projects.domain.transaction.models)
+    // endregion
+
+    // region Tests
+    testImplementation(deps.moshi)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
-
+    testImplementation(projects.libs.blockchainSdk)
+    // endregion
 }

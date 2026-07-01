@@ -12,107 +12,102 @@ android {
 }
 dependencies {
     /** Api */
-    implementation(projects.features.commonFeatures.api)
+    api(projects.features.approval.api)
+    api(projects.features.commonFeatures.api)
+    api(projects.features.send.api)
+    api(projects.features.swap.api)
+    api(projects.features.swap.domain)
+    implementation(projects.features.send.impl)
 
     /** Core modules */
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.datasource)
-    implementation(projects.core.navigation)
-    implementation(projects.core.utils)
-    implementation(projects.core.ui)
-    implementation(projects.common.routing)
-    implementation(projects.common.ui)
-    implementation(projects.core.decompose) // For Route supertype
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.ui)
+    api(projects.core.utils)
     implementation(projects.core.error)
-    implementation(projects.common.uiMarkets)
-    implementation(projects.common.uiCharts)
+    api(projects.common.routing)
+    api(projects.common.ui)
 
     /** Data modules */
     implementation(projects.data.common)
 
     /** Domain modules **/
-    implementation(projects.domain.models)
+    api(projects.domain.account.status)
+    api(projects.domain.appCurrency)
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.balanceHiding)
+    api(projects.domain.card)
+    api(projects.domain.express.models)
+    api(projects.domain.feedback)
+    api(projects.domain.legacy)
+    api(projects.domain.models)
+    api(projects.domain.settings)
+    api(projects.domain.stories)
+    api(projects.domain.swap)
+    api(projects.domain.swap.models)
+    api(projects.domain.tokens)
+    api(projects.domain.transaction)
+    api(projects.domain.transaction.models)
+    api(projects.domain.txhistory)
+    api(projects.domain.visa)
+    api(projects.domain.wallets)
     implementation(projects.domain.account)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.feedback)
+    implementation(projects.domain.core)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.stories)
+    implementation(projects.domain.markets.models)
     implementation(projects.domain.stories.models)
-    implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.account)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.card)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.markets)
-    implementation(projects.domain.swap)
-    implementation(projects.domain.swap.models)
-
-    /** Feature modules */
-    implementation(projects.features.swap.domain)
-    implementation(projects.features.swap.domain.api)
-    implementation(projects.features.swap.domain.models)
-    implementation(projects.features.wallet.api)
-    implementation(projects.features.swap.api)
-    implementation(projects.features.send.api)
-    implementation(projects.features.send.impl)
-    implementation(projects.features.feed.api)
+    implementation(projects.domain.visa.models)
+    runtimeOnly(projects.domain.staking)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
-    implementation(deps.androidx.fragment.ktx)
-    implementation(deps.lifecycle.viewModel.ktx)
-    implementation(deps.androidx.browser)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose */
-    implementation(deps.arrow.core)
-    implementation(deps.compose.foundation)
+    api(deps.compose.coil)
+    api(deps.compose.foundation)
+    api(deps.decompose.ext.compose)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
 
-    /** Api */
-    implementation(projects.features.swap.api)
-    implementation(projects.features.tokendetails.api)
-    implementation(projects.features.approval.api)
-
     /** Libs */
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
 
+    /** Common */
+    implementation(projects.common)
+
     /** Other libraries */
-    implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.systemUiController)
+    api(deps.arrow.core)
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.serialization)
-    implementation(deps.kotlin.immutable.collections)
-    implementation(deps.decompose.ext.compose)
     implementation(deps.firebase.perf) {
         exclude(group = "com.google.firebase", module = "protolite-well-known-types")
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
     }
 
     /** Tangem libs */
-    implementation(tangemDeps.blockchain)
+    api(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     /** Test */
+    testImplementation(projects.domain.core)
+    testImplementation(projects.domain.legacy)
+    testImplementation(projects.libs.blockchainSdk)
     testImplementation(projects.test.core)
 }

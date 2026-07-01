@@ -6,10 +6,11 @@ plugins {
 
 dependencies {
 
-    /* Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
 
-    /** Other */
-    implementation(deps.kotlin.serialization)
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

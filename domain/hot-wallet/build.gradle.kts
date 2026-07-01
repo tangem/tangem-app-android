@@ -9,16 +9,23 @@ android {
 }
 
 dependencies {
-    implementation(projects.domain.core)
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
 
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    testImplementation(deps.test.junit5)
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
 
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }

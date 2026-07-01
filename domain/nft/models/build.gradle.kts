@@ -5,13 +5,12 @@ plugins {
 }
 
 dependencies {
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
 
-    implementation(projects.domain.core)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
 
-    /* Utils */
-    implementation(deps.kotlin.serialization)
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }
