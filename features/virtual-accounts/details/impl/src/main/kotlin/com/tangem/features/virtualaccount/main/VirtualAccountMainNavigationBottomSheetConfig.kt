@@ -1,6 +1,6 @@
 package com.tangem.features.virtualaccount.main
 
-import com.tangem.features.virtualaccount.main.addfunds.VirtualAccountAddFundsBottomSheetComponent.RequisitesRow
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent.RequisitesRow
 import kotlinx.serialization.Serializable
 
 @Serializable
