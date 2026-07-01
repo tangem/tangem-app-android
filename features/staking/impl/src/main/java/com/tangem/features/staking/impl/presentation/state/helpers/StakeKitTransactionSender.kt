@@ -28,6 +28,7 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.staking.impl.di.StakingClock
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -42,7 +43,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 internal class StakeKitTransactionSender @AssistedInject constructor(
@@ -56,6 +61,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val checkStakingTransactionUseCase: CheckStakingTransactionUseCase,
+    @StakingClock private val clock: Clock,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: StakeKitIntegration,
@@ -65,7 +71,10 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
     private val balanceUpdater: StakingBalanceUpdater
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
 
-    private var cachedVerdict: StakingTransactionVerdict? = null
+    // The transactions validated in [validate] are cached here and reused in [send] so we don't build
+    // and validate them twice. The cache is only reused when the build inputs are unchanged ([BuildKey])
+    // and the build is not stale (see [ValidatedBuild.isStaleForSend]).
+    private var validatedBuild: ValidatedBuild? = null
 
     override suspend fun validate(): StakingTransactionVerdict {
         val state = stateController.value
@@ -73,41 +82,32 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
             ?: return StakingTransactionVerdict.SAFE
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: return StakingTransactionVerdict.SAFE
         val amountState = state.amountState as? AmountState.Data ?: return StakingTransactionVerdict.SAFE
-        val accountAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-            ?: return StakingTransactionVerdict.SAFE
+        if (cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value == null) {
+            return StakingTransactionVerdict.SAFE
+        }
 
         var hasError = false
         val onError: (StakingError) -> Unit = { hasError = true }
 
-        val stakingTransactions = getStakingTransactions(
+        val fullTransactionsData = buildTransactions(
             state = state,
             confirmationState = confirmationState,
-            onConstructError = onError,
-        )
-        if (hasError || stakingTransactions == null) return StakingTransactionVerdict.SAFE
-
-        val fullTransactionsData = getConstructedTransactions(
-            stakingTransactions = stakingTransactions,
             fee = fee,
             amount = amountState.amountTextField.cryptoAmount.value.orZero(),
             onConstructError = onError,
         )
         if (hasError || fullTransactionsData.isNullOrEmpty()) return StakingTransactionVerdict.SAFE
 
-        var worst = StakingTransactionVerdict.SAFE
-        fullTransactionsData.forEach { item ->
-            val verdict = checkStakingTransactionUseCase(
-                network = item.stakeKitTransaction.network,
-                accountAddress = accountAddress,
-                unsignedTransaction = item.stakeKitTransaction.unsignedTransaction,
-                token = cryptoCurrencyStatus.currency.symbol,
-                blockchain = cryptoCurrencyStatus.currency.network.name,
-                provider = STAKEKIT_PROVIDER,
+        val verdict = validateConstructedTransactions(fullTransactionsData)
+        validatedBuild = currentBuildKey(state)?.let { key ->
+            ValidatedBuild(
+                key = key,
+                transactions = fullTransactionsData,
+                verdict = verdict,
+                builtAt = clock.now(),
             )
-            worst = maxOf(worst, verdict)
         }
-        cachedVerdict = worst
-        return worst
+        return verdict
     }
 
     override suspend fun send(callbacks: StakingTransactionSender.Callbacks) {
@@ -135,25 +135,28 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
             ?: error("No fee provided")
         val amountState = state.amountState as? AmountState.Data ?: error("No amount state")
 
-        val stakingTransactions = getStakingTransactions(
-            state = state,
-            confirmationState = confirmationState,
-            onConstructError = onConstructError,
-        )
-
-        val fullTransactionsData = getConstructedTransactions(
-            stakingTransactions = stakingTransactions,
-            fee = fee,
-            amount = amountState.amountTextField.cryptoAmount.value.orZero(),
-            onConstructError = onConstructError,
-        )
-
-        if (fullTransactionsData.isNullOrEmpty()) {
-            onConstructError(StakingError.DomainError("fullTransactionsData is null or empty"))
-            return
+        val reused = reusableBuild(state)
+        val fullTransactionsData: List<FullTransactionData>
+        val verdict: StakingTransactionVerdict
+        if (reused != null) {
+            fullTransactionsData = reused.transactions
+            verdict = reused.verdict
+        } else {
+            val built = buildTransactions(
+                state = state,
+                confirmationState = confirmationState,
+                fee = fee,
+                amount = amountState.amountTextField.cryptoAmount.value.orZero(),
+                onConstructError = onConstructError,
+            )
+            if (built.isNullOrEmpty()) {
+                onConstructError(StakingError.DomainError("fullTransactionsData is null or empty"))
+                return
+            }
+            fullTransactionsData = built
+            verdict = validateConstructedTransactions(built)
         }
 
-        val verdict = cachedVerdict ?: validateConstructedTransactions(fullTransactionsData)
         if (verdict == StakingTransactionVerdict.UNSAFE) {
             onConstructError(StakingError.TransactionValidationFailed("Transaction blocked by security validation"))
             return
@@ -379,9 +382,90 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         )
     }
 
+    private suspend fun buildTransactions(
+        state: StakingUiState,
+        confirmationState: StakingStates.ConfirmationState.Data,
+        fee: Fee,
+        amount: BigDecimal,
+        onConstructError: (StakingError) -> Unit,
+    ): List<FullTransactionData>? {
+        val stakingTransactions = getStakingTransactions(
+            state = state,
+            confirmationState = confirmationState,
+            onConstructError = onConstructError,
+        )
+        return getConstructedTransactions(
+            stakingTransactions = stakingTransactions,
+            fee = fee,
+            amount = amount,
+            onConstructError = onConstructError,
+        )
+    }
+
+    // Returns the previously validated build only if it still matches the current inputs and is not
+    // stale; otherwise the caller must rebuild and re-validate.
+    private fun reusableBuild(state: StakingUiState): ValidatedBuild? {
+        val cached = validatedBuild ?: return null
+        val key = currentBuildKey(state) ?: return null
+        return cached.takeIf { it.key == key && !it.isStaleForSend(clock.now()) }
+    }
+
+    // The inputs that determine the built transactions. If any of them changed between [validate] and
+    // [send], the cached build is discarded and rebuilt.
+    private fun currentBuildKey(state: StakingUiState): BuildKey? {
+        val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data ?: return null
+        val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: return null
+        val amountState = state.amountState as? AmountState.Data ?: return null
+        val validatorState = state.validatorState as? StakingStates.ValidatorState.Data ?: return null
+        val accountAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return null
+        return BuildKey(
+            actionType = state.actionType,
+            accountAddress = accountAddress,
+            validatorAddress = validatorState.chosenTarget.address,
+            cryptoAmount = amountState.amountTextField.cryptoAmount.value.orZero(),
+            feeAmount = fee.amount.value.orZero(),
+            pendingAction = confirmationState.pendingAction,
+            reduceAmountBy = confirmationState.reduceAmountBy.orZero(),
+        )
+    }
+
     private data class FullTransactionData(
         val stakeKitTransaction: StakingTransaction,
         val tangemTransaction: TransactionData.Compiled,
+    )
+
+    private data class ValidatedBuild(
+        val key: BuildKey,
+        val transactions: List<FullTransactionData>,
+        val verdict: StakingTransactionVerdict,
+        val builtAt: Instant,
+    ) {
+        // Solana transactions embed a recentBlockhash that expires. A cached Solana build may be reused
+        // only while it is fresh; past [SOLANA_BUILD_TTL] it is rebuilt + re-validated so we never sign
+        // an expired blockhash. Freshness is measured on the wall clock, which can jump backwards
+        // (NTP/manual change) — a negative elapsed is untrustworthy and also treated as stale. Other
+        // chains are deterministic and never go stale.
+        fun isStaleForSend(now: Instant): Boolean {
+            val isSolana = transactions.any { it.stakeKitTransaction.network == NetworkType.SOLANA }
+            if (!isSolana) return false
+            val elapsed = now - builtAt
+            return elapsed < Duration.ZERO || elapsed >= SOLANA_BUILD_TTL
+        }
+    }
+
+    // Every field here must influence the built transaction, so that an equal key guarantees identical
+    // built bytes. [pendingAction] (its passthrough/type) and [reduceAmountBy] are folded into the
+    // built tx by getStakingTransaction/getAmount, so they belong in the key too. BigDecimal equality is
+    // scale-sensitive, but a spurious mismatch only forces a safe rebuild + re-validation, never a wrong
+    // reuse, so it is acceptable here.
+    private data class BuildKey(
+        val actionType: StakingActionCommonType,
+        val accountAddress: String,
+        val validatorAddress: String,
+        val cryptoAmount: BigDecimal,
+        val feeAmount: BigDecimal,
+        val pendingAction: PendingAction?,
+        val reduceAmountBy: BigDecimal,
     )
 
     @AssistedFactory
@@ -396,3 +480,8 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
 }
 
 private const val STAKEKIT_PROVIDER = "StakeKit"
+
+// Reuse window for a built Solana transaction before its recentBlockhash risks expiring (blockhashes
+// live ~60-90s on-chain). Measured from validate() (confirmation-screen entry), so it must leave
+// headroom for the post-send signing + broadcast latency that accrues after this check.
+private val SOLANA_BUILD_TTL = 50.seconds
