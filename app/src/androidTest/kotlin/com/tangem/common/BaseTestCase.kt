@@ -196,13 +196,9 @@ abstract class BaseTestCase : TestCase(
                 "DYNAMIC_ADDRESSES_ENABLED" to true,
                 "SOLANA_TX_HISTORY_ENABLED" to true,
                 "SOLANA_SCALED_UI_AMOUNT_ENABLED" to true,
-                "SWAP_AB_ENABLED" to true,
                 "AND_15310_ADD_FUNDS_STAGE1" to true,
-                "AND_15009_SWAP_PROVIDER_FILTER_ENABLED" to true,
                 "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
                 "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED" to true,
-                "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED" to true,
-                "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
                 "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
                 // 5.40
                 "TWI_1377_MANAGE_FUNDS" to true,
