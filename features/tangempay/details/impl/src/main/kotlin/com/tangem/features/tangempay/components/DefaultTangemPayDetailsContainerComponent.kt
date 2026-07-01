@@ -19,16 +19,19 @@ import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRout
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("LongParameterList")
 internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: TangemPayDetailsContainerComponent.Params,
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -65,6 +68,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             expressTransactionsComponentFactory = expressTransactionsComponentFactory,
+            virtualAccountAddFundsComponentFactory = virtualAccountAddFundsComponentFactory,
         )
         is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
