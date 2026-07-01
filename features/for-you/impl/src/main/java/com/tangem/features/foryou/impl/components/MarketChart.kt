@@ -51,9 +51,14 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
@@ -63,6 +68,7 @@ import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 @Composable
 internal fun MarketChart(marketChart: MarketChartUM, modifier: Modifier = Modifier) {
@@ -200,7 +206,7 @@ private fun DonutSegmentTooltipBlock(
     if (selectedIndex != null) shownIndex = selectedIndex
 
     val isExpanded = selectedIndex?.let(segments::getOrNull) != null
-    val shownSegment = shownIndex?.let(segments::getOrNull)
+    val shownSegment = shownIndex?.let(segments::getOrNull) ?: return
     val positionProvider = remember(
         shownIndex,
         segments,
@@ -225,24 +231,18 @@ private fun DonutSegmentTooltipBlock(
     DonutSegmentTooltip(
         expanded = isExpanded,
         positionProvider = positionProvider,
-        title = shownSegment?.title.orEmpty(),
-        fiatValue = shownSegment?.fiatValue.orEmpty(),
-        percent = shownSegment?.let { formatSegmentPercent(it.weight) }.orEmpty(),
+        title = shownSegment.title,
+        fiatValue = shownSegment.fiatValue,
+        percent = shownSegment.weight.format { percent() },
         onDismissRequest = onDismissRequest,
     )
-}
-
-@Suppress("MagicNumber")
-private fun formatSegmentPercent(weight: Float): String {
-    val percent = weight.coerceIn(0f, 1f) * 100
-    return if (percent % 1f == 0f) "${percent.toInt()}" else "%.2f".format(percent)
 }
 
 private val DonutStrokeWidth = 28.dp
 private val DonutStartAngle = -90f
 
 @Composable
-private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Float) {
+private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: TextReference) {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
         text = pluralStringResourceSafe(R.plurals.market_chart_assets_android, assetCount, assetCount),
@@ -252,7 +252,7 @@ private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Floa
 
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = stringResourceSafe(R.string.market_chart_top_holding, formatSegmentPercent(topHoldingPercent)),
+        text = topHoldingPercent.resolveReference(),
         color = TangemTheme.colors3.text.primary,
         style = TangemTheme.typography3.heading.small,
     )
@@ -361,7 +361,7 @@ private fun MarketChart_Preview(
 @Composable
 private fun previewMarketChartState(scenario: MarketChartPreviewScenario): MarketChartUM = when (scenario) {
     MarketChartPreviewScenario.DISPLAYED -> MarketChartUM.Loaded(
-        topHoldingPercent = 0.41f,
+        topHoldingPercent = stringReference("Top holding 41%"),
         aiInsight = AiInsightUM.Displayed(
             "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
                 "buffer. Consider trimming concentration for a smoother ride",
@@ -369,18 +369,28 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
         donutChart = previewLoadedDonut(),
     )
     MarketChartPreviewScenario.ASK_AI -> MarketChartUM.Loaded(
-        topHoldingPercent = 0.41f,
+        topHoldingPercent = stringReference("Top holding 41%"),
         aiInsight = AiInsightUM.AskAiInsight(askAiInsightClick = {}),
         donutChart = previewLoadedDonut(),
     )
     MarketChartPreviewScenario.NO_AI -> MarketChartUM.Loaded(
-        topHoldingPercent = 0.41f,
+        topHoldingPercent = stringReference("Top holding 41%"),
         aiInsight = AiInsightUM.Hide,
         donutChart = DonutChartUM.Loaded(
             totalAmount = "$10,12345678912.1333",
             donutSegmentList = listOf(
-                DonutSegmentUM(weight = 0.55f, color = TangemTheme.colors3.border.brand),
-                DonutSegmentUM(weight = 0.45f, color = TangemTheme.colors3.border.accent.green),
+                DonutSegmentUM(
+                    weight = BigDecimal(0.55),
+                    color = TangemTheme.colors3.border.brand,
+                    title = stringReference("Ethereum"),
+                    fiatValue = stringReference("$5,720.22"),
+                ),
+                DonutSegmentUM(
+                    weight = BigDecimal(0.45),
+                    color = TangemTheme.colors3.border.accent.green,
+                    title = stringReference("Solana"),
+                    fiatValue = stringReference("$728.30"),
+                ),
             ),
         ),
     )
@@ -393,28 +403,28 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
     totalAmount = "$10,123456.1333",
     donutSegmentList = listOf(
         DonutSegmentUM(
-            weight = 0.55f,
+            weight = BigDecimal(0.55),
             color = TangemTheme.colors3.border.brand,
-            title = "Ethereum",
-            fiatValue = "$5,720.22",
+            title = stringReference("Ethereum"),
+            fiatValue = stringReference("$5,720.22"),
         ),
         DonutSegmentUM(
-            weight = 0.077f,
+            weight = BigDecimal(0.077),
             color = TangemTheme.colors3.border.accent.violet,
-            title = "Solana",
-            fiatValue = "$728.30",
+            title = stringReference("Solana"),
+            fiatValue = stringReference("$728.30"),
         ),
         DonutSegmentUM(
-            weight = 0.0666f,
+            weight = BigDecimal(0.0666),
             color = TangemTheme.colors3.border.accent.red,
-            title = "Polkadot",
-            fiatValue = "$624.26",
+            title = stringReference("Polkadot"),
+            fiatValue = stringReference("$624.26"),
         ),
         DonutSegmentUM(
-            weight = 0.05f,
+            weight = BigDecimal(0.05),
             color = TangemTheme.colors3.border.accent.green,
-            title = "Tether",
-            fiatValue = "$520.18",
+            title = stringReference("Tether"),
+            fiatValue = stringReference("$520.18"),
         ),
     ),
 )
