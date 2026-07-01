@@ -38,11 +38,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
+import java.math.BigDecimal
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.min
@@ -164,7 +166,7 @@ internal fun DonutChart(
                 }
 
                 // Precompute each slice's [start, sweep] once.
-                val sweeps = segments.map { it.weight.coerceIn(0f, 1f) * 360f }
+                val sweeps = segments.map { it.weight.toFloat().coerceIn(0f, 1f) * 360f }
                 val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
 
                 // 2. Slices — reversed so slice 0 sits on top of its neighbor. Each slice gets its own
@@ -247,7 +249,7 @@ private fun segmentIndexAt(
     // Degrees clockwise from 3 o'clock — same convention as Canvas.drawArc.
     val angle = Math.toDegrees(atan2(dy, dx).toDouble()).toFloat().mod(360f)
 
-    val sweeps = segments.map { it.weight.coerceIn(0f, 1f) * 360f }
+    val sweeps = segments.map { it.weight.toFloat().coerceIn(0f, 1f) * 360f }
     val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
     for (i in segments.indices) {
         if (sweeps[i] <= 0f) continue
@@ -351,10 +353,30 @@ private fun PreviewDonutChart() {
                 selectedIndex = selectedIndex,
                 onSegmentClick = { index -> selectedIndex = index.takeIf { it != selectedIndex } },
                 segments = listOf(
-                    DonutSegmentUM(weight = 0.55f, color = TangemTheme.colors3.border.brand),
-                    DonutSegmentUM(weight = 0.07f, color = TangemTheme.colors3.border.accent.violet),
-                    DonutSegmentUM(weight = 0.06f, color = TangemTheme.colors3.border.accent.red),
-                    DonutSegmentUM(weight = 0.05f, color = TangemTheme.colors3.border.accent.green),
+                    DonutSegmentUM(
+                        weight = BigDecimal(0.55),
+                        color = TangemTheme.colors3.border.brand,
+                        title = stringReference("Ethereum"),
+                        fiatValue = stringReference("$5,720.22"),
+                    ),
+                    DonutSegmentUM(
+                        weight = BigDecimal(0.07),
+                        color = TangemTheme.colors3.border.accent.violet,
+                        title = stringReference("Solana"),
+                        fiatValue = stringReference("$728.30"),
+                    ),
+                    DonutSegmentUM(
+                        weight = BigDecimal(0.06),
+                        color = TangemTheme.colors3.border.accent.red,
+                        title = stringReference("Polkadot"),
+                        fiatValue = stringReference("$624.26"),
+                    ),
+                    DonutSegmentUM(
+                        weight = BigDecimal(0.05),
+                        color = TangemTheme.colors3.border.accent.green,
+                        title = stringReference("Tether"),
+                        fiatValue = stringReference("$520.18"),
+                    ),
                 ),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
