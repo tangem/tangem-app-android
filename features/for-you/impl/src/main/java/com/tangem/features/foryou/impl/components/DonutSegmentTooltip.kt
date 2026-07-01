@@ -186,7 +186,7 @@ private fun PreviewDonutSegmentTooltip() {
                 expandedStates = remember { MutableTransitionState(true) },
                 title = "Ethereum",
                 fiatValue = "$5,720.22",
-                percent = "57.5%",
+                percent = "57.5",
             )
         }
     }
