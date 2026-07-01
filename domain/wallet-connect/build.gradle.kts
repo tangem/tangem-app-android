@@ -9,23 +9,32 @@ android {
 }
 
 dependencies {
-    /* Project - Domain */
-    implementation(projects.domain.blockaid.models)
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain)
+    api(tangemDeps.card.core)
+    // endregion
+
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain
     implementation(projects.domain.core)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.transaction)
-    implementation(projects.domain.transaction.models)
+    // endregion
 
-    /* Project - Core */
-    implementation(projects.core.analytics)
-
-    /* Other */
-    implementation(deps.moshi.adapters)
-
-    /* Tangem libraries */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
+    // region Domain models
+    api(projects.domain.blockaid.models)
+    api(projects.domain.models)
+    api(projects.domain.transaction.models)
+    api(projects.domain.walletConnect.models)
+    // endregion
 }
