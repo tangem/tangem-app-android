@@ -355,21 +355,28 @@ private fun BalanceBlock(
                     style = TextShimmerStyle.HEADING_MEDIUM,
                     radius = TangemTheme.dimens2.x25,
                 )
-                is TangemPayDetailsBalanceBlockState.Content -> Text(
-                    modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
-                    text = animatedState.fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                    style = TangemTheme.typography3.display.medium.applyBladeBrush(
-                        isEnabled = animatedState.isBalanceFlickering,
-                        textColor = TangemTheme.colors3.text.primary,
-                    ),
-                    color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = TangemTheme.typography3.heading.medium.fontSize,
-                        maxFontSize = TangemTheme.typography3.display.medium.fontSize,
-                    ),
-                )
+                is TangemPayDetailsBalanceBlockState.Content -> {
+                    val balanceColor = if (animatedState.isMuted) {
+                        TangemTheme.colors3.text.secondary
+                    } else {
+                        TangemTheme.colors3.text.primary
+                    }
+                    Text(
+                        modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
+                        text = animatedState.fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                        style = TangemTheme.typography3.display.medium.applyBladeBrush(
+                            isEnabled = animatedState.isBalanceFlickering,
+                            textColor = balanceColor,
+                        ),
+                        color = balanceColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = TangemTheme.typography3.heading.medium.fontSize,
+                            maxFontSize = TangemTheme.typography3.display.medium.fontSize,
+                        ),
+                    )
+                }
                 is TangemPayDetailsBalanceBlockState.Error -> Text(
                     modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
                     text = DASH_SIGN.orMaskWithStars(isBalanceHidden),

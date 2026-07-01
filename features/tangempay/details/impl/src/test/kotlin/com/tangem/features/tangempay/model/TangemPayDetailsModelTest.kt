@@ -12,6 +12,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.withdrawButton
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -57,15 +58,36 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideMutedCases")
+    fun `GIVEN status source WHEN status loaded THEN balance is muted only when cached`(case: MutedCase) = runTest {
+        // Arrange + Act
+        val model = createModel(
+            testScope = this,
+            statusSource = case.statusSource,
+            frozenState = TangemPayCardFrozenState.Unfrozen,
+            availableForWithdrawal = BigDecimal.ZERO,
+            accountError = case.accountError,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val balanceState = model.uiState.value.balanceBlockState
+        assertThat(balanceState).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
+        assertThat((balanceState as TangemPayDetailsBalanceBlockState.Content).isMuted).isEqualTo(case.expectedMuted)
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource,
         frozenState: TangemPayCardFrozenState,
         availableForWithdrawal: BigDecimal,
+        accountError: PaymentAccountStatusValue.Error? = null,
     ): TangemPayDetailsModel {
         val loaded: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns statusSource
-            every { error } returns null
+            every { error } returns accountError
             every { cards } returns listOf(tangemPayCard())
             every { balance } returns PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
@@ -135,6 +157,12 @@ internal class TangemPayDetailsModelTest {
         val expectedWithdrawEnabled: Boolean,
     )
 
+    internal data class MutedCase(
+        val statusSource: StatusSource,
+        val expectedMuted: Boolean,
+        val accountError: PaymentAccountStatusValue.Error? = null,
+    )
+
     private companion object {
         @JvmStatic
         fun provideFreezeCases() = listOf(
@@ -165,6 +193,19 @@ internal class TangemPayDetailsModelTest {
                 availableForWithdrawal = BigDecimal.TEN,
                 expectedAddFundsEnabled = false,
                 expectedWithdrawEnabled = false,
+            ),
+        )
+
+        @JvmStatic
+        fun provideMutedCases() = listOf(
+            MutedCase(statusSource = StatusSource.ACTUAL, expectedMuted = false),
+            MutedCase(statusSource = StatusSource.CACHE, expectedMuted = true),
+            MutedCase(statusSource = StatusSource.ONLY_CACHE, expectedMuted = true),
+            // ACTUAL but errored is still not fresh -> muted (guards !isFresh, not just source != ACTUAL)
+            MutedCase(
+                statusSource = StatusSource.ACTUAL,
+                accountError = PaymentAccountStatusValue.Error.Unavailable,
+                expectedMuted = true,
             ),
         )
     }

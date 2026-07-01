@@ -23,6 +23,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
@@ -139,17 +140,25 @@ internal class TangemPayDetailsModel @Inject constructor(
             .onEach { state ->
                 when (state) {
                     is PaymentAccountStatusValue.Deactivated -> {
+                        val balanceTransformer = DetailsBalanceTransformer(
+                            fiatBalance = state.balance.fiatBalance,
+                            isMuted = state.source != StatusSource.ACTUAL,
+                        )
                         uiState.update {
-                            stateFactory.getDeactivatedState(
-                                hasWithdrawableBalance = state.balance.hasWithdrawableAmount,
+                            balanceTransformer.transform(
+                                stateFactory.getDeactivatedState(
+                                    hasWithdrawableBalance = state.balance.hasWithdrawableAmount,
+                                ),
                             )
                         }
-                        uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchAddToWalletBanner()
-                        uiState.update { stateFactory.getLoadedState(state) }
-                        uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
+                        val balanceTransformer = DetailsBalanceTransformer(
+                            fiatBalance = state.balance.fiatBalance,
+                            isMuted = !state.isFresh,
+                        )
+                        uiState.update { balanceTransformer.transform(stateFactory.getLoadedState(state)) }
                         state.cards.firstOrNull()?.let { card ->
                             subscribeToCardFrozenState(card.id)
                         }
