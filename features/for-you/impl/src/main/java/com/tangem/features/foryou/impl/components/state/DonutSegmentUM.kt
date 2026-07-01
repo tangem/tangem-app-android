@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.components.state
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.extensions.TextReference
 import java.math.BigDecimal
@@ -17,6 +18,8 @@ import java.math.BigDecimal
  * @param fiatValue Pre-formatted fiat value of the slice (e.g. `"$5,720.22"`). Shown in the selection
  *   tooltip next to the share. Empty by default.
  */
+
+@Immutable
 internal data class DonutSegmentUM(
     val color: Color,
     val weight: BigDecimal,
