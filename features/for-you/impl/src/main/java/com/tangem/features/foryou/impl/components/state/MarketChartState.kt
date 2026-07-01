@@ -1,8 +1,5 @@
 package com.tangem.features.foryou.impl.components.state
 
-import kotlin.Float
-import kotlin.collections.List
-
 internal sealed class MarketChartState(
     open val donutChartState: DonutChartState,
     open val aiInsightState: AiInsightState,
