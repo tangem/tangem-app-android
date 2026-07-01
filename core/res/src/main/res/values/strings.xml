@@ -98,6 +98,7 @@
   <string name="address_book_add_address">Add address</string>
   <string name="address_book_add_address_description">Add address and select network</string>
   <string name="address_book_add_contact">Add contact</string>
+  <string name="address_book_address_taken_error">This address is already saved as %1$s</string>
   <plurals name="address_book_addresses">
     <item quantity="one">%d address</item>
     <item quantity="other">%d addresses</item>
@@ -106,6 +107,7 @@
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Contact name</string>
   <string name="address_book_copy_address">Copy address</string>
+  <string name="address_book_create_success_message">Contact added</string>
   <string name="address_book_creating_error">Couldn\'t create contact. Please try again later.</string>
   <string name="address_book_delete_contact_description">This contact will be deleted from all your address books</string>
   <string name="address_book_deleting_error">Couldn\'t delete contact. Please try again later.</string>
@@ -116,7 +118,8 @@
   <string name="address_book_invalid_address_error">Invalid address</string>
   <string name="address_book_keep_editing">Keep editing</string>
   <string name="address_book_max_networks_alert_description">You can not create more than 20 addresses. Delete one to add new.</string>
-  <string name="address_book_max_networks_alert_title">Can\'t add new address </string>
+  <string name="address_book_max_networks_alert_title">Can\'t add new address</string>
+  <string name="address_book_memo_footer">Memo / Destination Tag is a code separating transactions to a shared recipient in a crypto network.\n**Caution: Missing a memo may lead to fund loss.**</string>
   <string name="address_book_name_empty_error">Contact name is required</string>
   <string name="address_book_name_invalid_chars_error">Contact name contains invalid characters</string>
   <string name="address_book_name_max_chars_error">Contact name must not exceed 50 characters</string>
@@ -125,8 +128,10 @@
   <string name="address_book_no_contacts">No contacts yet</string>
   <string name="address_book_no_contacts_description">Contacts added will appear here</string>
   <string name="address_book_remove_address">Remove address</string>
+  <string name="address_book_save_contact">Save contact</string>
   <string name="address_book_save_to_wallet_title">Save to Wallet</string>
   <string name="address_book_save_wallet_to_description">This contact will be linked to this wallet’s address book.</string>
+  <string name="address_book_search_no_results">No results found.\nTry another name</string>
   <string name="address_book_select_network">Select network</string>
   <string name="address_book_title">Address book</string>
   <string name="address_book_unsaved_changes">Unsaved changes</string>
@@ -355,6 +360,7 @@
   <string name="common_from">From</string>
   <string name="common_from_wallet_name">From %s</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
+  <string name="common_get">Get</string>
   <string name="common_get_started">Get started</string>
   <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
@@ -480,6 +486,7 @@
     <item quantity="other">%d tokens</item>
   </plurals>
   <string name="common_transaction_failed">Transaction failed</string>
+  <string name="common_transaction_id">Transaction ID</string>
   <string name="common_transaction_status">Transaction status</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
@@ -880,6 +887,15 @@
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
+  <string name="market_chart_ai_total">Al Total:</string>
+  <plurals name="market_chart_assets_android">
+    <item quantity="one">%d asset</item>
+    <item quantity="other">%d assets</item>
+  </plurals>
+  <string name="market_chart_buble_no_data">No data</string>
+  <string name="market_chart_buble_total_value">Total value</string>
+  <string name="market_chart_can_not_load_data">Can’t load data</string>
+  <string name="market_chart_top_holding">Top holding %s%%</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
@@ -1229,6 +1245,7 @@
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Cumulative transaction amount over %1s may require identity verification with %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Cumulative transaction amount over equivalent of %1s may require identity verification with %2s</string>
+  <string name="onramp_native_payment_identity_verification">Apple Pay transactions may require identity verification with %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">By clicking Pay, you agree to %1s\'s %2s and %3s.</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
   <string name="onramp_offer_type_fastet">Quickest processing</string>
@@ -1566,6 +1583,7 @@
   <string name="staking_error_no_validators_message">No available validators at the moment. Please try again later.</string>
   <string name="staking_error_no_validators_title">Staking Unavailable</string>
   <string name="staking_error_unavailable_region">Staking is unavailable in your region</string>
+  <string name="staking_error_unavailable_region_description">Staking is currently unavailable in your region. If you have VPN enabled – try disabling it.</string>
   <string name="staking_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the staking.</string>
   <string name="staking_legal">By using staking functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="staking_locked">Locked</string>
@@ -1861,6 +1879,10 @@
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
+  <string name="tangempay_current_plan_change">Change plan</string>
+  <string name="tangempay_current_plan_section_card">Card related</string>
+  <string name="tangempay_current_plan_section_plan">Plan related</string>
+  <string name="tangempay_current_plan_title">Current plan</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>
   <string name="tangempay_daily_limit_set_button">Set limits</string>
   <string name="tangempay_declined_reason_1">insufficient funds</string>
@@ -1951,10 +1973,6 @@
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
-  <string name="tangempay_current_plan_title">Current plan</string>
-  <string name="tangempay_current_plan_section_card">Card related</string>
-  <string name="tangempay_current_plan_section_plan">Plan related</string>
-  <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_reissue_card_confirm">Replace card</string>
   <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
@@ -2078,6 +2096,7 @@
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
   <string name="tx_history_onramp_top_up">Top up</string>
   <string name="tx_history_onramp_topped_up">Topped up</string>
+  <string name="tx_history_you_paid">You paid</string>
   <string name="unexpected_error_description">Please try again later. If the issue persists, please contact support.</string>
   <string name="unexpected_error_title">Something went wrong!</string>
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
