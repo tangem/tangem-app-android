@@ -138,7 +138,7 @@ private fun TooltipPill(
         },
         isMaterial = true,
         shape = RoundedCornerShape(percent = 50),
-        shadowRadius = 10.dp
+        shadowRadius = 10.dp,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
