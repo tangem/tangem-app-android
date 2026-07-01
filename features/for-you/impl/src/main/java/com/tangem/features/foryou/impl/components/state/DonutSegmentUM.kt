@@ -1,6 +1,8 @@
 package com.tangem.features.foryou.impl.components.state
 
 import androidx.compose.ui.graphics.Color
+import com.tangem.core.ui.extensions.TextReference
+import java.math.BigDecimal
 
 /**
  * One colored slice of a [com.tangem.features.foryou.impl.components.DonutChart].
@@ -16,8 +18,8 @@ import androidx.compose.ui.graphics.Color
  *   tooltip next to the share. Empty by default.
  */
 internal data class DonutSegmentUM(
-    val weight: Float,
     val color: Color,
-    val title: String = "",
-    val fiatValue: String = "",
+    val weight: BigDecimal,
+    val title: TextReference,
+    val fiatValue: TextReference,
 )
