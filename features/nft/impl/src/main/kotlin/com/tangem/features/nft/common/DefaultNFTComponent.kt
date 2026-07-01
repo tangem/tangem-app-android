@@ -20,6 +20,11 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
@@ -51,6 +56,9 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
 ) : NFTComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<NFTRoute>()
@@ -153,6 +161,8 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     )
 
     private fun onReceiveClick(route: NFTRoute.Collections) = componentScope.launch {
+        if (isTopUpBlockedByBackupError(route.userWalletId)) return@launch
+
         portfolioSelectorController.selectAccount(null)
         portfolioFetcher.updateMode(mode = PortfolioFetcher.Mode.Wallet(route.userWalletId))
         val portfolioData = portfolioFetcher.data.first()
@@ -168,6 +178,18 @@ internal class DefaultNFTComponent @AssistedInject constructor(
             innerRouter.push(NFTRoute.Receive(accountId = selectedAccountId))
         }
     }.saveIn(onReceiveClickJob)
+
+    private fun isTopUpBlockedByBackupError(userWalletId: UserWalletId): Boolean {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return false
+        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+
+        messageSender.send(
+            Dialogs.backupErrorAddFundsDisabled(
+                onContactSupport = { componentScope.launch { sendBackupProblemEmailUseCase(userWalletId) } },
+            ),
+        )
+        return true
+    }
 
     private fun getReceiveComponent(
         factoryContext: AppComponentContext,

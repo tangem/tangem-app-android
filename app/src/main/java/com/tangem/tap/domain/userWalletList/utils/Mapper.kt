@@ -1,10 +1,8 @@
 package com.tangem.tap.domain.userWalletList.utils
 
-import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 
@@ -74,10 +72,7 @@ internal fun List<UserWalletPublicInformation>.toUserWallets(): List<UserWallet>
     return this.map { it.toUserWallet() }
 }
 
-internal fun UserWallet.updateWith(
-    sensitiveInformation: UserWalletSensitiveInformation,
-    derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap>?,
-): UserWallet {
+internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInformation): UserWallet {
     return when (this) {
         is UserWallet.Cold -> {
             copy(
@@ -85,7 +80,6 @@ internal fun UserWallet.updateWith(
                     card = scanResponse.card.copy(
                         wallets = requireNotNull(sensitiveInformation.wallets),
                     ),
-                    derivedKeys = derivedKeys ?: scanResponse.derivedKeys,
                     // visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
                 ),
             )
@@ -98,17 +92,14 @@ internal fun UserWallet.updateWith(
 
 internal fun List<UserWallet>.updateWith(
     walletIdToSensitiveInformation: Map<UserWalletId, UserWalletSensitiveInformation>,
-    walletIdToDerivedKeys: Map<UserWalletId, Map<KeyWalletPublicKey, ExtendedPublicKeysMap>>? = null,
 ): List<UserWallet> {
     return if (walletIdToSensitiveInformation.isEmpty()) {
         this
     } else {
         this.map { wallet ->
             val sensitiveInformation = walletIdToSensitiveInformation[wallet.walletId]
-            val derivedKeys = walletIdToDerivedKeys?.get(wallet.walletId)
-
             if (sensitiveInformation != null) {
-                wallet.updateWith(sensitiveInformation, derivedKeys)
+                wallet.updateWith(sensitiveInformation)
             } else {
                 wallet
             }

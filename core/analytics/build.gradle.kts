@@ -3,11 +3,6 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     id("configuration")
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** DI */
@@ -32,5 +27,4 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

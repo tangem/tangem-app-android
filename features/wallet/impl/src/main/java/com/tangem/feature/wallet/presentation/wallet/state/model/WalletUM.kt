@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -26,6 +27,8 @@ internal sealed interface WalletUM {
 
     val tangemPayMainUM: TangemPayMainUM
 
+    val virtualAccountMainUM: VirtualAccountMainUM
+
     data class Content(
         override val pullToRefreshConfig: PullToRefreshConfig,
         override val walletsBalanceUM: WalletBalanceUM,
@@ -36,6 +39,7 @@ internal sealed interface WalletUM {
         override val nftState: WalletNFTItemUM,
         override val type: WalletType,
         override val tangemPayMainUM: TangemPayMainUM,
+        override val virtualAccountMainUM: VirtualAccountMainUM,
     ) : WalletUM
 
     data class Locked(
@@ -49,5 +53,6 @@ internal sealed interface WalletUM {
         override val tokensListUM: WalletTokensListUM = WalletTokensListUM.Locked
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
+        override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
     }
 }

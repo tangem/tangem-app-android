@@ -8,8 +8,6 @@
     <ID>BooleanPropertyNaming:GiveTxPermissionState.kt$CancelPermissionButton$val enabled: Boolean</ID>
     <ID>BooleanPropertyNaming:NotificationUM.kt$NotificationUM.Error.ExceedsBalance$val mergeFeeNetworkName: Boolean = false</ID>
     <ID>BooleanPropertyNaming:NotificationsFactory.kt$NotificationsFactory$val showNotification = sendingAmount + feeAmount &gt; balance - minimumRequirement.orZero()</ID>
-    <ID>BooleanPropertyNaming:TokenReceiveBottomSheetConfig.kt$TokenReceiveBottomSheetConfig$val showMemoDisclaimer: Boolean</ID>
-    <ID>MultilineLambdaItParameter:ExpressStatusItems.kt${ val itemInfo = expressTxs[it].info val (iconRes, tint) = when (itemInfo.iconState) { ExpressTransactionStateIconUM.Warning -&gt; { R.drawable.ic_alert_triangle_20 to TangemTheme.colors.icon.attention } ExpressTransactionStateIconUM.Error -&gt; { R.drawable.ic_alert_circle_24 to TangemTheme.colors.icon.warning } ExpressTransactionStateIconUM.None -&gt; null to null } ExpressStatusItem( title = itemInfo.title, fromTokenIconState = itemInfo.fromCurrencyIcon, toTokenIconState = itemInfo.toCurrencyIcon, fromAmount = itemInfo.fromAmount, fromSymbol = itemInfo.fromAmountSymbol, toAmount = itemInfo.toAmount, toSymbol = itemInfo.toAmountSymbol, onClick = itemInfo.onClick, infoIconRes = iconRes, infoIconTint = tint, modifier = modifier.animateItem(), ) }</ID>
     <ID>MultilineLambdaItParameter:TokenItemStateConverter.kt$TokenItemStateConverter.Companion${ it.key.equals( other = token.yieldSupplyKey(), ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId), ) }</ID>
     <ID>NoNameShadowing:NavigationButtonsBlock.kt$navigationUM</ID>
     <ID>NoNameShadowing:UserWalletItem.kt$balance</ID>

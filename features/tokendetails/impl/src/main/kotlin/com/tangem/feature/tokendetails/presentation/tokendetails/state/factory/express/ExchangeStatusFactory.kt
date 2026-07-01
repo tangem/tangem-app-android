@@ -8,12 +8,13 @@ import com.tangem.datasource.local.swap.SwapTransactionStatusStore
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
@@ -37,8 +38,8 @@ import kotlinx.coroutines.flow.map
 internal class ExchangeStatusFactory @AssistedInject constructor(
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapRepository: SwapRepository,
-    private val quotesRepository: QuotesRepository,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -62,19 +63,22 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
         return swapTransactionRepository.getTransactions(
             userWallet = userWallet,
-
             cryptoCurrencyId = cryptoCurrency.id,
         ).conflate()
             .map { savedTransactions ->
-                val quotes = savedTransactions
-                    ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) }
-                    ?.toSet()
-                    ?.getQuotesOrEmpty()
-                    ?: emptySet()
+                val accountStatuses = savedTransactions
+                    ?.flatMapTo(mutableSetOf()) { swapTransaction ->
+                        listOf(
+                            swapTransaction.fromAccount to swapTransaction.fromCryptoCurrency,
+                            swapTransaction.toAccount to swapTransaction.toCryptoCurrency,
+                        )
+                    }
+                    ?.getStatuses()
+                    .orEmpty()
 
                 getExchangeStatusState(
                     savedTransactions = savedTransactions,
-                    quoteStatuses = quotes,
+                    accountStatuses = accountStatuses,
                 )
             }
     }
@@ -194,7 +198,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
-        quoteStatuses: Set<QuoteStatus>,
+        accountStatuses: Map<Account, List<CryptoCurrencyStatus>>,
     ): PersistentList<ExchangeUM> {
         if (savedTransactions == null) {
             return persistentListOf()
@@ -202,7 +206,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
         return swapTransactionsStateConverter.convert(
             savedTransactions = savedTransactions,
-            quoteStatuses = quoteStatuses,
+            accountStatuses = accountStatuses,
         )
     }
 
@@ -226,12 +230,27 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
-    private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(): Set<QuoteStatus> {
-        val rawIds = mapNotNull { it.rawCurrencyId }.toSet()
+    private suspend fun Set<Pair<Account?, CryptoCurrency>>.getStatuses(): Map<Account, List<CryptoCurrencyStatus>> {
+        return mapNotNull { (account, cryptoCurrency) ->
+            when (account) {
+                is Account.CryptoPortfolio -> {
+                    val (cryptoPortfolioAccount, currencyStatus) = getAccountCurrencyStatusUseCase.invokeSync(
+                        userWalletId = account.userWalletId,
+                        currency = cryptoCurrency,
+                    ).getOrNull() ?: return@mapNotNull null
 
-        return runCatching { quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = rawIds) }
-            .getOrNull()
-            .orEmpty()
+                    cryptoPortfolioAccount to currencyStatus
+                }
+                is Account.Payment -> getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(
+                    userWalletId = account.userWalletId,
+                    cryptoCurrency = cryptoCurrency,
+                ).getOrNull()
+                else -> null
+            }
+        }.groupBy(
+            keySelector = { (account, _) -> account },
+            valueTransform = { (_, status) -> status },
+        )
     }
 
     @AssistedFactory

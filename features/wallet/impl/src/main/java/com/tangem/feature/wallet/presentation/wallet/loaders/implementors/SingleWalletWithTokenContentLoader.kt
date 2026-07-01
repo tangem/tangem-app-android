@@ -5,11 +5,13 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.CheckWalletWith
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletWithTokenSubscriberLegacy
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 internal class SingleWalletWithTokenContentLoader @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet.Cold,
     private val singleWalletWithTokenSubscriberLegacyFactory: SingleWalletWithTokenSubscriberLegacy.Factory,

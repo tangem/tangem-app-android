@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
@@ -85,7 +86,7 @@ fun InputRowEnterAmount(
                         symbolColor = textColor,
                     ),
                     onValueChange = onValueChange,
-                    color = textColor,
+                    colors = TangemAmountTextFieldColors.copy(textColor = textColor),
                     textStyle = TangemTheme.typography.body2,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,

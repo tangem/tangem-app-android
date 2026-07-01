@@ -38,11 +38,14 @@ fun SwapCurrencies.getGroupWithDirection(swapDirection: SwapDirection): SwapCurr
  * @param available list of available currencies to swap
  * @param available list of unavailable currencies to swap
  * @param isAfterSearch flag indicates whether user searched token
+ * @param availableForSwap currencies that are unavailable for the current flow (e.g. Send with Swap), but
+ *  available in the regular Swap flow. Empty by default for backward compatibility (regular Swap doesn't fill it).
  */
 data class SwapCurrenciesGroup(
     val available: List<SwapCryptoCurrency>,
     val unavailable: List<SwapCryptoCurrency>,
     val isAfterSearch: Boolean,
+    val availableForSwap: List<SwapCryptoCurrency> = emptyList(),
 )
 
 /**

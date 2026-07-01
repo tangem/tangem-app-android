@@ -23,8 +23,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class DefaultTxHistoryRepository(
+class DefaultTxHistoryRepository @Inject constructor(
     private val cacheRegistry: CacheRegistry,
     private val walletManagersFacade: WalletManagersFacade,
     private val userWalletsListRepository: UserWalletsListRepository,

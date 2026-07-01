@@ -38,6 +38,7 @@ import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.helpers.GetEffectiveStakingFee
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -92,6 +93,7 @@ internal abstract class StakingModelTestBase {
     protected val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk()
     protected val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase = mockk()
     protected val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk()
+    protected val getEffectiveStakingFee: GetEffectiveStakingFee = mockk()
     protected val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk()
     protected val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase = mockk()
     private val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase = mockk()
@@ -145,6 +147,9 @@ internal abstract class StakingModelTestBase {
         coEvery {
             isAmountSubtractAvailableUseCase(testUserWalletId, any())
         } returns Either.Right(false)
+        coEvery {
+            getEffectiveStakingFee(any(), any(), any(), any())
+        } answers { firstArg() }
         every { getActionsUseCase(testUserWalletId, any()) } returns emptyFlow()
         every { getBalanceHidingSettingsUseCase() } returns emptyFlow()
         mockBalanceUpdater = mockk {
@@ -178,6 +183,7 @@ internal abstract class StakingModelTestBase {
             saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
             getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
             getCurrencyCheckUseCase = getCurrencyCheckUseCase,
+            getEffectiveStakingFee = getEffectiveStakingFee,
             isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
             isAnyTokenStakedUseCase = isAnyTokenStakedUseCase,
             invalidatePendingTransactionsUseCase = invalidatePendingTransactionsUseCase,

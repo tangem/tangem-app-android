@@ -31,6 +31,8 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.offramp)
     implementation(projects.domain.demo)
+    implementation(projects.domain.card)
+    implementation(projects.domain.feedback)
 
     implementation(deps.lifecycle.compose)
     implementation(deps.compose.foundation)
@@ -42,4 +44,8 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
 }

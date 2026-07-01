@@ -37,8 +37,8 @@ import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.usecase.GetAllowanceInfoUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkListener
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent.SwapChooseProviderConfig
@@ -565,18 +565,43 @@ internal class SwapAmountModel @Inject constructor(
                 (params as? SwapAmountComponentParams.AmountParams)?.callback?.resetSendWithSwapNavigation(
                     data.shouldResetNavigation,
                 )
+                ensurePrimaryReady()
+                initPairs(data.swapCurrencies, data.cryptoCurrency)
                 uiState.update { amountUM ->
                     if (amountUM is SwapAmountUM.Content) {
-                        initPairs(data.swapCurrencies, data.cryptoCurrency)
-                        amountUM.copy(
-                            isPrimaryButtonEnabled = false,
-                        )
+                        amountUM.copy(isPrimaryButtonEnabled = false)
                     } else {
                         amountUM
                     }
                 }
             }
             .launchIn(modelScope)
+    }
+
+    /**
+     * Forces the amount UI into the primary-ready [SwapAmountUM.Content] state using the current primary
+     * status. Needed for the direct Send-with-Swap (Swap&Send) entry where the state can be [SwapAmountUM.Empty] and
+     * the balance-`distinctUntilChanged` primary status flow won't re-emit to rebuild it. No-op when already Content.
+     */
+    private suspend fun ensurePrimaryReady() {
+        if (uiState.value is SwapAmountUM.Content) return
+        val primaryCurrencyStatus = params.primaryCryptoCurrencyStatusFlow.value
+        initCurrencies(primaryStatus = primaryCurrencyStatus, secondaryStatus = null)
+        val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
+        uiState.transformerUpdate(
+            SwapAmountPrimaryReadyStateTransformer(
+                userWallet = userWallet,
+                primaryCryptoCurrencyStatus = primaryCurrencyStatus,
+                appCurrency = appCurrency,
+                swapDirection = swapDirection,
+                clickIntents = this,
+                isBalanceHidden = params.isBalanceHidingFlow.value,
+                isShowBestRateAnimation = isShowBestRateAnimation,
+                isSingleWallet = isOnlyOneWallet,
+                isAccountsMode = params.isAccountModeFlow.value,
+                account = params.accountFlow.value,
+            ),
+        )
     }
 
     private fun initPairs(swapCurrencies: SwapCurrencies, secondaryCryptoCurrency: CryptoCurrency?) {
