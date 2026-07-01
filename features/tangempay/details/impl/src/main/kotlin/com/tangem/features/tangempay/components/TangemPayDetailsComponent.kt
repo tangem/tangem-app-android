@@ -26,10 +26,14 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreenV2
+import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.utils.requireLoaded
+import com.tangem.features.tangempay.utils.toRequisitesRows
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
 
 internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
@@ -37,6 +41,7 @@ internal class TangemPayDetailsComponent(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
+    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
@@ -151,6 +156,17 @@ internal class TangemPayDetailsComponent(
                 params = TangemPayVirtualAccountDepositComponent.Params(
                     virtualAccountOnramp = navigation.virtualAccountOnramp,
                     onDismiss = model.bottomSheetNavigation::dismiss,
+                    onShowDetails = model::onShowVirtualAccountRequisites,
+                ),
+            )
+            is TangemPayDetailsNavigation.VirtualAccountRequisites -> virtualAccountAddFundsComponentFactory.create(
+                context = context,
+                params = VirtualAccountAddFundsBottomSheetComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    requisites = navigation.bankCredentials.toRequisitesRows(),
+                    dailyDepositLimit = VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER,
+                    shouldSkipIntro = true,
+                    listener = VirtualAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
                 ),
             )
             is TangemPayDetailsNavigation.IssueAdditionalCard -> TangemPayIssueAdditionalCardComponent(
