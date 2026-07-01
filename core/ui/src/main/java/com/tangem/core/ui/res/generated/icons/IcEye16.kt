@@ -1,0 +1,52 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_eye_16: ImageVector? = null
+
+val Icons.ic_eye_16: ImageVector
+    get() {
+        if (_ic_eye_16 != null) return _ic_eye_16!!
+        _ic_eye_16 = ImageVector.Builder(
+            name = "ic_eye_16",
+            defaultWidth = 16.dp,
+            defaultHeight = 16.dp,
+            viewportWidth = 16f,
+            viewportHeight = 16f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M7.99943 5.58399C8.63998 5.58402 9.25441 5.83916 9.70743 6.292C10.1603 6.74491 10.4153 7.35954 10.4154 8.00001C10.4154 8.64058 10.1603 9.25498 9.70743 9.70802C9.25438 10.1611 8.64015 10.416 7.99943 10.416C7.35871 10.416 6.74448 10.1611 6.29142 9.70802C5.83858 9.25498 5.58342 8.64058 5.58341 8.00001C5.5836 7.35951 5.83851 6.74492 6.29142 6.292C6.74445 5.83915 7.35886 5.584 7.99943 5.58399ZM7.99943 6.83399C7.69038 6.834 7.39382 6.95735 7.17521 7.17579C6.95672 7.39428 6.8336 7.69102 6.83341 8.00001C6.83342 8.30906 6.95679 8.60561 7.17521 8.82423C7.39385 9.04286 7.69023 9.16601 7.99943 9.16602C8.30862 9.166 8.60501 9.04287 8.82365 8.82423C9.04206 8.60561 9.16543 8.30906 9.16544 8.00001C9.16525 7.69106 9.04209 7.39428 8.82365 7.17579C8.60504 6.95738 8.30845 6.83402 7.99943 6.83399Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M7.98868 3.19434C10.3668 3.15229 12.5645 4.45945 13.6625 6.56934L13.6684 6.58106C14.1093 7.47498 14.1092 8.52401 13.6684 9.41798L13.6664 9.42188C13.1808 10.3888 12.4406 11.2022 11.5307 11.7774C11.4936 11.8011 11.4549 11.8238 11.4174 11.8467C11.3909 11.8626 11.3641 11.88 11.3373 11.8955C10.3336 12.4895 9.18446 12.8061 8.00919 12.8047L8.01017 12.8057C5.6321 12.8477 3.43442 11.5405 2.33634 9.43067L2.33048 9.41798C1.88959 8.52401 1.8896 7.47503 2.33048 6.58106L2.33243 6.57716C2.85239 5.54209 3.66303 4.68176 4.66251 4.10255C5.66559 3.50927 6.81435 3.1931 7.98868 3.19434ZM7.78165 4.44825C6.96786 4.47918 6.17418 4.69827 5.46329 5.08497C5.45542 5.08971 5.448 5.09711 5.43986 5.10157C5.30946 5.1709 5.18251 5.24736 5.05997 5.32813C4.97098 5.38744 4.88289 5.45071 4.79728 5.51563C4.79632 5.51623 4.79442 5.51697 4.79337 5.51759C4.23139 5.94724 3.77012 6.50059 3.44962 7.13868C3.1833 7.68193 3.18317 8.31813 3.44962 8.86134C4.33024 10.546 6.08753 11.5894 7.98868 11.5557H8.00138C8.89102 11.5583 9.76256 11.3344 10.5365 10.9131C10.5439 10.9087 10.5514 10.9026 10.559 10.8984C10.6967 10.8252 10.8295 10.7422 10.9584 10.6563C11.0001 10.6282 11.0425 10.5996 11.0834 10.5703C11.1228 10.5422 11.1631 10.5137 11.2016 10.4844C11.2024 10.4836 11.2037 10.4822 11.2045 10.4815C11.7666 10.0518 12.2287 9.49947 12.5492 8.86134C12.8162 8.3168 12.8156 7.67885 12.5473 7.13477C11.6659 5.45276 9.90957 4.41069 8.01017 4.44434H7.99747L7.78165 4.44825Z"),
+            )
+        }.build()
+        return _ic_eye_16!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcEye16Preview() {
+    Icon(
+        imageVector = Icons.ic_eye_16,
+        contentDescription = null,
+    )
+}
