@@ -7,12 +7,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.model.TokenReceiveQrCodeModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveQrCodeContent
+import com.tangem.features.tokenreceive.ui.TokenReceiveQrCodeContentLegacy
 
 internal class TokenReceiveQrCodeComponent(
     appComponentContext: AppComponentContext,
@@ -24,7 +26,11 @@ internal class TokenReceiveQrCodeComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-        TokenReceiveQrCodeContent(qrCodeUM = state)
+        if (LocalRedesignEnabled.current) {
+            TokenReceiveQrCodeContent(qrCodeUM = state)
+        } else {
+            TokenReceiveQrCodeContentLegacy(qrCodeUM = state)
+        }
     }
 
     internal interface TokenReceiveQrCodeModelCallback {
