@@ -29,6 +29,7 @@ sealed class ProviderState {
         val additionalBadge: AdditionalBadge,
         val percentLowerThenBest: PercentDifference = PercentDifference.Empty,
         val namePrefix: PrefixType,
+        val approvalSettings: ApprovalSettings = ApprovalSettings.Empty,
         override val onProviderClick: (String) -> Unit,
     ) : ProviderState()
 
@@ -46,6 +47,7 @@ sealed class ProviderState {
     sealed class AdditionalBadge {
         data object FCAWarningList : AdditionalBadge()
         data object BestTrade : AdditionalBadge()
+        data object BestDexRate : AdditionalBadge()
         data object Empty : AdditionalBadge()
         data object PermissionRequired : AdditionalBadge()
         data object Recommended : AdditionalBadge()
@@ -60,6 +62,14 @@ sealed class ProviderState {
     @Immutable
     enum class PrefixType {
         NONE, PROVIDED_BY
+    }
+
+    @Immutable
+    sealed class ApprovalSettings {
+        data object Empty : ApprovalSettings()
+        data class Content(
+            val onApprovalSelectClick: () -> Unit,
+        ) : ApprovalSettings()
     }
 }
 

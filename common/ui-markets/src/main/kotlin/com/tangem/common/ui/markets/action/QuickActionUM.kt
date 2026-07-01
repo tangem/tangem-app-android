@@ -60,6 +60,24 @@ sealed class QuickActionUM(
             description = resourceReference(R.string.yield_module_main_screen_promo_banner_message, wrappedList(apy)),
             icon = R.drawable.ic_analytics_up_mini_24,
         )
+
+        data object Send : V1(
+            title = resourceReference(R.string.common_send),
+            description = resourceReference(R.string.quick_action_send_description),
+            icon = R.drawable.ic_arrow_up_24,
+        )
+
+        data object Sell : V1(
+            title = resourceReference(R.string.common_sell),
+            description = resourceReference(R.string.quick_action_sell_description),
+            icon = R.drawable.ic_currency_24,
+        )
+
+        data object SwapAndSend : V1(
+            title = resourceReference(R.string.common_send_with_swap),
+            description = resourceReference(R.string.quick_action_send_and_swap_description),
+            icon = R.drawable.ic_exchange_mini_24,
+        )
     }
 
     sealed class V2(
@@ -106,6 +124,24 @@ sealed class QuickActionUM(
             title = resourceReference(R.string.common_yield_mode),
             description = resourceReference(R.string.yield_module_main_screen_promo_banner_message, wrappedList(apy)),
             icon = R.drawable.ic_analytics_up_mini_24,
+        )
+
+        data object Send : V2(
+            title = resourceReference(R.string.common_send),
+            description = resourceReference(R.string.quick_action_send_description),
+            icon = R.drawable.ic_arrow_up_24,
+        )
+
+        data object Sell : V2(
+            title = resourceReference(R.string.common_sell),
+            description = resourceReference(R.string.quick_action_sell_description),
+            icon = R.drawable.ic_currency_24,
+        )
+
+        data object SwapAndSend : V2(
+            title = resourceReference(R.string.common_send_with_swap),
+            description = resourceReference(R.string.quick_action_send_and_swap_description),
+            icon = R.drawable.ic_exchange_mini_24,
         )
     }
 }

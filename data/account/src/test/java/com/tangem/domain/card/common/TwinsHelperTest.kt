@@ -1,7 +1,6 @@
 package com.tangem.domain.card.common
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
 class TwinsHelperTest {
@@ -18,7 +17,7 @@ class TwinsHelperTest {
 
     @Test
     fun `twins compatibility pack 1 success`() {
-        Assert.assertTrue(TwinsHelper.isTwinsCompatible(pack1Twins[0], pack1Twins[1]))
+        assertTrue(TwinsHelper.isTwinsCompatible(pack1Twins[0], pack1Twins[1]))
         assertTrue(TwinsHelper.isTwinsCompatible(pack1Twins[1], pack1Twins[0]))
     }
 
