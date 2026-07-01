@@ -65,7 +65,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun MarketChart(modifier: Modifier = Modifier, marketChart: MarketChartUM) {
+internal fun MarketChart(marketChart: MarketChartUM, modifier: Modifier = Modifier) {
     var cardBoundsInWindow by remember { mutableStateOf(Rect.Zero) }
 
     TangemSurface(
