@@ -128,7 +128,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             element = WalletNotification.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
             ),
-            condition = cardTypesResolver.isTangemNote() && !hasWalletOrWallet2,
+            condition = cardTypesResolver.isSingleCurrency() && !hasWalletOrWallet2,
         )
 
         addIf(
