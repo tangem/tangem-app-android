@@ -46,6 +46,7 @@ object TestConstants {
     const val ALLURE_LABEL_VALUE = "Kaspresso"
 
     const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
+    const val COINS_API_SCENARIO = "coins_api"
     const val REFERRAL_API_SCENARIO = "referral_api"
     const val QUOTES_API_SCENARIO = "quotes_api"
     const val CREATE_USER_WALLET_API_SCENARIO = "create_user_wallet_api"
