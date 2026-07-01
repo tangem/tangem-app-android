@@ -100,9 +100,19 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/details/security")
 
+    /**
+     * Support chat (Usedesk) screen.
+     *
+     * @property walletMetaInfo   wallet meta info; its user wallet id is sent to Usedesk as the client email
+     * @property source           source of the chat opening (Settings by default, Swap for FR-02). Drives both
+     *                            analytics and the Usedesk additional fields mapped by the component.
+     * @property prefilledMessage optional message sent to the chat on behalf of the user right after init
+     */
     @Serializable
     data class Usedesk(
         val walletMetaInfo: WalletMetaInfo,
+        val source: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.Settings,
+        val prefilledMessage: String? = null,
     ) : AppRoute(path = "/usedesk/${walletMetaInfo.userWalletId}")
 
     @Serializable
