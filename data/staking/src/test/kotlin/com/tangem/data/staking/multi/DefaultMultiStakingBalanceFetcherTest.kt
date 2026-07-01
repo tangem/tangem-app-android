@@ -10,12 +10,15 @@ import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
+import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
+import com.tangem.datasource.api.ethpool.models.response.*
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.core.assertEitherRight
@@ -26,6 +29,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
@@ -54,7 +58,14 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsListRepository, stakingYieldsStore, stakeKitBalancesStore, stakeKitApi)
+        clearMocks(
+            userWalletsListRepository,
+            stakingYieldsStore,
+            stakeKitBalancesStore,
+            stakeKitApi,
+            p2pEthPoolApi,
+            p2pEthPoolVaultsStore,
+        )
     }
 
     @Test
@@ -359,6 +370,88 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         assertEitherLeft(actual, expected)
     }
 
+    @Test
+    fun `fetch P2P balances via batch endpoint`() = runTest {
+        // Arrange
+        val params = MultiStakingBalanceFetcher.Params(userWalletId, setOf(p2pId1, p2pId2))
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        coEvery { p2pEthPoolVaultsStore.getSync() } returns listOf(vault(VAULT_A), vault(VAULT_B))
+
+        coEvery { p2pEthPoolApi.getAccountsList(any(), VAULT_A, any()) } returns
+            accountsListSuccess(accountResponse(ADDR_1, VAULT_A))
+        coEvery { p2pEthPoolApi.getAccountsList(any(), VAULT_B, any()) } returns
+            accountsListSuccess(accountResponse(ADDR_2, VAULT_B))
+
+        // Actual
+        val actual = fetcher.invoke(params)
+
+        // Assert
+        coVerify(exactly = 1) {
+            p2pEthPoolApi.getAccountsList(
+                network = any(),
+                vaultAddress = VAULT_A,
+                body = match { it.delegatorAddresses.containsAll(listOf(ADDR_1, ADDR_2)) },
+            )
+        }
+        coVerify(exactly = 1) {
+            p2pEthPoolApi.getAccountsList(network = any(), vaultAddress = VAULT_B, body = any())
+        }
+        coVerify(inverse = true) { p2pEthPoolApi.getAccountInfo(any(), any(), any()) }
+        coVerify { p2PEthPoolBalancesStore.storeActual(userWalletId = userWalletId, values = any()) }
+
+        assertEitherRight(actual)
+    }
+
+    @Test
+    fun `fetch P2P batch maps per-item error to missing stakingId`() = runTest {
+        // Arrange
+        val params = MultiStakingBalanceFetcher.Params(userWalletId, setOf(p2pId1, p2pId2))
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        coEvery { p2pEthPoolVaultsStore.getSync() } returns listOf(vault(VAULT_A))
+
+        coEvery { p2pEthPoolApi.getAccountsList(any(), VAULT_A, any()) } returns
+            ApiResponse.Success(
+                P2PEthPoolResponse(
+                    error = null,
+                    result = P2PEthPoolAccountsListResponse(
+                        list = listOf(
+                            P2PEthPoolAccountListItem(
+                                delegatorAddress = ADDR_1,
+                                account = accountResponse(ADDR_1, VAULT_A),
+                                error = null,
+                            ),
+                            P2PEthPoolAccountListItem(
+                                delegatorAddress = ADDR_2,
+                                account = null,
+                                error = P2PEthPoolErrorDetailsDTO(
+                                    code = 127108,
+                                    message = "invalid",
+                                    name = null,
+                                    errors = null,
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+
+        // Actual
+        val actual = fetcher.invoke(params)
+
+        // Assert
+        coVerify { p2PEthPoolBalancesStore.storeActual(userWalletId = userWalletId, values = any()) }
+        coVerify {
+            p2PEthPoolBalancesStore.storeError(
+                userWalletId = userWalletId,
+                stakingIds = match { it == setOf(p2pId2) },
+            )
+        }
+
+        assertEitherRight(actual)
+    }
+
     private companion object {
         val userWallet = MockUserWalletFactory.create()
         val userWalletId = userWallet.walletId
@@ -370,5 +463,55 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         )
 
         val tonAndSolanaIds = setOf(tonId, solanaId)
+
+        const val ADDR_1 = "0x1111111111111111111111111111111111111111"
+        const val ADDR_2 = "0x2222222222222222222222222222222222222222"
+        const val VAULT_A = "0xVaultAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        const val VAULT_B = "0xVaultBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+        val p2pId1 = StakingID(integrationId = "p2p-ethereum-pooled", address = ADDR_1)
+        val p2pId2 = StakingID(integrationId = "p2p-ethereum-pooled", address = ADDR_2)
+
+        fun vault(address: String) = P2PEthPoolVault(
+            vaultAddress = address,
+            displayName = "Vault",
+            apy = BigDecimal("4.5"),
+            baseApy = BigDecimal("4.0"),
+            capacity = BigDecimal("1000"),
+            totalAssets = BigDecimal("100"),
+            feePercent = BigDecimal("10"),
+            isPrivate = false,
+            isGenesis = false,
+            isSmoothingPool = true,
+            isErc20 = false,
+            tokenName = null,
+            tokenSymbol = null,
+            createdAt = 0L,
+        )
+
+        fun accountResponse(address: String, vaultAddress: String) = P2PEthPoolAccountResponse(
+            delegatorAddress = address,
+            vaultAddress = vaultAddress,
+            stake = P2PEthPoolStakeDTO(assets = BigDecimal("1.5"), totalEarnedAssets = BigDecimal("0.1")),
+            availableToUnstake = BigDecimal.ZERO,
+            availableToWithdraw = BigDecimal.ZERO,
+            exitQueue = P2PEthPoolExitQueueDTO(total = BigDecimal.ZERO, requests = emptyList()),
+        )
+
+        fun accountsListSuccess(vararg accounts: P2PEthPoolAccountResponse) =
+            ApiResponse.Success(
+                P2PEthPoolResponse(
+                    error = null,
+                    result = P2PEthPoolAccountsListResponse(
+                        list = accounts.map {
+                            P2PEthPoolAccountListItem(
+                                delegatorAddress = it.delegatorAddress,
+                                account = it,
+                                error = null,
+                            )
+                        },
+                    ),
+                ),
+            )
     }
 }
