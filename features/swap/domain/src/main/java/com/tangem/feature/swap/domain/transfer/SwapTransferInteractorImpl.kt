@@ -114,7 +114,12 @@ class SwapTransferInteractorImpl @Inject constructor(
             feeCurrencyStatus = feePaidCurrencyStatus,
             amount = fromTokenAmountValue,
             fee = warningsFee,
-            feeCurrencyBalanceAfterTransaction = null,
+            feeCurrencyBalanceAfterTransaction = getFeeCurrencyBalanceAfterTx(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                feePaidCurrencyStatus = feePaidCurrencyStatus,
+                sendingAmount = fromTokenAmountValue,
+                feeValue = fee?.amount?.value,
+            ),
             recipientAddress = toSwapCurrencyStatus.destinationAddress(),
         )
         val isAmountSubtractAvailable = isAmountSubtractAvailable(
@@ -167,6 +172,22 @@ class SwapTransferInteractorImpl @Inject constructor(
             minAdaValue = minAdaValue,
             hasRequiredTrustline = hasRequiredTrustline,
         )
+    }
+
+    private fun getFeeCurrencyBalanceAfterTx(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        feePaidCurrencyStatus: CryptoCurrencyStatus?,
+        sendingAmount: BigDecimal,
+        feeValue: BigDecimal?,
+    ): BigDecimal? {
+        val feeCurrencyBalance = feePaidCurrencyStatus?.value as? CryptoCurrencyStatus.Loaded ?: return null
+        if (feeValue == null) return null
+        val isFeeInFromToken = feePaidCurrencyStatus.currency.id == fromSwapCurrencyStatus.currency.id
+        return if (isFeeInFromToken) {
+            feeCurrencyBalance.amount - sendingAmount - feeValue
+        } else {
+            feeCurrencyBalance.amount - feeValue
+        }
     }
 
     private suspend fun manageTransactionValidationWarnings(
