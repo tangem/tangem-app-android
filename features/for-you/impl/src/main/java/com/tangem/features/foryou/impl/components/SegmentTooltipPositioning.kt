@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
-import com.tangem.features.foryou.impl.components.state.DonutSegment
+import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -23,7 +23,7 @@ import kotlin.math.sin
 @Suppress("MagicNumber", "LongParameterList", "ComplexCondition")
 internal fun segmentTooltipPositionProvider(
     selectedIndex: Int?,
-    segments: List<DonutSegment>,
+    segments: List<DonutSegmentUM>,
     chartSize: IntSize,
     chartWindowOffset: Offset,
     strokePx: Float,
