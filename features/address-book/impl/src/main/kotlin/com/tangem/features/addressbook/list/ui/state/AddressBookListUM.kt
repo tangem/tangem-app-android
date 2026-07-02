@@ -12,6 +12,9 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal sealed interface AddressBookListUM {
 
+    /** Initial state while the address books are being (re-)synced on open — rendered as shimmer placeholders. */
+    data object Loading : AddressBookListUM
+
     data class Empty(val onAddClick: () -> Unit) : AddressBookListUM
 
     /**

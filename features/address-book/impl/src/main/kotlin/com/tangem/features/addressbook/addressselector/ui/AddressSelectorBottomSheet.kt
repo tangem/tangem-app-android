@@ -1,19 +1,20 @@
 package com.tangem.features.addressbook.addressselector.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.account.AccountIconUM
@@ -64,16 +65,29 @@ internal fun AddressSelectorBottomSheet(
                 },
             )
         },
-        content = { AddressSelectorList(contact = contact, onAddressClick = onAddressClick) },
-        footer = {
-            TangemButton(
-                onClick = onDismiss,
-                text = resourceReference(R.string.common_cancel),
-                variant = TangemButton.Variant.Secondary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-            )
+        content = {
+            val density = LocalDensity.current
+            var buttonHeight by remember { mutableStateOf(0.dp) }
+            Box(modifier = Modifier.fillMaxWidth()) {
+                AddressSelectorList(
+                    contact = contact,
+                    onAddressClick = onAddressClick,
+                    bottomContentPadding = buttonHeight,
+                )
+                TangemButton(
+                    onClick = onDismiss,
+                    text = resourceReference(R.string.common_cancel),
+                    variant = TangemButton.Variant.Secondary,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .onSizeChanged { size ->
+                            with(density) { buttonHeight = size.height.toDp() }
+                        }
+                        .padding(16.dp),
+                    size = TangemButton.Size.X12,
+                )
+            }
         },
     )
 }
@@ -83,9 +97,12 @@ private fun AddressSelectorList(
     contact: MatchedContact,
     onAddressClick: (MatchedContact.ContactAddress) -> Unit,
     modifier: Modifier = Modifier,
+    bottomContentPadding: Dp = 0.dp,
 ) {
     Column(
         modifier = modifier
+            .padding(horizontal = 16.dp)
+            .padding(bottom = bottomContentPadding)
             .background(
                 color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(20.dp),
