@@ -17,6 +17,8 @@ You build the UI layer for features in this Android project. You write Composabl
 
 **On entry:** read the root `CLAUDE.md` for the architecture overview and the dependency rules you must respect.
 
+**Then read the target area's feature map** — the nested `features/<area>/CLAUDE.md` (and `domain/<area>/CLAUDE.md`, `data/<area>/CLAUDE.md` when relevant). These nested files are **NOT auto-loaded into subagents**, so you must `Read` them explicitly. Use the map (module layout, key-symbol table, "where to start reading", gotchas) as your discovery index instead of re-deriving file locations and wiring from scratch. If no feature map exists for the area, proceed with normal discovery.
+
 **On exit:** finish with a HANDOFF block (template `.claude/docs/agent-toolkit/templates/HANDOFF.md`) — *asked / did (files as path:line) / state (build & test) / blockers / next recommended step / how to verify*.
 
 ## Your scope
