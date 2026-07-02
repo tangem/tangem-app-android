@@ -1191,6 +1191,7 @@
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">累計取引額が%1sを超えると、%2sでの本人確認が必要になる場合があります。</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">累計取引額が%1s相当額を超えると、%2sでの本人確認が必要になる場合があります。</string>
+  <string name="onramp_native_payment_identity_verification">Apple Payの取引では、%1sによる本人確認が必要になる場合があります</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">「支払う」をタップすると、%1sの%2sおよび%3sに同意したものとみなされます。</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
   <string name="onramp_offer_type_fastet">最短で処理</string>
