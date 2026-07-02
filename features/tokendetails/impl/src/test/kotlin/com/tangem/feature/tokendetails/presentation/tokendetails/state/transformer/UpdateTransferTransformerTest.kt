@@ -353,6 +353,28 @@ class UpdateTransferTransformerTest {
     }
 
     @Test
+    fun `GIVEN Swap action present but unavailable WHEN transform THEN Swap shown disabled AND swapAndSend is null`() {
+        // Arrange — cards that cannot swap (e.g. S2C single-currency) still expose a Swap action,
+        // but with a non-None reason. Swap stays visible-but-disabled per design, while Send&Swap
+        // must not appear at all (it is meaningful only when swap is available).
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+                TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable, false),
+            ),
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.swap).isNotNull()
+        assertThat(content.swap?.isEnabled).isFalse()
+        assertThat(content.swapAndSend).isNull()
+    }
+
+    @Test
     fun `GIVEN no Swap action WHEN transform THEN swapAndSend row is null`() {
         // Arrange
         val transformer = createTransformer(
