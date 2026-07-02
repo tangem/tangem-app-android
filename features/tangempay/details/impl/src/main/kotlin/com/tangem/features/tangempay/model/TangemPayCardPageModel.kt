@@ -31,6 +31,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.findCardWithId
@@ -453,11 +454,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         when (val onramp = loaded.virtualAccount) {
             null -> return
             VirtualAccountOnramp.Processing -> showVaPreparing()
-            // BankCredentialsError opens the deposit intro first; the retryable error sheet is shown from
-            // its "Show details" action (see onShowDetailsClick).
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
-            is VirtualAccountOnramp.BankCredentialsError,
             -> openVirtualAccountDeposit(onramp, loaded)
         }
     }
@@ -474,10 +472,13 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    fun showVaBankingDetailsError() {
+    fun showVaBankingDetailsError(productInstanceId: String) {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
-            TangemPayCardNavigation.VaBankingDetailsError(userWalletId = userWalletId),
+            TangemPayCardNavigation.VaBankingDetailsError(
+                userWalletId = userWalletId,
+                productInstanceId = productInstanceId,
+            ),
         )
     }
 
@@ -486,16 +487,10 @@ internal class TangemPayCardPageModel @Inject constructor(
         uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }
 
-    fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
-        when (onramp) {
-            // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
-            // instead of the intro deposit sheet that would need another "Show details" tap.
-            is VirtualAccountOnramp.Available -> onShowVirtualAccountRequisites(onramp)
-            else -> {
-                val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-                openVirtualAccountDeposit(onramp, loaded)
-            }
-        }
+    fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
+        // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
+        // instead of the intro deposit sheet that would need another "Show details" tap.
+        onShowVirtualAccountRequisites(bankCredentials)
     }
 
     fun onContactSupportClicked() {
@@ -517,12 +512,12 @@ internal class TangemPayCardPageModel @Inject constructor(
         router.push(TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess)
     }
 
-    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+    fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,
-                bankCredentials = onramp.bankCredentials,
+                bankCredentials = bankCredentials,
             ),
         )
     }
