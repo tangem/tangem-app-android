@@ -149,8 +149,21 @@ internal class NotificationsModel @Inject constructor(
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy,
         )
+        val feePaymentBalance = getCurrencyStatusForFeePayment().value.amount.orZero()
+        val isFeeCoverageForRent = checkFeeCoverage(
+            isSubtractAvailable = isAmountSubtractAvailable,
+            balance = feePaymentBalance,
+            amountValue = amountValue,
+            feeValue = feeValue.orZero(),
+            reduceAmountBy = reduceAmountBy,
+        )
+        val sendingAmountForRentCheck = if (isFeeCoverageForRent) {
+            (amountValue - feeValue.orZero()).coerceAtLeast(BigDecimal.ZERO)
+        } else {
+            amountValue
+        }
         val feeCurrencyBalanceAfterTransaction = getFeeCurrencyBalanceAfterTx(
-            sendingAmount = sendingAmount,
+            sendingAmount = sendingAmountForRentCheck,
             feeValue = feeValue,
         )
         val currencyCheck = getCurrencyCheckUseCase(
@@ -226,14 +239,17 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private fun getFeeCurrencyBalanceAfterTx(sendingAmount: BigDecimal, feeValue: BigDecimal?): BigDecimal? {
-        val sendingCurrencyBalance = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
-        val feeCurrencyBalance = feeCryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
-        if (feeCryptoCurrencyStatus.value !is CryptoCurrencyStatus.Loaded || feeValue == null) return null
-        return when {
-            feeCryptoCurrencyStatus == cryptoCurrencyStatus -> sendingCurrencyBalance?.let {
-                it.amount - sendingAmount - feeValue
-            }
-            else -> feeCurrencyBalance?.let { it.amount - feeValue }
+        val feeCurrencyBalance = feeCryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
+        if (feeValue == null) return null
+        // Compare by currency id, not by data-class equality: the sending status and the fee status come from
+        // two independently-populated flows, so a native-coin send (fee paid in the coin being sent, e.g. SOL)
+        // yields two non-equal snapshots. Falling into the else branch there would skip subtracting the sending
+        // amount and hide the rent-exemption warning.
+        val isFeeInSendingCurrency = feeCryptoCurrencyStatus.currency.id == cryptoCurrencyStatus.currency.id
+        return if (isFeeInSendingCurrency) {
+            feeCurrencyBalance.amount - sendingAmount - feeValue
+        } else {
+            feeCurrencyBalance.amount - feeValue
         }
     }
 
