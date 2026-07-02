@@ -83,12 +83,16 @@ fun TangemMessage(
         trailingContent = if (isIconLeading) null else icon,
         contentColor = contentColor,
         onCloseClick = messageUM.onCloseClick,
-        buttons = {
-            messageUM.buttonsUM.fastForEach { buttonUM ->
-                TangemButton(
-                    buttonUM = buttonUM.tangemButtonUM,
-                    modifier = Modifier.weight(1f),
-                )
+        buttons = if (messageUM.buttonsUM.isEmpty()) {
+            null
+        } else {
+            {
+                messageUM.buttonsUM.fastForEach { buttonUM ->
+                    TangemButton(
+                        buttonUM = buttonUM.tangemButtonUM,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         },
     )
