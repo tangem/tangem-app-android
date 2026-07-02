@@ -171,6 +171,7 @@ internal class TangemPayDetailsComponent(
                 appComponentContext = context,
                 params = TangemPayVaBankingDetailsErrorComponent.Params(
                     userWalletId = navigation.userWalletId,
+                    productInstanceId = navigation.productInstanceId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
                     onResolved = model::onVaBankingDetailsResolved,
