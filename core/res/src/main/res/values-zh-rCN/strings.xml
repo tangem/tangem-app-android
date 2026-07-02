@@ -1185,6 +1185,7 @@
   <string name="onramp_min_amount_restriction">购买金额必须至少 %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">累计交易金额超过 %1s 时，可能需要通过 %2s进行身份验证</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">累计交易金额超过等值金额 %1s 可能需要通过 %2s进行身份验证</string>
+  <string name="onramp_native_payment_identity_verification">Apple Pay 交易可能需要通过以下方式进行身份验证： %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">点击“支付”即表示您同意 %1s的 %2s 和 %3s。</string>
   <string name="onramp_no_available_providers">目前没有提供此货币的供应商</string>
   <string name="onramp_offer_type_fastet">最快处理</string>
