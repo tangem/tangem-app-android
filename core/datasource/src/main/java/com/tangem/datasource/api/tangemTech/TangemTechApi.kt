@@ -46,6 +46,9 @@ interface TangemTechApi {
     @GET("v1/geo")
     suspend fun getUserCountryCode(): GeoResponse
 
+    @GET("v1/application/versions")
+    suspend fun getApplicationVersions(): ApiResponse<ApplicationVersionsResponse>
+
     @PUT("/v1/wallets/{walletId}/tokens")
     suspend fun saveTokens(
         @Path(value = "walletId") userId: String,
