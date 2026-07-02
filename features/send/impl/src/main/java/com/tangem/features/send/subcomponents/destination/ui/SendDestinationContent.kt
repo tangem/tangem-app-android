@@ -77,6 +77,15 @@ internal fun SendDestinationContent(
                 onMemoChange = clickIntents::onRecipientMemoValueChange,
             )
         }
+        if (contactsBlock != null && !state.isRecentHidden) {
+            item(key = "CONTACTS_BLOCK_KEY") {
+                contactsBlock.Content(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                )
+            }
+        }
         listHeaderItem(
             titleRes = if (state.isAccountsMode == true) {
                 R.string.common_accounts
@@ -117,15 +126,6 @@ internal fun SendDestinationContent(
                 )
             },
         )
-        if (contactsBlock != null && !state.isRecentHidden) {
-            item(key = "CONTACTS_BLOCK_KEY") {
-                contactsBlock.Content(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp),
-                )
-            }
-        }
         item("SPACER_KEY") {
             SpacerH(16.dp)
         }

@@ -17,8 +17,14 @@ class GetContactsUseCase(
             repository.getContacts(userWalletId)
         }
         val normalizedQuery = query.trim()
-        if (normalizedQuery.isEmpty()) return source
-        return source.map { contacts -> contacts.filter { it.matches(normalizedQuery) } }
+        return source.map { contacts ->
+            val filtered = if (normalizedQuery.isEmpty()) {
+                contacts
+            } else {
+                contacts.filter { it.matches(normalizedQuery) }
+            }
+            filtered.sortedByDescending { it.createdAt }
+        }
     }
 
     private fun Contact.matches(query: String): Boolean {
