@@ -72,6 +72,20 @@ class GetContactsUseCaseTest {
     }
 
     @Test
+    fun `GIVEN contacts with different createdAt WHEN invoke THEN sorted newest first`() = runTest {
+        // Arrange
+        val older = contact(name = "Older", address = "0x1", createdAt = "2026-01-01T00:00:00.000Z")
+        val newer = contact(name = "Newer", address = "0x2", createdAt = "2026-06-01T00:00:00.000Z")
+        every { repository.getAllContacts() } returns flowOf(listOf(older, newer))
+
+        // Act
+        val result = useCase(query = "").first()
+
+        // Assert
+        assertThat(result).containsExactly(newer, older).inOrder()
+    }
+
+    @Test
     fun `GIVEN userWalletId WHEN invoke THEN reads single wallet contacts AND not all contacts`() = runTest {
         // Arrange
         val walletId = UserWalletId("011")
@@ -86,13 +100,17 @@ class GetContactsUseCaseTest {
         verify(exactly = 0) { repository.getAllContacts() }
     }
 
-    private fun contact(name: String, address: String): Contact = Contact(
+    private fun contact(
+        name: String,
+        address: String,
+        createdAt: String = "2026-01-01T00:00:00.000Z",
+    ): Contact = Contact(
         id = ContactId("id-$name"),
         walletId = UserWalletId("011"),
         name = requireNotNull(ContactName(name).getOrNull()),
         icon = "",
         iconColor = "KekColor",
-        createdAt = "2026-01-01T00:00:00.000Z",
+        createdAt = createdAt,
         updatedAt = "2026-01-01T00:00:00.000Z",
         addressEntries = listOf(
             AddressEntry(

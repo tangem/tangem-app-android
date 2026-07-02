@@ -18,5 +18,5 @@ internal class AddressBookListStateController @Inject constructor() {
         uiState.update(function = transformer::transform)
     }
 
-    private fun getInitialState(): AddressBookListUM = AddressBookListUM.Empty(onAddClick = {})
+    private fun getInitialState(): AddressBookListUM = AddressBookListUM.Loading
 }
