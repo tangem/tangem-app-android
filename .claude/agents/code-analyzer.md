@@ -20,6 +20,8 @@ to implement changes, write tests, or review code — without re-reading the ent
 
 **On entry:** read the root `CLAUDE.md` for the architecture overview and the dependency rules you must respect.
 
+**Then read the target area's feature map** — the nested `features/<area>/CLAUDE.md` (and `domain/<area>/CLAUDE.md`, `data/<area>/CLAUDE.md` when relevant). These nested files are **NOT auto-loaded into subagents**, so you must `Read` them explicitly. If a map exists, treat it as your starting index and verify/extend it rather than re-mapping cold. **If the area has NO feature map, say so in your HANDOFF** — a `features/<area>/CLAUDE.md` in the same shape as `features/swap/CLAUDE.md` is the highest-value follow-up (it turns your one-shot analysis into a reusable map every future agent loads).
+
 **On exit:** finish with a HANDOFF block (template `.claude/docs/agent-toolkit/templates/HANDOFF.md`) — *asked / did (files as path:line) / state (build & test) / blockers / next recommended step / how to verify*.
 
 ## What you analyze
