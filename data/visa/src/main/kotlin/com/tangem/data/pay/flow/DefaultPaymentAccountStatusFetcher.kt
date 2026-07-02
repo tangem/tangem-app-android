@@ -469,8 +469,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *
      * Resolution order:
      * 1. A product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted VA order id
-     *    (idempotent) and eagerly fetches its bank credentials ([VirtualAccountOnramp.Available], or
-     *    [VirtualAccountOnramp.BankCredentialsError] on failure).
+     *    (idempotent) and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
+     *    fetched on demand by the deposit screen, not here.
      * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
      *    NEW/PROCESSING/COMPLETED (or a lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
      *    clears the persisted id and falls through to eligibility.
@@ -486,18 +486,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         if (accountInstance != null) {
             // Order provisioned into an ACCOUNT product instance — drop the in-flight order hint (idempotent).
             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-            return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
-                ifLeft = { error ->
-                    logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
-                    VirtualAccountOnramp.BankCredentialsError
-                },
-                ifRight = { credentials ->
-                    VirtualAccountOnramp.Available(
-                        productInstanceId = accountInstance.id,
-                        bankCredentials = credentials,
-                    )
-                },
-            )
+            return VirtualAccountOnramp.Available(productInstanceId = accountInstance.id)
         }
 
         val vaOrderId = onboardingRepository.getVirtualAccountOrderId(userWalletId)

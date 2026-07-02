@@ -378,6 +378,11 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetBankCredentialsUseCase(onboardingRepository: OnboardingRepository): GetBankCredentialsUseCase {
+            return GetBankCredentialsUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
         fun provideCancelTangemPayOrderUseCase(
             customerOrderRepository: CustomerOrderRepository,
             issueCardRepository: TangemPayIssueCardRepository,
