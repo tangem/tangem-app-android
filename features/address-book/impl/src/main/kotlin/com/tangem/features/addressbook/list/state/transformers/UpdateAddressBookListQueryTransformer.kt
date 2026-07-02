@@ -12,6 +12,8 @@ internal class UpdateAddressBookListQueryTransformer(
         is AddressBookListUM.Content -> prevState.copy(
             searchBar = prevState.searchBar.copy(query = query, isActive = isActive),
         )
-        is AddressBookListUM.Empty -> prevState
+        is AddressBookListUM.Empty,
+        AddressBookListUM.Loading,
+        -> prevState
     }
 }
