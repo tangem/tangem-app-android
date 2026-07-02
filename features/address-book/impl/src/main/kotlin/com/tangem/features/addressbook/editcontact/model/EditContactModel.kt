@@ -21,6 +21,7 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.AddressBookResultHolder
 import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.state.EditContactStateController
@@ -50,6 +51,7 @@ internal class EditContactModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val validateContactNameUseCase: ValidateContactNameUseCase,
     private val saveContactInteractor: SaveContactInteractor,
+    private val analyticsSender: AddressBookAnalyticsSender,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
 ) : Model() {
@@ -86,6 +88,12 @@ internal class EditContactModel @Inject constructor(
         observeWalletBlock()
         observeNameValidation()
         observeSaveButton()
+        sendAddContactTappedEvent()
+    }
+
+    private fun sendAddContactTappedEvent() {
+        if (params.contactId != null) return
+        analyticsSender.sendAddContactTapped(fromSendSuccess = params.predefinedAddress != null, scope = modelScope)
     }
 
     /** In WithContactCreation mode the contact opens with the already-known address attached. */
@@ -151,6 +159,7 @@ internal class EditContactModel @Inject constructor(
 
     private fun onWalletBlockClick() {
         if (isWalletChangeable(userWalletsListRepository.userWallets.value)) {
+            analyticsSender.sendSaveToButtonClicked()
             portfolioSelectorNavigation.activate(Unit)
         }
     }
@@ -214,8 +223,22 @@ internal class EditContactModel @Inject constructor(
                     addressEntries = addressEntries,
                 )
                 result.fold(
-                    ifLeft = ::handleSaveError,
-                    ifRight = { params.onBackClick() },
+                    ifLeft = { error ->
+                        handleSaveError(error)
+                        analyticsSender.sendSaveErrorShown(
+                            walletId = userWallet.walletId,
+                            contactId = params.contactId?.value,
+                            error = error,
+                        )
+                    },
+                    ifRight = { contact ->
+                        analyticsSender.sendContactSaved(
+                            walletId = userWallet.walletId,
+                            contactId = contact.id.value,
+                            isEdit = params.contactId != null,
+                        )
+                        params.onBackClick()
+                    },
                 )
             } finally {
                 refreshSaveButton()
@@ -247,6 +270,7 @@ internal class EditContactModel @Inject constructor(
                 ),
             )
         } else {
+            analyticsSender.sendAddressScreenOpened()
             params.onAddAddressClick()
         }
     }
