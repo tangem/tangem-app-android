@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
 plugins {
@@ -61,15 +62,15 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
 
         require(actual == expected) {
             "Design tokens are out of date!\n" +
-                "  ds-tokens hash: $actual\n" +
-                "  generated hash:  $expected\n" +
+                "  computed from ds-tokens: $actual\n" +
+                "  committed .tokens-hash:  $expected\n" +
                 "Run the token generator: cd core/ui/token-gen && npm run build"
         }
 
         stampFile.get().asFile.writeText(actual)
     }
 
-    private fun hashTreeHex(root: java.io.File, extension: String): String {
+    private fun hashTreeHex(root: File, extension: String): String {
         val digest = MessageDigest.getInstance("SHA-256")
         val files = root.walkTopDown()
             .filter { it.isFile && it.extension == extension }
@@ -79,11 +80,26 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
         for (file in files) {
             digest.update(file.relativeTo(root).invariantSeparatorsPath.toByteArray())
             digest.update(nul)
-            digest.update(file.readBytes())
+            digest.update(file.readBytes().stripCr())
             digest.update(nul)
         }
         return digest.digest()
             .joinToString("") { b: Byte -> b.toInt().and(0xFF).toString(16).padStart(2, '0') }
+    }
+
+    /**
+     * Strips CR (0x0D) bytes so the token hash ignores CRLF vs LF line endings. The ds-tokens
+     * submodule is not covered by this repo's .gitattributes, so its .json/.svg sources may be
+     * checked out with CRLF on some platforms; without this the verification is non-deterministic.
+     * Removes lone CRs too — safe for UTF-8 sources, where 0x0D never appears inside a
+     * multi-byte sequence. Must stay byte-for-byte identical to stripCr() in token-gen/hash-util.mjs.
+     */
+    private fun ByteArray.stripCr(): ByteArray {
+        val cr: Byte = 0x0D
+        if (none { it == cr }) return this
+        val out = ByteArrayOutputStream(size)
+        for (b in this) if (b != cr) out.write(b.toInt())
+        return out.toByteArray()
     }
 }
 android {
