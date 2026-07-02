@@ -213,7 +213,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         addIf(
             element = WalletNotificationUM.MissingAddresses(
                 tangemIcon = walletInterationIcon(userWallet),
-                missingAddressesCount = currencies.count(),
+                missingAddressesCount = currencies.distinctBy { it.network.id }.count(),
                 onGenerateClick = {
                     clickIntents.onGenerateMissedAddressesClick(
                         userWalletId = userWallet.walletId,
