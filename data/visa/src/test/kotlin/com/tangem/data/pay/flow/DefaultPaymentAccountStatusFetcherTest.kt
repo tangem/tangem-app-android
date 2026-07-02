@@ -12,7 +12,6 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
@@ -88,16 +87,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     private val userWalletId = UserWalletId("011")
     private val params = PaymentAccountStatusFetcher.Params(userWalletId)
-
-    private val bankCredentialsFixture = BankCredentials(
-        type = "ACH",
-        beneficiaryName = "Test Beneficiary",
-        beneficiaryAddress = "123 Main St",
-        beneficiaryBankName = "Test Bank",
-        beneficiaryBankAddress = "456 Bank Ave",
-        accountNumber = "1234567890",
-        routingNumber = "021000021",
-    )
 
     private val cardProductInstance = CustomerInfo.ProductInstance(
         id = "pi_card",
@@ -293,7 +282,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN toggle on and ACCOUNT instance with bank credentials WHEN invoke THEN virtualAccount is Available`() =
+        fun `GIVEN toggle on and ACCOUNT instance WHEN invoke THEN virtualAccount is Available without fetching credentials`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -302,9 +291,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 stubHappyPath(customerInfo)
                 every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
-                coEvery {
-                    onboardingRepository.getBankCredentials(userWalletId, "pi_account")
-                } returns Either.Right(bankCredentialsFixture)
                 val storedStatuses = captureStoredStatuses()
 
                 // Act
@@ -313,36 +299,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.virtualAccount).isEqualTo(
-                    VirtualAccountOnramp.Available(
-                        productInstanceId = "pi_account",
-                        bankCredentials = bankCredentialsFixture,
-                    ),
+                    VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
                 )
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
-            }
-
-        @Test
-        fun `GIVEN toggle on and ACCOUNT instance but bank credentials fetch fails WHEN invoke THEN virtualAccount is Error`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(
-                    productInstances = listOf(cardProductInstance, accountProductInstance),
-                )
-                stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
-                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
-                coEvery {
-                    onboardingRepository.getBankCredentials(userWalletId, "pi_account")
-                } returns VisaApiError.UnknownWithoutCode.left()
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                val loaded = storedStatuses.lastLoaded()
-                assertThat(loaded.virtualAccount).isEqualTo(VirtualAccountOnramp.BankCredentialsError)
-                coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+                coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
             }
 
         @Test
