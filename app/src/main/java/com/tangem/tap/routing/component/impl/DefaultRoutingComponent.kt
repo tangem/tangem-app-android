@@ -55,13 +55,13 @@ import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerReferralParamsHandler
 import com.tangem.tap.features.hot.TangemHotSDKProxy
-import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.features.scanfails.ScanFailsComponent
 import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.startup.AppStartupGateComponent
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.utils.logging.TangemLogger
@@ -86,7 +86,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
     private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
-    private val rootDetectedWarningComponentFactory: RootDetectedWarningComponent.Factory,
+    private val appStartupGateComponentFactory: AppStartupGateComponent.Factory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
@@ -117,9 +117,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             .create(child("hotAccessCodeRequestComponent"), Unit)
     }
 
-    private val rootDetectedWarningComponent: RootDetectedWarningComponent by lazy {
-        rootDetectedWarningComponentFactory
-            .create(child("rootDetectedWarningComponent"), Unit)
+    private val appStartupGateComponent: AppStartupGateComponent by lazy {
+        appStartupGateComponentFactory.create(child("appStartupGate"))
     }
 
     private val scanFailsComponent: ScanFailsComponent by lazy {
@@ -175,38 +174,35 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private fun initializeInitialNavigation() {
         if (initialStack.isNullOrEmpty()) {
-            componentScope.launch {
-                val initialRoute = resolveInitialRoute()
-                if (rootDetectedWarningComponent.shouldShowWarning()) {
-                    launch(dispatchers.main) {
-                        rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
-                        router.replaceAll(initialRoute)
-                    }
-                } else {
-                    router.replaceAll(initialRoute)
-                }
-            }
+            componentScope.launch { resolveAndNavigate() }
         }
     }
 
-    private suspend fun resolveInitialRoute(): AppRoute {
+    private suspend fun resolveAndNavigate() {
+        appStartupGateComponent.await()
+        navigateToStartRoute()
+    }
+
+    private suspend fun navigateToStartRoute() {
+        val initialRoute = resolveStartRoute()
+        onInitialRouteResolved(initialRoute)
+        router.replaceAll(initialRoute)
+    }
+
+    private suspend fun resolveStartRoute(): AppRoute {
         val userWallets = userWalletsListRepository.userWalletsSync()
 
         return when {
             userWallets.isEmpty() -> navigateForEmptyWallets()
-            userWallets.any { it.isLocked } -> {
-                AppRoute.Welcome(
-                    launchMode = launchMode,
-                )
-            }
-            else -> {
-                trackSignInEvent()
-                AppRoute.Wallet
-            }
-        }.also {
-            appRouterConfig.initializedState.value = true
-            checkForUnfinishedBackup()
+            userWallets.any { it.isLocked } -> AppRoute.Welcome(launchMode = launchMode)
+            else -> AppRoute.Wallet
         }
+    }
+
+    private suspend fun onInitialRouteResolved(route: AppRoute) {
+        appRouterConfig.initializedState.value = true
+        if (route is AppRoute.Wallet) trackSignInEvent()
+        checkForUnfinishedBackup()
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
@@ -269,7 +265,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
-            rootDetectedWarningContent = { rootDetectedWarningComponent.Content(it) },
+            startupGateContent = { appStartupGateComponent.Content(it) },
             scanFailsContent = { scanFailsComponent.Content(it) },
         )
     }
