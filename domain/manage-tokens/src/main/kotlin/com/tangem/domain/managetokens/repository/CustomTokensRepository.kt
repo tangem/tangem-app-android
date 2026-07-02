@@ -43,5 +43,11 @@ interface CustomTokensRepository {
 
     suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network>
 
+    suspend fun isDerivationPathSupported(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): Boolean
+
     fun createDerivationPath(rawPath: String): Network.DerivationPath
 }
