@@ -17,6 +17,7 @@ import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.features.addressbook.list.model.AddressBookListModel
 import com.tangem.features.addressbook.list.ui.AddressBookEmptyScreen
 import com.tangem.features.addressbook.list.ui.AddressBookListScreen
+import com.tangem.features.addressbook.list.ui.AddressBookListShimmer
 import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
 import com.tangem.features.addressbook.route.AddressBookRoute
 
@@ -50,6 +51,10 @@ internal class DefaultAddressBookListComponent(
         val state by model.state.collectAsStateWithLifecycle()
         val selector by selectorSlot.subscribeAsState()
         when (val addressBookListUM = state) {
+            is AddressBookListUM.Loading -> AddressBookListShimmer(
+                onBackClick = router::pop,
+                modifier = modifier.background(TangemTheme.colors3.bg.primary),
+            )
             is AddressBookListUM.Empty -> AddressBookEmptyScreen(
                 onAddContactClick = addressBookListUM.onAddClick,
                 onBackClick = router::pop,
