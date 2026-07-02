@@ -1804,6 +1804,8 @@
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">A fee is charged due to the service tariffs</string>
   <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
+  <string name="tangem_pay_unavailable_region_description">We are rolling it out gradually and let you know when Tangem Pay will be available here</string>
+  <string name="tangem_pay_unavailable_region_title">Tangem Pay is unavailable in your region</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
   <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>
