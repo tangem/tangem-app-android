@@ -191,6 +191,7 @@ private fun SmoothHeightPager(
             BannerNotification(
                 config = banners[lowerPage].config,
                 containerColor = containerColor,
+                modifier = Modifier.padding(horizontal = horizontalPadding),
             )
         }.first().measure(pageConstraints).height
 
@@ -199,6 +200,7 @@ private fun SmoothHeightPager(
                 BannerNotification(
                     config = banners[upperPage].config,
                     containerColor = containerColor,
+                    modifier = Modifier.padding(horizontal = horizontalPadding),
                 )
             }.first().measure(pageConstraints).height
         } else {
