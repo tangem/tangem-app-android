@@ -27,6 +27,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -56,6 +57,18 @@ internal class AddressBookListModelTest {
     fun tearDown() {
         model?.onDestroy()
         model = null
+    }
+
+    @Test
+    fun `GIVEN feature just opened WHEN contacts not yet loaded THEN Loading state`() = runTest {
+        // Arrange — the interactor has not emitted yet (books still syncing).
+        every { getVerifiedContactsInteractor(query = "", userWalletId = null) } returns emptyFlow()
+
+        // Act
+        val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
+
+        // Assert — shimmer placeholder until the first emission arrives.
+        assertThat(model.state.value).isEqualTo(AddressBookListUM.Loading)
     }
 
     @Test
