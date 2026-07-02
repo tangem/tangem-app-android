@@ -15,7 +15,7 @@ internal fun TangemPayChangePinCodeSuccessScreenV2(onClose: () -> Unit, modifier
         modifier = modifier,
         title = resourceReference(R.string.tangempay_card_details_change_pin_success_title),
         subtitle = resourceReference(R.string.tangempay_card_details_change_pin_success_description),
-        buttonText = resourceReference(R.string.common_close),
+        buttonText = resourceReference(R.string.common_done),
         onButtonClick = onClose,
         titleTestTag = TangemPayTestTags.PIN_SUCCESS_TITLE,
         subtitleTestTag = TangemPayTestTags.PIN_SUCCESS_DESCRIPTION,
