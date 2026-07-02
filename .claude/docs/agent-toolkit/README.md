@@ -22,6 +22,32 @@ This contract is the whole answer to "a user can resume at any time with minimal
 each HANDOFF block makes its step legible cold, so the orchestrator (and a human) can
 synthesize where things stand and what to do next.
 
+## Standing conventions every agent follows (audit these)
+These exist because agents were burning time and context. `agent-auditor` should flag any agent
+that violates them.
+
+1. **Findings go in the HANDOFF, not on disk.** No agent writes scratch analysis/design `.md`
+   files to `.claude/docs/` (or anywhere) unless the user explicitly asks for a persisted
+   document by name. Long on-disk dumps bloat the repo and get truncated by context compaction —
+   the opposite of resumable. Keep HANDOFFs tight: links and `path:line`, not prose.
+2. **Never fight the build's automation.** detekt runs with `autoCorrect = true` +
+   `detekt-formatting` (see `plugins/configuration/.../DetektConfigurations.kt`), so the whole
+   Formatting rule set is auto-fixed by running the task. Agents must not hand-edit
+   autocorrectable violations. Generally: if a Gradle task fixes something, run it — don't
+   reimplement it by hand.
+3. **Iterate on the fast task, verify on the slow one.** Use compile-only tasks
+   (`compile*UnitTestKotlin`, `compile*Kotlin`) to catch errors; run the full test/detekt task
+   once, filtered (`--tests`, single module), to confirm. Never re-run a slow task per fix.
+4. **The repo's own rule files are the source of truth.** e.g. `.claude/rules/unit-testing.md`
+   for tests. Agents point to them rather than duplicating (and drifting from) their content.
+5. **Specialists read the feature map before discovering.** Nested `features/<area>/CLAUDE.md`
+   files (the curated per-feature code maps: module layout, key-symbol table, gotchas) are
+   **NOT auto-loaded into subagents** — only the root hierarchy is. Every specialist's entry
+   contract must `Read` the target area's `features/<area>/CLAUDE.md` (and `domain/`/`data/`
+   counterparts) when it exists, and use it as the discovery index. This is what stops the same
+   production hubs (`SwapModel`, `DefaultSendComponent`, …) being re-mapped from scratch every
+   run. `code-analyzer` flags areas that lack a map so one can be created.
+
 ## Contents
 ```
 agent-toolkit/
