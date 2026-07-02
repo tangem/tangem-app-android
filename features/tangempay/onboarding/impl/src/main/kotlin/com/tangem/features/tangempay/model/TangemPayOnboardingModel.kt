@@ -25,6 +25,7 @@ import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButto
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,7 +65,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
             when (params) {
                 is TangemPayOnboardingComponent.Params.Deeplink -> {
                     repository.validateDeeplink(params.deeplink)
-                        .onRight { isValid -> if (isValid) showOnboarding() else back() }
+                        .onRight { isValid -> if (isValid) checkEligibilityAndShow() else back() }
                         .onLeft { back() }
                 }
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
@@ -91,6 +92,21 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private suspend fun checkEligibilityAndShow() {
+        runSuspendCatching {
+            eligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DEEPLINK)
+        }
+            .onSuccess { isAvailable -> if (isAvailable) showOnboarding() else showNotAvailable() }
+            .onFailure { error ->
+                TangemLogger.e(messageString = "TangemPayOnboarding: eligibility check failed", throwable = error)
+                back()
+            }
+    }
+
+    private fun showNotAvailable() {
+        uiState.update { state -> TangemPayOnboardingScreenState.NotAvailable(onBack = state.onBack) }
     }
 
     private fun checkCustomerInfo(userWalletId: UserWalletId) {
