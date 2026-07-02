@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -10,22 +11,15 @@ android {
 }
 
 dependencies {
-    // region Project - Core
-    implementation(projects.core.datasource)
-    api(projects.core.utils)
+
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
     // endregion
 
-    // region Project - Data
-    implementation(projects.data.common)
-    // endregion
-
-    // region Project - Domain
-    implementation(projects.domain.search)
-    implementation(projects.domain.common)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.markets.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.appCurrency)
+    // region Other libraries
+    api(deps.androidx.datastore)
+    api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     // endregion
 
     // region DI
@@ -33,8 +27,15 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Other libraries
-    implementation(deps.androidx.datastore)
-    implementation(deps.moshi.kotlin)
+    // region Project - Core
+    api(projects.core.utils)
+    implementation(projects.core.datasource)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.account.status)
+    api(projects.domain.common)
+    api(projects.domain.search)
+    implementation(projects.domain.models)
     // endregion
 }
