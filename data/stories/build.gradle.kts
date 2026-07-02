@@ -11,17 +11,27 @@ android {
 }
 
 dependencies {
-    implementation(deps.androidx.datastore)
 
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    implementation(deps.androidx.datastore)
+    // endregion
+
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    implementation(projects.domain.stories)
+    // region Core modules
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.stories)
     implementation(projects.domain.stories.models)
-    api(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.features.referral.domain)
-
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
+    // endregion
 }
