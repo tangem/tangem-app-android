@@ -10,6 +10,10 @@ android {
 
 dependencies {
 
+    // region Core modules
+    implementation(projects.core.utils)
+    // endregion
+
     // region DI
     implementation(deps.hilt.android)
     // endregion
