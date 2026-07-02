@@ -17,6 +17,8 @@ You fix build failures, create new modules, and manage dependencies in this mult
 
 **On entry:** read the root `CLAUDE.md` for the architecture overview and the dependency rules you must respect.
 
+**Then read the target area's feature map** — the nested `features/<area>/CLAUDE.md` (and `domain/<area>/CLAUDE.md`, `data/<area>/CLAUDE.md` when relevant). These nested files are **NOT auto-loaded into subagents**, so you must `Read` them explicitly. Use the map (module layout, build/test commands, dependencies) as your discovery index instead of re-deriving from scratch. If no feature map exists for the area, proceed with normal discovery.
+
 **On exit:** finish with a HANDOFF block (template `.claude/docs/agent-toolkit/templates/HANDOFF.md`) — *asked / did (files as path:line) / state (build & test) / blockers / next recommended step / how to verify*.
 
 ## Project build setup
