@@ -14,6 +14,8 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -26,7 +28,6 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.feature.referral.domain.MobileWalletPromoRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
@@ -60,7 +61,7 @@ internal class DefaultUserWalletsListRepository(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletRepository: HotWalletRepository,
-    private val mobileWalletPromoRepository: MobileWalletPromoRepository,
+    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
 ) : UserWalletsListRepository {
 
@@ -620,12 +621,12 @@ internal class DefaultUserWalletsListRepository(
     }
 
     private suspend fun onFirstWalletCreated() {
-        // reset flag (that is set from AF deeplink) after creating a new wallet
-        mobileWalletPromoRepository.setShouldShowMobileWalletPromo(false)
+        // reset the referral attribution (set from AF deeplink) after creating a new wallet
+        clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.Referral)
     }
 
     private suspend fun onAllWalletsDeleted() {
-        // reset flag (that is set from AF deeplink) after removing the last wallet
-        mobileWalletPromoRepository.setShouldShowMobileWalletPromo(false)
+        // reset the referral attribution (set from AF deeplink) after removing the last wallet
+        clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.Referral)
     }
 }
