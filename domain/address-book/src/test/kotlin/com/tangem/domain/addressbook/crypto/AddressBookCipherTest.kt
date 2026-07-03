@@ -272,7 +272,7 @@ internal class AddressBookCipherTest {
         iconColor = iconColor,
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-05-22T09:00:00.000Z",
-        addressEntries = entries.toList(),
+        addresses = entries.toList(),
     )
 
     private fun entry(id: String, address: String, memo: String?): AddressEntry = AddressEntry(
