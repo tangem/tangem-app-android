@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.getSupportedTransactionExtras
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.network.Network
 import com.tangem.features.addressbook.addaddress.state.transformers.converter.ChosenNetworkConverter
 import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM
@@ -30,11 +31,14 @@ internal class UpdateAddressValidationTransformer(
     private val displayedBlockchains: List<Blockchain>,
     private val selectedBlockchains: List<Blockchain>,
     private val isMemoInvalid: Boolean,
+    private val duplicateName: String?,
 ) : Transformer<AddAddressUM> {
 
     override fun transform(prevState: AddAddressUM): AddAddressUM {
         val hasMatch = matchedBlockchains.isNotEmpty()
-        val isError = address.isNotBlank() && !hasMatch
+        val isInvalidAddress = address.isNotBlank() && !hasMatch
+        val isDuplicate = duplicateName != null
+        val isError = isInvalidAddress || isDuplicate
 
         val chosenNetworkState = if (hasMatch) {
             ChosenNetworkStateUM.Result(
@@ -46,16 +50,17 @@ internal class UpdateAddressValidationTransformer(
             ChosenNetworkStateUM.Hidden
         }
 
-        val label = if (isError) {
-            resourceReference(R.string.address_book_invalid_address_error)
-        } else {
-            resourceReference(R.string.common_address)
+        val label = when {
+            isDuplicate -> resourceReference(R.string.address_book_address_taken_error, wrappedList(duplicateName))
+            isInvalidAddress -> resourceReference(R.string.address_book_invalid_address_error)
+            else -> resourceReference(R.string.common_address)
         }
+        val isConfirmEnabled = selectedBlockchains.isNotEmpty() && !isMemoInvalid && !isDuplicate
         return prevState.copy(
             addressField = prevState.addressField.copy(isError = isError, label = label),
             chosenNetworkStateUM = chosenNetworkState,
             memoField = resolveMemoField(prevState.memoField),
-            buttonUM = prevState.buttonUM.copy(isEnabled = selectedBlockchains.isNotEmpty() && !isMemoInvalid),
+            buttonUM = prevState.buttonUM.copy(isEnabled = isConfirmEnabled),
         )
     }
 
