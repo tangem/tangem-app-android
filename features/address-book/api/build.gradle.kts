@@ -10,20 +10,22 @@ android {
 
 dependencies {
 
-    /* Project - Common */
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+    // endregion
+
+    // region Project - Common
     api(projects.common.routing)
-    implementation(projects.common.ui)
+    api(projects.common.ui)
+    // endregion
 
-    /* Project - Domain */
-    implementation(projects.domain.models)
+    // region Project - Core
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    // endregion
 
-    /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-
-    /* Compose */
-    implementation(deps.compose.runtime)
-
-    /** Other */
-    implementation(deps.kotlin.immutable.collections)
+    // region Project - Domain
+    api(projects.domain.models)
+    // endregion
 }
