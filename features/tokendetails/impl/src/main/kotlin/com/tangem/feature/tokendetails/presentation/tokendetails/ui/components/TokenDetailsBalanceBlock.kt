@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,13 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -46,7 +51,13 @@ import kotlinx.collections.immutable.persistentListOf
 private val CurrencyIconSize: Dp = 70.dp
 private val NetworkBadgeSize: Dp = 24.dp
 
-/** OpenType "tabular figures" feature — makes every digit the same width to prevent horizontal jitter. */
+/** Lower bound for the fitted balance font size. */
+private val MinBalanceFontSize: TextUnit = 15.sp
+
+/** Step-down multiplier when fitting the balance font size. */
+private const val FONT_SIZE_FIT_STEP = 0.95f
+
+/** OpenType "tabular figures" — equal-width digits, no horizontal jitter while ticking. */
 private const val TABULAR_FIGURES_FEATURE = "tnum"
 
 @Composable
@@ -150,8 +161,8 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
 }
 
 /**
- * Renders a balance that animates digit-by-digit ([TextAnimatedCounter]) while a ticking yield supply
- * value is present, and falls back to a plain [Text] otherwise (or when the balance is hidden).
+ * Digit-by-digit animated balance ([TextAnimatedCounter]) while a ticking yield value is present,
+ * plain [Text] otherwise (or when the balance is hidden).
  */
 @Composable
 private fun AnimatedBalance(
@@ -162,7 +173,7 @@ private fun AnimatedBalance(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = TangemTheme.dimens2.x6),
@@ -171,16 +182,66 @@ private fun AnimatedBalance(
         if (yieldBalance != null && !isBalanceHidden) {
             TextAnimatedCounter(
                 text = yieldBalance,
-                // Tabular figures keep every digit the same width, so the centered balance doesn't
-                // jitter horizontally as digits roll during the increment animation.
-                style = style.copy(color = color, fontFeatureSettings = TABULAR_FIGURES_FEATURE),
+                style = rememberFittedBalanceStyle(
+                    text = yieldBalance,
+                    style = style.copy(color = color, fontFeatureSettings = TABULAR_FIGURES_FEATURE),
+                    maxWidth = constraints.maxWidth,
+                ),
             )
         } else {
             Text(
                 text = fallbackBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
                 style = style,
                 color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = MinBalanceFontSize,
+                    maxFontSize = style.fontSize,
+                ),
             )
+        }
+    }
+}
+
+/**
+ * Returns [style] with the font size shrunk just enough for [text] to fit [maxWidth] px on one line
+ * (never below [MinBalanceFontSize]).
+ *
+ * [TextAutoSize] doesn't work here: [TextAnimatedCounter] renders each character as a separate
+ * [Text], so the size is fitted for the whole string upfront and shared by every character.
+ */
+@Composable
+private fun rememberFittedBalanceStyle(text: String, style: TextStyle, maxWidth: Int): TextStyle {
+    val textMeasurer = rememberTextMeasurer()
+    // Tabular figures make every digit equally wide, so measuring a digit-normalized string gives
+    // the same result while keeping the remember key stable across ticks of the same shape.
+    val normalizedText = remember(text) {
+        buildString(text.length) { text.forEach { append(if (it.isDigit()) '0' else it) } }
+    }
+    return remember(textMeasurer, normalizedText, style, maxWidth) {
+        // TextAnimatedCounter renders each char as its own Text, so the row width is the sum of
+        // per-char widths (ceil-rounded, no kerning) — measure the same way or the row overflows.
+        fun widthAt(fontSize: TextUnit): Int {
+            val sizedStyle = style.copy(fontSize = fontSize)
+            val charWidths = HashMap<Char, Int>()
+            return normalizedText.sumOf { char ->
+                charWidths.getOrPut(char) {
+                    textMeasurer.measure(text = char.toString(), style = sizedStyle, softWrap = false).size.width
+                }
+            }
+        }
+
+        val baseWidth = widthAt(style.fontSize)
+        if (baseWidth <= maxWidth) {
+            style
+        } else {
+            // Width grows ~linearly with font size: start from the proportional guess, step down until it fits.
+            var fontSize = style.fontSize * (maxWidth.toFloat() / baseWidth)
+            while (fontSize.value > MinBalanceFontSize.value && widthAt(fontSize) > maxWidth) {
+                fontSize *= FONT_SIZE_FIT_STEP
+            }
+            style.copy(fontSize = if (fontSize.value < MinBalanceFontSize.value) MinBalanceFontSize else fontSize)
         }
     }
 }
