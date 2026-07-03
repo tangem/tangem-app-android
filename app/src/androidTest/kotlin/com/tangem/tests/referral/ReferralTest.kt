@@ -56,8 +56,11 @@ class ReferralTest : BaseTestCase() {
             }
             step("Return to the 'Main' screen") {
                 tapBackButton()
+                onWalletSettingsScreen { screenContainer.assertIsDisplayed() }
                 tapBackButton()
+                onDetailsScreen { screenContainer.assertIsDisplayed() }
                 tapBackButton()
+                onMainScreen { screenContainer.assertIsDisplayed() }
             }
             step("Verify network $tokenNetwork and token $token is displayed on 'Main' screen") {
                 onMainScreen {
@@ -102,10 +105,13 @@ class ReferralTest : BaseTestCase() {
             }
             step("Return to the 'Main' screen") {
                 tapBackButton()
+                onWalletSettingsScreen { screenContainer.assertIsDisplayed() }
                 tapBackButton()
+                onDetailsScreen { screenContainer.assertIsDisplayed() }
                 tapBackButton()
+                onMainScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Verify $token is displaying on 'Main' screen") {
+            step("Verify $token is displayed on 'Main' screen") {
                 onMainScreen { tokenWithTitleAndAddress(token) }
             }
         }
