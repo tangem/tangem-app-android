@@ -526,7 +526,7 @@ internal class EditContactModelTest {
                 userWallet = walletA,
                 name = "Satoshi",
                 iconColor = any(),
-                addressEntries = any(),
+                addresses = any(),
             )
         }
         verify(exactly = 1) {
@@ -830,7 +830,7 @@ internal class EditContactModelTest {
             val walletA = createWallet(id = "aa", name = "Wallet A")
             setupWallets(wallets = listOf(walletA), selected = walletA)
             val contact = existingContact(walletId = "aa", name = "Alice", address = "0xAAA").copy(
-                addressEntries = listOf(
+                addresses = listOf(
                     AddressEntry(
                         id = AddressEntryId("e-1"),
                         address = "0xAAA",
@@ -891,7 +891,7 @@ internal class EditContactModelTest {
         iconColor = CryptoPortfolioIcon.Color.Azure.name,
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-01-01T00:00:00.000Z",
-        addressEntries = listOf(
+        addresses = listOf(
             AddressEntry(
                 id = AddressEntryId("e-1"),
                 address = address,

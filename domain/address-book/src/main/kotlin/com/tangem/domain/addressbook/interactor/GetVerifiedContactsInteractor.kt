@@ -29,7 +29,7 @@ class GetVerifiedContactsInteractor(
                 val userWallet = walletsById[contact.walletId] ?: return@mapNotNull null
                 val verification = verify(userWallet, contact).getOrNull() ?: return@mapNotNull null
                 VerifiedContact(
-                    contact = contact.copy(addressEntries = verification.valid),
+                    contact = contact.copy(addresses = verification.valid),
                     invalidEntries = verification.invalid,
                 )
             }
@@ -40,7 +40,7 @@ class GetVerifiedContactsInteractor(
         userWallet: UserWallet,
         contact: Contact,
     ): Either<VerifyMessagesError, AddressEntriesVerification> {
-        val entries = contact.addressEntries
+        val entries = contact.addresses
         if (entries.isEmpty()) return AddressEntriesVerification(valid = emptyList(), invalid = emptyList()).right()
 
         // Entries with a malformed (non-hex) signature can't be verified — they are invalid by format.
