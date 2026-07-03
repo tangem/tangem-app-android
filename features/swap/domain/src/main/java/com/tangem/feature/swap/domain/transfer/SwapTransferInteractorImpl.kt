@@ -108,6 +108,24 @@ class SwapTransferInteractorImpl @Inject constructor(
         val feePaidCurrency = feePaidCurrencyStatus?.currency
         val isFeeInOtherToken = feePaidCurrency is CryptoCurrency.Token && feePaidCurrency.id != fromToken.id
         val warningsFee = if (isFeeInOtherToken) BigDecimal.ZERO else fee?.amount?.value.orZero()
+        val isAmountSubtractAvailable = isAmountSubtractAvailable(
+            userWalletId = userWallet.walletId,
+            currency = fromTokenInfo.swapCurrencyStatus.currency,
+            fee = fee,
+        )
+        val fromBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
+        val isFeeCoverageForRent = checkFeeCoverage(
+            isSubtractAvailable = isAmountSubtractAvailable,
+            balance = fromBalance,
+            amountValue = fromTokenAmountValue,
+            feeValue = fee?.amount?.value.orZero(),
+            reduceAmountBy = BigDecimal.ZERO,
+        )
+        val sendingAmountForRentCheck = if (isFeeCoverageForRent) {
+            (fromTokenAmountValue - fee?.amount?.value.orZero()).coerceAtLeast(BigDecimal.ZERO)
+        } else {
+            fromTokenAmountValue
+        }
         val currencyCheck = getCurrencyCheckUseCase(
             userWalletId = fromSwapCurrencyStatus.userWalletId,
             currencyStatus = fromSwapCurrencyStatus.status,
@@ -117,15 +135,10 @@ class SwapTransferInteractorImpl @Inject constructor(
             feeCurrencyBalanceAfterTransaction = getFeeCurrencyBalanceAfterTx(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 feePaidCurrencyStatus = feePaidCurrencyStatus,
-                sendingAmount = fromTokenAmountValue,
+                sendingAmount = sendingAmountForRentCheck,
                 feeValue = fee?.amount?.value,
             ),
             recipientAddress = toSwapCurrencyStatus.destinationAddress(),
-        )
-        val isAmountSubtractAvailable = isAmountSubtractAvailable(
-            userWalletId = userWallet.walletId,
-            currency = fromTokenInfo.swapCurrencyStatus.currency,
-            fee = fee,
         )
         val coverageState = getCoverageState(
             fromTokenInfo = fromTokenInfo,
