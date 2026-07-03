@@ -12,6 +12,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -26,6 +27,7 @@ import com.tangem.domain.models.wallet.requireHotWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -80,6 +82,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val backupValidator: BackupValidator,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val defaultDerivationsHelper: DefaultDerivationsHelper,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
@@ -215,13 +218,26 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writeBackupCard(cardIndex: Int) {
         val backupService = backupServiceHolder.backupService.get() ?: return
+        val createdCurves = backupService.primaryCreatedCurves
         val backupCardBatchId = backupService.backupCardsBatchIds.getOrNull(cardIndex) ?: return
         val isRing = isRing(backupCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
         if (isRing) hasRing = true
 
-        tangemSdkManager.changeProductType(isRing)
-        backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
+        val needDeriveKeys = cardIndex == backupService.addedBackupCardsCount - 1
+        val defaultDerivations = if (needDeriveKeys) {
+            defaultDerivationsHelper.getDefaultDerivationsWithCurves(
+                derivationStyleProvider = params.multiWalletState.value.currentScanResponse.card.derivationStyleProvider,
+                cardId = backupCardBatchId,
+                curves = createdCurves,
+            )
+        } else {
+            emptyMap()
+        }
+        backupService.proceedBackup(
+            iconScanRes = iconScanRes,
+            defaultDerivations = defaultDerivations, // we have to add this for V8+ cards because of nullable publicKey before backup
+        ) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
