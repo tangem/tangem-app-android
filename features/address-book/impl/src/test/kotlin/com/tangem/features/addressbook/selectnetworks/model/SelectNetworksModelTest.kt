@@ -5,13 +5,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.features.addressbook.common.SupportedNetworksMatcher
 import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
 import com.tangem.features.addressbook.selectnetworks.state.SelectNetworksStateController
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.clearMocks
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -23,19 +19,10 @@ import org.junit.jupiter.api.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SelectNetworksModelTest {
 
-    private val supportedNetworksMatcher: SupportedNetworksMatcher = mockk()
-
     private val ethereum = Blockchain.Ethereum
     private val bsc = Blockchain.BSC
 
     private var model: SelectNetworksModel? = null
-
-    @BeforeEach
-    fun resetMocks() {
-        clearMocks(supportedNetworksMatcher)
-        // The address resolves to two networks unless a test overrides it.
-        every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(ethereum, bsc)
-    }
 
     @AfterEach
     fun tearDown() {
@@ -149,7 +136,7 @@ internal class SelectNetworksModelTest {
         selectedNetworkIds: List<String> = emptyList(),
         onDone: (Set<String>) -> Unit = {},
         params: DefaultSelectNetworksComponent.Params = DefaultSelectNetworksComponent.Params(
-            address = ADDRESS,
+            matchedNetworkIds = listOf(ethereum.toNetworkId(), bsc.toNetworkId()),
             selectedNetworkIds = selectedNetworkIds,
             onBackClick = {},
             onDone = onDone,
@@ -159,7 +146,6 @@ internal class SelectNetworksModelTest {
         return SelectNetworksModel(
             paramsContainer = paramsContainer,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            supportedNetworksMatcher = supportedNetworksMatcher,
             stateController = SelectNetworksStateController(),
         ).also { model = it }
     }
@@ -173,9 +159,5 @@ internal class SelectNetworksModelTest {
             default = testDispatcher,
             single = testDispatcher,
         )
-    }
-
-    private companion object {
-        const val ADDRESS = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
     }
 }

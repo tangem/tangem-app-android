@@ -27,16 +27,28 @@ internal sealed class AddressBookRoute {
         val predefinedNetworkId: String? = null,
     ) : AddressBookRoute()
 
+    /**
+     * Address entry screen. [walletId] / [excludeContactId] scope the `network + address` duplicate check to the target
+     * wallet (excluding the contact being edited). When [prefillAddress] is set the screen opens pre-filled (edit-address
+     * flow): [prefillNetworkIds] restores the previously chosen networks and [prefillMemo] the memo.
+     */
     @Serializable
-    data object AddAddress : AddressBookRoute()
+    data class AddAddress(
+        val walletId: String? = null,
+        val excludeContactId: String? = null,
+        val prefillAddress: String? = null,
+        val prefillNetworkIds: kotlin.collections.List<String> = emptyList(),
+        val prefillMemo: String? = null,
+    ) : AddressBookRoute()
 
     /**
-     * Network-selection screen for the [address] entered on [AddAddress]. [selectedNetworkIds] carries the current
-     * selection so it can be restored; empty means nothing is pre-selected.
+     * Network-selection screen. [matchedNetworkIds] are the networks the entered address already resolved to (computed
+     * once on the AddAddress screen and passed in, so this screen never re-validates the address against every chain).
+     * [selectedNetworkIds] carries the current selection so it can be restored; empty means nothing is pre-selected.
      */
     @Serializable
     data class SelectNetworks(
-        val address: String,
+        val matchedNetworkIds: kotlin.collections.List<String>,
         val selectedNetworkIds: kotlin.collections.List<String> = emptyList(),
     ) : AddressBookRoute()
 
