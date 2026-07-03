@@ -57,22 +57,33 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
             navigation.pop()
         }
 
-        override fun onAddAddressClick() {
-            navigation.pushNew(AddressBookRoute.AddAddress)
+        override fun onAddAddressClick(walletId: String, excludeContactId: String?, prefill: ValidatedAddress?) {
+            navigation.pushNew(
+                AddressBookRoute.AddAddress(
+                    walletId = walletId,
+                    excludeContactId = excludeContactId,
+                    prefillAddress = prefill?.address,
+                    prefillNetworkIds = prefill?.networkIds.orEmpty(),
+                    prefillMemo = prefill?.memo,
+                ),
+            )
         }
 
         override fun onAddAddressBack() {
             navigation.pop()
         }
 
-        override fun onAddressConfirmed(address: ValidatedAddress) {
-            resultHolder.setConfirmedAddress(address)
+        override fun onAddressConfirmed(address: ValidatedAddress, replaces: String?) {
+            resultHolder.setConfirmedAddress(ConfirmedAddress(address = address, replaces = replaces))
             navigation.pop()
         }
 
-        override fun onSelectNetworksClick(address: String, selectedNetworkIds: List<String>) {
+        override fun onSelectNetworksClick(matchedNetworkIds: List<String>, selectedNetworkIds: List<String>) {
             navigation.pushNew(
-                AddressBookRoute.SelectNetworks(address = address, selectedNetworkIds = selectedNetworkIds),
+                AddressBookRoute.SelectNetworks(
+                    matchedNetworkIds = matchedNetworkIds,
+                    selectedNetworkIds = selectedNetworkIds,
+                ),
             )
         }
 
