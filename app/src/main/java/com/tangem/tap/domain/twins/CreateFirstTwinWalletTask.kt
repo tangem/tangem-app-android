@@ -5,6 +5,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
+import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.operations.attestation.AttestationTask
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -16,28 +17,30 @@ class CreateFirstTwinWalletTask(private val firstCardId: String) : CardSessionRu
     override val allowsRequestAccessCodeFromRepository: Boolean = false
 
     override fun run(session: CardSession, callback: CompletionCallback<CreateWalletResponse>) {
-        val card = session.environment.card
-        val publicKey = card?.wallets?.firstOrNull()?.publicKey
-        if (publicKey != null) {
-            val requiredTwinCardNumber = TwinsHelper.getTwinCardNumber(firstCardId)
-            if (requiredTwinCardNumber != TwinsHelper.getTwinCardNumber(card.cardId)) {
-                requiredTwinCardNumber?.let {
-                    callback(CompletionResult.Failure(WrongTwinCard(it)))
-                }
-                return
+        val card = session.environment.card ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+            return
+        }
+        val walletIndex = card.wallets.firstOrNull()?.index ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.WalletNotFound()))
+            return
+        }
+        val requiredTwinCardNumber = TwinsHelper.getTwinCardNumber(firstCardId)
+        if (requiredTwinCardNumber != TwinsHelper.getTwinCardNumber(card.cardId)) {
+            requiredTwinCardNumber?.let {
+                callback(CompletionResult.Failure(WrongTwinCard(it)))
             }
+            return
+        }
 
-            PurgeWalletCommand(publicKey).run(session) { response ->
-                when (response) {
-                    is CompletionResult.Success -> {
-                        session.environment.card = session.environment.card?.setWallets(emptyList())
-                        createWallet(session, callback)
-                    }
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+        PurgeWalletCommand(walletIndex).run(session) { response ->
+            when (response) {
+                is CompletionResult.Success -> {
+                    session.environment.card = session.environment.card?.setWallets(emptyList())
+                    createWallet(session, callback)
                 }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
             }
-        } else {
-            createWallet(session, callback)
         }
     }
 
