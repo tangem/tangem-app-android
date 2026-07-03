@@ -22,6 +22,8 @@ internal data class EditContactUM(
     val onNameChange: (String) -> Unit,
     val onCloseClick: () -> Unit,
     val onAddAddressClick: () -> Unit,
+    val onAddressClick: (ValidatedAddress) -> Unit,
+    val onDeleteClick: (() -> Unit)?,
 ) {
 
     data class Colors(
