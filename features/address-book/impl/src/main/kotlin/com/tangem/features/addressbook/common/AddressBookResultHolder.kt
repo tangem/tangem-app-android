@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Carries a [ValidatedAddress] confirmed on the AddAddress screen over to the EditContact screen.
+ * Carries an address confirmed on the AddAddress screen over to the EditContact screen.
  *
  * The two screens live in independent model scopes, so a shared singleton holder is used to hand the result over
  * instead of routing it through navigation/click intents. The producer calls [setConfirmedAddress]; the consumer
@@ -16,14 +16,19 @@ import javax.inject.Singleton
 @Singleton
 internal class AddressBookResultHolder @Inject constructor() {
 
-    val confirmedAddress: StateFlow<ValidatedAddress?>
-        field = MutableStateFlow<ValidatedAddress?>(null)
+    val confirmedAddress: StateFlow<ConfirmedAddress?>
+        field = MutableStateFlow<ConfirmedAddress?>(null)
 
-    fun setConfirmedAddress(address: ValidatedAddress) {
-        confirmedAddress.value = address
+    fun setConfirmedAddress(confirmed: ConfirmedAddress) {
+        confirmedAddress.value = confirmed
     }
 
     fun clear() {
         confirmedAddress.value = null
     }
 }
+
+internal data class ConfirmedAddress(
+    val address: ValidatedAddress,
+    val replaces: String?,
+)
