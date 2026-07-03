@@ -17,6 +17,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -207,6 +208,55 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(amount).doesNotContain("-")
     }
 
+    @Test
+    fun `GIVEN non-yield Transfer WHEN convert THEN single icon and no label`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Transfer)
+
+        // Act
+        val amountBlock = converter.convert(tx).amountBlock
+
+        // Assert
+        assertThat(amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        assertThat(amountBlock.label).isNull()
+    }
+
+    @Test
+    fun `GIVEN yield-supply Enter WHEN convert THEN Supplied label, Aave-leading pair and unsigned amount`() {
+        // Arrange — enter (funds outgoing to Aave): the amount must still be unsigned.
+        val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS), isOutgoing = true)
+
+        // Act
+        val amountBlock = converter.convert(tx).amountBlock
+
+        // Assert
+        assertThat(amountBlock.label).isEqualTo(resourceReference(R.string.yield_module_transaction_supplied))
+        val pair = amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
+        assertThat(pair.trailing).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        val amount = amountBlock.amount.resolveString()
+        assertThat(amount).doesNotContain("+")
+        assertThat(amount).doesNotContain("-")
+    }
+
+    @Test
+    fun `GIVEN yield-supply Exit WHEN convert THEN Returned label, asset-leading pair and unsigned amount`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.YieldSupply.Exit(address = USER_ADDRESS), isOutgoing = false)
+
+        // Act
+        val amountBlock = converter.convert(tx).amountBlock
+
+        // Assert
+        assertThat(amountBlock.label).isEqualTo(resourceReference(R.string.yield_module_transaction_returned))
+        val pair = amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
+        val amount = amountBlock.amount.resolveString()
+        assertThat(amount).doesNotContain("+")
+        assertThat(amount).doesNotContain("-")
+    }
+
     // endregion
 
     // region Counterparty
@@ -222,6 +272,29 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(counterparty).isNull()
     }
+
+    @ParameterizedTest
+    @MethodSource("provideContractInteractionTypes")
+    fun `GIVEN contract-interaction tx with User interaction address WHEN convert THEN no counterparty card`(
+        type: TransactionType,
+    ) {
+        // Arrange — yield-supply / staking / approve talk to a protocol/validator, not a copyable recipient.
+        val tx = txInfo(type = type, interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS))
+
+        // Act
+        val counterparty = converter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty).isNull()
+    }
+
+    private fun provideContractInteractionTypes() = listOf(
+        TransactionType.YieldSupply.Enter(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
+        TransactionType.Staking.Stake,
+        TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS),
+        TransactionType.Approve,
+    )
 
     @Test
     fun `GIVEN incoming Transfer with User address WHEN convert THEN address-avatar counterparty with From label`() {
@@ -435,8 +508,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     // region Protocol row (yield-supply)
 
     @Test
-    fun `GIVEN yield-supply tx WHEN convert THEN protocol row shows the hard-wired Aave protocol`() {
-        // Arrange — yield-supply is a single hard-wired integration (Aave), so the value is constant, not resolved.
+    fun `GIVEN yield-supply tx WHEN convert THEN protocol row shows the hard-wired Aave protocol with its link`() {
+        // Arrange — yield-supply is a single hard-wired integration (Aave), so the value and link are constant.
         val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
 
         // Act
@@ -445,8 +518,9 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(row.label).isEqualTo(resourceReference(R.string.staking_validator))
         assertThat(row.value).isEqualTo(resourceReference(R.string.yield_module_provider))
-        assertThat(row.trailingIconRes).isNull()
-        assertThat(row.onClick).isNull()
+        assertThat(row.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
+        row.onClick?.invoke()
+        assertThat(openedUrls).containsExactly("https://aave.com/")
     }
 
     @Test
