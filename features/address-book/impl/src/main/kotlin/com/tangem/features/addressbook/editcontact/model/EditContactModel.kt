@@ -11,16 +11,22 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
 import com.tangem.domain.addressbook.interactor.SaveContactInteractor
+import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactName
+import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
+import com.tangem.domain.addressbook.usecase.GetContactByIdUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.features.addressbook.addressinfo.DefaultAddressInfoComponent
 import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.AddressBookResultHolder
 import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
@@ -40,7 +46,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass", "NamedArguments")
 @ModelScoped
 internal class EditContactModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -51,14 +57,26 @@ internal class EditContactModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val validateContactNameUseCase: ValidateContactNameUseCase,
     private val saveContactInteractor: SaveContactInteractor,
+    private val getContactByIdUseCase: GetContactByIdUseCase,
+    private val deleteContactUseCase: DeleteContactUseCase,
     private val analyticsSender: AddressBookAnalyticsSender,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
 ) : Model() {
 
+    // region State
+
     private val params: DefaultEditContactComponent.Params = paramsContainer.require()
 
-    private val selectedWalletId = MutableStateFlow<UserWalletId?>(null)
+    /** The contact being edited (null for a new contact). Drives create-vs-update and the delete/discard rules. */
+    private val loadedContact = MutableStateFlow<Contact?>(null)
+
+    /** The editor's starting point: the loaded contact once available, otherwise the empty (or predefined) new contact. */
+    private val newContactBaseline = EditSnapshot(
+        name = "",
+        colorName = CryptoPortfolioIcon.Color.entries.first().name,
+        addresses = listOfNotNull(params.predefinedAddress).map { it.address to it.networkIds.toSet() },
+    )
 
     /** The in-flight save coroutine — its [Job.isActive] drives both the re-entrancy guard and the button state. */
     private var saveJob: Job? = null
@@ -66,6 +84,7 @@ internal class EditContactModel @Inject constructor(
     val state: StateFlow<EditContactUM> get() = stateController.uiState
 
     val portfolioSelectorNavigation = SlotNavigation<Unit>()
+    val addressInfoNavigation = SlotNavigation<String>()
 
     val portfolioFetcher: PortfolioFetcher by lazy {
         portfolioFetcherFactory.create(
@@ -74,20 +93,45 @@ internal class EditContactModel @Inject constructor(
         )
     }
 
+    /** The wallet picked in the selector, if any — single source of the wallet the contact is being saved to. */
+    private val pickedWallet: StateFlow<UserWallet?> =
+        portfolioSelectorController.selectedAccountWithData(portfolioFetcher)
+            .map { it?.first }
+            .stateIn(modelScope, SharingStarted.Eagerly, null)
+
+    /**
+     * The wallet the contact is saved to. For an existing contact it is fixed to the contact's wallet; for a new
+     * contact it follows the selector pick and falls back to the app's currently selected wallet.
+     */
+    private val selectedWallet: StateFlow<UserWallet?> = combine(
+        pickedWallet,
+        loadedContact,
+        userWalletsListRepository.selectedUserWallet,
+        userWalletsListRepository.userWallets,
+    ) { picked, contact, currentSelected, wallets ->
+        when {
+            contact != null -> wallets?.firstOrNull { it.walletId == contact.walletId }
+            picked != null -> picked
+            else -> currentSelected
+        }
+    }.stateIn(modelScope, SharingStarted.Eagerly, null)
+
     val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
         override val onDismiss: () -> Unit = { portfolioSelectorNavigation.dismiss() }
         override val onBack: () -> Unit = { portfolioSelectorNavigation.dismiss() }
     }
 
+    // endregion
+
     init {
         updateInitialState()
         prefillPredefinedAddress()
         subscribeToConfirmedAddresses()
-        initSelectedWallet()
-        observeWalletSelection()
+        dismissSelectorOnPick()
         observeWalletBlock()
         observeNameValidation()
         observeSaveButton()
+        loadExistingContact()
         sendAddContactTappedEvent()
     }
 
@@ -96,10 +140,7 @@ internal class EditContactModel @Inject constructor(
         analyticsSender.sendAddContactTapped(fromSendSuccess = params.predefinedAddress != null, scope = modelScope)
     }
 
-    /** In WithContactCreation mode the contact opens with the already-known address attached. */
-    private fun prefillPredefinedAddress() {
-        params.predefinedAddress?.let(::addAddress)
-    }
+    // region Initialization
 
     private fun updateInitialState() {
         stateController.update(
@@ -107,42 +148,74 @@ internal class EditContactModel @Inject constructor(
                 isExistingContact = params.contactId != null,
                 onNameChange = ::onNameChange,
                 onColorSelect = ::onColorSelect,
-                onCloseClick = params.onBackClick,
+                onCloseClick = ::onCloseClick,
                 onAddAddressClick = ::onAddAddressClick,
+                onAddressClick = ::onAddressClick,
                 onSaveClick = ::onSaveClick,
+                onDeleteClick = if (params.contactId != null) ::onDeleteClick else null,
             ),
         )
     }
 
-    private fun initSelectedWallet() {
-        // TODO: For an existing contact the contact's own wallet should be used here once existing-contact
-        //  loading is implemented. For now both new and existing contacts default to the selected wallet.
-        userWalletsListRepository.selectedUserWallet
+    /** In WithContactCreation mode the contact opens with the already-known address attached. */
+    private fun prefillPredefinedAddress() {
+        params.predefinedAddress?.let(::addAddress)
+    }
+
+    /** Loads an existing contact and prefills the editor. A new contact needs nothing — its baseline is empty. */
+    private fun loadExistingContact() {
+        val contactId = params.contactId ?: return
+        modelScope.launch {
+            val contact = getContactByIdUseCase(contactId).first()
+            if (contact == null) {
+                params.onBackClick()
+                return@launch
+            }
+            loadedContact.value = contact
+            prefillFromContact(contact)
+        }
+    }
+
+    private fun prefillFromContact(contact: Contact) {
+        stateController.update(UpdateContactNameTransformer(name = contact.name.value))
+        CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == contact.iconColor }
+            ?.let { stateController.update(SelectContactColorTransformer(color = it)) }
+        val addresses = ContactAddressEntriesConverter().toValidatedAddresses(contact.addressEntries)
+        stateController.update(SetValidatedAddressesTransformer(addresses = addresses, maxAddresses = MAX_ADDRESSES))
+    }
+
+    // endregion
+
+    // region Subscriptions
+
+    private fun subscribeToConfirmedAddresses() {
+        resultHolder.confirmedAddress
             .filterNotNull()
-            .onEach { wallet ->
-                if (selectedWalletId.value == null) selectedWalletId.value = wallet.walletId
+            .onEach { confirmed ->
+                // Edit-address: the result carries the entry it supersedes, so we swap it in place.
+                confirmed.replaces?.let { old ->
+                    stateController.update(
+                        RemoveValidatedAddressTransformer(address = old, maxAddresses = MAX_ADDRESSES),
+                    )
+                }
+                addAddress(confirmed.address)
+                resultHolder.clear()
             }
             .launchIn(modelScope)
     }
 
-    /** Maps the account picked in the selector back to its wallet (wallet-only mode picks the main account). */
-    private fun observeWalletSelection() {
-        portfolioSelectorController.selectedAccountWithData(portfolioFetcher)
-            .mapNotNull { it?.first?.walletId }
-            .onEach { walletId ->
-                selectedWalletId.value = walletId
-                portfolioSelectorNavigation.dismiss()
-            }
+    /** Closes the wallet selector as soon as the user picks a wallet in it. */
+    private fun dismissSelectorOnPick() {
+        pickedWallet
+            .filterNotNull()
+            .onEach { portfolioSelectorNavigation.dismiss() }
             .launchIn(modelScope)
     }
 
     private fun observeWalletBlock() {
-        combine(
-            selectedWalletId,
-            userWalletsListRepository.userWallets,
-        ) { walletId, wallets ->
+        combine(selectedWallet, userWalletsListRepository.userWallets) { wallet, wallets ->
             UpdateWalletBlockTransformer(
-                walletName = wallets?.firstOrNull { it.walletId == walletId }?.name.orEmpty(),
+                walletName = wallet?.name.orEmpty(),
                 isChangeable = isWalletChangeable(wallets),
                 onClick = ::onWalletBlockClick,
             )
@@ -152,9 +225,45 @@ internal class EditContactModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun isWalletChangeable(wallets: List<UserWallet>?): Boolean {
-        val unlockedWalletsCount = wallets.orEmpty().count { !it.isLocked }
-        return params.contactId == null && unlockedWalletsCount > 1
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private fun observeNameValidation() {
+        combine(
+            stateController.uiState.map { it.name }.distinctUntilChanged().debounce(NAME_DEBOUNCE_MS),
+            selectedWallet.mapNotNull { it?.walletId }.distinctUntilChanged(),
+        ) { name, walletId -> name to walletId }
+            .mapLatest { (name, walletId) -> validateName(name, walletId) }
+            .onEach { error -> stateController.update(UpdateNameErrorTransformer(error)) }
+            .launchIn(modelScope)
+    }
+
+    private fun observeSaveButton() {
+        // Recompute on input changes and on wallet changes (the wallet type drives the button's Tangem-logo icon).
+        combine(
+            stateController.uiState
+                .map { state ->
+                    SaveButtonInputs(
+                        name = state.name,
+                        hasNameError = state.nameError != null,
+                        hasAddresses = state.addresses.isNotEmpty(),
+                    )
+                }
+                .distinctUntilChanged(),
+            selectedWallet.map { it is UserWallet.Cold }.distinctUntilChanged(),
+        ) { _, _ -> }
+            .onEach { refreshSaveButton() }
+            .launchIn(modelScope)
+    }
+
+    // endregion
+
+    // region Clicks
+
+    private fun onNameChange(name: String) {
+        stateController.update(UpdateContactNameTransformer(name = name))
+    }
+
+    private fun onColorSelect(color: CryptoPortfolioIcon.Color) {
+        stateController.update(SelectContactColorTransformer(color = color))
     }
 
     private fun onWalletBlockClick() {
@@ -164,87 +273,166 @@ internal class EditContactModel @Inject constructor(
         }
     }
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun observeNameValidation() {
-        combine(
-            stateController.uiState.map { it.name }.distinctUntilChanged().debounce(NAME_DEBOUNCE_MS),
-            selectedWalletId.filterNotNull(),
-        ) { name, walletId -> name to walletId }
-            .mapLatest { (name, walletId) -> validateName(name, walletId) }
-            .onEach { error -> stateController.update(UpdateNameErrorTransformer(error)) }
-            .launchIn(modelScope)
-    }
-
-    private suspend fun validateName(name: String, walletId: UserWalletId): TextReference? {
-        if (name.isBlank()) return null
-        val error = validateContactNameUseCase(walletId, name).leftOrNull() ?: return null
-        // A blank name must not surface an inline error; the Empty case is treated as "no error".
-        if (error is ContactNameValidationError.Format && error.error is ContactName.Error.Empty) return null
-        return ContactNameErrorConverter().convert(error)
-    }
-
-    private fun observeSaveButton() {
-        stateController.uiState
-            .map { state ->
-                SaveButtonInputs(
-                    name = state.name,
-                    hasNameError = state.nameError != null,
-                    hasAddresses = state.addresses.isNotEmpty(),
-                )
-            }
-            .distinctUntilChanged()
-            .onEach { refreshSaveButton() }
-            .launchIn(modelScope)
-    }
-
-    /** Recomputes the button from the current inputs and whether a save is running ([saveJob] is active). */
-    private fun refreshSaveButton() {
-        val ui = stateController.uiState.value
-        val isSaving = saveJob?.isActive == true
-        val isEnabled = ui.name.isNotBlank() && ui.nameError == null && ui.addresses.isNotEmpty() && !isSaving
-        stateController.update(UpdateSaveButtonTransformer(isEnabled = isEnabled, isLoading = isSaving))
+    private fun onAddAddressClick() {
+        if (stateController.uiState.value.addresses.size >= MAX_ADDRESSES) {
+            messageSender.send(
+                DialogMessage(
+                    title = resourceReference(R.string.address_book_max_networks_alert_title),
+                    message = resourceReference(R.string.address_book_max_networks_alert_description),
+                    firstActionBuilder = {
+                        EventMessageAction(
+                            title = resourceReference(R.string.common_ok),
+                            onClick = onDismissRequest,
+                        )
+                    },
+                ),
+            )
+        } else {
+            val walletId = selectedWallet.value?.walletId?.stringValue ?: return
+            analyticsSender.sendAddressScreenOpened()
+            params.onAddAddressClick(walletId, params.contactId?.value, null)
+        }
     }
 
     private fun onSaveClick() {
         if (saveJob?.isActive == true) return
-        val userWallet = userWalletsListRepository.userWallets.value
-            ?.firstOrNull { it.walletId == selectedWalletId.value }
-            ?: return
+        val userWallet = selectedWallet.value ?: return
         val ui = stateController.uiState.value
         val addressEntries = ContactAddressEntriesConverter().convert(ui.addresses)
+        val existing = loadedContact.value
 
         saveJob = modelScope.launch {
-            try {
-                // TODO: existing-contact update needs the loaded Contact; existing-contact loading is not implemented.
-                val result = saveContactInteractor.createContact(
+            val result = if (existing != null) {
+                saveContactInteractor.updateContact(
+                    userWallet = userWallet,
+                    contact = existing,
+                    name = ui.name,
+                    iconColor = ui.colors.selected.name,
+                    addressEntries = addressEntries,
+                )
+            } else {
+                saveContactInteractor.createContact(
                     userWallet = userWallet,
                     name = ui.name,
                     iconColor = ui.colors.selected.name,
                     addressEntries = addressEntries,
                 )
-                result.fold(
-                    ifLeft = { error ->
-                        handleSaveError(error)
-                        analyticsSender.sendSaveErrorShown(
-                            walletId = userWallet.walletId,
-                            contactId = params.contactId?.value,
-                            error = error,
-                        )
-                    },
-                    ifRight = { contact ->
+            }
+            result.fold(
+                ifLeft = { error ->
+                    handleSaveError(error)
+                    analyticsSender.sendSaveErrorShown(
+                        walletId = userWallet.walletId,
+                        contactId = params.contactId?.value,
+                        error = error,
+                    )
+                    saveJob?.cancel()
+                    refreshSaveButton()
+                },
+                ifRight = { contact ->
+                    if (existing == null) {
                         analyticsSender.sendContactSaved(
                             walletId = userWallet.walletId,
                             contactId = contact.id.value,
                             isEdit = params.contactId != null,
                         )
-                        params.onBackClick()
-                    },
-                )
-            } finally {
-                refreshSaveButton()
-            }
+                        messageSender.send(
+                            SnackbarMessage(
+                                message = resourceReference(R.string.address_book_create_success_message),
+                                startIconId = R.drawable.ic_success_20,
+                            ),
+                        )
+                    }
+                    params.onBackClick()
+                },
+            )
         }
         refreshSaveButton()
+    }
+
+    private fun onCloseClick() {
+        if (isDirty()) showDiscardDialog() else params.onBackClick()
+    }
+
+    private fun onDeleteClick() {
+        messageSender.send(
+            DialogMessage(
+                message = resourceReference(R.string.address_book_delete_contact_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_delete),
+                        isWarning = true,
+                        onClick = ::deleteContact,
+                    )
+                },
+            ),
+        )
+    }
+
+    private fun onAddressClick(address: ValidatedAddress) {
+        addressInfoNavigation.activate(address.address)
+    }
+
+    fun createAddressInfoParams(address: String): DefaultAddressInfoComponent.Params {
+        val entry = stateController.uiState.value.addresses.firstOrNull { it.address == address }
+        return DefaultAddressInfoComponent.Params(
+            address = address,
+            networkCount = entry?.networkIds?.size ?: 0,
+            onEditAddress = { onEditAddress(address) },
+            onDeleteAddress = { onDeleteAddress(address) },
+            onDismiss = { addressInfoNavigation.dismiss() },
+        )
+    }
+
+    private fun onEditAddress(address: String) {
+        val entry = stateController.uiState.value.addresses.firstOrNull { it.address == address } ?: return
+        val walletId = selectedWallet.value?.walletId?.stringValue ?: return
+        addressInfoNavigation.dismiss()
+        params.onAddAddressClick(walletId, params.contactId?.value, entry)
+    }
+
+    private fun onDeleteAddress(address: String) {
+        addressInfoNavigation.dismiss()
+        val isLastAddress = stateController.uiState.value.addresses.size <= 1
+        if (isLastAddress && params.contactId != null) {
+            onDeleteClick()
+        } else {
+            stateController.update(RemoveValidatedAddressTransformer(address = address, maxAddresses = MAX_ADDRESSES))
+        }
+    }
+
+    // endregion
+
+    // region Helpers
+
+    private fun addAddress(address: ValidatedAddress) {
+        stateController.update(AddValidatedAddressTransformer(address = address, maxAddresses = MAX_ADDRESSES))
+    }
+
+    private fun isWalletChangeable(wallets: List<UserWallet>?): Boolean {
+        val unlockedWalletsCount = wallets.orEmpty().count { !it.isLocked }
+        return params.contactId == null && unlockedWalletsCount > 1
+    }
+
+    private suspend fun validateName(name: String, walletId: UserWalletId): TextReference? {
+        if (name.isBlank()) return null
+        if (name == loadedContact.value?.name?.value) return null
+        val error = validateContactNameUseCase(walletId, name).leftOrNull() ?: return null
+        if (error is ContactNameValidationError.Format && error.error is ContactName.Error.Empty) return null
+        return ContactNameErrorConverter().convert(error)
+    }
+
+    private fun refreshSaveButton() {
+        val ui = stateController.uiState.value
+        val isSaving = saveJob?.isActive == true
+        val isEnabled = ui.name.isNotBlank() && ui.nameError == null && ui.addresses.isNotEmpty() && !isSaving
+        stateController.update(
+            UpdateSaveButtonTransformer(
+                isEnabled = isEnabled,
+                isLoading = isSaving,
+                isColdWallet = selectedWallet.value is UserWallet.Cold,
+            ),
+        )
     }
 
     private fun handleSaveError(error: SaveContactError) {
@@ -256,52 +444,97 @@ internal class EditContactModel @Inject constructor(
                 DialogMessage(
                     title = resourceReference(R.string.common_something_went_wrong),
                     message = resourceReference(R.string.address_book_creating_error),
+                    firstActionBuilder = {
+                        EventMessageAction(
+                            title = resourceReference(R.string.common_ok),
+                            onClick = onDismissRequest,
+                        )
+                    },
                 ),
             )
         }
     }
 
-    private fun onAddAddressClick() {
-        if (stateController.uiState.value.addresses.size >= MAX_ADDRESSES) {
-            messageSender.send(
-                DialogMessage(
-                    title = resourceReference(R.string.address_book_max_networks_alert_title),
-                    message = resourceReference(R.string.address_book_max_networks_alert_description),
-                ),
+    private fun deleteContact() {
+        val contactId = params.contactId ?: return
+        modelScope.launch {
+            deleteContactUseCase(contactId).fold(
+                ifLeft = { showDeleteError() },
+                ifRight = { params.onBackClick() },
             )
-        } else {
-            analyticsSender.sendAddressScreenOpened()
-            params.onAddAddressClick()
         }
     }
 
-    private fun subscribeToConfirmedAddresses() {
-        resultHolder.confirmedAddress
-            .filterNotNull()
-            .onEach { address ->
-                addAddress(address)
-                resultHolder.clear()
-            }
-            .launchIn(modelScope)
+    private fun showDiscardDialog() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.address_book_unsaved_changes),
+                message = resourceReference(R.string.address_book_unsaved_changes_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.address_book_keep_editing),
+                        onClick = onDismissRequest,
+                    )
+                },
+                secondActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.address_book_discard),
+                        isWarning = true,
+                        onClick = params.onBackClick,
+                    )
+                },
+            ),
+        )
     }
 
-    private fun onNameChange(name: String) {
-        stateController.update(UpdateContactNameTransformer(name = name))
+    private fun showDeleteError() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.address_book_deleting_error),
+            ),
+        )
     }
 
-    private fun onColorSelect(color: CryptoPortfolioIcon.Color) {
-        stateController.update(SelectContactColorTransformer(color = color))
+    /** Dirty when the current editor differs from its baseline — the loaded contact, or the empty new contact. */
+    private fun isDirty(): Boolean {
+        val baseline = loadedContact.value?.toSnapshot() ?: newContactBaseline
+        return currentSnapshot() != baseline
     }
 
-    private fun addAddress(address: ValidatedAddress) {
-        stateController.update(AddValidatedAddressTransformer(address = address, maxAddresses = MAX_ADDRESSES))
+    private fun currentSnapshot(): EditSnapshot {
+        val ui = stateController.uiState.value
+        return EditSnapshot(
+            name = ui.name,
+            colorName = ui.colors.selected.name,
+            addresses = ui.addresses.map { it.address to it.networkIds.toSet() },
+        )
     }
+
+    private fun Contact.toSnapshot(): EditSnapshot = EditSnapshot(
+        name = name.value,
+        colorName = iconColor,
+        addresses = ContactAddressEntriesConverter().toValidatedAddresses(addressEntries)
+            .map { it.address to it.networkIds.toSet() },
+    )
+
+    // endregion
+
+    // region Models
 
     private data class SaveButtonInputs(
         val name: String,
         val hasNameError: Boolean,
         val hasAddresses: Boolean,
     )
+
+    private data class EditSnapshot(
+        val name: String,
+        val colorName: String,
+        val addresses: List<Pair<String, Set<String>>>,
+    )
+
+    // endregion
 
     private companion object {
         const val MAX_ADDRESSES = 20

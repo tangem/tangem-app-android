@@ -18,13 +18,13 @@ internal interface AddressBookClickIntents {
 
     fun onEditContactBack()
 
-    fun onAddAddressClick()
+    fun onAddAddressClick(walletId: String, excludeContactId: String?, prefill: ValidatedAddress?)
 
     fun onAddAddressBack()
 
-    fun onAddressConfirmed(address: ValidatedAddress)
+    fun onAddressConfirmed(address: ValidatedAddress, replaces: String?)
 
-    fun onSelectNetworksClick(address: String, selectedNetworkIds: List<String>)
+    fun onSelectNetworksClick(matchedNetworkIds: List<String>, selectedNetworkIds: List<String>)
 
     fun onSelectNetworksBack()
 
