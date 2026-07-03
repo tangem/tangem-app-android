@@ -63,7 +63,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN on-chain pill row WHEN row clicked THEN stays on the explorer`() {
+    fun `GIVEN on-chain pill row WHEN row clicked THEN routes the incoming OnChainTx through onTransactionClick`() {
         // Arrange
         val item = OnChainTx.BSDK(txInfo(type = TransactionType.Approve))
 
@@ -72,7 +72,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
         result.onClick()
 
         // Assert
-        verify { txHistoryUiActions.openTxInExplorer(TX_HASH) }
+        verify { txHistoryUiActions.onTransactionClick(item) }
     }
 
     @Test
