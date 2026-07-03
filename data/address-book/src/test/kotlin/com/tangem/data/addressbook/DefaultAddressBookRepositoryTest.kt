@@ -8,7 +8,6 @@ import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.addressbook.models.SyncAddressBooksRequest
 import com.tangem.datasource.api.addressbook.models.SyncAddressBooksResponse
-import com.tangem.datasource.api.addressbook.models.UpdateAddressBookRequest
 import com.tangem.datasource.api.addressbook.models.UpdateAddressBookResponse
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -391,7 +390,7 @@ internal class DefaultAddressBookRepositoryTest {
         iconColor = iconColor,
         createdAt = TIMESTAMP,
         updatedAt = TIMESTAMP,
-        addressEntries = emptyList(),
+        addresses = emptyList(),
     )
 
     private fun createBlob(): AddressBookBlob = AddressBookBlob(
