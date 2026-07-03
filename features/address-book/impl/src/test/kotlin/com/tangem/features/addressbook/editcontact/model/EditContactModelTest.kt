@@ -11,21 +11,24 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
 import com.tangem.domain.addressbook.interactor.SaveContactInteractor
-import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.ContactId
-import com.tangem.domain.addressbook.model.ContactName
+import com.tangem.domain.addressbook.model.*
+import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
+import com.tangem.domain.addressbook.usecase.GetContactByIdUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.AddressBookResultHolder
+import com.tangem.features.addressbook.common.ConfirmedAddress
 import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.state.EditContactStateController
 import com.tangem.features.addressbook.editcontact.ui.state.EditContactUM
@@ -33,11 +36,7 @@ import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -59,6 +58,8 @@ internal class EditContactModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
     private val validateContactNameUseCase: ValidateContactNameUseCase = mockk()
     private val saveContactInteractor: SaveContactInteractor = mockk()
+    private val getContactByIdUseCase: GetContactByIdUseCase = mockk()
+    private val deleteContactUseCase: DeleteContactUseCase = mockk()
     private val portfolioSelectorController: PortfolioSelectorController = mockk()
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
@@ -77,6 +78,8 @@ internal class EditContactModelTest {
         coEvery { validateContactNameUseCase(any(), any()) } returns ContactName("Satoshi").getOrNull()!!.right()
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns selectedWalletData
+        // No existing contact by default; a StateFlow<null> never surfaces a contact and never completes.
+        every { getContactByIdUseCase(any()) } returns MutableStateFlow<Contact?>(null)
     }
 
     @AfterEach
@@ -120,6 +123,8 @@ internal class EditContactModelTest {
             onNameChange = state.onNameChange,
             onCloseClick = state.onCloseClick,
             onAddAddressClick = state.onAddAddressClick,
+            onAddressClick = state.onAddressClick,
+            onDeleteClick = null,
         )
         assertThat(state).isEqualTo(expected)
     }
@@ -202,7 +207,7 @@ internal class EditContactModelTest {
         val validatedAddress = ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum"))
 
         // Act
-        resultHolder.setConfirmedAddress(validatedAddress)
+        deliverConfirmed(validatedAddress)
         advanceUntilIdle()
 
         // Assert
@@ -219,13 +224,32 @@ internal class EditContactModelTest {
         val validatedAddress = ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum"))
 
         // Act
-        resultHolder.setConfirmedAddress(validatedAddress)
+        deliverConfirmed(validatedAddress)
         advanceUntilIdle()
-        resultHolder.setConfirmedAddress(validatedAddress)
+        deliverConfirmed(validatedAddress)
         advanceUntilIdle()
 
         // Assert
         assertThat(model.state.value.addresses).containsExactly(validatedAddress)
+    }
+
+    @Test
+    fun `GIVEN edit-address confirmed with replaces WHEN collected THEN old entry swapped for the new one`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        deliverConfirmed(ValidatedAddress(address = "0xOLD", networkIds = persistentListOf("ethereum")))
+        advanceUntilIdle()
+
+        // Act — the edit-address flow confirms a new address that supersedes 0xOLD.
+        deliverConfirmed(
+            address = ValidatedAddress(address = "0xNEW", networkIds = persistentListOf("bsc")),
+            replaces = "0xOLD",
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.addresses.map { it.address }).containsExactly("0xNEW")
     }
 
     @Test
@@ -245,7 +269,12 @@ internal class EditContactModelTest {
     fun `GIVEN below address limit WHEN onAddAddressClick THEN click propagated AND no dialog`() = runTest {
         // Arrange
         var addClicked = false
-        val model = createModel(testScope = this, params = createParams(onAddAddressClick = { addClicked = true }))
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val model = createModel(
+            testScope = this,
+            params = createParams(onAddAddressClick = { _, _, _ -> addClicked = true }),
+        )
         advanceUntilIdle()
 
         // Act
@@ -262,10 +291,13 @@ internal class EditContactModelTest {
         runTest {
             // Arrange
             var addClicked = false
-            val model = createModel(testScope = this, params = createParams(onAddAddressClick = { addClicked = true }))
+            val model = createModel(
+                testScope = this,
+                params = createParams(onAddAddressClick = { _, _, _ -> addClicked = true }),
+            )
             advanceUntilIdle()
             repeat(MAX_ADDRESSES) { index ->
-                resultHolder.setConfirmedAddress(
+                deliverConfirmed(
                     ValidatedAddress(address = "0x$index", networkIds = persistentListOf("ethereum")),
                 )
                 advanceUntilIdle()
@@ -345,6 +377,20 @@ internal class EditContactModelTest {
     }
 
     @Test
+    fun `GIVEN cold wallet selected WHEN created THEN save button shows the Tangem logo`() = runTest {
+        // Arrange — MockUserWalletFactory builds a cold (card) wallet.
+        val coldWallet = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(coldWallet), selected = coldWallet)
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert — a cold wallet signs via NFC, so the button carries the Tangem logo.
+        assertThat(model.state.value.saveButton.tangemIconUM).isNotNull()
+    }
+
+    @Test
     fun `GIVEN duplicate name in selected wallet WHEN name entered THEN name error shown`() = runTest {
         // Arrange
         val walletA = createWallet(id = "aa", name = "Wallet A")
@@ -415,7 +461,7 @@ internal class EditContactModelTest {
 
         // Act
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Assert
@@ -449,7 +495,7 @@ internal class EditContactModelTest {
 
         // Act
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Assert
@@ -467,7 +513,7 @@ internal class EditContactModelTest {
         val model = createModel(testScope = this, params = createParams(onBackClick = { navigatedBack = true }))
         advanceUntilIdle()
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Act
@@ -499,7 +545,7 @@ internal class EditContactModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Act
@@ -520,7 +566,7 @@ internal class EditContactModelTest {
         val model = createModel(testScope = this, params = createParams(contactId = null))
         advanceUntilIdle()
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Act
@@ -543,7 +589,7 @@ internal class EditContactModelTest {
         val model = createModel(testScope = this, params = createParams(contactId = ContactId(value = "contact-id")))
         advanceUntilIdle()
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Act
@@ -566,7 +612,7 @@ internal class EditContactModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.state.value.onNameChange("Satoshi")
-        resultHolder.setConfirmedAddress(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
         advanceUntilIdle()
 
         // Act
@@ -578,10 +624,289 @@ internal class EditContactModelTest {
             .isEqualTo(resourceReference(R.string.address_book_name_taken_error))
     }
 
+    @Test
+    fun `GIVEN save fails with backend error WHEN save clicked THEN button leaves loading AND editor stays`() = runTest {
+        // Arrange
+        var navigatedBack = false
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns
+            SaveContactError.Backend(AddressBookSyncError.Network).left()
+        val model = createModel(testScope = this, params = createParams(onBackClick = { navigatedBack = true }))
+        advanceUntilIdle()
+        model.state.value.onNameChange("Satoshi")
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert — the failed save must not leave the button spinning, and the editor stays open for a retry.
+        assertThat(model.state.value.saveButton.isLoading).isFalse()
+        assertThat(navigatedBack).isFalse()
+    }
+
+    @Test
+    fun `GIVEN existing contact WHEN model created THEN name and addresses prefilled`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+
+        // Act
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.state.value
+        assertThat(state.name).isEqualTo("Alice")
+        assertThat(state.addresses.map { it.address }).containsExactly("0xABC")
+    }
+
+    @Test
+    fun `GIVEN existing contact WHEN save clicked THEN updateContact called instead of create`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+        coEvery { saveContactInteractor.updateContact(any(), any(), any(), any(), any()) } returns contact.right()
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { saveContactInteractor.updateContact(walletA, contact, "Alice", any(), any()) }
+        coVerify(exactly = 0) { saveContactInteractor.createContact(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN new contact saved WHEN success THEN contact-added snackbar shown`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        // relaxed so the merged analytics call (contact.id.value) doesn't throw before the snackbar is sent.
+        coEvery { saveContactInteractor.createContact(any(), any(), any(), any()) } returns
+            mockk<Contact>(relaxed = true).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.state.value.onNameChange("Satoshi")
+        deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify { messageSender.send(any<SnackbarMessage>()) }
+    }
+
+    @Test
+    fun `GIVEN existing contact WHEN delete confirmed THEN deleteContactUseCase called AND navigates back`() = runTest {
+        // Arrange
+        var navigatedBack = false
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+        coEvery { deleteContactUseCase(ContactId("c-1")) } returns Unit.right()
+        val model = createModel(
+            testScope = this,
+            params = createParams(contactId = ContactId("c-1"), onBackClick = { navigatedBack = true }),
+        )
+        advanceUntilIdle()
+
+        // Act — invoke the delete action, then confirm on the captured dialog.
+        model.state.value.onDeleteClick?.invoke()
+        val dialog = slot<DialogMessage>()
+        verify { messageSender.send(capture(dialog)) }
+        dialog.captured.firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { deleteContactUseCase(ContactId("c-1")) }
+        assertThat(navigatedBack).isTrue()
+    }
+
+    @Test
+    fun `GIVEN delete fails WHEN confirmed THEN error dialog shown AND stays`() = runTest {
+        // Arrange
+        var navigatedBack = false
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+        coEvery { deleteContactUseCase(ContactId("c-1")) } returns AddressBookSyncError.Network.left()
+        val model = createModel(
+            testScope = this,
+            params = createParams(contactId = ContactId("c-1"), onBackClick = { navigatedBack = true }),
+        )
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onDeleteClick?.invoke()
+        val dialog = slot<DialogMessage>()
+        verify { messageSender.send(capture(dialog)) }
+        dialog.captured.firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(navigatedBack).isFalse()
+        // Two dialogs sent: the confirmation and the error.
+        verify(atLeast = 2) { messageSender.send(any<DialogMessage>()) }
+    }
+
+    @Test
+    fun `GIVEN unchanged new contact WHEN close clicked THEN navigates back without dialog`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        var navigatedBack = false
+        val model = createModel(testScope = this, params = createParams(onBackClick = { navigatedBack = true }))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onCloseClick()
+
+        // Assert
+        assertThat(navigatedBack).isTrue()
+        verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
+    }
+
+    @Test
+    fun `GIVEN edited name WHEN close clicked THEN discard dialog shown AND not navigated`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        var navigatedBack = false
+        val model = createModel(testScope = this, params = createParams(onBackClick = { navigatedBack = true }))
+        advanceUntilIdle()
+        model.state.value.onNameChange("Satoshi")
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onCloseClick()
+
+        // Assert
+        assertThat(navigatedBack).isFalse()
+        verify { messageSender.send(any<DialogMessage>()) }
+    }
+
+    @Test
+    fun `GIVEN existing contact with one address WHEN it is deleted THEN contact deletion is offered not silent removal`() =
+        runTest {
+            // Arrange
+            val walletA = createWallet(id = "aa", name = "Wallet A")
+            setupWallets(wallets = listOf(walletA), selected = walletA)
+            val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+            every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+            coEvery { deleteContactUseCase(ContactId("c-1")) } returns Unit.right()
+            val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+            advanceUntilIdle()
+
+            // Act — delete the only address from the address-info sheet.
+            model.createAddressInfoParams("0xABC").onDeleteAddress()
+            advanceUntilIdle()
+
+            // Assert — not silently removed; a confirmation is shown, and confirming deletes the whole contact.
+            assertThat(model.state.value.addresses.map { it.address }).containsExactly("0xABC")
+            val dialog = slot<DialogMessage>()
+            verify { messageSender.send(capture(dialog)) }
+            dialog.captured.firstAction.onClick()
+            advanceUntilIdle()
+            coVerify(exactly = 1) { deleteContactUseCase(ContactId("c-1")) }
+        }
+
+    @Test
+    fun `GIVEN existing contact with several addresses WHEN one is deleted THEN it is removed and the rest kept`() =
+        runTest {
+            // Arrange
+            val walletA = createWallet(id = "aa", name = "Wallet A")
+            setupWallets(wallets = listOf(walletA), selected = walletA)
+            val contact = existingContact(walletId = "aa", name = "Alice", address = "0xAAA").copy(
+                addressEntries = listOf(
+                    AddressEntry(
+                        id = AddressEntryId("e-1"),
+                        address = "0xAAA",
+                        networkId = Network.RawID("ethereum"),
+                        networkName = "Ethereum",
+                        memo = null,
+                        signature = "sig",
+                    ),
+                    AddressEntry(
+                        id = AddressEntryId("e-2"),
+                        address = "0xBBB",
+                        networkId = Network.RawID("bsc"),
+                        networkName = "BSC",
+                        memo = null,
+                        signature = "sig",
+                    ),
+                ),
+            )
+            every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+            val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+            advanceUntilIdle()
+
+            // Act
+            model.createAddressInfoParams("0xAAA").onDeleteAddress()
+            advanceUntilIdle()
+
+            // Assert — plain removal, no contact-deletion prompt.
+            assertThat(model.state.value.addresses.map { it.address }).containsExactly("0xBBB")
+            verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
+            coVerify(exactly = 0) { deleteContactUseCase(any()) }
+        }
+
+    @Test
+    fun `GIVEN new contact with one address WHEN it is deleted THEN removed without a contact-deletion prompt`() =
+        runTest {
+            // Arrange
+            val walletA = createWallet(id = "aa", name = "Wallet A")
+            setupWallets(wallets = listOf(walletA), selected = walletA)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            deliverConfirmed(ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum")))
+            advanceUntilIdle()
+
+            // Act
+            model.createAddressInfoParams("0xABC").onDeleteAddress()
+            advanceUntilIdle()
+
+            // Assert — a new (unsaved) contact has nothing to delete, so the address is just removed.
+            assertThat(model.state.value.addresses).isEmpty()
+            verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
+        }
+
+    private fun existingContact(walletId: String, name: String, address: String): Contact = Contact(
+        id = ContactId("c-1"),
+        walletId = UserWalletId(walletId),
+        name = requireNotNull(ContactName(name).getOrNull()),
+        icon = "",
+        iconColor = CryptoPortfolioIcon.Color.Azure.name,
+        createdAt = "2026-01-01T00:00:00.000Z",
+        updatedAt = "2026-01-01T00:00:00.000Z",
+        addressEntries = listOf(
+            AddressEntry(
+                id = AddressEntryId("e-1"),
+                address = address,
+                networkId = Network.RawID("ethereum"),
+                networkName = "Ethereum",
+                memo = null,
+                signature = "sig",
+            ),
+        ),
+    )
+
     private fun createParams(
         contactId: ContactId? = null,
         predefinedAddress: ValidatedAddress? = null,
-        onAddAddressClick: () -> Unit = {},
+        onAddAddressClick: (String, String?, ValidatedAddress?) -> Unit = { _, _, _ -> },
         onBackClick: () -> Unit = {},
     ): DefaultEditContactComponent.Params = DefaultEditContactComponent.Params(
         contactId = contactId,
@@ -604,6 +929,8 @@ internal class EditContactModelTest {
             userWalletsListRepository = userWalletsListRepository,
             validateContactNameUseCase = validateContactNameUseCase,
             saveContactInteractor = saveContactInteractor,
+            getContactByIdUseCase = getContactByIdUseCase,
+            deleteContactUseCase = deleteContactUseCase,
             analyticsSender = analyticsSender,
             portfolioSelectorController = portfolioSelectorController,
             portfolioFetcherFactory = portfolioFetcherFactory,
@@ -617,6 +944,11 @@ internal class EditContactModelTest {
 
     private fun createWallet(id: String, name: String): UserWallet =
         MockUserWalletFactory.create().copy(walletId = UserWalletId(id), name = name)
+
+    /** Mirrors what the AddAddress screen delivers back through the result holder. */
+    private fun deliverConfirmed(address: ValidatedAddress, replaces: String? = null) {
+        resultHolder.setConfirmedAddress(ConfirmedAddress(address = address, replaces = replaces))
+    }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
         val testDispatcher = StandardTestDispatcher(testScheduler)
