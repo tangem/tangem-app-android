@@ -14,7 +14,7 @@ internal object ContactMatcher {
 
     fun match(contacts: List<Contact>, networkId: String): List<MatchedContact> {
         return contacts.mapNotNull { contact ->
-            val entries = contact.addressEntries.filter { it.networkId.value == networkId }
+            val entries = contact.addresses.filter { it.networkId.value == networkId }
             if (entries.isEmpty()) return@mapNotNull null
 
             MatchedContact(
