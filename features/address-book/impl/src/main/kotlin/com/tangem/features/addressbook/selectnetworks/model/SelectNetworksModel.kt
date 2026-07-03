@@ -1,11 +1,11 @@
 package com.tangem.features.addressbook.selectnetworks.model
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.features.addressbook.common.SupportedNetworksMatcher
 import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
 import com.tangem.features.addressbook.selectnetworks.state.SelectNetworksStateController
 import com.tangem.features.addressbook.selectnetworks.state.transformers.UpdateNetworksContentTransformer
@@ -20,7 +20,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class SelectNetworksModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    supportedNetworksMatcher: SupportedNetworksMatcher,
     override val dispatchers: CoroutineDispatcherProvider,
     private val stateController: SelectNetworksStateController,
 ) : Model() {
@@ -29,7 +28,7 @@ internal class SelectNetworksModel @Inject constructor(
     private val query = MutableStateFlow("")
     private val isSearchActive = MutableStateFlow(false)
 
-    private val matchedBlockchains: List<Blockchain> = supportedNetworksMatcher.match(params.address)
+    private val matchedBlockchains: List<Blockchain> = params.matchedNetworkIds.mapNotNull(Blockchain::fromNetworkId)
 
     private val selectedNetworks = MutableStateFlow(
         params.selectedNetworkIds.toSet().intersect(
