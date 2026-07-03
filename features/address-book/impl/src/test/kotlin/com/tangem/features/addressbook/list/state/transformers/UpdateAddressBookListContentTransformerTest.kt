@@ -165,7 +165,7 @@ internal class UpdateAddressBookListContentTransformerTest {
             iconColor = "Azure",
             createdAt = "2026-06-10T14:30:00.000Z",
             updatedAt = "2026-06-10T14:30:00.000Z",
-            addressEntries = listOf(
+            addresses = listOf(
                 AddressEntry(
                     id = AddressEntryId(name),
                     address = "addr-$name",
