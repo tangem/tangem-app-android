@@ -518,6 +518,9 @@ sealed class AppRoute(val path: String) : Route {
 
             @Serializable
             data object FromBannerInSettings : Mode()
+
+            @Serializable
+            data object MobileOnboardingDeeplink : Mode()
         }
     }
 
