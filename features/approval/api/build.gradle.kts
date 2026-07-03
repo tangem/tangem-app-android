@@ -9,20 +9,17 @@ android {
 }
 
 dependencies {
-    /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
 
-    /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
+    // region Core
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    // endregion
 
-    /** Common */
-    implementation(projects.common.ui)
+    // region Common
+    api(projects.common.ui)
+    // endregion
 
-    /** Other */
-    implementation(deps.kotlin.immutable.collections)
-
-    /** Compose */
-    implementation(deps.compose.runtime)
+    // region Domain
+    api(projects.domain.models)
+    // endregion
 }
