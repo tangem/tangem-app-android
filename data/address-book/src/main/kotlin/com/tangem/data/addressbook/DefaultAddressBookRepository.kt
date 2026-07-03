@@ -102,7 +102,7 @@ internal class DefaultAddressBookRepository(
                     ?: return@withLock AddressBookSyncError.Unknown.left()
                 val current = currentContacts(contact.walletId, userWallet)
                 val merged = current.filterNot { it.id == contact.id } + contact
-                persist(userWallet, AddressBook(walletId = contact.walletId, contacts = merged))
+                persist(userWallet, AddressBook(contacts = merged))
             }
         }
 
@@ -181,7 +181,7 @@ internal class DefaultAddressBookRepository(
                 )
                 AddressBookSyncError.Unknown
             }
-            .flatMap { blob -> pushBlob(addressBook.walletId, blob) }
+            .flatMap { blob -> pushBlob(userWallet.walletId, blob) }
     }
 
     private suspend fun pushBlob(
@@ -210,7 +210,14 @@ internal class DefaultAddressBookRepository(
             },
             onError = { error ->
                 TangemLogger.e(messageString = "Failed to push address book for wallet $userWalletId: $error")
-                error.toSyncError().left()
+                val syncError = error.toSyncError()
+                // A 412 means the local etag is stale relative to the backend. Refresh the local blob + etag so the
+                // next save attempt (user re-taps Save) starts from the current backend state. We do NOT re-push here
+                // on purpose — the write stays single-shot; the conflict is still surfaced so the UI can prompt.
+                if (syncError is AddressBookSyncError.Conflict) {
+                    syncAddressBooks()
+                }
+                syncError.left()
             },
         )
     }

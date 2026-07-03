@@ -103,7 +103,7 @@ internal class SendDestinationModel @Inject constructor(
     private val cryptoCurrency = params.cryptoCurrency
     private val userWalletId = params.userWalletId
 
-    private val contacts: StateFlow<List<Contact>> = getContactsUseCase(query = "", userWalletId = userWalletId)
+    private val contacts: StateFlow<List<Contact>> = getContactsUseCase(query = "", userWalletId = null)
         .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
 
     val addressSelectorNavigation = SlotNavigation<MatchedContact>()
