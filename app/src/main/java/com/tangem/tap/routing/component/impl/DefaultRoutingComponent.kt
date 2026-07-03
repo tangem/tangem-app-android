@@ -19,8 +19,6 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -31,7 +29,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
@@ -52,7 +49,7 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
-import com.tangem.tap.common.analytics.appsflyer.AppsFlyerReferralParamsHandler
+import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeeplinkRouter
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.scanfails.ScanFailsComponent
 import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
@@ -68,11 +65,8 @@ import com.tangem.wallet.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultRoutingComponent @AssistedInject constructor(
@@ -91,7 +85,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
-    private val appsFlyerReferralParamsHandler: AppsFlyerReferralParamsHandler,
+    private val appsFlyerDeeplinkRouter: AppsFlyerDeeplinkRouter,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -102,7 +96,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -146,6 +139,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         },
     )
 
+    private val currentRoute = MutableStateFlow<AppRoute?>(null)
+
     init {
         appRouterConfig.routerScope = componentScope
         appRouterConfig.componentRouter = router
@@ -160,6 +155,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
             val stackItems = stack.items.map { it.configuration }
 
+            currentRoute.value = stack.active.configuration
             wcRoutingComponent.onAppRouteChange(stack.active.configuration)
             deeplinkFactory.checkRoutingReadiness(stack.active.configuration)
 
@@ -170,6 +166,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         configureProxies()
         initializeInitialNavigation()
+        appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute)
     }
 
     private fun initializeInitialNavigation() {
@@ -206,8 +203,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
-        val afterEmptyRoute = resolveAppsFlyerOnboardingRoute()
-            ?: AppRoute.Home(launchMode = launchMode)
+        // AppsFlyer deep links (referral, tpay_mobileonboard) are routed reactively by AppsFlyerDeeplinkRouter
+        // once we settle on an idle screen — not resolved here.
+        val afterEmptyRoute = AppRoute.Home(launchMode = launchMode)
 
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
             ?: return afterEmptyRoute
@@ -224,44 +222,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             afterEmptyRoute
-        }
-    }
-
-    private suspend fun resolveAppsFlyerOnboardingRoute(): AppRoute? = coroutineScope {
-        val tangemPayRoute = async { resolveTangemPayHotWalletOnboardingRoute() }
-        val referralRoute = async { resolveReferralRoute() }
-        tangemPayRoute.await() ?: referralRoute.await()
-    }
-
-    private suspend fun resolveTangemPayHotWalletOnboardingRoute(): AppRoute? {
-        val isEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
-        )
-        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isEnabled")
-        if (!isEnabled) return null
-
-        val deepLink = awaitAppsFlyerDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
-        TangemLogger.i("[TangemPay][HWO] Deep link present=${deepLink != null}")
-        return if (deepLink != null) AppRoute.TangemPayHotWalletOnboarding else null
-    }
-
-    private suspend fun resolveReferralRoute(): AppRoute? {
-        val isEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
-        )
-        if (!isEnabled) return null
-
-        val referralDeepLink = awaitAppsFlyerDeeplink(AppsFlyerDeeplinkSource.Referral)
-        return if (referralDeepLink != null) {
-            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
-        } else {
-            null
-        }
-    }
-
-    private suspend fun awaitAppsFlyerDeeplink(source: AppsFlyerDeeplinkSource): String? {
-        return withTimeoutOrNull(2.seconds) {
-            appsFlyerReferralParamsHandler.waitForDeeplink(source)
         }
     }
 
