@@ -101,21 +101,30 @@ internal fun TonInitializeAccountBottomSheet(config: TangemBottomSheetConfig) {
 
             SpacerH(height = 20.dp)
 
-            TangemButton(
-                text = stringResourceSafe(R.string.common_activate),
-                icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
-                onClick = content.onButtonClick,
-                colors = TangemButtonsDefaults.primaryButtonColors,
-                showProgress = content.feeState is FeeState.Loading || content.isButtonLoading,
-                enabled = content.isButtonEnabled,
-                size = TangemButtonSize.WideAction,
-                textStyle = TangemTheme.typography.subtitle1,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            ActivateButton(content)
 
             SpacerH(height = 8.dp)
         }
     }
+}
+
+@Composable
+private fun ActivateButton(content: TonInitializeAccountBottomSheetConfig, modifier: Modifier = Modifier) {
+    TangemButton(
+        text = stringResourceSafe(R.string.common_activate),
+        icon = if (content.isColdWalletInteractionIconVisible) {
+            TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24)
+        } else {
+            TangemButtonIconPosition.None
+        },
+        onClick = content.onButtonClick,
+        colors = TangemButtonsDefaults.primaryButtonColors,
+        showProgress = content.feeState is FeeState.Loading || content.isButtonLoading,
+        enabled = content.isButtonEnabled,
+        size = TangemButtonSize.WideAction,
+        textStyle = TangemTheme.typography.subtitle1,
+        modifier = modifier.fillMaxWidth(),
+    )
 }
 
 // region Preview
@@ -149,6 +158,7 @@ private fun Preview_TonInitializeAccountBottomSheetContent() {
                         isFeeApproximate = false,
                         isFeeConvertibleToFiat = true,
                     ),
+                    isColdWalletInteractionIconVisible = true,
                 ),
 
             ),
