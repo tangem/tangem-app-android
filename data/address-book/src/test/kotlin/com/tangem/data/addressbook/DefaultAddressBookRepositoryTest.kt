@@ -78,7 +78,7 @@ internal class DefaultAddressBookRepositoryTest {
         val contact = createContact(id = "c1", name = "Alice")
         val blob = createBlob()
         every { blobStore.getBlob(UserWalletId(WALLET_A)) } returns flowOf(blob)
-        every { cipher.decrypt(blob, userWallet) } returns AddressBook(UserWalletId(WALLET_A), listOf(contact)).right()
+        every { cipher.decrypt(blob, userWallet) } returns AddressBook(listOf(contact)).right()
 
         // Act
         val result = repository.getContacts(UserWalletId(WALLET_A)).first()
@@ -93,7 +93,7 @@ internal class DefaultAddressBookRepositoryTest {
         val contact = createContact(id = "c1", name = "Alice")
         val blob = createBlob()
         every { blobStore.getBlob(UserWalletId(WALLET_A)) } returns flowOf(blob)
-        every { cipher.decrypt(blob, userWallet) } returns AddressBook(UserWalletId(WALLET_A), listOf(contact)).right()
+        every { cipher.decrypt(blob, userWallet) } returns AddressBook(listOf(contact)).right()
 
         // Act
         repository.getContacts(UserWalletId(WALLET_A)).first()
@@ -112,7 +112,7 @@ internal class DefaultAddressBookRepositoryTest {
         val blob = createBlob()
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
         every { blobStore.getBlobs(setOf(UserWalletId(WALLET_A))) } returns flowOf(listOf(blob))
-        every { cipher.decrypt(blob, userWallet) } returns AddressBook(UserWalletId(WALLET_A), listOf(contact)).right()
+        every { cipher.decrypt(blob, userWallet) } returns AddressBook(listOf(contact)).right()
 
         // Act
         val result = repository.getAllContacts().first()
@@ -128,7 +128,7 @@ internal class DefaultAddressBookRepositoryTest {
         val blob = createBlob()
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
         every { blobStore.getBlobs(setOf(UserWalletId(WALLET_A))) } returns flowOf(listOf(blob))
-        every { cipher.decrypt(blob, userWallet) } returns AddressBook(UserWalletId(WALLET_A), listOf(contact)).right()
+        every { cipher.decrypt(blob, userWallet) } returns AddressBook(listOf(contact)).right()
 
         // Act
         repository.getAllContacts().first()
@@ -174,7 +174,7 @@ internal class DefaultAddressBookRepositoryTest {
         val storedBlob = createBlob()
         coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns storedBlob
         every { cipher.decrypt(storedBlob, userWallet) } returns
-            AddressBook(UserWalletId(WALLET_A), listOf(existing)).right()
+            AddressBook(listOf(existing)).right()
         val bookSlot = slot<AddressBook>()
         val newBlob = createBlob()
         every { cipher.encrypt(capture(bookSlot), userWallet, any()) } returns newBlob.right()
@@ -243,6 +243,37 @@ internal class DefaultAddressBookRepositoryTest {
     }
 
     @Test
+    fun `GIVEN etag conflict WHEN saveContact THEN re-syncs once without retrying the write`() = runTest {
+        // Arrange
+        coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns null
+        every { cipher.encrypt(any(), userWallet, any()) } returns createBlob().right()
+        coEvery { addressBookApi.updateAddressBook(WALLET_A, any(), any()) } returns
+            errorResponse(ApiResponseError.HttpException.Code.PRECONDITION_FAILED)
+
+        // Act
+        val result = repository.saveContact(createContact(id = "c1", name = "Alice"))
+
+        // Assert
+        assertThat(result).isEqualTo(AddressBookSyncError.Conflict.left())
+        coVerify(exactly = 1) { addressBookApi.syncAddressBooks(any()) }
+        coVerify(exactly = 1) { addressBookApi.updateAddressBook(WALLET_A, any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN network error WHEN saveContact THEN does not re-sync`() = runTest {
+        // Arrange
+        coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns null
+        every { cipher.encrypt(any(), userWallet, any()) } returns createBlob().right()
+        coEvery { addressBookApi.updateAddressBook(WALLET_A, any(), any()) } returns networkErrorResponse()
+
+        // Act
+        repository.saveContact(createContact(id = "c1", name = "Alice"))
+
+        // Assert
+        coVerify(exactly = 0) { addressBookApi.syncAddressBooks(any()) }
+    }
+
+    @Test
     fun `GIVEN no network WHEN saveContact THEN returns Network and does not store locally`() = runTest {
         // Arrange
         coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns null
@@ -265,7 +296,7 @@ internal class DefaultAddressBookRepositoryTest {
         val storedBlob = createBlob()
         coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns storedBlob
         every { cipher.decrypt(storedBlob, userWallet) } returns
-            AddressBook(UserWalletId(WALLET_A), listOf(original)).right()
+            AddressBook(listOf(original)).right()
         val bookSlot = slot<AddressBook>()
         every { cipher.encrypt(capture(bookSlot), userWallet, any()) } returns createBlob().right()
         coEvery { blobStore.storeBlob(any()) } returns Unit
@@ -286,7 +317,7 @@ internal class DefaultAddressBookRepositoryTest {
         val storedBlob = createBlob()
         coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns storedBlob
         every { cipher.decrypt(storedBlob, userWallet) } returns
-            AddressBook(UserWalletId(WALLET_A), listOf(kept, removed)).right()
+            AddressBook(listOf(kept, removed)).right()
         val bookSlot = slot<AddressBook>()
         val newBlob = createBlob()
         every { cipher.encrypt(capture(bookSlot), userWallet, any()) } returns newBlob.right()
@@ -348,7 +379,7 @@ internal class DefaultAddressBookRepositoryTest {
         val blob = createBlob()
         coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns blob
         every { cipher.decrypt(blob, userWallet) } returns
-            AddressBook(UserWalletId(WALLET_A), listOf(alice, bob)).right()
+            AddressBook(listOf(alice, bob)).right()
 
         // Act
         val result = repository.getContact(UserWalletId(WALLET_A), name = "Bob")
