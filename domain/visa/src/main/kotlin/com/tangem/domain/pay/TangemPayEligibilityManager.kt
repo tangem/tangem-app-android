@@ -13,7 +13,8 @@ interface TangemPayEligibilityManager {
 
     /**
      * Returns all compatible user wallets without checking Tangem Pay eligibility, only used when opening deeplink
-     * Remove after removing [TangemPayOnboardingComponent.Params.Deeplink]
+     * Remove after removing [TangemPayOnboardingComponent.Params.Deeplink] and
+     * [TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink]
      * */
     suspend fun getPossibleWalletsIds(shouldExcludePaeraCustomers: Boolean): List<UserWalletId>
 
