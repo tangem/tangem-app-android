@@ -7,6 +7,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalance
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -44,7 +45,7 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
         val feeContent = feeSelectorUM
         val getFeeError = (feeSelectorUM as? FeeSelectorUM.Error)?.error
         return buildList {
-            maybeAddRentExemptionError(transferState)
+            addRentExemptionNotification(transferState.currencyCheck?.rentWarning)
             maybeAddDomainWarnings(
                 state = transferState,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
@@ -70,12 +71,6 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 actions = actions,
             )
         }.toPersistentList()
-    }
-
-    private fun MutableList<NotificationUM>.maybeAddRentExemptionError(state: SwapState.Transfer) {
-        state.currencyCheck?.rentWarning?.let {
-            add(NotificationUM.Solana.RentInfo(it))
-        }
     }
 
     private fun MutableList<NotificationUM>.maybeAddDomainWarnings(
