@@ -180,7 +180,7 @@ internal class EditContactModel @Inject constructor(
         stateController.update(UpdateContactNameTransformer(name = contact.name.value))
         CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == contact.iconColor }
             ?.let { stateController.update(SelectContactColorTransformer(color = it)) }
-        val addresses = ContactAddressEntriesConverter().toValidatedAddresses(contact.addressEntries)
+        val addresses = ContactAddressEntriesConverter().toValidatedAddresses(contact.addresses)
         stateController.update(SetValidatedAddressesTransformer(addresses = addresses, maxAddresses = MAX_ADDRESSES))
     }
 
@@ -298,7 +298,7 @@ internal class EditContactModel @Inject constructor(
         if (saveJob?.isActive == true) return
         val userWallet = selectedWallet.value ?: return
         val ui = stateController.uiState.value
-        val addressEntries = ContactAddressEntriesConverter().convert(ui.addresses)
+        val addresses = ContactAddressEntriesConverter().convert(ui.addresses)
         val existing = loadedContact.value
 
         saveJob = modelScope.launch {
@@ -308,14 +308,14 @@ internal class EditContactModel @Inject constructor(
                     contact = existing,
                     name = ui.name,
                     iconColor = ui.colors.selected.name,
-                    addressEntries = addressEntries,
+                    addresses = addresses,
                 )
             } else {
                 saveContactInteractor.createContact(
                     userWallet = userWallet,
                     name = ui.name,
                     iconColor = ui.colors.selected.name,
-                    addressEntries = addressEntries,
+                    addresses = addresses,
                 )
             }
             result.fold(
@@ -514,7 +514,7 @@ internal class EditContactModel @Inject constructor(
     private fun Contact.toSnapshot(): EditSnapshot = EditSnapshot(
         name = name.value,
         colorName = iconColor,
-        addresses = ContactAddressEntriesConverter().toValidatedAddresses(addressEntries)
+        addresses = ContactAddressEntriesConverter().toValidatedAddresses(addresses)
             .map { it.address to it.networkIds.toSet() },
     )
 
