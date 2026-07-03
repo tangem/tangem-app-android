@@ -33,8 +33,12 @@ class TangemPaySignWithdrawalHashTask(private val hash: ByteArray) : CardSession
             return
         }
 
+        val publicKey = wallet.publicKey ?: run {
+            callback(CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError))
+            return
+        }
         val derivationTask = DeriveWalletPublicKeyTask(
-            walletPublicKey = wallet.publicKey,
+            walletPublicKey = publicKey,
             derivationPath = derivationPath,
         )
 
@@ -42,7 +46,7 @@ class TangemPaySignWithdrawalHashTask(private val hash: ByteArray) : CardSession
             when (result) {
                 is CompletionResult.Success -> {
                     signData(
-                        targetWalletPublicKey = wallet.publicKey,
+                        targetWalletPublicKey = publicKey,
                         derivationPath = derivationPath,
                         session = session,
                         extendedPublicKey = result.data,

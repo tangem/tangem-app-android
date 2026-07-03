@@ -223,7 +223,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             linkedTerminal = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
+                maxFirmwareVersion = FirmwareVersion(major = 8, minor = 58),
                 batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
                     items = setOf("0027", "0030", "0031", "0035"),
                 ),
