@@ -2,6 +2,8 @@ package com.tangem.features.foryou.impl.components.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal sealed class MarketChartUM(
@@ -27,14 +29,14 @@ internal sealed class MarketChartUM(
 
 @Immutable
 internal sealed class DonutChartUM(
-    open val donutSegmentList: List<DonutSegmentUM>,
+    open val donutSegmentList: ImmutableList<DonutSegmentUM>,
 ) {
     data class Loaded(
         val totalAmount: String,
-        override val donutSegmentList: List<DonutSegmentUM>,
+        override val donutSegmentList: ImmutableList<DonutSegmentUM>,
     ) : DonutChartUM(donutSegmentList = donutSegmentList)
 
-    data object NoData : DonutChartUM(donutSegmentList = emptyList())
+    data object NoData : DonutChartUM(donutSegmentList = persistentListOf())
 }
 
 @Immutable
