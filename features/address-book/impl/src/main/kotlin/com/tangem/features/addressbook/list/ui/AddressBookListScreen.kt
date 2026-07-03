@@ -127,13 +127,14 @@ private fun ColumnScope.NothingFoundContent() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .imePadding()
             .weight(1f),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(48.dp)
                 .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
@@ -141,14 +142,14 @@ private fun ColumnScope.NothingFoundContent() {
                 imageVector = Icons.ic_search_24,
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.secondary,
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
         Text(
             modifier = Modifier.padding(top = 32.dp),
-            text = stringResourceSafe(R.string.common_no_results),
-            color = TangemTheme.colors3.text.primary,
-            style = TangemTheme.typography3.heading.small,
+            text = stringResourceSafe(R.string.address_book_search_no_results),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
         )
     }
 }

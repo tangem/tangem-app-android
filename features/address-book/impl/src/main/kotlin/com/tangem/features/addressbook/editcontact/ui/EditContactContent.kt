@@ -42,6 +42,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_20
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.editcontact.ui.state.EditContactUM
@@ -96,10 +97,13 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
                             shape = RoundedCornerShape(24.dp),
                             colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
                         ) {
-                            ContactAddresses(addresses = state.addresses)
+                            ContactAddresses(addresses = state.addresses, onAddressClick = state.onAddressClick)
                             AddAddressRow(isEnabled = state.isAddAddressEnabled, onClick = state.onAddAddressClick)
                         }
                         WalletBlock(walletBlock = state.walletBlock)
+                        state.onDeleteClick?.let {
+                            DeleteContactButton(onClick = it)
+                        }
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     SaveButton(saveButton = state.saveButton)
@@ -116,6 +120,7 @@ private fun SaveButton(saveButton: TangemButtonUM) {
             .fillMaxWidth()
             .padding(top = 16.dp),
         text = saveButton.text,
+        iconEnd = saveButton.tangemIconUM,
         onClick = saveButton.onClick,
         isEnabled = saveButton.isEnabled,
         isLoading = saveButton.isLoading,
@@ -124,16 +129,17 @@ private fun SaveButton(saveButton: TangemButtonUM) {
 }
 
 @Composable
-private fun ContactAddresses(addresses: ImmutableList<ValidatedAddress>) {
+private fun ContactAddresses(addresses: ImmutableList<ValidatedAddress>, onAddressClick: (ValidatedAddress) -> Unit) {
     addresses.fastForEach { entry ->
-        AddressRow(entry = entry)
+        AddressRow(entry = entry, onClick = { onAddressClick(entry) })
     }
 }
 
 @Composable
-private fun AddressRow(entry: ValidatedAddress) {
+private fun AddressRow(entry: ValidatedAddress, onClick: () -> Unit) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = onClick,
         startSlot = {
             TangemIcon(
                 tangemIconUM = TangemIconUM.Ident(text = entry.address),
@@ -229,39 +235,72 @@ private fun AddAddressRow(isEnabled: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun WalletBlock(walletBlock: EditContactUM.WalletBlockUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .fillMaxWidth()
+                .clickableSingle(
+                    onClick = walletBlock.onClick,
+                    enabled = walletBlock.isChangeable,
+                )
+                .background(TangemTheme.colors3.bg.secondary),
+        ) {
+            TangemRow(
+                verticalAlignment = TangemRowVerticalAlignment.Center,
+                titleSlot = {
+                    TangemRowText(
+                        text = stringResourceSafe(R.string.address_book_save_to_wallet_title),
+                        role = TangemRowTextRole.Title,
+                    )
+                },
+                endSlot = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = walletBlock.walletName,
+                            style = TangemTheme.typography3.body.medium,
+                            color = TangemTheme.colors3.text.secondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            autoSize = TextAutoSize.StepBased(
+                                minFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                                maxFontSize = TangemTheme.typography3.body.medium.fontSize,
+                            ),
+                        )
+                        if (walletBlock.isChangeable) {
+                            WalletChevronIcon()
+                        }
+                    }
+                },
+            )
+        }
+        Text(
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp),
+            text = stringResourceSafe(R.string.address_book_save_wallet_to_description),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
+        )
+    }
+}
+
+@Composable
+private fun DeleteContactButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
             .fillMaxWidth()
+            .clickableSingle(onClick = onClick)
             .background(TangemTheme.colors3.bg.secondary),
+        contentAlignment = Alignment.Center,
     ) {
-        TangemRow(
-            onClick = if (walletBlock.isChangeable) walletBlock.onClick else null,
-            verticalAlignment = TangemRowVerticalAlignment.Center,
-            titleSlot = {
-                TangemRowText(
-                    text = stringResourceSafe(R.string.address_book_save_to_wallet_title),
-                    role = TangemRowTextRole.Title,
-                )
-            },
-            endSlot = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = walletBlock.walletName,
-                        style = TangemTheme.typography3.body.medium,
-                        color = TangemTheme.colors3.text.secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = TangemTheme.typography3.caption.medium.fontSize,
-                            maxFontSize = TangemTheme.typography3.body.medium.fontSize,
-                        ),
-                    )
-                    if (walletBlock.isChangeable) {
-                        WalletChevronIcon()
-                    }
-                }
-            },
+        Text(
+            text = stringResourceSafe(R.string.address_book_delete_contact),
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.status.error,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         )
     }
 }
@@ -419,11 +458,14 @@ private fun Preview_EditContactContent() {
                     text = TextReference.Res(R.string.common_save),
                     type = TangemButtonType.Primary,
                     isEnabled = true,
+                    tangemIconUM = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
                     onClick = {},
                 ),
                 onNameChange = {},
                 onCloseClick = {},
                 onAddAddressClick = {},
+                onAddressClick = {},
+                onDeleteClick = {},
             ),
         )
     }
