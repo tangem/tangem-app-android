@@ -128,18 +128,6 @@ internal class AddressBookCipherTest {
     }
 
     @Test
-    fun `GIVEN book whose walletId differs from the wallet WHEN encrypt THEN WalletMismatch`() {
-        // Arrange
-        val book = addressBook().copy(walletId = UserWalletId("deadbeef"))
-
-        // Act
-        val result = cipher.encrypt(book, wallet, updatedAt)
-
-        // Assert
-        assertThat(result.leftValue()).isEqualTo(AddressBookCryptoError.WalletMismatch)
-    }
-
-    @Test
     fun `GIVEN blob WHEN decrypt with a wallet of different id THEN WalletMismatch`() {
         // Arrange
         val blob = cipher.encrypt(addressBook(), wallet, updatedAt).rightValue()
@@ -212,7 +200,7 @@ internal class AddressBookCipherTest {
                 every { card } returns mockk { every { wallets } returns emptyList() }
             }
         }
-        val book = addressBook(walletId = wallet.walletId)
+        val book = addressBook()
 
         // Act
         val result = cipher.encrypt(book, lockedWallet, updatedAt)
@@ -259,10 +247,7 @@ internal class AddressBookCipherTest {
 
     // region helpers
     private fun addressBook(vararg contacts: Contact): AddressBook =
-        AddressBook(walletId = wallet.walletId, contacts = contacts.toList())
-
-    private fun addressBook(walletId: UserWalletId): AddressBook =
-        AddressBook(walletId = walletId, contacts = emptyList())
+        AddressBook(contacts = contacts.toList())
 
     private fun contact(name: String, iconColor: String, vararg entries: AddressEntry): Contact = Contact(
         id = ContactId("contact-$name"),
