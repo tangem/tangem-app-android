@@ -83,7 +83,7 @@ class CheckAddressDuplicateUseCaseTest {
         iconColor = "Azure",
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-01-01T00:00:00.000Z",
-        addressEntries = listOf(
+        addresses = listOf(
             AddressEntry(
                 id = AddressEntryId("addr-$name"),
                 address = address,
