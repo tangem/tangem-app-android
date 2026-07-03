@@ -4,19 +4,23 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.editcontact.ui.state.EditContactUM
+import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.utils.transformer.Transformer
 
 /**
  * Wires the title (derived from whether an existing contact is being edited) and the callbacks owned by
  * [com.tangem.features.addressbook.editcontact.model.EditContactModel] into the initial state.
  */
+@Suppress("LongParameterList")
 internal class UpdateEditContactInitialStateTransformer(
     private val isExistingContact: Boolean,
     private val onNameChange: (String) -> Unit,
     private val onColorSelect: (CryptoPortfolioIcon.Color) -> Unit,
     private val onCloseClick: () -> Unit,
     private val onAddAddressClick: () -> Unit,
+    private val onAddressClick: (ValidatedAddress) -> Unit,
     private val onSaveClick: () -> Unit,
+    private val onDeleteClick: (() -> Unit)?,
 ) : Transformer<EditContactUM> {
 
     override fun transform(prevState: EditContactUM): EditContactUM {
@@ -32,6 +36,8 @@ internal class UpdateEditContactInitialStateTransformer(
             onNameChange = onNameChange,
             onCloseClick = onCloseClick,
             onAddAddressClick = onAddAddressClick,
+            onAddressClick = onAddressClick,
+            onDeleteClick = onDeleteClick,
         )
     }
 }

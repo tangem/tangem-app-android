@@ -30,8 +30,13 @@ internal class DefaultAddAddressComponent(
     }
 
     data class Params(
+        val walletId: String?,
+        val excludeContactId: String?,
+        val prefillAddress: String?,
+        val prefillNetworkIds: List<String>,
+        val prefillMemo: String?,
         val onBackClick: () -> Unit,
-        val onSelectNetworksClick: (address: String, selectedNetworkIds: List<String>) -> Unit,
-        val onConfirm: (ValidatedAddress) -> Unit,
+        val onSelectNetworksClick: (matchedNetworkIds: List<String>, selectedNetworkIds: List<String>) -> Unit,
+        val onConfirm: (address: ValidatedAddress, replaces: String?) -> Unit,
     )
 }
