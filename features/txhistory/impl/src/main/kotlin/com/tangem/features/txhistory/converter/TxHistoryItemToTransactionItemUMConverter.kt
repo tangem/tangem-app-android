@@ -9,7 +9,6 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
@@ -51,6 +50,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private val lookupContext: TxHistoryLookupContext? = null,
 ) : Converter<TxInfo, TransactionItemUM> {
 
+    private val titleConverter = TxHistoryTitleConverter()
     private val pillConverter = TxHistoryStatusPillConverter(currency, txHistoryUiActions)
 
     @Suppress("CyclomaticComplexMethod")
@@ -69,7 +69,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             // endregion
 
             // region Content
-            is TransactionType.Operation -> operationContent(value, uiStatus, type)
+            is TransactionType.Operation -> operationContent(value, uiStatus)
             is TransactionType.Swap -> swapContent(value, uiStatus)
             is TransactionType.Transfer -> transferContent(value, uiStatus)
             is TransactionType.Staking.ClaimRewards -> claimRewardsContent(value, uiStatus)
@@ -84,23 +84,20 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         }
     }
 
-    private fun operationContent(
-        tx: TxInfo,
-        uiStatus: TransactionItemUM.Content.Status,
-        type: TransactionType.Operation,
-    ): TransactionItemUM.Content = buildContent(
-        tx = tx,
-        uiStatus = uiStatus,
-        title = stringReference(type.name),
-        icon = tx.directionalIcon(),
-        subtitle = tx.extractAddressSubtitle(),
-    )
+    private fun operationContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
+        buildContent(
+            tx = tx,
+            uiStatus = uiStatus,
+            title = titleConverter.convert(tx),
+            icon = TxIcon.Vector(Icons.ic_document_20),
+            subtitle = tx.extractAddressSubtitle(),
+        )
 
     private fun swapContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
         buildContent(
             tx = tx,
             uiStatus = uiStatus,
-            title = tx.statusAwareTitle(R.string.common_swapping, R.string.common_swapped),
+            title = titleConverter.convert(tx),
             icon = tx.directionalIcon(),
             subtitle = tx.extractAddressSubtitle(),
         )
@@ -117,11 +114,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             )
         }
 
-        val title = when {
-            ownSubtitle != null -> tx.statusAwareTitle(R.string.common_transfer, R.string.common_transferred)
-            tx.isOutgoing -> tx.statusAwareTitle(R.string.common_sending, R.string.common_sent)
-            else -> tx.statusAwareTitle(R.string.common_receiving, R.string.common_received)
-        }
+        val title = titleConverter.convert(tx, isOwnTransfer = ownSubtitle != null)
 
         val subtitle = ownSubtitle ?: when {
             counterpartyAddress != null -> ContentSubtitle.ExternalAddress(
@@ -145,10 +138,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         buildContent(
             tx = tx,
             uiStatus = uiStatus,
-            title = tx.statusAwareTitle(
-                pending = R.string.transaction_history_claiming_reward,
-                confirmed = R.string.transaction_history_staking_reward,
-            ),
+            title = titleConverter.convert(tx),
             icon = TxIcon.Res(R.drawable.ic_transaction_history_claim_rewards_24),
             subtitle = ContentSubtitle.Plain(resourceReference(R.string.transaction_history_earned_from_stake)),
         )
@@ -160,7 +150,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     ): TransactionItemUM.Content = buildContent(
         tx = tx,
         uiStatus = uiStatus,
-        title = resourceReference(R.string.yield_module_transaction_topup),
+        title = titleConverter.convert(tx),
         icon = tx.directionalIcon(),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
@@ -172,7 +162,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     ): TransactionItemUM.Content = buildContent(
         tx = tx,
         uiStatus = uiStatus,
-        title = resourceReference(R.string.yield_module_transaction_deploy_contract),
+        title = titleConverter.convert(tx),
         icon = TxIcon.Vector(Icons.ic_document_20),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
@@ -184,7 +174,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     ): TransactionItemUM.Content = buildContent(
         tx = tx,
         uiStatus = uiStatus,
-        title = resourceReference(R.string.yield_module_transaction_initialize),
+        title = titleConverter.convert(tx),
         icon = TxIcon.Res(R.drawable.ic_gear_24),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
@@ -196,7 +186,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     ): TransactionItemUM.Content = buildContent(
         tx = tx,
         uiStatus = uiStatus,
-        title = resourceReference(R.string.yield_module_transaction_reactivate),
+        title = titleConverter.convert(tx),
         icon = TxIcon.Vector(Icons.ic_arrow_refresh_20),
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
@@ -208,11 +198,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     ): TransactionItemUM.Content = buildContent(
         tx = tx,
         uiStatus = uiStatus,
-        title = if (type.isYieldSupplyWithdraw || tx.isOutgoing) {
-            resourceReference(R.string.yield_module_transaction_withdraw)
-        } else {
-            resourceReference(R.string.common_transfer)
-        },
+        title = titleConverter.convert(tx),
         icon = tx.directionalIcon(),
         subtitle = tx.yieldSupplySubtitle(currency, type),
         hideAmount = currency is CryptoCurrency.Token && !tx.isOutgoing,
@@ -224,7 +210,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     ): TransactionItemUM.Content = buildContent(
         tx = tx,
         uiStatus = uiStatus,
-        title = resourceReference(R.string.transaction_history_operation),
+        title = titleConverter.convert(tx),
         icon = tx.directionalIcon(),
         subtitle = tx.extractAddressSubtitle(),
     )
@@ -233,7 +219,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         buildContent(
             tx = tx,
             uiStatus = uiStatus,
-            title = resourceReference(R.string.gasless_transaction_fee),
+            title = titleConverter.convert(tx),
             icon = tx.directionalIcon(),
             subtitle = tx.extractAddressSubtitle(),
         )

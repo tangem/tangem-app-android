@@ -45,6 +45,8 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.account.status)
     implementation(projects.domain.onramp.models)
+    implementation(projects.domain.staking)
+    implementation(projects.domain.staking.models)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
