@@ -78,11 +78,13 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         menu = previewMenu(),
     ),
     amountBlock = TxHistoryDetailsUM.AmountBlockUM(
-        currencyIcon = CurrencyIconState.CoinIcon(
-            url = null,
-            fallbackResId = R.drawable.img_eth_22,
-            isGrayscale = false,
-            shouldShowCustomBadge = false,
+        icon = TxHistoryDetailsUM.AmountIconUM.Single(
+            CurrencyIconState.CoinIcon(
+                url = null,
+                fallbackResId = R.drawable.img_eth_22,
+                isGrayscale = false,
+                shouldShowCustomBadge = false,
+            ),
         ),
         amount = stringReference("- 350.31 USDT"),
         fiatAmount = stringReference("$350.31"),

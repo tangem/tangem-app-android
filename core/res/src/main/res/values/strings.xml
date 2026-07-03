@@ -2688,6 +2688,8 @@
   <string name="yield_module_transaction_exit_subtitle">%1$s withdrawn from Aave</string>
   <string name="yield_module_transaction_initialize">Yield Mode initialized</string>
   <string name="yield_module_transaction_reactivate">Yield Mode reactivated</string>
+  <string name="yield_module_transaction_returned">Returned</string>
+  <string name="yield_module_transaction_supplied">Supplied</string>
   <string name="yield_module_transaction_topup">Supply to Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s supplied to Aave</string>
   <string name="yield_module_transaction_withdraw">Withdraw from Aave</string>
