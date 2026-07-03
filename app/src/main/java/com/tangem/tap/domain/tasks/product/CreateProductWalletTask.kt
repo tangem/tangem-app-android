@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.tasks.product
 
+import android.util.Log
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
@@ -7,21 +8,21 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.toMapKey
 import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
+import com.tangem.operations.masterSecret.CreateMasterSecretCommand
+import com.tangem.operations.read.ReadMasterSecretCommand
 import com.tangem.operations.read.ReadWalletsListCommand
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
@@ -42,10 +43,10 @@ private data class CreateWalletResponse(
 
 class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
-    private val derivationStyleProvider: DerivationStyleProvider,
     private val mnemonic: Mnemonic? = null,
     private val passphrase: String? = null,
     private val shouldReset: Boolean,
+    private val defaultDerivationsHelper: DefaultDerivationsHelper,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -72,10 +73,10 @@ class CreateProductWalletTask(
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
             else -> CreateWalletTangemWallet(
+                defaultDerivationsHelper = defaultDerivationsHelper,
                 mnemonic = mnemonic,
                 passphrase = passphrase,
                 shouldReset = shouldReset,
-                derivationStyleProvider = derivationStyleProvider,
                 cardDTO = cardDto,
             )
         }
@@ -136,10 +137,10 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
  * Uses for multiWallet 1st and 2nd
  */
 private class CreateWalletTangemWallet(
+    private val defaultDerivationsHelper: DefaultDerivationsHelper,
     private val mnemonic: Mnemonic?,
     private val passphrase: String?,
     private val shouldReset: Boolean,
-    private val derivationStyleProvider: DerivationStyleProvider,
     cardDTO: CardDTO,
 ) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
@@ -169,12 +170,27 @@ private class CreateWalletTangemWallet(
         CreateWalletsTask(cardConfig.mandatoryCurves, mnemonic, passphrase).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    checkIfAllWalletsCreated(
-                        card = card,
-                        session = session,
-                        createResponse = result.data,
-                        callback = callback,
-                    )
+                    val sdkCard = session.environment.card
+                    if (sdkCard == null) {
+                        callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+                        return@run
+                    }
+                    val updatedCard = CardDTO(sdkCard)
+                    if (card.cardId != updatedCard.cardId) {
+                        callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+                        return@run
+                    }
+                    if (card.firmwareVersion >= FirmwareVersion.v8) {
+                        Log.e("wallet3", "createMasterSecret")
+                        createMasterSecret(updatedCard, session, result.data, callback)
+                    } else {
+                        checkIfAllWalletsCreated(
+                            card = updatedCard,
+                            session = session,
+                            createResponse = result.data,
+                            callback = callback,
+                        )
+                    }
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
@@ -218,6 +234,52 @@ private class CreateWalletTangemWallet(
                     }
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+            }
+        }
+    }
+
+    private fun createMasterSecret(
+        card: CardDTO,
+        session: CardSession,
+        createWalletsResponse: CreateWalletsResponse,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        CreateMasterSecretCommand().run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    Log.e("wallet3", "master secret created")
+                    // save the card with derived wallets and a master secret
+                    checkMasterSecret(card, session, createWalletsResponse, callback)
+                }
+                is CompletionResult.Failure -> {
+                    Log.e("wallet3", "master secret create error: ${result.error}")
+                    callback(CompletionResult.Failure(result.error))
+                }
+            }
+        }
+    }
+
+    private fun checkMasterSecret(
+        card: CardDTO,
+        session: CardSession,
+        createWalletsResponse: CreateWalletsResponse,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        ReadMasterSecretCommand().run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    if (result.data.masterSecret == null) {
+                        callback(CompletionResult.Failure(TangemSdkError.WalletAlreadyCreated()))
+                        return@run
+                    }
+                    checkIfAllWalletsCreated(
+                        card = card,
+                        session = session,
+                        createResponse = createWalletsResponse,
+                        callback
+                    )
+                }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }
     }
@@ -323,52 +385,22 @@ private class CreateWalletTangemWallet(
 
     private fun deriveKeys(
         card: CardDTO,
-        createWalletResponses: List<CreateWalletResponse>,
         session: CardSession,
+        createWalletResponses: List<CreateWalletResponse>,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        if (card.firmwareVersion >= FirmwareVersion.v8) {
-            // for v8 we make it on finalize backup, so we don't need to derive keys here
-            return
-        }
-        val map = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
-        var isBlockchainsForCurvesExist = false
-        createWalletResponses.forEach { response ->
-            val blockchainsForCurve = getBlockchains(response.cardId, card).filter {
-                it.getSupportedCurves().contains(response.wallet.curve)
-            }
-            val derivationPaths = blockchainsForCurve.mapNotNull { blockchain ->
-                isBlockchainsForCurvesExist = true
-                blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())
-            }
-            val publicKey = response.wallet.publicKey ?: return@forEach
-            if (derivationPaths.isNotEmpty()) {
-                map[publicKey.toMapKey()] = derivationPaths
-            }
-        }
+        val derivations = defaultDerivationsHelper.getDefaultDerivations(
+            derivationStyleProvider = card.derivationStyleProvider,
+            cardId = card.cardId,
+            wallets = createWalletResponses.map { it.wallet }
+        )
         val cardEnv = session.environment.card
         if (cardEnv == null) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return
         }
-        if (map.isEmpty()) {
-            if (isBlockchainsForCurvesExist) {
-                callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
-            } else {
-                // if there is no blockchains to derive, just return success response with empty derivedKeys
-                callback(
-                    CompletionResult.Success(
-                        CreateProductWalletTaskResponse(
-                            card = cardEnv,
-                            primaryCard = primaryCard,
-                        ),
-                    ),
-                )
-            }
-            return
-        }
 
-        DeriveMultipleWalletPublicKeysTask(map)
+        DeriveMultipleWalletPublicKeysTask(derivations)
             .run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
