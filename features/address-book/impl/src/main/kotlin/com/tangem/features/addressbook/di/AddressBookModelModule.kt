@@ -3,6 +3,7 @@ package com.tangem.features.addressbook.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.addressbook.addaddress.model.AddAddressModel
+import com.tangem.features.addressbook.addressinfo.model.AddressInfoModel
 import com.tangem.features.addressbook.block.model.ContactsBlockModel
 import com.tangem.features.addressbook.list.model.AddressBookListModel
 import com.tangem.features.addressbook.editcontact.model.EditContactModel
@@ -41,4 +42,9 @@ internal interface AddressBookModelModule {
     @IntoMap
     @ClassKey(SelectNetworksModel::class)
     fun bindSelectNetworksModel(model: SelectNetworksModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(AddressInfoModel::class)
+    fun bindAddressInfoModel(model: AddressInfoModel): Model
 }
