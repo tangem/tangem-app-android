@@ -1,6 +1,6 @@
 package com.tangem.domain.appsflyer.usecase
 
-import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
+import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 
 /**
@@ -10,6 +10,6 @@ class IsReferralInstallUseCase(
     private val appsFlyerRepository: AppsFlyerRepository,
 ) {
     suspend operator fun invoke(): Boolean {
-        return appsFlyerRepository.getDeeplink(AppsFlyerDeeplinkSource.Referral) != null
+        return AppsFlyerDeeplink.from(appsFlyerRepository.getDeeplink()) == AppsFlyerDeeplink.Referral
     }
 }
