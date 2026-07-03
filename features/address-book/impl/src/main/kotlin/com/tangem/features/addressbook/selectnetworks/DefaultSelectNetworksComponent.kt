@@ -29,7 +29,7 @@ internal class DefaultSelectNetworksComponent(
     }
 
     data class Params(
-        val address: String,
+        val matchedNetworkIds: List<String>,
         val selectedNetworkIds: List<String>,
         val onBackClick: () -> Unit,
         val onDone: (selectedNetworkIds: Set<String>) -> Unit,
