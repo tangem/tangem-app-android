@@ -76,7 +76,9 @@ internal class TxHistoryInfoMergerTest {
     fun `GIVEN rows of different timestamps WHEN merge THEN sorted by timestamp descending`() {
         // Arrange
         val onChain = listOf(createTxInfo(txHash = "h1", timestamp = 100))
-        val express = listOf(createSwap(matchHash = "missing", createdAtMillis = 200, status = ExpressExchangeStatus.Waiting))
+        val express = listOf(
+            createSwap(matchHash = "missing", createdAtMillis = 200, status = ExpressExchangeStatus.Waiting),
+        )
 
         // Act
         val result = mergeTxHistoryInfos(onChain, express)
