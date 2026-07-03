@@ -16,6 +16,8 @@ interface AddressBookRepository {
     /** Contacts across all wallets (flattened). Each [Contact] keeps its own [Contact.walletId]. */
     fun getAllContacts(): Flow<List<Contact>>
 
+    suspend fun getContactsSync(userWalletId: UserWalletId): List<Contact>
+
     suspend fun getContact(userWalletId: UserWalletId, name: String): Contact?
 
     suspend fun saveContact(contact: Contact): Either<AddressBookSyncError, Unit>
