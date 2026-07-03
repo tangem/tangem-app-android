@@ -175,6 +175,7 @@ object TwinsMockContent : MockContent {
             index = 0,
             isImported = false,
             hasBackup = false,
+            status = CardWallet.Status.Empty,
             derivedKeys = emptyMap(),
         ),
     )
@@ -191,6 +192,7 @@ object TwinsMockContent : MockContent {
             index = 0,
             isImported = false,
             hasBackup = false,
+            status = CardWallet.Status.Empty,
             derivedKeys = emptyMap(),
         ),
     )
