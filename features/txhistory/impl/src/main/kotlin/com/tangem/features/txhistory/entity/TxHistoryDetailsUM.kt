@@ -137,21 +137,50 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     }
 
     /**
-     * Centered amount block of the single-asset card: token avatar (with network badge), the big signed crypto
-     * [amount] and the secondary [fiatAmount].
+     * Centered amount block of the single-asset card: the [icon] (a single token avatar, or a yield-supply asset+Aave
+     * pair), an optional [label] above the amount ("Supplied" / "Returned" for yield supply), the big [amount] and the
+     * secondary [fiatAmount].
      *
-     * [fiatAmount] is `null` while no fiat value is available (`TxInfo` has no fiat field yet) — the fiat line is then
-     * omitted entirely rather than shown as a placeholder.
+     * [label] is `null` for the plain single-asset types (Send / Receive / Transfer / staking) — the line is then
+     * omitted. [fiatAmount] is `null` while no fiat value is available (`TxInfo` has no fiat field yet) — the fiat line
+     * is then omitted entirely rather than shown as a placeholder.
      *
      * [isFailed] drives the failed visual state — the amount is struck through, recolored to tertiary and carries no
      * `+`/`−` sign (mirrors the status-driven recolor in the shared header).
      */
     data class AmountBlockUM(
-        val currencyIcon: CurrencyIconState,
+        val icon: AmountIconUM,
         val amount: TextReference,
+        val label: TextReference? = null,
         val fiatAmount: TextReference? = null,
         val isFailed: Boolean,
     )
+
+    /** Icon shown above the amount of the single-asset card. */
+    @Immutable
+    sealed interface AmountIconUM {
+
+        /** A single token avatar — Send / Receive / Transfer / staking. */
+        data class Single(val currencyIcon: CurrencyIconState) : AmountIconUM
+
+        /**
+         * Two overlapping avatars: [leading] is drawn on top (left, with a background-colored ring), [trailing] behind
+         * it (right). Used by yield supply — the asset and the hard-wired Aave protocol icon — with the order set by the
+         * transaction direction: Aave leads on "Supplied" (enter), the asset leads on "Returned" (exit).
+         */
+        data class OverlappingPair(val leading: Item, val trailing: Item) : AmountIconUM
+
+        /** One avatar of an [OverlappingPair]. */
+        @Immutable
+        sealed interface Item {
+
+            /** A token avatar backed by its [state]. */
+            data class Currency(val state: CurrencyIconState) : Item
+
+            /** A hard-wired drawable (e.g. the Aave protocol icon). */
+            data class Resource(@DrawableRes val resId: Int) : Item
+        }
+    }
 
     /**
      * A single info row of the details card: a [label] on the leading side and its [value] on the trailing side
