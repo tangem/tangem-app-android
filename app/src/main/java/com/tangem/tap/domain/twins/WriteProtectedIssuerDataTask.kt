@@ -20,10 +20,17 @@ class WriteProtectedIssuerDataTask(
 ) : CardSessionRunnable<SuccessResponse> {
 
     override fun run(session: CardSession, callback: (result: CompletionResult<SuccessResponse>) -> Unit) {
+        val card = session.environment.card ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+            return
+        }
+        val walletPublicKey = card.wallets.firstOrNull()?.publicKey ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.WalletNotFound()))
+            return
+        }
         SignHashCommand(
             hash = twinPublicKey.calculateSha256(),
-            walletPublicKey = requireNotNull(session.environment.card)
-                .wallets.first().publicKey,
+            walletPublicKey = walletPublicKey,
         )
             .run(session) { signResult ->
                 when (signResult) {

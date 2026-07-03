@@ -7,6 +7,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -25,34 +26,36 @@ class CreateSecondTwinWalletTask(
     override val allowsRequestAccessCodeFromRepository: Boolean = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        val card = session.environment.card
-        val publicKey = card?.wallets?.firstOrNull()?.publicKey
-        if (publicKey != null) {
-            val currentTwinCardNumber = TwinsHelper.getTwinCardNumber(card.cardId)
-            if (TwinsHelper.getTwinCardNumber(firstCardId) == currentTwinCardNumber) {
-                currentTwinCardNumber?.pairNumber()?.let {
-                    callback(CompletionResult.Failure(WrongTwinCard(it)))
-                }
-                return
+        val card = session.environment.card ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+            return
+        }
+        val walletIndex = card.wallets.firstOrNull()?.index ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.WalletNotFound()))
+            return
+        }
+        val currentTwinCardNumber = TwinsHelper.getTwinCardNumber(card.cardId)
+        if (TwinsHelper.getTwinCardNumber(firstCardId) == currentTwinCardNumber) {
+            currentTwinCardNumber?.pairNumber()?.let {
+                callback(CompletionResult.Failure(WrongTwinCard(it)))
             }
+            return
+        }
 
-            if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
-                callback(CompletionResult.Failure(IncompatibleTwinCard()))
-                return
-            }
+        if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
+            callback(CompletionResult.Failure(IncompatibleTwinCard()))
+            return
+        }
 
-            session.setMessage(preparingMessage)
-            PurgeWalletCommand(publicKey).run(session) { response ->
-                when (response) {
-                    is CompletionResult.Success -> {
-                        session.environment.card = session.environment.card?.setWallets(emptyList())
-                        finishTask(session, callback)
-                    }
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+        session.setMessage(preparingMessage)
+        PurgeWalletCommand(walletIndex).run(session) { response ->
+            when (response) {
+                is CompletionResult.Success -> {
+                    session.environment.card = session.environment.card?.setWallets(emptyList())
+                    finishTask(session, callback)
                 }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
             }
-        } else {
-            finishTask(session, callback)
         }
     }
 
