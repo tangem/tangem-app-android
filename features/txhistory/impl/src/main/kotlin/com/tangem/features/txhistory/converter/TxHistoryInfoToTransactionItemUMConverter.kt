@@ -28,8 +28,8 @@ internal class TxHistoryInfoToTransactionItemUMConverter(
 
     private fun convertOnChain(value: OnChainTx): TransactionItemUM = when (value) {
         is OnChainTx.BSDK -> when (val um = txInfoConverter.convert(value.txInfo)) {
-            // Content rows (transfer/swap/…) route through the details/explorer decision; pills stay on the explorer.
             is TransactionItemUM.Content -> um.copy(onClick = { txHistoryUiActions.onTransactionClick(value) })
+            is TransactionItemUM.Pill -> um.copy(onClick = { txHistoryUiActions.onTransactionClick(value) })
             else -> um
         }
     }
