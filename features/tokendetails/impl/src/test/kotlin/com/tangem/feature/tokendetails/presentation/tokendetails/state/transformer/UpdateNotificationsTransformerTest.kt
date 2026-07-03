@@ -11,13 +11,8 @@ import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
@@ -684,6 +679,7 @@ class UpdateNotificationsTransformerTest {
     private fun createTransformer(warnings: Set<CryptoCurrencyWarning>) = UpdateNotificationsTransformer(
         warnings = warnings,
         clickIntents = clickIntents,
+        walletInteractionIcon = null,
     )
 
     private fun initialState(): TokenDetailsUM = TokenDetailsUM(
