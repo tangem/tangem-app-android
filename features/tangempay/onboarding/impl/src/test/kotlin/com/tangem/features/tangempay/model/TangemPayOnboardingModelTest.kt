@@ -133,6 +133,39 @@ internal class TangemPayOnboardingModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN MobileOnboardingDeeplink WHEN model created THEN shows onboarding without validating deeplink`() =
+        runTest {
+            // Act
+            val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Content::class.java)
+            coVerify(exactly = 0) { repository.validateDeeplink(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN MobileOnboardingDeeplink WHEN get card clicked THEN uses possible wallets ignoring eligibility`() =
+        runTest {
+            // Arrange
+            coEvery {
+                eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true)
+            } returns emptyList()
+            val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
+            advanceUntilIdle()
+            val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+            // Act
+            content.buttonConfig.onClick.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify { eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true) }
+            model.onDestroy()
+        }
+
     private fun TestScope.createModel(params: TangemPayOnboardingComponent.Params): TangemPayOnboardingModel {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         return TangemPayOnboardingModel(
