@@ -110,7 +110,9 @@
   <string name="address_book_copy_address">Copy address</string>
   <string name="address_book_create_success_message">Contact added</string>
   <string name="address_book_creating_error">Couldn\'t create contact. Please try again later.</string>
+  <string name="address_book_delete_contact">Delete contact</string>
   <string name="address_book_delete_contact_description">This contact will be deleted from all your address books</string>
+  <string name="address_book_delete_last_address">\"%1$s\" has only one address. Deleting it will also delete the contact. Continue?</string>
   <string name="address_book_deleting_error">Couldn\'t delete contact. Please try again later.</string>
   <string name="address_book_description">Manage contacts &amp; addresses</string>
   <string name="address_book_discard">Discard</string>
@@ -1988,6 +1990,13 @@
   <string name="tangempay_remove_account">Remove account</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay will be removed from the main screen and won\'t appear again, even after reinstalling the app.</string>
   <string name="tangempay_remove_account_alert_title">Remove account?</string>
+  <string name="tangempay_select_plan_btn_cancel">Cancel</string>
+  <string name="tangempay_select_plan_btn_downgrade">Downgrade plan</string>
+  <string name="tangempay_select_plan_btn_select">Select</string>
+  <string name="tangempay_select_plan_btn_upgrade">Upgrade plan</string>
+  <string name="tangempay_select_plan_compare">Compare plans</string>
+  <string name="tangempay_select_plan_confirm_title">Confirm selection</string>
+  <string name="tangempay_select_plan_title">Select plan</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Service unreachable. However, card payments are still working.</string>
