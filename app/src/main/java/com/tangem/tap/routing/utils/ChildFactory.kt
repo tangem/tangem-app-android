@@ -690,6 +690,7 @@ internal class ChildFactory @Inject constructor(
                         )
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings -> FromBannerInSettings
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain
+                        is AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink -> MobileOnboardingDeeplink
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
                 )
