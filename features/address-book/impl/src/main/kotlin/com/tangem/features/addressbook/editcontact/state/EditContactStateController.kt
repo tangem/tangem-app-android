@@ -52,7 +52,7 @@ internal class EditContactStateController @Inject constructor() {
             ),
             isAddAddressEnabled = true,
             saveButton = TangemButtonUM(
-                text = TextReference.Res(R.string.common_save),
+                text = TextReference.Res(R.string.address_book_save_contact),
                 type = TangemButtonType.Primary,
                 isEnabled = false,
                 onClick = {},
@@ -60,6 +60,8 @@ internal class EditContactStateController @Inject constructor() {
             onNameChange = {},
             onCloseClick = {},
             onAddAddressClick = {},
+            onAddressClick = {},
+            onDeleteClick = null,
         )
     }
 }

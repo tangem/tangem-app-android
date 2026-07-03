@@ -47,9 +47,14 @@ internal class AddressBookChildFactory @Inject constructor(
             ),
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         )
-        AddressBookRoute.AddAddress -> DefaultAddAddressComponent(
+        is AddressBookRoute.AddAddress -> DefaultAddAddressComponent(
             appComponentContext = context,
             params = DefaultAddAddressComponent.Params(
+                walletId = route.walletId,
+                excludeContactId = route.excludeContactId,
+                prefillAddress = route.prefillAddress,
+                prefillNetworkIds = route.prefillNetworkIds,
+                prefillMemo = route.prefillMemo,
                 onBackClick = clickIntents::onAddAddressBack,
                 onSelectNetworksClick = clickIntents::onSelectNetworksClick,
                 onConfirm = clickIntents::onAddressConfirmed,
@@ -58,7 +63,7 @@ internal class AddressBookChildFactory @Inject constructor(
         is AddressBookRoute.SelectNetworks -> DefaultSelectNetworksComponent(
             appComponentContext = context,
             params = DefaultSelectNetworksComponent.Params(
-                address = route.address,
+                matchedNetworkIds = route.matchedNetworkIds,
                 selectedNetworkIds = route.selectedNetworkIds,
                 onBackClick = clickIntents::onSelectNetworksBack,
                 onDone = clickIntents::onNetworksSelected,

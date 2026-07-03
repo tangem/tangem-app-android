@@ -11,6 +11,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.R
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.addressbook.usecase.CheckAddressDuplicateUseCase
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
@@ -43,6 +44,7 @@ internal class AddAddressModelTest {
     private val memoValidator: AddressMemoValidator = mockk()
     private val clipboardManager: ClipboardManager = mockk()
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk()
+    private val checkAddressDuplicateUseCase: CheckAddressDuplicateUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val selectNetworksResultHolder = SelectNetworksResultHolder()
 
@@ -50,8 +52,17 @@ internal class AddAddressModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(supportedNetworksMatcher, memoValidator, clipboardManager, listenToQrScanningUseCase, router)
+        clearMocks(
+            supportedNetworksMatcher,
+            memoValidator,
+            clipboardManager,
+            listenToQrScanningUseCase,
+            checkAddressDuplicateUseCase,
+            router,
+        )
         selectNetworksResultHolder.clear()
+        // Default: the network+address pair is free unless a test stubs an owning contact name.
+        coEvery { checkAddressDuplicateUseCase(any(), any(), any(), any()) } returns null
         // Default: an address matches nothing unless a test stubs a specific value.
         every { supportedNetworksMatcher.match(any()) } returns emptyList()
         // Default: any memo passes unless a test stubs an invalid one.
@@ -114,7 +125,7 @@ internal class AddAddressModelTest {
         fun `GIVEN no matching network WHEN button clicked THEN onConfirm not called`() = runTest {
             // Arrange
             var confirmed: ValidatedAddress? = null
-            val model = createModel(testScope = this, onConfirm = { confirmed = it })
+            val model = createModel(testScope = this, onConfirm = { address, _ -> confirmed = address })
             model.state.value.onAddressChange("0xABC")
             advanceUntilIdle()
 
@@ -265,16 +276,16 @@ internal class AddAddressModelTest {
         }
 
         @Test
-        fun `GIVEN valid address WHEN onNetworkClick THEN opens selector with address and default selection`() =
+        fun `GIVEN valid address WHEN onNetworkClick THEN opens selector with matched networks and default selection`() =
             runTest {
                 // Arrange
-                var openedAddress: String? = null
+                var openedMatched: List<String> = emptyList()
                 var openedSelection: List<String> = listOf("sentinel")
                 every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum, Blockchain.BSC)
                 val model = createModel(
                     testScope = this,
-                    onSelectNetworksClick = { address, selection ->
-                        openedAddress = address
+                    onSelectNetworksClick = { matched, selection ->
+                        openedMatched = matched
                         openedSelection = selection
                     },
                 )
@@ -285,8 +296,9 @@ internal class AddAddressModelTest {
                 // Act
                 model.state.value.onNetworkClick()
 
-                // Assert — empty selection means "nothing selected yet" on the selection screen.
-                assertThat(openedAddress).isEqualTo(ADDRESS)
+                // Assert — the already-matched networks are handed over; empty selection = "nothing selected yet".
+                assertThat(openedMatched)
+                    .containsExactly(Blockchain.Ethereum.toNetworkId(), Blockchain.BSC.toNetworkId())
                 assertThat(openedSelection).isEmpty()
             }
 
@@ -296,7 +308,7 @@ internal class AddAddressModelTest {
                 // Arrange
                 var confirmed: ValidatedAddress? = null
                 every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum, Blockchain.BSC)
-                val model = createModel(testScope = this, onConfirm = { confirmed = it })
+                val model = createModel(testScope = this, onConfirm = { address, _ -> confirmed = address })
                 advanceUntilIdle()
                 model.state.value.onAddressChange(ADDRESS)
                 advanceUntilIdle()
@@ -357,7 +369,7 @@ internal class AddAddressModelTest {
             // Arrange — a single match is auto-selected, so confirm works without opening the selection screen.
             var confirmed: ValidatedAddress? = null
             every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum)
-            val model = createModel(testScope = this, onConfirm = { confirmed = it })
+            val model = createModel(testScope = this, onConfirm = { address, _ -> confirmed = address })
             advanceUntilIdle()
             model.state.value.onAddressChange(ADDRESS)
             advanceUntilIdle()
@@ -379,7 +391,7 @@ internal class AddAddressModelTest {
             // Arrange
             var confirmed: ValidatedAddress? = null
             every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum, Blockchain.BSC)
-            val model = createModel(testScope = this, onConfirm = { confirmed = it })
+            val model = createModel(testScope = this, onConfirm = { address, _ -> confirmed = address })
             advanceUntilIdle()
             model.state.value.onAddressChange(ADDRESS)
             advanceUntilIdle()
@@ -433,7 +445,7 @@ internal class AddAddressModelTest {
             // Arrange
             var confirmed: ValidatedAddress? = null
             every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.XRP)
-            val model = createModel(testScope = this, onConfirm = { confirmed = it })
+            val model = createModel(testScope = this, onConfirm = { address, _ -> confirmed = address })
             advanceUntilIdle()
             model.state.value.onAddressChange(ADDRESS)
             advanceUntilIdle()
@@ -476,7 +488,7 @@ internal class AddAddressModelTest {
             // Arrange
             var confirmed: ValidatedAddress? = null
             every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum)
-            val model = createModel(testScope = this, onConfirm = { confirmed = it })
+            val model = createModel(testScope = this, onConfirm = { address, _ -> confirmed = address })
             advanceUntilIdle()
             model.state.value.onAddressChange(ADDRESS)
             advanceUntilIdle()
@@ -547,11 +559,94 @@ internal class AddAddressModelTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Prefill {
+
+        @Test
+        fun `GIVEN prefilled address and networks WHEN created THEN field and selection restored`() = runTest {
+            // Arrange
+            var confirmed: ValidatedAddress? = null
+            every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum, Blockchain.BSC)
+            val model = createModel(
+                testScope = this,
+                params = params(
+                    prefillAddress = ADDRESS,
+                    prefillNetworkIds = listOf(Blockchain.Ethereum.toNetworkId(), Blockchain.BSC.toNetworkId()),
+                    onConfirm = { address, _ -> confirmed = address },
+                ),
+            )
+
+            // Act
+            advanceUntilIdle()
+            model.state.value.buttonUM.onClick()
+
+            // Assert
+            assertThat(model.state.value.addressField.value).isEqualTo(ADDRESS)
+            assertThat(confirmed?.networkIds)
+                .containsExactly(Blockchain.Ethereum.toNetworkId(), Blockchain.BSC.toNetworkId())
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class DuplicateAddress {
+
+        @Test
+        fun `GIVEN pair already saved WHEN validated THEN inline error shown AND confirm blocked`() = runTest {
+            // Arrange — single match auto-selects, then the duplicate check reports an owning contact.
+            var confirmed: ValidatedAddress? = null
+            every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum)
+            coEvery {
+                checkAddressDuplicateUseCase(any(), Blockchain.Ethereum.toNetworkId(), ADDRESS, null)
+            } returns "Binance"
+            val model = createModel(
+                testScope = this,
+                params = params(walletId = "aa", onConfirm = { address, _ -> confirmed = address }),
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onAddressChange(ADDRESS)
+            advanceUntilIdle()
+            model.state.value.buttonUM.onClick()
+
+            // Assert
+            assertThat(model.state.value.addressField.isError).isTrue()
+            assertThat(model.state.value.buttonUM.isEnabled).isFalse()
+            assertThat(confirmed).isNull()
+        }
+    }
+
+    private fun params(
+        walletId: String? = null,
+        excludeContactId: String? = null,
+        prefillAddress: String? = null,
+        prefillNetworkIds: List<String> = emptyList(),
+        prefillMemo: String? = null,
+        onSelectNetworksClick: (List<String>, List<String>) -> Unit = { _, _ -> },
+        onConfirm: (ValidatedAddress, String?) -> Unit = { _, _ -> },
+    ): DefaultAddAddressComponent.Params = DefaultAddAddressComponent.Params(
+        walletId = walletId,
+        excludeContactId = excludeContactId,
+        prefillAddress = prefillAddress,
+        prefillNetworkIds = prefillNetworkIds,
+        prefillMemo = prefillMemo,
+        onBackClick = {},
+        onSelectNetworksClick = onSelectNetworksClick,
+        onConfirm = onConfirm,
+    )
+
     private fun createModel(
         testScope: TestScope,
-        onConfirm: (ValidatedAddress) -> Unit = {},
-        onSelectNetworksClick: (String, List<String>) -> Unit = { _, _ -> },
+        onConfirm: (ValidatedAddress, String?) -> Unit = { _, _ -> },
+        onSelectNetworksClick: (List<String>, List<String>) -> Unit = { _, _ -> },
         params: DefaultAddAddressComponent.Params = DefaultAddAddressComponent.Params(
+            walletId = null,
+            excludeContactId = null,
+            prefillAddress = null,
+            prefillNetworkIds = emptyList(),
+            prefillMemo = null,
             onBackClick = {},
             onSelectNetworksClick = onSelectNetworksClick,
             onConfirm = onConfirm,
@@ -567,6 +662,7 @@ internal class AddAddressModelTest {
             clipboardManager = clipboardManager,
             stateController = AddAddressStateController(),
             selectNetworksResultHolder = selectNetworksResultHolder,
+            checkAddressDuplicateUseCase = checkAddressDuplicateUseCase,
             router = router,
         ).also { model = it }
     }
