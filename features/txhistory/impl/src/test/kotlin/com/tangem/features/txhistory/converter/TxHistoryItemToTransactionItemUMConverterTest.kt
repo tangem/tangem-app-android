@@ -85,7 +85,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(TextReference.Str("Mint NFT"))
-        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
     }
 
     @Test
