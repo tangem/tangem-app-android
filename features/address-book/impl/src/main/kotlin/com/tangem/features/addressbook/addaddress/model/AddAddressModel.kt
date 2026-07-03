@@ -10,6 +10,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.domain.addressbook.model.ContactId
+import com.tangem.domain.addressbook.usecase.CheckAddressDuplicateUseCase
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
@@ -42,6 +45,7 @@ internal class AddAddressModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val stateController: AddAddressStateController,
     private val selectNetworksResultHolder: SelectNetworksResultHolder,
+    private val checkAddressDuplicateUseCase: CheckAddressDuplicateUseCase,
     private val router: Router,
 ) : Model() {
 
@@ -83,15 +87,42 @@ internal class AddAddressModel @Inject constructor(
             ChosenNetworks(address = "", matched = emptyList(), displayed = emptyList(), selected = emptyList()),
         )
 
+    /**
+     * Name of the contact that already holds one of the selected `network + address` pairs in the target wallet, or
+     * `null` when the pair is free.
+     */
+    private val duplicateName: StateFlow<String?> = chosenNetworks
+        .mapLatest { networks ->
+            val walletId = params.walletId ?: return@mapLatest null
+            if (networks.selected.isEmpty()) return@mapLatest null
+            networks.selected.firstNotNullOfOrNull { blockchain ->
+                checkAddressDuplicateUseCase(
+                    userWalletId = UserWalletId(walletId),
+                    networkId = blockchain.toNetworkId(),
+                    address = networks.address,
+                    excludeContactId = params.excludeContactId?.let(::ContactId),
+                )
+            }
+        }
+        .flowOn(dispatchers.default)
+        .stateIn(modelScope, SharingStarted.Eagerly, null)
+
     init {
         // Drop any selection left over from a previous AddAddress session before subscribing to it.
         selectNetworksResultHolder.clear()
         updateInitialState()
         subscribeToValidation()
         subscribeToMemoValidation()
-        resetSelectionOnAddressChange()
         subscribeToSelectedNetworks()
         subscribeToQrScanResult()
+        prefillData()
+    }
+
+    private fun prefillData() {
+        val prefillAddress = params.prefillAddress ?: return
+        onAddressChange(prefillAddress)
+        selectedNetworkIds.value = params.prefillNetworkIds.toSet().ifEmpty { null }
+        params.prefillMemo?.let(::onMemoChange)
     }
 
     private fun updateInitialState() {
@@ -114,6 +145,7 @@ internal class AddAddressModel @Inject constructor(
 
     private fun onAddressChange(value: String) {
         stateController.update(UpdateAddressInputTransformer(value = value))
+        selectedNetworkIds.value = null
     }
 
     private fun onMemoChange(value: String) {
@@ -121,13 +153,14 @@ internal class AddAddressModel @Inject constructor(
     }
 
     private fun subscribeToValidation() {
-        combine(chosenNetworks, isMemoInvalid) { networks, memoInvalid ->
+        combine(chosenNetworks, isMemoInvalid, duplicateName) { networks, memoInvalid, duplicate ->
             UpdateAddressValidationTransformer(
                 address = networks.address,
                 matchedBlockchains = networks.matched,
                 displayedBlockchains = networks.displayed,
                 selectedBlockchains = networks.selected,
                 isMemoInvalid = memoInvalid,
+                duplicateName = duplicate,
             )
         }
             .onEach(stateController::update)
@@ -143,14 +176,6 @@ internal class AddAddressModel @Inject constructor(
             }
             .onEach { isMemoInvalid.value = it }
             .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-    }
-
-    private fun resetSelectionOnAddressChange() {
-        validation
-            .map { it.address }
-            .distinctUntilChanged()
-            .onEach { selectedNetworkIds.value = null }
             .launchIn(modelScope)
     }
 
@@ -195,7 +220,7 @@ internal class AddAddressModel @Inject constructor(
 
     private fun onNetworkClick() {
         params.onSelectNetworksClick(
-            stateController.uiState.value.addressField.value,
+            chosenNetworks.value.matched.map { it.toNetworkId() },
             selectedNetworkIds.value?.toList().orEmpty(),
         )
     }
@@ -203,6 +228,7 @@ internal class AddAddressModel @Inject constructor(
     private fun validateAndConfirm() {
         val networks = chosenNetworks.value
         if (networks.selected.isEmpty()) return
+        if (duplicateName.value != null) return
 
         val memoField = stateController.uiState.value.memoField
         val memo = memoField.value.trim().takeIf { memoField.isVisible && it.isNotEmpty() }
@@ -212,6 +238,8 @@ internal class AddAddressModel @Inject constructor(
                 networkIds = networks.selected.map { it.toNetworkId() }.toImmutableList(),
                 memo = memo,
             ),
+            // In the edit-address flow this confirmation supersedes the entry the screen was opened for.
+            params.prefillAddress,
         )
     }
 
