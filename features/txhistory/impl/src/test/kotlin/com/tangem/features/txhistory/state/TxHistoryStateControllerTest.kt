@@ -1,7 +1,6 @@
 package com.tangem.features.txhistory.state
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM

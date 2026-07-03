@@ -159,8 +159,12 @@ internal class ExpressTxToTransactionItemUMConverterTest {
 
     @Test
     fun `GIVEN swap statuses WHEN convert THEN status-aware title`() {
-        val swapping = converter.convert(createSwap(status = ExpressExchangeStatus.Waiting)) as TransactionItemUM.Content
-        val swapped = converter.convert(createSwap(status = ExpressExchangeStatus.Finished)) as TransactionItemUM.Content
+        val swapping = converter.convert(
+            createSwap(status = ExpressExchangeStatus.Waiting),
+        ) as TransactionItemUM.Content
+        val swapped = converter.convert(
+            createSwap(status = ExpressExchangeStatus.Finished),
+        ) as TransactionItemUM.Content
 
         assertThat(swapping.title).isEqualTo(resourceReference(R.string.common_swapping))
         assertThat(swapped.title).isEqualTo(resourceReference(R.string.common_swapped))
@@ -169,7 +173,9 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN onramp statuses WHEN convert THEN status-aware title`() {
         val topUp = converter.convert(createOnramp(status = ExpressOnrampStatus.Sending)) as TransactionItemUM.Content
-        val toppedUp = converter.convert(createOnramp(status = ExpressOnrampStatus.Finished)) as TransactionItemUM.Content
+        val toppedUp = converter.convert(
+            createOnramp(status = ExpressOnrampStatus.Finished),
+        ) as TransactionItemUM.Content
 
         assertThat(topUp.title).isEqualTo(resourceReference(R.string.tx_history_onramp_top_up))
         assertThat(toppedUp.title).isEqualTo(resourceReference(R.string.tx_history_onramp_topped_up))
@@ -237,31 +243,29 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         txInfo = null,
     )
 
-    private fun createOnramp(
-        status: ExpressOnrampStatus,
-        toAmount: BigDecimal? = BigDecimal("0.006339"),
-    ) = ExpressTx.Onramp(
-        tx = OnrampTransaction(
-            txId = "tx-2",
-            status = status,
-            createdAtMillis = 100,
-            provider = null,
-            payoutHash = null,
-            payoutAddress = null,
-            fromFiat = Amount(
-                currencySymbol = "SEK",
-                value = BigDecimal("100"),
-                decimals = 2,
-                type = AmountType.FiatType(code = "SEK"),
+    private fun createOnramp(status: ExpressOnrampStatus, toAmount: BigDecimal? = BigDecimal("0.006339")) =
+        ExpressTx.Onramp(
+            tx = OnrampTransaction(
+                txId = "tx-2",
+                status = status,
+                createdAtMillis = 100,
+                provider = null,
+                payoutHash = null,
+                payoutAddress = null,
+                fromFiat = Amount(
+                    currencySymbol = "SEK",
+                    value = BigDecimal("100"),
+                    decimals = 2,
+                    type = AmountType.FiatType(code = "SEK"),
+                ),
+                toAsset = ExpressTransactionAsset(
+                    id = ExpressAssetId(networkId = "btc", contractAddress = "0"),
+                    amount = toAmount,
+                    decimals = 8,
+                ),
             ),
-            toAsset = ExpressTransactionAsset(
-                id = ExpressAssetId(networkId = "btc", contractAddress = "0"),
-                amount = toAmount,
-                decimals = 8,
-            ),
-        ),
-        txInfo = null,
-    )
+            txInfo = null,
+        )
 
     private fun createCoin(symbol: String, decimals: Int): CryptoCurrency.Coin = CryptoCurrency.Coin(
         id = CryptoCurrency.ID(
