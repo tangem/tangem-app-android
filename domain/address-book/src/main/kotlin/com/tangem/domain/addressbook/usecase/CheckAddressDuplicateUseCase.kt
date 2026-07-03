@@ -29,7 +29,7 @@ class CheckAddressDuplicateUseCase(
         val contacts = repository.getContactsSync(userWalletId)
         return contacts
             .firstOrNull { contact ->
-                contact.id != excludeContactId && contact.addressEntries.any { entry ->
+                contact.id != excludeContactId && contact.addresses.any { entry ->
                     entry.networkId.value == networkId && entry.address == address
                 }
             }

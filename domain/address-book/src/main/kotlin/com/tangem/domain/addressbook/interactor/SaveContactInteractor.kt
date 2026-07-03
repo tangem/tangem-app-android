@@ -31,7 +31,7 @@ class SaveContactInteractor(
         userWallet: UserWallet,
         name: String,
         iconColor: String,
-        addressEntries: List<AddressEntry>,
+        addresses: List<AddressEntry>,
     ): Either<SaveContactError, Contact> = either {
         val userWalletId = userWallet.walletId
         val validName = validateContactName(userWalletId, name)
@@ -47,9 +47,9 @@ class SaveContactInteractor(
             iconColor = iconColor,
             createdAt = now,
             updatedAt = now,
-            addressEntries = addressEntries,
+            addresses = addresses,
         )
-        val signed = signAddressEntries(userWallet, contact)
+        val signed = signAddresses(userWallet, contact)
             .mapLeft(SaveContactError::Signing)
             .bind()
         repository.saveContact(signed)
@@ -63,7 +63,7 @@ class SaveContactInteractor(
         contact: Contact,
         name: String,
         iconColor: String,
-        addressEntries: List<AddressEntry>,
+        addresses: List<AddressEntry>,
     ): Either<SaveContactError, Contact> = either {
         val validName = ContactName(name)
             .mapLeft { SaveContactError.Name(ContactNameValidationError.Format(it)) }
@@ -72,10 +72,10 @@ class SaveContactInteractor(
         val updated = contact.copy(
             name = validName,
             iconColor = iconColor,
-            addressEntries = addressEntries,
+            addresses = addresses,
             updatedAt = timestampProvider.now(),
         )
-        val signed = signAddressEntries(userWallet, updated)
+        val signed = signAddresses(userWallet, updated)
             .mapLeft(SaveContactError::Signing)
             .bind()
         repository.saveContact(signed)
@@ -84,22 +84,20 @@ class SaveContactInteractor(
         signed
     }
 
-    private suspend fun signAddressEntries(
-        userWallet: UserWallet,
-        contact: Contact,
-    ): Either<SignHashesError, Contact> = either {
-        val entries = contact.addressEntries
-        if (entries.isEmpty()) return@either contact
+    private suspend fun signAddresses(userWallet: UserWallet, contact: Contact): Either<SignHashesError, Contact> =
+        either {
+            val entries = contact.addresses
+            if (entries.isEmpty()) return@either contact
 
-        val publicKey = userWallet.primarySecp256k1PublicKey() ?: raise(SignHashesError.NoSigningKey)
-        val hashes = entries.map { entry -> hashEntry(contact, entry) }
-        val signatures = signUseCase(hashes = hashes, publicKey = publicKey, userWallet = userWallet).bind()
+            val publicKey = userWallet.primarySecp256k1PublicKey() ?: raise(SignHashesError.NoSigningKey)
+            val hashes = entries.map { entry -> hashEntry(contact, entry) }
+            val signatures = signUseCase(hashes = hashes, publicKey = publicKey, userWallet = userWallet).bind()
 
-        val signedEntries = entries.mapIndexed { index, entry ->
-            entry.copy(signature = signatures[index].toHexString())
+            val signedEntries = entries.mapIndexed { index, entry ->
+                entry.copy(signature = signatures[index].toHexString())
+            }
+            contact.copy(addresses = signedEntries)
         }
-        contact.copy(addressEntries = signedEntries)
-    }
 
     private fun hashEntry(contact: Contact, entry: AddressEntry): ByteArray {
         val payload = buildAddressEntryPayload(contact, entry)

@@ -124,7 +124,7 @@ internal class SendDestinationModel @Inject constructor(
                 if (address.contactName != null) return@combine false // sent via a contact
                 val networkId = cryptoCurrency.network.rawId
                 contactList.none { contact ->
-                    contact.addressEntries.any {
+                    contact.addresses.any {
                         it.networkId.value == networkId && it.address.equals(address.actualAddress, ignoreCase = true)
                     }
                 }
@@ -481,7 +481,7 @@ internal class SendDestinationModel @Inject constructor(
     private fun findContactByAddress(address: String): Contact? {
         val networkId = cryptoCurrency.network.rawId
         return contacts.value.firstOrNull { contact ->
-            contact.addressEntries.any { entry ->
+            contact.addresses.any { entry ->
                 entry.networkId.value == networkId && entry.address.equals(address, ignoreCase = true)
             }
         }

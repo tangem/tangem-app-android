@@ -67,7 +67,7 @@ class GetVerifiedContactsInteractorTest {
         // Assert
         assertThat(result).containsExactly(
             VerifiedContact(
-                contact = contact.copy(addressEntries = listOf(valid)),
+                contact = contact.copy(addresses = listOf(valid)),
                 invalidEntries = listOf(invalid),
             ),
         )
@@ -93,8 +93,8 @@ class GetVerifiedContactsInteractorTest {
         // Assert
         assertThat(messagesSlot.captured.map { String(it) })
             .containsExactly(
-                expectedPayload(contact, contact.addressEntries[0]),
-                expectedPayload(contact, contact.addressEntries[1]),
+                expectedPayload(contact, contact.addresses[0]),
+                expectedPayload(contact, contact.addresses[1]),
             )
             .inOrder()
         assertThat(signaturesSlot.captured.map { it.toHexString() }).containsExactly("AABB", "CCDD").inOrder()
@@ -114,7 +114,7 @@ class GetVerifiedContactsInteractorTest {
         val result = interactor(query = "").first().single()
 
         // Assert
-        assertThat(result.contact.addressEntries).containsExactly(valid1, valid2).inOrder()
+        assertThat(result.contact.addresses).containsExactly(valid1, valid2).inOrder()
         assertThat(result.invalidEntries).containsExactly(invalid)
     }
 
@@ -135,7 +135,7 @@ class GetVerifiedContactsInteractorTest {
 
         // Assert
         assertThat(signaturesSlot.captured.map { it.toHexString() }).containsExactly("AABB")
-        assertThat(result.contact.addressEntries).containsExactly(signed)
+        assertThat(result.contact.addresses).containsExactly(signed)
         assertThat(result.invalidEntries).containsExactly(malformed)
     }
 
@@ -149,7 +149,7 @@ class GetVerifiedContactsInteractorTest {
         val result = interactor(query = "").first().single()
 
         // Assert
-        assertThat(result.contact.addressEntries).isEmpty()
+        assertThat(result.contact.addresses).isEmpty()
         assertThat(result.invalidEntries).isEmpty()
         verify(exactly = 0) { verifyMessages(any(), any(), any()) }
     }
@@ -192,7 +192,7 @@ class GetVerifiedContactsInteractorTest {
         iconColor = "KekColor",
         createdAt = "2026-01-01T00:00:00.000Z",
         updatedAt = "2026-01-01T00:00:00.000Z",
-        addressEntries = entries.toList(),
+        addresses = entries.toList(),
     )
 
     private fun entry(id: String, address: String, memo: String?, signature: String): AddressEntry = AddressEntry(

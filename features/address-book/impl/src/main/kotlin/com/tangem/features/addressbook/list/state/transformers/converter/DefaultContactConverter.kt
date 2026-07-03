@@ -23,7 +23,7 @@ internal class DefaultContactConverter(
                 color = CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == contact.iconColor }
                     ?: CryptoPortfolioIcon.Color.Azure,
             ),
-            networkAddressCount = contact.addressEntries.size,
+            networkAddressCount = contact.addresses.size,
             onClick = { onContactClick(contact.id.value) },
         )
     }

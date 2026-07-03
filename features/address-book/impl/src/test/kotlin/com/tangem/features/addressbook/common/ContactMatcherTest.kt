@@ -81,7 +81,7 @@ internal class ContactMatcherTest {
         iconColor = iconColor,
         createdAt = "2026-06-10T14:30:00.000Z",
         updatedAt = "2026-06-10T14:30:00.000Z",
-        addressEntries = entries.toList(),
+        addresses = entries.toList(),
     )
 
     private fun entry(address: String, networkId: String, memo: String? = null): AddressEntry = AddressEntry(
