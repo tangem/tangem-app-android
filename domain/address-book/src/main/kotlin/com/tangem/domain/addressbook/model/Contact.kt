@@ -19,5 +19,5 @@ data class Contact(
     val iconColor: String,
     val createdAt: String,
     val updatedAt: String,
-    val addressEntries: List<AddressEntry>,
+    val addresses: List<AddressEntry>,
 )
