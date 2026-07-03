@@ -7,6 +7,7 @@ import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.AddressEntryId
 import com.tangem.domain.models.network.Network
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
+import kotlinx.collections.immutable.toImmutableList
 import java.util.UUID
 
 internal class ContactAddressEntriesConverter {
@@ -15,6 +16,18 @@ internal class ContactAddressEntriesConverter {
         return addresses.flatMap { address ->
             address.networkIds.map { rawId -> address.toAddressEntry(rawId) }
         }
+    }
+
+    fun toValidatedAddresses(entries: List<AddressEntry>): List<ValidatedAddress> {
+        return entries
+            .groupBy { it.address }
+            .map { (address, group) ->
+                ValidatedAddress(
+                    address = address,
+                    networkIds = group.map { it.networkId.value }.toImmutableList(),
+                    memo = group.firstNotNullOfOrNull { it.memo },
+                )
+            }
     }
 
     private fun ValidatedAddress.toAddressEntry(rawId: String): AddressEntry {

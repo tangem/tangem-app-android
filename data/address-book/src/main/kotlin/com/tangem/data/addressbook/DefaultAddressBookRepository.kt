@@ -27,13 +27,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -82,6 +76,14 @@ internal class DefaultAddressBookRepository(
     private fun getContactsForWallet(userWalletId: UserWalletId): Flow<List<Contact>> {
         return blobStore.getBlob(userWalletId).map { blob ->
             val userWallet = blob?.let { findUserWallet(it.walletId) } ?: return@map emptyList()
+            decryptContacts(blob, userWallet)
+        }
+    }
+
+    override suspend fun getContactsSync(userWalletId: UserWalletId): List<Contact> {
+        return withContext(dispatchers.io) {
+            val blob = blobStore.getBlobSync(userWalletId) ?: return@withContext emptyList()
+            val userWallet = findUserWallet(blob.walletId) ?: return@withContext emptyList()
             decryptContacts(blob, userWallet)
         }
     }
