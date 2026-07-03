@@ -724,6 +724,144 @@ internal class SwapTransferInteractorImplTest {
             assertThat(feeBalances.single()).isNull()
         }
 
+    @Test
+    fun `GIVEN subtract available and sub-max amount in coverage zone WHEN updateTransfer THEN feeCurrencyBalanceAfterTx surfaces the dust remainder`() =
+        runTest {
+            // Arrange: reproduces the reported Solana dust bug. Entered amount is below the balance but within
+            // one fee of it → fee coverage applies and the sent amount tracks the entered amount (entered - fee),
+            // leaving (balance - entered) on the account. That dust remainder must be surfaced so the rent
+            // warning can fire — it must NOT be clamped to (balance - fee), which would report a zero remainder.
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val balance = BigDecimal("0.0534546")
+            val enteredAmount = BigDecimal("0.05332441")
+            val feeValue = BigDecimal("0.000205")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = balance,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val feePaidCurrencyStatus = buildFeeCurrencyStatus(
+                currency = fromCurrencyStatus.currency,
+                amount = balance,
+            )
+            val fee: Fee = mockk(relaxed = true) { every { amount.value } returns feeValue }
+            stubBaseFlows(appCurrency)
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            coEvery { getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any()) } returns null.right()
+            val feeBalances = mutableListOf<BigDecimal?>()
+            stubGetCurrencyCheckCapturingFeeBalance(feeBalances)
+
+            // Act
+            sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = enteredAmount.toPlainString(),
+                feePaidCurrencyStatus = feePaidCurrencyStatus,
+                fee = fee,
+            )
+
+            // Assert: remainder is balance - entered (the dust), not zero.
+            assertThat(feeBalances.single()!!.compareTo(balance - enteredAmount)).isEqualTo(0)
+        }
+
+    @Test
+    fun `GIVEN subtract available and max amount WHEN updateTransfer THEN feeCurrencyBalanceAfterTx is fee-adjusted remainder`() =
+        runTest {
+            // Arrange: Max send with fee coverage. The actual sent amount is entered - fee, so the true
+            // remainder is 0 (allowed) — the raw entered amount must not be subtracted on top of the fee.
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val balance = BigDecimal("1.5")
+            val feeValue = BigDecimal("0.2")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = balance,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val feePaidCurrencyStatus = buildFeeCurrencyStatus(
+                currency = fromCurrencyStatus.currency,
+                amount = balance,
+            )
+            val fee: Fee = mockk(relaxed = true) { every { amount.value } returns feeValue }
+            stubBaseFlows(appCurrency)
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            coEvery { getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any()) } returns null.right()
+            val feeBalances = mutableListOf<BigDecimal?>()
+            stubGetCurrencyCheckCapturingFeeBalance(feeBalances)
+
+            // Act
+            sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = balance.toPlainString(),
+                feePaidCurrencyStatus = feePaidCurrencyStatus,
+                fee = fee,
+            )
+
+            // Assert: fee-adjusted remainder is exactly zero, not -fee.
+            assertThat(feeBalances.single()!!.compareTo(BigDecimal.ZERO)).isEqualTo(0)
+        }
+
+    @Test
+    fun `GIVEN subtract available and amount below coverage zone WHEN updateTransfer THEN feeCurrencyBalanceAfterTx is balance minus amount minus fee`() =
+        runTest {
+            // Arrange: amount well below balance → no fee coverage → the entered amount is used as-is.
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val balance = BigDecimal("2.0")
+            val enteredAmount = BigDecimal("0.5")
+            val feeValue = BigDecimal("0.1")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = balance,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val feePaidCurrencyStatus = buildFeeCurrencyStatus(
+                currency = fromCurrencyStatus.currency,
+                amount = balance,
+            )
+            val fee: Fee = mockk(relaxed = true) { every { amount.value } returns feeValue }
+            stubBaseFlows(appCurrency)
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            coEvery { getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any()) } returns null.right()
+            val feeBalances = mutableListOf<BigDecimal?>()
+            stubGetCurrencyCheckCapturingFeeBalance(feeBalances)
+
+            // Act
+            sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = enteredAmount.toPlainString(),
+                feePaidCurrencyStatus = feePaidCurrencyStatus,
+                fee = fee,
+            )
+
+            // Assert
+            assertThat(feeBalances.single()!!.compareTo(balance - enteredAmount - feeValue)).isEqualTo(0)
+        }
+
     // endregion
 
     // region loadFee
