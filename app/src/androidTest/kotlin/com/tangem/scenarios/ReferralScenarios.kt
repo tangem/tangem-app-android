@@ -8,7 +8,7 @@ import com.tangem.screens.onReferralProgramScreen
 import com.tangem.screens.onWalletSettingsScreen
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.referralTakeParticipate(withBackup: Boolean = false) {
+fun BaseTestCase.referralTakeParticipate() {
     step("Open 'Details' screen") {
         onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
