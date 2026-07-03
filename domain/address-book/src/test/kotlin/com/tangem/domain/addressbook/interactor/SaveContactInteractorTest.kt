@@ -87,7 +87,7 @@ internal class SaveContactInteractorTest {
             assertThat(contact.id.value).isNotEmpty()
             assertThat(contact.createdAt).isEqualTo(NEW_TIMESTAMP)
             assertThat(contact.updatedAt).isEqualTo(NEW_TIMESTAMP)
-            assertThat(contact.addressEntries.map { it.signature })
+            assertThat(contact.addresses.map { it.signature })
                 .containsExactly(signatures[0].toHexString())
         }
 
@@ -121,7 +121,7 @@ internal class SaveContactInteractorTest {
                         expectedHash(persisted, twoEntries[1]).toHexString(),
                     )
                     .inOrder()
-                assertThat(persisted.addressEntries.map { it.signature })
+                assertThat(persisted.addresses.map { it.signature })
                     .containsExactly(signatures[0].toHexString(), signatures[1].toHexString())
                     .inOrder()
             }
@@ -138,7 +138,7 @@ internal class SaveContactInteractorTest {
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(saved.captured)
-            assertThat(saved.captured.addressEntries).isEmpty()
+            assertThat(saved.captured.addresses).isEmpty()
             coVerify(exactly = 0) { signUseCase(any<List<ByteArray>>(), any(), any()) }
         }
 
@@ -249,7 +249,7 @@ internal class SaveContactInteractorTest {
                     contact = existing,
                     name = "Bob",
                     iconColor = "TestColor",
-                    addressEntries = updatedEntries,
+                    addresses = updatedEntries,
                 )
 
                 // Assert
@@ -259,7 +259,7 @@ internal class SaveContactInteractorTest {
                 assertThat(contact.name.value).isEqualTo("Bob")
                 assertThat(contact.createdAt).isEqualTo(ORIGINAL_TIMESTAMP)
                 assertThat(contact.updatedAt).isEqualTo(NEW_TIMESTAMP)
-                assertThat(contact.addressEntries.map { it.signature })
+                assertThat(contact.addresses.map { it.signature })
                     .containsExactly(signatures[0].toHexString())
                 coVerify(exactly = 0) { repository.getContacts(any<UserWalletId>()) }
             }
@@ -276,7 +276,7 @@ internal class SaveContactInteractorTest {
                 contact = contact(name = "Alice"),
                 name = "Bob",
                 iconColor = "TestColor",
-                addressEntries = updatedEntries,
+                addresses = updatedEntries,
             )
 
             // Assert
@@ -292,7 +292,7 @@ internal class SaveContactInteractorTest {
                 contact = contact(name = "Alice"),
                 name = "",
                 iconColor = "TestColor",
-                addressEntries = updatedEntries,
+                addresses = updatedEntries,
             )
 
             // Assert
@@ -310,7 +310,7 @@ internal class SaveContactInteractorTest {
         iconColor = "TestColor",
         createdAt = ORIGINAL_TIMESTAMP,
         updatedAt = ORIGINAL_TIMESTAMP,
-        addressEntries = listOf(entry(id = "addr-$name", address = "0xabc", memo = null)),
+        addresses = listOf(entry(id = "addr-$name", address = "0xabc", memo = null)),
     )
 
     private fun entry(id: String, address: String, memo: String?): AddressEntry = AddressEntry(
