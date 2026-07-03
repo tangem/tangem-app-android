@@ -74,8 +74,10 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 is TangemPayOnboardingComponent.Params.HotWalletOnboarding -> {
                     startOnboarding(userWalletId = params.userWalletId)
                 }
+                // FromBanner* and mobile-onboard skip the backend validation that Params.Deeplink performs.
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
+                is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
                 -> showOnboarding()
             }
         }
@@ -144,7 +146,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
-        if (params is TangemPayOnboardingComponent.Params.Deeplink) {
+        if (params is TangemPayOnboardingComponent.Params.Deeplink ||
+            params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
+        ) {
             modelScope.launch {
                 openWalletSelectorIfNeeds(
                     walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
@@ -249,6 +253,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         is TangemPayOnboardingComponent.Params.Deeplink,
         is TangemPayOnboardingComponent.Params.ContinueOnboarding,
         is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
+        is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
         -> null
     }
 }

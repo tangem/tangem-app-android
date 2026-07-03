@@ -13,17 +13,9 @@ class AppsFlyerDeepLinkListener @Inject constructor(
 
     override fun onDeepLinking(p0: DeepLinkResult) {
         when (p0.status) {
-            DeepLinkResult.Status.FOUND -> {
-                referralParamsHandler.handleDeeplink(deepLink = p0.deepLink)
-            }
-            DeepLinkResult.Status.NOT_FOUND -> {
-                referralParamsHandler.handleNoDeeplink()
-                TangemLogger.i("No deep link found")
-            }
-            DeepLinkResult.Status.ERROR -> {
-                referralParamsHandler.handleNoDeeplink()
-                TangemLogger.e("Deep link error: ${p0.error}")
-            }
+            DeepLinkResult.Status.FOUND -> referralParamsHandler.handleDeeplink(deepLink = p0.deepLink)
+            DeepLinkResult.Status.NOT_FOUND -> TangemLogger.i("No deep link found")
+            DeepLinkResult.Status.ERROR -> TangemLogger.e("Deep link error: ${p0.error}")
         }
     }
 }
