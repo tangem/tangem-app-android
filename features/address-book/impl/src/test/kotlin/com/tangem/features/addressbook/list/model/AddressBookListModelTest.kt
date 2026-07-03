@@ -2,7 +2,6 @@ package com.tangem.features.addressbook.list.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.AddressEntry
@@ -129,7 +128,7 @@ internal class AddressBookListModelTest {
             iconColor = CryptoPortfolioIcon.Color.Azure.name,
             createdAt = TIMESTAMP,
             updatedAt = TIMESTAMP,
-            addressEntries = listOf(
+            addresses = listOf(
                 AddressEntry(
                     id = AddressEntryId("e-$id"),
                     address = "0xABC",
