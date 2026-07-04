@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.tasks.product
 
 import android.util.Log
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
@@ -13,7 +12,6 @@ import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.domain.card.CardTypesResolver
-import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
@@ -26,7 +24,6 @@ import com.tangem.operations.read.ReadMasterSecretCommand
 import com.tangem.operations.read.ReadWalletsListCommand
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
-import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.operations.wallet.CreateWalletResponse as SdkCreateWalletResponse
 
 private data class CreateWalletResponse(
@@ -419,14 +416,4 @@ private class CreateWalletTangemWallet(
                 }
             }
     }
-
-    private fun getBlockchains(cardId: String, card: CardDTO): List<Blockchain> {
-        return when {
-            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.getDemoBlockchains(cardId).toList()
-            card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
-            else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-        }
-    }
-
-    private companion object
 }
