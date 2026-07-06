@@ -202,3 +202,7 @@ Delete anything explaining WHAT a step does.
   vs. raw `am instrument`), running against a local WireMock, interpreting CLI/Allure output, using
   `@Ignore`, or driving WireMock scenarios. Includes how to find app-side root causes when the UI fails
   silently (the app log in `files/log.txt`, and the WireMock journal).
+- **`reference/yield-mode.md`** — read before writing any **Yield Mode (yield-supply / "Earning")** test.
+  Covers the hot-wallet activation flow, why Ethereum (not Polygon — gasless), the full mock set +
+  scenarios, the `isActive`-semantics / lowercase-address / hold-timing / Pill-testTag gotchas, and the
+  production testTags already added. Mirror `tests/yield/YieldModeTest.kt`.
