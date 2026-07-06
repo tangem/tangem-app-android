@@ -2,6 +2,8 @@ package com.tangem.features.txhistory.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -11,7 +13,9 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -65,6 +69,15 @@ private fun TxHistoryDetailsModalBottomSheetContentPreview() {
 private fun TxHistoryDetailsModalBottomSheetContentTwoAssetsPreview() {
     TangemThemePreviewRedesign {
         TxHistoryDetailsModalBottomSheetContent(state = previewTwoAssets(), onDismiss = {})
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun TxHistoryDetailsModalBottomSheetContentRefundedPreview() {
+    TangemThemePreviewRedesign {
+        TxHistoryDetailsModalBottomSheetContent(state = previewRefunded(), onDismiss = {})
     }
 }
 
@@ -122,12 +135,12 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
             isGrayscale = false,
             shouldShowCustomBadge = false,
         ),
-        isFaded = true,
+        isFaded = false,
     ),
     to = TxHistoryDetailsUM.AssetUM(
         label = stringReference("You receive"),
         owner = null,
-        amount = stringReference("+ 0.001 BTC"),
+        amount = stringReference("0.001 BTC"),
         currencyIcon = CurrencyIconState.CoinIcon(
             url = null,
             fallbackResId = R.drawable.img_btc_22,
@@ -153,6 +166,34 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
     ),
     providerButton = TxHistoryDetailsUM.ProviderButtonUM(
         text = stringReference("Go to provider"),
+        onClick = {},
+    ),
+)
+
+/** Refunded swap exercising the "Refunded in {symbol}" banner with the "Learn more" link and the "Go to token" CTA. */
+private fun previewRefunded() = previewTwoAssets().copy(
+    header = TxHistoryDetailsUM.HeaderUM(
+        icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+        status = Status.Failed,
+        title = stringReference("Swapping failed"),
+        subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
+    ),
+    statusBanner = TxHistoryDetailsUM.StatusBannerUM(
+        severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+        title = stringReference("Refunded in WBTC"),
+        subtitle = stringReference(
+            "Your funds have been refunded in WBTC to your wallet on the Polygon network, " +
+                "in accordance with OKX exchange rules. ",
+        ) + styledStringReference(
+            value = "Learn more",
+            spanStyleReference = { SpanStyle(textDecoration = TextDecoration.Underline) },
+            onClick = {},
+        ),
+        isLoading = false,
+    ),
+    providerButton = TxHistoryDetailsUM.ProviderButtonUM(
+        text = stringReference("Go to token"),
         onClick = {},
     ),
 )
