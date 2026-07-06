@@ -170,13 +170,11 @@ internal class TangemPayDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    fun onResume() {
-        modelScope.launch {
-            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
-        }
+    fun onStart() {
+        onRefreshSwipe(refreshState = ShowRefreshState(false))
     }
 
-    fun onPause() {
+    fun onStop() {
         modelScope.launch {
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
         }
