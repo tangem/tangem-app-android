@@ -43,16 +43,21 @@ internal class UpdateTransferTransformer(
                 },
             )
         }
-        val swapAndSendRow = swapAction?.let { action ->
-            TransferUM.Row(
-                isLoading = action.unavailabilityReason.isLoading,
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
-                onClick = {
-                    onActionDispatched()
-                    clickIntents.onSwapAndSendClick(action.unavailabilityReason)
-                },
-            )
-        }
+        // Send&Swap is only meaningful when Swap itself is available, so it is shown only in that case
+        // (mirrors the main-screen Transfer quick actions, which synthesize Send&Swap only when swap is available).
+        // This prevents a disabled Send&Swap row for cards that cannot swap at all (e.g. S2C single-currency cards).
+        val swapAndSendRow = swapAction
+            ?.takeIf { it.unavailabilityReason == ScenarioUnavailabilityReason.None }
+            ?.let {
+                TransferUM.Row(
+                    isLoading = false,
+                    isEnabled = true,
+                    onClick = {
+                        onActionDispatched()
+                        clickIntents.onSwapAndSendClick(it.unavailabilityReason)
+                    },
+                )
+            }
         val sellRow = sellAction?.let { action ->
             TransferUM.Row(
                 isLoading = action.unavailabilityReason.isOutdatedLoading(),
