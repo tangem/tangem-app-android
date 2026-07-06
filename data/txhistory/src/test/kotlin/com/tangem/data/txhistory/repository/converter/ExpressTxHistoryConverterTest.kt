@@ -89,7 +89,6 @@ internal class ExpressTxHistoryConverterTest {
         toActualAmount: String? = null,
     ) = ExpressExchangeEntity(
         txId = "tx-1",
-        ownerAddress = "owner",
         providerId = "provider",
         fromAddress = "owner",
         payinAddress = "payin-addr",
@@ -131,7 +130,6 @@ internal class ExpressTxHistoryConverterTest {
         status: String = "finished",
     ) = ExpressOnrampEntity(
         txId = "onramp-1",
-        ownerAddress = "owner",
         providerId = "provider",
         payoutAddress = "owner",
         status = status,
