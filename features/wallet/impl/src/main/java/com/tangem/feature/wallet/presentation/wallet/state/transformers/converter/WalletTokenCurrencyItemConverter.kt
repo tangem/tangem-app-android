@@ -9,10 +9,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.styledResourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -136,11 +133,7 @@ internal class WalletTokenCurrencyItemConverter(
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.NoAccount,
             -> TangemTokenRowUM.SubtitleUM.Content(
-                text = stringReference(
-                    currencyStatus.value.fiatRate.format {
-                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
-                    },
-                ),
+                text = TextReference.EMPTY,
                 priceChangeUM = PriceChangeState.Content(
                     type = PriceChangeType.fromBigDecimal(currencyStatus.value.priceChange.orZero()),
                     valueInPercent = currencyStatus.value.priceChange.format { percent() },

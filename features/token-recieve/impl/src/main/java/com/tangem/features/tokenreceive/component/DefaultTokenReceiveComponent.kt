@@ -11,10 +11,12 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.tokenreceive.model.TokenReceiveModel
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.TokenReceiveContentSheet
+import com.tangem.features.tokenreceive.ui.TokenReceiveContentSheetLegacy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -43,13 +45,21 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
     override fun BottomSheet() {
         val content by contentStack.subscribeAsState()
         val currentRoute = content.active.configuration
-
-        TokenReceiveContentSheet(
-            route = currentRoute,
-            onCloseClick = ::dismiss,
-            onBackClick = ::onChildBack,
-            contentStack = content,
-        )
+        if (LocalRedesignEnabled.current) {
+            TokenReceiveContentSheet(
+                route = currentRoute,
+                onCloseClick = ::dismiss,
+                onBackClick = ::onChildBack,
+                contentStack = content,
+            )
+        } else {
+            TokenReceiveContentSheetLegacy(
+                route = currentRoute,
+                onCloseClick = ::dismiss,
+                onBackClick = ::onChildBack,
+                contentStack = content,
+            )
+        }
     }
 
     override fun dismiss() = model.params.onDismiss()
