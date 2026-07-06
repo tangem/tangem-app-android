@@ -1251,6 +1251,7 @@
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Загальна сума транзакцій понад %1s може вимагати верифікації особи через %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Загальна сума транзакцій, що перевищує еквівалент %1s, може вимагати верифікації особи через %2s</string>
+  <string name="onramp_native_payment_identity_verification">Для транзакцій через Apple Pay може знадобитися верифікація особи в %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">Натискаючи «Оплатити», ви погоджуєтеся з %1s\'s %2s і %3s.</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_offer_type_fastet">Найшвидший</string>
@@ -2335,8 +2336,8 @@
   <string name="warning_no_backup_title">Резервна копія відсутня</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Ця картка вже використовувалася для здійснення транзакцій. Якщо вона отримана з ненадійного джерела, подумайте про те, щоб зняти всі кошти. Якщо це ваша картка, ніяких додаткових дій не потрібно.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Картка вже підписувала транзакції</string>
-  <string name="warning_outdated_data_message">Буде оновлено якнайшвидше.</string>
-  <string name="warning_outdated_data_title">Відсутня частина балансу токенів.</string>
+  <string name="warning_outdated_data_message">Деякі баланси токенів не вдалося оновити</string>
+  <string name="warning_outdated_data_title">Баланси можуть бути неактуальними</string>
   <string name="warning_rate_app_message">Ваш відгук мотивує нас робити гаманець Tangem Wallet ще кращим</string>
   <string name="warning_rate_app_title">Подобається Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необхідно провести асоціацію токена, щоб мати можливість приймати його</string>
