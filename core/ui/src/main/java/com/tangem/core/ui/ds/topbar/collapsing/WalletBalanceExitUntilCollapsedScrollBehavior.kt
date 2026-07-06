@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.drop
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
+private const val LIST_FLING_DAMPING = 0.1f
+
 /**
  * A scroll behavior for a collapsing top app bar that collapses when scrolling up and expands when scrolling down.
  * When the user stops scrolling, the app bar will settle to either fully collapsed or fully expanded state
@@ -176,7 +178,8 @@ private fun exitUntilCollapsedScrollBehavior(
                     }
                 }
 
-                return Velocity(0f, available.y - remainingVelocity)
+                val passedVelocity = remainingVelocity * LIST_FLING_DAMPING
+                return Velocity(0f, available.y - passedVelocity)
             }
 
             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {

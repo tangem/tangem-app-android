@@ -26,6 +26,8 @@ dependencies {
     implementation(projects.core.analytics.models)
 
     /** Domain modules */
+    api(projects.domain.card)
+    api(projects.domain.feedback)
     api(projects.domain.account)
     api(projects.domain.account.status)
     api(projects.domain.appCurrency)

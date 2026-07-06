@@ -80,6 +80,8 @@ import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlock
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -208,10 +210,17 @@ private fun WalletContent2(
             bottom = paddingValues.calculateBottomPadding() + marketHintApproxHeight,
         )
 
-        LaunchedEffect(walletsPagerState.currentPage) {
-            if (walletsPagerState.currentPage != state.selectedWalletIndex) {
-                state.onWalletChange(walletsPagerState.currentPage, false)
-            }
+        val selectedWalletIndex by rememberUpdatedState(state.selectedWalletIndex)
+        LaunchedEffect(walletsPagerState) {
+            // Only react to genuine settles and skip the page the pager was (re)created with, so a
+            // programmatic scroll or pager recreation can't revert the selection to a stale page.
+            snapshotFlow { walletsPagerState.settledPage }
+                .drop(count = 1)
+                .collectLatest { settledPage ->
+                    if (settledPage != selectedWalletIndex) {
+                        state.onWalletChange(settledPage, false)
+                    }
+                }
         }
 
         val canPagerScroll by remember { derivedStateOf { behavior.state.heightOffset == 0f } }

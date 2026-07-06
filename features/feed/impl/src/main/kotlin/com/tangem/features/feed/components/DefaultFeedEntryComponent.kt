@@ -218,7 +218,11 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
 
     private fun onChildBack() {
         if (stack.value.active.configuration !is FeedEntryChildFactory.Child.Feed) {
-            stackNavigation.pop()
+            if (stack.value.backStack.isEmpty()) {
+                router.pop()
+            } else {
+                stackNavigation.pop()
+            }
         }
     }
 
