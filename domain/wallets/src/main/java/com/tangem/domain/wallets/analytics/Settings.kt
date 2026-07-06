@@ -13,6 +13,8 @@ sealed class Settings(
 
     class ButtonManageTokens : Settings(event = "Button - Manage Tokens")
 
+    class ButtonOpenChat : Settings(event = "Button - Open Chat")
+
     class ColdWalletAdded(
         source: AnalyticsParam.ScreensSources?,
     ) : Settings(

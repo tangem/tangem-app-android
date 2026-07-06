@@ -125,6 +125,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.appUpdate)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
@@ -192,6 +193,7 @@ dependencies {
     implementation(projects.libs.tangemSdkApi)
 
     implementation(projects.data.account)
+    implementation(projects.data.addressBook)
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
@@ -199,6 +201,7 @@ dependencies {
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
+    implementation(projects.data.appUpdate)
     implementation(projects.data.tokens)
     implementation(projects.data.assetsdiscovery)
     implementation(projects.data.txhistory)
@@ -264,6 +267,8 @@ dependencies {
     implementation(projects.features.details.impl)
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.disclaimer.impl)
+    implementation(projects.features.forceUpdate.api)
+    implementation(projects.features.forceUpdate.impl)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.pushNotifications.impl)
     implementation(projects.features.pushNotificationSettings.api)
@@ -332,6 +337,8 @@ dependencies {
     implementation(projects.features.yieldSupply.impl)
     implementation(projects.features.approval.api)
     implementation(projects.features.approval.impl)
+    implementation(projects.features.forYou.api)
+    implementation(projects.features.forYou.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -391,6 +398,7 @@ dependencies {
     kapt(deps.hilt.compilerx)
 
     /** Other libraries */
+    implementation(deps.arrow.fx)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.googlePlay.review)

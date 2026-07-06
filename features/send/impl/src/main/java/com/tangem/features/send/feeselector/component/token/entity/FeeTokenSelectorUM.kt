@@ -1,6 +1,6 @@
 package com.tangem.features.send.feeselector.component.token.entity
 
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class FeeTokenSelectorUM(
