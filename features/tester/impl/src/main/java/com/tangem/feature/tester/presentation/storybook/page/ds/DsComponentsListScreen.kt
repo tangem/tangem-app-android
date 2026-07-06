@@ -26,6 +26,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.ta
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSearchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
 
 private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
@@ -43,6 +44,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
     DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
     DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
+    DsStoryItem(title = "🔤 Text styles", factory = textStyleStoryFactory),
 )
 
 @Composable
