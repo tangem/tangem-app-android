@@ -51,7 +51,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
     private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
-    private val selectedCategoryFlow = MutableStateFlow(SwapMarketCategory.Trending)
+    private val selectedCategoryFlow = MutableStateFlow(SwapMarketCategory.MarketCap)
 
     val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
