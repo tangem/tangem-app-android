@@ -1,37 +1,52 @@
 package com.tangem.features.swap.v2.impl.sendviaswap.confirm
 
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.footers.SendingText
+import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
-import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.*
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.*
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
+import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
-import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.SendWithSwapConfirmModel
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.ui.SendWithSwapConfirmContent
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -44,7 +59,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     sendDestinationBlockComponentFactory: SendDestinationBlockComponent.Factory,
     feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
     sendNotificationsComponentFactory: SendNotificationsComponent.Factory,
-) : ComposableContentComponent, AppComponentContext by appComponentContext {
+    private val urlOpener: UrlOpener,
+) : ComposableModularContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendWithSwapConfirmModel = getOrCreateModel(params = params)
 
@@ -178,6 +194,17 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     }
 
     @Composable
+    override fun Title() {
+        AppBarWithBackButtonAndIcon(
+            text = stringResourceSafe(R.string.send_with_swap_confirm_title),
+            onBackClick = router::pop,
+            backIconRes = R.drawable.ic_back_24,
+            backgroundColor = TangemTheme.colors.background.tertiary,
+            modifier = Modifier.height(TangemTheme.dimens.size56),
+        )
+    }
+
+    @Composable
     override fun Content(modifier: Modifier) {
         val sendWithSwapUM by model.uiState.collectAsStateWithLifecycle()
         val sendNotificationsUM by sendNotificationsComponent.state.collectAsStateWithLifecycle()
@@ -196,13 +223,120 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         )
     }
 
+    @Composable
+    override fun Footer() {
+        val state by model.uiState.collectAsStateWithLifecycle()
+        Column {
+            val confirmUMContent = state.confirmUM as? ConfirmUM.Content
+            AnimatedVisibility(
+                visible = confirmUMContent != null,
+                enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
+            ) {
+                val sendFooter = confirmUMContent?.sendingFooter ?: TextReference.EMPTY
+                val legalFooter = getAnnotatedStringForLegals(
+                    tosUM = confirmUMContent?.tosUM,
+                    sendFooter = sendFooter,
+                    onClick = urlOpener::openUrl,
+                )
+                val footerText = remember(sendFooter, legalFooter) {
+                    if (sendFooter != TextReference.EMPTY || legalFooter != TextReference.EMPTY) {
+                        combinedReference(sendFooter, legalFooter)
+                    } else {
+                        TextReference.EMPTY
+                    }
+                }
+                SendingText(footerText = footerText)
+            }
+            NavigationPrimaryButton(
+                primaryButton = model.primaryButtonUM(state.confirmUM),
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
+            )
+        }
+    }
+
+    @Composable
+    private fun getAnnotatedStringForLegals(
+        tosUM: ConfirmUM.Content.TosUM?,
+        sendFooter: TextReference,
+        onClick: (String) -> Unit,
+    ): TextReference {
+        if (tosUM == null) return TextReference.EMPTY
+        val tos = tosUM.tosLink
+        val policy = tosUM.policyLink
+        return if (tos != null && policy != null) {
+            val tosTitle = tos.title.resolveReference()
+            val policyTitle = policy.title.resolveReference()
+            val fullString = stringResourceSafe(id = R.string.express_legal_two_placeholders, tosTitle, policyTitle)
+            val tosIndex = fullString.indexOf(tosTitle)
+            val policyIndex = fullString.indexOf(policyTitle)
+
+            annotatedReference {
+                if (!sendFooter.resolveReference().endsWith(StringsSigns.POINT_SIGN)) {
+                    append(StringsSigns.POINT_SIGN)
+                }
+                appendSpace()
+                append(fullString.substring(0, tosIndex))
+                withLink(
+                    link = LinkAnnotation.Clickable(
+                        tag = "TOS_TAG",
+                        linkInteractionListener = { onClick(tos.link) },
+                    ),
+                    block = {
+                        appendColored(
+                            text = fullString.substring(tosIndex, tosIndex + tosTitle.length),
+                            color = TangemTheme.colors.text.accent,
+                        )
+                    },
+                )
+                append(fullString.substring(tosIndex + tosTitle.length, policyIndex))
+                withLink(
+                    link = LinkAnnotation.Clickable(
+                        tag = "POLICY_TAG",
+                        linkInteractionListener = { onClick(policy.link) },
+                    ),
+                    block = {
+                        appendColored(
+                            text = fullString.substring(policyIndex, policyIndex + policyTitle.length),
+                            color = TangemTheme.colors.text.accent,
+                        )
+                    },
+                )
+            }
+        } else {
+            val legal = requireNotNull(tos ?: policy) { "tos or policy must not be null" }
+            val legalTitle = legal.title.resolveReference()
+            val fullString = stringResourceSafe(id = R.string.express_legal_one_placeholder, legalTitle)
+            val legalIndex = fullString.indexOf(legalTitle)
+
+            annotatedReference {
+                append(fullString.substring(0, legalIndex))
+                withLink(
+                    link = LinkAnnotation.Clickable(
+                        tag = "LEGAL_TAG",
+                        linkInteractionListener = { onClick(legal.link) },
+                    ),
+                    block = {
+                        appendColored(
+                            text = fullString.substring(legalIndex, legalIndex + legalTitle.length),
+                            color = TangemTheme.colors.text.accent,
+                        )
+                    },
+                )
+            }
+        }
+    }
+
     data class Params(
         val sendWithSwapUM: SendWithSwapUM,
         val analyticsCategoryName: String,
         val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val userWallet: UserWallet,
         val appCurrency: AppCurrency,
-        val currentRoute: Flow<SendWithSwapRoute>,
         val swapDirection: SwapDirection,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
@@ -218,6 +352,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     }
 
     interface ModelCallback {
-        fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM)
+        fun onResult(sendWithSwapUM: SendWithSwapUM)
     }
 }
