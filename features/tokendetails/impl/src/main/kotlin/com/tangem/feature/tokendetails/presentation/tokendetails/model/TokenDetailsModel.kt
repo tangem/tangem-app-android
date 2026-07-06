@@ -3,17 +3,13 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import arrow.core.right
-import com.tangem.utils.logging.TangemLogger
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
-import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
@@ -21,19 +17,18 @@ import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.features.rating.RatingComponent
 import com.tangem.feature.swap.domain.SwapFeedbackUseCase
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
-import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds.image.DeviceIconUM
@@ -49,13 +44,18 @@ import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
+import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
@@ -88,11 +88,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
-import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
-import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
-import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
@@ -101,28 +97,10 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetYieldSupplyBalanceTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateActionButtonsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateAddFundsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTransferTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateZeroBalanceActionsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindAddFundsActionButtonTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindTransferActionButtonTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateStakingNotificationTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateNotificationsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -134,6 +112,7 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -438,6 +417,7 @@ internal class TokenDetailsModel @Inject constructor(
                         UpdateNotificationsTransformer(
                             warnings = warnings,
                             clickIntents = this@TokenDetailsModel,
+                            walletInteractionIcon = walletInterationIcon(userWallet),
                         ),
                     )
                 }
