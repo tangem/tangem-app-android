@@ -647,7 +647,9 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        fetchWalletContent(userWallet = action.selectedWallet)
+        // Force update: a re-added wallet reuses the same id, so a stale (completed) fetch job from a previous
+        // session would otherwise make the fetcher skip loading, leaving the screen stuck on infinite loading.
+        fetchWalletContent(userWallet = action.selectedWallet, forceUpdate = true)
 
         stateHolder.update(
             AddWalletTransformer(
@@ -770,7 +772,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun fetchWalletContent(userWallet: UserWallet) {
+    private fun fetchWalletContent(userWallet: UserWallet, forceUpdate: Boolean = false) {
         if (userWallet.isLocked) return
 
         /*
@@ -778,7 +780,7 @@ internal class WalletModel @Inject constructor(
          * so the coroutine is launched in the current context
          */
         modelScope.launch {
-            walletContentFetcher(userWalletId = userWallet.walletId)
+            walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = forceUpdate)
         }
     }
 
