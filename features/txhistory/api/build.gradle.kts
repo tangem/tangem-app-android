@@ -15,6 +15,7 @@ dependencies {
 
     /** Domain models */
     api(projects.domain.models)
+    api(projects.domain.txhistory)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 

@@ -33,6 +33,16 @@ object PreferencesKeys {
 
     val APP_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "launchCount") }
 
+    val LAST_OPTIONAL_UPDATE_SHOWN_VERSION_KEY by lazy {
+        stringPreferencesKey(name = "lastOptionalUpdateShownVersion")
+    }
+
+    val LAST_OPTIONAL_UPDATE_SHOWN_AT_KEY by lazy { longPreferencesKey(name = "lastOptionalUpdateShownAt") }
+
+    val CACHED_APP_VERSIONS_KEY by lazy { stringPreferencesKey(name = "cachedApplicationVersions") }
+
+    val CACHED_APP_VERSIONS_AT_KEY by lazy { longPreferencesKey(name = "cachedApplicationVersionsAt") }
+
     val SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "showRatingDialogAtLaunchCount") }
 
     val FUNDS_FOUND_DATE_KEY by lazy { longPreferencesKey(name = "fundsFoundDate") }
@@ -40,6 +50,8 @@ object PreferencesKeys {
     val USER_WAS_INTERACT_WITH_RATING_KEY by lazy { booleanPreferencesKey(name = "userWasInteractWithRating") }
 
     val USED_CARDS_INFO_KEY by lazy { stringPreferencesKey(name = "usedCardsInfo_v2") }
+
+    val USEDESK_CLIENT_ID_KEY by lazy { stringPreferencesKey(name = "usedeskClientId") }
 
     val APP_THEME_MODE_KEY by lazy { stringPreferencesKey(name = "appThemeMode") }
 
@@ -154,7 +166,7 @@ object PreferencesKeys {
     val TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY by lazy {
         stringPreferencesKey(name = "tangemPayActiveWithdrawOrdersKey")
     }
-    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityList") }
+    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityListV2") }
 
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
