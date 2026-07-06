@@ -108,6 +108,10 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                     userWalletId = params.userWalletId,
                     currency = params.currency,
                     onDismiss = model.txDetailsNavigation::dismiss,
+                    onOpenTokenDetails = { currency ->
+                        model.txDetailsNavigation.dismiss()
+                        model.openTokenDetails(currency)
+                    },
                 ),
             )
         },

@@ -59,7 +59,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * @property severity Plaque colors (background tint + text/icon color).
      * @property title Status line, e.g. "Awaiting funds" / "Confirmed" / "Failed".
-     * @property subtitle Optional second line (e.g. the refund hint on a failed terminal).
+     * @property subtitle Optional second line (e.g. the refund hint on a failed terminal). May carry a styled
+     * tappable part (e.g. the "Learn more" of the refunded terminal) — rendered as an annotated reference.
      * @property isLoading `true` → trailing rotating loader (in-progress); `false` → static [severity] glyph.
      */
     data class StatusBannerUM(
