@@ -3,10 +3,10 @@ package com.tangem.features.send.api.subcomponents.amount
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationModelCallback
 import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 
-interface SendAmountComponent : ComposableContentComponent {
+interface SendAmountComponent : ComposableModularContentComponent {
 
     fun updateState(amountUM: AmountState)
 
