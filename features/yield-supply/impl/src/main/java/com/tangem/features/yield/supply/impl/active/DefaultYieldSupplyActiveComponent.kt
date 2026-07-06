@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -20,6 +21,7 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.YieldSupplyTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.R
@@ -101,7 +103,8 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                         start = 16.dp,
                         end = 16.dp,
                         bottom = 16.dp,
-                    ),
+                    )
+                    .testTag(YieldSupplyTestTags.STOP_EARNING_BUTTON),
             )
         }
 
