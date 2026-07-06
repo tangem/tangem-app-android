@@ -64,8 +64,7 @@ internal class AddressBookAnalyticsSender @Inject constructor(
 
     /**
      * Fired when a save failure is surfaced to the user. [contactId] is set only in edit mode. Validation failures
-     * ([SaveContactError.Name]/[SaveContactError.Address]) are shown inline rather than as a save error, so they do
-     * not produce this event.
+     * ([SaveContactError.Name]) are shown inline rather than as a save error, so they do not produce this event.
      */
     fun sendSaveErrorShown(walletId: UserWalletId, contactId: String?, error: SaveContactError) {
         val errorType = error.toErrorType() ?: return
@@ -85,9 +84,7 @@ internal class AddressBookAnalyticsSender @Inject constructor(
             AddressBookSyncError.Network -> ErrorType.Network
             else -> ErrorType.Server
         }
-        is SaveContactError.Name,
-        is SaveContactError.Address,
-        -> null
+        is SaveContactError.Name -> null
     }
 
     fun sendSaveToButtonClicked() {
