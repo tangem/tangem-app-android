@@ -24,7 +24,6 @@ import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -721,18 +720,18 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
     }
 
     /**
-     * `manageCex` no longer derives `includeFeeInAmount` through `getIncludeFeeInAmountInternal`.
-     * It now reads the native-coin balance directly:
-     *  - native balance non-zero → request the whole `nativeBalance - reduceBalanceBy` as `fromAmount`
-     *  - native balance zero      → request the original swap `amount`
-     * The resulting quote balance status is always `Pending` (resolved later by the fee selector).
+     * [REDACTED_TASK_KEY]: the CEX quote stage must request the **user-entered** amount as `fromAmount`, regardless of
+     * the native-coin balance or `reduceBalanceBy`. A prior fix derived the quote amount from the native
+     * balance (`nativeBalance - reduceBalanceBy`), which discarded the entered amount and made CEX always
+     * quote the max balance (and, for tokens, sent the native balance under the token's decimals). The real
+     * balance/fee decision is deferred to the fee selector, so the quote status is always `Pending`.
      */
     @Nested
-    inner class CexNativeBalanceAmount {
+    inner class CexQuoteAmount {
 
         @Test
-        fun `should request nativeBalance as fromAmount when native balance is non-zero`() = runTest {
-            // Given — native balance 10 (from base stub), decimals 18, reduceBalanceBy 0
+        fun `should request the entered amount for a coin with non-zero native balance`() = runTest {
+            // Given — coin balance 10, native balance 10 (base stub); user enters 0.014 (the reported case)
             val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
             val fromStatus = buildSwapCurrencyStatus(
                 networkRawId = ethNetwork,
@@ -764,21 +763,21 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 fromSwapCurrencyStatus = fromStatus,
                 toSwapCurrencyStatus = toStatus,
                 providers = listOf(cexProvider),
-                amountToSwap = "1.0",
+                amountToSwap = "0.014",
                 reduceBalanceBy = BigDecimal.ZERO,
             )
 
-            // Then — fromAmount is the full native balance (10 * 1e18), not the "1.0" swap amount
+            // Then — fromAmount is the entered 0.014 (0.014 * 1e18), NOT the full balance
             assertThat(fromAmountSlot.isCaptured).isTrue()
-            assertThat(fromAmountSlot.captured).isEqualTo("10000000000000000000")
+            assertThat(fromAmountSlot.captured).isEqualTo("14000000000000000")
             assertThat(result[cexProvider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
             val loaded = (result[cexProvider] ?: error("state must not be null")) as SwapState.QuotesLoadedState
             assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
         }
 
         @Test
-        fun `should subtract reduceBalanceBy from native balance when building fromAmount`() = runTest {
-            // Given — native balance 10, reduceBalanceBy 2 → fromAmount = 8 * 1e18
+        fun `should ignore reduceBalanceBy when building the CEX quote fromAmount`() = runTest {
+            // Given — reduceBalanceBy must NOT affect the CEX quote amount anymore
             val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
             val fromStatus = buildSwapCurrencyStatus(
                 networkRawId = ethNetwork,
@@ -814,13 +813,13 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 reduceBalanceBy = BigDecimal("2"),
             )
 
-            // Then
-            assertThat(fromAmountSlot.captured).isEqualTo("8000000000000000000")
+            // Then — still the entered 1.0 * 1e18, unaffected by reduceBalanceBy
+            assertThat(fromAmountSlot.captured).isEqualTo("1000000000000000000")
         }
 
         @Test
-        fun `should request the original swap amount as fromAmount when native balance is zero`() = runTest {
-            // Given — native balance ZERO → includeFeeInAmount Excluded → fromAmount = swap amount (1.0)
+        fun `should request the entered amount for a coin with zero native balance`() = runTest {
+            // Given — native balance ZERO must not block or override the entered amount
             val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
             val fromStatus = buildSwapCurrencyStatus(
                 networkRawId = ethNetwork,
@@ -857,24 +856,75 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 reduceBalanceBy = BigDecimal.ZERO,
             )
 
-            // Then — 1.0 * 1e18, not the native balance
+            // Then — 1.0 * 1e18, status Pending
             assertThat(fromAmountSlot.captured).isEqualTo("1000000000000000000")
             val loaded = (result[cexProvider] ?: error("state must not be null")) as SwapState.QuotesLoadedState
             assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
         }
 
         @Test
-        fun `should read native token balance for the from-token network`() = runTest {
-            // Given
+        fun `should request the entered token amount with token decimals for a token with non-zero native balance`() =
+            runTest {
+                // Given — token (6 decimals) balance 100, native ETH balance 10 (base stub); user enters 5.
+                // The quote must send 5 in token units, NOT the native balance under token decimals.
+                val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+                val fromStatus = buildSwapCurrencyStatus(
+                    networkRawId = ethNetwork,
+                    contractAddress = "0xToken",
+                    isCoin = false,
+                    amount = BigDecimal("100"),
+                    decimals = 6,
+                )
+                val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+                val quoteModel = buildQuoteModel()
+                val fromAmountSlot = slot<String>()
+
+                coEvery {
+                    repository.findBestQuote(
+                        userWallet = any(),
+                        fromContractAddress = any(),
+                        fromNetwork = any(),
+                        toContractAddress = any(),
+                        toNetwork = any(),
+                        fromAmount = capture(fromAmountSlot),
+                        fromDecimals = any(),
+                        toDecimals = any(),
+                        providerId = cexProvider.providerId,
+                        rateType = any(),
+                    )
+                } returns quoteModel.right()
+
+                // When
+                val result = sut.findBestQuote(
+                    fromSwapCurrencyStatus = fromStatus,
+                    toSwapCurrencyStatus = toStatus,
+                    providers = listOf(cexProvider),
+                    amountToSwap = "5",
+                    reduceBalanceBy = BigDecimal.ZERO,
+                )
+
+                // Then — 5 * 1e6 (token decimals), NOT 10 (native balance)
+                assertThat(fromAmountSlot.captured).isEqualTo("5000000")
+                val loaded = (result[cexProvider] ?: error("state must not be null")) as SwapState.QuotesLoadedState
+                assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+            }
+
+        @Test
+        fun `should not block a token swap with zero native balance (gasless)`() = runTest {
+            // Given — the original [REDACTED_TASK_KEY] case: token with zero native (ETH) balance, gasless supported.
             val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
             val fromStatus = buildSwapCurrencyStatus(
                 networkRawId = ethNetwork,
-                isCoin = true,
-                amount = BigDecimal("10"),
+                contractAddress = "0xToken",
+                isCoin = false,
+                amount = BigDecimal("100"),
+                decimals = 6,
             )
             val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
             val quoteModel = buildQuoteModel()
+            val fromAmountSlot = slot<String>()
 
+            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
             coEvery {
                 repository.findBestQuote(
                     userWallet = any(),
@@ -882,7 +932,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     fromNetwork = any(),
                     toContractAddress = any(),
                     toNetwork = any(),
-                    fromAmount = any(),
+                    fromAmount = capture(fromAmountSlot),
                     fromDecimals = any(),
                     toDecimals = any(),
                     providerId = cexProvider.providerId,
@@ -891,22 +941,112 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             } returns quoteModel.right()
 
             // When
-            sut.findBestQuote(
+            val result = sut.findBestQuote(
                 fromSwapCurrencyStatus = fromStatus,
                 toSwapCurrencyStatus = toStatus,
                 providers = listOf(cexProvider),
-                amountToSwap = "1.0",
+                amountToSwap = "5",
                 reduceBalanceBy = BigDecimal.ZERO,
             )
 
-            // Then — the CEX path resolves the fee-paying native balance for the from-token network
-            coVerify {
-                walletManagersFacade.getNativeTokenBalance(
-                    userWalletId = any(),
-                    networkId = ethNetwork,
-                    derivationPath = any(),
+            // Then — entered token amount is quoted and status is Pending (not InsufficientAmount)
+            assertThat(fromAmountSlot.captured).isEqualTo("5000000")
+            val loaded = (result[cexProvider] ?: error("state must not be null")) as SwapState.QuotesLoadedState
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `should request the full entered balance for a coin when max is tapped`() = runTest {
+            // Given — "Max" sets the entered amount to the full coin balance (10). The native balance stub is
+            // deliberately different (3) so a regression to the old `nativeBalance - reduceBalanceBy` logic
+            // would flip the asserted value (3e18) instead of the entered 10e18.
+            val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                isCoin = true,
+                amount = BigDecimal("10"),
+                decimals = 18,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel()
+            val fromAmountSlot = slot<String>()
+
+            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("3")
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = capture(fromAmountSlot),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
                 )
-            }
+            } returns quoteModel.right()
+
+            // When — user taps Max: entered amount == full coin balance
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(cexProvider),
+                amountToSwap = "10",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — full entered balance 10 * 1e18, NOT the native balance (3); no quote-stage fee subtraction
+            assertThat(fromAmountSlot.captured).isEqualTo("10000000000000000000")
+            val loaded = (result[cexProvider] ?: error("state must not be null")) as SwapState.QuotesLoadedState
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `should request the full entered token balance when max is tapped`() = runTest {
+            // Given — token (6 decimals) balance 100, native ETH balance 10 (base stub). "Max" enters 100.
+            // native (10) naturally differs from the token balance (100), so a regression to the native-balance
+            // logic would send 10 (as "10000000") instead of the entered 100 (as "100000000").
+            val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = "0xToken",
+                isCoin = false,
+                amount = BigDecimal("100"),
+                decimals = 6,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel()
+            val fromAmountSlot = slot<String>()
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = capture(fromAmountSlot),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns quoteModel.right()
+
+            // When — user taps Max: entered amount == full token balance
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(cexProvider),
+                amountToSwap = "100",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — full entered token balance 100 * 1e6, NOT the native balance (10)
+            assertThat(fromAmountSlot.captured).isEqualTo("100000000")
+            val loaded = (result[cexProvider] ?: error("state must not be null")) as SwapState.QuotesLoadedState
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
         }
     }
 
