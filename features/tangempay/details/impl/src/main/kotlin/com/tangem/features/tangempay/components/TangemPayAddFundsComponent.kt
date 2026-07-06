@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -39,11 +40,13 @@ internal class TangemPayAddFundsComponent(
         val fiatBalance: BigDecimal,
         val depositAddress: String,
         val cryptoCurrency: CryptoCurrency,
+        val virtualAccountOnramp: VirtualAccountOnramp?,
     )
 }
 
 internal interface AddFundsListener {
     fun onClickReceive(data: TangemPayTopUpData)
     fun onClickSwap(data: TangemPayTopUpData)
+    fun onClickBankTransfer()
     fun onDismissAddFunds()
 }
