@@ -12,9 +12,6 @@ android {
 
 dependencies {
     /** Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-
-    /** Other dependencies */
-    implementation(deps.compose.foundation)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 }
