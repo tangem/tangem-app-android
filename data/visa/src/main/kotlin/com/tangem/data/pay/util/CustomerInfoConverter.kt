@@ -1,6 +1,7 @@
 package com.tangem.data.pay.util
 
 import arrow.core.getOrElse
+import com.tangem.data.pay.converter.TangemPayTariffPlanConverter
 import com.tangem.datasource.api.pay.models.response.CryptoBalance
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.FiatBalance
@@ -63,21 +64,8 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         )
     }
 
-    private fun CustomerMeResponse.TariffPlan.toDomain(): TangemPayTariffPlan? {
-        val name = name ?: return null
-        return TangemPayTariffPlan(
-            type = TangemPayTariffPlan.Type.fromString(type),
-            name = name,
-            descriptionItems = descriptionItems.orEmpty().map { it.toDomain() },
-        )
-    }
-
-    private fun CustomerMeResponse.DescriptionItem.toDomain() = TangemPayTariffPlan.DescriptionItem(
-        section = TangemPayTariffPlan.Section.fromString(type),
-        order = order ?: 0,
-        title = title.orEmpty(),
-        body = body.orEmpty(),
-    )
+    private fun CustomerMeResponse.TariffPlan.toDomain(): TangemPayTariffPlan? =
+        TangemPayTariffPlanConverter.convert(this)
 
     private fun CustomerMeResponse.ProductInstance.toDomain(): ProductInstance {
         val status = status.toDomain()
