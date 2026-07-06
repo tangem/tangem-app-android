@@ -24,6 +24,7 @@ class Wallet2CardConfigTest {
         Blockchain.BitcoinCashTestnet to EllipticCurve.Secp256k1,
         Blockchain.Cardano to EllipticCurve.Ed25519,
         Blockchain.Cosmos to EllipticCurve.Secp256k1,
+        Blockchain.Gonka to EllipticCurve.Secp256k1,
         Blockchain.CosmosTestnet to EllipticCurve.Secp256k1,
         Blockchain.Dogecoin to EllipticCurve.Secp256k1,
         Blockchain.Ducatus to EllipticCurve.Secp256k1,
