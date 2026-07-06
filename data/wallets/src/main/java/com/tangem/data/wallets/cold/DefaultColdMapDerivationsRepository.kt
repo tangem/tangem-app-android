@@ -100,6 +100,11 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
         }
     }
 
+    override fun mergeDerivedKeys(
+        userWallet: UserWallet.Cold,
+        keys: Map<ByteArrayKey, ExtendedPublicKeysMap>,
+    ): UserWallet.Cold = userWallet.updateDerivedKeys(keys)
+
     override suspend fun hasMissedDerivations(
         userWallet: UserWallet.Cold,
         networksWithDerivationPath: Map<BackendId, String?>,

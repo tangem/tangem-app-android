@@ -7,13 +7,13 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEnti
 
 /**
  * Maps API history items into their persisted [androidx.room.Entity] representations.
- *
- * @param ownerAddress address the history was requested for. Stored as the query key.
  */
-fun ExchangeItemResponse.toEntity(ownerAddress: String): ExpressExchangeEntity {
+fun ExchangeItemResponse.toEntity(): ExpressExchangeEntity? {
+    // Items with no fromAddress (very old app versions didn't send it) can't be found by the outgoing-swap
+    // lookup, which keys on from_address — drop them. Such items are effectively nonexistent nowadays.
+    if (fromAddress == null) return null
     return ExpressExchangeEntity(
         txId = txId,
-        ownerAddress = ownerAddress,
         providerId = providerId,
         fromAddress = fromAddress,
         payinAddress = payinAddress,
@@ -50,10 +50,9 @@ fun ExchangeItemResponse.toEntity(ownerAddress: String): ExpressExchangeEntity {
     )
 }
 
-fun OnrampItemResponse.toEntity(ownerAddress: String): ExpressOnrampEntity {
+fun OnrampItemResponse.toEntity(): ExpressOnrampEntity {
     return ExpressOnrampEntity(
         txId = txId,
-        ownerAddress = ownerAddress,
         providerId = providerId,
         payoutAddress = payoutAddress,
         status = status,

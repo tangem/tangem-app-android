@@ -44,6 +44,7 @@ internal data class TangemPayTxHistoryDetailsUMV2(
     val subtitle: TextReference,
     val iconState: TangemIconUM,
     val transactionTitle: TextReference,
+    val card: TextReference?,
     val transactionCategory: TextReference,
     val mcc: TextReference?,
     val transactionAmount: String,

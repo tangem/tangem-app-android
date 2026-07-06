@@ -20,6 +20,14 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.features.usedesk.api)
 
+    /** Core */
+    implementation(projects.core.datasource)
+    implementation(projects.core.analytics)
+
+    /** Domain */
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.settings)
+
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
@@ -29,8 +37,8 @@ dependencies {
     implementation(deps.compose.ui)
 
     /** Usedesk */
-    implementation(deps.usedesk.chat.sdk)
-    implementation(deps.usedesk.chat.gui)
+    implementation(tangemDeps.usedesk.chat.sdk)
+    implementation(tangemDeps.usedesk.chat.gui)
 
 
 }

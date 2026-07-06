@@ -2,7 +2,6 @@ package com.tangem.features.staking.impl.presentation.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingTarget
@@ -46,10 +45,6 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onActiveStakeAnalytic()
 
     fun showApprovalBottomSheet()
-
-    fun onApproveTypeChange(approveType: ApproveType)
-
-    fun onApprovalClick()
 
     fun onAmountReduceByClick(
         reduceAmountBy: BigDecimal,

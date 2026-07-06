@@ -36,6 +36,7 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -124,6 +125,7 @@ internal class SwapNotificationsFactory(
         swapFee: SwapFee?,
         feeError: GetFeeError?,
         appRouter: AppRouter,
+        isHighNetworkFee: Boolean = false,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddFeeErrorNotification(feeCryptoCurrencyStatus, quoteModel, feeError)
@@ -135,8 +137,15 @@ internal class SwapNotificationsFactory(
             maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, appRouter)
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
+            maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }
         return warnings.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {
+        if (isHighNetworkFee) {
+            add(NotificationUM.Warning.HighNetworkFee)
+        }
     }
 
     private fun MutableList<NotificationUM>.maybeAddRentExemptionError(quoteModel: SwapState.QuotesLoadedState) {
@@ -207,7 +216,7 @@ internal class SwapNotificationsFactory(
                 actions.onReduceToAmount(amount.copy(value = reduceTo))
             },
         )
-        if (!isCardano) {
+        if (!isCardano && !feeValue.isZero()) {
             addDustWarningNotification(
                 dustValue = quoteModel.currencyCheck?.dustValue,
                 feeValue = feeValue,
