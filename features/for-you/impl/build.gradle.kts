@@ -18,37 +18,53 @@ android {
 
 dependencies {
 
-    /** Features */
-    implementation(projects.features.forYou.api)
-    implementation(projects.features.promoBanners.api)
+    /** Project - Features */
+    api(projects.features.forYou.api)
+    api(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
 
-    /** Domain */
-    implementation(projects.domain.common)
-    implementation(projects.domain.models)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency)
-
-    /** Core */
-    implementation(projects.core.decompose)
+    /** Project - Core */
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
 
-    implementation(projects.common.ui)
+    /** Project - Common */
+    api(projects.common.ui)
 
+    /** Project - Domain */
+    api(projects.domain.account.status)
+    api(projects.domain.appCurrency)
+    api(projects.domain.common)
+    api(projects.domain.wallets)
+    implementation(projects.domain.account)
+    implementation(projects.domain.models)
+
+    /** Project - Domain models */
+    implementation(projects.domain.appCurrency.models)
+
+    /** Compose */
+    api(deps.compose.animation)
+    api(deps.compose.foundation)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.reorderable)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.foundation)
-    implementation(deps.compose.animation)
-    implementation(deps.lifecycle.compose)
-    implementation(deps.compose.material3)
+
+    /** Other libraries */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.decompose)
+    implementation(deps.haze)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.lifecycle.compose)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    /** Test */
+    /** Tests */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }
