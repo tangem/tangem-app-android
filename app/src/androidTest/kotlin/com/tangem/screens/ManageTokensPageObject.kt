@@ -18,6 +18,7 @@ import androidx.compose.ui.test.hasText as withText
 import androidx.compose.ui.test.hasAnySibling as withAnySibling
 import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import androidx.compose.ui.test.hasAnyAncestor as withAnyAncestor
+import com.tangem.core.res.R as CoreResR
 
 class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<ManageTokensPageObject>(semanticsProvider = semanticsProvider) {
@@ -59,6 +60,18 @@ class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
                 ),
             ),
         )
+    }
+
+    fun networkName(networkName: String): KNode = child {
+        useUnmergedTree = true
+        addSemanticsMatcher(
+            withTestTag(ManageTokensScreenTestTags.NETWORK_NAME)
+                .and(withAnyDescendant(withText(networkName))),
+        )
+    }
+
+    val contractAddressCopiedMessage: KNode = child {
+        hasText(getResourceString(CoreResR.string.contract_address_copied_message))
     }
 
     fun networkSwitch(networkName: String): KNode = child {
