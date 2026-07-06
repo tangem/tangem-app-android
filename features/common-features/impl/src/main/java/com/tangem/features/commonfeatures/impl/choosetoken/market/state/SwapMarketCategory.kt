@@ -16,13 +16,9 @@ internal enum class SwapMarketCategory(
     val title: TextReference,
     val order: TokenMarketListConfig.Order,
 ) {
-    Trending(
-        title = resourceReference(R.string.markets_sort_by_trending_title),
-        order = TokenMarketListConfig.Order.Trending,
-    ),
-    ExperiencedBuyers(
-        title = resourceReference(R.string.markets_sort_by_experienced_buyers_title),
-        order = TokenMarketListConfig.Order.Buyers,
+    MarketCap(
+        title = resourceReference(R.string.markets_sort_by_rating_title),
+        order = TokenMarketListConfig.Order.ByRating,
     ),
     TopGainers(
         title = resourceReference(R.string.markets_sort_by_top_gainers_title),
