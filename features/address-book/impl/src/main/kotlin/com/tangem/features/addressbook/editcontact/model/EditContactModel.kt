@@ -20,7 +20,7 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
 import com.tangem.domain.addressbook.usecase.GetContactByIdUseCase
-import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
+import com.tangem.domain.addressbook.validation.ContactNameValidator
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
@@ -55,7 +55,7 @@ internal class EditContactModel @Inject constructor(
     private val resultHolder: AddressBookResultHolder,
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val validateContactNameUseCase: ValidateContactNameUseCase,
+    private val contactNameValidator: ContactNameValidator,
     private val saveContactInteractor: SaveContactInteractor,
     private val getContactByIdUseCase: GetContactByIdUseCase,
     private val deleteContactUseCase: DeleteContactUseCase,
@@ -232,6 +232,7 @@ internal class EditContactModel @Inject constructor(
             selectedWallet.mapNotNull { it?.walletId }.distinctUntilChanged(),
         ) { name, walletId -> name to walletId }
             .mapLatest { (name, walletId) -> validateName(name, walletId) }
+            .flowOn(dispatchers.default)
             .onEach { error -> stateController.update(UpdateNameErrorTransformer(error)) }
             .launchIn(modelScope)
     }
@@ -417,7 +418,7 @@ internal class EditContactModel @Inject constructor(
     private suspend fun validateName(name: String, walletId: UserWalletId): TextReference? {
         if (name.isBlank()) return null
         if (name == loadedContact.value?.name?.value) return null
-        val error = validateContactNameUseCase(walletId, name).leftOrNull() ?: return null
+        val error = contactNameValidator.validate(walletId, name).leftOrNull() ?: return null
         if (error is ContactNameValidationError.Format && error.error is ContactName.Error.Empty) return null
         return ContactNameErrorConverter().convert(error)
     }
