@@ -27,6 +27,7 @@ dependencies {
 
     /** Common */
     api(projects.common.ui)
+    implementation(projects.common)
 
     /** Features api */
     api(projects.features.txhistory.api)
