@@ -11,7 +11,6 @@ import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.features.send.send.SendModelTestBase
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -33,7 +32,6 @@ internal class SendModelTest : SendModelTestBase() {
         fun `GIVEN amount route AND predefined main screen QR WHEN onNextClick THEN push Confirm`() = runTest {
             // Arrange
             val model = createSendModel(this)
-            model.currentRoute.value = CommonSendRoute.Amount(isEditMode = false)
             model.predefinedValues = PredefinedValues.Content.QrCode(
                 amount = "1.0",
                 address = "addr123",
@@ -42,7 +40,7 @@ internal class SendModelTest : SendModelTestBase() {
             )
 
             // Act
-            model.onNextClick()
+            model.onNextClick(CommonSendRoute.Amount(isEditMode = false))
 
             // Assert
             verify(exactly = 1) { router.push(CommonSendRoute.Confirm, any()) }
@@ -52,11 +50,10 @@ internal class SendModelTest : SendModelTestBase() {
         fun `GIVEN amount route AND NOT main screen QR WHEN onNextClick THEN push Destination`() = runTest {
             // Arrange
             val model = createSendModel(this)
-            model.currentRoute.value = CommonSendRoute.Amount(isEditMode = false)
             model.predefinedValues = PredefinedValues.Empty
 
             // Act
-            model.onNextClick()
+            model.onNextClick(CommonSendRoute.Amount(isEditMode = false))
 
             // Assert
             verify(exactly = 1) { router.push(CommonSendRoute.Destination(isEditMode = false), any()) }
@@ -66,10 +63,9 @@ internal class SendModelTest : SendModelTestBase() {
         fun `GIVEN destination route WHEN onNextClick THEN push Confirm`() = runTest {
             // Arrange
             val model = createSendModel(this)
-            model.currentRoute.value = CommonSendRoute.Destination(isEditMode = false)
 
             // Act
-            model.onNextClick()
+            model.onNextClick(CommonSendRoute.Destination(isEditMode = false))
 
             // Assert
             verify(exactly = 1) { router.push(CommonSendRoute.Confirm, any()) }
@@ -79,10 +75,9 @@ internal class SendModelTest : SendModelTestBase() {
         fun `GIVEN route in edit mode WHEN onNextClick THEN pop without push`() = runTest {
             // Arrange
             val model = createSendModel(this)
-            model.currentRoute.value = CommonSendRoute.Amount(isEditMode = true)
 
             // Act
-            model.onNextClick()
+            model.onNextClick(CommonSendRoute.Amount(isEditMode = true))
 
             // Assert
             verify(exactly = 1) { router.pop(any()) }
@@ -90,19 +85,18 @@ internal class SendModelTest : SendModelTestBase() {
         }
 
         @Test
-        fun `GIVEN confirm route WHEN onNextClick THEN pop (Confirm isEditMode is true so push branch is dead)`() =
+        fun `GIVEN confirm route WHEN onNextClick THEN push ConfirmSuccess`() =
             runTest {
                 // Arrange
-                // CommonSendRoute.Confirm.isEditMode == true, so onNextClick short-circuits to onBackClick().
+                // CommonSendRoute.Confirm.isEditMode == false, so onNextClick pushes ConfirmSuccess.
                 val model = createSendModel(this)
-                model.currentRoute.value = CommonSendRoute.Confirm
 
                 // Act
-                model.onNextClick()
+                model.onNextClick(CommonSendRoute.Confirm)
 
                 // Assert
-                verify(exactly = 1) { router.pop(any()) }
-                verify(exactly = 0) { router.push(CommonSendRoute.ConfirmSuccess, any()) }
+                verify(exactly = 1) { router.push(CommonSendRoute.ConfirmSuccess, any()) }
+                verify(exactly = 0) { router.pop(any()) }
             }
     }
 
@@ -210,10 +204,9 @@ internal class SendModelTest : SendModelTestBase() {
         fun `GIVEN amount route non-edit WHEN onBackClick THEN send analytics and pop`() = runTest {
             // Arrange
             val model = createSendModel(this)
-            model.currentRoute.value = CommonSendRoute.Amount(isEditMode = false)
 
             // Act
-            model.onBackClick()
+            model.onBackClick(CommonSendRoute.Amount(isEditMode = false))
 
             // Assert
             verify(exactly = 1) { analyticsEventHandler.send(any<CommonSendAnalyticEvents.CloseButtonClicked>()) }
@@ -224,10 +217,9 @@ internal class SendModelTest : SendModelTestBase() {
         fun `GIVEN destination route edit WHEN onBackClick THEN pop without analytics`() = runTest {
             // Arrange
             val model = createSendModel(this)
-            model.currentRoute.value = CommonSendRoute.Destination(isEditMode = true)
 
             // Act
-            model.onBackClick()
+            model.onBackClick(CommonSendRoute.Destination(isEditMode = true))
 
             // Assert
             verify(exactly = 0) { analyticsEventHandler.send(any<CommonSendAnalyticEvents.CloseButtonClicked>()) }
@@ -251,7 +243,6 @@ internal class SendModelTest : SendModelTestBase() {
             assertThat(state.feeSelectorUM).isEqualTo(FeeSelectorUMRedesigned.Loading)
             assertThat(state.confirmUM).isEqualTo(ConfirmUM.Empty)
             assertThat(state.confirmData).isNull()
-            assertThat(state.navigationUM).isEqualTo(NavigationUM.Empty)
             verify(exactly = 1) { router.popTo(CommonSendRoute.Amount(isEditMode = false), any()) }
         }
     }
