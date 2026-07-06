@@ -108,7 +108,7 @@
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Contact name</string>
   <string name="address_book_copy_address">Copy address</string>
-  <string name="address_book_create_success_message">Contact added</string>
+  <string name="address_book_create_success_message">Contact saved</string>
   <string name="address_book_creating_error">Couldn\'t create contact. Please try again later.</string>
   <string name="address_book_delete_contact">Delete contact</string>
   <string name="address_book_delete_contact_description">This contact will be deleted from all your address books</string>
@@ -1285,12 +1285,14 @@
   <string name="onramp_title_available_from">Available from</string>
   <string name="onramp_title_available_up_to">Available up to</string>
   <string name="onramp_title_you_get">You get</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">This token is not supported. Please choose a different token to buy.</string>
   <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_up_to_rate">Up to</string>
   <string name="onramp_via">Via</string>
   <string name="onramp_via_provider">via %s</string>
   <string name="onramp_you_will_pay_title">You will pay</string>
+  <string name="onramps_token_is_not_supported_banner_title">%s is not supported</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_menu_group_by_networks">Group by networks</string>
   <string name="organize_tokens_menu_sort_by_balance">Sort by balance</string>
@@ -2077,6 +2079,9 @@
   <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Show QR code</string>
+  <string name="token_summary_can_not_load_token">Can’t load data of the token</string>
+  <string name="token_summary_go_to_swap_button">Go to swap</string>
+  <string name="token_summary_title">Token summary</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
