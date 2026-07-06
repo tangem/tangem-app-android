@@ -95,7 +95,7 @@ private fun ColumnScope.DynamicSpacer(scrollState: ScrollState) {
 private fun AddToWalletTitle(modifier: Modifier = Modifier) {
     Text(
         modifier = modifier
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(vertical = 12.dp, horizontal = 24.dp)
             .fillMaxWidth(),
         text = stringResourceSafe(R.string.tangempay_card_details_open_wallet_title),
         style = TangemTheme.typography3.heading.medium,
@@ -111,8 +111,8 @@ private fun AddToWalletSteps(steps: ImmutableList<TangemPayAddToWalletStepItemUM
                 modifier = Modifier.padding(
                     top = if (idx == 0) 12.dp else 0.dp,
                     bottom = if (idx < steps.lastIndex) 16.dp else 12.dp,
-                    start = 16.dp,
-                    end = 16.dp,
+                    start = 24.dp,
+                    end = 24.dp,
                 ),
                 stepNumber = step.count,
                 title = step.text,
@@ -130,7 +130,7 @@ private fun StepItem(stepNumber: Int, title: TextReference, modifier: Modifier =
     ) {
         Box(
             modifier = Modifier
-                .size(16.dp)
+                .size(20.dp)
                 .background(color = TangemTheme.colors3.bg.inverse, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
