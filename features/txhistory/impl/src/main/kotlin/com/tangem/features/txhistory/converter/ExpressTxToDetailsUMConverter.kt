@@ -1,6 +1,8 @@
 package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
@@ -9,7 +11,10 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledResourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -49,6 +54,9 @@ internal class ExpressTxToDetailsUMConverter(
     private val onGoToProvider: (String) -> Unit,
     private val lookup: TxHistoryLookupContext,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
+    private val refundCurrency: CryptoCurrency? = null,
+    private val onLearnMoreAboutRefundsClick: () -> Unit = {},
+    private val onGoToRefundedTokenClick: (CryptoCurrency) -> Unit = {},
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -68,6 +76,7 @@ internal class ExpressTxToDetailsUMConverter(
         val status = exchangeStatusConverter.convert(swap.tx.status)
         val fromOwner = resolveLegOwner(swap.tx.fromAddress, swap.tx.fromAsset.cryptoCurrency)
         val toOwner = resolveLegOwner(swap.tx.payoutAddress, swap.tx.toAsset.cryptoCurrency)
+        val refundToken = refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
@@ -79,8 +88,9 @@ internal class ExpressTxToDetailsUMConverter(
             from = swap.tx.fromAsset.toAssetUM(
                 label = ownerLabel(fromOwner, fallback = R.string.swapping_from_title_v2, owned = R.string.common_from),
                 owner = fromOwner,
-                sign = status.outgoingSign(),
-                isFaded = status is Status.Failed,
+                sign = OUTGOING_SIGN,
+                // The spent leg always stands as sent — on a failed/refunded deal only the never-received leg fades.
+                isFaded = false,
             ),
             to = swap.tx.toAsset.toAssetUM(
                 label = ownerLabel(toOwner, fallback = R.string.swapping_to_title, owned = R.string.common_to),
@@ -88,11 +98,39 @@ internal class ExpressTxToDetailsUMConverter(
                 sign = status.incomingSign(),
                 isFaded = status is Status.Failed,
             ),
-            statusBanner = swap.tx.status.toStatusBannerUM(),
+            statusBanner = refundToken?.let(::refundedInBanner) ?: swap.tx.status.toStatusBannerUM(),
             rows = swap.toInfoRows(onProviderClick = swap.providerClick(), rateRow = swap.tx.swapRateRow()),
-            providerButton = providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel()),
+            providerButton = refundToken?.let(::goToRefundedTokenButton)
+                ?: providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel()),
         )
     }
+
+    /**
+     * Refunded terminal with a resolved refund token: the red "Refunded in {symbol}" plaque with the token/network
+     * explanation and the underlined "Learn more" link appended to the subtitle.
+     */
+    private fun refundedInBanner(refundToken: CryptoCurrency) = TxHistoryDetailsUM.StatusBannerUM(
+        severity = Severity.Error,
+        title = resourceReference(
+            id = R.string.express_exchange_notification_refunded_in_title,
+            formatArgs = wrappedList(refundToken.symbol),
+        ),
+        subtitle = resourceReference(
+            id = R.string.express_exchange_notification_refunded_in_text,
+            formatArgs = wrappedList(refundToken.symbol, refundToken.network.name),
+        ) + stringReference(" ") + styledResourceReference(
+            id = R.string.common_learn_more,
+            spanStyleReference = { SpanStyle(textDecoration = TextDecoration.Underline) },
+            onClick = onLearnMoreAboutRefundsClick,
+        ),
+        isLoading = false,
+    )
+
+    /** Bottom "Go to token" CTA of the refunded terminal — opens the refund token's details. */
+    private fun goToRefundedTokenButton(refundToken: CryptoCurrency) = TxHistoryDetailsUM.ProviderButtonUM(
+        text = resourceReference(R.string.common_go_to_token),
+        onClick = { onGoToRefundedTokenClick(refundToken) },
+    )
 
     private fun convertExpressOnramp(onramp: ExpressTx.Onramp): TxHistoryDetailsUM.TwoAssets {
         val status = onrampStatusConverter.convert(onramp.tx.status)
@@ -217,10 +255,11 @@ internal class ExpressTxToDetailsUMConverter(
  * Express swap status → the status plaque under the two-asset block.
  *
  * In-flight stages render as [Severity.Info] with the rotating loader; [Verifying][ExpressExchangeStatus.Verifying]
- * (KYC) and the paused / refunded terminals as [Severity.Warning]; the failure terminals as [Severity.Error]; the
+ * (KYC) and the paused terminal as [Severity.Warning]; the failure and refunded terminals as [Severity.Error]; the
  * [Finished][ExpressExchangeStatus.Finished] success as [Severity.Success] (the plaque then auto-collapses — see
  * `TxHistoryDetailsStatusBanner`). [Unknown][ExpressExchangeStatus.Unknown] carries nothing to show, so it hides the
- * plaque (`null`).
+ * plaque (`null`). The [Refunded][ExpressExchangeStatus.Refunded] mapping here is the fallback for an unresolved
+ * refund token — with a resolved one the converter builds the richer "Refunded in {symbol}" plaque instead.
  */
 private fun ExpressExchangeStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBannerUM? = when (this) {
     ExpressExchangeStatus.Preview,
@@ -233,7 +272,7 @@ private fun ExpressExchangeStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusB
     ExpressExchangeStatus.Exchanging -> loadingBanner(R.string.express_exchange_status_exchanging_active)
     ExpressExchangeStatus.Sending -> loadingBanner(R.string.express_exchange_status_sending_active)
     ExpressExchangeStatus.Verifying -> verificationBanner()
-    ExpressExchangeStatus.Refunded -> warningBanner(R.string.express_exchange_status_refunded)
+    ExpressExchangeStatus.Refunded -> errorBanner(R.string.express_exchange_status_refunded)
     ExpressExchangeStatus.Paused -> warningBanner(R.string.express_exchange_status_paused)
     ExpressExchangeStatus.Failed,
     ExpressExchangeStatus.TxFailed,
@@ -429,8 +468,8 @@ private fun BigDecimal?.takeIfPositive(): BigDecimal? = this?.takeIf { it > BigD
 
 // region Amount signs
 
-/** Leading sign of the pay-in / "You send" leg: `−` while in flight or settled, dropped on a failed deal. */
-private fun Status.outgoingSign(): String = if (this is Status.Failed) "" else "${StringsSigns.MINUS} "
+/** Leading sign of the pay-in / "You send" leg: always `−` — the funds left regardless of how the deal ended. */
+private const val OUTGOING_SIGN = "${StringsSigns.MINUS} "
 
 /**
  * Leading sign of the payout / "You receive" leg: `~` while in flight (the final received amount is still an estimate),
