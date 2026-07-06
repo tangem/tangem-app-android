@@ -57,7 +57,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val name = displayName?.ifEmpty { null }
         return ProductInstance(
             id = id,
-            cardId = cardId,
+            cardId = cardId.orEmpty(),
             frozenState = cardFrozenState,
             status = status,
             displayName = if (name != null) CardDisplayName(name).getOrElse { null } else null,
