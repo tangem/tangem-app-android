@@ -194,20 +194,47 @@ internal class OnChainTxToDetailsUMConverter(
 
 // region Amount / header building helpers
 
+/** How the header amount is signed, decided by the transaction type. */
+private enum class AmountSign {
+
+    /** `-` for outgoing, `+` for incoming — plain value transfers. */
+    BY_DIRECTION,
+
+    /** Always `+` — an inflow regardless of the reported direction (staking rewards). */
+    ALWAYS_PLUS,
+
+    /**
+     * No sign — protocol interactions (staking, approvals, yield-supply enter/exit) whose amount is a parameter of the
+     * operation, not a transfer in/out of the account.
+     */
+    NONE,
+}
+
+private fun TransactionType.amountSign(): AmountSign = when (this) {
+    is TransactionType.Staking.ClaimRewards -> AmountSign.ALWAYS_PLUS
+    is TransactionType.Staking,
+    is TransactionType.Approve,
+    is TransactionType.YieldSupply.Enter,
+    is TransactionType.YieldSupply.Exit,
+    -> AmountSign.NONE
+    else -> AmountSign.BY_DIRECTION
+}
+
 /**
- * Signed crypto amount with inline symbol, e.g. `+ 350.31 USDT` / `- 350.31 USDT`. The sign is `-` for outgoing, `+`
- * otherwise, and is dropped for zero amounts, for the failed state (a failed tx moved nothing) and for yield-supply
- * enter/exit (which reads "Supplied"/"Returned" via the label instead of a signed transfer) — the UI then only strikes
- * the amount through and dims it via [TxHistoryDetailsUM.AmountBlockUM.isFailed].
+ * Signed crypto amount with inline symbol, e.g. `+ 350.31 USDT` / `- 350.31 USDT`. The sign is decided per transaction
+ * type by [amountSign], and is dropped for zero amounts and for the failed state (a failed tx moved nothing) — the UI
+ * then only strikes the amount through and dims it via [TxHistoryDetailsUM.AmountBlockUM.isFailed].
  */
 private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
     val formatted = amount.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
     val prefix = when {
         status is TxInfo.TransactionStatus.Failed -> ""
-        type is TransactionType.YieldSupply.Enter || type is TransactionType.YieldSupply.Exit -> ""
         amount.isZero() -> ""
-        isOutgoing -> "${StringsSigns.MINUS} "
-        else -> "${StringsSigns.PLUS} "
+        else -> when (type.amountSign()) {
+            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.MINUS} " else "${StringsSigns.PLUS} "
+            AmountSign.ALWAYS_PLUS -> "${StringsSigns.PLUS} "
+            AmountSign.NONE -> ""
+        }
     }
     return (prefix + formatted).trim()
 }

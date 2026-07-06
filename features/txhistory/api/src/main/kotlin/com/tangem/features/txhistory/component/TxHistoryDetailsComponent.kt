@@ -14,6 +14,7 @@ interface TxHistoryDetailsComponent : ComposableBottomSheetComponent {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val onDismiss: () -> Unit,
+        val onOpenTokenDetails: (CryptoCurrency) -> Unit,
     )
 
     interface Factory : ComponentFactory<Params, TxHistoryDetailsComponent>
