@@ -12,6 +12,7 @@ import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
+import com.tangem.datasource.api.pay.models.request.VirtualAccountOrderRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
@@ -38,7 +39,7 @@ import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 internal class DefaultOnboardingRepository @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val dispatcherProvider: CoroutineDispatcherProvider,
@@ -113,7 +114,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
     ): Either<VisaApiError, BankCredentials> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getBankCredentials(authHeader = authHeader, productInstanceId = productInstanceId)
-        }.map { response -> BankCredentialsConverter.convert(response) }
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+            BankCredentialsConverter.convert(result).right()
+        }
     }
 
     override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
@@ -167,6 +171,34 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
         }
 
+    override suspend fun createVirtualAccountOrder(
+        userWalletId: UserWalletId,
+        paymentAccountAddress: String,
+    ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
+        requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createVirtualAccountOrder(
+                authHeader = authHeader,
+                body = VirtualAccountOrderRequest(
+                    data = VirtualAccountOrderRequest.Data(depositAddress = paymentAccountAddress),
+                    idempotencyKey = UUID.randomUUID().toString(),
+                ),
+            )
+        }.map { response -> requireNotNull(response.result).id }
+    }
+
+    override suspend fun getVirtualAccountOrderId(userWalletId: UserWalletId): String? =
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.getVirtualAccountOrderId(customerWalletAddress)
+        }
+
+    override suspend fun storeVirtualAccountOrderId(userWalletId: UserWalletId, vaOrderId: String) {
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.storeVirtualAccountOrderId(customerWalletAddress, vaOrderId)
+        }
+    }
+
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
             ?: error("no userWallet found")
@@ -181,7 +213,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         sendKycAnalytics(customerInfo.kycStatus)
 
         // Keep the per-card frozen state up to date for every card.
-        customerInfo.productInstances.forEach { instance ->
+        customerInfo.cardProductInstances.forEach { instance ->
             cardFrozenStateStore.store(key = instance.cardId, value = instance.frozenState)
         }
 
