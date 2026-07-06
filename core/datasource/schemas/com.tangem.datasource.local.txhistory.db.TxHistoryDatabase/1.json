@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c0f8e7d958a8852440a5bdec5a989f0e",
+    "identityHash": "1ddc01e929ea21940e7f1e9e35810691",
     "entities": [
       {
         "tableName": "express_provider",
@@ -271,15 +271,16 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_from_address_from_network_from_contract_address_created_at` ON `${TABLE_NAME}` (`from_address`, `from_network`, `from_contract_address`, `created_at`)"
           },
           {
-            "name": "index_express_exchange_to_network_to_contract_address_created_at",
+            "name": "index_express_exchange_payout_address_to_network_to_contract_address_created_at",
             "unique": false,
             "columnNames": [
+              "payout_address",
               "to_network",
               "to_contract_address",
               "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`to_network`, `to_contract_address`, `created_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_payout_address_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`payout_address`, `to_network`, `to_contract_address`, `created_at`)"
           }
         ]
       },
@@ -650,7 +651,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c0f8e7d958a8852440a5bdec5a989f0e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1ddc01e929ea21940e7f1e9e35810691')"
     ]
   }
 }
