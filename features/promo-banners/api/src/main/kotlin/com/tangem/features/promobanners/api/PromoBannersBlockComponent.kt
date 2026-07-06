@@ -20,6 +20,7 @@ interface PromoBannersBlockComponent {
     enum class Placeholder(val value: String) {
         MAIN("main"),
         FEED("shtorka"),
+        PAYMENT_ACCOUNT_MAIN("payment_account_main"),
     }
 
     interface Factory : ComponentFactory<Params, PromoBannersBlockComponent>

@@ -16,20 +16,19 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.features.send.api.FeeSelectorBlockComponent
-import com.tangem.features.send.api.SendNotificationsComponent
-import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
-import com.tangem.features.send.api.params.FeeSelectorParams
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.confirm.ui.SendConfirmContent
 import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.features.send.subcomponents.amount.SendAmountBlockComponent
-import com.tangem.features.send.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.subcomponents.amount.DefaultSendAmountBlockComponent
+import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
@@ -61,7 +60,7 @@ internal class SendConfirmComponent(
             onClick = model::showEditDestination,
         )
 
-    private val amountBlockComponent = SendAmountBlockComponent(
+    private val amountBlockComponent = DefaultSendAmountBlockComponent(
         appComponentContext = child("sendConfirmAmountBlock"),
         params = SendAmountComponentParams.AmountBlockParams(
             state = model.uiState.value.amountUM,
@@ -107,7 +106,7 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
-            notificationData = NotificationData(
+            notificationData = SendNotificationsComponent.Params.NotificationData(
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = model.confirmData.enteredMemo,
                 amountValue = model.confirmData.enteredAmount.orZero(),
