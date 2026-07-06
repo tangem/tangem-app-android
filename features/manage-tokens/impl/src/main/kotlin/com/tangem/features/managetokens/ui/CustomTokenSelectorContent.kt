@@ -101,7 +101,7 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
                 }
                 is DerivationPathUM -> {
                     DerivationPathItem(
-                        modifier = itemModifier,
+                        modifier = itemModifier.testTag(AddCustomTokenScreenTestTags.derivationRow(item.id)),
                         model = item,
                     )
                 }
