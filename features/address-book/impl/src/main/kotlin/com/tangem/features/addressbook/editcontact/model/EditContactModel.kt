@@ -232,6 +232,7 @@ internal class EditContactModel @Inject constructor(
             selectedWallet.mapNotNull { it?.walletId }.distinctUntilChanged(),
         ) { name, walletId -> name to walletId }
             .mapLatest { (name, walletId) -> validateName(name, walletId) }
+            .flowOn(dispatchers.default)
             .onEach { error -> stateController.update(UpdateNameErrorTransformer(error)) }
             .launchIn(modelScope)
     }
