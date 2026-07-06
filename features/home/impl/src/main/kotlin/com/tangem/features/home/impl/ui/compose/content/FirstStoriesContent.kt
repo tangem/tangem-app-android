@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -21,16 +20,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.home.impl.ui.compose.StoriesTextAnimation
-import com.tangem.core.ui.R
 
-@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
+private val firstStoryTitleStyle = TextStyle(
+    fontSize = 46.sp,
+    fontWeight = FontWeight.SemiBold,
+    textAlign = TextAlign.Center,
+)
+
 @Composable
-fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
+internal fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
     val progress = remember { Animatable(0f) }
 
     LaunchedEffect(isPaused) {
@@ -47,16 +51,8 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
         }
     }
 
-    val style = TextStyle(
-        fontSize = 46.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = Color.White,
-        textAlign = TextAlign.Center,
-    )
-
     Column(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SpacerH(TangemTheme.dimens.spacing94)
@@ -67,15 +63,14 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
             Text(
                 modifier = modifier,
                 text = stringResourceSafe(R.string.story_meet_title),
-                style = style,
+                style = firstStoryTitleStyle,
                 color = TangemColorPalette.White,
                 textAlign = TextAlign.Center,
             )
         }
         SpacerH(TangemTheme.dimens.spacing46)
         Image(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             painter = painterResource(R.drawable.img_meet_tangem),
             contentScale = ContentScale.Inside,
             contentDescription = "Tangem Wallet card",
@@ -86,8 +81,5 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
 @Preview
 @Composable
 private fun FirstStoriesPreview() {
-    FirstStoriesContent(
-        false,
-        8000,
-    )
+    FirstStoriesContent(isPaused = false, duration = 8000)
 }
