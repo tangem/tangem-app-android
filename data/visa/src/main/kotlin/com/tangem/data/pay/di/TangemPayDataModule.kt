@@ -313,5 +313,16 @@ internal interface TangemPayDataModule {
                 appCoroutineScope = appCoroutineScope,
             )
         }
+
+        @Provides
+        fun provideCreateVirtualAccountOrderUseCase(
+            onboardingRepository: OnboardingRepository,
+            pollingUseCase: StartTangemPayOrderPollingUseCase,
+        ): CreateVirtualAccountOrderUseCase {
+            return CreateVirtualAccountOrderUseCase(
+                onboardingRepository = onboardingRepository,
+                pollingUseCase = pollingUseCase,
+            )
+        }
     }
 }
