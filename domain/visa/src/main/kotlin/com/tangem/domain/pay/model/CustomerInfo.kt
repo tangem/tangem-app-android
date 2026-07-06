@@ -40,6 +40,10 @@ data class CustomerInfo(
     /** Transitional single-card accessor — returns the first card, or null if none. */
     val cardInfo: CardInfo? get() = cards.firstOrNull()
 
+    /** Card-level product instances only (excludes the VA ACCOUNT instance). */
+    val cardProductInstances: List<ProductInstance>
+        get() = productInstances.filter { it.specificationDataType == ProductInstance.SpecificationDataType.CARD }
+
     enum class State {
         NEW,
         ACTIVE,
