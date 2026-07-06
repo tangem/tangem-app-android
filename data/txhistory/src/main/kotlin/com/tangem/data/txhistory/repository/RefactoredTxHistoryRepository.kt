@@ -73,7 +73,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
 
         val flow = combine(
             flow = expressHistoryDao.observeOutgoingSwaps(
-                ownerAddress = address,
+                fromAddress = address,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
@@ -86,7 +86,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
             ).distinctUntilChanged(),
             flow3 = expressHistoryDao.observeIncomingOnramps(
-                ownerAddress = address,
+                payoutAddress = address,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
