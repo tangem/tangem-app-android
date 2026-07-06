@@ -2,32 +2,30 @@ package com.tangem.features.txhistory.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.Option
-import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.model.TxHistoryInfo
+import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
@@ -39,6 +37,7 @@ import com.tangem.features.txhistory.utils.HistoryTxListManager
 import com.tangem.features.txhistory.utils.TxHistoryListManager
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
@@ -48,7 +47,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TxHistoryModel @Inject constructor(
@@ -56,8 +55,6 @@ internal class TxHistoryModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-    private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val walletIconUMConverter: WalletIconUMConverter,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val urlOpener: UrlOpener,
     private val txHistoryUpdateListener: TxHistoryUpdateListener,
@@ -65,44 +62,27 @@ internal class TxHistoryModel @Inject constructor(
     private val designFeatureToggles: DesignFeatureToggles,
     private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val historyTxListManagerFactory: HistoryTxListManager.Factory,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
-    multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    userWalletsListRepository: UserWalletsListRepository,
+    ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) : Model(), TxHistoryUiActions {
 
     private val params: TxHistoryComponent.Params = paramsContainer.require()
 
     private val lookupDataFlow: Flow<TxHistoryLookupContext> = if (designFeatureToggles.isRedesignEnabled) {
-        combine(
-            flow = multiAccountStatusListSupplier(),
-            flow2 = isAccountsModeEnabledUseCase(),
-            flow3 = userWalletsListRepository.userWallets.filterNotNull(),
-            transform = ::Triple,
-        )
-            .map { (accountLists, modeEnabled, wallets) ->
-                TxHistoryLookupContext(
-                    ownAccountByAddress = buildOwnAccountAddressMap(accountLists),
-                    isAccountsModeEnabled = modeEnabled,
-                    walletInfoById = wallets.associate { wallet ->
-                        wallet.walletId to WalletInfo(
-                            name = wallet.name,
-                            deviceIconUM = walletIconUMConverter.convert(getWalletIconUseCase(wallet)),
-                        )
-                    },
-                )
-            }
-            .distinctUntilChanged()
+        ownerLookupProducer()
             .flowOn(dispatchers.default)
             .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
     } else {
         emptyFlow()
     }
 
+    @RemoveWithToggle("APP_REDESIGN_ENABLED")
     private val legacyTxHistoryItemConverter =
         TxHistoryItemToTransactionStateConverter(currency = params.currency, txHistoryUiActions = this)
 
+    @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
     private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
         TxHistoryListManager(
             repository = repository,
@@ -138,23 +118,6 @@ internal class TxHistoryModel @Inject constructor(
         loadTxInfo()
         subscribeToUpdateListener()
         subscribeOnCurrencyStatusUpdates()
-    }
-
-    private fun buildOwnAccountAddressMap(lists: List<AccountStatusList>): Map<String, Account.CryptoPortfolio> {
-        val networkRawId = params.currency.network.id.rawId
-        val map = mutableMapOf<String, Account.CryptoPortfolio>()
-        lists.forEach { accountList ->
-            accountList.accountStatuses
-                .filterCryptoPortfolio()
-                .forEach { status: AccountStatus.CryptoPortfolio ->
-                    status.flattenCurrencies().forEach { currencyStatus ->
-                        if (currencyStatus.currency.network.id.rawId != networkRawId) return@forEach
-                        val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
-                        map[address] = status.account
-                    }
-                }
-        }
-        return map
     }
 
     private fun subscribeToUiItemChanges() {
@@ -193,7 +156,6 @@ internal class TxHistoryModel @Inject constructor(
         }
     }
 
-    // Temporary: express rows are mapped to UI via a synthesized TxInfo (see ExpressTx.toSyntheticTxInfo).
     private fun buildUiItems(
         merged: List<TxHistoryInfo>,
         lookup: TxHistoryLookupContext,
@@ -204,6 +166,11 @@ internal class TxHistoryModel @Inject constructor(
                 txHistoryUiActions = this,
                 lookupContext = lookup,
             ),
+            expressConverter = ExpressTxToTransactionItemUMConverter(
+                currency = params.currency,
+                txHistoryUiActions = this,
+            ),
+            txHistoryUiActions = this,
         )
 
         val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
@@ -242,6 +209,13 @@ internal class TxHistoryModel @Inject constructor(
                     historyTxListManager?.startLoading()
                 }
         }
+        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+            val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
+                walletId = params.userWalletId,
+                currency = params.currency,
+            )
+            modelScope.launch { appTxHistoryFetcher.invoke(trigger) }
+        }
     }
 
     fun reload() {
@@ -255,6 +229,13 @@ internal class TxHistoryModel @Inject constructor(
                     txHistoryListManager?.reload()
                     historyTxListManager?.reload()
                 }
+            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+                val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
+                    walletId = params.userWalletId,
+                    currency = params.currency,
+                )
+                modelScope.launch { appTxHistoryFetcher.invoke(trigger) }
+            }
         }
     }
 
@@ -354,4 +335,20 @@ internal class TxHistoryModel @Inject constructor(
             ifRight = { urlOpener.openUrl(url = it) },
         )
     }
+
+    override fun onTransactionClick(item: TxHistoryInfo) {
+        // manager is non-null only under the new tx-history toggle; on the legacy path every tap falls to the explorer.
+        val manager = historyTxListManager
+        if (manager != null && item.opensInAppDetails()) {
+            params.onTxDetailsRequested(manager.txHistoryInfoFlow(item))
+        } else {
+            item.explorerHash?.let(::openTxInExplorer)
+        }
+    }
+}
+
+/** On-chain transfers/swaps and every express op open the in-app details sheet; everything else goes to the explorer. */
+private fun TxHistoryInfo.opensInAppDetails(): Boolean = when (this) {
+    is ExpressTx -> true
+    is OnChainTx.BSDK -> txInfo.type is TxInfo.TransactionType.Transfer || txInfo.type is TxInfo.TransactionType.Swap
 }

@@ -98,6 +98,8 @@
   <string name="address_book_add_address">Adresse hinzufügen</string>
   <string name="address_book_add_address_description">Adresse hinzufügen und Netzwerk auswählen</string>
   <string name="address_book_add_contact">Kontakt hinzufügen</string>
+  <string name="address_book_address_copied">Adresse kopiert</string>
+  <string name="address_book_address_taken_error">Diese Adresse ist bereits gespeichert als %1$s</string>
   <plurals name="address_book_addresses">
     <item quantity="one">Adresse</item>
     <item quantity="other">Adressen</item>
@@ -106,8 +108,11 @@
   <string name="address_book_contact">Kontakt</string>
   <string name="address_book_contact_name">Name der Kontaktperson</string>
   <string name="address_book_copy_address">Adresse kopieren</string>
+  <string name="address_book_create_success_message">Kontakt hinzugefügt</string>
   <string name="address_book_creating_error">Es konnte kein Kontakt hergestellt werden. Bitte versuchen Sie es später erneut.</string>
+  <string name="address_book_delete_contact">Kontakt löschen</string>
   <string name="address_book_delete_contact_description">Dieser Kontakt wird aus all Ihren Adressbüchern gelöscht.</string>
+  <string name="address_book_delete_last_address">„%1$s“ hat nur eine Adresse. Durch das Löschen wird auch der Kontakt gelöscht. Möchten Sie fortfahren?</string>
   <string name="address_book_deleting_error">Der Kontakt konnte nicht gelöscht werden. Bitte versuchen Sie es später erneut.</string>
   <string name="address_book_description">Verwalten von Kontakten und Adressen</string>
   <string name="address_book_discard">Verwerfen</string>
@@ -115,11 +120,20 @@
   <string name="address_book_enter_address">Adresse eingeben</string>
   <string name="address_book_invalid_address_error">Ungültige Adresse</string>
   <string name="address_book_keep_editing">Weiter bearbeiten</string>
+  <string name="address_book_max_networks_alert_description">Sie können maximal 20 Adressen erstellen. Löschen Sie eine, um eine neue hinzuzufügen.</string>
+  <string name="address_book_max_networks_alert_title">Neue Adresse kann nicht hinzugefügt werden</string>
+  <string name="address_book_name_empty_error">Der Name des Ansprechpartners ist erforderlich</string>
+  <string name="address_book_name_invalid_chars_error">Der Name des Ansprechpartners enthält ungültige Zeichen</string>
+  <string name="address_book_name_max_chars_error">Der Name des Ansprechpartners darf nicht länger als 50 Zeichen sein</string>
+  <string name="address_book_name_taken_error">Dieser Name ist bei dieser Wallet bereits vergeben.</string>
   <string name="address_book_new_contact">Neuer Kontakt</string>
   <string name="address_book_no_contacts">Noch keine Kontakte</string>
   <string name="address_book_no_contacts_description">Die von Ihnen hinzugefügten Kontakte werden hier angezeigt</string>
   <string name="address_book_remove_address">Adresse entfernen</string>
+  <string name="address_book_save_contact">Kontakt speichern</string>
+  <string name="address_book_save_to_wallet_title">In Wallet speichern</string>
   <string name="address_book_save_wallet_to_description">Dieser Kontakt wird mit dem Adressbuch dieser Wallet verknüpft.</string>
+  <string name="address_book_search_no_results">Es wurden keine Ergebnisse gefunden.\nVersuchen Sie es mit einem anderen Namen</string>
   <string name="address_book_select_network">Netzwerk auswählen</string>
   <string name="address_book_title">Adressbuch</string>
   <string name="address_book_unsaved_changes">Nicht gespeicherte Änderungen</string>
@@ -348,10 +362,12 @@
   <string name="common_from">Vom</string>
   <string name="common_from_wallet_name">Von %s</string>
   <string name="common_generate_addresses">Adressen synchronisieren</string>
+  <string name="common_get">Erhalten</string>
   <string name="common_get_started">Erste Schritte</string>
   <string name="common_get_token">Token erhalten</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
+  <string name="common_go_to_verification">Zur Verifizierung gehen</string>
   <string name="common_got_it">Verstanden</string>
   <string name="common_hide">Ausblenden</string>
   <string name="common_hold_to">Halten bis %s</string>
@@ -410,6 +426,7 @@
   <string name="common_privacy_policy">Datenschutzrichtlinie</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
+  <string name="common_rate">Zinssatz</string>
   <string name="common_read_more">Weiterlesen</string>
   <string name="common_receive">Empfangen</string>
   <string name="common_received">Erhalten</string>
@@ -471,6 +488,7 @@
     <item quantity="other">%d Token</item>
   </plurals>
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
+  <string name="common_transaction_id">Transaktions-ID</string>
   <string name="common_transaction_status">Transaktionsstatus</string>
   <string name="common_transactions">Transaktionen</string>
   <string name="common_transfer">Überweisung</string>
@@ -700,6 +718,8 @@
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
+  <string name="for_you_description">Portfolio prüfen und Verdienstmöglichkeiten erkunden</string>
+  <string name="for_you_title">Für dich</string>
   <string name="force_update_action">Jetzt aktualisieren</string>
   <string name="force_update_banner_message">Aktualisiere die Anwendung auf die neueste Version, um die ordnungsgemäße Funktionalität zu gewährleisten</string>
   <string name="force_update_banner_title">Aktualisierung erforderlich</string>
@@ -731,6 +751,8 @@
   <string name="hardware_wallet_key_feature_title">Schlüsselgenerierung</string>
   <string name="hardware_wallet_security_feature_description">Alle kryptografischen Vorgänge finden innerhalb des sicheren Chips statt, der gegen Klonen und physische Manipulation zertifiziert ist.</string>
   <string name="hardware_wallet_security_feature_title">Sicherheit auf Hardwareebene</string>
+  <string name="high_fee_warning_description">Das Netzwerk ist derzeit stark ausgelastet. Sie können jetzt fortfahren oder es später erneut versuchen, wenn die Gebühren möglicherweise niedriger sind.</string>
+  <string name="high_fee_warning_title">Die Netzwerkgebühr ist höher als üblich</string>
   <string name="home_button_add_existing_wallet">Vorhandene Wallet hinzufügen</string>
   <string name="home_button_create_new_wallet">Neues Wallet erstellen</string>
   <string name="home_button_order">Karte oder Ring bestellen</string>
@@ -866,6 +888,16 @@
   <string name="manage_tokens_unavailable_description">Der ausgewählte Token ist derzeit nicht für Aktionen innerhalb der Krypto-Wallet verfügbar. Aber keine Sorge, du kannst dein Interesse bekunden, indem du den Token hochstufen.</string>
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
+  <string name="market_chart_ai_total">KI Gesamt:</string>
+  <string name="market_chart_ask_for_ai_summary_button">Zusammenfassung der KI anfordern</string>
+  <plurals name="market_chart_assets_android">
+    <item quantity="one">Vermögenswert</item>
+    <item quantity="other">Vermögenswerte</item>
+  </plurals>
+  <string name="market_chart_bubble_no_data">Keine Daten</string>
+  <string name="market_chart_bubble_total_value">Gesamtwert</string>
+  <string name="market_chart_can_not_load_data">Daten konnten nicht geladen werden</string>
+  <string name="market_chart_top_holding">Top-Halterung %s</string>
   <string name="markets_about_coin_header">Über diesen Coin</string>
   <string name="markets_add_to_my_portfolio_description">Um dieses Asset zu kaufen, zu tauschen oder zu erhalten, füge diesen Deinem Portfolio hinzu</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset wird derzeit in der Wallet nicht unterstützt.</string>
@@ -1215,6 +1247,7 @@
   <string name="onramp_min_amount_restriction">Der zu kaufende Betrag muss mindestens %s betragen</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Kumulierte Transaktionsbeträge über %1s können eine Identitätsüberprüfung mit %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Kumulierte Transaktionsbeträge über dem Gegenwert von %1s können eine Identitätsprüfung mit %2s</string>
+  <string name="onramp_native_payment_identity_verification">Apple Pay-Transaktionen erfordern möglicherweise eine Identitätsprüfung mit %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">Indem du auf \"Bezahlen\" klicken, stimmen Sie %1s\'s %2s und %3szu.</string>
   <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
   <string name="onramp_offer_type_fastet">Schnellste Bearbeitung</string>
@@ -1401,6 +1434,7 @@
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Überprüfe deine Netzwerkverbindung</string>
   <string name="send_fee_unreachable_error_title">Informationen zur Netzwerkgebühr nicht erreichbar</string>
+  <string name="send_from_account_in_wallet_name">aus „ %1$s “ in %2$s</string>
   <string name="send_from_title">Sie senden</string>
   <string name="send_from_wallet_name">Von %s</string>
   <string name="send_gas_limit">Grenzwert Gasgebühr</string>
@@ -1551,6 +1585,7 @@
   <string name="staking_error_no_validators_message">Zurzeit sind keine Validierer verfügbar. Bitte versuche es später noch einmal.</string>
   <string name="staking_error_no_validators_title">Staking nicht verfügbar</string>
   <string name="staking_error_unavailable_region">Staking ist in Ihrer Region nicht verfügbar.</string>
+  <string name="staking_error_unavailable_region_description">Staking ist in Ihrer Region derzeit nicht verfügbar. Falls Sie ein VPN aktiviert haben, deaktivieren Sie es bitte.</string>
   <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
   <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
@@ -1846,6 +1881,10 @@
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
+  <string name="tangempay_current_plan_change">Tarif wechseln</string>
+  <string name="tangempay_current_plan_section_card">Kartenbezogen</string>
+  <string name="tangempay_current_plan_section_plan">Planbezogen</string>
+  <string name="tangempay_current_plan_title">Aktueller Plan</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Limit von %s bis %s festlegen</string>
   <string name="tangempay_daily_limit_set_button">Limits festlegen</string>
   <string name="tangempay_declined_reason_1">Unzureichendes Guthaben</string>
@@ -1950,6 +1989,13 @@
   <string name="tangempay_remove_account">Konto löschen</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay wird vom Hauptbildschirm entfernt und erscheint auch nach einer Neuinstallation der App nicht wieder.</string>
   <string name="tangempay_remove_account_alert_title">Konto löschen?</string>
+  <string name="tangempay_select_plan_btn_cancel">Abbrechen</string>
+  <string name="tangempay_select_plan_btn_downgrade">Tarif wechseln</string>
+  <string name="tangempay_select_plan_btn_select">Auswählen</string>
+  <string name="tangempay_select_plan_btn_upgrade">Tarif wechseln</string>
+  <string name="tangempay_select_plan_compare">Tarife vergleichen</string>
+  <string name="tangempay_select_plan_confirm_title">Auswahl bestätigen</string>
+  <string name="tangempay_select_plan_title">Plan auswählen</string>
   <string name="tangempay_service_unavailable_description">Wir beheben ein technisches Problem. Bitte versuchen Sie es später erneut.</string>
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
@@ -2059,6 +2105,7 @@
   <string name="twins_scan_twin_with_number">Tippe auf die Doppelkarte oder Ring mit der Nummer %s und entferne sie erst am Ende des Vorgangs.</string>
   <string name="tx_history_onramp_top_up">Aufladen</string>
   <string name="tx_history_onramp_topped_up">Aufgeladen</string>
+  <string name="tx_history_you_paid">Du hast bezahlt</string>
   <string name="unexpected_error_description">Bitte versuche es später noch einmal. Sollte das Problem weiterhin bestehen, wende Dich bitte an den Support.</string>
   <string name="unexpected_error_title">Etwas ist schiefgelaufen!</string>
   <string name="universal_error">Es ist ein Fehler aufgetreten. Fehlercode: %s. Bitte kontaktiere unseren Support.</string>
@@ -2329,6 +2376,7 @@
     <item quantity="other">Adressen synchronisieren, um eine Adresse für das Netzwerk %d zu erhalten</item>
   </plurals>
   <string name="warning_missing_derivation_title">Einige Adressen fehlen</string>
+  <string name="warning_mobile_access_denied_message">Verwenden %s oder Zugangscode, um den Zugriff auf Ihre Wallet freizuschalten</string>
   <string name="warning_network_unreachable_message">Das Netzwerk ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.</string>
   <string name="warning_network_unreachable_title">Netzwerk ist nicht erreichbar</string>
   <string name="warning_no_account_title">Lade dein Guthaben auf</string>
@@ -2336,8 +2384,8 @@
   <string name="warning_no_backup_title">Fehlende Sicherung</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Diese Karte oder Ring wurde bereits für Transaktionen verwendet. Wenn die Karte oder Ring aus einer nicht vertrauenswürdigen Quelle stammt, solltest du den gesamten Betrag abheben. Wenn es sich um deine Karte oder Ring handelt, sind keine Maßnahmen erforderlich.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Karte oder Ring hat bereits Transaktionen unterzeichnet</string>
-  <string name="warning_outdated_data_message">Wird so schnell wie möglich aktualisiert.</string>
-  <string name="warning_outdated_data_title">Es fehlen einige Token-Guthaben.</string>
+  <string name="warning_outdated_data_message">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
+  <string name="warning_outdated_data_title">Guthaben sind möglicherweise nicht aktuell</string>
   <string name="warning_rate_app_message">Deine Bewertung motiviert uns, die Tangem Wallet noch besser zu machen.</string>
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
