@@ -62,20 +62,21 @@ interface ExpressHistoryDao {
     ): Flow<List<ExpressExchangeEntity>>
 
     /**
-     * Incoming swaps: the viewed currency is the swap's `to` side. Such a deal was initiated from a
-     * different coin, so the row is stored under that coin's `from_address` — hence this query is
-     * cross-address, matched by the `to` asset. Join to on-chain by `payout_hash`.
+     * Incoming swaps: the viewed currency is the swap's `to` side, so the row is looked up by its `payout_address`
+     * (where the target assets landed = this currency's address). Join to on-chain by `payout_hash`.
      */
     @Query(
         """
         SELECT * FROM express_exchange
-        WHERE to_network = :network
+        WHERE payout_address = :payoutAddress
+          AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
         ORDER BY created_at DESC
         """,
     )
     fun observeIncomingSwaps(
+        payoutAddress: String,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
