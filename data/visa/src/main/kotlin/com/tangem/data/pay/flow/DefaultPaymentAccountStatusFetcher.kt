@@ -338,7 +338,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         fiatRate: BigDecimal?,
     ): PaymentAccountStatusValue {
         val cardsById = cards.associateBy { it.cardId }
-        val tangemPayCards = productInstances.mapNotNull { productInstance ->
+        val tangemPayCards = cardProductInstances.mapNotNull { productInstance ->
             val cardInfo = cardsById[productInstance.cardId] ?: return@mapNotNull null
             val cardId = productInstance.cardId
             val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
