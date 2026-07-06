@@ -166,4 +166,5 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Adi, AdiTestnet -> null
         SeiEvm, SeiEvmTestnet -> null
         Monad, MonadTestnet -> null
+        Gonka -> null
     }
