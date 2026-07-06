@@ -12,7 +12,8 @@ import com.tangem.domain.addressbook.usecase.GetContactByIdUseCase
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.addressbook.usecase.ValidateContactAddressUseCase
-import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
+import com.tangem.domain.addressbook.validation.ContactNameValidator
+import com.tangem.domain.addressbook.verification.ContactSignatureVerifier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.transaction.usecase.SignUseCase
@@ -42,8 +43,26 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
-    fun provideValidateContactNameUseCase(repository: AddressBookRepository): ValidateContactNameUseCase {
-        return ValidateContactNameUseCase(repository = repository)
+    fun provideContactSignatureVerifier(
+        verifyMessagesUseCase: VerifySecp256k1MessagesUseCase,
+        userWalletsListRepository: UserWalletsListRepository,
+    ): ContactSignatureVerifier {
+        return ContactSignatureVerifier(
+            verifyMessages = verifyMessagesUseCase,
+            userWalletsListRepository = userWalletsListRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideContactNameValidator(
+        repository: AddressBookRepository,
+        contactSignatureVerifier: ContactSignatureVerifier,
+    ): ContactNameValidator {
+        return ContactNameValidator(
+            repository = repository,
+            contactSignatureVerifier = contactSignatureVerifier,
+        )
     }
 
     @Provides
@@ -56,13 +75,11 @@ object AddressBookDomainModule {
     @Singleton
     fun provideGetVerifiedContactsInteractor(
         getContactsUseCase: GetContactsUseCase,
-        verifyMessagesUseCase: VerifySecp256k1MessagesUseCase,
-        userWalletsListRepository: UserWalletsListRepository,
+        contactSignatureVerifier: ContactSignatureVerifier,
     ): GetVerifiedContactsInteractor {
         return GetVerifiedContactsInteractor(
             getContacts = getContactsUseCase,
-            verifyMessages = verifyMessagesUseCase,
-            userWalletsListRepository = userWalletsListRepository,
+            contactSignatureVerifier = contactSignatureVerifier,
         )
     }
 
@@ -70,13 +87,13 @@ object AddressBookDomainModule {
     @Singleton
     fun provideSaveContactInteractor(
         repository: AddressBookRepository,
-        validateContactNameUseCase: ValidateContactNameUseCase,
+        contactNameValidator: ContactNameValidator,
         signUseCase: SignUseCase,
         timestampProvider: IsoTimestampProvider,
     ): SaveContactInteractor {
         return SaveContactInteractor(
             repository = repository,
-            validateContactName = validateContactNameUseCase,
+            validateContactName = contactNameValidator,
             signUseCase = signUseCase,
             timestampProvider = timestampProvider,
         )
