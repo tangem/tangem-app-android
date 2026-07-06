@@ -4,7 +4,9 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
 import com.tangem.datasource.local.txhistory.db.dao.TokenInfoDao
+import com.tangem.datasource.local.txhistory.db.entity.HistoryIndexEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
@@ -21,6 +23,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
         ExpressSyncStateEntity::class,
         OnrampCountryEntity::class,
         TokenInfoEntity::class,
+        HistoryIndexEntity::class,
     ],
 )
 abstract class TxHistoryDatabase : RoomDatabase() {
@@ -30,4 +33,6 @@ abstract class TxHistoryDatabase : RoomDatabase() {
     abstract fun syncStateDao(): ExpressSyncStateDao
 
     abstract fun tokenInfoDao(): TokenInfoDao
+
+    abstract fun historyIndexDao(): HistoryIndexDao
 }
