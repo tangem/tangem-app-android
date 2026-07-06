@@ -1,6 +1,9 @@
 package com.tangem.data.txhistory.repository
 
+import androidx.room.withTransaction
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
+import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntities
+import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
 import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -11,8 +14,10 @@ import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaRespon
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
+import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
@@ -25,12 +30,15 @@ import javax.inject.Inject
  * Fetches express (exchange & onramp) transaction history from the API, persists it into the local database, and
  * fetches any missing token metadata for the referenced assets.
  */
+@Suppress("LongParameterList")
 internal class DefaultExpressHistoryRepository @Inject constructor(
     private val exchangeApi: TangemExpressApi,
     private val onrampApi: OnrampApi,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val historyIndexDao: HistoryIndexDao,
     private val expressSyncStateDao: ExpressSyncStateDao,
     private val tokenInfoRepository: TokenInfoRepository,
+    private val database: TxHistoryDatabase,
     private val appScope: AppCoroutineScope,
 ) : ExpressHistoryRepository {
 
@@ -48,7 +56,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             limit = limit,
         ).getOrThrow()
 
-        storeExchanges(ownerAddress = fromAddress, items = response.items)
+        storeExchanges(items = response.items)
         persistHistoryState(
             type = ExpressSyncStateEntity.Type.EXCHANGE,
             address = fromAddress,
@@ -72,7 +80,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             limit = limit,
         ).getOrThrow()
 
-        storeExchanges(ownerAddress = fromAddress, items = response.items)
+        storeExchanges(items = response.items)
         persistDeltaState(
             type = ExpressSyncStateEntity.Type.EXCHANGE,
             address = fromAddress,
@@ -95,7 +103,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             limit = limit,
         ).getOrThrow()
 
-        storeOnramps(ownerAddress = payoutAddress, items = response.items)
+        storeOnramps(items = response.items)
         persistHistoryState(
             type = ExpressSyncStateEntity.Type.ONRAMP,
             address = payoutAddress,
@@ -119,7 +127,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             limit = limit,
         ).getOrThrow()
 
-        storeOnramps(ownerAddress = payoutAddress, items = response.items)
+        storeOnramps(items = response.items)
         persistDeltaState(
             type = ExpressSyncStateEntity.Type.ONRAMP,
             address = payoutAddress,
@@ -128,10 +136,13 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         return response
     }
 
-    override suspend fun storeExchanges(ownerAddress: String, items: List<ExchangeItemResponse>) {
-        if (items.isEmpty()) return
-        val entities = items.map { it.toEntity(ownerAddress) }
-        expressHistoryDao.upsertExchanges(entities)
+    override suspend fun storeExchanges(items: List<ExchangeItemResponse>) {
+        val entities = items.mapNotNull { it.toEntity() }
+        if (entities.isEmpty()) return
+        database.withTransaction {
+            expressHistoryDao.upsertExchanges(entities)
+            historyIndexDao.upsert(entities.flatMap { it.toHistoryIndexEntities() })
+        }
         fetchMissingTokenInfo(
             buildSet {
                 entities.forEach { entity ->
@@ -142,10 +153,13 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         )
     }
 
-    override suspend fun storeOnramps(ownerAddress: String, items: List<OnrampItemResponse>) {
+    override suspend fun storeOnramps(items: List<OnrampItemResponse>) {
         if (items.isEmpty()) return
-        val entities = items.map { it.toEntity(ownerAddress) }
-        expressHistoryDao.upsertOnramps(entities)
+        val entities = items.map { it.toEntity() }
+        database.withTransaction {
+            expressHistoryDao.upsertOnramps(entities)
+            historyIndexDao.upsert(entities.map { it.toHistoryIndexEntity() })
+        }
         fetchMissingTokenInfo(entities.mapTo(mutableSetOf()) { it.to.toAssetId() })
     }
 

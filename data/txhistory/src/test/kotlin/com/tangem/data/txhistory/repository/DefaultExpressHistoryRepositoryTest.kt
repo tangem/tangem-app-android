@@ -1,6 +1,9 @@
 package com.tangem.data.txhistory.repository
 
+import androidx.room.withTransaction
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntities
+import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
 import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -15,8 +18,11 @@ import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaRespon
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
+import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
+import com.tangem.datasource.local.txhistory.db.entity.HistoryIndexEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
@@ -25,8 +31,12 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -37,21 +47,35 @@ internal class DefaultExpressHistoryRepositoryTest {
     private val exchangeApi: TangemExpressApi = mockk()
     private val onrampApi: OnrampApi = mockk()
     private val expressHistoryDao: ExpressHistoryDao = mockk(relaxUnitFun = true)
+    private val historyIndexDao: HistoryIndexDao = mockk(relaxUnitFun = true)
     private val expressSyncStateDao: ExpressSyncStateDao = mockk(relaxUnitFun = true)
     private val tokenInfoRepository: TokenInfoRepository = mockk(relaxUnitFun = true)
+
+    private val database: TxHistoryDatabase = mockk()
 
     private val repository = DefaultExpressHistoryRepository(
         exchangeApi = exchangeApi,
         onrampApi = onrampApi,
         expressHistoryDao = expressHistoryDao,
+        historyIndexDao = historyIndexDao,
         expressSyncStateDao = expressSyncStateDao,
         tokenInfoRepository = tokenInfoRepository,
+        database = database,
         appScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(exchangeApi, onrampApi, expressHistoryDao, expressSyncStateDao, tokenInfoRepository)
+        clearMocks(exchangeApi, onrampApi, expressHistoryDao, historyIndexDao, expressSyncStateDao, tokenInfoRepository)
+        // Run the withTransaction block inline so the DAO writes inside it actually happen and can be verified.
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val block = slot<suspend () -> Any?>()
+        coEvery { database.withTransaction(capture(block)) } coAnswers { block.captured.invoke() }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        unmockkStatic("androidx.room.RoomDatabaseKt")
     }
 
     // region exchange history
@@ -74,7 +98,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         coVerify(exactly = 1) {
             exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = DEFAULT_LIMIT)
         }
-        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(item.toEntity())) }
     }
 
     @Test
@@ -130,7 +154,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         coVerify(exactly = 1) {
             exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = DELTA_CURSOR, limit = DEFAULT_LIMIT)
         }
-        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(item.toEntity())) }
     }
 
     // endregion
@@ -155,7 +179,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         coVerify(exactly = 1) {
             onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, afterCursor = AFTER_CURSOR, limit = DEFAULT_LIMIT)
         }
-        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity())) }
     }
 
     @Test
@@ -176,7 +200,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         coVerify(exactly = 1) {
             onrampApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, cursor = DELTA_CURSOR, limit = DEFAULT_LIMIT)
         }
-        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity())) }
     }
 
     @Test
@@ -206,10 +230,11 @@ internal class DefaultExpressHistoryRepositoryTest {
         val item = createExchangeItem()
 
         // WHEN
-        repository.storeExchanges(ownerAddress = ADDRESS, items = listOf(item))
+        repository.storeExchanges(items = listOf(item))
 
         // THEN
-        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(item.toEntity())) }
+        coVerify(exactly = 1) { historyIndexDao.upsert(item.toEntity()!!.toHistoryIndexEntities()) }
         coVerify(exactly = 1) {
             tokenInfoRepository.fetchMissing(
                 setOf(
@@ -226,10 +251,11 @@ internal class DefaultExpressHistoryRepositoryTest {
         val item = createOnrampItem()
 
         // WHEN
-        repository.storeOnramps(ownerAddress = ADDRESS, items = listOf(item))
+        repository.storeOnramps(items = listOf(item))
 
         // THEN
-        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity(ADDRESS))) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity())) }
+        coVerify(exactly = 1) { historyIndexDao.upsert(listOf(item.toEntity().toHistoryIndexEntity())) }
         coVerify(exactly = 1) {
             tokenInfoRepository.fetchMissing(setOf(ExpressAsset.ID(networkId = "bitcoin", contractAddress = "0xtoContract")))
         }
@@ -238,12 +264,27 @@ internal class DefaultExpressHistoryRepositoryTest {
     @Test
     fun `GIVEN empty items WHEN store THEN does nothing`() = runTest {
         // WHEN
-        repository.storeExchanges(ownerAddress = ADDRESS, items = emptyList())
-        repository.storeOnramps(ownerAddress = ADDRESS, items = emptyList())
+        repository.storeExchanges(items = emptyList())
+        repository.storeOnramps(items = emptyList())
 
         // THEN
         coVerify(exactly = 0) { expressHistoryDao.upsertExchanges(any()) }
         coVerify(exactly = 0) { expressHistoryDao.upsertOnramps(any()) }
+        coVerify(exactly = 0) { historyIndexDao.upsert(any<List<HistoryIndexEntity>>()) }
+        coVerify(exactly = 0) { tokenInfoRepository.fetchMissing(any()) }
+    }
+
+    @Test
+    fun `GIVEN exchange with null fromAddress WHEN storeExchanges THEN it is skipped`() = runTest {
+        // GIVEN
+        val item = createExchangeItem().copy(fromAddress = null)
+
+        // WHEN
+        repository.storeExchanges(items = listOf(item))
+
+        // THEN
+        coVerify(exactly = 0) { expressHistoryDao.upsertExchanges(any()) }
+        coVerify(exactly = 0) { historyIndexDao.upsert(any<List<HistoryIndexEntity>>()) }
         coVerify(exactly = 0) { tokenInfoRepository.fetchMissing(any()) }
     }
 
