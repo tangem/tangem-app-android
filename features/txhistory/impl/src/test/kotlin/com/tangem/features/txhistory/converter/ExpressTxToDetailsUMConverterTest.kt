@@ -188,15 +188,29 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN failed express swap WHEN convert THEN both legs faded and signs dropped`() {
+    fun `GIVEN failed express swap WHEN convert THEN from keeps minus unfaded and to is faded unsigned`() {
         // Act
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Failed))
 
-        // Assert
-        assertThat(result.from?.isFaded).isTrue()
+        // Assert — the spent leg stands as sent; only the never-received leg is struck through, with no sign.
+        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.isFaded).isFalse()
         assertThat(result.to?.isFaded).isTrue()
-        assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
         assertThat(result.to?.amount?.resolveString()).doesNotContain("+")
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("~")
+    }
+
+    @Test
+    fun `GIVEN refunded express swap WHEN convert THEN from keeps minus unfaded and to is faded unsigned`() {
+        // Act
+        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Refunded))
+
+        // Assert
+        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.isFaded).isFalse()
+        assertThat(result.to?.isFaded).isTrue()
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("+")
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("~")
     }
 
     @Test
