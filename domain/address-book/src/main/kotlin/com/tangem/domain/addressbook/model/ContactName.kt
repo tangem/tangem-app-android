@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  *
  * The only way to obtain an instance is the validating [invoke] factory, which enforces the
  * address-book naming rules. Uniqueness within a wallet is **not** enforced here — it requires
- * access to the repository and lives in `ValidateContactNameUseCase`.
+ * access to the repository and lives in `ContactNameValidator`.
  */
 @Serializable
 @ConsistentCopyVisibility
