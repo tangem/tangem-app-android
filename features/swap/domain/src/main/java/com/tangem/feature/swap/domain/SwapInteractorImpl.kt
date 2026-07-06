@@ -62,6 +62,7 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import jakarta.inject.Inject
@@ -420,12 +421,19 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromSwapCurrencyStatus.currency
         val toToken = toSwapCurrencyStatus.currency
 
-        val includeFeeInAmount = getIncludeFeeInAmountInternal(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            amount = amount,
-            reduceBalanceBy = reduceBalanceBy,
-            feeValue = BigDecimal.ZERO,
+        val nativeBalance = walletManagersFacade.getNativeTokenBalance(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            networkId = fromToken.network.rawId,
+            derivationPath = fromSwapCurrencyStatus.currency.network.derivationPath.value,
         )
+
+        val includeFeeInAmount = if (nativeBalance.isZero()) {
+            IncludeFeeInAmountInternal.Excluded
+        } else {
+            IncludeFeeInAmountInternal.Included(
+                SwapAmount(nativeBalance - reduceBalanceBy, fromToken.decimals),
+            )
+        }
 
         val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmountInternal.Included) {
             includeFeeInAmount.amountSubtractFee
@@ -446,12 +454,6 @@ internal class SwapInteractorImpl @Inject constructor(
             rateType = RateType.FLOAT,
         )
 
-        val quoteBalanceStatus = if (includeFeeInAmount == IncludeFeeInAmountInternal.BalanceNotEnough) {
-            SwapBalanceStatus.InsufficientAmount
-        } else {
-            SwapBalanceStatus.Pending // fee not resolved yet
-        }
-
         return provider to getQuotesState(
             provider = provider,
             quoteDataModel = quotes,
@@ -459,7 +461,7 @@ internal class SwapInteractorImpl @Inject constructor(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             isAllowedToSpend = true,
-            quoteBalanceStatus = quoteBalanceStatus,
+            quoteBalanceStatus = SwapBalanceStatus.Pending,
         )
     }
 
