@@ -22,6 +22,9 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     onCopyTxId: (() -> Unit)? = null,
     onShare: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
+    refundCurrency: CryptoCurrency? = null,
+    onLearnMoreAboutRefundsClick: () -> Unit = {},
+    onGoToRefundedTokenClick: (CryptoCurrency) -> Unit = {},
     lookup: TxHistoryLookupContext = TxHistoryLookupContext(
         ownAccountByNetwork = emptyMap(),
         isAccountsModeEnabled = false,
@@ -47,6 +50,9 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onGoToProvider = onGoToProvider,
         lookup = lookup,
         menu = menu,
+        refundCurrency = refundCurrency,
+        onLearnMoreAboutRefundsClick = onLearnMoreAboutRefundsClick,
+        onGoToRefundedTokenClick = onGoToRefundedTokenClick,
     )
 
     override fun convert(value: TxHistoryInfo): TxHistoryDetailsUM = when (value) {
