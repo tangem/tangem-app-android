@@ -10,7 +10,7 @@ internal class BankCredentialsConverterTest {
     @Test
     fun `GIVEN full response WHEN convert THEN all fields mapped`() {
         // Arrange
-        val response = BankCredentialsResponse(
+        val response = BankCredentialsResponse.Result(
             type = "fiat",
             beneficiaryName = "Ivan Ivanov",
             beneficiaryAddress = "18, Rue Rubens 20, Paris, Ile-de-France 75013, US",
@@ -39,7 +39,7 @@ internal class BankCredentialsConverterTest {
     @Test
     fun `GIVEN null fields WHEN convert THEN mapped to empty strings`() {
         // Arrange
-        val response = BankCredentialsResponse(
+        val response = BankCredentialsResponse.Result(
             type = null,
             beneficiaryName = null,
             beneficiaryAddress = null,
