@@ -11,6 +11,7 @@ import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
+import com.tangem.domain.txhistory.repository.ExpressHistoryPage
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.pagination.BatchFetchResult
@@ -230,6 +231,12 @@ internal class TxHistoryListManagerTest {
             currency: CryptoCurrency,
             fromCreatedAtMillis: Long,
         ) = emptyFlow<List<ExpressTx>>()
+
+        override fun getIndexedExpressHistory(
+            userWalletId: UserWalletId,
+            currency: CryptoCurrency,
+            limit: Int,
+        ) = emptyFlow<ExpressHistoryPage>()
 
         fun loadedItemsCount(): Int = batchFlow.state.value.data.sumOf { batch -> batch.data.items.size }
 
