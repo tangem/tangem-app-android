@@ -7,6 +7,7 @@ import com.tangem.features.commonfeatures.impl.R
 
 internal data class ManageFundsRouteUiSpec(
     val title: TextReference,
+    val subtitle: TextReference?,
     val shouldApplyHorizontalPadding: Boolean,
     val shouldFillHeight: Boolean,
 )
@@ -16,21 +17,25 @@ internal fun ManageFundsModel.UiRoute.uiSpec(flowType: ManageFundsComponent.Flow
     return when (this) {
         ManageFundsModel.UiRoute.Loading -> ManageFundsRouteUiSpec(
             title = resourceReference(if (isTransfer) R.string.common_choose_token else R.string.common_add_funds),
+            subtitle = null,
             shouldApplyHorizontalPadding = false,
             shouldFillHeight = false,
         )
         ManageFundsModel.UiRoute.ChooseToken -> ManageFundsRouteUiSpec(
             title = resourceReference(R.string.common_choose_token),
+            subtitle = null,
             shouldApplyHorizontalPadding = false,
             shouldFillHeight = true,
         )
         ManageFundsModel.UiRoute.UserPortfolio -> ManageFundsRouteUiSpec(
             title = resourceReference(R.string.common_add_funds),
+            subtitle = resourceReference(R.string.common_choose_token),
             shouldApplyHorizontalPadding = false,
             shouldFillHeight = false,
         )
         ManageFundsModel.UiRoute.TokenActions -> ManageFundsRouteUiSpec(
             title = resourceReference(if (isTransfer) R.string.common_transfer else R.string.common_get_token),
+            subtitle = null,
             shouldApplyHorizontalPadding = true,
             shouldFillHeight = true,
         )
