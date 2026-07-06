@@ -1,7 +1,7 @@
 ---
 name: create-pr
-description: Open a GitHub pull request for the current work via the GitHub CLI (gh), following Tangem repo conventions — branch naming (feature/bugfix/AND-xxx), commit format (AND-xxx Description), base develop, required trailers. Picks which changes to include, creates a feature branch off a protected branch, commits, and — only after explicit confirmation — pushes and opens the PR. Use when the user asks to "open/create a PR", "создай ПР / пул-реквест", "open a pull request", "залей в PR".
-allowed-tools: Read, Bash, AskUserQuestion, Monitor, TaskStop
+description: Open a GitHub pull request for the current work via the GitHub CLI (gh), following Tangem repo conventions — branch naming (feature/bugfix/AND-xxx), commit format (AND-xxx Description), base develop, required trailers. Picks which changes to include, creates a feature branch off a protected branch, commits, and — only after explicit confirmation — pushes and opens the PR. For a task-tied PR, then offers to fill the Jira task's QA Notes from the local changes (after review & confirmation). Use when the user asks to "open/create a PR", "создай ПР / пул-реквест", "open a pull request", "залей в PR".
+allowed-tools: Read, Bash, AskUserQuestion, Monitor, TaskStop, mcp__claude_ai_Atlassian_Rovo__getJiraIssue, mcp__claude_ai_Atlassian_Rovo__editJiraIssue
 argument-hint: [AND-xxxxx] [title...] [--base develop] [--dry-run]
 ---
 
@@ -9,6 +9,10 @@ Open a GitHub pull request for the current changes via `gh`, following this repo
 
 This skill is **interactive** and runs locally. **Pushing and opening the PR happen ONLY after an
 explicit confirmation gate (Phase 4)** — never push or create the PR before the user confirms.
+
+For a PR tied to a specific Jira task (i.e. **not** a Technical PR), after the PR is open the skill
+offers to fill the task's **QA Notes** field from the local changes — **only after the user reviews
+and confirms the exact text** (Phase 6b). Never write to Jira before that confirmation.
 
 ## Conventions
 
@@ -243,7 +247,66 @@ If a step fails, stop and surface the exact error and the command that failed; d
 ## Phase 6 — Report
 
 Output the PR URL, branch, base, the files included, and the labels. Do **not** offer to comment the
-PR link on Jira or to change the Jira task status — those are out of scope for this skill.
+PR link on Jira or to change the Jira task status — those are out of scope for this skill. (Filling
+the task's **QA Notes** is in scope — see Phase 6b.)
+
+## Phase 6b — QA Notes on the Jira task
+
+**Runs only for a PR tied to a Jira task** — skip entirely for a **Technical PR** (no task id), and
+skip in **`--dry-run`** (note in the dry-run output that QA Notes would be offered, but make no Jira
+read/write). This is the only Jira write this skill performs, and it happens **after** the PR is open.
+
+QA Notes is a testing note for QA, **written strictly in Russian**, describing user-facing behaviour
+to verify **without any code-level names** (no class / component / function / file names). It is the
+same field and conventions as the `create-jira-task` skill: field **`customfield_11232`**, **ADF
+document only** (a plain string is rejected).
+
+> **Tool names:** the steps below reference the Jira MCP tools by short name (`getJiraIssue`,
+> `editJiraIssue`) for readability. These map to the fully-qualified Atlassian Rovo tools declared in
+> `allowed-tools` (`mcp__claude_ai_Atlassian_Rovo__getJiraIssue` /
+> `mcp__claude_ai_Atlassian_Rovo__editJiraIssue`) — invoke them by their fully-qualified names.
+
+1. **Read the current value.** `getJiraIssue` for the resolved `AND-xxxxx` with
+   `fields: ["summary","customfield_11232"]` and `responseContentFormat: "markdown"` so the field
+   comes back as readable plain text rather than raw ADF JSON. (The field is stored as an ADF
+   document — if you fetch it as ADF, extract the plain text from the `content` paragraphs before
+   showing it; never paste raw ADF into the preview.)
+   - **Already filled** (non-empty `customfield_11232`) → **warn the user**, show the existing QA
+     Notes as plain text, and ask via `AskUserQuestion` how to proceed: **Keep existing** (default —
+     make no change, skip the rest of this phase) / **Overwrite** / **Append**. Do not silently
+     clobber an existing value.
+   - **Empty** → offer to fill it (**Generate & fill** / **Skip**). If the user skips, end the phase.
+
+2. **Generate the QA Notes from the changes in this PR** (in Russian, for testers): describe in plain
+   language what to verify — you may include concrete test cases (step → expected result). Base it on
+   the PR's actual diff, not a bare `git diff` (which is empty after the commit/push): use
+   `git diff origin/<base>...HEAD` (the branch's changes against the base), or `git show HEAD` for a
+   single-commit PR. If the functionality is gated behind a feature toggle (detect a toggle name from
+   the diff — e.g. a new entry in `feature_toggles_config.json` or an `XxxFeatureToggles` usage),
+   append `Закрыто тогглом "<название>"`. When appending to an existing value, produce the combined
+   final text.
+
+3. **Show the full proposed QA Notes text and get explicit confirmation** (`AskUserQuestion`:
+   **Write to Jira** / **Edit** / **Cancel**). The user must review the exact text before anything is
+   written. On **Edit**, let them adjust the text and re-preview. Never call `editJiraIssue` before
+   the user selects **Write to Jira**.
+
+4. **Write.** `editJiraIssue` for `AND-xxxxx` with the QA Notes wrapped as an ADF document. Each line
+   of text is its **own `paragraph`** in the `content` array — a single-line note is one paragraph, a
+   multi-line note is several. Do **not** put line breaks inside one paragraph's text.
+   ```
+   # single line → one paragraph:
+   "customfield_11232": {"type":"doc","version":1,"content":[
+     {"type":"paragraph","content":[{"type":"text","text":"<line 1>"}]}
+   ]}
+
+   # multiple lines → one paragraph per line:
+   "customfield_11232": {"type":"doc","version":1,"content":[
+     {"type":"paragraph","content":[{"type":"text","text":"<line 1>"}]},
+     {"type":"paragraph","content":[{"type":"text","text":"<line 2>"}]}
+   ]}
+   ```
+   Report success (or surface the exact error and stop — do not retry blindly).
 
 ## Phase 7 — Optional PR monitor
 
