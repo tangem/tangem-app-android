@@ -53,11 +53,8 @@ option **id** (preferred); if the API rejects `{ "id": ... }` for a field, retry
 | Value | id | When |
 |---|---|---|
 | `Core` | `15117` | default for most bugs (the common Core stream) |
-| `Blockchain` | `15120` | blockchain-specific bugs only |
 | `Grow` | `15116` | Grow stream |
 | `Visa` | `15981` | Visa stream |
-| `Engagement` | `15118` | Engagement stream |
-| `App store` | `15119` | App store stream |
 
 **Detected by** (`customfield_10870`) — who found the bug:
 
@@ -112,8 +109,7 @@ Ask the user **only for what is still missing**, grouped into as few questions a
   result in the Phase 3 preview so the developer can approve or edit it before creation.
 - **Stream** (required) — **always ask** via `AskUserQuestion`. Offer the options from the **Stream**
   table above (label = value). Per the metrics guidance, **Core** is the common default for most
-  bugs; **Blockchain** only for blockchain-specific bugs; **Grow** / **Visa** / **Engagement** /
-  **App store** for those streams. Map the chosen value to its option id.
+  bugs; use **Grow** / **Visa** for those streams. Map the chosen value to its option id.
 - **Detected by** (required) — ask via `AskUserQuestion`, **default `Team`**. Offer `Team` (default —
   anyone in Tangem except QA, e.g. the developer filing this), `QA`, `User` (non-Tangem / Support).
   Map to its option id.
