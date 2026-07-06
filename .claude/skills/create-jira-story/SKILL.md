@@ -45,11 +45,11 @@ Jira** — skip the confirmation gate and the `createJiraIssue` call. See Phase 
 If the user picks a Stream, map the chosen value to its option **id** (preferred); on a `{ "id": ... }`
 rejection retry that field with `{ "value": "<value>" }`.
 
-| Value | id | | Value | id |
-|---|---|---|---|---|
-| `Core` | `15117` | | `Visa` | `15981` |
-| `Blockchain` | `15120` | | `Engagement` | `15118` |
-| `Grow` | `15116` | | `App store` | `15119` |
+| Value | id |
+|---|---|
+| `Core` | `15117` |
+| `Grow` | `15116` |
+| `Visa` | `15981` |
 
 > **Tool names:** the phases below reference MCP tools by short name (e.g. `createJiraIssue`,
 > `getAccessibleAtlassianResources`) for readability. These map to the fully-qualified Atlassian Rovo
