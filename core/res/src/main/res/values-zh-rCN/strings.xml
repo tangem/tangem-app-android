@@ -2285,7 +2285,7 @@
   <string name="warning_no_backup_title">缺少备份</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">此卡曾用于交易。如果是从不可信来源收到的，请考虑提取所有资金。如果是您的卡，则无需采取任何措施。</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">卡片已签署交易</string>
-  <string name="warning_outdated_data_message">将尽快更新</string>
+  <string name="warning_outdated_data_message">部分代币余额无法更新</string>
   <string name="warning_outdated_data_title">缺少部分代币余额</string>
   <string name="warning_rate_app_message">您的评价激励我们不断改进 Tangem Wallet。</string>
   <string name="warning_rate_app_title">喜欢 Tangem 吗？</string>
