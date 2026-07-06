@@ -1,8 +1,6 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -11,24 +9,23 @@ android {
 }
 
 dependencies {
-    /** Project - Domain */
-    implementation(projects.domain.core)
-    api(projects.domain.express.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.visa.models)
 
-    /** Project - Other */
-    implementation(projects.core.utils)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    /** Android - Other */
+    // region Other libraries
+    api(deps.arrow.core)
     implementation(deps.androidx.paging.runtime)
+    // endregion
 
+    // region Core modules
     api(projects.core.pagination)
+    // endregion
 
-    /** DI */
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
+    // region Domain models
+    api(projects.domain.express.models)
+    api(projects.domain.models)
+    api(projects.domain.txhistory.models)
+    // endregion
 }

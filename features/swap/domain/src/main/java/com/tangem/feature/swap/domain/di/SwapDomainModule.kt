@@ -18,7 +18,6 @@ import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractorImpl
-import com.tangem.features.swap.SwapFeatureToggles
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -39,11 +38,9 @@ internal class SwapDomainModule {
     @Provides
     @Singleton
     fun provideGetSwapUiModeUseCase(
-        swapFeatureToggles: SwapFeatureToggles,
         swapRepository: SwapRepository,
         abTestsManager: ABTestsManager,
     ): GetSwapUiModeUseCase = GetSwapUiModeUseCase(
-        swapFeatureToggles = swapFeatureToggles,
         swapRepository = swapRepository,
         abTestsManager = abTestsManager,
     )
