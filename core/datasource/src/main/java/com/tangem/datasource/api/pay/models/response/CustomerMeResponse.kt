@@ -27,7 +27,7 @@ data class CustomerMeResponse(
     data class ProductInstance(
         @Json(name = "id") val id: String,
         @Json(name = "cid") val cid: String?,
-        @Json(name = "card_id") val cardId: String,
+        @Json(name = "card_id") val cardId: String?,
         @Json(name = "card_wallet_address") val cardWalletAddress: String?,
         @Json(name = "status") val status: Status,
         @Json(name = "updated_at") val updatedAt: String,
