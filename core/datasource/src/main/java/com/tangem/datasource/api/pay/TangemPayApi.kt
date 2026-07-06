@@ -88,6 +88,13 @@ interface TangemPayApi {
         @Body body: OrderRequest,
     ): ApiResponse<OrderResponse>
 
+    // TODO: Doston: [REDACTED_TASK_KEY] Unify with method above
+    @POST("v1/order")
+    suspend fun createVirtualAccountOrder(
+        @Header("Authorization") authHeader: String,
+        @Body body: VirtualAccountOrderRequest,
+    ): ApiResponse<OrderResponse>
+
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")
     suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>
