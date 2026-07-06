@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseDialogTestTags
@@ -10,12 +11,19 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
 
     val dialogContainer: KNode = child {
         hasTestTag(BaseDialogTestTags.CONTAINER)
+    }
+
+    fun containerWithText(text: String): KNode = child {
+        hasTestTag(BaseDialogTestTags.CONTAINER)
+        hasAnyDescendant(withText(text = text, substring = true))
+        useUnmergedTree = true
     }
 
     val title: KNode = child {
@@ -85,6 +93,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val okButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_ok))
+    }
+
+    val forgetButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(CoreResR.string.common_forget))
     }
 
     val changeButton: KNode = child {

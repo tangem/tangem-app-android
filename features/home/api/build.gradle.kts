@@ -9,9 +9,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /** Common */
-    implementation(projects.common.routing)
-} 
+    api(projects.common.routing)
+}

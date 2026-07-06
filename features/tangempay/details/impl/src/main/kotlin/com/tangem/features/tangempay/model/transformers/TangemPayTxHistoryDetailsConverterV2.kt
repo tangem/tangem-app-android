@@ -34,6 +34,7 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
             subtitle = transaction.extractDate(),
             iconState = transaction.extractIcon(),
             transactionTitle = transaction.extractTransactionTitle(),
+            card = transaction.extractCard(),
             transactionCategory = transaction.extractTransactionCategory(),
             mcc = transaction.extractMcc(),
             transactionAmount = transaction.extractAmount(),
@@ -286,6 +287,18 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
                 id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
                 formatArgs = wrappedList(TangemPayDeclinedReasonMapper.map(reason)),
             )
+        }
+    }
+
+    private fun TangemPayTxHistoryItem.extractCard(): TextReference? {
+        if (this !is TangemPayTxHistoryItem.Spend) return null
+        val name = cardName?.takeIf { it.isNotEmpty() }
+        val last4 = cardNumberLast4?.takeIf { it.isNotEmpty() }
+        return when {
+            name != null && last4 != null -> stringReference("$name *$last4")
+            last4 != null -> stringReference("*$last4")
+            name != null -> stringReference(name)
+            else -> null
         }
     }
 

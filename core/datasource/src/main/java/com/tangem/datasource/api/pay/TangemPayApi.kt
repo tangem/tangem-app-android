@@ -17,11 +17,29 @@ interface TangemPayApi {
         @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
     ): ApiResponse<TangemPayTxHistoryResponse>
 
+    @GET("v1/customer/transactions/{transaction_id}")
+    suspend fun getCustomerTransaction(
+        @Header("Authorization") authHeader: String,
+        @Path("transaction_id") transactionId: String,
+    ): ApiResponse<TangemPayTransactionResponse>
+
     @GET("v1/customer/kyc")
     suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
 
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
+
+    @GET("v1/customer/tariff-plan/transitions")
+    suspend fun getTariffPlanTransitions(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<TariffPlanTransitionsResponse>
+
+    /** Fiat bank requisites for the Virtual Account on-ramp (VA MVP0, TWI-1638). */
+    @GET("v1/account/bank-credentials/{product_instance_id}")
+    suspend fun getBankCredentials(
+        @Header("Authorization") authHeader: String,
+        @Path("product_instance_id") productInstanceId: String,
+    ): ApiResponse<BankCredentialsResponse>
 
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(
@@ -39,6 +57,12 @@ interface TangemPayApi {
 
     @GET("v1/eligibility/channels")
     suspend fun getEligibilityChannels(): ApiResponse<TangemPayEligibilityChannels>
+
+    /** Eligibility channels fetched with the user (customer-wallet) token (VA MVP0, TWI-1638). */
+    @GET("v1/eligibility/channels")
+    suspend fun getUserEligibilityChannels(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<TangemPayEligibilityChannels>
 
     @GET("v1/order/{order_id}")
     suspend fun getOrder(
