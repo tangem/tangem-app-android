@@ -48,7 +48,7 @@ fun TangemNavigationText(
             modifier = modifier,
             color = navigationTextColor(role),
             style = navigationTextStyle(role),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
             maxLines = maxLines,
             overflow = overflow,
         )
@@ -73,7 +73,7 @@ fun TangemNavigationText(
             modifier = modifier,
             color = navigationTextColor(role),
             style = navigationTextStyle(role),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
             maxLines = maxLines,
             overflow = overflow,
         )
