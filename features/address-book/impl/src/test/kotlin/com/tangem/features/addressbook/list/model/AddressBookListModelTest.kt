@@ -61,7 +61,7 @@ internal class AddressBookListModelTest {
     @Test
     fun `GIVEN feature just opened WHEN contacts not yet loaded THEN Loading state`() = runTest {
         // Arrange — the interactor has not emitted yet (books still syncing).
-        every { getVerifiedContactsInteractor(query = "", userWalletId = null) } returns emptyFlow()
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns emptyFlow()
 
         // Act
         val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
@@ -73,7 +73,7 @@ internal class AddressBookListModelTest {
     @Test
     fun `GIVEN default mode AND verified contacts WHEN created THEN content shown`() = runTest {
         // Arrange
-        every { getVerifiedContactsInteractor(query = "", userWalletId = null) } returns
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
             flowOf(listOf(verifiedContact(id = "1", name = "Alice"), verifiedContact(id = "2", name = "Bob")))
 
         // Act
@@ -89,7 +89,7 @@ internal class AddressBookListModelTest {
     @Test
     fun `GIVEN default mode AND no contacts WHEN created THEN empty state`() = runTest {
         // Arrange
-        every { getVerifiedContactsInteractor(query = "", userWalletId = null) } returns flowOf(emptyList())
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns flowOf(emptyList())
 
         // Act
         val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
@@ -103,7 +103,7 @@ internal class AddressBookListModelTest {
     fun `GIVEN default mode WHEN contact clicked THEN editor opened with contact id`() = runTest {
         // Arrange
         var clickedId: String? = null
-        every { getVerifiedContactsInteractor(query = "", userWalletId = null) } returns
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
             flowOf(listOf(verifiedContact(id = "42", name = "Alice")))
         val model = createModel(
             testScope = this,
