@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.actions
 
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -65,6 +66,12 @@ internal open class BaseActionsFactory(
         currency: CryptoCurrency,
         requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
     ): ScenarioUnavailabilityReason {
+        // Start2Coin (S2C) are legacy single-currency cards that do not support buying crypto in-app
+        // (historically only Receive/Send were offered for them).
+        if (userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isStart2Coin()) {
+            return ScenarioUnavailabilityReason.BuyUnavailable(currency.name)
+        }
+
         val onrampUnavailabilityReason = rampStateManager.availableForBuy(
             userWallet = userWallet,
             cryptoCurrency = currency,

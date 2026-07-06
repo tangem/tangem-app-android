@@ -35,12 +35,15 @@ internal interface CardSdkModule {
             sdkRepository: CardSdkConfigRepository,
             @ApplicationContext context: Context,
         ): CardArtworksProvider {
+            // Use internal storage (always mounted) instead of external files dir. External
+            // storage can be transiently unavailable/unmounted or cleared after this singleton
+            // is constructed, leaving the directory missing when the SDK later writes to it —
+            // ArtworksStorage.store() opens a FileOutputStream without re-creating the parent,
+            // which crashes with ENOENT. Artwork is only a cache, so internal storage is fine.
+            val artworksDirectory = File(context.filesDir, "card_artworks").apply { mkdirs() }
             return CardArtworksProvider(
                 tangemApiBaseUrlProvider = { sdkRepository.sdk.config.tangemApiBaseUrl },
-                artworksDirectory = File(
-                    context.getExternalFilesDir(null) ?: context.filesDir,
-                    "card_artworks",
-                ).apply { mkdirs() },
+                artworksDirectory = artworksDirectory,
             )
         }
     }

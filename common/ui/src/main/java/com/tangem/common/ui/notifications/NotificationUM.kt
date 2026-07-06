@@ -179,17 +179,26 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.send_notification_invalid_reserve_amount_text),
         )
 
-        data class NetworkAccountNotFunded(val coinName: String) : Error(
+        data class NetworkAccountNotFunded(
+            val coinName: String,
+            val reserveAmount: String,
+            val reserveSymbol: String,
+        ) : Error(
             title = resourceReference(R.string.alert_failed_to_send_transaction_title),
             subtitle = resourceReference(
                 id = R.string.no_account_generic,
-                formatArgs = wrappedList(coinName),
+                formatArgs = wrappedList(coinName, reserveAmount, reserveSymbol),
             ),
         )
 
         data object DestinationTagRequired : Error(
             title = resourceReference(id = R.string.send_validation_destination_tag_required_title),
             subtitle = resourceReference(id = R.string.send_validation_destination_tag_required_description),
+        )
+
+        data object RequiredTrustline : Error(
+            title = resourceReference(id = R.string.common_error),
+            subtitle = resourceReference(id = R.string.no_trustline_xlm_asset),
         )
     }
 

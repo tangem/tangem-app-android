@@ -11,10 +11,11 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureToggleGroupUM
-import com.tangem.feature.tester.presentation.featuretoggles.state.TesterFeatureToggleUM
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesScreenUM
+import com.tangem.feature.tester.presentation.featuretoggles.state.TesterFeatureToggleUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.utils.info.AppInfoProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -40,7 +41,7 @@ internal class FeatureTogglesViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Declared before `state` so it is initialized before `initState()` runs in the field initializer.
-    private val appVersion: Version? = Version.create(appInfoProvider.appVersion)
+    private val appVersion: Version? = createAppVersion()
 
     val state: StateFlow<FeatureTogglesScreenUM>
         field = MutableStateFlow(initState())
@@ -135,6 +136,20 @@ internal class FeatureTogglesViewModel @Inject constructor(
                 }
             }
             .toImmutableList()
+    }
+
+    private fun createAppVersion(): Version? {
+        val rawVersion = appInfoProvider.appVersion
+        // Drop the build-type suffix (e.g. "6.0-internal" -> "6.0") so the version parses, mirroring
+        // DefaultVersionProvider; otherwise every toggle falls back to the "Not planned yet" group.
+        val sanitizedVersion = rawVersion.substringBefore(delimiter = '-')
+        val version = Version.create(sanitizedVersion)
+
+        if (version == null) {
+            TangemLogger.e("Failed to parse app version: raw=$rawVersion, sanitized=$sanitizedVersion")
+        }
+
+        return version
     }
 
     private fun statusOf(toggleVersion: String): TesterFeatureToggleUM.Status {

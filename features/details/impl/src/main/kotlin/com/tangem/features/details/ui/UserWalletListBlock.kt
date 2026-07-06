@@ -130,7 +130,7 @@ private fun AddWalletButton(
     modifier: Modifier = Modifier,
 ) {
     BlockCard(
-        modifier = modifier,
+        modifier = modifier.testTag(DetailsScreenTestTags.ADD_WALLET_BUTTON),
         onClick = onClick,
         enabled = !isInProgress,
     ) {

@@ -24,6 +24,7 @@ import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -31,10 +32,12 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -66,8 +69,11 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
+    private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
+    private val validateTransactionUseCase: ValidateTransactionUseCase,
 ) : SwapTransferInteractor {
 
+    @Suppress("LongMethod")
     override suspend fun updateTransfer(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -102,18 +108,37 @@ class SwapTransferInteractorImpl @Inject constructor(
         val feePaidCurrency = feePaidCurrencyStatus?.currency
         val isFeeInOtherToken = feePaidCurrency is CryptoCurrency.Token && feePaidCurrency.id != fromToken.id
         val warningsFee = if (isFeeInOtherToken) BigDecimal.ZERO else fee?.amount?.value.orZero()
+        val isAmountSubtractAvailable = isAmountSubtractAvailable(
+            userWalletId = userWallet.walletId,
+            currency = fromTokenInfo.swapCurrencyStatus.currency,
+            fee = fee,
+        )
+        val fromBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
+        val isFeeCoverageForRent = checkFeeCoverage(
+            isSubtractAvailable = isAmountSubtractAvailable,
+            balance = fromBalance,
+            amountValue = fromTokenAmountValue,
+            feeValue = fee?.amount?.value.orZero(),
+            reduceAmountBy = BigDecimal.ZERO,
+        )
+        val sendingAmountForRentCheck = if (isFeeCoverageForRent) {
+            (fromTokenAmountValue - fee?.amount?.value.orZero()).coerceAtLeast(BigDecimal.ZERO)
+        } else {
+            fromTokenAmountValue
+        }
         val currencyCheck = getCurrencyCheckUseCase(
             userWalletId = fromSwapCurrencyStatus.userWalletId,
             currencyStatus = fromSwapCurrencyStatus.status,
             feeCurrencyStatus = feePaidCurrencyStatus,
             amount = fromTokenAmountValue,
             fee = warningsFee,
-            feeCurrencyBalanceAfterTransaction = null,
-        )
-        val isAmountSubtractAvailable = isAmountSubtractAvailable(
-            userWalletId = userWallet.walletId,
-            currency = fromTokenInfo.swapCurrencyStatus.currency,
-            fee = fee,
+            feeCurrencyBalanceAfterTransaction = getFeeCurrencyBalanceAfterTx(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                feePaidCurrencyStatus = feePaidCurrencyStatus,
+                sendingAmount = sendingAmountForRentCheck,
+                feeValue = fee?.amount?.value,
+            ),
+            recipientAddress = toSwapCurrencyStatus.destinationAddress(),
         )
         val coverageState = getCoverageState(
             fromTokenInfo = fromTokenInfo,
@@ -130,6 +155,17 @@ class SwapTransferInteractorImpl @Inject constructor(
             )
         }
         val tronFeeNotificationShowCount = getTronFeeNotificationShowCountUseCase()
+        val hasRequiredTrustline = getAssetRequirementsUseCase(
+            userWalletId = toSwapCurrencyStatus.userWalletId,
+            currency = toToken,
+        ).getOrNull() is AssetRequirementsCondition.RequiredTrustline
+        val validationResult = manageTransactionValidationWarnings(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            destinationAddress = toSwapCurrencyStatus.destinationAddress(),
+            amount = fromTokenInfo.tokenAmount,
+            fee = fee,
+        )
+        val minAdaValue = (fee as? Fee.CardanoToken)?.minAdaValue
         return SwapState.Transfer(
             userWallet = userWallet,
             fromTokenInfo = fromTokenInfo,
@@ -145,7 +181,43 @@ class SwapTransferInteractorImpl @Inject constructor(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
             isSendingAmountLoading = coverageState.isSendingAmountLoading,
             currencyCheck = currencyCheck,
+            validationResult = validationResult,
+            minAdaValue = minAdaValue,
+            hasRequiredTrustline = hasRequiredTrustline,
         )
+    }
+
+    private fun getFeeCurrencyBalanceAfterTx(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        feePaidCurrencyStatus: CryptoCurrencyStatus?,
+        sendingAmount: BigDecimal,
+        feeValue: BigDecimal?,
+    ): BigDecimal? {
+        val feeCurrencyBalance = feePaidCurrencyStatus?.value as? CryptoCurrencyStatus.Loaded ?: return null
+        if (feeValue == null) return null
+        val isFeeInFromToken = feePaidCurrencyStatus.currency.id == fromSwapCurrencyStatus.currency.id
+        return if (isFeeInFromToken) {
+            feeCurrencyBalance.amount - sendingAmount - feeValue
+        } else {
+            feeCurrencyBalance.amount - feeValue
+        }
+    }
+
+    private suspend fun manageTransactionValidationWarnings(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        destinationAddress: String?,
+        amount: SwapAmount,
+        fee: Fee?,
+    ): Throwable? {
+        destinationAddress ?: return null
+        return validateTransactionUseCase(
+            amount = amount.value.convertToSdkAmount(fromSwapCurrencyStatus.status),
+            fee = fee,
+            memo = null,
+            destination = destinationAddress,
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = fromSwapCurrencyStatus.currency.network,
+        ).leftOrNull()
     }
 
     private suspend fun getCryptoCurrencyWarning(

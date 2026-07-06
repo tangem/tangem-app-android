@@ -8,10 +8,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.styledResourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
@@ -108,14 +105,7 @@ internal class WalletTokenAccountItemConverter(
                 val priceChangeType = PriceChangeType.fromBigDecimal(priceChange.value)
 
                 TangemTokenRowUM.EndContentUM.Content(
-                    text = stringReference(
-                        priceChange.value.format {
-                            fiat(
-                                fiatCurrencyCode = appCurrency.code,
-                                fiatCurrencySymbol = appCurrency.symbol,
-                            )
-                        },
-                    ),
+                    text = TextReference.EMPTY,
                     priceChangeUM = PriceChangeState.Content(
                         type = priceChangeType,
                         valueInPercent = priceChange.value.format { percent() },
