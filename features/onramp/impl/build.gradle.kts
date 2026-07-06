@@ -14,49 +14,48 @@ android {
 dependencies {
 
     /** Project - API */
-    implementation(projects.features.commonFeatures.api)
-    implementation(projects.features.onramp.api)
-    implementation(projects.features.swap.api)
-    implementation(projects.features.swap.domain)
-    implementation(projects.features.swap.domain.api)
-    implementation(projects.features.swap.domain.models)
-    implementation(projects.features.feed.api)
+    api(projects.features.commonFeatures.api)
+    api(projects.features.onramp.api)
 
     /** Project - Core */
-    implementation(projects.core.analytics)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.ui)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
 
     /** Project - Common */
-    implementation(projects.common.routing)
-    implementation(projects.common.ui)
-    implementation(projects.common.uiMarkets)
-    implementation(projects.common.uiCharts)
+    api(projects.common.routing)
+    api(projects.common.ui)
+    implementation(projects.common)
 
     /** Project - Domain */
-    implementation(projects.domain.appCurrency)
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.appCurrency)
+    api(projects.domain.appTheme)
+    api(projects.domain.balanceHiding)
+    api(projects.domain.demo)
+    api(projects.domain.legacy)
+    api(projects.domain.models)
+    api(projects.domain.offramp)
+    api(projects.domain.onramp)
+    api(projects.domain.onramp.models)
+    api(projects.domain.settings)
+    api(projects.domain.tokens)
+    api(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.models)
-    implementation(projects.domain.offramp)
-    implementation(projects.domain.onramp)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
-    implementation(projects.data.common)
-    implementation(projects.domain.markets)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.core)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
+    implementation(projects.domain.wallets.models)
+    runtimeOnly(projects.domain.card)
+
+    /** Data */
+    api(projects.data.common)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -67,19 +66,23 @@ dependencies {
     implementation(deps.lifecycle.compose)
 
     /** Compose */
+    api(deps.compose.coil)
+    api(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.shimmer)
-    implementation(deps.compose.coil)
 
     /** Tangem libraries */
     implementation(tangemDeps.blockchain)
     implementation(projects.libs.blockchainSdk)
 
     /** Other */
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+    api(deps.kotlin.serialization.core)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.kotlin.immutable.collections)
 }
