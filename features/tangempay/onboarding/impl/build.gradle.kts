@@ -12,51 +12,60 @@ android {
 }
 dependencies {
     /** Core */
-    implementation(projects.core.analytics)
-    implementation(projects.core.decompose)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.error)
-    implementation(projects.core.navigation)
     implementation(projects.core.ui)
-    implementation(projects.core.utils)
 
     /** Common */
-    implementation(projects.common.routing)
+    api(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Features api */
-    implementation(projects.features.tangempay.onboarding.api)
+    api(projects.features.tangempay.onboarding.api)
+    api(projects.features.wallet.api)
     implementation(projects.features.tangempay.details.api)
-    implementation(projects.features.kyc.api)
-    implementation(projects.features.wallet.api)
-    implementation(projects.features.hotWallet.api)
 
     /** Domain */
-    implementation(projects.domain.appsflyer)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.hotWallet)
+    api(projects.domain.appsflyer)
+    api(projects.domain.hotWallet)
+    api(projects.domain.visa)
+    api(projects.domain.visa.models)
+    api(projects.domain.wallets)
+    implementation(projects.domain.models)
 
     /** Libs */
     implementation(tangemDeps.hot.core)
 
     /** Data **/
-    implementation(projects.data.visa)
+    runtimeOnly(projects.data.visa)
 
     /** Compose */
-    implementation(deps.compose.foundation)
+    api(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.decompose.ext.compose)
+
+    /** AndroidX */
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     /** Other */
+    api(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Test */
     testImplementation(deps.test.junit5)
