@@ -23,11 +23,15 @@ class CloseTangemPayCardUseCase(
             raise(VisaApiError.Unspecified)
         }
 
-        closeCardRepository.setCloseOrderId(cardId, order.orderId)
+        closeCardRepository.storeCloseOrderId(cardId, order.orderId)
         paymentAccountStatusFetcher.invoke(userWalletId)
 
         appCoroutineScope.launch {
-            startTangemPayOrderPollingUseCase(order, userWalletId)
+            startTangemPayOrderPollingUseCase(
+                order = order,
+                userWalletId = userWalletId,
+                onTerminalReached = { closeCardRepository.removeCloseOrderId(cardId) },
+            )
         }
     }
 }

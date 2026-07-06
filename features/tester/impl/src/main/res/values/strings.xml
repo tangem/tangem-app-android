@@ -15,6 +15,9 @@
     <string name="excluded_blockchains_search_placeholder" translatable="false">Filter by name or symbol</string>
     <string name="blockchain_providers" translatable="false">Blockchain providers</string>
     <string name="toggle_hot_wallet_restriction" translatable="false">Hot wallet creation restriction - %s</string>
+    <string name="usedesk_token_ttl" translatable="false">Usedesk chat token TTL - %s</string>
+    <string name="usedesk_token_ttl_title" translatable="false">Usedesk chat token TTL</string>
+    <string name="usedesk_token_ttl_custom" translatable="false">Custom (minutes)</string>
     <string name="share_logs" translatable="false">Share logs</string>
     <string name="test_push" translatable="false">Test push</string>
     <string name="accounts" translatable="false">Accounts</string>
