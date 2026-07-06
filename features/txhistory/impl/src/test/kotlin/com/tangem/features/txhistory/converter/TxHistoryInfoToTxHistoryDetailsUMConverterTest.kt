@@ -1,13 +1,16 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_share_android_24
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -168,6 +171,93 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
 
     // endregion
 
+    // region Refunded express swap
+
+    @Test
+    fun `GIVEN refunded express swap with resolved refund token WHEN convert THEN refunded-in banner with link`() {
+        // Arrange
+        var learnMoreClicked = false
+        val refundConverter = refundConverter(onLearnMore = { learnMoreClicked = true })
+
+        // Act
+        val result = refundConverter.convert(expressSwap(status = ExpressExchangeStatus.Refunded))
+            as TxHistoryDetailsUM.TwoAssets
+
+        // Assert — the subtitle's trailing "Learn more" is a styled reference carrying a lambda, so the subtitle is
+        // nulled out for the whole-object comparison and its parts are checked apart.
+        val banner = requireNotNull(result.statusBanner)
+        assertThat(banner.copy(subtitle = null)).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+                title = resourceReference(
+                    id = R.string.express_exchange_notification_refunded_in_title,
+                    formatArgs = wrappedList(bitcoin.symbol),
+                ),
+                isLoading = false,
+            ),
+        )
+        assertThat(banner.subtitle).isInstanceOf(TextReference.Combined::class.java)
+        val subtitle = banner.subtitle as TextReference.Combined
+        assertThat(subtitle.refs.data.first()).isEqualTo(
+            resourceReference(
+                id = R.string.express_exchange_notification_refunded_in_text,
+                formatArgs = wrappedList(bitcoin.symbol, bitcoin.network.name),
+            ),
+        )
+        val link = subtitle.refs.data.last() as TextReference.StyledRes
+        assertThat(link.id).isEqualTo(R.string.common_learn_more)
+        link.onClick?.invoke()
+        assertThat(learnMoreClicked).isTrue()
+    }
+
+    @Test
+    fun `GIVEN refunded express swap with resolved refund token WHEN convert THEN go-to-token button with the token`() {
+        // Arrange
+        val goToTokenClicks = mutableListOf<CryptoCurrency>()
+        val refundConverter = refundConverter(onGoToToken = goToTokenClicks::add)
+
+        // Act
+        val result = refundConverter.convert(expressSwap(status = ExpressExchangeStatus.Refunded))
+            as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        val button = result.providerButton
+        assertThat(button?.text).isEqualTo(resourceReference(R.string.common_go_to_token))
+        button?.onClick?.invoke()
+        assertThat(goToTokenClicks).containsExactly(bitcoin)
+    }
+
+    @Test
+    fun `GIVEN refunded express swap without refund token WHEN convert THEN fallback error banner and no button`() {
+        // Act — the refund token is unresolved (e.g. offline / not a bridge deal), even though a provider url exists.
+        val result = dispatcher().convert(
+            expressSwap(status = ExpressExchangeStatus.Refunded, externalTxUrl = EXTERNAL_URL),
+        ) as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.statusBanner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+                title = resourceReference(R.string.express_exchange_status_refunded),
+                isLoading = false,
+            ),
+        )
+        assertThat(result.providerButton).isNull()
+    }
+
+    @Test
+    fun `GIVEN finished express swap with resolved refund token WHEN convert THEN refund banner not applied`() {
+        // Act — a stale refund resolution must not leak into non-refunded terminals.
+        val result = refundConverter().convert(expressSwap(status = ExpressExchangeStatus.Finished))
+            as TxHistoryDetailsUM.TwoAssets
+
+        // Assert
+        assertThat(result.statusBanner?.severity).isEqualTo(TxHistoryDetailsUM.StatusBannerUM.Severity.Success)
+        assertThat(result.providerButton).isNull()
+    }
+
+    // endregion
+
     private fun dispatcher(
         onCopyTxId: (() -> Unit)? = null,
         onShare: (() -> Unit)? = null,
@@ -181,5 +271,18 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onShare = onShare,
         onExplore = onExplore,
         lookup = lookup,
+    )
+
+    /** Converter with a resolved refund token (bitcoin) and the refund callbacks wired. */
+    private fun refundConverter(
+        onLearnMore: () -> Unit = {},
+        onGoToToken: (CryptoCurrency) -> Unit = {},
+    ) = TxHistoryInfoToTxHistoryDetailsUMConverter(
+        currency = currency,
+        onCopyAddress = copiedAddresses::add,
+        onGoToProvider = openedUrls::add,
+        refundCurrency = bitcoin,
+        onLearnMoreAboutRefundsClick = onLearnMore,
+        onGoToRefundedTokenClick = onGoToToken,
     )
 }
