@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.appsflyer.usecase.IsReferralInstallUseCase
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -16,7 +17,6 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.api.HomeFeatureToggles
 import com.tangem.features.home.impl.ui.state.Stories
@@ -45,7 +45,7 @@ internal class HomeModelTest {
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory = mockk(relaxed = true)
     private val saveWalletUseCase: SaveWalletUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase = mockk(relaxed = true)
+    private val isReferralInstallUseCase: IsReferralInstallUseCase = mockk(relaxed = true)
     private val homeFeatureToggles: HomeFeatureToggles = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -188,7 +188,7 @@ internal class HomeModelTest {
             coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
             saveWalletUseCase = saveWalletUseCase,
             userWalletsListRepository = userWalletsListRepository,
-            shouldShowMobileWalletPromoUseCase = shouldShowMobileWalletPromoUseCase,
+            isReferralInstallUseCase = isReferralInstallUseCase,
             homeFeatureToggles = homeFeatureToggles,
             uiMessageSender = uiMessageSender,
         )
