@@ -2275,6 +2275,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">このトークンを受け取るには、Hederaアカウントに関連付ける必要があります。</string>
   <string name="warning_hedera_missing_token_association_title">トークンを関連付ける</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%sが不足しています。このトークンを関連付けるには、Hederaアカウントに資金を追加してください。</string>
+  <string name="warning_incomplete_backup_notification_message">カードの有効化が正常に完了していないことが判明しました。原因として、お使いの端末のNFC機能の不具合、またはカードをスマートフォンに正しくかざせていない可能性があります。詳しくはサポートまでお問い合わせください。</string>
+  <string name="warning_incomplete_backup_notification_title">対応が必要です。ウォレットは使用しないでください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">取引をキャンセルしてもよろしいですか? 取引を再試行することはできません</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
