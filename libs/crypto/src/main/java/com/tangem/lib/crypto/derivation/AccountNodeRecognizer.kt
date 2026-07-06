@@ -180,6 +180,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.Adi,
             Blockchain.SeiEvm,
             Blockchain.Monad,
+            Blockchain.Gonka,
             -> true
             Blockchain.Nexa, // unsupported network
             Blockchain.Chia,
