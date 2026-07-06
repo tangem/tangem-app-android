@@ -1,13 +1,10 @@
 package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.walletconnect.model.WcBitcoinMethod
-import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.model.WcMethod
-import com.tangem.domain.walletconnect.model.WcPsbtOutput
-import com.tangem.domain.walletconnect.model.WcSolanaMethod
+import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
@@ -74,6 +71,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                         }
                     },
                     feeErrorNotification = feeErrorNotification,
+                    walletInteractionIcon = walletInterationIcon(value.context.session.wallet),
                     isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
                 ),
                 feeSelectorUM = when (value.feeState) {

@@ -15,6 +15,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.appsflyer.usecase.IsReferralInstallUseCase
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -27,7 +28,6 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.api.HomeFeatureToggles
 import com.tangem.features.home.impl.ui.state.HomeStoriesConfig
@@ -60,7 +60,7 @@ internal class HomeModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
+    private val isReferralInstallUseCase: IsReferralInstallUseCase,
     private val homeFeatureToggles: HomeFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
@@ -120,12 +120,14 @@ internal class HomeModel @Inject constructor(
 
     private fun onGetStartedClick() {
         debouncer.debounce(modelScope) {
-            val mode = if (shouldShowMobileWalletPromoUseCase()) {
-                AppRoute.CreateWalletStart.Mode.HotWallet
-            } else {
-                AppRoute.CreateWalletStart.Mode.ColdWallet
+            modelScope.launch {
+                val mode = if (isReferralInstallUseCase()) {
+                    AppRoute.CreateWalletStart.Mode.HotWallet
+                } else {
+                    AppRoute.CreateWalletStart.Mode.ColdWallet
+                }
+                router.push(AppRoute.CreateWalletStart(mode = mode))
             }
-            router.push(AppRoute.CreateWalletStart(mode = mode))
         }
     }
 

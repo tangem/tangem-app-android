@@ -53,7 +53,7 @@ private enum class SlotId { Start, Content, Group, End }
  * @param blurBackground Whether the fade behind the row should blur the content below.
  * @param startButton Leading slot. Typically a back button (see [TangemButton.Back]).
  * @param endButtonsGroup Optional pill-grouped secondary actions placed just before [endButton].
- * @param endButton Trailing slot. Typically a close button (see [TangemButton.Close]).
+ * @param endButton Trailing slot. Typically, a close button (see [TangemButton.Close]).
  * @param contentColumn Center slot. Place title/subtitle children here.
  */
 @Suppress("LongMethod")
@@ -88,7 +88,6 @@ fun TangemTopNavigation(
             blur = blurBackground,
         )
 
-        val groupSpacing = 8.dp
         Layout(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,7 +107,7 @@ fun TangemTopNavigation(
 
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 12.dp)
+                        .padding(start = if (startButton != null) 12.dp else 0.dp, end = 12.dp)
                         .layoutId(SlotId.Content),
                     horizontalAlignment = when (contentAlign) {
                         TangemTopNavigation.ContentAlign.Start -> Alignment.Start
@@ -148,7 +147,7 @@ fun TangemTopNavigation(
                 }
             },
         ) { measurables, constraints ->
-            val groupSpacingPx = groupSpacing.roundToPx()
+            val groupSpacingPx = 8.dp.roundToPx()
             val totalWidth = constraints.maxWidth
 
             val startM = measurables.first { it.layoutId == SlotId.Start }
@@ -161,13 +160,15 @@ fun TangemTopNavigation(
             val endP = endM.measure(slotConstraints)
             val groupP = groupM.measure(slotConstraints)
 
+            val endGap = if (endP.width > 0) groupSpacingPx else 0
+            val groupOccupiedWidth = if (groupP.width > 0) endGap + groupP.width else 0
+            val trailingWidth = endP.width + groupOccupiedWidth
+
             val contentMaxWidth = when (contentAlign) {
-                // Symmetric band so the content can be visually centered within `totalWidth`
-                // without colliding with the start/end slots.
                 TangemTopNavigation.ContentAlign.Center ->
-                    (totalWidth - 2 * maxOf(startP.width, endP.width)).coerceAtLeast(0)
+                    (totalWidth - 2 * maxOf(startP.width, trailingWidth)).coerceAtLeast(0)
                 TangemTopNavigation.ContentAlign.Start ->
-                    (totalWidth - startP.width - endP.width).coerceAtLeast(0)
+                    (totalWidth - startP.width - trailingWidth).coerceAtLeast(0)
             }
             val contentP = contentM.measure(slotConstraints.copy(maxWidth = contentMaxWidth))
 
@@ -183,15 +184,14 @@ fun TangemTopNavigation(
                         ((totalWidth - contentP.width) / 2)
                             .coerceIn(
                                 startP.width,
-                                (totalWidth - endP.width - contentP.width).coerceAtLeast(startP.width),
+                                (totalWidth - trailingWidth - contentP.width).coerceAtLeast(startP.width),
                             )
                 }
                 contentP.placeRelative(x = contentX, y = centerY(contentP.height))
 
                 endP.placeRelative(x = totalWidth - endP.width, y = centerY(endP.height))
-                // Group floats to the left of endButton with `groupSpacing` gap, overlaying the
-                // tail of the content band if necessary.
-                val groupX = (totalWidth - endP.width - groupSpacingPx - groupP.width)
+
+                val groupX = (totalWidth - endP.width - endGap - groupP.width)
                     .coerceAtLeast(0)
                 groupP.placeRelative(x = groupX, y = centerY(groupP.height))
             }

@@ -74,7 +74,7 @@ internal class AddTokenUiBuilder @Inject constructor(
             isEnabled = isAvailableNetwork,
             showProgress = false,
             isTangemIconVisible = isTangemIconVisible,
-            text = resourceReference(R.string.common_add),
+            text = resourceReference(R.string.common_confirm),
             onConfirmClick = onConfirmClick,
         )
         val networkUM = createNetwork(selectedNetwork)
