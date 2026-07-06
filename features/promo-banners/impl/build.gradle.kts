@@ -12,29 +12,32 @@ android {
 
 dependencies {
     /** Project - API */
-    implementation(projects.features.promoBanners.api)
+    api(projects.features.promoBanners.api)
 
     /** Domain */
-    implementation(projects.domain.common)
+    api(projects.domain.common)
     implementation(projects.domain.models)
 
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.ui)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-    implementation(projects.core.datasource)
+    implementation(projects.core.ui)
 
     /** Compose */
-    implementation(deps.compose.foundation)
+    api(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
     /** Other */
-    implementation(deps.arrow.core)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */
