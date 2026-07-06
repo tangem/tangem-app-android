@@ -3,6 +3,7 @@ package com.tangem.data.txhistory.repository.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.tokens.model.AmountType
@@ -89,6 +90,47 @@ internal class ExpressTxHistoryConverterTest {
     }
 
     @Test
+    fun `GIVEN exchange entity with refund fields WHEN convert THEN refund asset id mapped to domain`() {
+        // Arrange
+        val entity = createExchangeEntity(refundNetwork = "polygon", refundContractAddress = "0xrefund")
+
+        // Act
+        val swap = swapConverter.convert(
+            ExpressSwapConverter.Input(
+                entity = entity,
+                provider = null,
+                isOutgoing = true,
+                fromCurrency = null,
+                toCurrency = null,
+                refundCurrency = null,
+            ),
+        )
+
+        // Assert
+        assertThat(swap.tx.refundAssetId)
+            .isEqualTo(ExpressAsset.ID(networkId = "polygon", contractAddress = "0xrefund"))
+    }
+
+    @Test
+    fun `GIVEN exchange entity without refund fields WHEN convert THEN refund fields are null`() {
+        // Act
+        val swap = swapConverter.convert(
+            ExpressSwapConverter.Input(
+                entity = createExchangeEntity(),
+                provider = null,
+                isOutgoing = true,
+                fromCurrency = null,
+                toCurrency = null,
+                refundCurrency = null,
+            ),
+        )
+
+        // Assert
+        assertThat(swap.tx.refundAssetId).isNull()
+        assertThat(swap.tx.refundCurrency).isNull()
+    }
+
+    @Test
     fun `GIVEN onramp entity WHEN toOnramp THEN matched by payout hash with fiat from-leg`() {
         // Arrange
         val entity = createOnrampEntity(payoutHash = "payout", status = "finished")
@@ -114,6 +156,8 @@ internal class ExpressTxHistoryConverterTest {
         // Raw minimal-unit amount (to-asset decimals = 8) → 0.001
         toAmount: String = "100000",
         toActualAmount: String? = null,
+        refundNetwork: String? = null,
+        refundContractAddress: String? = null,
     ) = ExpressExchangeEntity(
         txId = "tx-1",
         providerId = "provider",
@@ -129,8 +173,8 @@ internal class ExpressTxHistoryConverterTest {
         externalTxUrl = "https://ex.url",
         payinHash = payinHash,
         payoutHash = payoutHash,
-        refundNetwork = null,
-        refundContractAddress = null,
+        refundNetwork = refundNetwork,
+        refundContractAddress = refundContractAddress,
         createdAt = CREATED_AT,
         updatedAt = CREATED_AT,
         payTill = null,
