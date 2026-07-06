@@ -9,11 +9,16 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class BankCredentialsResponse(
-    @Json(name = "type") val type: String?,
-    @Json(name = "beneficiary_name") val beneficiaryName: String?,
-    @Json(name = "beneficiary_address") val beneficiaryAddress: String?,
-    @Json(name = "beneficiary_bank_name") val beneficiaryBankName: String?,
-    @Json(name = "beneficiary_bank_address") val beneficiaryBankAddress: String?,
-    @Json(name = "account_number") val accountNumber: String?,
-    @Json(name = "routing_number") val routingNumber: String?,
-)
+    @Json(name = "result") val result: Result?,
+) {
+    @JsonClass(generateAdapter = true)
+    data class Result(
+        @Json(name = "type") val type: String?,
+        @Json(name = "beneficiary_name") val beneficiaryName: String?,
+        @Json(name = "beneficiary_address") val beneficiaryAddress: String?,
+        @Json(name = "beneficiary_bank_name") val beneficiaryBankName: String?,
+        @Json(name = "beneficiary_bank_address") val beneficiaryBankAddress: String?,
+        @Json(name = "account_number") val accountNumber: String?,
+        @Json(name = "routing_number") val routingNumber: String?,
+    )
+}
