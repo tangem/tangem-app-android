@@ -12,41 +12,48 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.home.api)
+    api(projects.features.home.api)
 
     /** Core modules */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-    implementation(projects.core.configToggles)
+    implementation(projects.core.ui)
 
     /** Common */
     implementation(projects.common.routing)
 
     /** Domain */
-    implementation(projects.domain.common)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
     implementation(projects.domain.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.wallets)
 
     /** Referral */
-    implementation(projects.features.referral.domain)
+    api(projects.features.referral.domain)
 
     /** Compose libraries */
+    api(deps.compose.animation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
 
     /** Other libraries */
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** DI */
     implementation(deps.hilt.android)
