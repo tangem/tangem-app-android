@@ -166,5 +166,9 @@
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED",
+        "version": "6.0"
     }
 ]
