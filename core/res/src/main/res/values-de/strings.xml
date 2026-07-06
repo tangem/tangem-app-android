@@ -98,6 +98,8 @@
   <string name="address_book_add_address">Adresse hinzufügen</string>
   <string name="address_book_add_address_description">Adresse hinzufügen und Netzwerk auswählen</string>
   <string name="address_book_add_contact">Kontakt hinzufügen</string>
+  <string name="address_book_address_copied">Adresse kopiert</string>
+  <string name="address_book_address_taken_error">Diese Adresse ist bereits gespeichert als %1$s</string>
   <plurals name="address_book_addresses">
     <item quantity="one">Adresse</item>
     <item quantity="other">Adressen</item>
@@ -108,7 +110,9 @@
   <string name="address_book_copy_address">Adresse kopieren</string>
   <string name="address_book_create_success_message">Kontakt hinzugefügt</string>
   <string name="address_book_creating_error">Es konnte kein Kontakt hergestellt werden. Bitte versuchen Sie es später erneut.</string>
+  <string name="address_book_delete_contact">Kontakt löschen</string>
   <string name="address_book_delete_contact_description">Dieser Kontakt wird aus all Ihren Adressbüchern gelöscht.</string>
+  <string name="address_book_delete_last_address">„%1$s“ hat nur eine Adresse. Durch das Löschen wird auch der Kontakt gelöscht. Möchten Sie fortfahren?</string>
   <string name="address_book_deleting_error">Der Kontakt konnte nicht gelöscht werden. Bitte versuchen Sie es später erneut.</string>
   <string name="address_book_description">Verwalten von Kontakten und Adressen</string>
   <string name="address_book_discard">Verwerfen</string>
@@ -126,8 +130,10 @@
   <string name="address_book_no_contacts">Noch keine Kontakte</string>
   <string name="address_book_no_contacts_description">Die von Ihnen hinzugefügten Kontakte werden hier angezeigt</string>
   <string name="address_book_remove_address">Adresse entfernen</string>
+  <string name="address_book_save_contact">Kontakt speichern</string>
   <string name="address_book_save_to_wallet_title">In Wallet speichern</string>
   <string name="address_book_save_wallet_to_description">Dieser Kontakt wird mit dem Adressbuch dieser Wallet verknüpft.</string>
+  <string name="address_book_search_no_results">Es wurden keine Ergebnisse gefunden.\nVersuchen Sie es mit einem anderen Namen</string>
   <string name="address_book_select_network">Netzwerk auswählen</string>
   <string name="address_book_title">Adressbuch</string>
   <string name="address_book_unsaved_changes">Nicht gespeicherte Änderungen</string>
@@ -882,6 +888,16 @@
   <string name="manage_tokens_unavailable_description">Der ausgewählte Token ist derzeit nicht für Aktionen innerhalb der Krypto-Wallet verfügbar. Aber keine Sorge, du kannst dein Interesse bekunden, indem du den Token hochstufen.</string>
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
+  <string name="market_chart_ai_total">KI Gesamt:</string>
+  <string name="market_chart_ask_for_ai_summary_button">Zusammenfassung der KI anfordern</string>
+  <plurals name="market_chart_assets_android">
+    <item quantity="one">Vermögenswert</item>
+    <item quantity="other">Vermögenswerte</item>
+  </plurals>
+  <string name="market_chart_bubble_no_data">Keine Daten</string>
+  <string name="market_chart_bubble_total_value">Gesamtwert</string>
+  <string name="market_chart_can_not_load_data">Daten konnten nicht geladen werden</string>
+  <string name="market_chart_top_holding">Top-Halterung %s</string>
   <string name="markets_about_coin_header">Über diesen Coin</string>
   <string name="markets_add_to_my_portfolio_description">Um dieses Asset zu kaufen, zu tauschen oder zu erhalten, füge diesen Deinem Portfolio hinzu</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset wird derzeit in der Wallet nicht unterstützt.</string>
@@ -1973,6 +1989,13 @@
   <string name="tangempay_remove_account">Konto löschen</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay wird vom Hauptbildschirm entfernt und erscheint auch nach einer Neuinstallation der App nicht wieder.</string>
   <string name="tangempay_remove_account_alert_title">Konto löschen?</string>
+  <string name="tangempay_select_plan_btn_cancel">Abbrechen</string>
+  <string name="tangempay_select_plan_btn_downgrade">Tarif wechseln</string>
+  <string name="tangempay_select_plan_btn_select">Auswählen</string>
+  <string name="tangempay_select_plan_btn_upgrade">Tarif wechseln</string>
+  <string name="tangempay_select_plan_compare">Tarife vergleichen</string>
+  <string name="tangempay_select_plan_confirm_title">Auswahl bestätigen</string>
+  <string name="tangempay_select_plan_title">Plan auswählen</string>
   <string name="tangempay_service_unavailable_description">Wir beheben ein technisches Problem. Bitte versuchen Sie es später erneut.</string>
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
@@ -2353,6 +2376,7 @@
     <item quantity="other">Adressen synchronisieren, um eine Adresse für das Netzwerk %d zu erhalten</item>
   </plurals>
   <string name="warning_missing_derivation_title">Einige Adressen fehlen</string>
+  <string name="warning_mobile_access_denied_message">Verwenden %s oder Zugangscode, um den Zugriff auf Ihre Wallet freizuschalten</string>
   <string name="warning_network_unreachable_message">Das Netzwerk ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.</string>
   <string name="warning_network_unreachable_title">Netzwerk ist nicht erreichbar</string>
   <string name="warning_no_account_title">Lade dein Guthaben auf</string>
@@ -2360,8 +2384,8 @@
   <string name="warning_no_backup_title">Fehlende Sicherung</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Diese Karte oder Ring wurde bereits für Transaktionen verwendet. Wenn die Karte oder Ring aus einer nicht vertrauenswürdigen Quelle stammt, solltest du den gesamten Betrag abheben. Wenn es sich um deine Karte oder Ring handelt, sind keine Maßnahmen erforderlich.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Karte oder Ring hat bereits Transaktionen unterzeichnet</string>
-  <string name="warning_outdated_data_message">Wird so schnell wie möglich aktualisiert.</string>
-  <string name="warning_outdated_data_title">Es fehlen einige Token-Guthaben.</string>
+  <string name="warning_outdated_data_message">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
+  <string name="warning_outdated_data_title">Guthaben sind möglicherweise nicht aktuell</string>
   <string name="warning_rate_app_message">Deine Bewertung motiviert uns, die Tangem Wallet noch besser zu machen.</string>
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>

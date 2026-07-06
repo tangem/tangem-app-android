@@ -2297,6 +2297,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">Este token debe estar asociado con su cuenta de Hedera antes de poder recibirlo.</string>
   <string name="warning_hedera_missing_token_association_title">Asocie su token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">No hay suficiente %s. Recargue su cuenta de Hedera para asociar este token</string>
+  <string name="warning_incomplete_backup_notification_message">Hemos detectado que el proceso de activación de la tarjeta no se ha completado correctamente debido a problemas con el módulo NFC de su dispositivo o a que no ha acercado la tarjeta al teléfono de forma adecuada. Póngase en contacto con nuestro equipo de soporte para obtener más información.</string>
+  <string name="warning_incomplete_backup_notification_title">Es necesario actuar. ¡No use su billetera!</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">¿Está seguro de que desea cancelar la transacción? No podrá volver a reintentarlo.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
@@ -2322,8 +2324,8 @@
   <string name="warning_no_backup_title">Falta backup</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Esta tarjeta se ha utilizado previamente para transacciones. Si la recibió de una fuente no confiable, considere retirar todos los fondos. Si es su tarjeta, no se requiere ninguna acción.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">La tarjeta ya ha firmado transacciones</string>
-  <string name="warning_outdated_data_message">Se actualizará lo antes posible</string>
-  <string name="warning_outdated_data_title">Faltan algunos saldos de tokens</string>
+  <string name="warning_outdated_data_message">No se han podido actualizar los saldos de algunos tokens</string>
+  <string name="warning_outdated_data_title">Los saldos pueden no estar actualizados</string>
   <string name="warning_rate_app_message">Su opinión nos motiva a hacer Tangem Wallet aún mejor</string>
   <string name="warning_rate_app_title">¿Disfrutando de Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Deba asociar su token antes de recibir tokens</string>
