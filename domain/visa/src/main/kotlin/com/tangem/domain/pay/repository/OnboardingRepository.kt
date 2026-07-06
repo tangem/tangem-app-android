@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.visa.error.VisaApiError
 
+@Suppress("TooManyFunctions")
 interface OnboardingRepository {
 
     suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean>
@@ -29,6 +30,16 @@ interface OnboardingRepository {
     suspend fun clearOrderId(userWalletId: UserWalletId)
 
     suspend fun getOrderId(userWalletId: UserWalletId): String?
+
+    /** Creates a Virtual Account on-ramp order (VA MVP0, TWI-1638); returns the created order id. */
+    suspend fun createVirtualAccountOrder(
+        userWalletId: UserWalletId,
+        paymentAccountAddress: String,
+    ): Either<VisaApiError, String>
+
+    suspend fun getVirtualAccountOrderId(userWalletId: UserWalletId): String?
+
+    suspend fun storeVirtualAccountOrderId(userWalletId: UserWalletId, vaOrderId: String)
 
     suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 
