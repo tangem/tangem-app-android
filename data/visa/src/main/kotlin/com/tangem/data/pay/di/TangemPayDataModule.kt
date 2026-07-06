@@ -124,7 +124,20 @@ internal interface TangemPayDataModule {
     @IntoSet
     fun bindTangemPayUserWalletDataCleaner(impl: TangemPayUserWalletDataCleaner): UserWalletDataCleaner
 
+    @Binds
+    @Singleton
+    fun bindTariffPlanTransitionsRepository(
+        repository: DefaultTariffPlanTransitionsRepository,
+    ): TangemPayTariffPlanTransitionsRepository
+
     companion object {
+
+        @Provides
+        fun provideGetTangemPayTariffPlanTransitionsUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+        ): GetTangemPayTariffPlanTransitionsUseCase {
+            return GetTangemPayTariffPlanTransitionsUseCase(repository)
+        }
 
         @Provides
         @Singleton
