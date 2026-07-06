@@ -113,6 +113,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
     implementation(projects.domain.addressBook)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     api(projects.domain.common)

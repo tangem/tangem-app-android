@@ -8,9 +8,11 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.network.Network
 import com.tangem.features.tokenreceive.model.TokenReceiveWarningModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveWarningContent
+import com.tangem.features.tokenreceive.ui.TokenReceiveWarningContentLegacy
 
 internal class TokenReceiveWarningComponent(
     appComponentContext: AppComponentContext,
@@ -22,7 +24,11 @@ internal class TokenReceiveWarningComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-        TokenReceiveWarningContent(warningUM = state)
+        if (LocalRedesignEnabled.current) {
+            TokenReceiveWarningContent(warningUM = state)
+        } else {
+            TokenReceiveWarningContentLegacy(warningUM = state)
+        }
     }
 
     internal interface TokenReceiveWarningModelCallback {

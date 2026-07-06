@@ -7,13 +7,13 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.feature.referral.domain.MobileWalletPromoRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.Provider
@@ -45,7 +45,7 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val hotWalletRepository: HotWalletRepository = mockk(relaxed = true)
-    private val mobileWalletPromoRepository: MobileWalletPromoRepository = mockk(relaxed = true)
+    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val userWalletSelectedHandler: UserWalletSelectedHandler = mockk(relaxed = true)
 
     private val walletA = MockUserWalletFactory.create().copy(walletId = UserWalletId("0011"), name = "Wallet A")
@@ -61,7 +61,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             selectedUserWalletRepository,
             userWalletEncryptionKeysRepository,
             trackingContextProxy,
-            mobileWalletPromoRepository,
+            clearAppsFlyerDeeplinkUseCase,
             userWalletSelectedHandler,
         )
 
@@ -82,7 +82,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
-            mobileWalletPromoRepository = mobileWalletPromoRepository,
+            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             userWalletSelectedHandler = Lazy { userWalletSelectedHandler },
         )
     }
