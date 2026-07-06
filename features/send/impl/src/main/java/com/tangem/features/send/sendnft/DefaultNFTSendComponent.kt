@@ -20,15 +20,15 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.SendContent
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.sendnft.model.NFTSendModel
 import com.tangem.features.send.sendnft.success.NFTSendSuccessComponent
-import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationComponent
-import com.tangem.features.send.impl.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -41,6 +41,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
     private val nftSendConfirmComponentFactory: NFTSendConfirmComponent.Factory,
     private val nftSendSuccessComponentFactory: NFTSendSuccessComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
 ) : NFTSendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
@@ -96,7 +97,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                             activeComponent.updateState(model.uiState.value)
                         }
                     }
-                    is DefaultSendDestinationComponent -> {
+                    is SendDestinationComponent -> {
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.AddressScreenOpened(
                                 categoryName = analyticsCategoryName,
@@ -131,9 +132,9 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         else -> getStubComponent()
     }
 
-    private fun getDestinationComponent(factoryContext: AppComponentContext): DefaultSendDestinationComponent =
-        DefaultSendDestinationComponent(
-            appComponentContext = factoryContext,
+    private fun getDestinationComponent(factoryContext: AppComponentContext): SendDestinationComponent =
+        sendDestinationComponentFactory.create(
+            context = factoryContext,
             params = SendDestinationComponentParams.DestinationParams(
                 state = model.uiState.value.destinationUM,
                 currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.Destination>(),

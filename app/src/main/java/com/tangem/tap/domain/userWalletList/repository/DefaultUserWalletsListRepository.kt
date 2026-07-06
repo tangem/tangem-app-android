@@ -628,5 +628,6 @@ internal class DefaultUserWalletsListRepository(
     private suspend fun onAllWalletsDeleted() {
         // reset the referral attribution (set from AF deeplink) after removing the last wallet
         clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.Referral)
+        appPreferencesStore.editData { it.remove(PreferencesKeys.USEDESK_CLIENT_ID_KEY) }
     }
 }
