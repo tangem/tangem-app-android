@@ -98,7 +98,7 @@ fun TangemSurface(
     }
 
     if (onClick != null) {
-        CompositionLocalProvider(LocalRippleConfiguration provides tangemSurfaceRipple()) {
+        CompositionLocalProvider(LocalRippleConfiguration provides tangemSurfaceRipple(color)) {
             surface()
         }
     } else {
@@ -115,14 +115,17 @@ fun TangemSurface(
  * `isAlphaContentClip`) to avoid the dark blur bleeding through the surface.
  */
 @Composable
-private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
-    radius = 40.dp,
-    color = Color.Black.copy(alpha = 0.12f),
-    shape = shape,
-    spread = 0.dp,
-    offset = DpOffset(x = 0.dp, y = 8.dp),
-    isAlphaContentClip = true,
-)
+private fun Modifier.materialShadow(shape: Shape): Modifier {
+    val isBlurEnabled = LocalHazeState.current.blurEnabled
+    return softLayerShadow(
+        radius = 40.dp,
+        color = Color.Black.copy(alpha = 0.12f),
+        shape = shape,
+        spread = 0.dp,
+        offset = DpOffset(x = 0.dp, y = 8.dp),
+        isAlphaContentClip = isBlurEnabled,
+    )
+}
 
 /** Diagonal gradient stroke that wraps the material variant. */
 @Composable
@@ -191,8 +194,12 @@ private fun materialBorderBrush(): Brush {
 
 @Composable
 @ReadOnlyComposable
-private fun tangemSurfaceRipple(): RippleConfiguration = RippleConfiguration(
-    color = TangemTheme.colors3.interaction.press.default,
+private fun tangemSurfaceRipple(backgroundColor: Color): RippleConfiguration = RippleConfiguration(
+    color = if (backgroundColor == TangemTheme.colors3.bg.inverse) {
+        TangemTheme.colors3.interaction.press.inverse
+    } else {
+        TangemTheme.colors3.interaction.press.default
+    },
     rippleAlpha = RippleAlpha(
         draggedAlpha = 0f,
         focusedAlpha = 0f,
