@@ -92,6 +92,7 @@ dependencies {
 
     // region Room
     api(deps.room.runtime)
+    api(deps.room.ktx)
     ksp(deps.room.compiler)
     // endregion
 

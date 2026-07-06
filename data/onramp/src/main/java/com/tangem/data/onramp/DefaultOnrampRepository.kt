@@ -174,7 +174,7 @@ internal class DefaultOnrampRepository(
             .getOrThrow()
 
         if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryRepository.storeOnramps(ownerAddress = response.payoutAddress, items = listOf(response))
+            expressHistoryRepository.storeOnramps(items = listOf(response))
         }
 
         statusConverter.convert(response)
