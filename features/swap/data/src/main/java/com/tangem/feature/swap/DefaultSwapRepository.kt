@@ -157,10 +157,7 @@ internal class DefaultSwapRepository(
                             .getOrThrow()
 
                         if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-                            expressHistoryRepository.storeExchanges(
-                                ownerAddress = response.fromAddress.orEmpty(),
-                                items = listOf(response),
-                            )
+                            expressHistoryRepository.storeExchanges(items = listOf(response))
                         }
 
                         exchangeStatusConverter.convert(response)
