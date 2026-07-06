@@ -2,8 +2,8 @@ package com.tangem.data.txhistory.repository
 
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.converter.ExpressProviderConverter
-import com.tangem.data.txhistory.repository.converter.ExpressStatusMapper
 import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
+import com.tangem.data.txhistory.repository.converter.ExpressStatusMapper
 import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.converter.OnrampCountryConverter
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
@@ -11,6 +11,7 @@ import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
@@ -25,6 +26,7 @@ import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
+import com.tangem.domain.txhistory.repository.ExpressHistoryPage
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
@@ -33,16 +35,19 @@ import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.ISODateTimeFormat
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class RefactoredTxHistoryRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val txHistoryItemsStore: TxHistoryItemsStore,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val historyIndexDao: HistoryIndexDao,
     private val expressTransactionAssetFactory: ExpressTransactionAssetFactory,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -80,6 +85,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
             ).distinctUntilChanged(),
             flow2 = expressHistoryDao.observeIncomingSwaps(
+                payoutAddress = address,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
@@ -109,6 +115,31 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         )
         emitAll(flow)
     }.flowOn(dispatchers.io)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getIndexedExpressHistory(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        limit: Int,
+    ): Flow<ExpressHistoryPage> = flow {
+        val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network).orEmpty()
+        val pages = historyIndexDao
+            .observePage(addresses = listOf(address), cursor = null, limit = limit)
+            .map { page ->
+                IndexWindow(
+                    fromCreatedAtMillis = page.lastOrNull()?.sortTimeMillis ?: 0L,
+                    hasMore = page.size >= limit,
+                )
+            }
+            .distinctUntilChanged()
+            .flatMapLatest { window ->
+                getExpressHistory(userWalletId, currency, window.fromCreatedAtMillis)
+                    .map { express -> ExpressHistoryPage(items = express, hasMore = window.hasMore) }
+            }
+        emitAll(pages)
+    }.flowOn(dispatchers.io)
+
+    private data class IndexWindow(val fromCreatedAtMillis: Long, val hasMore: Boolean)
 
     /** The reactive express-history inputs gathered from the DB in a single [combine] tick. */
     private data class ExpressHistorySources(
