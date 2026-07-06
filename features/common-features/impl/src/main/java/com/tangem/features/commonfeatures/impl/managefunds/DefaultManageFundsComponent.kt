@@ -190,8 +190,10 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
         onBackClick: () -> Unit,
         onCloseClick: () -> Unit,
     ) {
+        val spec = route.uiSpec(model.flowType)
         TangemTopBar(
-            title = route.uiSpec(model.flowType).title,
+            title = spec.title,
+            subtitle = spec.subtitle,
             type = TangemTopBarType.BottomSheet,
             startContent = if (canGoBack) {
                 {

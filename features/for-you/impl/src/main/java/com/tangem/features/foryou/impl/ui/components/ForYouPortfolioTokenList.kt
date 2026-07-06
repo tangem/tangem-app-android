@@ -92,7 +92,6 @@ private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int, oute
             TangemTokenRow(
                 tokenRowUM = item,
                 isBalanceHidden = false, // TODO For You
-                reorderableState = null,
                 modifier = itemModifier
                     .onGloballyPositioned {
                         position = it.positionInWindow()
@@ -171,7 +170,6 @@ private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, oute
                     headComponent = composables.icon,
                     titleComponent = composables.title,
                     isBalanceHidden = false, // todo For You
-                    reorderableState = null,
                 )
             }
         }

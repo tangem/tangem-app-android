@@ -108,7 +108,7 @@ private fun Content(state: TangemPayCloseCardUM) {
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.tangem_pay_close_card_popup_secondary_button_title),
+            text = resourceReference(R.string.common_cancel),
             isEnabled = !state.isClosingInProgress,
             onClick = state.onDismissRequest,
         )
