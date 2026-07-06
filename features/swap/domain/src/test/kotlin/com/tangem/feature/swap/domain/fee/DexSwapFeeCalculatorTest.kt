@@ -122,29 +122,88 @@ internal class DexSwapFeeCalculatorTest {
     }
 
     // -------------------------------------------------------------------------
-    // EVM zero-balance short-circuit
+    // EVM zero-balance no longer short-circuits (guard removed)
+    //
+    // Previously a zero native balance raised UnknownError *before* any fee call. That guard was
+    // removed, so a zero-balance quote must still surface a fee: when the tx amount fits the (zero)
+    // balance the normal getFeeUseCase path runs; when it does not, the balance check throws and the
+    // calculator falls back to getEthSpecificFeeUseCase via the IllegalStateException branch.
     // -------------------------------------------------------------------------
 
     @Test
-    fun `EVM DEX swap with native balance ZERO returns Left UnknownError`() = runTest {
-        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
-        val transaction = buildDex(txValue = "0")
-        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+    fun `EVM DEX swap with native balance ZERO no longer short-circuits and computes fee via getFeeUseCase`() =
+        runTest {
+            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+            // txValue "0" → amountToSend 0, so `nativeBalance(0) < 0` is false and the main path runs.
+            val transaction = buildDex(txValue = "0")
+            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+            coEvery {
+                getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+            } returns TransactionFee.Single(normal = ethLegacyFee()).right()
 
-        val result = sut.calculate(fromStatus, transaction)
+            val result = sut.calculate(fromStatus, transaction)
 
-        assertThat(result.isLeft()).isTrue()
-        result.onLeft { assertThat(it).isEqualTo(ExpressDataError.UnknownError()) }
-        // getFeeUseCase should not have been called because balance check short-circuits first.
-        // Use a more permissive verify to avoid clashing with the other overload signatures.
-        coVerify(exactly = 0) {
-            getFeeUseCase.invoke(
-                userWallet = any(),
-                network = any(),
-                transactionData = any<TransactionData>(),
-            )
+            // The removed guard means the fee is now computed instead of raising UnknownError.
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) {
+                getFeeUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = any<TransactionData>(),
+                )
+            }
+            coVerify(exactly = 0) {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = any(),
+                    gasPrice = any(),
+                )
+            }
         }
-    }
+
+    @Test
+    fun `EVM DEX swap with native balance ZERO falls back to getEthSpecificFeeUseCase when txValue exceeds balance`() =
+        runTest {
+            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+            val gas = BigInteger.valueOf(120_000L)
+            // txValue 0.001 ETH > zero balance → `nativeBalance < amountToSend` throws → gas fallback.
+            val transaction = buildDex(txValue = "1000000000000000", gas = gas)
+            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+            coEvery {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = any(),
+                    gasPrice = any(),
+                )
+            } returns TransactionFee.Choosable(
+                minimum = ethLegacyFee(),
+                normal = ethLegacyFee(),
+                priority = ethLegacyFee(),
+            ).right()
+
+            val result = sut.calculate(fromStatus, transaction)
+
+            // Zero balance now falls back instead of raising UnknownError up-front.
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = gas,
+                    gasPrice = any(),
+                )
+            }
+            // The balance check throws before the main fee call, so getFeeUseCase is never reached.
+            coVerify(exactly = 0) {
+                getFeeUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = any<TransactionData>(),
+                )
+            }
+        }
 
     // -------------------------------------------------------------------------
     // EVM IllegalStateException → fallback to GetEthSpecificFeeUseCase
