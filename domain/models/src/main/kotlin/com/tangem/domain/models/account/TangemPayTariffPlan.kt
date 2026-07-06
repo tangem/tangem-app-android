@@ -6,9 +6,11 @@ import java.util.Locale
 
 @Serializable
 data class TangemPayTariffPlan(
+    @SerialName("id") val id: String,
     @SerialName("type") val type: Type,
     @SerialName("name") val name: String,
     @SerialName("description_items") val descriptionItems: List<DescriptionItem>,
+    @SerialName("images") val images: List<Image> = emptyList(),
 ) {
     @Serializable
     data class DescriptionItem(
@@ -17,6 +19,37 @@ data class TangemPayTariffPlan(
         @SerialName("title") val title: String,
         @SerialName("body") val body: String,
     )
+
+    @Serializable
+    data class Image(
+        @SerialName("type") val type: Type,
+        @SerialName("url") val url: String,
+    ) {
+        @Serializable
+        enum class Type {
+            @SerialName("THUMBNAIL")
+            THUMBNAIL,
+
+            @SerialName("MAIN")
+            MAIN,
+
+            @SerialName("BANNER")
+            BANNER,
+
+            @SerialName("UNKNOWN")
+            UNKNOWN,
+            ;
+
+            companion object {
+                fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
+                    "THUMBNAIL" -> THUMBNAIL
+                    "MAIN" -> MAIN
+                    "BANNER" -> BANNER
+                    else -> UNKNOWN
+                }
+            }
+        }
+    }
 
     @Serializable
     enum class Type {
