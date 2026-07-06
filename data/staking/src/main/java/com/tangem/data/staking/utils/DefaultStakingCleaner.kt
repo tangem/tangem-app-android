@@ -30,6 +30,23 @@ internal class DefaultStakingCleaner(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingCleaner {
 
+    override suspend fun clear(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        // Best-effort: isolate failures per store so one failing store does not cancel the other.
+        withContext(dispatchers.default) {
+            awaitAll(
+                async { removeSafely(store = "StakeKit") { stakeKitBalancesStore.remove(userWalletIds) } },
+                async { removeSafely(store = "P2PEthPool") { p2pEthPoolBalancesStore.remove(userWalletIds) } },
+            )
+        }
+    }
+
+    private suspend fun removeSafely(store: String, remove: suspend () -> Unit) {
+        runSuspendCatching { remove() }
+            .onFailure { TangemLogger.e("Failed to remove $store staking balances", it) }
+    }
+
     override suspend fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) {
             TangemLogger.d("No currencies to clear for wallet: $userWalletId")
