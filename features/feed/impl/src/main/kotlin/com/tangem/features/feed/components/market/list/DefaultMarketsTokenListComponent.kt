@@ -12,6 +12,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
@@ -56,11 +58,13 @@ internal class DefaultMarketsTokenListComponent(
         val bsState by bottomSheetState
 
         if (LocalRedesignEnabled.current) {
-            val background = LocalMainBottomSheetColor.current.value
+            val bottomSheetColor = LocalMainBottomSheetColor.current.value
             FeedSearchBar(
                 isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
                 feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier.background(background.copy(alpha = .95f)),
+                modifier = Modifier.conditional(bottomSheetColor.isSpecified) {
+                    background(bottomSheetColor.copy(alpha = .95f))
+                },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
