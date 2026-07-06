@@ -82,7 +82,7 @@
   <string name="action_buttons_you_want_to_swap">Выберите токен для обмена</string>
   <string name="actionbutton_addfunds_title">Пополнить</string>
   <string name="actionbutton_swap_title">Обмен</string>
-  <string name="actionbutton_transfer_title">Перевод</string>
+  <string name="actionbutton_transfer_title">Перевести</string>
   <string name="add_and_manage_sheet_manage_subtitle">Добавить в портфель</string>
   <string name="add_and_manage_sheet_manage_title">Добавить токены</string>
   <string name="add_and_manage_sheet_organize_subtitle">Сортировка и группировка</string>
@@ -1251,6 +1251,7 @@
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Общая сумма транзакций свыше %1s может потребовать верификации личности через %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Общая сумма транзакций, превышающая эквивалент %1s, может потребовать верификации личности через %2s</string>
+  <string name="onramp_native_payment_identity_verification">Для транзакций через Apple Pay может потребоваться верификация личности в %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">Нажимая «Оплатить», вы соглашаетесь с %1s\'s %2s и %3s.</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
   <string name="onramp_offer_type_fastet">Самый быстрый</string>
@@ -2320,8 +2321,8 @@
   <string name="warning_no_backup_title">Резервная копия отсутствует</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Эта карта ранее использовалась для подписи транзакций. Если она получена от ненадежного источника, рассмотрите возможность вывода своих средств. Если это ваша карта, дополнительных действий не требуется.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Карта уже подписывала транзакции</string>
-  <string name="warning_outdated_data_message">Обновление будет произведено в кратчайшие сроки.</string>
-  <string name="warning_outdated_data_title">Отсутствует часть баланса токенов.</string>
+  <string name="warning_outdated_data_message">Некоторые балансы токенов не удалось обновить</string>
+  <string name="warning_outdated_data_title">Балансы могут быть неактуальны</string>
   <string name="warning_rate_app_message">Ваш отзыв мотивирует нас сделать кошелек Tangem еще лучше</string>
   <string name="warning_rate_app_title">Нравится Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необходимо провести ассоциацию токена для того, чтобы иметь возможность принимать его</string>
