@@ -88,7 +88,6 @@ internal class ExpressTransactionAssetFactoryTest {
     /** A swap from a native coin (empty contract) to an Ethereum token. */
     private fun coinToTokenSwap() = ExpressExchangeEntity(
         txId = "tx-1",
-        ownerAddress = "owner",
         providerId = "provider",
         fromAddress = "owner",
         payinAddress = "payin-addr",
