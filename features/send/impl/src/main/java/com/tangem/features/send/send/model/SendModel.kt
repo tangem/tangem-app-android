@@ -7,13 +7,13 @@ import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
@@ -123,8 +123,6 @@ internal class SendModel @Inject constructor(
         CommonSendRoute.Empty
     }
 
-    val currentRoute = MutableStateFlow(initialRoute)
-
     val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
         field = MutableStateFlow(
             CryptoCurrencyStatus(
@@ -149,7 +147,7 @@ internal class SendModel @Inject constructor(
             return cryptoCurrencyStatus.isAvailableForSend() && feeCryptoCurrencyStatus.isAvailableForSend()
         }
 
-    val isUnavailableForSend: Boolean
+    private val isUnavailableForSend: Boolean
         get() {
             val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
             val feeCryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
@@ -179,10 +177,6 @@ internal class SendModel @Inject constructor(
         initAppCurrency()
     }
 
-    override fun onNavigationResult(navigationUM: NavigationUM) {
-        uiState.update { it.copy(navigationUM = navigationUM) }
-    }
-
     override fun onDestinationResult(destinationUM: DestinationUM) {
         uiState.update { it.copy(destinationUM = destinationUM) }
     }
@@ -196,9 +190,9 @@ internal class SendModel @Inject constructor(
         uiState.update { sendUM }
     }
 
-    override fun onBackClick() {
-        when (val route = currentRoute.value) {
-            is CommonSendRoute.Amount -> if (!route.isEditMode) {
+    override fun onBackClick(currentRoute: Route) {
+        when (currentRoute) {
+            is CommonSendRoute.Amount -> if (!currentRoute.isEditMode) {
                 analyticsEventHandler.send(
                     CommonSendAnalyticEvents.CloseButtonClicked(
                         categoryName = analyticCategoryName,
@@ -208,7 +202,7 @@ internal class SendModel @Inject constructor(
                     ),
                 )
             }
-            is CommonSendRoute.Destination -> if (!route.isEditMode) {
+            is CommonSendRoute.Destination -> if (!currentRoute.isEditMode) {
                 analyticsEventHandler.send(
                     CommonSendAnalyticEvents.CloseButtonClicked(
                         categoryName = analyticCategoryName,
@@ -224,11 +218,11 @@ internal class SendModel @Inject constructor(
         router.pop()
     }
 
-    override fun onNextClick() {
-        if (currentRoute.value.isEditMode) {
-            onBackClick()
+    override fun onNextClick(currentRoute: Route) {
+        if ((currentRoute as? CommonSendRoute)?.isEditMode == true) {
+            onBackClick(currentRoute)
         } else {
-            when (currentRoute.value) {
+            when (currentRoute) {
                 is CommonSendRoute.Amount -> {
                     val nextRoute = if (predefinedValues.isFromMainScreenQr) {
                         CommonSendRoute.Confirm
@@ -239,7 +233,7 @@ internal class SendModel @Inject constructor(
                 }
                 is CommonSendRoute.Destination -> router.push(CommonSendRoute.Confirm)
                 CommonSendRoute.Confirm -> router.push(CommonSendRoute.ConfirmSuccess)
-                else -> onBackClick()
+                else -> router.pop()
             }
         }
     }
@@ -263,7 +257,6 @@ internal class SendModel @Inject constructor(
                 feeSelectorUM = FeeSelectorUM.Loading,
                 confirmUM = ConfirmUM.Empty,
                 confirmData = null,
-                navigationUM = NavigationUM.Empty,
             )
         }
         router.popTo(CommonSendRoute.Amount(isEditMode = false))
@@ -442,7 +435,7 @@ internal class SendModel @Inject constructor(
             cryptoCurrencyStatusFlow,
             feeCryptoCurrencyStatusFlow,
         ) { cryptoCurrencyStatus, _ ->
-            if (!isAvailableForSend || currentRoute.value != initialRoute) {
+            if (!isAvailableForSend) {
                 if (isUnavailableForSend) showAlertError()
                 return@combine
             }
@@ -548,7 +541,6 @@ internal class SendModel @Inject constructor(
             cryptoCurrency = cryptoCurrency,
         ).transform(DestinationUM.Empty()),
         confirmUM = ConfirmUM.Empty,
-        navigationUM = NavigationUM.Empty,
         confirmData = null,
         feeSelectorUM = FeeSelectorUM.Loading,
     )
