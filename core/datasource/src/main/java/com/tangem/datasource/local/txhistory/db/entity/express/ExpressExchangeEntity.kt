@@ -12,9 +12,8 @@ import androidx.room.*
     indices = [
         // Outgoing swaps lookup (observeOutgoingSwaps): from-address + from-asset equality, created_at range/sort.
         Index(value = ["from_address", "from_network", "from_contract_address", "created_at"]),
-        // Incoming (cross-owner) swaps lookup (observeIncomingSwaps): to-asset equality, created_at range/sort.
-        // No owner filter here, so to_contract_address in the index is what keeps a popular to-network selective.
-        Index(value = ["to_network", "to_contract_address", "created_at"]),
+        // Incoming swaps lookup (observeIncomingSwaps): payout-address + to-asset equality, created_at range/sort.
+        Index(value = ["payout_address", "to_network", "to_contract_address", "created_at"]),
     ],
 )
 data class ExpressExchangeEntity(
