@@ -193,7 +193,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class `resolveVirtualAccountOnramp` {
+    inner class ResolveVirtualAccountOnramp {
 
         @Test
         fun `GIVEN feature toggle is off WHEN invoke THEN virtualAccount is null`() = runTest {
