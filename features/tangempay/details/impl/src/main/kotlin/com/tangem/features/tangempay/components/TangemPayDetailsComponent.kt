@@ -82,8 +82,8 @@ internal class TangemPayDetailsComponent(
     init {
         promoBannersBlockComponent.setVisibleOnScreen(true)
         lifecycle.subscribe(
-            onPause = model::onPause,
-            onResume = model::onResume,
+            onStart = model::onStart,
+            onStop = model::onStop,
         )
     }
 
