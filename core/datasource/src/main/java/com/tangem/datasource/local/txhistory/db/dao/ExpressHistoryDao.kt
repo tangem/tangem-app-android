@@ -37,8 +37,8 @@ interface ExpressHistoryDao {
     fun getCountriesByCode(): Flow<Map<@MapColumn(columnName = "code") String, OnrampCountryEntity>>
 
     /**
-     * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is stored under this
-     * address ([ExpressExchangeEntity.ownerAddress] == fromAddress). Join to on-chain by `payin_hash`.
+     * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is looked up by its `from_address`.
+     * Join to on-chain by `payin_hash`.
      *
 
      * loading the whole table; [activeStatuses] keeps in-progress deals visible even outside the window.
@@ -46,7 +46,7 @@ interface ExpressHistoryDao {
     @Query(
         """
         SELECT * FROM express_exchange
-        WHERE owner_address = :ownerAddress
+        WHERE from_address = :fromAddress
           AND from_network = :network
           AND from_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -54,7 +54,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeOutgoingSwaps(
-        ownerAddress: String,
+        fromAddress: String,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
@@ -63,8 +63,8 @@ interface ExpressHistoryDao {
 
     /**
      * Incoming swaps: the viewed currency is the swap's `to` side. Such a deal was initiated from a
-     * different coin, so the row is stored under that coin's `owner_address` — hence this query is
-     * cross-owner, matched by the `to` asset. Join to on-chain by `payout_hash`.
+     * different coin, so the row is stored under that coin's `from_address` — hence this query is
+     * cross-address, matched by the `to` asset. Join to on-chain by `payout_hash`.
      */
     @Query(
         """
@@ -83,12 +83,12 @@ interface ExpressHistoryDao {
     ): Flow<List<ExpressExchangeEntity>>
 
     /**
-     * Onramp is always incoming: [ExpressOnrampEntity.ownerAddress] == payoutAddress. Join by `payout_hash`.
+     * Onramp is always incoming, looked up by its `payout_address`. Join by `payout_hash`.
      */
     @Query(
         """
         SELECT * FROM express_onramp
-        WHERE owner_address = :ownerAddress
+        WHERE payout_address = :payoutAddress
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -96,7 +96,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeIncomingOnramps(
-        ownerAddress: String,
+        payoutAddress: String,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
