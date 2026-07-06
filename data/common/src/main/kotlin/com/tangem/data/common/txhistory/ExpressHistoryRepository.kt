@@ -9,7 +9,7 @@ import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
  */
 interface ExpressHistoryRepository {
 
-    suspend fun storeExchanges(ownerAddress: String, items: List<ExchangeItemResponse>)
+    suspend fun storeExchanges(items: List<ExchangeItemResponse>)
 
-    suspend fun storeOnramps(ownerAddress: String, items: List<OnrampItemResponse>)
+    suspend fun storeOnramps(items: List<OnrampItemResponse>)
 }
