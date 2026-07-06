@@ -14,6 +14,9 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
+import com.tangem.features.rating.RatingComponent
+import com.tangem.feature.swap.domain.SwapFeedbackUseCase
+import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -88,8 +91,6 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
-import com.tangem.feature.swap.domain.SwapFeedbackUseCase
-import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -100,12 +101,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
-import com.tangem.features.rating.RatingComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -180,7 +180,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val designFeatureToggles: DesignFeatureToggles,
     private val redesignStateController: TokenDetailsStateController,
     private val swapFeedbackUseCase: SwapFeedbackUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
@@ -211,6 +210,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
+    val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -1160,7 +1160,6 @@ internal class TokenDetailsModel @Inject constructor(
         txExternalUrl: String,
         userWalletIdStringValue: String,
     ) {
-        if (!swapFeatureToggles.isSwapRateExperienceEnabled) return
         ratingSlotNavigation.activate(
             RatingComponent.Params(
                 onLoadRating = {

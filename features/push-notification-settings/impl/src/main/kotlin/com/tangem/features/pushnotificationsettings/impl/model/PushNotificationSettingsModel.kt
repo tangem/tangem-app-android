@@ -163,7 +163,6 @@ internal class PushNotificationSettingsModel @Inject constructor(
         return TOGGLE_ORDER
             .asSequence()
             .map { id -> id.spec(prefs) }
-            .filter { it.preference.isVisible }
             .map { spec ->
                 ToggleUM(
                     id = spec.id,

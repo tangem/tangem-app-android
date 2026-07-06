@@ -10,6 +10,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
+import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
 import dagger.Module
@@ -31,6 +32,7 @@ internal class TangemSdkManagerModule {
         visaCardScanHandler: VisaCardScanHandler,
         visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
         tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
+        tangemPayVirtualAccountTaskFactory: TangemPayGenerateVirtualAccountAddressTask.Factory,
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         analyticsErrorHandler: AnalyticsErrorHandler,
         cardRepository: CardRepository,
@@ -44,6 +46,7 @@ internal class TangemSdkManagerModule {
                 visaCardScanHandler = visaCardScanHandler,
                 visaCardActivationTaskFactory = visaCardActivationTaskFactory,
                 tangemPayChallengeTaskFactory = tangemPayChallengeTaskFactory,
+                tangemPayVirtualAccountTaskFactory = tangemPayVirtualAccountTaskFactory,
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 analyticsErrorHandler = analyticsErrorHandler,
                 cardRepository = cardRepository,
