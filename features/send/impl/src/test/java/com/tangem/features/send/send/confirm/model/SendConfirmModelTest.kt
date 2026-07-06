@@ -7,36 +7,25 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
-import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.common.ui.state.ConfirmUM
-import com.tangem.features.send.send.ui.state.SendUM
-import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.send.SendModelTestBase
+import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
@@ -73,10 +62,30 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
             // Assert
             if (model.expectedSendInitiated) {
-                coVerify(exactly = 1) { createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any()) }
+                coVerify(exactly = 1) {
+                    createTransferTransactionUseCase(
+                        any(),
+                        any<Fee>(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
+                }
                 coVerify(exactly = 0) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
             } else {
-                coVerify(exactly = 0) { createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any()) }
+                coVerify(exactly = 0) {
+                    createTransferTransactionUseCase(
+                        any(),
+                        any<Fee>(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
+                }
                 coVerify(exactly = 1) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
             }
         }
@@ -108,9 +117,29 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
                 // Assert
                 if (model.expectedSendInitiated) {
-                    coVerify(exactly = 1) { createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any()) }
+                    coVerify(exactly = 1) {
+                        createTransferTransactionUseCase(
+                            any(),
+                            any<Fee>(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any()
+                        )
+                    }
                 } else {
-                    coVerify(exactly = 0) { createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any()) }
+                    coVerify(exactly = 0) {
+                        createTransferTransactionUseCase(
+                            any(),
+                            any<Fee>(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any()
+                        )
+                    }
                 }
             }
 
@@ -161,7 +190,8 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         fun `GIVEN successful send WHEN verifyAndSend THEN notify onSendTransaction`() = runTest {
             // Arrange
             val onSendTransaction = mockk<() -> Unit>(relaxed = true)
-            val callback = mockk<com.tangem.features.send.send.confirm.SendConfirmComponent.ModelCallback>(relaxed = true)
+            val callback =
+                mockk<com.tangem.features.send.send.confirm.SendConfirmComponent.ModelCallback>(relaxed = true)
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
             every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
             coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
@@ -256,7 +286,6 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             destinationUM = destination,
             feeSelectorUM = feeSelector,
             confirmUM = mockk<ConfirmUM.Content>(relaxed = true),
-            navigationUM = NavigationUM.Empty,
             confirmData = null,
         )
     }

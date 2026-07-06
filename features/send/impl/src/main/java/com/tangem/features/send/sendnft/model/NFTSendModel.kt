@@ -5,13 +5,13 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
@@ -36,9 +36,9 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.api.NFTSendComponent
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
@@ -82,8 +82,6 @@ internal class NFTSendModel @Inject constructor(
 
     val initialRoute = CommonSendRoute.Empty
 
-    val currentRouteFlow = MutableStateFlow<CommonSendRoute>(initialRoute)
-
     private val userWalletId = params.userWalletId
     private val nftAsset = params.nftAsset
 
@@ -107,10 +105,6 @@ internal class NFTSendModel @Inject constructor(
         initAppCurrency()
     }
 
-    override fun onNavigationResult(navigationUM: NavigationUM) {
-        uiState.update { it.copy(navigationUM = navigationUM) }
-    }
-
     override fun onResult(nftSendUM: NFTSendUM) {
         uiState.value = nftSendUM
     }
@@ -119,8 +113,8 @@ internal class NFTSendModel @Inject constructor(
         uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onBackClick() {
-        if (currentRouteFlow.value == CommonSendRoute.ConfirmSuccess) {
+    override fun onBackClick(currentRoute: Route) {
+        if (currentRoute == CommonSendRoute.ConfirmSuccess) {
             modelScope.launch {
                 nftSendSuccessTrigger.triggerSuccessNFTSend()
             }
@@ -128,14 +122,14 @@ internal class NFTSendModel @Inject constructor(
         router.pop()
     }
 
-    override fun onNextClick() {
-        if (currentRouteFlow.value.isEditMode) {
-            onBackClick()
+    override fun onNextClick(currentRoute: Route) {
+        if ((currentRoute as? CommonSendRoute)?.isEditMode == true) {
+            onBackClick(currentRoute)
         } else {
-            when (currentRouteFlow.value) {
+            when (currentRoute) {
                 is CommonSendRoute.Destination -> router.push(CommonSendRoute.Confirm)
                 CommonSendRoute.Confirm -> router.replaceAll(CommonSendRoute.ConfirmSuccess)
-                else -> onBackClick()
+                else -> onBackClick(currentRoute)
             }
         }
     }
@@ -241,6 +235,5 @@ internal class NFTSendModel @Inject constructor(
         destinationUM = DestinationUM.Empty(),
         feeSelectorUM = FeeSelectorUM.Loading,
         confirmUM = ConfirmUM.Empty,
-        navigationUM = NavigationUM.Empty,
     )
 }
