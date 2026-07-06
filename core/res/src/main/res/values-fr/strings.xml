@@ -1532,8 +1532,8 @@
   <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
   <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
-  <string name="support_chat_screen_title">Discussion avec le support</string>
-  <string name="support_chat_share_logs_button">Joindre les logs de l\'application</string>
+  <string name="support_chat_screen_title">Support via chat</string>
+  <string name="support_chat_share_logs_button">Joindre les logs de l\'app</string>
   <string name="support_chat_swap_prefilled_message">Données du SWAP :\nDepuis :%1$s%2$s\nVers :%3$s%4$s\nPar :%5$s-%6$s</string>
   <string name="support_selector_view_chat_button">Accéder au chat</string>
   <string name="support_selector_view_email_button">Ouvrir un email</string>
@@ -2159,8 +2159,8 @@
   <string name="warning_no_backup_title">Sauvegarde manquante</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Cette carte a déjà été utilisée pour des transactions. Si elle provient d\'une source non fiable, envisagez de retirer tous les fonds. S\'il s\'agit de votre carte, aucune action n\'est requise.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">La carte a déjà signé des transactions</string>
-  <string name="warning_outdated_data_message">Sera mis à jour dès que possible</string>
-  <string name="warning_outdated_data_title">Données de soldes incomplètes</string>
+  <string name="warning_outdated_data_message">Certains soldes de jetons n\'ont pas pu être mis à jour</string>
+  <string name="warning_outdated_data_title">Les soldes peuvent ne pas être à jour</string>
   <string name="warning_rate_app_message">Votre avis nous motive à améliorer encore le Portefeuille Tangem</string>
   <string name="warning_rate_app_title">Vous appréciez Tangem ?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Vous devez associer votre jeton avant de recevoir des jetons</string>
