@@ -12,11 +12,10 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.kyc.api)
+    api(projects.features.kyc.api)
 
-    implementation(projects.core.decompose)
+    api(projects.core.decompose)
     implementation(deps.compose.ui)
-    implementation(projects.core.ui)
 
     /** DI */
     implementation(deps.hilt.android)
