@@ -10,12 +10,12 @@ import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.nft.utils.NFTCleaner
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -71,10 +71,12 @@ internal object AccountStatusUseCaseModule {
     fun provideIsAccountsModeEnabledUseCase(
         multiAccountListSupplier: MultiAccountListSupplier,
         paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+        appCoroutineScope: AppCoroutineScope,
     ): IsAccountsModeEnabledUseCase {
         return IsAccountsModeEnabledUseCase(
             multiAccountListSupplier = multiAccountListSupplier,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            appCoroutineScope = appCoroutineScope,
         )
     }
 

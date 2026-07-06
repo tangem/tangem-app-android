@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.common.routing)
 
     /** Domain */
+    api(projects.domain.appsflyer)
     api(projects.domain.card)
     api(projects.domain.common)
     api(projects.domain.settings)
