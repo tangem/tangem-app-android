@@ -900,6 +900,7 @@
   <string name="markets_portfolio_block_add_token_title">**Add to your portfolio** to start buying, exchanging or receiving this asset</string>
   <string name="markets_portfolio_block_subtitle">In your portfolio</string>
   <string name="markets_portfolio_block_title">Your portfolio</string>
+  <string name="markets_portfolio_block_token_unsupported">**Token not supported**. This token is currently not supported in the wallet</string>
   <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_clear_all_hints">Clear all</string>
