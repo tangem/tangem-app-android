@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.res.generated.TangemTypography3
 import com.tangem.core.ui.res.generated.darkColors3
 import com.tangem.core.ui.res.generated.lightColors3
@@ -48,8 +49,10 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
             CompositionLocalProvider(
                 LocalTextSelectionColors provides TangemTextSelectionColors2,
             ) {
-                ProvideHaze {
-                    content()
+                ProvideTangemShimmer {
+                    ProvideHaze {
+                        content()
+                    }
                 }
             }
         }
