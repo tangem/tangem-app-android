@@ -9,6 +9,7 @@ import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -60,6 +61,33 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
 
     val stakingEnabledTitle: KNode = child {
         hasText(getResourceString(R.string.staking_enabled))
+    }
+
+    val yieldSupplyAvailableBlock: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_AVAILABLE_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val yieldSupplyActiveBlock: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val earnBlockTitleIcon: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.EARN_BLOCK_TITLE_ICON)
+        useUnmergedTree = true
+    }
+
+    val yieldModeConnectedTitle: KNode = child {
+        hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK))
+        hasText(getResourceString(CoreResR.string.yield_module_transaction_enter))
+        useUnmergedTree = true
+    }
+
+    fun yieldModeApy(apy: String): KNode = child {
+        hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK))
+        hasText(getResourceString(CoreResR.string.yield_module_average_apy, apy))
+        useUnmergedTree = true
     }
 
     val title: KNode = child {
