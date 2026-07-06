@@ -19,7 +19,7 @@ import com.tangem.domain.addressbook.interactor.SaveContactInteractor
 import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
 import com.tangem.domain.addressbook.usecase.GetContactByIdUseCase
-import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
+import com.tangem.domain.addressbook.validation.ContactNameValidator
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -56,7 +56,7 @@ internal class EditContactModelTest {
     private val resultHolder = AddressBookResultHolder()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val validateContactNameUseCase: ValidateContactNameUseCase = mockk()
+    private val contactNameValidator: ContactNameValidator = mockk()
     private val saveContactInteractor: SaveContactInteractor = mockk()
     private val getContactByIdUseCase: GetContactByIdUseCase = mockk()
     private val deleteContactUseCase: DeleteContactUseCase = mockk()
@@ -75,7 +75,7 @@ internal class EditContactModelTest {
     fun setUp() {
         // Default: no wallets loaded, name always valid. Individual tests override as needed.
         setupWallets(wallets = emptyList(), selected = null)
-        coEvery { validateContactNameUseCase(any(), any()) } returns ContactName("Satoshi").getOrNull()!!.right()
+        coEvery { contactNameValidator.validate(any(), any()) } returns ContactName("Satoshi").getOrNull()!!.right()
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns selectedWalletData
         // No existing contact by default; a StateFlow<null> never surfaces a contact and never completes.
@@ -396,7 +396,7 @@ internal class EditContactModelTest {
         val walletA = createWallet(id = "aa", name = "Wallet A")
         setupWallets(wallets = listOf(walletA), selected = walletA)
         coEvery {
-            validateContactNameUseCase(any(), any())
+            contactNameValidator.validate(any(), any())
         } returns ContactNameValidationError.Duplicate.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -434,7 +434,7 @@ internal class EditContactModelTest {
             val walletB = createWallet(id = "bb", name = "Wallet B")
             setupWallets(wallets = listOf(walletA, walletB), selected = walletA)
             coEvery {
-                validateContactNameUseCase(walletB.walletId, "Satoshi")
+                contactNameValidator.validate(walletB.walletId, "Satoshi")
             } returns ContactNameValidationError.Duplicate.left()
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -489,7 +489,7 @@ internal class EditContactModelTest {
         // Arrange
         val walletA = createWallet(id = "aa", name = "Wallet A")
         setupWallets(wallets = listOf(walletA), selected = walletA)
-        coEvery { validateContactNameUseCase(any(), any()) } returns ContactNameValidationError.Duplicate.left()
+        coEvery { contactNameValidator.validate(any(), any()) } returns ContactNameValidationError.Duplicate.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -927,7 +927,7 @@ internal class EditContactModelTest {
             resultHolder = resultHolder,
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,
-            validateContactNameUseCase = validateContactNameUseCase,
+            contactNameValidator = contactNameValidator,
             saveContactInteractor = saveContactInteractor,
             getContactByIdUseCase = getContactByIdUseCase,
             deleteContactUseCase = deleteContactUseCase,
