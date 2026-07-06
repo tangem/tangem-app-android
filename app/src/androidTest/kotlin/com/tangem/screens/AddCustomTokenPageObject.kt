@@ -11,12 +11,13 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.res.R as CoreResR
 
 class AddCustomTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<AddCustomTokenPageObject>(semanticsProvider = semanticsProvider) {
 
-    private val selectorList: KNode = child {
+    val selectorList: KNode = child {
         hasTestTag(AddCustomTokenScreenTestTags.SELECTOR_LIST)
     }
 
@@ -27,6 +28,17 @@ class AddCustomTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     @OptIn(ExperimentalTestApi::class)
     fun scrollToNetwork(networkName: String) = selectorList {
         performScrollToNode(withTestTag(AddCustomTokenScreenTestTags.networkRow(networkName)))
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToDerivationRow(networkId: String) = selectorList {
+        performScrollToNode(withTestTag(AddCustomTokenScreenTestTags.derivationRow(networkId)))
+    }
+
+    fun derivationPath(networkId: String, path: String): KNode = child {
+        useUnmergedTree = true
+        hasTestTag(AddCustomTokenScreenTestTags.derivationRow(networkId))
+        hasAnyDescendant(withText(path))
     }
 
     val contractAddressField: KNode = child {
