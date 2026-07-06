@@ -49,6 +49,7 @@ fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtrasType {
         Blockchain.EthereumClassicTestnet,
         Blockchain.Fantom,
         Blockchain.FantomTestnet,
+        Blockchain.Gonka,
         Blockchain.Litecoin,
         Blockchain.Near,
         Blockchain.NearTestnet,

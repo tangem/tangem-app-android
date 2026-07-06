@@ -1,23 +1,25 @@
 package com.tangem.features.send.send.confirm.model.transformers
 
-import com.google.common.truth.Truth.assertThat
-import com.tangem.blockchain.common.Amount
+import com.google.common.truth.Truth
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.CustomFeeFieldUM
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeFiatRateUM
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.domain.tokens.model.Amount
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.*
+import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import io.mockk.mockk
 import io.mockk.verify
@@ -28,7 +30,6 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Locale
-import com.tangem.domain.tokens.model.Amount as DomainAmount
 
 class SendConfirmationNotificationsTransformerV2Test {
 
@@ -77,6 +78,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = false,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState: ConfirmUM = ConfirmUM.Empty
 
@@ -84,7 +87,7 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isEqualTo(initialState)
+        Truth.assertThat(result).isEqualTo(initialState)
     }
 
     @Test
@@ -100,6 +103,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = false,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -107,7 +112,7 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isEqualTo(initialState)
+        Truth.assertThat(result).isEqualTo(initialState)
     }
 
     @Test
@@ -123,6 +128,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = false,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -130,10 +137,62 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
+        Truth.assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
         val content = result as ConfirmUM.Content
-        assertThat(content.notifications).isEmpty()
-        assertThat(content.sendingFooter).isNotEqualTo(initialState.sendingFooter)
+        Truth.assertThat(content.notifications).isEmpty()
+        Truth.assertThat(content.sendingFooter).isNotEqualTo(initialState.sendingFooter)
+    }
+
+    @Test
+    fun `GIVEN fee subtracted from amount WHEN transform THEN footer sending excludes the fee`() = runTest {
+        // GIVEN: fee is taken out of the entered amount, so the footer must show the amount alone (not amount + fee).
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val amountUM = createTestAmountUM()
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = amountUM,
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = true,
+            isFeeExceedingBalance = false,
+        )
+
+        // WHEN
+        val result = transformer.transform(createTestConfirmUM())
+
+        // THEN: sending = entered fiat amount (50.00), fee NOT added on top.
+        val content = result as ConfirmUM.Content
+        Truth.assertThat(content.sendingFooter).isEqualTo(
+            expectedFiatFooter(sendingValue = BigDecimal("50.00"), feeSelectorUM = feeSelectorUM),
+        )
+    }
+
+    @Test
+    fun `GIVEN fee exceeds balance WHEN transform THEN footer sending is zero`() = runTest {
+        // GIVEN: the fee alone exceeds the balance → nothing can be sent.
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val amountUM = createTestAmountUM()
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = amountUM,
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = true,
+            isFeeExceedingBalance = true,
+        )
+
+        // WHEN
+        val result = transformer.transform(createTestConfirmUM())
+
+        // THEN: sending = $0.
+        val content = result as ConfirmUM.Content
+        Truth.assertThat(content.sendingFooter).isEqualTo(
+            expectedFiatFooter(sendingValue = BigDecimal.ZERO, feeSelectorUM = feeSelectorUM),
+        )
     }
 
     @Test
@@ -149,6 +208,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = false,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -156,10 +217,10 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
+        Truth.assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
         val content = result as ConfirmUM.Content
-        assertThat(content.notifications).hasSize(1)
-        assertThat(content.notifications.first()).isInstanceOf(NotificationUM.Warning.TooHigh::class.java)
+        Truth.assertThat(content.notifications).hasSize(1)
+        Truth.assertThat(content.notifications.first()).isInstanceOf(NotificationUM.Warning.TooHigh::class.java)
     }
 
     @Test
@@ -175,6 +236,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = true,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -182,9 +245,9 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
+        Truth.assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
         val content = result as ConfirmUM.Content
-        assertThat(content.notifications).containsExactly(NotificationUM.Warning.HighNetworkFee)
+        Truth.assertThat(content.notifications).containsExactly(NotificationUM.Warning.HighNetworkFee)
     }
 
     @Test
@@ -200,6 +263,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = false,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -207,10 +272,10 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
+        Truth.assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
         val content = result as ConfirmUM.Content
-        assertThat(content.notifications).hasSize(1)
-        assertThat(content.notifications.first()).isInstanceOf(NotificationUM.Warning.FeeTooLow::class.java)
+        Truth.assertThat(content.notifications).hasSize(1)
+        Truth.assertThat(content.notifications.first()).isInstanceOf(NotificationUM.Warning.FeeTooLow::class.java)
         verify { analyticsEventHandler.send(any()) }
     }
 
@@ -227,6 +292,8 @@ class SendConfirmationNotificationsTransformerV2Test {
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
             isHighNetworkFee = false,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
         )
         val initialState = createTestConfirmUM()
 
@@ -234,11 +301,11 @@ class SendConfirmationNotificationsTransformerV2Test {
         val result = transformer.transform(initialState)
 
         // THEN
-        assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
+        Truth.assertThat(result).isInstanceOf(ConfirmUM.Content::class.java)
         val content = result as ConfirmUM.Content
-        assertThat(content.notifications).hasSize(2)
-        assertThat(content.notifications.any { it is NotificationUM.Warning.TooHigh }).isTrue()
-        assertThat(content.notifications.any { it is NotificationUM.Warning.FeeTooLow }).isTrue()
+        Truth.assertThat(content.notifications).hasSize(2)
+        Truth.assertThat(content.notifications.any { it is NotificationUM.Warning.TooHigh }).isTrue()
+        Truth.assertThat(content.notifications.any { it is NotificationUM.Warning.FeeTooLow }).isTrue()
     }
 
     private fun createTestConfirmUM(): ConfirmUM.Content {
@@ -253,12 +320,12 @@ class SendConfirmationNotificationsTransformerV2Test {
     }
 
     private fun createTestAmountUM(): AmountState.Data {
-        val cryptoAmount = DomainAmount(
+        val cryptoAmount = Amount(
             currencySymbol = "SOL",
             value = BigDecimal("1.5"),
             decimals = 8,
         )
-        val fiatAmount = DomainAmount(
+        val fiatAmount = Amount(
             currencySymbol = "USD",
             value = BigDecimal("50.00"),
             decimals = 2,
@@ -294,9 +361,52 @@ class SendConfirmationNotificationsTransformerV2Test {
         )
     }
 
+    private fun createFiatConvertibleFeeSelectorUM(feeValue: BigDecimal): FeeSelectorUM.Content {
+        val fee = Fee.Common(
+            amount = com.tangem.blockchain.common.Amount(
+                currencySymbol = "SOL",
+                value = feeValue,
+                decimals = 8
+            )
+        )
+        return FeeSelectorUM.Content(
+            isPrimaryButtonEnabled = true,
+            fees = TransactionFee.Single(fee),
+            feeItems = persistentListOf(FeeItem.Market(fee)),
+            selectedFeeItem = FeeItem.Market(fee),
+            feeExtraInfo = FeeExtraInfo(
+                isFeeApproximate = false,
+                isFeeConvertibleToFiat = true,
+                isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
+            ),
+            feeFiatRateUM = FeeFiatRateUM(rate = BigDecimal("50000"), appCurrency = appCurrency),
+            feeNonce = FeeNonce.Nonce(nonce = BigInteger.ZERO, onNonceChange = {}),
+        )
+    }
+
+    /** Builds the expected footer reference for a fiat-convertible fee, mirroring the transformer's formatting. */
+    private fun expectedFiatFooter(sendingValue: BigDecimal, feeSelectorUM: FeeSelectorUM.Content): TextReference {
+        val fee = feeSelectorUM.selectedFeeItem.fee
+        val fiatFeeValue = fee.amount.value?.multiply(feeSelectorUM.feeFiatRateUM!!.rate)
+        val sending = sendingValue.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        val feeText = formatFooterFiatFee(
+            amount = fee.amount.copy(value = fiatFeeValue),
+            isFeeConvertibleToFiat = true,
+            isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
+            appCurrency = appCurrency,
+        )
+        return resourceReference(
+            id = R.string.send_summary_transaction_description,
+            formatArgs = wrappedList(sending, feeText),
+        )
+    }
+
     private fun createNormalFeeSelectorUM(): FeeSelectorUM.Content {
         val fee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.001"),
                 decimals = 8,
@@ -327,14 +437,14 @@ class SendConfirmationNotificationsTransformerV2Test {
 
     private fun createFeeTooHighUM(): FeeSelectorUM.Content {
         val priorityFee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.001"),
                 decimals = 8,
             ),
         )
         val minimumFee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.001"),
                 decimals = 8,
@@ -351,7 +461,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             feeItems = persistentListOf(
                 FeeItem.Custom(
                     fee = Fee.Common(
-                        amount = Amount(
+                        amount = com.tangem.blockchain.common.Amount(
                             currencySymbol = "SOL",
                             value = BigDecimal("0.01"),
                             decimals = 8,
@@ -373,7 +483,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             ),
             selectedFeeItem = FeeItem.Custom(
                 fee = Fee.Common(
-                    amount = Amount(
+                    amount = com.tangem.blockchain.common.Amount(
                         currencySymbol = "SOL",
                         value = BigDecimal("0.01"),
                         decimals = 8,
@@ -411,14 +521,14 @@ class SendConfirmationNotificationsTransformerV2Test {
 
     private fun createFeeTooLowUM(): FeeSelectorUM.Content {
         val fee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.0001"),
                 decimals = 8,
             ),
         )
         val minimumFee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.001"),
                 decimals = 8,
@@ -483,14 +593,14 @@ class SendConfirmationNotificationsTransformerV2Test {
 
     private fun createFeeTooHighAndTooLowUM(): FeeSelectorUM.Content {
         val priorityFee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.001"),
                 decimals = 8,
             ),
         )
         val minimumFee = Fee.Common(
-            amount = Amount(
+            amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "SOL",
                 value = BigDecimal("0.01"),
                 decimals = 8,
@@ -507,7 +617,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             feeItems = persistentListOf(
                 FeeItem.Custom(
                     fee = Fee.Common(
-                        amount = Amount(
+                        amount = com.tangem.blockchain.common.Amount(
                             currencySymbol = "SOL",
                             value = BigDecimal("0.008"),
                             decimals = 8,
@@ -529,7 +639,7 @@ class SendConfirmationNotificationsTransformerV2Test {
             ),
             selectedFeeItem = FeeItem.Custom(
                 fee = Fee.Common(
-                    amount = Amount(
+                    amount = com.tangem.blockchain.common.Amount(
                         currencySymbol = "SOL",
                         value = BigDecimal("0.008"),
                         decimals = 8,
