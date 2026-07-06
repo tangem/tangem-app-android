@@ -15,7 +15,7 @@ internal class DefaultStakingFeatureToggles(
     }
 
     private fun StakingIntegrationID.getFeatureToggle(): FeatureToggles? = when (this) {
-        is StakingIntegrationID.P2PEthPool -> FeatureToggles.STAKING_ETH_ENABLED
+        is StakingIntegrationID.P2PEthPool -> null
         is StakingIntegrationID.StakeKit -> this.getStakeKitFeatureToggle()
     }
 
