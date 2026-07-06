@@ -35,14 +35,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.plus
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -219,7 +224,9 @@ private fun StatusBannerContent(state: StatusBannerUM, modifier: Modifier = Modi
         }
         // Retain the last non-null subtitle so the line stays rendered while it fades out (mirrors the retain above).
         val lastSubtitle = remember { mutableStateOf<TextReference?>(null) }
-        SideEffect { if (state.subtitle != null) lastSubtitle.value = state.subtitle }
+        SideEffect {
+            state.subtitle?.let { subtitle -> lastSubtitle.value = subtitle }
+        }
 
         AnimatedVisibility(
             visible = state.subtitle != null,
@@ -232,9 +239,10 @@ private fun StatusBannerContent(state: StatusBannerUM, modifier: Modifier = Modi
             exit = shrinkVertically(tween(DEFAULT_ANIMATION_MILLIS), shrinkTowards = Alignment.Top) +
                 fadeOut(tween(DEFAULT_ANIMATION_MILLIS)),
         ) {
-            (state.subtitle ?: lastSubtitle.value)?.let { subtitle ->
+            val subtitle = state.subtitle ?: lastSubtitle.value
+            subtitle?.let { line ->
                 Text(
-                    text = subtitle.resolveReference(),
+                    text = line.resolveAnnotatedReference(),
                     style = TangemTheme.typography3.caption.medium,
                     color = contentColor,
                     modifier = Modifier.padding(top = SUBTITLE_TOP_GAP),
@@ -330,6 +338,21 @@ private fun TxHistoryDetailsStatusBannerPreview() {
                     severity = Severity.Warning,
                     title = stringReference("Verification required"),
                     subtitle = stringReference("Visit provider's website to refund your money"),
+                    isLoading = false,
+                ),
+            )
+            TxHistoryDetailsStatusBanner(
+                state = StatusBannerUM(
+                    severity = Severity.Error,
+                    title = stringReference("Refunded in WBTC"),
+                    subtitle = stringReference(
+                        "Your funds have been refunded in WBTC to your wallet on the Polygon network, " +
+                            "in accordance with OKX exchange rules. ",
+                    ) + styledStringReference(
+                        value = "Learn more",
+                        spanStyleReference = { SpanStyle(textDecoration = TextDecoration.Underline) },
+                        onClick = {},
+                    ),
                     isLoading = false,
                 ),
             )
