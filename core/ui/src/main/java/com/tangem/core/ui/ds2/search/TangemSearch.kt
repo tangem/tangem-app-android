@@ -140,7 +140,11 @@ private fun SearchField(state: TangemSearch.State, focusRequester: FocusRequeste
             Icon(
                 modifier = Modifier.padding(end = 8.dp),
                 imageVector = Icons.ic_search_20,
-                tint = TangemTheme.colors3.icon.primary,
+                tint = if (state.isActive) {
+                    TangemTheme.colors3.icon.secondary
+                } else {
+                    TangemTheme.colors3.icon.primary
+                },
                 contentDescription = null,
             )
             QueryTextField(state = state, focusRequester = focusRequester)
