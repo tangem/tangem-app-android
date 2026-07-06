@@ -663,6 +663,11 @@ internal class TokenDetailsModel @Inject constructor(
         router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
     }
 
+    /** Opens the given currency's Token Details on top of this screen (e.g. the refunded token from the tx details sheet). */
+    fun openTokenDetails(currency: CryptoCurrency) {
+        router.openTokenDetails(userWalletId = userWalletId, currency = currency)
+    }
+
     override fun onStakeBannerClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.StakingClicked(cryptoCurrency.symbol))
         openStaking()
