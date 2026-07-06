@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseDialogTestTags
@@ -92,6 +93,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val okButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_ok))
+    }
+
+    val forgetButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(CoreResR.string.common_forget))
     }
 
     val changeButton: KNode = child {
