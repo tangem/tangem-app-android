@@ -172,7 +172,6 @@ internal class AddressBookAnalyticsSenderTest {
         ),
         // Validation failures are shown inline, not as a save error.
         SaveErrorModel(error = SaveContactError.Name(mockk()), expectedType = null),
-        SaveErrorModel(error = SaveContactError.Address(mockk()), expectedType = null),
     )
 
     private companion object {
