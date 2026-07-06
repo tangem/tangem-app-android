@@ -167,7 +167,6 @@ private fun LazyListScope.tokenItem(
             is TangemTokenRowUM -> TangemTokenRow(
                 tokenRowUM = tokenRowUM,
                 isBalanceHidden = isBalanceHidden,
-                reorderableState = null,
                 modifier = itemModifier
                     .onGloballyPositioned { position = it.positionOnScreen() }
                     .combinedClickable(
@@ -238,7 +237,6 @@ private fun LazyListScope.portfolioItem(
                         is TangemTokenRowUM -> TangemTokenRow(
                             tokenRowUM = tokenRowUM,
                             isBalanceHidden = isBalanceHidden,
-                            reorderableState = null,
                             modifier = itemModifier
                                 .onGloballyPositioned {
                                     position = it.positionInWindow()
@@ -450,7 +448,6 @@ internal fun PortfolioRowItem(
                     headComponent = composables.icon,
                     titleComponent = composables.title,
                     isBalanceHidden = isBalanceHidden,
-                    reorderableState = null,
                 )
             }
         }

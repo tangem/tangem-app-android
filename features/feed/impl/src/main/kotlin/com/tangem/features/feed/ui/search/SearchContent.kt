@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
@@ -405,6 +406,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
         Text(
             text = stringResourceSafe(R.string.markets_search_see_tokens_under_100k),
             style = TangemTheme.typography2.subheadlineMedium14,
+            textAlign = TextAlign.Center,
             color = TangemTheme.colors2.text.neutral.secondary,
         )
         TangemButton(
