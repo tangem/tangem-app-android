@@ -49,12 +49,13 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
+import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -79,7 +80,7 @@ private const val PREVIEW_HEIGHT_DP = 220
 
 // Match the production TangemTopNavigation's spring stiffness so the story animates identically.
 private val SlotAlphaSpec = spring<Float>(stiffness = Spring.StiffnessMediumLow)
-private val SlotSizeSpec = spring<androidx.compose.ui.unit.IntSize>(stiffness = Spring.StiffnessMediumLow)
+private val SlotSizeSpec = spring<IntSize>(stiffness = Spring.StiffnessMediumLow)
 private val TitleEnterTransition = fadeIn(animationSpec = SlotAlphaSpec)
 private val TitleExitTransition = fadeOut(animationSpec = SlotAlphaSpec)
 private val SubtitleEnterTransition =
@@ -257,42 +258,36 @@ private fun endGroupContent(endGroup: EndGroup): (@Composable RowScope.() -> Uni
     EndGroup.None -> null
     EndGroup.One -> {
         {
-            TangemButton(
-                variant = TangemButton.Variant.Ghost,
-                iconStart = TangemIconUM.Icon(Icons.ic_arrow_swap_horizontal_20),
+            TangemButton.GroupEntry(
+                imageVector = Icons.ic_arrow_swap_horizontal_20,
                 onClick = {},
             )
         }
     }
     EndGroup.Two -> {
         {
-            TangemButton(
-                variant = TangemButton.Variant.Ghost,
-                iconStart = TangemIconUM.Icon(Icons.ic_arrow_swap_horizontal_20),
+            TangemButton.GroupEntry(
+                imageVector = Icons.ic_arrow_swap_horizontal_20,
                 onClick = {},
             )
-            TangemButton(
-                variant = TangemButton.Variant.Ghost,
-                iconStart = TangemIconUM.Icon(Icons.ic_scan_20),
+            TangemButton.GroupEntry(
+                imageVector = Icons.ic_scan_20,
                 onClick = {},
             )
         }
     }
     EndGroup.Three -> {
         {
-            TangemButton(
-                variant = TangemButton.Variant.Ghost,
-                iconStart = TangemIconUM.Icon(Icons.ic_arrow_swap_horizontal_20),
+            TangemButton.GroupEntry(
+                imageVector = Icons.ic_arrow_swap_horizontal_20,
                 onClick = {},
             )
-            TangemButton(
-                variant = TangemButton.Variant.Ghost,
-                iconStart = TangemIconUM.Icon(Icons.ic_sign_usd_20),
+            TangemButton.GroupEntry(
+                imageVector = Icons.ic_sign_usd_20,
                 onClick = {},
             )
-            TangemButton(
-                variant = TangemButton.Variant.Ghost,
-                iconStart = TangemIconUM.Icon(Icons.ic_scan_20),
+            TangemButton.GroupEntry(
+                imageVector = Icons.ic_scan_20,
                 onClick = {},
             )
         }
