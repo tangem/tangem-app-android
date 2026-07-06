@@ -19,7 +19,7 @@ import org.junit.jupiter.api.TestInstance
 [REDACTED_AUTHOR]
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CryptoCurrencyCleanerTest {
+class CryptoCurrencyMetadataCleanerTest {
 
     private val networksCleaner: NetworksCleaner = mockk(relaxUnitFun = true)
     private val stakingCleaner: StakingCleaner = mockk(relaxUnitFun = true)
@@ -69,6 +69,33 @@ class CryptoCurrencyCleanerTest {
             networksCleaner(userWalletId = userWalletId, currencies = currencies)
             stakingCleaner(userWalletId = userWalletId, currencies = currencies)
             nftCleaner(userWalletId = userWalletId, networks = setOf(coin.network, token.network))
+        }
+    }
+
+    @Test
+    fun `GIVEN wallets WHEN clear THEN networks and staking cleared once with all ids`() = runTest {
+        // Arrange
+        val ids = listOf(userWalletId, UserWalletId("022"))
+
+        // Act
+        cleaner.clear(userWalletIds = ids)
+
+        // Assert
+        coVerify(exactly = 1) {
+            networksCleaner.clear(ids)
+            stakingCleaner.clear(ids)
+        }
+    }
+
+    @Test
+    fun `GIVEN empty list WHEN clear THEN no cleaners are called`() = runTest {
+        // Act
+        cleaner.clear(userWalletIds = emptyList())
+
+        // Assert
+        coVerify(inverse = true) {
+            networksCleaner.clear(any())
+            stakingCleaner.clear(any())
         }
     }
 }
