@@ -18,6 +18,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -56,17 +57,19 @@ internal fun TxHistoryDetailsAmountBlock(amountBlock: TxHistoryDetailsUM.AmountB
             textAlign = TextAlign.Center,
             textDecoration = if (amountBlock.isFailed) TextDecoration.LineThrough else null,
         )
-        SpacerH(4.dp)
-        Text(
-            text = amountBlock.fiatAmount.resolveReference(),
-            color = if (amountBlock.isFailed) {
-                TangemTheme.colors3.text.tertiary
-            } else {
-                TangemTheme.colors3.text.secondary
-            },
-            style = TangemTheme.typography3.body.medium,
-            textAlign = TextAlign.Center,
-        )
+        amountBlock.fiatAmount?.let { fiatAmount ->
+            SpacerH(4.dp)
+            Text(
+                text = fiatAmount.resolveReference(),
+                color = if (amountBlock.isFailed) {
+                    TangemTheme.colors3.text.tertiary
+                } else {
+                    TangemTheme.colors3.text.secondary
+                },
+                style = TangemTheme.typography3.body.medium,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -82,20 +85,23 @@ private fun TxHistoryDetailsAmountBlockPreview() {
         ) {
             TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = false))
             TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = true))
+            // No fiat — the fiat line is omitted entirely.
+            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = false, fiatAmount = null))
         }
     }
 }
 
-private fun previewAmountBlock(isFailed: Boolean) = TxHistoryDetailsUM.AmountBlockUM(
-    currencyIcon = CurrencyIconState.CoinIcon(
-        url = null,
-        fallbackResId = R.drawable.img_eth_22,
-        isGrayscale = false,
-        shouldShowCustomBadge = false,
-    ),
-    amount = stringReference("+ 350.31 USDT"),
-    fiatAmount = stringReference("$350.31"),
-    isFailed = isFailed,
-)
+private fun previewAmountBlock(isFailed: Boolean, fiatAmount: TextReference? = stringReference("$350.31")) =
+    TxHistoryDetailsUM.AmountBlockUM(
+        currencyIcon = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_eth_22,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        ),
+        amount = stringReference("+ 350.31 USDT"),
+        fiatAmount = fiatAmount,
+        isFailed = isFailed,
+    )
 
 // endregion

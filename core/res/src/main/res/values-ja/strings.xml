@@ -1191,6 +1191,7 @@
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">累計取引額が%1sを超えると、%2sでの本人確認が必要になる場合があります。</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">累計取引額が%1s相当額を超えると、%2sでの本人確認が必要になる場合があります。</string>
+  <string name="onramp_native_payment_identity_verification">Apple Payの取引では、%1sによる本人確認が必要になる場合があります</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">「支払う」をタップすると、%1sの%2sおよび%3sに同意したものとみなされます。</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
   <string name="onramp_offer_type_fastet">最短で処理</string>
@@ -2297,8 +2298,8 @@
   <string name="warning_no_backup_title">バックアップがありません</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">このカードは以前取引に使用されたことがあります。信頼できない出所から受け取った場合は、全資金を引き出すことを検討してください。あなたのカードであれば、何もする必要はありません。</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">カードはすでに取引に署名済みです</string>
-  <string name="warning_outdated_data_message">順次更新されます。</string>
-  <string name="warning_outdated_data_title">一部トークンの残高が表示されていません。</string>
+  <string name="warning_outdated_data_message">一部のトークン残高を更新できませんでした</string>
+  <string name="warning_outdated_data_title">残高が最新でない可能性があります</string>
   <string name="warning_rate_app_message">あなたのレビューは、Tangemウォレットをさらに良くするためのモチベーションになります</string>
   <string name="warning_rate_app_title">Tangemを楽しんでいますか?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">トークンを受け取る前に、トークンを関連付ける必要があります。</string>

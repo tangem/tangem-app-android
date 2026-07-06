@@ -3,28 +3,39 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     id("configuration")
 }
+
 dependencies {
 
-    /** DI */
+    // region DI
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Analytics - Models */
-    api(projects.core.analytics.models)
-
-    /** Domain */
-    implementation(projects.domain.analytics)
-    implementation(projects.domain.models)
-
-    /** Other */
+    // region Kotlin
     implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /** Core shouldn't depend on core, but in case with utils and logging its necessary */
+    // region Tangem
+    implementation(tangemDeps.card.core) // for calculating user id hash
+    // endregion
+
+    // region Core modules
+    api(projects.core.analytics.models)
+    // Core shouldn't depend on core, but with utils and logging it's necessary.
     implementation(projects.core.utils)
+    // endregion
 
-    /** For calculating user id hash */
-    implementation(tangemDeps.card.core)
+    // region Domain
+    api(projects.domain.analytics)
+    // endregion
 
-    /** Tests */
-    testImplementation(projects.test.core)
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
+
+    // region Tests
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }

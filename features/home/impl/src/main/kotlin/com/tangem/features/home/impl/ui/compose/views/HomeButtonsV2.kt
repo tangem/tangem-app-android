@@ -24,7 +24,7 @@ internal fun HomeButtonsV2(onGetStartedClick: () -> Unit, modifier: Modifier = M
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         StoriesButton(
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(),
             text = stringResourceSafe(id = R.string.common_get_started),
             useDarkerColors = false,
             onClick = onGetStartedClick,

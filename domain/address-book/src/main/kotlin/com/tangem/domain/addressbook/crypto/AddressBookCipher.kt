@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec
  * stored. Each encryption uses a fresh random 12-byte nonce, so encrypting the same book twice
  * produces different blobs that both decrypt back to the original.
  *
- * The produced [AddressBookBlob] keeps the GCM authentication tag in a separate `auth_tag` field
+ * The produced [AddressBookBlob] keeps the GCM authentication tag in a separate `authTag` field
  * (Java appends it to the ciphertext; this class splits it out and re-joins it on decrypt). A
  * tampered ciphertext or tag fails the tag check and surfaces as
  * [AddressBookCryptoError.DecryptionFailed].
@@ -41,8 +41,6 @@ class AddressBookCipher {
         userWallet: UserWallet,
         updatedAt: DateTime,
     ): Either<AddressBookCryptoError, AddressBookBlob> = either {
-        ensure(addressBook.walletId == userWallet.walletId) { AddressBookCryptoError.WalletMismatch }
-
         val aesKey = deriveKey(userWallet)
         val plaintext = json.encodeToString(AddressBook.serializer(), addressBook).toByteArray(Charsets.UTF_8)
 
@@ -55,7 +53,7 @@ class AddressBookCipher {
         val authTag = cipherWithTag.copyOfRange(fromIndex = tagOffset, toIndex = cipherWithTag.size)
 
         AddressBookBlob(
-            walletId = addressBook.walletId.stringValue,
+            walletId = userWallet.walletId.stringValue,
             updatedAt = updatedAt.withZone(DateTimeZone.UTC).toString(),
             nonce = nonce.toHexString().lowercase(),
             ciphertext = ciphertext.toHexString().lowercase(),
