@@ -58,12 +58,16 @@ internal class AddressBookListModel @Inject constructor(
     private val selectedWalletId = MutableStateFlow<String?>(value = null)
 
     private val allContacts: SharedFlow<List<VerifiedContact>> =
-        getVerifiedContactsInteractor(query = "", userWalletId = null)
+        getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null)
             .shareIn(modelScope, SharingStarted.Lazily, replay = 1)
 
     init {
         val matchedContacts = searchQuery.flatMapLatest { query ->
-            if (query.isBlank()) allContacts else getVerifiedContactsInteractor(query = query, userWalletId = null)
+            if (query.isBlank()) {
+                allContacts
+            } else {
+                getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
+            }
         }
         combine(
             allContacts,
