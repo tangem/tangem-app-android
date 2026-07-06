@@ -14,10 +14,9 @@ import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
-import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
+import com.tangem.domain.addressbook.validation.ContactNameValidator
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.SignHashesError
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.utils.extensions.toHexString
@@ -27,7 +26,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,13 +37,14 @@ import java.security.MessageDigest
 internal class SaveContactInteractorTest {
 
     private val repository: AddressBookRepository = mockk(relaxUnitFun = true)
+    private val contactNameValidator: ContactNameValidator = mockk()
     private val signUseCase: SignUseCase = mockk()
     private val timestampProvider: IsoTimestampProvider = mockk {
         every { now() } returns NEW_TIMESTAMP
     }
     private val interactor = SaveContactInteractor(
         repository = repository,
-        validateContactName = ValidateContactNameUseCase(repository),
+        validateContactName = contactNameValidator,
         signUseCase = signUseCase,
         timestampProvider = timestampProvider,
     )
@@ -57,7 +56,7 @@ internal class SaveContactInteractorTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, signUseCase, answers = false)
+        clearMocks(repository, contactNameValidator, signUseCase, answers = false)
     }
 
     @Nested
@@ -69,7 +68,7 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN unique name WHEN createContact THEN generates ids AND persists the signed contact`() = runTest {
             // Arrange
-            stubNoExistingContacts()
+            stubValidName(name = "Alice")
             val signatures = listOf(byteArrayOf(0x01, 0xAB.toByte()))
             coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(userWallet)) } returns
                 signatures.right()
@@ -95,7 +94,7 @@ internal class SaveContactInteractorTest {
         fun `GIVEN entries WHEN createContact THEN signs each with the wallet key over the canonical payload`() =
             runTest {
                 // Arrange
-                stubNoExistingContacts()
+                stubValidName(name = "Alice")
                 val twoEntries = listOf(
                     entry(id = "addr-1", address = "0xabc", memo = "memo"),
                     entry(id = "addr-2", address = "0xdef", memo = null),
@@ -129,7 +128,7 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN no entries WHEN createContact THEN persists without signing`() = runTest {
             // Arrange
-            stubNoExistingContacts()
+            stubValidName(name = "Alice")
             val saved = slot<Contact>()
             coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
 
@@ -150,7 +149,7 @@ internal class SaveContactInteractorTest {
                     every { walletId } returns userWallet.walletId
                     every { wallets } returns null
                 }
-                stubNoExistingContacts()
+                stubValidName(name = "Alice")
 
                 // Act
                 val result = interactor.createContact(lockedWallet, name = "Alice", iconColor = "TestColor", entries)
@@ -164,7 +163,7 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN signUseCase fails WHEN createContact THEN propagates Signing error without persisting`() = runTest {
             // Arrange
-            stubNoExistingContacts()
+            stubValidName(name = "Alice")
             coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = any()) } returns
                 SignHashesError.SigningFailed(message = "canceled").left()
 
@@ -180,7 +179,8 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN duplicate name WHEN createContact THEN Name Duplicate without persisting`() = runTest {
             // Arrange
-            every { repository.getContacts(userWallet.walletId) } returns flowOf(listOf(contact(name = "Alice")))
+            coEvery { contactNameValidator.validate(userWallet.walletId, "alice") } returns
+                ContactNameValidationError.Duplicate.left()
 
             // Act
             val result = interactor.createContact(userWallet, name = "alice", iconColor = "TestColor", entries)
@@ -194,7 +194,8 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN blank name WHEN createContact THEN Name Format without persisting`() = runTest {
             // Arrange
-            stubNoExistingContacts()
+            coEvery { contactNameValidator.validate(userWallet.walletId, "") } returns
+                ContactNameValidationError.Format(ContactName.Error.Empty).left()
 
             // Act
             val result = interactor.createContact(userWallet, name = "", iconColor = "TestColor", entries)
@@ -208,7 +209,7 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN backend rejects the save WHEN createContact THEN Backend error is propagated`() = runTest {
             // Arrange
-            stubNoExistingContacts()
+            stubValidName(name = "Alice")
             coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = any()) } returns
                 listOf(byteArrayOf(0x01)).right()
             coEvery { repository.saveContact(any()) } returns AddressBookSyncError.Conflict.left()
@@ -221,8 +222,9 @@ internal class SaveContactInteractorTest {
                 .isEqualTo(SaveContactError.Backend(AddressBookSyncError.Conflict))
         }
 
-        private fun stubNoExistingContacts() {
-            every { repository.getContacts(userWallet.walletId) } returns flowOf(emptyList())
+        private fun stubValidName(name: String) {
+            coEvery { contactNameValidator.validate(userWallet.walletId, name) } returns
+                requireNotNull(ContactName(name).getOrNull()).right()
         }
     }
 
@@ -261,7 +263,7 @@ internal class SaveContactInteractorTest {
                 assertThat(contact.updatedAt).isEqualTo(NEW_TIMESTAMP)
                 assertThat(contact.addresses.map { it.signature })
                     .containsExactly(signatures[0].toHexString())
-                coVerify(exactly = 0) { repository.getContacts(any<UserWalletId>()) }
+                coVerify(exactly = 0) { contactNameValidator.validate(any(), any()) }
             }
 
         @Test
