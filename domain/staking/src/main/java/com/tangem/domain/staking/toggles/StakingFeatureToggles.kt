@@ -5,4 +5,6 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 interface StakingFeatureToggles {
 
     fun isIntegrationEnabled(integrationId: StakingIntegrationID): Boolean
+
+    fun isSolanaUnstakeValidationEnabled(): Boolean
 }
