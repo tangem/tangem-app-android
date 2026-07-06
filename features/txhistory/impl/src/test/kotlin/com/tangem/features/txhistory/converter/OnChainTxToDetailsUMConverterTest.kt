@@ -208,6 +208,56 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(amount).doesNotContain("-")
     }
 
+    @ParameterizedTest
+    @MethodSource("provideUnsignedAmountTypes")
+    fun `GIVEN protocol-interaction tx WHEN convert THEN amount has no sign regardless of direction`(
+        type: TransactionType,
+    ) {
+        // Arrange — staking (except ClaimRewards) and approvals show the operation amount, not a signed transfer.
+        val tx = txInfo(type = type, isOutgoing = true)
+
+        // Act
+        val amount = converter.convert(tx).amountBlock.amount.resolveString()
+
+        // Assert
+        assertThat(amount).doesNotContain("+")
+        assertThat(amount).doesNotContain("-")
+    }
+
+    private fun provideUnsignedAmountTypes() = listOf(
+        TransactionType.Staking.Stake,
+        TransactionType.Staking.Unstake,
+        TransactionType.Staking.Restake,
+        TransactionType.Staking.Withdraw,
+        TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS),
+        TransactionType.Approve,
+    )
+
+    @Test
+    fun `GIVEN ClaimRewards WHEN convert THEN amount has plus sign regardless of direction`() {
+        // Arrange — rewards are an inflow even when the chain reports the claiming tx as outgoing.
+        val tx = txInfo(type = TransactionType.Staking.ClaimRewards, isOutgoing = true)
+
+        // Act
+        val amount = converter.convert(tx).amountBlock.amount.resolveString()
+
+        // Assert
+        assertThat(amount).startsWith("+ ")
+    }
+
+    @Test
+    fun `GIVEN failed ClaimRewards WHEN convert THEN sign is dropped`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Staking.ClaimRewards, status = TxInfo.TransactionStatus.Failed)
+
+        // Act
+        val amountBlock = converter.convert(tx).amountBlock
+
+        // Assert
+        assertThat(amountBlock.isFailed).isTrue()
+        assertThat(amountBlock.amount.resolveString()).doesNotContain("+")
+    }
+
     @Test
     fun `GIVEN non-yield Transfer WHEN convert THEN single icon and no label`() {
         // Arrange
