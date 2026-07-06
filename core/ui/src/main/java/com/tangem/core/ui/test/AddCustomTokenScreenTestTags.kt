@@ -8,4 +8,6 @@ object AddCustomTokenScreenTestTags {
     const val SELECTOR_LIST = "ADD_CUSTOM_TOKEN_SELECTOR_LIST"
 
     fun networkRow(networkName: String): String = "ADD_CUSTOM_TOKEN_NETWORK_ROW_${networkName.lowercase()}"
+
+    fun derivationRow(networkId: String): String = "ADD_CUSTOM_TOKEN_DERIVATION_ROW_${networkId.lowercase()}"
 }

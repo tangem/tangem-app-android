@@ -6,16 +6,22 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.addCustomTokenWithCustomDerivation
+import com.tangem.scenarios.assertDerivationPathsInSelector
+import com.tangem.scenarios.forgetCurrentWalletAndReArmForNextScan
 import com.tangem.scenarios.navigateBackToMainFromManageTokens
 import com.tangem.scenarios.openAddCustomToken
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddCustomTokenScreen
 import com.tangem.screens.onMainScreen
+import com.tangem.tap.domain.sdk.mocks.content.Wallet1LegacyDerivationMockContent
+import com.tangem.tap.domain.sdk.mocks.content.Wallet2NoEd25519Slip0010MockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 @HiltAndroidTest
@@ -25,6 +31,8 @@ class AddCustomTokenTest : BaseTestCase() {
     private val tokenTitle = "Tether"
     private val ethereumNetwork = "Ethereum"
     private val solanaNetwork = "Solana"
+    private val bitcoinNetworkId = "bitcoin"
+    private val ethereumClassicNetworkId = "ethereum-classic"
     private val ethContract = "0xdac17f958d2ee523a2206206994597c13d831ec7"
     private val solanaContract = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     private val customDerivationPath = "m/44'/60'/0'/0/1"
@@ -170,6 +178,73 @@ class AddCustomTokenTest : BaseTestCase() {
             }
             step("Assert unsupported-token warning is not displayed") {
                 onAddCustomTokenScreen { warningNotification.assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("777")
+    @DisplayName("Add custom token: network with a missing curve is not offered")
+    @Test
+    fun missingCurveNetworkNotOfferedTest() {
+        val bitcoinNetwork = "Bitcoin"
+
+        setupHooks(
+            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
+        ).run {
+            step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
+                setWireMockScenarioState(COINS_API_SCENARIO, richState)
+            }
+            step("Open 'Main Screen'") { openMainScreen(mockContent = Wallet2NoEd25519Slip0010MockContent) }
+            step("Open 'Add custom token' screen") { openAddCustomToken() }
+            step("Assert supported network '$bitcoinNetwork' is displayed") {
+                flakySafely { onAddCustomTokenScreen { scrollToNetwork(bitcoinNetwork) } }
+            }
+            step("Assert '$solanaNetwork' network is not displayed for the missing-curve card") {
+                onAddCustomTokenScreen { selectorList.assertIsDisplayed() }
+                val solanaOffered = runCatching { onAddCustomTokenScreen { scrollToNetwork(solanaNetwork) } }.isSuccess
+                assertFalse("'$solanaNetwork' should not be offered for a missing-curve card", solanaOffered)
+            }
+        }
+    }
+
+    @AllureId("776")
+    @DisplayName("Add custom token: derivation paths match the card version (V1/V2/V3)")
+    @Test
+    fun derivationPathsMatchCardVersionTest() {
+        setupHooks(
+            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
+        ).run {
+            step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
+                setWireMockScenarioState(COINS_API_SCENARIO, richState)
+            }
+            step("Assert derivation paths for a legacy-batch V1 Wallet card") {
+                openMainScreen(mockContent = Wallet1LegacyDerivationMockContent)
+                openAddCustomToken()
+                assertDerivationPathsInSelector(
+                    ethereumNetwork,
+                    bitcoinNetworkId to "m/44'/0'/0'/0/0",
+                    ethereumClassicNetworkId to "m/44'/61'/0'/0/0",
+                )
+                forgetCurrentWalletAndReArmForNextScan()
+            }
+            step("Assert derivation paths for a V2 Wallet card") {
+                openMainScreen()
+                openAddCustomToken()
+                assertDerivationPathsInSelector(
+                    ethereumNetwork,
+                    bitcoinNetworkId to "m/44'/0'/0'/0/0",
+                    ethereumClassicNetworkId to "m/44'/60'/0'/0/0",
+                )
+                forgetCurrentWalletAndReArmForNextScan()
+            }
+            step("Assert derivation paths for a V3 Wallet 2 card") {
+                openMainScreen(productType = ProductType.Wallet2)
+                openAddCustomToken()
+                assertDerivationPathsInSelector(
+                    ethereumNetwork,
+                    bitcoinNetworkId to "m/84'/0'/0'/0/0",
+                    ethereumClassicNetworkId to "m/44'/61'/0'/0/0",
+                )
             }
         }
     }
