@@ -10,8 +10,8 @@ import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
-import com.tangem.domain.addressbook.usecase.ValidateContactNameUseCase
 import com.tangem.domain.addressbook.usecase.buildAddressEntryPayload
+import com.tangem.domain.addressbook.validation.ContactNameValidator
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.SignHashesError
 import com.tangem.domain.transaction.usecase.SignUseCase
@@ -22,7 +22,7 @@ import java.util.UUID
 
 class SaveContactInteractor(
     private val repository: AddressBookRepository,
-    private val validateContactName: ValidateContactNameUseCase,
+    private val validateContactName: ContactNameValidator,
     private val signUseCase: SignUseCase,
     private val timestampProvider: IsoTimestampProvider,
 ) {
@@ -34,7 +34,7 @@ class SaveContactInteractor(
         addresses: List<AddressEntry>,
     ): Either<SaveContactError, Contact> = either {
         val userWalletId = userWallet.walletId
-        val validName = validateContactName(userWalletId, name)
+        val validName = validateContactName.validate(userWalletId, name)
             .mapLeft(SaveContactError::Name)
             .bind()
 
