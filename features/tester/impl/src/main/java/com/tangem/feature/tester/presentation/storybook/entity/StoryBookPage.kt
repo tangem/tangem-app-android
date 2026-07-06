@@ -388,6 +388,24 @@ internal data class TangemMessageBannerStory(
     }
 }
 
+internal data class TextStyleStory(
+    val style: Style,
+    val textScale: Float,
+    val onStyleChange: (Style) -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** DS3 typography3 text styles available in the preview. Labels match the Figma naming. */
+    enum class Style(val label: String) {
+        Display("Display"),
+        HeadM("Head.M"),
+        HeadS("Head.S"),
+        Body("Body"),
+        SubH("Sub.H"),
+        Caption("Caption"),
+    }
+}
+
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,
     val status: TangemBadge.Status,
