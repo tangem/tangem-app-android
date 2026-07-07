@@ -10,13 +10,9 @@ plugins {
 android {
     namespace = "com.tangem.domain.account.status"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     api(projects.domain.account)
+    api(projects.domain.card)
     api(projects.domain.core)
     api(projects.domain.common)
     api(projects.domain.express)
@@ -48,7 +44,6 @@ dependencies {
     kapt(deps.hilt.kapt)
     // end
 
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
