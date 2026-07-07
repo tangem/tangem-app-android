@@ -11,13 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cloud_24_filled
+
+private const val DEFAULT_DEVICE_ICON_COLOR = 0xFF595963
+private const val DEFAULT_BORDER_COLOR = 0x1A1E1E1E
 
 /**
  * Composable function for displaying a wallet icon based on the provided [DeviceIconUM] state.
@@ -57,9 +59,9 @@ fun TangemDeviceIcon(state: DeviceIconUM, modifier: Modifier = Modifier) {
         )
         DeviceIconUM.Mobile -> Icon(
             modifier = modifier,
-            imageVector = ImageVector.vectorResource(R.drawable.ic_shield_24),
+            imageVector = Icons.ic_cloud_24_filled,
             contentDescription = null,
-            tint = TangemTheme.colors2.graphic.status.attention,
+            tint = Color(DEFAULT_DEVICE_ICON_COLOR),
         )
     }
 }
@@ -73,10 +75,10 @@ private fun DeviceIcon(
     tColor: Color?,
     modifier: Modifier = Modifier,
 ) {
-    val main = mainColor.takeOrElse { TangemTheme.colors2.graphic.neutral.tertiaryConstant }
-    val second = secondColor?.takeOrElse { TangemTheme.colors2.graphic.neutral.tertiaryConstant }
-    val third = thirdColor?.takeOrElse { TangemTheme.colors2.graphic.neutral.tertiaryConstant }
-    val borderColor = TangemTheme.colors2.border.walletIcon
+    val main = mainColor.takeOrElse { Color(DEFAULT_DEVICE_ICON_COLOR) }
+    val second = secondColor?.takeOrElse { Color(DEFAULT_DEVICE_ICON_COLOR) }
+    val third = thirdColor?.takeOrElse { Color(DEFAULT_DEVICE_ICON_COLOR) }
+    val borderColor = Color(DEFAULT_BORDER_COLOR)
 
     val imageVector = remember(isRing, main, second, third, borderColor, tColor) {
         when {

@@ -3,14 +3,7 @@ package com.tangem.features.tangempay.components.express
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import com.tangem.common.ui.expressStatus.expressTransactionsItemsLegacy
-import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
-import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
+import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.onramp.model.OnrampStatus
@@ -122,13 +115,19 @@ internal class PreviewEmptyExpressTransactionsComponent : ExpressTransactionsCom
                 onDisposeExpressStatus = {},
                 iconState = iconState,
                 toAmount = TextReference.Str(toAmount),
+                toAmountValue = toAmount.toBigDecimal(),
                 toFiatAmount = null,
                 toAmountSymbol = toSymbol,
                 toCurrencyIcon = CurrencyIconState.Empty(),
+                toAddress = "",
+                toAmountDecimals = 2,
                 fromAmount = TextReference.Str(fromAmount),
+                fromAmountValue = fromAmount.toBigDecimal(),
                 fromFiatAmount = null,
                 fromAmountSymbol = fromSymbol,
                 fromCurrencyIcon = CurrencyIconState.Empty(),
+                fromAddress = "",
+                fromAmountDecimals = 2,
             ),
             providerName = "Preview Provider",
             providerImageUrl = "",

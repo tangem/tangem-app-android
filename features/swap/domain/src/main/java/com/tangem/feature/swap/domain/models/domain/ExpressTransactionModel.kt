@@ -30,7 +30,7 @@ sealed class ExpressTransactionModel {
         val txData: String,
         val otherNativeFeeWei: BigDecimal?,
         val gas: BigInteger?,
-        val allowanceContract: String?,
+        val allowanceContract: String? = null,
     ) : ExpressTransactionModel()
 
     data class CEX(
