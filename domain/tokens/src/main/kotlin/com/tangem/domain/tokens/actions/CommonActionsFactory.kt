@@ -104,7 +104,7 @@ internal class CommonActionsFactory(
 
             // region Sell
             val sellUnavailabilityReason = getSellUnavailabilityReason(
-                userWalletId = userWallet.walletId,
+                userWallet = userWallet,
                 status = cryptoCurrencyStatus,
                 sendUnavailabilityReason = sendUnavailabilityReason,
             )
