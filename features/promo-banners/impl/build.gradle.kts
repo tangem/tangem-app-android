@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     id("configuration")
@@ -13,12 +14,17 @@ android {
 dependencies {
     /** Project - API */
     api(projects.features.promoBanners.api)
+    implementation(projects.features.commonFeatures.api)
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain */
     api(projects.domain.common)
     implementation(projects.domain.models)
+    implementation(projects.domain.appCurrency)
 
     /** Core */
+    api(projects.core.configToggles)
     api(projects.core.analytics)
     api(projects.core.datasource)
     api(projects.core.decompose)
@@ -37,6 +43,7 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.core.ktx)
     implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
 
