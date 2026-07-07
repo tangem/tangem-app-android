@@ -79,4 +79,10 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
             OrderConverter.convert(result)
         }
     }
+
+    override suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.cancelOrder(authHeader = authHeader, orderId = orderId)
+        }.map {}
+    }
 }
