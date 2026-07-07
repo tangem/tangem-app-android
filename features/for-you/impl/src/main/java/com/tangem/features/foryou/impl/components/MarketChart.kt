@@ -8,27 +8,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -51,21 +34,14 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds2.surface.TangemSurface
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.pluralStringResourceSafe
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
-import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.components.state.DonutChartUM
-import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
-import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.components.state.*
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -80,7 +56,7 @@ internal fun MarketChart(marketChart: MarketChartUM, modifier: Modifier = Modifi
             .onGloballyPositioned { cardBoundsInWindow = it.boundsInWindow() },
         color = TangemTheme.colors3.bg.secondary,
     ) {
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
             DonutChartBlock(marketChart.donutChart, cardBoundsInWindow)
             Spacer(modifier = Modifier.height(16.dp))
             if (marketChart is MarketChartUM.Loaded) {
@@ -353,10 +329,7 @@ private fun MarketChart_Preview(
     }
 }
 
-/**
- * Maps a [scenario] to the state shown. Built inside a `@Composable` (not the [PreviewParameterProvider])
- * because the segment colors come from [TangemTheme.colors3], which can only be read in composition.
- */
+/** Maps a [scenario] to the state shown in the preview. */
 @Suppress("MagicNumber")
 @Composable
 private fun previewMarketChartState(scenario: MarketChartPreviewScenario): MarketChartUM = when (scenario) {
@@ -378,16 +351,16 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
         aiInsight = AiInsightUM.Hide,
         donutChart = DonutChartUM.Loaded(
             totalAmount = "$10,12345678912.1333",
-            donutSegmentList = listOf(
+            donutSegmentList = persistentListOf(
                 DonutSegmentUM(
                     weight = BigDecimal(0.55),
-                    color = TangemTheme.colors3.border.brand,
+                    color = DonutSegmentColor.Brand,
                     title = stringReference("Ethereum"),
                     fiatValue = stringReference("$5,720.22"),
                 ),
                 DonutSegmentUM(
                     weight = BigDecimal(0.45),
-                    color = TangemTheme.colors3.border.accent.green,
+                    color = DonutSegmentColor.Green,
                     title = stringReference("Solana"),
                     fiatValue = stringReference("$728.30"),
                 ),
@@ -401,28 +374,28 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
 @Composable
 private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
     totalAmount = "$10,123456.1333",
-    donutSegmentList = listOf(
+    donutSegmentList = persistentListOf(
         DonutSegmentUM(
             weight = BigDecimal(0.55),
-            color = TangemTheme.colors3.border.brand,
+            color = DonutSegmentColor.Brand,
             title = stringReference("Ethereum"),
             fiatValue = stringReference("$5,720.22"),
         ),
         DonutSegmentUM(
             weight = BigDecimal(0.077),
-            color = TangemTheme.colors3.border.accent.violet,
+            color = DonutSegmentColor.Violet,
             title = stringReference("Solana"),
             fiatValue = stringReference("$728.30"),
         ),
         DonutSegmentUM(
             weight = BigDecimal(0.0666),
-            color = TangemTheme.colors3.border.accent.red,
+            color = DonutSegmentColor.Red,
             title = stringReference("Polkadot"),
             fiatValue = stringReference("$624.26"),
         ),
         DonutSegmentUM(
             weight = BigDecimal(0.05),
-            color = TangemTheme.colors3.border.accent.green,
+            color = DonutSegmentColor.Green,
             title = stringReference("Tether"),
             fiatValue = stringReference("$520.18"),
         ),
