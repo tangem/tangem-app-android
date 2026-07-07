@@ -20,7 +20,7 @@ internal sealed class ForYouNotification(val state: TangemMessageBanner.State) {
                 tintReference = { TangemTheme.colors3.icon.primary },
             ),
             variant = TangemMessageBanner.Variant.Warning,
-            isShowGlowRing = false,
+            shouldShowGlowRing = false,
         ),
     )
 }
