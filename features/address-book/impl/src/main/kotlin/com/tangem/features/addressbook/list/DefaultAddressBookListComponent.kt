@@ -63,7 +63,7 @@ internal class DefaultAddressBookListComponent(
             is AddressBookListUM.Content -> AddressBookListScreen(
                 state = addressBookListUM,
                 onBackClick = router::pop,
-                modifier = modifier.background(TangemTheme.colors3.bg.primary),
+                modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             )
         }
         selector.child?.instance?.BottomSheet()

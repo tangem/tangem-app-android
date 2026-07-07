@@ -321,7 +321,6 @@ internal class SaveContactInteractorTest {
         networkId = networkRawId,
         memo = memo,
         signature = "sig",
-        networkName = "Ethereum",
     )
 
     private fun expectedHash(contact: Contact, entry: AddressEntry): ByteArray {

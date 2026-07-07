@@ -589,7 +589,6 @@ internal class SendDestinationModelTest {
                 id = AddressEntryId("e1"),
                 address = address,
                 networkId = Network.RawID(networkRawId),
-                networkName = "Ethereum",
                 memo = null,
                 signature = "",
             ),

@@ -43,7 +43,7 @@ internal fun AddressBookListScreen(
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
-    Column(modifier = modifier) {
+    Column(modifier = modifier.fillMaxSize()) {
         TangemTopBar(
             modifier = Modifier.statusBarsPadding(),
             title = resourceReference(R.string.address_book_title),

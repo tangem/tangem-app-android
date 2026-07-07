@@ -90,7 +90,6 @@ internal class ContactMatcherTest {
         networkId = Network.RawID(networkId),
         memo = memo,
         signature = "sig",
-        networkName = "Ethereum",
     )
 
     private companion object {
