@@ -13,6 +13,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class TangemPayVirtualAccountDepositUM(
     val fees: ImmutableList<FeeRow>,
     val shouldShowTermsAndConditions: Boolean,
+    val isLoading: Boolean,
     val onShowDetailsClick: () -> Unit,
     val onDismiss: () -> Unit,
     val onTermsClick: () -> Unit,

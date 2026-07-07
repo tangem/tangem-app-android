@@ -1,10 +1,13 @@
 package com.tangem.features.tangempay.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayVirtualAccountDepositModel
 import com.tangem.features.tangempay.ui.TangemPayVirtualAccountDepositBottomSheet
 
@@ -25,12 +28,16 @@ internal class TangemPayVirtualAccountDepositComponent(
 
     @Composable
     override fun BottomSheet() {
-        TangemPayVirtualAccountDepositBottomSheet(state = model.uiState)
+        val state by model.uiState.collectAsStateWithLifecycle()
+        TangemPayVirtualAccountDepositBottomSheet(state = state)
     }
 
     data class Params(
         val virtualAccountOnramp: VirtualAccountOnramp,
+        val userWalletId: UserWalletId,
+        val paymentAccountAddress: String,
         val onDismiss: () -> Unit,
         val onShowDetails: (VirtualAccountOnramp.Available) -> Unit,
+        val onOrderCreated: () -> Unit,
     )
 }

@@ -35,6 +35,7 @@ interface OnboardingRepository {
     suspend fun createVirtualAccountOrder(
         userWalletId: UserWalletId,
         paymentAccountAddress: String,
+        idempotencyKey: String,
     ): Either<VisaApiError, String>
 
     suspend fun getVirtualAccountOrderId(userWalletId: UserWalletId): String?

@@ -181,13 +181,14 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun createVirtualAccountOrder(
         userWalletId: UserWalletId,
         paymentAccountAddress: String,
+        idempotencyKey: String,
     ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
         requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.createVirtualAccountOrder(
                 authHeader = authHeader,
                 body = VirtualAccountOrderRequest(
                     data = VirtualAccountOrderRequest.Data(depositAddress = paymentAccountAddress),
-                    idempotencyKey = UUID.randomUUID().toString(),
+                    idempotencyKey = idempotencyKey,
                 ),
             )
         }.map { response -> requireNotNull(response.result).id }
