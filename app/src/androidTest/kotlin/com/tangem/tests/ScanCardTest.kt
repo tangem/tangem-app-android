@@ -35,11 +35,7 @@ class ScanCardTest : BaseTestCase() {
                     openMainScreen(cardType)
                 }
                 step("Check 'Main' screen for '${cardType.name}' $cardBlockchain card") {
-                    checkSingleCurrencyMainScreen(
-                        cardBlockchain = cardBlockchain,
-                        cardTitle = cardType.name,
-                        withTransactions = true
-                    )
+                    checkSingleCurrencyMainScreen(cardTitle = cardType.name)
                 }
         }
     }
@@ -57,7 +53,7 @@ class ScanCardTest : BaseTestCase() {
                 openMainScreen(mockContent = cardType, isTwinsCard = true)
             }
             step("Check 'Main' screen for '$cardName' $cardBlockchain card") {
-                checkSingleCurrencyMainScreen(cardBlockchain = cardBlockchain, cardTitle = cardName)
+                checkSingleCurrencyMainScreen(cardTitle = cardName)
             }
         }
     }
@@ -66,7 +62,6 @@ class ScanCardTest : BaseTestCase() {
     @DisplayName("Scan: Card with Secp256k1 curve")
     @Test
     fun secpk1CurveCardScanTest() {
-        val devicesCount = "1 device"
         val cardType: MockContent = Secpk1CurveMockContent
         val cardName = "Wallet"
         val card = "card with Secp256k1 curve"
@@ -75,12 +70,8 @@ class ScanCardTest : BaseTestCase() {
             step("Open 'Main Screen' on $card") {
                 openMainScreen(mockContent = cardType)
             }
-            step("Check 'Main' screen for $card curve with devices count = '$devicesCount'") {
-                checkMultiCurrencyMainScreen(
-                    devicesCount = devicesCount,
-                    cardTitle = cardName,
-                    withWalletImage = false
-                )
+            step("Check 'Main' screen for $card curve") {
+                checkMultiCurrencyMainScreen(cardTitle = cardName)
             }
         }
     }
@@ -99,11 +90,7 @@ class ScanCardTest : BaseTestCase() {
                 openMainScreen(mockContent = cardType)
             }
             step("Check 'Main' screen for $card with blockchain: '$cardBlockchain'") {
-                checkSingleCurrencyMainScreen(
-                    cardBlockchain = cardBlockchain,
-                    cardTitle = cardName,
-                    withWalletImage = false
-                )
+                checkSingleCurrencyMainScreen(cardTitle = cardName)
             }
         }
     }
@@ -112,7 +99,6 @@ class ScanCardTest : BaseTestCase() {
     @DisplayName("Scan: 'Shiba' card")
     @Test
     fun shibaCardScanTest() {
-        val devicesCount = "2 devices"
         val cardType: MockContent = ShibaMockContent
         val cardName = "Wallet"
         val card = "Shiba"
@@ -121,8 +107,8 @@ class ScanCardTest : BaseTestCase() {
             step("Open 'Main Screen' on '$card' card") {
                 openMainScreen(mockContent = cardType)
             }
-            step("Check 'Main' screen for '$card' card with devices count = '$devicesCount'") {
-                checkMultiCurrencyMainScreen(devicesCount, cardName)
+            step("Check 'Main' screen for '$card' card") {
+                checkMultiCurrencyMainScreen(cardName)
             }
         }
     }
@@ -131,7 +117,6 @@ class ScanCardTest : BaseTestCase() {
     @DisplayName("Scan: 'Ring'")
     @Test
     fun ringScanTest() {
-        val devicesCount = "3 devices"
         val cardType: ProductType = ProductType.Ring
         val cardName = "Wallet"
         val ring = "Ring"
@@ -140,8 +125,8 @@ class ScanCardTest : BaseTestCase() {
             step("Open 'Main Screen' on '$ring'") {
                 openMainScreen(productType = cardType)
             }
-            step("Check 'Main' screen for '$ring' with devices count = '$devicesCount'") {
-                checkMultiCurrencyMainScreen(devicesCount, cardName)
+            step("Check 'Main' screen for '$ring'") {
+                checkMultiCurrencyMainScreen(cardName)
             }
         }
     }
@@ -150,7 +135,6 @@ class ScanCardTest : BaseTestCase() {
     @DisplayName("Scan: 'Wallet' card")
     @Test
     fun walletCardScanTest() {
-        val devicesCount = "1 device"
         val cardType: ProductType = ProductType.Wallet
         val cardName = "Wallet"
 
@@ -158,8 +142,8 @@ class ScanCardTest : BaseTestCase() {
             step("Open 'Main Screen' on '$cardName' card") {
                 openMainScreen(productType = cardType)
             }
-            step("Check 'Main' screen for '$cardName' card with devices count = '$devicesCount'") {
-                checkMultiCurrencyMainScreen(devicesCount, cardName)
+            step("Check 'Main' screen for '$cardName' card") {
+                checkMultiCurrencyMainScreen(cardName)
             }
         }
     }
@@ -168,7 +152,6 @@ class ScanCardTest : BaseTestCase() {
     @DisplayName("Scan: 'Wallet 2' card")
     @Test
     fun wallet2ScanTest() {
-        val devicesCount = "2 devices"
         val cardType: MockContent = Wallet2MockContent
         val cardName = "Wallet"
         val card = "Wallet 2"
@@ -177,8 +160,8 @@ class ScanCardTest : BaseTestCase() {
             step("Open 'Main Screen' on '$card' card") {
                 openMainScreen(mockContent = cardType)
             }
-            step("Check 'Main' screen for '$card' card with devices count = '$devicesCount'") {
-                checkMultiCurrencyMainScreen(devicesCount, cardName)
+            step("Check 'Main' screen for '$card' card") {
+                checkMultiCurrencyMainScreen(cardName)
             }
         }
     }
@@ -187,7 +170,6 @@ class ScanCardTest : BaseTestCase() {
     @DisplayName("Scan: Card with 4.12 firmware")
     @Test
     fun firmware412CardScanTest() {
-        val devicesCount = "1 device"
         val cardType: MockContent = Firmware412MockContent
         val cardName = "Tangem card"
         val card = "card with 4.12 firmware"
@@ -196,8 +178,8 @@ class ScanCardTest : BaseTestCase() {
             step("Open 'Main Screen' on '$card'") {
                 openMainScreen(mockContent = cardType)
             }
-            step("Check 'Main' screen for '$card' with devices count = '$devicesCount'") {
-                checkMultiCurrencyMainScreen(devicesCount, cardName)
+            step("Check 'Main' screen for '$card'") {
+                checkMultiCurrencyMainScreen(cardName)
             }
         }
     }

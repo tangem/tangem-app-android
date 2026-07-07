@@ -14,6 +14,7 @@ internal class AmountMaxValueStateTransformer(
     private val minimumTransactionAmount: EnterAmountBoundary?,
     private val actionType: StakingActionCommonType,
     private val integration: StakingIntegration,
+    private val isSolanaUnstakeValidationEnabled: Boolean,
 ) : Transformer<StakingUiState> {
 
     private val maxEnterAmountConverter = MaxEnterAmountConverter()
@@ -40,6 +41,7 @@ internal class AmountMaxValueStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 integration = integration,
                 actionType = prevState.actionType,
+                isSolanaUnstakeValidationEnabled = isSolanaUnstakeValidationEnabled,
             ).transform(updatedAmountState),
         )
     }

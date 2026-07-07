@@ -2,8 +2,6 @@ package com.tangem.scenarios
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
@@ -142,11 +140,14 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
 
 fun BaseTestCase.synchronizeAddresses(
     balance: String? = null,
-    isBalanceAvailable: Boolean = true
+    isBalanceAvailable: Boolean = true,
+    assertBalance: Boolean = true,
 ) {
     step("Click on 'Synchronize addresses' button") {
         onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
     }
+
+    if (!assertBalance) return
 
     when {
         !isBalanceAvailable -> step("Assert wallet balance = '$DASH_SIGN'") {
@@ -175,7 +176,10 @@ fun BaseTestCase.openDeviceSettingsScreen() {
         onDetailsScreen { walletNameButton.performClick() }
     }
     step("Click on 'Device settings' button") {
-        onWalletSettingsScreen { deviceSettingsButton.clickWithAssertion() }
+        onWalletSettingsScreen {
+            scrollToDeviceSettings()
+            deviceSettingsButton.clickWithAssertion()
+        }
     }
 }
 

@@ -4,12 +4,7 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -32,11 +27,7 @@ import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
 import com.tangem.core.ui.message.EventMessageEffect
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.LocalRootBackgroundColor
-import com.tangem.core.ui.res.LocalSnackbarHostState
-import com.tangem.core.ui.res.LocalTopSnackbarHostState
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.*
 import com.tangem.core.ui.security.ProvideSecureFlagController
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
@@ -124,20 +115,34 @@ private fun childrenAnimation(
     backHandler: BackHandler,
     onBack: () -> Unit,
 ): StackAnimation<AppRoute, RoutingComponent.Child> {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+    val routeAnimation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
         predictiveBackAnimation(
             backHandler = backHandler,
             onBack = onBack,
             selector = { backEvent, _, _ ->
                 androidPredictiveBackAnimatable(backEvent)
             },
-            fallbackAnimation = stackAnimation {
-                RoutingTransitionAnimationFactory.create(it.configuration)
+            fallbackAnimation = stackAnimation<AppRoute, RoutingComponent.Child> { child ->
+                RoutingTransitionAnimationFactory.create(child.configuration)
             },
         )
     } else {
-        stackAnimation {
-            RoutingTransitionAnimationFactory.create(it.configuration)
+        stackAnimation { child ->
+            RoutingTransitionAnimationFactory.create(child.configuration)
         }
+    }
+
+    return skipAnimationWhileInitial(routeAnimation)
+}
+
+private fun skipAnimationWhileInitial(
+    delegate: StackAnimation<AppRoute, RoutingComponent.Child>,
+): StackAnimation<AppRoute, RoutingComponent.Child> = StackAnimation { stack, animModifier, content ->
+    if (stack.active.configuration is AppRoute.Initial) {
+        Box(modifier = animModifier) {
+            content(stack.active)
+        }
+    } else {
+        delegate(stack, animModifier, content)
     }
 }

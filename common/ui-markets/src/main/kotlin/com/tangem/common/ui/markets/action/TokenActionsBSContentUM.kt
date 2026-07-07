@@ -43,6 +43,10 @@ data class TokenActionsBSContentUM(
             text = resourceReference(R.string.common_exchange),
             iconRes = R.drawable.ic_exchange_horizontal_24,
         ),
+        SendWithSwap(
+            text = resourceReference(R.string.common_send_with_swap),
+            iconRes = R.drawable.ic_exchange_horizontal_24,
+        ),
         Stake(
             text = resourceReference(R.string.common_stake),
             iconRes = R.drawable.ic_staking_24,
