@@ -98,14 +98,20 @@
   <string name="address_book_add_address">添加地址</string>
   <string name="address_book_add_address_description">添加地址并选择网络</string>
   <string name="address_book_add_contact">添加联系人</string>
+  <string name="address_book_address_copied">地址已复制</string>
+  <string name="address_book_address_taken_error">此地址已保存为 %1$s</string>
   <plurals name="address_book_addresses" formatted="false">
     <item quantity="other">%d地址\n%d地址</item>
   </plurals>
+  <string name="address_book_choose_address">选择地址</string>
   <string name="address_book_contact">联系人</string>
   <string name="address_book_contact_name">联系人姓名</string>
   <string name="address_book_copy_address">复制地址</string>
+  <string name="address_book_create_success_message">联系人已保存</string>
   <string name="address_book_creating_error">无法创建联系人。请稍后再试。</string>
+  <string name="address_book_delete_contact">删除联系人</string>
   <string name="address_book_delete_contact_description">该联系人将从您所有的通讯录中删除</string>
+  <string name="address_book_delete_last_address">“%1$s“只有一个地址。删除此地址也会删除联系人。继续吗？”</string>
   <string name="address_book_deleting_error">无法删除联系人，请稍后再试。</string>
   <string name="address_book_description">管理联系人及地址</string>
   <string name="address_book_discard">取消</string>
@@ -113,11 +119,20 @@
   <string name="address_book_enter_address">输入地址</string>
   <string name="address_book_invalid_address_error">无效地址</string>
   <string name="address_book_keep_editing">继续编辑</string>
+  <string name="address_book_max_networks_alert_description">您最多只能创建 20 个地址。删除一个地址即可添加新地址。</string>
+  <string name="address_book_max_networks_alert_title">无法添加新地址</string>
+  <string name="address_book_name_empty_error">必须填写联系人姓名</string>
+  <string name="address_book_name_invalid_chars_error">联系人姓名包含无效字符</string>
+  <string name="address_book_name_max_chars_error">联系人姓名不得超过 50 个字符</string>
+  <string name="address_book_name_taken_error">这个钱包的名字已经被注册了</string>
   <string name="address_book_new_contact">新联系人</string>
   <string name="address_book_no_contacts">尚无联系人</string>
   <string name="address_book_no_contacts_description">添加的联系人将显示在此处</string>
   <string name="address_book_remove_address">移除地址</string>
+  <string name="address_book_save_contact">保存联系人</string>
+  <string name="address_book_save_to_wallet_title">保存到钱包</string>
   <string name="address_book_save_wallet_to_description">该联系人将与该钱包的通讯录关联。</string>
+  <string name="address_book_search_no_results">未找到结果。\n请尝试其他名称</string>
   <string name="address_book_select_network">选择网络</string>
   <string name="address_book_title">地址簿</string>
   <string name="address_book_unsaved_changes">未保存的更改</string>
@@ -1185,6 +1200,7 @@
   <string name="onramp_min_amount_restriction">购买金额必须至少 %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">累计交易金额超过 %1s 时，可能需要通过 %2s进行身份验证</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">累计交易金额超过等值金额 %1s 可能需要通过 %2s进行身份验证</string>
+  <string name="onramp_native_payment_identity_verification">Apple Pay 交易可能需要通过以下方式进行身份验证： %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">点击“支付”即表示您同意 %1s的 %2s 和 %3s。</string>
   <string name="onramp_no_available_providers">目前没有提供此货币的供应商</string>
   <string name="onramp_offer_type_fastet">最快处理</string>
@@ -2261,6 +2277,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">您必须先将此代币与您的 Hedera 账户关联才能收到它。</string>
   <string name="warning_hedera_missing_token_association_title">关联您的代币</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%s不够。请为您的 Hedera 账户充值以关联此代币</string>
+  <string name="warning_incomplete_backup_notification_message">我们发现，由于您的设备NFC模块存在问题，或者将卡片轻触手机的方式不正确，导致卡片激活流程未能正常完成。请联系我们的客服团队以获取更多详情。</string>
+  <string name="warning_incomplete_backup_notification_title">必须采取行动。不要用你的钱包！</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">您确定要取消交易吗？取消后您将无法再次尝试交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">您金额为 %1$s %2$s 的交易未完成。您可以再次尝试完成交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">您有未完成的交易</string>
@@ -2284,7 +2302,7 @@
   <string name="warning_no_backup_title">缺少备份</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">此卡曾用于交易。如果是从不可信来源收到的，请考虑提取所有资金。如果是您的卡，则无需采取任何措施。</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">卡片已签署交易</string>
-  <string name="warning_outdated_data_message">将尽快更新</string>
+  <string name="warning_outdated_data_message">部分代币余额无法更新</string>
   <string name="warning_outdated_data_title">缺少部分代币余额</string>
   <string name="warning_rate_app_message">您的评价激励我们不断改进 Tangem Wallet。</string>
   <string name="warning_rate_app_title">喜欢 Tangem 吗？</string>
