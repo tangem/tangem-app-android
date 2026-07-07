@@ -15,6 +15,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
+import com.tangem.domain.txhistory.list.HistoryTxListManager
+import com.tangem.domain.txhistory.list.txHistoryInfoFlow
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -30,9 +32,7 @@ import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
-import com.tangem.features.txhistory.utils.HistoryTxListManager
-import com.tangem.features.txhistory.utils.TxHistoryListManager
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.features.txhistory.utils.*
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -99,6 +99,7 @@ internal class TxHistoryModel @Inject constructor(
         historyTxListManagerFactory.create(
             userWalletId = params.userWalletId,
             currency = params.currency,
+            modelScope = modelScope,
         )
     } else {
         null
@@ -133,23 +134,34 @@ internal class TxHistoryModel @Inject constructor(
 
         if (historyTxListManager != null) {
             combine(
-                flow = historyTxListManager.items,
+                flow = historyTxListManager.state,
                 flow2 = lookupDataFlow,
-                transform = { merged, lookup -> merged to lookup },
+                transform = { state, lookup -> state to lookup },
             )
-                .onEach { (merged, lookup) ->
-                    stateController.setContent(
-                        snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(merged, lookup)),
-                        loadMore = ::loadMoreItems,
-                        onExploreClick = ::openExplorer,
-                    )
-                }
+                .onEach { (state, lookup) -> applyHistoryState(state, lookup) }
                 .flowOn(dispatchers.default)
                 .launchIn(modelScope)
+        }
+    }
 
-            historyTxListManager.paginationStatus
-                .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
-                .launchIn(modelScope)
+    private fun applyHistoryState(state: HistoryTxListManager.HistoryState, lookup: TxHistoryLookupContext) {
+        when (state) {
+            HistoryTxListManager.HistoryState.Loading ->
+                stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
+            HistoryTxListManager.HistoryState.Unavailable ->
+                stateController.setNotSupported(onExploreClick = ::openExplorer)
+            HistoryTxListManager.HistoryState.Empty ->
+                stateController.setEmpty(onExploreClick = ::openExplorer)
+            HistoryTxListManager.HistoryState.Error ->
+                stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
+            is HistoryTxListManager.HistoryState.Content -> {
+                stateController.setContent(
+                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup)),
+                    loadMore = ::loadMoreItems,
+                    onExploreClick = ::openExplorer,
+                )
+                stateController.updateLoadingMore(isLoadingMore = state.isLoadingMore)
+            }
         }
     }
 
@@ -192,19 +204,17 @@ internal class TxHistoryModel @Inject constructor(
     private fun initListManager() {
         modelScope.launch {
             txHistoryListManager?.init()
-            historyTxListManager?.init()
         }
     }
 
     private fun loadTxInfo() {
         stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
         modelScope.launch {
-            txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
-                .onLeft(::handleErrorState)
-                .onRight {
-                    txHistoryListManager?.startLoading()
-                    historyTxListManager?.startLoading()
-                }
+            txHistoryListManager?.let { legacy ->
+                txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
+                    .onLeft(::handleErrorState)
+                    .onRight { legacy.startLoading() }
+            }
         }
         if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
             val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
@@ -219,13 +229,13 @@ internal class TxHistoryModel @Inject constructor(
         if (stateController.isNotSupported) return
 
         stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
+        historyTxListManager?.reload()
         modelScope.launch {
-            txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
-                .onLeft(::handleErrorState)
-                .onRight {
-                    txHistoryListManager?.reload()
-                    historyTxListManager?.reload()
-                }
+            txHistoryListManager?.let { legacy ->
+                txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
+                    .onLeft(::handleErrorState)
+                    .onRight { legacy.reload() }
+            }
             if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
                 val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
                     walletId = params.userWalletId,
@@ -245,9 +255,9 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
+        historyTxListManager?.loadMore()
         modelScope.launch {
             txHistoryListManager?.loadMore(params.userWalletId, params.currency)
-            historyTxListManager?.loadMore(params.userWalletId, params.currency)
         }
         return true
     }
