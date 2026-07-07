@@ -2,6 +2,7 @@ package com.tangem.features.onramp.main.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,12 +10,15 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
+import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
@@ -30,9 +34,9 @@ import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.isNullOrZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -46,6 +50,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
+    private val rampStateManager: RampStateManager,
     private val amountInputManager: InputManager,
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -222,6 +227,8 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleOnrampAvailability(availability: OnrampAvailability) {
+        // "Buy not supported" notification has priority over the residency flow.
+        if (state.value.buyNotSupportedMessage != null) return
         when (availability) {
             is OnrampAvailability.Available -> Unit
             is OnrampAvailability.ConfirmResidency,
@@ -274,21 +281,28 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifLeft = ::handleOnrampError,
                     ifRight = { country ->
                         if (country == null) return@onEach
-                        state.update { prevState ->
-                            when (prevState) {
-                                is OnrampMainComponentUM.Content -> {
-                                    amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
-                                }
-                                is OnrampMainComponentUM.InitialLoading -> {
-                                    stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
-                                }
-                            }
+                        // Resolve token-level buy support BEFORE emitting any Content state, so an
+                        // unsupported token never briefly shows an enabled amount field — otherwise it
+                        // would grab focus and flash the keyboard before being disabled.
+                        if (isTokenNotSupportedForBuy()) {
+                            showBuyNotSupported(country)
+                        } else {
+                            state.update { prevState -> getCountryUpdatedState(prevState, country) }
+                            updatePairsAndQuotes()
                         }
-                        updatePairsAndQuotes()
                     },
                 )
             }
             .launchIn(modelScope)
+    }
+
+    private fun getCountryUpdatedState(
+        prevState: OnrampMainComponentUM,
+        country: OnrampCountry,
+    ): OnrampMainComponentUM = when (prevState) {
+        is OnrampMainComponentUM.Content -> amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
+        is OnrampMainComponentUM.InitialLoading ->
+            stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
     }
 
     private fun subscribeToQuotesUpdate() {
@@ -356,9 +370,41 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
     }
 
+    private suspend fun isTokenNotSupportedForBuy(): Boolean {
+        // Token-level "cannot be bought", independent of country: the asset is either flagged as
+        // not onrampable (BuyUnavailable) or absent from the express asset list (AssetNotFound).
+        // Transient express states (loading/unreachable) are NOT treated as "not supported".
+        val reason = rampStateManager.availableForBuy(
+            userWallet = userWallet,
+            cryptoCurrency = params.cryptoCurrency,
+        )
+        return reason is ScenarioUnavailabilityReason.BuyUnavailable ||
+            reason is ScenarioUnavailabilityReason.AssetNotFound
+    }
+
     private fun handleOnrampError(onrampError: OnrampError) {
         TangemLogger.e(onrampError.toString())
         state.update { stateFactory.getOnrampErrorState(onrampError) }
+    }
+
+    private fun showBuyNotSupported(country: OnrampCountry) {
+        if (state.value.buyNotSupportedMessage != null) return
+
+        analyticsEventHandler.send(
+            OnrampAnalyticsEvent.NoticeBuyNotSupported(
+                source = params.source,
+                tokenSymbol = params.cryptoCurrency.symbol,
+                blockchain = params.cryptoCurrency.network.name,
+            ),
+        )
+        quotesTaskScheduler.cancelTask()
+        // "Not supported" has priority: hide the residency bottom sheet if it was already shown.
+        bottomSheetNavigation.dismiss()
+        // Emit the not-supported state in a single update built from the ready state, so the amount
+        // field never appears enabled first (no focus/keyboard flash).
+        state.update { prevState ->
+            stateFactory.getBuyNotSupportedState(getCountryUpdatedState(prevState, country))
+        }
     }
 
     private fun sendOnrampQuotesErrorAnalytic(quotes: List<OnrampQuote>) {
