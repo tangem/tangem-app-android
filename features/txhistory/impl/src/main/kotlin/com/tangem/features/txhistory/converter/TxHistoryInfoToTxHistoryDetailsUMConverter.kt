@@ -51,6 +51,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
 
     override fun convert(value: TxHistoryInfo): TxHistoryDetailsUM = when (value) {
         is OnChainTx.BSDK -> onChainConverter.convert(value.txInfo)
+        // todo txHistory: build the details card for standalone TangemPay rows when TangemPay is wired in
+        is OnChainTx.TangemPay -> TODO("TangemPay on-chain details rendering is not implemented yet")
         is ExpressTx -> expressConverter.convert(value)
     }
 }
