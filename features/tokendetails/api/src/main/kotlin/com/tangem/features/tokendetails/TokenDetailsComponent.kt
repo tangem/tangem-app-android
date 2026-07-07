@@ -12,6 +12,7 @@ interface TokenDetailsComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val navigationAction: NavigationAction? = null,
+        val shouldShowMarketBlock: Boolean = true,
     )
 
     interface Factory : ComponentFactory<Params, TokenDetailsComponent>
