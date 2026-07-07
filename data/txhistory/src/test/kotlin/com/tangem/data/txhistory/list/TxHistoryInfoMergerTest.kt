@@ -1,4 +1,4 @@
-package com.tangem.features.txhistory.utils
+package com.tangem.data.txhistory.list
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.express.models.ExchangeTransaction
