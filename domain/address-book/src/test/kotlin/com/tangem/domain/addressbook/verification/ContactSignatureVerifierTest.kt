@@ -253,7 +253,6 @@ class ContactSignatureVerifierTest {
         id = AddressEntryId(id),
         address = address,
         networkId = Network.RawID("ethereum"),
-        networkName = "Ethereum",
         memo = memo,
         signature = signature,
     )
