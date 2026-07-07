@@ -22,12 +22,12 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
-import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
-import com.tangem.features.rating.RatingComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -88,12 +88,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         },
     )
 
-    private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
-        tokenMarketBlockComponentFactory.create(
-            appComponentContext = child("tokenMarketBlockComponent"),
-            params = tokenMarketParams,
-        )
-    }
+    private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()
+        ?.takeIf { params.shouldShowMarketBlock }
+        ?.let { tokenMarketParams ->
+            tokenMarketBlockComponentFactory.create(
+                appComponentContext = child("tokenMarketBlockComponent"),
+                params = tokenMarketParams,
+            )
+        }
 
     private val yieldSupplyComponent = yieldSupplyComponentFactory.create(
         context = child("tokenYieldSupplyComponent"),
