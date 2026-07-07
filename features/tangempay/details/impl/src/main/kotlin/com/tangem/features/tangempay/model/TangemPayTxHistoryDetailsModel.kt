@@ -17,9 +17,11 @@ import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUiStates
+import com.tangem.features.tangempay.entity.TransactionLoadState
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverter
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverterV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,16 +43,23 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private val params = paramsContainer.require<TangemPayTransactionBottomSheetComponent.Params>()
 
     private val transaction = MutableStateFlow(params.transaction)
+    private val transactionLoadState = MutableStateFlow(TransactionLoadState.Loading)
+    private var loadTransactionJob: Job? = null
 
     val uiState: StateFlow<TangemPayTxHistoryDetailsUiStates> = combine(
         balanceHidingSettings.isBalanceHidden(),
         transaction,
-    ) { isBalanceHidden, transaction ->
-        buildUiStates(isBalanceHidden, transaction)
+        transactionLoadState,
+    ) { isBalanceHidden, transaction, transactionLoadState ->
+        buildUiStates(isBalanceHidden, transaction, transactionLoadState)
     }.stateIn(
         scope = modelScope,
         started = SharingStarted.Eagerly,
-        initialValue = buildUiStates(isBalanceHidden = params.isBalanceHidden, transaction = params.transaction),
+        initialValue = buildUiStates(
+            isBalanceHidden = params.isBalanceHidden,
+            transaction = params.transaction,
+            transactionLoadState = transactionLoadState.value,
+        ),
     )
 
     init {
@@ -64,17 +73,25 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private fun loadTransaction() {
         val current = params.transaction
         if (current !is TangemPayTxHistoryItem.Spend) return
-        modelScope.launch {
+        if (loadTransactionJob?.isActive == true) return
+        loadTransactionJob = modelScope.launch {
+            transactionLoadState.value = TransactionLoadState.Loading
             tangemPayTxHistoryRepository.getTransaction(
                 userWalletId = params.userWalletId,
                 transactionId = current.id,
-            ).onRight { loaded -> if (loaded != null) transaction.value = loaded }
+            ).onRight { loaded ->
+                if (loaded != null) transaction.value = loaded
+                transactionLoadState.value = TransactionLoadState.Loaded
+            }.onLeft {
+                transactionLoadState.value = TransactionLoadState.Error
+            }
         }
     }
 
     private fun buildUiStates(
         isBalanceHidden: Boolean,
         transaction: TangemPayTxHistoryItem,
+        transactionLoadState: TransactionLoadState,
     ): TangemPayTxHistoryDetailsUiStates {
         val converterInput = TangemPayTxHistoryDetailsConverter.Input(
             item = transaction,
@@ -89,8 +106,10 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
                 value = TangemPayTxHistoryDetailsConverterV2.Input(
                     item = converterInput.item,
                     isBalanceHidden = converterInput.isBalanceHidden,
+                    transactionLoadState = transactionLoadState,
                     onExplorerClick = converterInput.onExplorerClick,
                     onDisputeClick = converterInput.onDisputeClick,
+                    onCardRefreshClick = ::loadTransaction,
                     onDismiss = converterInput.onDismiss,
                 ),
             ),

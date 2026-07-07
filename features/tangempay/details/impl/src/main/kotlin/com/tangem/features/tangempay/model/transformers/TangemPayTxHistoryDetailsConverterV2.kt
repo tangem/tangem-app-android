@@ -15,7 +15,9 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.ButtonState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
+import com.tangem.features.tangempay.entity.TransactionDetailUM
 import com.tangem.features.tangempay.entity.TransactionLabelUM
+import com.tangem.features.tangempay.entity.TransactionLoadState
 import com.tangem.features.tangempay.entity.TransactionStateType
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -34,7 +36,7 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
             subtitle = transaction.extractDate(),
             iconState = transaction.extractIcon(),
             transactionTitle = transaction.extractTransactionTitle(),
-            card = transaction.extractCard(),
+            detail = value.extractDetail(),
             transactionCategory = transaction.extractTransactionCategory(),
             mcc = transaction.extractMcc(),
             transactionAmount = transaction.extractAmount(),
@@ -290,8 +292,16 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
         }
     }
 
-    private fun TangemPayTxHistoryItem.extractCard(): TextReference? {
-        if (this !is TangemPayTxHistoryItem.Spend) return null
+    private fun Input.extractDetail(): TransactionDetailUM? {
+        val spend = item as? TangemPayTxHistoryItem.Spend ?: return null
+        return when (transactionLoadState) {
+            TransactionLoadState.Loading -> TransactionDetailUM.Loading
+            TransactionLoadState.Error -> TransactionDetailUM.Error(onRefreshClick = onCardRefreshClick)
+            TransactionLoadState.Loaded -> spend.extractCardValue()?.let(TransactionDetailUM::Content)
+        }
+    }
+
+    private fun TangemPayTxHistoryItem.Spend.extractCardValue(): TextReference? {
         val name = cardName?.takeIf { it.isNotEmpty() }
         val last4 = cardNumberLast4?.takeIf { it.isNotEmpty() }
         return when {
@@ -312,8 +322,10 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
     data class Input(
         val item: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
+        val transactionLoadState: TransactionLoadState,
         val onExplorerClick: (String?) -> Unit,
         val onDisputeClick: () -> Unit,
+        val onCardRefreshClick: () -> Unit,
         val onDismiss: () -> Unit,
     )
 }
