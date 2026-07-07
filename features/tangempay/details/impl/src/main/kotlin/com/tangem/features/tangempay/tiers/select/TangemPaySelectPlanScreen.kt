@@ -250,6 +250,7 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
+            isEnabled = !content.isProcessing,
             text = resourceReference(R.string.tangempay_select_plan_btn_cancel),
             onClick = content.onCancelClick,
         )
@@ -257,6 +258,7 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
+            isLoading = content.isProcessing,
             text = content.confirmButtonText,
             onClick = content.onConfirmClick,
         )
@@ -344,6 +346,7 @@ private fun previewState(isConfirm: Boolean) = TangemPaySelectPlanUM(
                 ),
             ),
             confirmButtonText = stringReference("Upgrade plan"),
+            isProcessing = false,
             onCancelClick = {},
             onConfirmClick = {},
         )

@@ -36,6 +36,7 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -87,6 +88,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
+    private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -168,6 +170,15 @@ internal class TangemPayDetailsModel @Inject constructor(
                 }
             }
             .launchIn(modelScope)
+    }
+
+    override fun onCancelPlusTransition(orderId: String) {
+        modelScope.launch {
+            cancelTangemPayOrderUseCase(userWalletId = userWalletId, orderId = orderId)
+                .onLeft {
+                    uiMessageSender.send(TangemPayMessagesFactory.createGenericError())
+                }
+        }
     }
 
     fun onStart() {

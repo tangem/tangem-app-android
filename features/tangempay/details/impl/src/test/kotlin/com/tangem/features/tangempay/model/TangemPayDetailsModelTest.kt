@@ -135,6 +135,7 @@ internal class TangemPayDetailsModelTest {
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
             getCustomerOffers = mockk(relaxed = true),
+            cancelTangemPayOrderUseCase = mockk(relaxed = true),
         )
     }
 

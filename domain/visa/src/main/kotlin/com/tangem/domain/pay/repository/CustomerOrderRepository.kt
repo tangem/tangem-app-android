@@ -40,4 +40,6 @@ interface CustomerOrderRepository {
         targetTariffPlanId: String? = null,
         transitionType: TangemPayTariffPlanTransition.Type? = null,
     ): Either<VisaApiError, Order>
+
+    suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit>
 }
