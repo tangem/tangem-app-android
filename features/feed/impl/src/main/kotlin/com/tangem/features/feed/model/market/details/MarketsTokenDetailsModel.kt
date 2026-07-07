@@ -401,6 +401,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.addedCurrency.currency,
+                shouldShowMarketBlock = false,
             ),
         )
     }
