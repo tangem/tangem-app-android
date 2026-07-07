@@ -3,6 +3,7 @@
     <style name="BaseAppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
 
     <style name="AppTheme" parent="BaseAppTheme">
+        <item name="android:windowBackground">@color/background_secondary</item>
         <item name="colorPrimary">@color/menu_accent_color</item>
         <item name="colorSecondary">@color/menu_accent_color</item>
         <item name="android:textColor">@color/text_primary_1</item>

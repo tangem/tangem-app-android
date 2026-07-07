@@ -62,6 +62,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "ravencoin" -> Blockchain.Ravencoin
         "ravencoin/test" -> Blockchain.RavencoinTestnet
         "cosmos" -> Blockchain.Cosmos
+        "gonka" -> Blockchain.Gonka
         "cosmos/test" -> Blockchain.CosmosTestnet
         "terra" -> Blockchain.TerraV1
         "terra-2" -> Blockchain.TerraV2
@@ -242,6 +243,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Ravencoin -> "ravencoin"
         Blockchain.RavencoinTestnet -> "ravencoin/test"
         Blockchain.Cosmos -> "cosmos"
+        Blockchain.Gonka -> "gonka"
         Blockchain.CosmosTestnet -> "cosmos/test"
         Blockchain.TerraV1 -> "terra"
         Blockchain.TerraV2 -> "terra-2"
@@ -398,6 +400,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Kava, Blockchain.KavaTestnet -> "kava"
         Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> "ravencoin"
         Blockchain.Cosmos, Blockchain.CosmosTestnet -> "cosmos"
+        Blockchain.Gonka -> "gonka"
         Blockchain.TerraV1 -> "terra-luna"
         Blockchain.TerraV2 -> "terra-luna-2"
         Blockchain.Cronos -> "crypto-com-chain"

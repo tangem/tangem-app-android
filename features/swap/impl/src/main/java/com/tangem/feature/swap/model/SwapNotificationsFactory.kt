@@ -20,6 +20,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -76,6 +77,19 @@ internal class SwapNotificationsFactory(
         return persistentListOf(
             SwapNotificationUM.Warning.SwapNotSupported,
         )
+    }
+
+    fun getDestinationRequirementNotifications(
+        requirement: AssetRequirementsCondition,
+        onAssociateClick: () -> Unit,
+    ): ImmutableList<NotificationUM> {
+        val notification = when (requirement) {
+            is AssetRequirementsCondition.RequiredTrustline ->
+                SwapNotificationUM.Warning.TokenTrustlineRequired(onAssociateClick)
+            else ->
+                SwapNotificationUM.Warning.TokenAssociationRequired(onAssociateClick)
+        }
+        return persistentListOf(notification)
     }
 
     fun getQuotesErrorStateNotifications(
@@ -208,6 +222,7 @@ internal class SwapNotificationsFactory(
             cryptoCurrency = swapCurrencyStatus.currency,
             feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
             isAccountFunded = true, // consider the account is funded on the provider side
+            hasRequiredTrustline = false,
         )
         addReduceAmountNotification(
             cryptoCurrencyStatus = swapCurrencyStatus.status,
@@ -249,7 +264,7 @@ internal class SwapNotificationsFactory(
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    onApproveClick = actions.openPermissionBottomSheet,
+                    onApproveClick = actions.onApproveClick,
                     onLearnMoreClick = { actions.onLinkClick(TangemSiteUrlBuilder.HELP_CENTER_SWAP_URL) },
                 ),
             )
@@ -346,6 +361,15 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
+                add(
+                    getWarningForError(
+                        expressDataError = ExpressDataError.TooLargeSolanaTransactionError(),
+                        fromToken = quoteModel.fromTokenInfo.swapCurrencyStatus.currency,
+                        onRetryClick = actions.onRetryClick,
+                    ),
+                )
+            }
             is GetFeeError.DataError -> {
                 val error = feeError.cause
                 if (error is ExpressDataError) {

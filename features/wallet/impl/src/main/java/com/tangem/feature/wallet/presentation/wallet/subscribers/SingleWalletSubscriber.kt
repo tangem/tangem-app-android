@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -12,7 +13,9 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 
+@Suppress("LongParameterList")
 internal class SingleWalletSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet.Cold,
     override val accountDependencies: AccountDependencies,
@@ -20,6 +23,7 @@ internal class SingleWalletSubscriber @AssistedInject constructor(
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
     override val isAddAndManageTokensEnabled: Boolean
@@ -30,6 +34,7 @@ internal class SingleWalletSubscriber @AssistedInject constructor(
         flow2 = getAppCurrencyFlow(),
         flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet),
         flow4 = accountDependencies.isAccountsModeEnabledUseCase(),
+        flow5 = flowOf(tangemPayFeatureToggles.isMultipleCardsEnabled),
         transform = ::updateState2,
     )
 
