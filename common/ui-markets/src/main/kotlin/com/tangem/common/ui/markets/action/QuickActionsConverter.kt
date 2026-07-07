@@ -4,6 +4,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 
 object QuickActionsConverter {
 
@@ -13,8 +14,9 @@ object QuickActionsConverter {
         isRedesignEnabled: Boolean,
         context: TokenActionsContext = TokenActionsContext.Markets,
     ): QuickActions {
+        val states = toQuickActionStates(cryptoData.actions, isRedesignEnabled, context)
         return QuickActions(
-            actions = toQuickActions(cryptoData.actions, isRedesignEnabled, context),
+            actions = states.map { it.action }.toImmutableList(),
             onQuickActionClick = { quickActionUM ->
                 tokenActionsHandler.handle(
                     action = quickActionUM.toHandledAction(),
@@ -30,6 +32,7 @@ object QuickActionsConverter {
                     )
                 }
             },
+            disabledActions = states.filterNot { it.isEnabled }.map { it.action }.toImmutableSet(),
         )
     }
 
@@ -45,29 +48,51 @@ object QuickActionsConverter {
     }
 
     /**
-     * Returns available actions filtered to [context]'s allow-list and ordered by it.
-     * Omitting [context] (default [TokenActionsContext.Markets]) yields all available actions in source order;
-     * a context with a non-null [TokenActionsContext.allowedActionsInOrder] filters to and orders by that list.
+     * Returns actions filtered and ordered for [context].
+     * Omitting [context] (default [TokenActionsContext.Markets]) yields only available actions in source order.
+     * A context with a non-null [TokenActionsContext.allowedActionsInOrder] returns that list's actions in order,
+     * including unavailable ones (they are meant to be shown disabled by the caller).
      */
     fun toQuickActions(
         actions: List<TokenActionsState.ActionState>,
         isRedesignEnabled: Boolean,
         context: TokenActionsContext = TokenActionsContext.Markets,
-    ): ImmutableList<QuickActionUM> {
-        val available = actions.filter { it.unavailabilityReason == ScenarioUnavailabilityReason.None }
-        val allowed = context.allowedActionsInOrder
-            ?: return available.mapNotNull { it.toQuickActionUM(isRedesignEnabled) }.toImmutableList()
+    ): ImmutableList<QuickActionUM> =
+        toQuickActionStates(actions, isRedesignEnabled, context).map { it.action }.toImmutableList()
 
-        val byBsAction = available.associateBy { it.toBsAction() }
-        val hasExchange = byBsAction.containsKey(TokenActionsBSContentUM.Action.Exchange)
+    private fun toQuickActionStates(
+        actions: List<TokenActionsState.ActionState>,
+        isRedesignEnabled: Boolean,
+        context: TokenActionsContext,
+    ): List<QuickActionState> {
+        val allowed = context.allowedActionsInOrder
+            ?: return actions
+                .filter { it.unavailabilityReason == ScenarioUnavailabilityReason.None }
+                .mapNotNull { action ->
+                    action.toQuickActionUM(isRedesignEnabled)?.let { QuickActionState(it, isEnabled = true) }
+                }
+
+        val byBsAction = actions.associateBy { it.toBsAction() }
+        val isExchangeAvailable = byBsAction[TokenActionsBSContentUM.Action.Exchange]
+            ?.unavailabilityReason == ScenarioUnavailabilityReason.None
         return allowed.mapNotNull { action ->
             when (action) {
                 TokenActionsBSContentUM.Action.SendWithSwap ->
-                    if (hasExchange) swapAndSendUM(isRedesignEnabled) else null
-                else -> byBsAction[action]?.toQuickActionUM(isRedesignEnabled)
+                    if (isExchangeAvailable) {
+                        QuickActionState(swapAndSendUM(isRedesignEnabled), isEnabled = true)
+                    } else {
+                        null
+                    }
+                else -> {
+                    val state = byBsAction[action] ?: return@mapNotNull null
+                    val um = state.toQuickActionUM(isRedesignEnabled) ?: return@mapNotNull null
+                    QuickActionState(um, isEnabled = state.unavailabilityReason == ScenarioUnavailabilityReason.None)
+                }
             }
-        }.toImmutableList()
+        }
     }
+
+    private data class QuickActionState(val action: QuickActionUM, val isEnabled: Boolean)
 
     private fun swapAndSendUM(isRedesignEnabled: Boolean): QuickActionUM =
         if (isRedesignEnabled) QuickActionUM.V2.SwapAndSend else QuickActionUM.V1.SwapAndSend
