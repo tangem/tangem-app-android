@@ -31,6 +31,7 @@ import com.tangem.features.commonfeatures.impl.R
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.PortfolioBadgeUM
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
@@ -42,6 +43,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
     private val designFeatureToggles: DesignFeatureToggles,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
 ) {
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
@@ -145,36 +147,45 @@ internal class TokenActionsUiBuilder @Inject constructor(
     }
 
     private fun createPortfolioBadge(cryptoCurrencyData: CryptoCurrencyData): PortfolioBadgeUM {
-        return if (cryptoCurrencyData.isAccountMode) {
-            val icon = CryptoPortfolioIconConverter.convert(cryptoCurrencyData.account.account.icon)
-            val name = cryptoCurrencyData
-                .account
-                .account
-                .accountName
-                .toUM()
-                .value
-            PortfolioBadgeUM.Account(
-                badge = TangemBadgeUM(
-                    text = name,
-                    tangemIconUM = TangemIconUM.Icon(
-                        iconRes = icon.value.getResId(),
-                        tintReference = { icon.color.getUiColor() },
+        return when {
+            cryptoCurrencyData.isAccountMode -> {
+                val icon = CryptoPortfolioIconConverter.convert(cryptoCurrencyData.account.account.icon)
+                val name = cryptoCurrencyData
+                    .account
+                    .account
+                    .accountName
+                    .toUM()
+                    .value
+                PortfolioBadgeUM.Account(
+                    badge = TangemBadgeUM(
+                        text = name,
+                        tangemIconUM = TangemIconUM.Icon(
+                            iconRes = icon.value.getResId(),
+                            tintReference = { icon.color.getUiColor() },
+                        ),
+                        size = TangemBadgeSize.X6,
+                        shape = TangemBadgeShape.Rounded,
+                        iconPosition = TangemBadgeIconPosition.Start,
+                        shouldRespectIconTint = true,
                     ),
-                    size = TangemBadgeSize.X6,
-                    shape = TangemBadgeShape.Rounded,
-                    iconPosition = TangemBadgeIconPosition.Start,
-                    shouldRespectIconTint = true,
-                ),
-            )
-        } else {
-            val userWallet = cryptoCurrencyData.userWallet
-            PortfolioBadgeUM.Wallet(
-                name = stringReference(userWallet.name),
-                deviceIcon = walletIconUMConverter.convert(
-                    getWalletIconUseCase(cryptoCurrencyData.userWallet),
-                ),
-            )
+                )
+            }
+            isSingleWallet() -> PortfolioBadgeUM.None
+            else -> {
+                val userWallet = cryptoCurrencyData.userWallet
+                PortfolioBadgeUM.Wallet(
+                    name = stringReference(userWallet.name),
+                    deviceIcon = walletIconUMConverter.convert(
+                        getWalletIconUseCase(cryptoCurrencyData.userWallet),
+                    ),
+                )
+            }
         }
+    }
+
+    private fun isSingleWallet(): Boolean {
+        val count = runCatching { getWalletsUseCase.invokeSync().size }.getOrNull() ?: return false
+        return count <= 1
     }
 
     private fun createSubtitle2State(status: CryptoCurrencyStatus): TokenItemState.Subtitle2State? {
