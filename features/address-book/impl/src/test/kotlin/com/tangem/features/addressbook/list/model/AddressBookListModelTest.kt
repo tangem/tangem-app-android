@@ -4,18 +4,15 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
-import com.tangem.domain.addressbook.model.AddressEntry
-import com.tangem.domain.addressbook.model.AddressEntryId
-import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.ContactId
-import com.tangem.domain.addressbook.model.ContactName
-import com.tangem.domain.addressbook.model.VerifiedContact
+import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.ContactSelectionTrigger
+import com.tangem.features.addressbook.analytics.AddressBookEvents.ContactListScreenOpened.Source
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.list.state.AddressBookListStateController
 import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
@@ -25,6 +22,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -32,7 +30,10 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -40,6 +41,7 @@ internal class AddressBookListModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val contactSelectionTrigger: ContactSelectionTrigger = mockk(relaxed = true)
+    private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
 
@@ -47,7 +49,7 @@ internal class AddressBookListModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getVerifiedContactsInteractor, getWalletsUseCase)
+        clearMocks(getVerifiedContactsInteractor, getWalletsUseCase, analyticsSender, contactSelectionTrigger)
         every { getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true) } returns
             flowOf(linkedMapOf<UserWalletId, UserWallet>())
     }
@@ -119,6 +121,57 @@ internal class AddressBookListModelTest {
         assertThat(clickedId).isEqualTo("42")
     }
 
+    @Test
+    fun `GIVEN default mode WHEN created THEN ContactListScreenOpened sent with settings source and all-tab count`() =
+        runTest {
+            // Arrange
+            every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
+                flowOf(listOf(verifiedContact(id = "1", name = "Alice"), verifiedContact(id = "2", name = "Bob")))
+
+            // Act
+            createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
+            advanceUntilIdle()
+
+            // Assert — count comes from the list's own contacts subscription.
+            verify(exactly = 1) {
+                analyticsSender.sendContactListScreenOpened(source = Source.Settings, contactsCount = 2, scope = any())
+            }
+        }
+
+    @Test
+    fun `GIVEN selector mode WHEN created THEN ContactListScreenOpened sent with send_flow source`() = runTest {
+        // Arrange
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns flowOf(emptyList())
+
+        // Act
+        createModel(testScope = this, mode = AddressBookRoute.ListMode.Selector(networkId = "ethereum"))
+        advanceUntilIdle()
+
+        // Assert — the "See all" list opened from Send reports send_flow, even with zero contacts.
+        verify(exactly = 1) {
+            analyticsSender.sendContactListScreenOpened(source = Source.SendFlow, contactsCount = 0, scope = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN selector mode WHEN contact picked THEN ContactSelectedInSend sent`() = runTest {
+        // Arrange — a contact with a single ethereum address matches the selection network.
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
+            flowOf(listOf(verifiedContact(id = "42", name = "Alice")))
+        val model = createModel(
+            testScope = this,
+            mode = AddressBookRoute.ListMode.Selector(networkId = "ethereum"),
+        )
+        advanceUntilIdle()
+
+        // Act — tapping a contact in selector mode picks it.
+        (model.state.value as AddressBookListUM.Content).contacts.first().onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
+    }
+
     private fun verifiedContact(id: String, name: String): VerifiedContact = VerifiedContact(
         contact = Contact(
             id = ContactId(id),
@@ -159,6 +212,7 @@ internal class AddressBookListModelTest {
             stateController = AddressBookListStateController(),
             router = router,
             contactSelectionTrigger = contactSelectionTrigger,
+            analyticsSender = analyticsSender,
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             getWalletsUseCase = getWalletsUseCase,
         ).also { model = it }
