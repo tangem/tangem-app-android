@@ -37,7 +37,6 @@ internal class ContactAddressEntriesConverter {
             id = AddressEntryId(UUID.randomUUID().toString()),
             address = address,
             networkId = Network.RawID(rawId),
-            networkName = blockchain?.fullName ?: rawId,
             memo = memo?.takeIf { hasExtrasSupport },
             signature = "",
         )
