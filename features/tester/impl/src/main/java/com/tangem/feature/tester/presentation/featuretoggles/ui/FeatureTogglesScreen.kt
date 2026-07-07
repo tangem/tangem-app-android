@@ -13,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
@@ -25,9 +27,12 @@ import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWit
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.common.components.notification.CustomSetupNotification
 import com.tangem.feature.tester.presentation.common.components.notification.InitialSetupNotification
-import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
-import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
+import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureToggleGroupUM
+import com.tangem.feature.tester.presentation.featuretoggles.state.TesterFeatureToggleUM
+import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesScreenUM
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Screen with feature toggles list
@@ -36,7 +41,7 @@ import kotlinx.collections.immutable.persistentListOf
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
+internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -70,15 +75,27 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
             }
         }
 
-        items(
-            items = state.featureToggles,
-            key = TesterFeatureToggle::name,
-            contentType = { "feature_toggle_item" },
-        ) { featureToggle ->
-            FeatureToggleItem(
-                toggle = featureToggle,
-                onCheckedChange = { isChange -> state.onToggleValueChange(featureToggle.name, isChange) },
-            )
+        state.featureToggleGroups.fastForEachIndexed { index, group ->
+            if (index != 0) {
+                item(key = "divider_${group.status.name}", contentType = "group_divider") {
+                    DividerWithPadding(horizontal = 16.dp, vertical = 8.dp)
+                }
+            }
+
+            item(key = "header_${group.status.name}", contentType = "group_header") {
+                GroupHeader(title = "${group.status.emoji} ${group.status.title}")
+            }
+
+            items(
+                items = group.toggles,
+                key = TesterFeatureToggleUM::name,
+                contentType = { "feature_toggle_item" },
+            ) { featureToggle ->
+                FeatureToggleItem(
+                    toggle = featureToggle,
+                    onCheckedChange = { isChange -> state.onToggleValueChange(featureToggle.name, isChange) },
+                )
+            }
         }
 
         item {
@@ -94,7 +111,22 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
 }
 
 @Composable
-private fun FeatureToggleItem(toggle: TesterFeatureToggle, onCheckedChange: (Boolean) -> Unit) {
+private fun GroupHeader(title: String) {
+    Text(
+        text = title,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = TangemTheme.dimens.spacing18,
+                vertical = TangemTheme.dimens.spacing8,
+            ),
+        color = TangemTheme.colors.text.primary1,
+        style = TangemTheme.typography.h3,
+    )
+}
+
+@Composable
+private fun FeatureToggleItem(toggle: TesterFeatureToggleUM, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -105,14 +137,35 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggle, onCheckedChange: (Boo
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = toggle.name,
-            modifier = Modifier.weight(1f),
-            color = TangemTheme.colors.text.primary1,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = TangemTheme.typography.body2,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = toggle.name,
+                color = TangemTheme.colors.text.primary1,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = TangemTheme.typography.body2,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = toggle.version,
+                    color = TangemTheme.colors.text.tertiary,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    style = TangemTheme.typography.caption2,
+                )
+                if (toggle.status == TesterFeatureToggleUM.Status.RELEASED && !toggle.isEnabled) {
+                    Text(
+                        text = "Disabled",
+                        color = TangemTheme.colors.text.warning,
+                        maxLines = 1,
+                        style = TangemTheme.typography.caption2,
+                    )
+                }
+            }
+        }
 
         TangemSwitch(onCheckedChange = onCheckedChange, checked = toggle.isEnabled)
     }
@@ -126,7 +179,7 @@ private fun PreviewFeatureTogglesScreen() {
         var isCustomSetup by remember { mutableStateOf(value = true) }
 
         FeatureTogglesScreen(
-            state = FeatureTogglesContentState(
+            state = FeatureTogglesScreenUM(
                 topBar = TopBarWithRefreshUM(
                     titleResId = R.string.feature_toggles,
                     onBackClick = {},
@@ -135,14 +188,34 @@ private fun PreviewFeatureTogglesScreen() {
                         onRefreshClick = { isCustomSetup = false },
                     ),
                 ),
-                appVersion = "5.15",
-                featureToggles = persistentListOf(
-                    TesterFeatureToggle(name = "FEATURE_TOGGLE_1", isEnabled = true),
-                    TesterFeatureToggle(name = "FEATURE_TOGGLE_2", isEnabled = false),
-                ),
+                appVersion = "5.38",
+                featureToggleGroups = previewFeatureToggleGroups(),
                 onToggleValueChange = { _, _ -> isCustomSetup = true },
                 onRestartAppClick = {},
             ),
         )
     }
+}
+
+private fun previewFeatureToggleGroups(): ImmutableList<FeatureToggleGroupUM> {
+    fun group(status: TesterFeatureToggleUM.Status, vararg toggles: Triple<String, String, Boolean>) =
+        FeatureToggleGroupUM(
+            status = status,
+            toggles = toggles
+                .map { (name, version, isEnabled) ->
+                    TesterFeatureToggleUM(name = name, version = version, status = status, isEnabled = isEnabled)
+                }
+                .toImmutableList(),
+        )
+
+    return persistentListOf(
+        group(TesterFeatureToggleUM.Status.PENDING, Triple("FEATURE_TOGGLE_2", "5.38", false)),
+        group(TesterFeatureToggleUM.Status.PLANNED, Triple("FEATURE_TOGGLE_1", "5.40", true)),
+        group(TesterFeatureToggleUM.Status.UNDEFINED, Triple("FEATURE_TOGGLE_4", "undefined", false)),
+        group(
+            TesterFeatureToggleUM.Status.RELEASED,
+            Triple("FEATURE_TOGGLE_3", "5.15", true),
+            Triple("FEATURE_TOGGLE_3_OFF", "5.15", false),
+        ),
+    )
 }

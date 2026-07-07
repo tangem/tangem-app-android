@@ -19,14 +19,12 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
-import org.burnoutcrew.reorderable.ReorderableLazyListState
-import org.burnoutcrew.reorderable.detectReorder
 
 @Composable
 fun TangemRowTail(
     tangemRowTailUM: TangemRowTailUM,
     modifier: Modifier = Modifier,
-    reorderableState: ReorderableLazyListState? = null,
+    dragHandleModifier: Modifier = Modifier,
 ) {
     AnimatedContent(
         targetState = tangemRowTailUM,
@@ -39,7 +37,7 @@ fun TangemRowTail(
             TangemRowTailUM.Empty -> Unit
             is TangemRowTailUM.Draggable -> DraggableImage(
                 iconRes = animatedState.iconRes,
-                reorderableState = reorderableState,
+                dragHandleModifier = dragHandleModifier,
                 modifier = innerModifier,
             )
             is TangemRowTailUM.Text -> ContentText(text = animatedState.text, modifier = innerModifier)
@@ -54,21 +52,11 @@ fun TangemRowTail(
 }
 
 @Composable
-private fun DraggableImage(
-    @DrawableRes iconRes: Int,
-    reorderableState: ReorderableLazyListState?,
-    modifier: Modifier = Modifier,
-) {
+private fun DraggableImage(@DrawableRes iconRes: Int, dragHandleModifier: Modifier, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(size = TangemTheme.dimens2.x6)
-            .then(
-                other = if (reorderableState != null) {
-                    Modifier.detectReorder(reorderableState)
-                } else {
-                    Modifier
-                },
-            )
+            .then(dragHandleModifier)
             .testTag(OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE),
         contentAlignment = Alignment.Center,
     ) {
