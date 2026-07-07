@@ -19,6 +19,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
@@ -48,6 +49,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
     private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles = mockk()
+    private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -63,6 +65,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
         virtualAccountFeatureToggles = virtualAccountFeatureToggles,
+        getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
     )
 
     private val userWalletId = UserWalletId("011")

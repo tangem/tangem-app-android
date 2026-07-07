@@ -29,6 +29,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -161,7 +162,11 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
             val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
             requestHelper.performRequest(userWalletId) { authHeader ->
-                val data = OrderRequest.Data(customerWalletAddress = walletAddress)
+                val data = OrderRequest.Data(
+                    customerWalletAddress = walletAddress,
+                    specificationName = "SP_000004",
+                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC.wireValue,
+                )
                 tangemPayApi.createOrder(
                     authHeader = authHeader,
                     body = OrderRequest(data = data, idempotencyKey = UUID.randomUUID().toString()),
