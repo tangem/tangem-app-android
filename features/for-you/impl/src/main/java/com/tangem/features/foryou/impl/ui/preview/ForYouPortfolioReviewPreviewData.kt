@@ -10,16 +10,19 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.foryou.impl.components.state.DonutChartUM
+import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
+import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
+import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.utils.StringsSigns.DOT
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal object ForYouPortfolioReviewPreviewData {
 
     val reviewContent = PortfolioReviewUM.Content(
-        assetCount = stringReference("5 assets"),
-        topHoldingPercent = stringReference("Top holding 42%"),
         periodPickerUM = TangemSegmentedPickerUM(
             items = persistentListOf(
                 TangemSegmentUM(id = "0", title = stringReference("Day")),
@@ -31,6 +34,27 @@ internal object ForYouPortfolioReviewPreviewData {
             isAltSurface = true,
         ),
         onPeriodClick = {},
+        marketChartUM = MarketChartUM.Loaded(
+            donutChart = DonutChartUM.Loaded(
+                totalAmount = "10000$",
+                // Colours are assigned in segment order (rank), matching the transformer's palette-by-index.
+                donutSegmentList = persistentListOf(
+                    DonutSegmentUM(
+                        color = DonutSegmentColor.Brand,
+                        weight = BigDecimal("0.55"),
+                        title = stringReference("Ethereum"),
+                        fiatValue = stringReference("\$5,720.22"),
+                    ),
+                    DonutSegmentUM(
+                        color = DonutSegmentColor.Green,
+                        weight = BigDecimal("0.45"),
+                        title = stringReference("Solana"),
+                        fiatValue = stringReference("\$728.30"),
+                    ),
+                ),
+            ),
+            topHoldingPercent = stringReference("Top holding 42%"),
+        ),
         tokenList = persistentListOf(
             ForYouTokenListItemUM(
                 tokenRowUM = TangemTokenRowUM.Content(
