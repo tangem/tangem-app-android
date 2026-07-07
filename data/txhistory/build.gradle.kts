@@ -53,6 +53,8 @@ dependencies {
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.visa)
     // endregion
 
     // region Domain models
@@ -60,6 +62,8 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.visa.models)
+    implementation(projects.domain.wallets.models)
     // endregion
 
     // region Libs
