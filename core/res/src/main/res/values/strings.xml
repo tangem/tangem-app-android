@@ -287,6 +287,10 @@
   <string name="common_approve">Approve</string>
   <string name="common_approved">Approved</string>
   <string name="common_approving">Approving</string>
+  <plurals name="common_assets">
+    <item quantity="one">%d asset</item>
+    <item quantity="other">%d assets</item>
+  </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
