@@ -7,6 +7,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import java.util.UUID
 
 /**
  * Creates the Virtual Account on-ramp order (VA MVP0, TWI-1638) and persists the returned id as `vaOrderId`.
@@ -29,6 +30,7 @@ class CreateVirtualAccountOrderUseCase(
                 val vaOrderId = onboardingRepository.createVirtualAccountOrder(
                     userWalletId = userWalletId,
                     paymentAccountAddress = paymentAccountAddress,
+                    idempotencyKey = UUID.randomUUID().toString(),
                 ).bind()
                 onboardingRepository.storeVirtualAccountOrderId(userWalletId = userWalletId, vaOrderId = vaOrderId)
                 pollingUseCase.invoke(
