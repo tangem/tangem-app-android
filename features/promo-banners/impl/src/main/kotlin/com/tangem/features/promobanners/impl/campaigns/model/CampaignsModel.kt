@@ -5,24 +5,28 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
+import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 @ModelScoped
 internal class CampaignsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    // private val campaignIdConverter: CampaignIdConverter,
-    // campaignsService: CampaignsService,
+    private val campaignIdConverter: CampaignIdConverter,
+    campaignsService: CampaignsService,
 ) : Model() {
 
     val bottomSheetNavigation: SlotNavigation<CampaignsBottomSheetConfig> = SlotNavigation()
 
     init {
-        //   campaignsService.campaignFlow
-        //       .onEach { campaignId -> resolveStartNavigation(campaignIdConverter.convert(campaignId)) }
-        //       .launchIn(modelScope)
+        campaignsService.campaignFlow
+            .onEach { campaignId -> resolveStartNavigation(campaignIdConverter.convert(campaignId)) }
+            .launchIn(modelScope)
     }
 
     @Suppress("UnusedPrivateMember")
