@@ -9,7 +9,6 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.addCustomTokenWithCustomDerivation
 import com.tangem.scenarios.assertDerivationPathsInSelector
-import com.tangem.scenarios.forgetCurrentWalletAndReArmForNextScan
 import com.tangem.scenarios.navigateBackToMainFromManageTokens
 import com.tangem.scenarios.openAddCustomToken
 import com.tangem.scenarios.openMainScreen
@@ -208,38 +207,62 @@ class AddCustomTokenTest : BaseTestCase() {
     }
 
     @AllureId("776")
-    @DisplayName("Add custom token: derivation paths match the card version (V1/V2/V3)")
+    @DisplayName("Add custom token: derivation paths match a legacy-batch V1 Wallet card")
     @Test
-    fun derivationPathsMatchCardVersionTest() {
+    fun derivationPathsLegacyBatchWalletTest() {
         setupHooks(
             additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
         ).run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
-            step("Assert derivation paths for a legacy-batch V1 Wallet card") {
-                openMainScreen(mockContent = Wallet1LegacyDerivationMockContent)
-                openAddCustomToken()
+            step("Open 'Main Screen'") { openMainScreen(mockContent = Wallet1LegacyDerivationMockContent) }
+            step("Open 'Add custom token' screen") { openAddCustomToken() }
+            step("Assert V1 derivation paths are displayed in the selector") {
                 assertDerivationPathsInSelector(
                     ethereumNetwork,
                     bitcoinNetworkId to "m/44'/0'/0'/0/0",
                     ethereumClassicNetworkId to "m/44'/61'/0'/0/0",
                 )
-                forgetCurrentWalletAndReArmForNextScan()
             }
-            step("Assert derivation paths for a V2 Wallet card") {
-                openMainScreen()
-                openAddCustomToken()
+        }
+    }
+
+    @AllureId("10204")
+    @DisplayName("Add custom token: derivation paths match a V2 Wallet card")
+    @Test
+    fun derivationPathsWalletTest() {
+        setupHooks(
+            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
+        ).run {
+            step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
+                setWireMockScenarioState(COINS_API_SCENARIO, richState)
+            }
+            step("Open 'Main Screen'") { openMainScreen() }
+            step("Open 'Add custom token' screen") { openAddCustomToken() }
+            step("Assert V2 derivation paths are displayed in the selector") {
                 assertDerivationPathsInSelector(
                     ethereumNetwork,
                     bitcoinNetworkId to "m/44'/0'/0'/0/0",
                     ethereumClassicNetworkId to "m/44'/60'/0'/0/0",
                 )
-                forgetCurrentWalletAndReArmForNextScan()
             }
-            step("Assert derivation paths for a V3 Wallet 2 card") {
-                openMainScreen(productType = ProductType.Wallet2)
-                openAddCustomToken()
+        }
+    }
+
+    @AllureId("10205")
+    @DisplayName("Add custom token: derivation paths match a V3 Wallet 2 card")
+    @Test
+    fun derivationPathsWallet2Test() {
+        setupHooks(
+            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
+        ).run {
+            step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
+                setWireMockScenarioState(COINS_API_SCENARIO, richState)
+            }
+            step("Open 'Main Screen'") { openMainScreen(productType = ProductType.Wallet2) }
+            step("Open 'Add custom token' screen") { openAddCustomToken() }
+            step("Assert V3 derivation paths are displayed in the selector") {
                 assertDerivationPathsInSelector(
                     ethereumNetwork,
                     bitcoinNetworkId to "m/84'/0'/0'/0/0",
