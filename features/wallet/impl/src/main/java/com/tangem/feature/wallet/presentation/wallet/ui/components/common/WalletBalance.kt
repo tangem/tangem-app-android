@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,6 +38,8 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MainScreenTestTags
@@ -47,6 +50,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditiona
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 private const val MIN_SCALE = 0.75f
 private const val MAX_SCALE = 1f
@@ -64,6 +68,17 @@ internal fun WalletBalance(
     val alpha = 1f - collapsedFraction
     val scale = alpha.coerceIn(MIN_SCALE, MAX_SCALE)
     val density = LocalDensity.current
+    val hapticManager = LocalHapticManager.current
+    val hapticButtons = remember(buttons, hapticManager) {
+        buttons.map { button ->
+            button.copy(
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                    button.onClick()
+                },
+            )
+        }.toImmutableList()
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -99,7 +114,7 @@ internal fun WalletBalance(
             }
         }
         SpacerH(TangemTheme.dimens2.x2)
-        ActionButtons(buttons, modifier = Modifier.fillMaxWidth())
+        ActionButtons(buttons = hapticButtons, modifier = Modifier.fillMaxWidth())
         SpacerH(TangemTheme.dimens2.x6)
     }
 }
