@@ -5,6 +5,7 @@ import com.tangem.data.pay.util.OrderConverter
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
@@ -53,8 +54,10 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
     override suspend fun createOrder(
         userWalletId: UserWalletId,
         type: OrderType,
-        specificationName: String,
+        specificationName: String?,
         idempotencyKey: String,
+        targetTariffPlanId: String?,
+        transitionType: TangemPayTariffPlanTransition.Type?,
     ): Either<VisaApiError, Order> {
         val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
         return requestHelper.performRequest(userWalletId) { authHeader ->
@@ -65,6 +68,8 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                         customerWalletAddress = walletAddress,
                         specificationName = specificationName,
                         type = type.wireValue,
+                        targetTariffPlanId = targetTariffPlanId,
+                        tariffPlanTransitionType = transitionType?.name,
                     ),
                     idempotencyKey = idempotencyKey,
                 ),

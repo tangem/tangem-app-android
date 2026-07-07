@@ -17,6 +17,7 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDat
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayEntryPoint
+import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -63,6 +64,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
+    private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -395,7 +397,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             ),
             error = null,
             virtualAccount = virtualAccount,
-            tariffPlan = tariffPlan,
+            tariffPlan = tariffPlan?.let { tariff ->
+                getTangemPayTariffPlanStateUseCase(
+                    userWalletId = userWalletId,
+                    tariff = tariff,
+                )
+            },
         )
     }
 
