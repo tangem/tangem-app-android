@@ -5,15 +5,11 @@ import com.tangem.common.getRewardStakingBalance
 import com.tangem.common.getTotalStakingBalance
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.defaultAmount
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.formatStyled
-import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -39,11 +35,12 @@ internal class UpdateStakingNotificationTransformer(
     private val stakingAvailability: StakingAvailability,
     private val stakingEntryInfo: StakingEntryInfo?,
     private val appCurrency: AppCurrency,
+    private val isBalanceHidden: Boolean,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
     override fun transform(prevState: TokenDetailsUM): TokenDetailsUM {
-        return prevState.copy(earnBlockState = buildEarnBlock(prevState.isBalanceHidden))
+        return prevState.copy(earnBlockState = buildEarnBlock(isBalanceHidden))
     }
 
     private fun buildEarnBlock(isBalanceHidden: Boolean): EarnBlockUM? {
@@ -195,7 +192,7 @@ internal class UpdateStakingNotificationTransformer(
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = getRewardSubtitle(status, rewardFiatAmount),
+            subtitleUM = getRewardSubtitle(status, rewardFiatAmount, isBalanceHidden),
             trailingUM = EarnBlockUM.TrailingUM.Balance(
                 fiatValue = fiatAmount.formatStyled {
                     fiat(
@@ -223,6 +220,7 @@ internal class UpdateStakingNotificationTransformer(
     private fun getRewardSubtitle(
         status: CryptoCurrencyStatus,
         stakingRewardAmount: BigDecimal?,
+        isBalanceHidden: Boolean,
     ): EarnBlockUM.SubtitleUM? {
         val blockchainId = status.currency.network.rawId
         val isCoin = status.currency.id.isCoin
@@ -251,16 +249,20 @@ internal class UpdateStakingNotificationTransformer(
             -> return null
             RewardBlockType.EthereumEarnedRewards -> {
                 val cryptoRewardAmount = (stakingBalance as? StakingBalance.Data.P2PEthPool)?.totalRewards
-                resourceReference(
-                    R.string.staking_details_autocompound_rewards_earned,
-                    wrappedList(
-                        cryptoRewardAmount.format {
-                            crypto(
-                                symbol = status.currency.symbol,
-                                decimals = status.currency.decimals,
-                            )
-                        },
+                return EarnBlockUM.SubtitleUM.AccentedText(
+                    text = resourceReference(R.string.staking_details_autocompound_rewards_compounded),
+                    accent = resourceReference(
+                        R.string.staking_details_autocompound_funds_earned,
+                        wrappedList(
+                            cryptoRewardAmount.format {
+                                crypto(
+                                    symbol = status.currency.symbol,
+                                    decimals = status.currency.decimals,
+                                )
+                            }.orMaskWithStars(isBalanceHidden),
+                        ),
                     ),
+                    style = EarnBlockUM.SubtitleUM.Style.Small,
                 )
             }
             RewardBlockType.RewardsRequirementsError,
@@ -268,14 +270,14 @@ internal class UpdateStakingNotificationTransformer(
             -> resourceReference(
                 R.string.staking_details_rewards_to_claim,
                 wrappedList(
-                    stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) },
+                    stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
+                        .orMaskWithStars(isBalanceHidden),
                 ),
             )
         }
 
         val isAccent = rewardBlockType == RewardBlockType.Rewards ||
-            rewardBlockType == RewardBlockType.RewardsRequirementsError ||
-            rewardBlockType == RewardBlockType.EthereumEarnedRewards
+            rewardBlockType == RewardBlockType.RewardsRequirementsError
 
         return EarnBlockUM.SubtitleUM.Text(
             text = text,

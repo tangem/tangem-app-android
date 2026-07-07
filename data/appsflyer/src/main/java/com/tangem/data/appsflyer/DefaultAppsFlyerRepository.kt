@@ -10,11 +10,16 @@ internal class DefaultAppsFlyerRepository @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
 ) : AppsFlyerRepository {
 
+    override suspend fun getDeeplink(source: AppsFlyerDeeplinkSource): String? {
+        return appsFlyerStore.getDeeplink(source.toStoreSource())
+    }
+
     override suspend fun clearDeeplink(source: AppsFlyerDeeplinkSource) {
         appsFlyerStore.clearDeeplink(source.toStoreSource())
     }
 
     private fun AppsFlyerDeeplinkSource.toStoreSource() = when (this) {
         AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding -> StoreDeeplinkSource.TangemPayHotWalletOnboarding
+        AppsFlyerDeeplinkSource.Referral -> StoreDeeplinkSource.Referral
     }
 }

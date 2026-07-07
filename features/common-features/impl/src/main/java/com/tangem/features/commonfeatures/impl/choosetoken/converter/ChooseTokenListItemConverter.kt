@@ -8,7 +8,6 @@ import com.tangem.common.ui.tokens.TokenItemGrouping.toGroupedItems
 import com.tangem.common.ui.tokens.TokenItemGrouping.toUngroupedItems
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
@@ -55,12 +54,11 @@ internal class ChooseTokenListItemConverter(
     }
 
     private val fiatAmountStateProvider: ((TotalFiatBalance, isExpanded: Boolean) -> FiatAmountState?) =
-        { totalBalance, isExpanded ->
-            when {
-                isSearchingState -> FiatAmountState.Empty
-                !isExpanded -> FiatAmountState.Icon(R.drawable.ic_chewron_down_20, IconTint.Informative)
-                else -> AccountCryptoPortfolioItemStateConverter
-                    .createFiatAmountState(totalBalance, appCurrency)
+        { totalBalance, _ ->
+            if (isSearchingState) {
+                FiatAmountState.Empty
+            } else {
+                AccountCryptoPortfolioItemStateConverter.createFiatAmountState(totalBalance, appCurrency)
             }
         }
 
@@ -87,6 +85,7 @@ internal class ChooseTokenListItemConverter(
                 when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
+                    is AccountStatus.Virtual -> null
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }

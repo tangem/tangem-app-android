@@ -41,7 +41,7 @@ internal class DefaultChooseTokenComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val state by model.state.collectAsStateWithLifecycle()
-        ChooseTokenScreen(state = state)
+        ChooseTokenScreen(state = state, modifier = modifier)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
