@@ -22,6 +22,7 @@ dependencies {
     api(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.appCurrency)
+    implementation(projects.domain.account.status)
 
     /** Core */
     api(projects.core.configToggles)
@@ -54,4 +55,5 @@ dependencies {
     /** Tests */
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
+    testImplementation(deps.kotlin.serialization)
 }
