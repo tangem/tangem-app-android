@@ -125,7 +125,9 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
     )
 
     LaunchedEffect(key1 = Unit) {
-        requester.requestFocus()
+        if (!amountField.isError) {
+            requester.requestFocus()
+        }
     }
 }
 
