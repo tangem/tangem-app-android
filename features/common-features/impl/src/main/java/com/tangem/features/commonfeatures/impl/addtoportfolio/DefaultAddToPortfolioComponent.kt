@@ -104,7 +104,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     ): ComposableContentComponent = when (config) {
         AddToPortfolioRoutes.AddToken -> addTokenComponent
         AddToPortfolioRoutes.PortfolioSelector -> portfolioSelectorComponent
-        AddToPortfolioRoutes.TokenActions -> tokenActionsComponent
+        is AddToPortfolioRoutes.TokenActions -> tokenActionsComponent
         AddToPortfolioRoutes.Empty -> ComposableContentComponent.EMPTY
         AddToPortfolioRoutes.UserPortfolio -> createUserPortfolioComponent(componentContext)
         is AddToPortfolioRoutes.NetworkSelector -> chooseNetworkComponentFactory.create(
