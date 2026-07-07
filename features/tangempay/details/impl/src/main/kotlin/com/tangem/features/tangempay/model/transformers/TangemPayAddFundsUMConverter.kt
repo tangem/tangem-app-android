@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.model.transformers
 
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_card_20
@@ -75,8 +74,8 @@ internal class TangemPayAddFundsUMConverter(
                                 imageVector = Icons.ic_sign_usd_20,
                                 tintReference = { TangemTheme.colors3.icon.brand },
                             ),
-                            title = stringReference("Bank transfer"),
-                            description = stringReference("Receive fiat USD via ACH/FedWire"),
+                            title = resourceReference(R.string.tangempay_topup_bank_transfer_title),
+                            description = resourceReference(R.string.tangempay_topup_bank_transfer_body),
                             onClick = listener::onClickBankTransfer,
                         )
                     },
