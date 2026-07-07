@@ -2,14 +2,18 @@ package com.tangem.features.foryou.impl.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.features.commonfeatures.api.choosetoken.model.WalletListUM
+import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.model.ForYouNotification
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -20,13 +24,12 @@ import java.math.BigDecimal
 internal class SetPortfolioReviewTransformerTest {
 
     private val appCurrency: AppCurrency = AppCurrency.Default
-    private val walletListUM = WalletListUM(items = persistentListOf())
 
     @Nested
-    inner class Transform {
+    inner class TokenList {
 
         @Test
-        fun `GIVEN currency with zero fiat balance WHEN transform THEN it is dropped from asset count`() {
+        fun `GIVEN currency with resolved zero fiat balance WHEN transform THEN it is dropped from the list`() {
             // Arrange
             val zeroBalance = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
             val nonZeroBalance = createCurrency(rawCurrencyId = "eth", symbol = "ETH")
@@ -34,18 +37,37 @@ internal class SetPortfolioReviewTransformerTest {
                 createStatus(zeroBalance, loadedValue(BigDecimal.ZERO)),
                 createStatus(nonZeroBalance, loadedValue(BigDecimal("100"))),
             )
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("100"))
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("100"))))
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
 
-            // Assert
-            assertThat(result.assetCount).isEqualTo(stringReference("1 assets"))
+            // Assert — only the ETH asset survives; the zero-fiat BTC is dropped
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("eth")
         }
 
         @Test
-        fun `GIVEN assets across networks WHEN transform THEN they are aggregated and ranked by summed fiat`() {
-            // Arrange — same asset (rawCurrencyId "usdc") on two networks aggregates into one asset
+        fun `GIVEN non-content status with null fiat WHEN transform THEN it is kept not dropped`() {
+            // Arrange — a non-content status (Unreachable) carries a null fiatAmount, not a resolved zero;
+            // it must still be shown so the user sees the token they hold, with the appropriate treatment.
+            val unreachable = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
+            val loaded = createCurrency(rawCurrencyId = "eth", symbol = "ETH")
+            val currencies = listOf(
+                createStatus(unreachable, unreachableValue()),
+                createStatus(loaded, loadedValue(BigDecimal("100"))),
+            )
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("100"))))
+
+            // Act
+            val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
+
+            // Assert — both assets kept, ranked by summed fiat (eth 100 > btc 0)
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("eth", "btc").inOrder()
+        }
+
+        @Test
+        fun `GIVEN same asset across networks WHEN transform THEN aggregated into one asset ranked by summed fiat`() {
+            // Arrange — the same asset (shared rawCurrencyId "usdc") aggregates into one asset
             val onEth = createCurrency(rawCurrencyId = "usdc", symbol = "USDC")
             val onSol = createCurrency(rawCurrencyId = "usdc", symbol = "USDC")
             val other = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
@@ -54,13 +76,13 @@ internal class SetPortfolioReviewTransformerTest {
                 createStatus(onSol, loadedValue(BigDecimal("60"))),
                 createStatus(other, loadedValue(BigDecimal("10"))),
             )
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("120"))
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("120"))))
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
 
-            // Assert — 2 ranked assets: usdc (110 total) and btc (10)
-            assertThat(result.assetCount).isEqualTo(stringReference("2 assets"))
+            // Assert — 2 ranked assets: usdc (110 total) ahead of btc (10)
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("usdc", "btc").inOrder()
         }
 
         @Test
@@ -72,12 +94,12 @@ internal class SetPortfolioReviewTransformerTest {
                     loadedValue(BigDecimal(100 - index)),
                 )
             }
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("470"))
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("470"))))
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
 
-            // Assert — tokenList has 4 top asset rows + 1 "Other" row = 5 items
+            // Assert — 4 top asset rows + 1 "Other" row
             assertThat(result.tokenList).hasSize(5)
             assertThat(result.tokenList.last().tokenRowUM.id).isEqualTo("for_you_other_assets")
         }
@@ -91,7 +113,7 @@ internal class SetPortfolioReviewTransformerTest {
                     loadedValue(BigDecimal(100 - index)),
                 )
             }
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("394"))
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("394"))))
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
@@ -101,39 +123,76 @@ internal class SetPortfolioReviewTransformerTest {
         }
 
         @Test
-        fun `GIVEN total and top balance non-zero WHEN transform THEN topHoldingPercent is computed`() {
-            // Arrange — a single asset means top balance == total balance == 100%
-            val currency = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
-            val currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100"))))
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("100"))
+        fun `GIVEN null account status list WHEN transform THEN token list is empty`() {
+            // Arrange
+            val transformer = createTransformer(accountStatusList = null)
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
 
             // Assert
-            assertThat(result.topHoldingPercent).isEqualTo(stringReference("Top holding 100.00%"))
+            assertThat(result.tokenList).isEmpty()
+        }
+    }
+
+    @Nested
+    inner class MarketChart {
+
+        @Test
+        fun `GIVEN loaded total balance WHEN transform THEN market chart is Loaded with one segment per top asset`() {
+            // Arrange
+            val currencies = listOf(
+                createStatus(createCurrency(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("70"))),
+                createStatus(createCurrency(rawCurrencyId = "eth", symbol = "ETH"), loadedValue(BigDecimal("30"))),
+            )
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("100"))))
+
+            // Act
+            val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
+
+            // Assert
+            val marketChart = result.marketChartUM as MarketChartUM.Loaded
+            assertThat(marketChart.assetCount).isEqualTo(2)
         }
 
         @Test
-        fun `GIVEN zero total fiat balance WHEN transform THEN topHoldingPercent is DASH_SIGN`() {
+        fun `GIVEN non-loaded total balance WHEN transform THEN market chart is NoData`() {
             // Arrange
-            val currency = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
-            val currencies = listOf(createStatus(currency, loadedValue(BigDecimal.ZERO)))
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal.ZERO)
+            val currencies = listOf(
+                createStatus(createCurrency(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("100"))),
+            )
+            val transformer = createTransformer(accountStatusList(currencies, TotalFiatBalance.Loading))
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
 
             // Assert
-            assertThat(result.topHoldingPercent).isEqualTo(stringReference("Top holding —"))
+            assertThat(result.marketChartUM).isEqualTo(MarketChartUM.NoData)
         }
+
+        @Test
+        fun `GIVEN null account status list WHEN transform THEN market chart is NoData`() {
+            // Arrange
+            val transformer = createTransformer(accountStatusList = null)
+
+            // Act
+            val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
+
+            // Assert
+            assertThat(result.marketChartUM).isEqualTo(MarketChartUM.NoData)
+        }
+    }
+
+    @Nested
+    inner class PeriodPicker {
 
         @Test
         fun `GIVEN prev state is Loading WHEN transform THEN period picker is freshly created with Day selected`() {
             // Arrange
-            val currency = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
-            val currencies = listOf(createStatus(currency, loadedValue(BigDecimal("10"))))
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("10"))
+            val currencies = listOf(
+                createStatus(createCurrency(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("10"))),
+            )
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("10"))))
 
             // Act
             val result = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
@@ -150,15 +209,17 @@ internal class SetPortfolioReviewTransformerTest {
         @Test
         fun `GIVEN prev state is Content WHEN transform THEN period picker selection is preserved`() {
             // Arrange
-            val currency = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
-            val currencies = listOf(createStatus(currency, loadedValue(BigDecimal("10"))))
-            val transformer = createTransformer(currencies = currencies, totalFiatBalance = BigDecimal("10"))
-            val prevContentState = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
-            val weekItem = prevContentState.periodPickerUM.items[1]
-            val prevWithWeekSelected = prevContentState.copy(
-                periodPickerUM = prevContentState.periodPickerUM.copy(initialSelectedItem = weekItem),
+            val currencies = listOf(
+                createStatus(createCurrency(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("10"))),
             )
-            val prevState = ForYouUM(walletListUM = walletListUM, portfolioReviewUM = prevWithWeekSelected)
+            val transformer = createTransformer(accountStatusList(currencies, loaded(BigDecimal("10"))))
+            val prevContent = transformer.transform(loadingState()).portfolioReviewUM as PortfolioReviewUM.Content
+            val weekItem = prevContent.periodPickerUM.items[1]
+            val prevState = loadingState().copy(
+                portfolioReviewUM = prevContent.copy(
+                    periodPickerUM = prevContent.periodPickerUM.copy(initialSelectedItem = weekItem),
+                ),
+            )
 
             // Act
             val result = transformer.transform(prevState).portfolioReviewUM as PortfolioReviewUM.Content
@@ -166,48 +227,86 @@ internal class SetPortfolioReviewTransformerTest {
             // Assert
             assertThat(result.periodPickerUM.initialSelectedItem).isEqualTo(weekItem)
         }
+    }
+
+    @Nested
+    inner class Notifications {
 
         @Test
-        fun `GIVEN new state WHEN transform THEN walletListUM is applied from constructor`() {
+        fun `GIVEN total balance from outdated source WHEN transform THEN outdated-data notification is emitted`() {
             // Arrange
-            val currency = createCurrency(rawCurrencyId = "btc", symbol = "BTC")
-            val currencies = listOf(createStatus(currency, loadedValue(BigDecimal("10"))))
-            val newWalletListUM = WalletListUM(items = persistentListOf())
-            val transformer = SetPortfolioReviewTransformer(
-                walletListUM = newWalletListUM,
-                currencies = currencies,
-                totalFiatBalance = BigDecimal("10"),
-                appCurrency = appCurrency,
-                expandedAssetIds = emptySet(),
-                expandClick = {},
-                onPeriodClick = {},
+            val currencies = listOf(
+                createStatus(createCurrency(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("10"))),
+            )
+            val transformer = createTransformer(
+                accountStatusList(currencies, loaded(BigDecimal("10"), source = StatusSource.ONLY_CACHE)),
             )
 
             // Act
             val result = transformer.transform(loadingState())
 
             // Assert
-            assertThat(result.walletListUM).isSameInstanceAs(newWalletListUM)
+            assertThat(result.notifications).containsExactly(ForYouNotification.UsedOutdatedData)
+        }
+
+        @Test
+        fun `GIVEN total balance from actual source WHEN transform THEN no notification is emitted`() {
+            // Arrange
+            val currencies = listOf(
+                createStatus(createCurrency(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("10"))),
+            )
+            val transformer = createTransformer(
+                accountStatusList(currencies, loaded(BigDecimal("10"), source = StatusSource.ACTUAL)),
+            )
+
+            // Act
+            val result = transformer.transform(loadingState())
+
+            // Assert
+            assertThat(result.notifications).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN null account status list WHEN transform THEN no notification is emitted`() {
+            // Arrange
+            val transformer = createTransformer(accountStatusList = null)
+
+            // Act
+            val result = transformer.transform(loadingState())
+
+            // Assert
+            assertThat(result.notifications).isEmpty()
         }
     }
 
     private fun createTransformer(
-        currencies: List<CryptoCurrencyStatus>,
-        totalFiatBalance: BigDecimal,
+        accountStatusList: AccountStatusList?,
         expandedAssetIds: Set<String> = emptySet(),
     ) = SetPortfolioReviewTransformer(
-        walletListUM = walletListUM,
-        currencies = currencies,
-        totalFiatBalance = totalFiatBalance,
+        accountStatusList = accountStatusList,
         appCurrency = appCurrency,
         expandedAssetIds = expandedAssetIds,
         expandClick = {},
         onPeriodClick = {},
     )
 
+    private fun accountStatusList(
+        currencies: List<CryptoCurrencyStatus>,
+        totalFiatBalance: TotalFiatBalance,
+    ): AccountStatusList = mockk {
+        every { flattenCurrencies() } returns currencies
+        every { this@mockk.totalFiatBalance } returns totalFiatBalance
+    }
+
+    private fun loaded(amount: BigDecimal, source: StatusSource = StatusSource.ACTUAL): TotalFiatBalance.Loaded =
+        TotalFiatBalance.Loaded(amount = amount, source = source)
+
     private fun loadingState(): ForYouUM = ForYouUM(
-        walletListUM = walletListUM,
-        portfolioReviewUM = PortfolioReviewUM.Loading(tokenList = persistentListOf<ForYouTokenListItemUM>()),
+        portfolioReviewUM = PortfolioReviewUM.Loading(
+            tokenList = persistentListOf<ForYouTokenListItemUM>(),
+            marketChartUM = MarketChartUM.NoData,
+        ),
+        notifications = persistentListOf(),
     )
 
     private fun createStatus(currency: CryptoCurrency, value: CryptoCurrencyStatus.Value) = CryptoCurrencyStatus(
@@ -219,7 +318,15 @@ internal class SetPortfolioReviewTransformerTest {
         every { amount } returns BigDecimal.ONE
         every { this@mockk.fiatAmount } returns fiatAmount
         every { isError } returns false
+        every { sources } returns CryptoCurrencyStatus.Sources()
     }
+
+    /** A non-content status: carries a null fiatAmount (unknown balance), not a resolved zero. */
+    private fun unreachableValue(): CryptoCurrencyStatus.Unreachable = CryptoCurrencyStatus.Unreachable(
+        priceChange = null,
+        fiatRate = null,
+        networkAddress = null,
+    )
 
     private fun createCurrency(rawCurrencyId: String, symbol: String): CryptoCurrency.Coin {
         val network: Network = mockk {
@@ -234,6 +341,7 @@ internal class SetPortfolioReviewTransformerTest {
         return mockk<CryptoCurrency.Coin> {
             every { this@mockk.id } returns currencyId
             every { this@mockk.symbol } returns symbol
+            every { this@mockk.name } returns symbol
             every { this@mockk.network } returns network
             every { this@mockk.decimals } returns 8
             every { isCustom } returns false
