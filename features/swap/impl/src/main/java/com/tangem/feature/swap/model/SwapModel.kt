@@ -1728,6 +1728,7 @@ internal class SwapModel @Inject constructor(
                 if (provider != null && swapState != null && isNotNullCurrency) {
                     modelScope.launch {
                         feeSelectorRepository.state.value = FeeSelectorUM.Loading
+                        updateFeePaidCryptoCurrencyFor(fromSwapCurrencyStatus)
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
