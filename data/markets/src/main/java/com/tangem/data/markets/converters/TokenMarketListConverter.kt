@@ -1,5 +1,6 @@
 package com.tangem.data.markets.converters
 
+import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.datasource.api.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListWithMaxApy
@@ -19,7 +20,8 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, To
             }
         }
 
-        val tokens = value.tokens.map { token ->
+        val tokens = value.tokens.map { rawToken ->
+            val token = rawToken.applyL2Compatibility()
             val stakingRate = token.stakingOpportunities
                 ?.mapNotNull { it.apy }
                 ?.max()
