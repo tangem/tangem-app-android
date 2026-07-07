@@ -22,6 +22,7 @@ import com.tangem.features.addressbook.addaddress.state.transformers.UpdateAddre
 import com.tangem.features.addressbook.addaddress.state.transformers.UpdateAddressValidationTransformer
 import com.tangem.features.addressbook.addaddress.state.transformers.UpdateMemoInputTransformer
 import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.AddressMemoValidator
 import com.tangem.features.addressbook.common.SelectNetworksResultHolder
 import com.tangem.features.addressbook.common.SupportedNetworksMatcher
@@ -46,6 +47,7 @@ internal class AddAddressModel @Inject constructor(
     private val stateController: AddAddressStateController,
     private val selectNetworksResultHolder: SelectNetworksResultHolder,
     private val checkAddressDuplicateUseCase: CheckAddressDuplicateUseCase,
+    private val analyticsSender: AddressBookAnalyticsSender,
     private val router: Router,
 ) : Model() {
 
@@ -110,11 +112,13 @@ internal class AddAddressModel @Inject constructor(
     init {
         // Drop any selection left over from a previous AddAddress session before subscribing to it.
         selectNetworksResultHolder.clear()
+        sendInitAnalytics()
         updateInitialState()
         subscribeToValidation()
         subscribeToMemoValidation()
         subscribeToSelectedNetworks()
         subscribeToQrScanResult()
+        subscribeToAddressInvalid()
         prefillData()
     }
 
@@ -189,6 +193,22 @@ internal class AddAddressModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeToAddressInvalid() {
+        val walletId = params.walletId ?: return
+        validation
+            .map { it.address.isNotBlank() && it.matchedBlockchains.isEmpty() }
+            .distinctUntilChanged()
+            .filter { isInvalid -> isInvalid }
+            .onEach {
+                analyticsSender.sendAddressInvalid(
+                    walletId = UserWalletId(walletId),
+                    contactId = params.excludeContactId.orEmpty(),
+                )
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
     private fun onPaste() {
         onAddressChange(value = clipboardManager.getText().orEmpty())
     }
@@ -256,6 +276,10 @@ internal class AddAddressModel @Inject constructor(
     private fun selectedNetworks(matched: List<Blockchain>, selected: Set<String>?): List<Blockchain> {
         if (selected == null) return listOfNotNull(matched.singleOrNull())
         return matched.filter { it.toNetworkId() in selected }
+    }
+
+    private fun sendInitAnalytics() {
+        analyticsSender.sendAddressScreenOpened()
     }
 
     private data class AddressValidation(
