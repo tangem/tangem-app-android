@@ -5,6 +5,9 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
@@ -56,5 +59,21 @@ internal class CampaignsModel @Inject constructor(
 
     fun onActivated(campaignType: CampaignType) {
         bottomSheetNavigation.activate(CampaignsBottomSheetConfig.Enrolled(campaignType))
+    }
+
+    fun onAlreadyActivated(
+        campaignType: CampaignType,
+        appCurrency: AppCurrency,
+        account: Account?,
+        currency: CryptoCurrencyStatus,
+    ) {
+        bottomSheetNavigation.activate(
+            CampaignsBottomSheetConfig.AlreadyActivated(
+                campaignType = campaignType,
+                appCurrency = appCurrency,
+                account = account,
+                currency = currency,
+            ),
+        )
     }
 }
