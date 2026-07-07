@@ -7,4 +7,5 @@ interface SwapFeatureToggles {
     val isExpressShareButtonEnabled: Boolean
     val isSwapBestDexRateEnabled: Boolean
     val isHighFeeWarningEnabled: Boolean
+    val isTronDexSwapEnabled: Boolean
 }
