@@ -10,6 +10,7 @@ private const val ADDRESS_BOOK_CATEGORY = "Address Book"
 private const val WALLET_ID = "Wallet Id"
 private const val CONTACT_ID = "Contact Id"
 private const val MODE = "Mode"
+private const val CONTACTS_COUNT = "Contacts Count"
 
 sealed class AddressBookEvents(
     event: String,
@@ -24,11 +25,13 @@ sealed class AddressBookEvents(
     class ContactListScreenOpened(
         walletId: UserWalletId,
         source: Source,
+        contactsCount: Int,
     ) : AddressBookEvents(
         event = "Contact List Screen Opened",
         params = mapOf(
             WALLET_ID to walletId.stringValue,
             SOURCE to source.value,
+            CONTACTS_COUNT to contactsCount.toString(),
         ),
     ) {
         enum class Source(val value: String) {
@@ -92,11 +95,11 @@ sealed class AddressBookEvents(
     // endregion
 
     // region Contact editing
-    class ContactOpened(
+    class ContactScreenOpened(
         walletId: UserWalletId,
         contactId: String,
     ) : AddressBookEvents(
-        event = "Contact Opened",
+        event = "Contact Screen Opened",
         params = mapOf(
             WALLET_ID to walletId.stringValue,
             CONTACT_ID to contactId,
@@ -116,7 +119,7 @@ sealed class AddressBookEvents(
         walletId: UserWalletId,
         contactId: String,
     ) : AddressBookEvents(
-        event = "Contact Selected In Send",
+        event = "Contact Selected",
         params = mapOf(
             WALLET_ID to walletId.stringValue,
             CONTACT_ID to contactId,
