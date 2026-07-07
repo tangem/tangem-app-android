@@ -75,7 +75,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(),
-                itemsV2 = getTopBarMenuItemsV2(tariffPlan = status.tariffPlan),
+                itemsV2 = getTopBarMenuItemsV2(tariffPlan = status.tariffPlan?.tariff),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
