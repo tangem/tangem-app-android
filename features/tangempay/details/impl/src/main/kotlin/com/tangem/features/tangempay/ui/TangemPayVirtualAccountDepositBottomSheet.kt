@@ -33,12 +33,15 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_usd_32
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayVirtualAccountDepositUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -76,11 +79,11 @@ private fun DepositContent(state: TangemPayVirtualAccountDepositUM, modifier: Mo
     ) {
         IntroIcons(modifier = Modifier.padding(top = TangemTheme.dimens2.x4))
         TitleText(
-            text = stringReference("Bank transfer might take 1-2 business days"),
+            text = resourceReference(R.string.tangempay_bank_transfer_intro_title),
             modifier = Modifier.padding(top = TangemTheme.dimens2.x8),
         )
         SubtitleText(
-            text = stringReference("Received USD will be converted to USDC by 1:1 rate"),
+            text = resourceReference(R.string.tangempay_bank_transfer_intro_subtitle),
             modifier = Modifier.padding(top = TangemTheme.dimens2.x2),
         )
         FeesBlock(
@@ -88,16 +91,18 @@ private fun DepositContent(state: TangemPayVirtualAccountDepositUM, modifier: Mo
             modifier = Modifier.padding(top = TangemTheme.dimens2.x6),
         )
         InfoNotification(
-            text = stringReference("Deposit via ACH or FedWire only. SWIFT transfers will be returned."),
+            text = resourceReference(R.string.tangempay_bank_transfer_swift_warning),
             modifier = Modifier.padding(top = TangemTheme.dimens2.x4),
         )
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = TangemTheme.dimens2.x4),
-            text = stringReference("Show details"),
+            text = resourceReference(R.string.tangempay_bank_transfer_show_details),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
+            isLoading = state.isLoading,
+            isEnabled = !state.isLoading,
             onClick = state.onShowDetailsClick,
         )
         if (state.shouldShowTermsAndConditions) {
@@ -118,7 +123,7 @@ private fun FeesBlock(fees: ImmutableList<TangemPayVirtualAccountDepositUM.FeeRo
                 start = TangemTheme.dimens2.x4,
                 bottom = TangemTheme.dimens2.x2,
             ),
-            text = stringReference("Fee for onramp").resolveReference(),
+            text = stringResourceSafe(R.string.tangempay_bank_transfer_fee_header),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
         )
@@ -161,15 +166,31 @@ private fun InfoNotification(text: TextReference, modifier: Modifier = Modifier)
 @Composable
 private fun TermsFooter(onTermsClick: () -> Unit, onPrivacyClick: () -> Unit, modifier: Modifier = Modifier) {
     val linkStyle = SpanStyle(color = TangemTheme.colors3.text.primary)
+    val termsTitle = stringResourceSafe(R.string.common_terms_of_use)
+    val privacyTitle = stringResourceSafe(R.string.common_privacy_policy)
+    val fullText = stringResourceSafe(R.string.tangempay_bank_transfer_legal, termsTitle, privacyTitle)
+
+    // Locate each link title in the resolved (localized) string and splice them in appearance order.
+    // Handles translations that reorder the %1$s/%2$s placeholders and skips a title that a translation
+    // does not contain verbatim — falling back to plain text instead of crashing on an invalid substring range.
+    val links = listOf(
+        Triple(fullText.indexOf(termsTitle), termsTitle, onTermsClick),
+        Triple(fullText.indexOf(privacyTitle), privacyTitle, onPrivacyClick),
+    )
+        .filter { it.first >= 0 }
+        .sortedBy { it.first }
+
     val text = buildAnnotatedString {
-        append("By using service, you agree with provider ")
-        withLink(LinkAnnotation.Clickable(tag = "terms", linkInteractionListener = { onTermsClick() })) {
-            withStyle(linkStyle) { append("Terms of Use") }
+        var cursor = 0
+        links.forEach { (index, title, onClick) ->
+            if (index < cursor) return@forEach
+            append(fullText.substring(cursor, index))
+            withLink(LinkAnnotation.Clickable(tag = title, linkInteractionListener = { onClick() })) {
+                withStyle(linkStyle) { append(title) }
+            }
+            cursor = index + title.length
         }
-        append(" and ")
-        withLink(LinkAnnotation.Clickable(tag = "privacy", linkInteractionListener = { onPrivacyClick() })) {
-            withStyle(linkStyle) { append("Privacy Policy") }
-        }
+        append(fullText.substring(cursor))
     }
     Text(
         modifier = modifier.fillMaxWidth(),
@@ -267,10 +288,17 @@ private fun SubtitleText(text: TextReference, modifier: Modifier = Modifier) {
 
 private fun previewState(shouldShowTermsAndConditions: Boolean) = TangemPayVirtualAccountDepositUM(
     fees = persistentListOf(
-        TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("ACH"), value = "$1"),
-        TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("FedWire"), value = "$11"),
+        TangemPayVirtualAccountDepositUM.FeeRow(
+            title = resourceReference(R.string.tangempay_bank_transfer_fee_ach),
+            value = "$1",
+        ),
+        TangemPayVirtualAccountDepositUM.FeeRow(
+            title = resourceReference(R.string.tangempay_bank_transfer_fee_fedwire),
+            value = "$11",
+        ),
     ),
     shouldShowTermsAndConditions = shouldShowTermsAndConditions,
+    isLoading = false,
     onShowDetailsClick = {},
     onDismiss = {},
     onTermsClick = {},
