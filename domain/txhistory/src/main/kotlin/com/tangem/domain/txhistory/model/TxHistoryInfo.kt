@@ -4,6 +4,7 @@ import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 
 /**
  * A single row of the unified transaction history shown on the token-details screen.
@@ -38,11 +39,10 @@ sealed interface OnChainTx : TxHistoryInfo {
         override val timestampMillis: Long get() = txInfo.timestampInMillis
     }
 
-    // todo txHistory next step
-    /*data class TangemPay(val txInfo: TangemPayTxHistoryItem) : OnChainTx {
+    data class TangemPay(val txInfo: TangemPayTxHistoryItem) : OnChainTx {
         override val txId: String get() = txInfo.id
         override val timestampMillis: Long get() = txInfo.date.millis
-    }*/
+    }
 
     // todo txHistory next step
     /*data class Gateway() : OnChainTx {
@@ -71,6 +71,13 @@ fun TxInfo.identityKey(): String = "$txHash|$type"
 inline val TxHistoryInfo.explorerHash: String?
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
+        is OnChainTx.TangemPay -> when (val item = txInfo) {
+            is TangemPayTxHistoryItem.Payment -> item.transactionHash
+            is TangemPayTxHistoryItem.Collateral -> item.transactionHash
+            is TangemPayTxHistoryItem.Spend,
+            is TangemPayTxHistoryItem.Fee,
+            -> null
+        }
         is ExpressTx -> matchHash
     }
 
@@ -78,6 +85,7 @@ inline val TxHistoryInfo.explorerHash: String?
 inline val TxHistoryInfo.idToCopy: String
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
+        is OnChainTx.TangemPay -> explorerHash ?: txId
         is ExpressTx -> txId
     }
 

@@ -32,5 +32,7 @@ internal class TxHistoryInfoToTransactionItemUMConverter(
             is TransactionItemUM.Pill -> um.copy(onClick = { txHistoryUiActions.onTransactionClick(value) })
             else -> um
         }
+        // todo txHistory: render standalone TangemPay on-chain rows when TangemPay is wired into the history
+        is OnChainTx.TangemPay -> TODO("TangemPay on-chain row rendering is not implemented yet")
     }
 }
