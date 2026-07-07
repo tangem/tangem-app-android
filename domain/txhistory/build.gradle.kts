@@ -27,5 +27,6 @@ dependencies {
     api(projects.domain.express.models)
     api(projects.domain.models)
     api(projects.domain.txhistory.models)
+    api(projects.domain.visa.models)
     // endregion
 }
