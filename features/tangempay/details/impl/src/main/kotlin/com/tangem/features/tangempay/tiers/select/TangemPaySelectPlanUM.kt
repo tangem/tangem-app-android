@@ -54,6 +54,7 @@ internal data class TangemPaySelectPlanUM(
             val title: TextReference,
             val points: ImmutableList<PointUM>,
             val confirmButtonText: TextReference,
+            val isProcessing: Boolean,
             val onCancelClick: () -> Unit,
             val onConfirmClick: () -> Unit,
         ) : Content
