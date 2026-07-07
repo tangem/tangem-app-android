@@ -133,7 +133,6 @@ internal class AddressBookListModelTest {
                     id = AddressEntryId("e-$id"),
                     address = "0xABC",
                     networkId = Network.RawID("ethereum"),
-                    networkName = "Ethereum",
                     memo = null,
                     signature = "sig",
                 ),

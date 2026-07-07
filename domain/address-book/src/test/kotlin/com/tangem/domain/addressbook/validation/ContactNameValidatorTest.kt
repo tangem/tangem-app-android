@@ -102,7 +102,6 @@ class ContactNameValidatorTest {
                 networkId = Network.RawID("ethereum"),
                 memo = null,
                 signature = "AABB",
-                networkName = "Ethereum",
             ),
         ),
     )
