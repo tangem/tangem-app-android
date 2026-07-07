@@ -55,6 +55,7 @@ sealed class VisaApiError(
     data object ProductInstanceIsNotActivated : VisaApiError(104110208)
     data object ProductInstanceIsAlreadyActivated : VisaApiError(104110207)
     data object CustomerIsBlocked : VisaApiError(104110210)
+    data object CardIssueInsufficientBalance : VisaApiError(104140116)
     data object UnknownWithoutCode : VisaApiError(104110999)
     data class Unknown(override val errorCode: Int) : VisaApiError(errorCode)
 
@@ -78,6 +79,7 @@ sealed class VisaApiError(
                 ProductInstanceIsNotActivated.errorCode -> ProductInstanceIsNotActivated
                 ProductInstanceIsAlreadyActivated.errorCode -> ProductInstanceIsAlreadyActivated
                 CustomerIsBlocked.errorCode -> CustomerIsBlocked
+                CardIssueInsufficientBalance.errorCode -> CardIssueInsufficientBalance
                 else -> Unknown(universalErrorCode)
             }
         }

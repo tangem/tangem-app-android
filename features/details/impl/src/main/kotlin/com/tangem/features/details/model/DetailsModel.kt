@@ -26,6 +26,7 @@ import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
@@ -51,6 +52,7 @@ internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
     paramsContainer: ParamsContainer,
     feedbackFeatureToggles: FeedbackFeatureToggles,
+    addressBookFeatureToggles: AddressBookFeatureToggles,
     private val itemsBuilder: ItemsBuilder,
     private val appInfoProvider: AppInfoProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
@@ -86,6 +88,7 @@ internal class DetailsModel @Inject constructor(
         items = MutableStateFlow(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
+                isAddressBookAvailable = addressBookFeatureToggles.isAddressBookEnabled,
                 isSupportChatAvailable = feedbackFeatureToggles.isUsedeskEnabled,
                 hasAnyMobileWallet = getWalletsUseCase.invokeSync().any { it is UserWallet.Hot },
                 userWalletId = params.userWalletId,

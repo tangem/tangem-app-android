@@ -47,7 +47,7 @@ internal class PortfolioBlockModel @Inject constructor(
 ) : Model() {
 
     val state: StateFlow<PortfolioBlockUM>
-        field = MutableStateFlow<PortfolioBlockUM>(PortfolioBlockUM.Loading)
+        field = MutableStateFlow<PortfolioBlockUM>(PortfolioBlockUM.Hidden)
 
     val cryptoCurrencyIdState: StateFlow<CryptoCurrency.ID?>
         field = MutableStateFlow(null)
@@ -86,7 +86,7 @@ internal class PortfolioBlockModel @Inject constructor(
     private fun combineData(): Flow<PortfolioBlockUM> {
         return availableNetworks.transformLatest { networks ->
             if (networks.isEmpty()) {
-                emit(PortfolioBlockUM.Hidden)
+                emit(PortfolioBlockUM.Unsupported(tokenIcon = tokenIcon))
             } else {
                 emitAll(portfolioFlow().distinctUntilChanged())
             }
@@ -145,7 +145,7 @@ internal class PortfolioBlockModel @Inject constructor(
                     onAddClick = { parentRouter?.openAddToPortfolioDirect() },
                 )
             } else {
-                PortfolioBlockUM.Hidden
+                PortfolioBlockUM.Unsupported(tokenIcon = tokenIcon)
             }
         }
 
@@ -171,7 +171,7 @@ internal class PortfolioBlockModel @Inject constructor(
             tokenSymbol = firstCurrency.symbol,
             isBalanceHidden = isBalanceHidden,
             onRowClick = { parentRouter?.openAddToPortfolioViaUserPortfolio(currencyRawId) },
-            onAddFundsClick = {},
+            onAddFundsClick = { parentRouter?.openAddFunds(currencyRawId) },
         )
     }
 }

@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.bottomsheets.message
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -42,6 +43,21 @@ data class MessageBottomSheetUM(
     }
 
     @Immutable
+    data class Vector(
+        val imageVector: ImageVector,
+        var type: Type = Type.Unspecified,
+        var backgroundType: BackgroundType = BackgroundType.Unspecified,
+    ) : Element {
+        enum class Type {
+            Unspecified, Accent, Informative, Attention, Warning,
+        }
+
+        enum class BackgroundType {
+            Unspecified, SameAsTint, Accent, Informative, Attention, Warning,
+        }
+    }
+
+    @Immutable
     data class IconImage(@DrawableRes internal var res: Int) : Element
 
     @Immutable
@@ -58,6 +74,7 @@ data class MessageBottomSheetUM(
     data class InfoBlock(
         internal var icon: Icon? = null,
         internal var iconImage: IconImage? = null,
+        internal var vector: Vector? = null,
         internal var chip: Chip? = null,
         var title: TextReference? = null,
         var body: TextReference? = null,
@@ -109,6 +126,12 @@ fun MessageBottomSheetUM.infoBlock(init: @MessageBottomSheetDsl MessageBottomShe
 fun MessageBottomSheetUM.InfoBlock.icon(@DrawableRes res: Int, init: MessageBottomSheetUM.Icon.() -> Unit = {}) =
     apply {
         icon = MessageBottomSheetUM.Icon(res).apply(init)
+    }
+
+@Suppress("NestedScopeFunctions")
+fun MessageBottomSheetUM.InfoBlock.vector(imageVector: ImageVector, init: MessageBottomSheetUM.Vector.() -> Unit = {}) =
+    apply {
+        vector = MessageBottomSheetUM.Vector(imageVector).apply(init)
     }
 
 fun MessageBottomSheetUM.InfoBlock.iconImage(@DrawableRes res: Int) = apply {

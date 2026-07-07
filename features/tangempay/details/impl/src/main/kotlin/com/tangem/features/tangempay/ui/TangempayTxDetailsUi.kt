@@ -30,6 +30,7 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.ButtonState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -115,10 +116,7 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
 }
 
 @Composable
-private fun ButtonsContainer(
-    buttons: ImmutableList<TangemPayTxHistoryDetailsUM.ButtonState>,
-    modifier: Modifier = Modifier,
-) {
+private fun ButtonsContainer(buttons: ImmutableList<ButtonState>, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -179,7 +177,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             ),
             notification = null,
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
+                ButtonState(
                     text = resourceReference(R.string.tangem_pay_dispute),
                     onClick = {},
                 ),
@@ -210,7 +208,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
                 containerColor = themedColor { TangemColorPalette.Amaranth.copy(alpha = 0.1F) },
             ),
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
+                ButtonState(
                     text = resourceReference(R.string.tangem_pay_dispute),
                     onClick = {},
                 ),
@@ -232,7 +230,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             ),
             notification = null,
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
+                ButtonState(
                     text = resourceReference(R.string.tangem_pay_dispute),
                     onClick = {},
                 ),
@@ -260,7 +258,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
                 containerColor = null,
             ),
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
+                ButtonState(
                     text = resourceReference(R.string.tangem_pay_dispute),
                     onClick = {},
                 ),
@@ -279,7 +277,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             labelState = null,
             notification = null,
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
+                ButtonState(
                     text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = {},
                 ),
@@ -298,7 +296,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             labelState = null,
             notification = null,
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
+                ButtonState(
                     text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = {},
                 ),
