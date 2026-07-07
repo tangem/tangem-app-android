@@ -83,7 +83,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = stringReference(type.name),
         iconRes = tx.directionalIcon(),
-        subtitle = ContentSubtitle.Plain(tx.extractSubtitleByAddressType()),
+        subtitle = tx.extractAddressSubtitle(),
     )
 
     private fun swapContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
@@ -92,7 +92,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             uiStatus = uiStatus,
             title = tx.statusAwareTitle(R.string.common_swapping, R.string.common_swapped),
             iconRes = tx.directionalIcon(),
-            subtitle = ContentSubtitle.Plain(tx.extractSubtitleByAddressType()),
+            subtitle = tx.extractAddressSubtitle(),
         )
 
     private fun transferContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content {
@@ -112,7 +112,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
                 rawAddress = counterpartyAddress,
                 briefAddress = counterpartyAddress.toBriefAddressFormat(),
             )
-            else -> ContentSubtitle.Plain(tx.extractSubtitleByAddressType())
+            else -> tx.extractAddressSubtitle()
         }
 
         return buildContent(
@@ -145,7 +145,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_topup),
         iconRes = tx.directionalIcon(),
-        subtitle = ContentSubtitle.Plain(tx.yieldSupplySubtitle(currency, type)),
+        subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
     private fun yieldDeployContractContent(
@@ -157,7 +157,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_deploy_contract),
         iconRes = R.drawable.ic_doc_24,
-        subtitle = ContentSubtitle.Plain(tx.yieldSupplySubtitle(currency, type)),
+        subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
     private fun yieldInitializeTokenContent(
@@ -169,7 +169,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_initialize),
         iconRes = R.drawable.ic_gear_24,
-        subtitle = ContentSubtitle.Plain(tx.yieldSupplySubtitle(currency, type)),
+        subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
     private fun yieldReactivateTokenContent(
@@ -181,7 +181,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = resourceReference(R.string.yield_module_transaction_reactivate),
         iconRes = R.drawable.ic_refresh_24,
-        subtitle = ContentSubtitle.Plain(tx.yieldSupplySubtitle(currency, type)),
+        subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
     private fun yieldSendContent(
@@ -197,7 +197,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             resourceReference(R.string.common_transfer)
         },
         iconRes = tx.directionalIcon(),
-        subtitle = ContentSubtitle.Plain(tx.yieldSupplySubtitle(currency, type)),
+        subtitle = tx.yieldSupplySubtitle(currency, type),
         hideAmount = currency is CryptoCurrency.Token && !tx.isOutgoing,
     )
 
@@ -209,7 +209,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = resourceReference(R.string.transaction_history_operation),
         iconRes = tx.directionalIcon(),
-        subtitle = ContentSubtitle.Plain(tx.extractSubtitleByAddressType()),
+        subtitle = tx.extractAddressSubtitle(),
     )
 
     private fun gaslessFeeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
@@ -218,7 +218,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             uiStatus = uiStatus,
             title = resourceReference(R.string.gasless_transaction_fee),
             iconRes = tx.directionalIcon(),
-            subtitle = ContentSubtitle.Plain(tx.extractSubtitleByAddressType()),
+            subtitle = tx.extractAddressSubtitle(),
         )
 
     private fun buildContent(
@@ -283,15 +283,21 @@ private fun resolveOwnSubtitle(
     }
 }
 
-private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: TransactionType.YieldSupply): TextReference {
+private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: TransactionType.YieldSupply): ContentSubtitle {
     if (currency is CryptoCurrency.Coin) {
         return if (type is TransactionType.YieldSupply.Send) {
-            extractSubtitleByAddressType()
+            extractAddressSubtitle()
         } else {
-            resourceReference(
+            val briefAddress = type.address?.toBriefAddressFormat()
+            val text = resourceReference(
                 R.string.transaction_history_transaction_for_address,
-                wrappedList(type.address?.toBriefAddressFormat().orEmpty()),
+                wrappedList(briefAddress.orEmpty()),
             )
+            if (briefAddress.isNullOrEmpty()) {
+                ContentSubtitle.Plain(text)
+            } else {
+                ContentSubtitle.PlainAddress(text = text, highlight = briefAddress)
+            }
         }
     }
     return when (type) {
@@ -304,15 +310,34 @@ private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: Transacti
         is TransactionType.YieldSupply.Send -> if (!isOutgoing && type.isYieldSupplyWithdraw) {
             amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
         } else {
-            extractSubtitleByAddressType()
+            extractAddressSubtitle()
         }
-        else -> extractSubtitleByAddressType()
+        else -> extractAddressSubtitle()
     }
 }
 
-private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): TextReference {
+private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): ContentSubtitle.Plain {
     val formatted = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
-    return resourceReference(resId, wrappedList(formatted))
+    return ContentSubtitle.Plain(resourceReference(resId, wrappedList(formatted)))
+}
+
+private fun TxInfo.extractAddressSubtitle(): ContentSubtitle {
+    val text = extractSubtitleByAddressType()
+    val highlight = interactionAddressType.highlightableBriefAddress()
+    return if (highlight == null) {
+        ContentSubtitle.Plain(text)
+    } else {
+        ContentSubtitle.PlainAddress(text = text, highlight = highlight)
+    }
+}
+
+private fun TxInfo.InteractionAddressType?.highlightableBriefAddress(): String? = when (this) {
+    is TxInfo.InteractionAddressType.Contract -> address.toBriefAddressFormat()
+    is TxInfo.InteractionAddressType.User -> address.toBriefAddressFormat()
+    is TxInfo.InteractionAddressType.Validator -> address.toBriefAddressFormat()
+    is TxInfo.InteractionAddressType.Multiple,
+    null,
+    -> null
 }
 
 private fun TxInfo.extractSubtitleByAddressType(): TextReference =

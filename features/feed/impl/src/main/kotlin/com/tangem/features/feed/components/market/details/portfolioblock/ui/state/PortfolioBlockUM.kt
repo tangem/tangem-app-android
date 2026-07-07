@@ -5,15 +5,14 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
-internal sealed class PortfolioBlockUM {
+internal sealed interface PortfolioBlockUM {
 
-    data object Loading : PortfolioBlockUM()
-    data object Hidden : PortfolioBlockUM()
+    data object Hidden : PortfolioBlockUM
 
     data class AddToken(
         val tokenIcon: CurrencyIconState,
         val onAddClick: () -> Unit,
-    ) : PortfolioBlockUM()
+    ) : PortfolioBlockUM
 
     data class Content(
         val totalBalance: TextReference,
@@ -24,5 +23,9 @@ internal sealed class PortfolioBlockUM {
         val isBalanceHidden: Boolean,
         val onRowClick: () -> Unit,
         val onAddFundsClick: () -> Unit,
-    ) : PortfolioBlockUM()
+    ) : PortfolioBlockUM
+
+    data class Unsupported(
+        val tokenIcon: CurrencyIconState,
+    ) : PortfolioBlockUM
 }

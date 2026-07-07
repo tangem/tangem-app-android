@@ -299,7 +299,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         }
     }
 
-    private fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
+    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
         return requireNotNull(
             value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
