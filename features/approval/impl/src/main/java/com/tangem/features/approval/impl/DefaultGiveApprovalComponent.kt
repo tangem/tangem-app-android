@@ -17,10 +17,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.impl.model.GiveApprovalModel
 import com.tangem.features.approval.impl.ui.GiveApprovalContent
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.params.FeeSelectorParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

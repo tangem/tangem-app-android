@@ -48,6 +48,8 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
+import com.tangem.features.feed.components.market.details.AddFundsSlotRoute
 import com.tangem.features.feed.components.market.details.AddToPortfolioSlotRoute
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.analytics.MarketTokenAnalyticsEvent
@@ -233,6 +235,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
     val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
+    val addFundsSheetNavigation = SlotNavigation<AddFundsSlotRoute>()
 
     private val isAddToPortfolioAvailable: Boolean =
         params.shouldShowPortfolio && designFeatureToggles.isRedesignEnabled
@@ -286,6 +289,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 onScroll = {},
             ),
             onShareClick = ::onShareClick,
+            isAddToPortfolioButtonVisible = false,
+            onAddToPortfolioClick = ::openAddToPortfolio,
         ),
     )
 
@@ -341,11 +346,31 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 }
             }
         }
+        if (isAddToPortfolioAvailable) {
+            addToPortfolioManager.setTokenParams(params.token)
+            addToPortfolioManager.state
+                .map { managerState ->
+                    managerState is AddToPortfolioManager.State.Ready && managerState.isAvailableToAdd
+                }
+                .distinctUntilChanged()
+                .onEach { isVisible ->
+                    state.update { it.copy(isAddToPortfolioButtonVisible = isVisible) }
+                }
+                .launchIn(modelScope)
+        }
         addToPortfolioManager.onDismiss.receiveAsFlow()
             .onEach { addToPortfolioSheetNavigation.dismiss() }
             .launchIn(modelScope)
         addToPortfolioManager.onSuccessAdded.receiveAsFlow()
-            .onEach { addToPortfolioSheetNavigation.dismiss() }
+            .onEach { result ->
+                addToPortfolioSheetNavigation.dismiss()
+                val meta = result.meta
+                if (meta is AddToPortfolioManager.FinishMeta.OnBottomAction &&
+                    meta.action == BottomAction.GoToToken
+                ) {
+                    openTokenDetails(result)
+                }
+            }
             .launchIn(modelScope)
         addToPortfolioManager.onAddedTokenClick.receiveAsFlow()
             .onEach { result ->
@@ -365,6 +390,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         if (!isAddToPortfolioAvailable) return
         prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
         addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
+    }
+
+    fun openAddFunds(rawCurrencyId: com.tangem.domain.models.currency.CryptoCurrency.RawID) {
+        addFundsSheetNavigation.activate(AddFundsSlotRoute(rawCurrencyId = rawCurrencyId))
     }
 
     private fun openTokenDetails(result: AddToPortfolioManager.Result) {
