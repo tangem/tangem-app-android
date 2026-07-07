@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -80,7 +79,7 @@ private fun SortByBalanceMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMe
                 },
                 enabled = !organizeMenuUM.isSortedByBalance,
             )
-            .padding(vertical = TangemTheme.dimens2.x5, horizontal = TangemTheme.dimens2.x4),
+            .padding(vertical = TangemTheme.dimens2.x2_5, horizontal = TangemTheme.dimens2.x4),
     )
 
     HorizontalDivider(
@@ -93,6 +92,7 @@ private fun SortByBalanceMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMe
 private fun GroupTokensMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMenuUM, onDropdownDismiss: () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .widthIn(238.dp)
@@ -102,7 +102,7 @@ private fun GroupTokensMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMenu
                     onDropdownDismiss()
                 },
             )
-            .padding(vertical = TangemTheme.dimens2.x5, horizontal = TangemTheme.dimens2.x4),
+            .padding(vertical = TangemTheme.dimens2.x2_5, horizontal = TangemTheme.dimens2.x4),
     ) {
         Text(
             text = stringResourceSafe(R.string.organize_tokens_group),
@@ -110,27 +110,30 @@ private fun GroupTokensMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMenu
             color = TangemTheme.colors2.text.neutral.primary,
             maxLines = 1,
         )
-        if (organizeMenuUM.isGrouped) {
-            Box(
-                modifier = Modifier
-                    .padding(TangemTheme.dimens2.x0_5)
-                    .size(TangemTheme.dimens2.x5)
-                    .background(
-                        color = TangemTheme.colors2.graphic.neutral.primary,
-                        shape = CircleShape,
-                    ),
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(
-                        ImageVector.vectorResource(R.drawable.ic_check_default_24),
-                    ),
-                    contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primaryInverted,
+        Box(
+            modifier = Modifier.size(TangemTheme.dimens2.x6),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (organizeMenuUM.isGrouped) {
+                Box(
                     modifier = Modifier
-                        .align(Alignment.Center)
                         .padding(TangemTheme.dimens2.x0_5)
-                        .size(TangemTheme.dimens2.x4),
-                )
+                        .size(TangemTheme.dimens2.x5)
+                        .background(
+                            color = TangemTheme.colors2.graphic.neutral.primary,
+                            shape = CircleShape,
+                        ),
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_check_default_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors2.graphic.neutral.primaryInverted,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(TangemTheme.dimens2.x0_5)
+                            .size(TangemTheme.dimens2.x4),
+                    )
+                }
             }
         }
     }

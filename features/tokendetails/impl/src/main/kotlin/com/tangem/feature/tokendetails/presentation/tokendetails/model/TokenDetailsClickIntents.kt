@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
+import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
 interface TokenDetailsClickIntents {
@@ -20,6 +21,8 @@ interface TokenDetailsClickIntents {
     fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
@@ -70,6 +73,8 @@ interface TokenDetailsClickIntents {
     fun onStakeBannerClick()
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
+
+    fun onQuickTopUpClick(amount: BigDecimal, currencyCode: String)
 
     fun onYieldInfoClick()
 
@@ -140,6 +145,8 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
 
     override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
+    override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
     override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onHideClick() { /* no op */ }
@@ -167,6 +174,8 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) { /* no op */ }
 
     override fun onYieldInfoClick() { /* no op */ }
+
+    override fun onQuickTopUpClick(amount: BigDecimal, currencyCode: String) { /* no op */ }
 
     override fun onCopyAddress(): TextReference? {
         /* no op */

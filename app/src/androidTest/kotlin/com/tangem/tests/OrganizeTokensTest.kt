@@ -22,7 +22,8 @@ class OrganizeTokensTest : BaseTestCase() {
     fun groupTokensTest() {
         setupHooks().run {
             val tokenTitle = "Ethereum"
-            val tokenNetwork = "Ethereum network"
+            val networkTitleOrganize = "Ethereum"
+            val networkTitleMain = "Ethereum network"
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -39,17 +40,20 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitle(tokenTitle).assertIsDisplayed()
                 }
             }
+            step("Open organize menu") {
+                onOrganizeTokensScreen { organizeMenuButton.clickWithAssertion() }
+            }
             step("Click 'Group' button") {
                 onOrganizeTokensScreen { groupButton.clickWithAssertion() }
             }
             step("Assert tokens were grouped on 'Organize tokens' screen") {
-                onOrganizeTokensScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsDisplayed() }
+                onOrganizeTokensScreen { tokenNetworkGroupTitle(networkTitleOrganize).assertIsDisplayed() }
             }
             step("Click 'Apply' button") {
                 onOrganizeTokensScreen { applyButton.clickWithAssertion() }
             }
             step("Assert tokens were grouped on 'Main screen'") {
-                onMainScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsDisplayed() }
+                onMainScreen { tokenNetworkGroupTitle(networkTitleMain).assertIsDisplayed() }
             }
             step("Open 'Organize tokens' screen") {
                 openOrganizeTokensScreen()
@@ -60,17 +64,20 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitle(tokenTitle).assertIsDisplayed()
                 }
             }
-            step("Click 'Ungroup' button") {
-                onOrganizeTokensScreen { ungroupButton.clickWithAssertion() }
+            step("Open organize menu") {
+                onOrganizeTokensScreen { organizeMenuButton.clickWithAssertion() }
+            }
+            step("Click 'Group' checkbox again to ungroup") {
+                onOrganizeTokensScreen { groupButton.clickWithAssertion() }
             }
             step("Assert tokens were ungrouped on 'Organize tokens' screen") {
-                onOrganizeTokensScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsNotDisplayed() }
+                onOrganizeTokensScreen { tokenNetworkGroupTitle(networkTitleOrganize).assertIsNotDisplayed() }
             }
             step("Click 'Apply' button") {
                 onOrganizeTokensScreen { applyButton.clickWithAssertion() }
             }
             step("Assert tokens were ungrouped on 'Main screen'") {
-                onMainScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsNotDisplayed() }
+                onMainScreen { tokenNetworkGroupTitle(networkTitleMain).assertIsNotDisplayed() }
             }
         }
     }
@@ -184,6 +191,9 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
                     tokenWithTitleAndPosition(polExMaticTitle, 3).assertIsDisplayed()
                 }
+            }
+            step("Open organize menu") {
+                onOrganizeTokensScreen { organizeMenuButton.clickWithAssertion() }
             }
             step("Click 'By Balance' button") {
                 onOrganizeTokensScreen {
