@@ -1,5 +1,8 @@
 package com.tangem.features.send.subcomponents.destination.model
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -30,6 +33,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.AddressBookSendAnalytics
 import com.tangem.features.addressbook.ContactSelectionListener
 import com.tangem.features.addressbook.MatchedContact
 import com.tangem.features.addressbook.SelectedContact
@@ -38,6 +42,7 @@ import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
@@ -46,10 +51,6 @@ import com.tangem.features.send.subcomponents.destination.analytics.SendDestinat
 import com.tangem.features.send.testDispatcherProvider
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -93,6 +94,7 @@ internal class SendDestinationModelTest {
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val getContactsUseCase: GetContactsUseCase = mockk(relaxed = true)
     private val contactSelectionListener: ContactSelectionListener = mockk(relaxed = true)
+    private val addressBookSendAnalytics: AddressBookSendAnalytics = mockk(relaxed = true)
     private val callback: SendDestinationComponent.ModelCallback = mockk(relaxed = true)
 
     @BeforeEach
@@ -321,6 +323,25 @@ internal class SendDestinationModelTest {
             }
 
         @Test
+        fun `GIVEN a selected contact WHEN applySelectedContact THEN AddressSubstitutedInSend reported`() = runTest {
+            // Arrange
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Success.Valid.right()
+            val sut = buildModel()
+            advanceUntilIdle()
+
+            // Act
+            sut.applySelectedContact(selectedContact(name = "Bob", address = "0xBob"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                addressBookSendAnalytics.onAddressSubstitutedInSend(walletId = testUserWalletId, contactId = "c1")
+            }
+        }
+
+        @Test
         fun `GIVEN a contact is pre-set in state AND route is edit mode WHEN model initializes THEN the contact is reset`() =
             runTest {
                 // Arrange — build initial state with a contact name already set and isInitialized = true
@@ -331,8 +352,8 @@ internal class SendDestinationModelTest {
                     addressTextField = DestinationTextFieldUM.RecipientAddress(
                         value = "0xDave",
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Text),
-                        placeholder = com.tangem.core.ui.extensions.stringReference(""),
-                        label = com.tangem.core.ui.extensions.stringReference(""),
+                        placeholder = stringReference(""),
+                        label = stringReference(""),
                         isValuePasted = false,
                         contactName = "Dave",
                     ),
@@ -549,6 +570,7 @@ internal class SendDestinationModelTest {
             getBackupProblematicWalletForAddressUseCase = getBackupProblematicWalletForAddressUseCase,
             sendDestinationAlertFactory = sendDestinationAlertFactory,
             sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
+            addressBookSendAnalytics = addressBookSendAnalytics,
             getContactsUseCase = getContactsUseCase,
             contactSelectionListener = contactSelectionListener,
         )

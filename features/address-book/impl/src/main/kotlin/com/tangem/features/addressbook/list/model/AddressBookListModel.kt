@@ -15,6 +15,8 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.ContactSelectionTrigger
 import com.tangem.features.addressbook.MatchedContact
 import com.tangem.features.addressbook.SelectedContact
+import com.tangem.features.addressbook.analytics.AddressBookEvents.ContactListScreenOpened.Source
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.list.state.AddressBookListStateController
 import com.tangem.features.addressbook.list.state.transformers.UpdateAddressBookListContentTransformer
@@ -42,6 +44,7 @@ internal class AddressBookListModel @Inject constructor(
     private val stateController: AddressBookListStateController,
     private val router: Router,
     private val contactSelectionTrigger: ContactSelectionTrigger,
+    private val analyticsSender: AddressBookAnalyticsSender,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
@@ -87,6 +90,14 @@ internal class AddressBookListModel @Inject constructor(
             .onEach(::updateState)
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
+
+        sendContactListScreenOpenedEvent()
+    }
+
+    fun deliverSelection(contact: SelectedContact) {
+        contactSelectionTrigger.trigger(contact)
+        selectorNavigation.dismiss()
+        router.pop()
     }
 
     private fun updateState(inputs: ListInputs) {
@@ -134,6 +145,8 @@ internal class AddressBookListModel @Inject constructor(
     }
 
     private fun onPickContact(contact: MatchedContact) {
+        // Reported on tap, before the address is substituted; onPickContact is only invoked in selector (Send) mode.
+        analyticsSender.sendContactSelectedInSend(contactId = contact.contactId, scope = modelScope)
         val singleEntry = contact.entries.singleOrNull()
         if (singleEntry != null) {
             deliverSelection(contact.toSelectedContact(singleEntry))
@@ -142,10 +155,22 @@ internal class AddressBookListModel @Inject constructor(
         }
     }
 
-    fun deliverSelection(contact: SelectedContact) {
-        contactSelectionTrigger.trigger(contact)
-        selectorNavigation.dismiss()
-        router.pop()
+    private fun sendContactListScreenOpenedEvent() {
+        allContacts
+            .take(count = 1)
+            .onEach { contacts ->
+                analyticsSender.sendContactListScreenOpened(
+                    source = params.mode.toAnalyticsSource(),
+                    contactsCount = contacts.size,
+                    scope = modelScope,
+                )
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun AddressBookRoute.ListMode.toAnalyticsSource(): Source = when (this) {
+        AddressBookRoute.ListMode.Default -> Source.Settings
+        is AddressBookRoute.ListMode.Selector -> Source.SendFlow
     }
 
     private data class ListInputs(
