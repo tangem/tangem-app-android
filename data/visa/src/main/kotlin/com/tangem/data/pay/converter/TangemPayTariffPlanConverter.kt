@@ -14,6 +14,18 @@ internal object TangemPayTariffPlanConverter {
             name = name,
             descriptionItems = value.descriptionItems.orEmpty().mapNotNull(::convertDescriptionItem),
             images = value.images.orEmpty().mapNotNull(::convertImage),
+            fees = value.fees.orEmpty().mapNotNull(::convertFee),
+        )
+    }
+
+    private fun convertFee(fee: CustomerMeResponse.Fee): TangemPayTariffPlan.Fee? {
+        val amount = fee.amount ?: return null
+        return TangemPayTariffPlan.Fee(
+            type = TangemPayTariffPlan.Fee.Type.fromString(fee.type),
+            amount = amount,
+            currency = fee.currency.orEmpty(),
+            description = fee.description.orEmpty(),
+            period = fee.period?.let(TangemPayTariffPlan.Fee.Period::fromString),
         )
     }
 

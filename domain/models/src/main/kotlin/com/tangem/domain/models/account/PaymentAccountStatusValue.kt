@@ -166,7 +166,7 @@ sealed class PaymentAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
         val virtualAccount: VirtualAccountOnramp?,
-        val tariffPlan: TangemPayCustomerTariffPlan?,
+        val tariffPlan: TangemPayTariffPlanState?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
