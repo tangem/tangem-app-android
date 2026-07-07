@@ -6,9 +6,11 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookContactsBlockComponent
+import com.tangem.features.addressbook.MatchedContact
 import com.tangem.features.addressbook.block.state.ContactsBlockStateController
 import com.tangem.features.addressbook.block.state.transformers.UpdateContactsBlockStateTransformer
 import com.tangem.features.addressbook.block.ui.state.ContactsBlockUM
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.ContactMatcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,12 +23,13 @@ internal class ContactsBlockModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val stateController: ContactsBlockStateController,
+    private val analyticsSender: AddressBookAnalyticsSender,
     getContactsUseCase: GetContactsUseCase,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
+    private var isWidgetShownReported = false
     private val params = paramsContainer.require<AddressBookContactsBlockComponent.Params>()
-
     val state: StateFlow<ContactsBlockUM> get() = stateController.uiState
 
     init {
@@ -38,17 +41,30 @@ internal class ContactsBlockModel @Inject constructor(
         ) { contacts, wallets -> contacts to wallets.values.toList() }
             .onEach { (contacts, wallets) ->
                 val matched = ContactMatcher.match(contacts = contacts, networkId = params.network.rawId)
+                reportWidgetShownIfNeeded(matched.isNotEmpty())
                 stateController.update(
                     UpdateContactsBlockStateTransformer(
                         matched = matched,
                         walletNamesById = wallets.associate { it.walletId.stringValue to it.name },
                         shouldShowWalletName = matched.mapTo(HashSet()) { it.walletId }.size > 1,
                         onSeeAllClick = params.onSeeAllClick,
-                        onContactClick = params.onContactClick,
+                        onContactClick = ::onContactClick,
                     ),
                 )
             }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
+    }
+
+    private fun reportWidgetShownIfNeeded(isVisible: Boolean) {
+        if (isVisible && !isWidgetShownReported) {
+            isWidgetShownReported = true
+            analyticsSender.sendSendFlowWidgetShown(scope = modelScope)
+        }
+    }
+
+    private fun onContactClick(contact: MatchedContact) {
+        analyticsSender.sendContactSelectedInSend(contactId = contact.contactId, scope = modelScope)
+        params.onContactClick(contact)
     }
 }
