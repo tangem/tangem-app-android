@@ -162,5 +162,9 @@
     {
         "name": "TWI_1638_VA_MVP0_ENABLED",
         "version": "6.1"
+    },
+    {
+        "name": "TWI_1637_CASHBACK_AND_REACTIVATION_CAMPAIGNS_ENABLED",
+        "version": "undefined"
     }
 ]
