@@ -116,6 +116,7 @@ internal class TangemPayDetailsComponent(
         }
     }
 
+    @Suppress("LongMethod")
     private fun bottomSheetChild(
         navigation: TangemPayDetailsNavigation,
         componentContext: ComponentContext,
@@ -155,8 +156,11 @@ internal class TangemPayDetailsComponent(
                 appComponentContext = context,
                 params = TangemPayVirtualAccountDepositComponent.Params(
                     virtualAccountOnramp = navigation.virtualAccountOnramp,
+                    userWalletId = navigation.userWalletId,
+                    paymentAccountAddress = navigation.paymentAccountAddress,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onShowDetails = model::onShowVirtualAccountRequisites,
+                    onOrderCreated = model::onVirtualAccountOrderCreated,
                 ),
             )
             is TangemPayDetailsNavigation.VirtualAccountRequisites -> virtualAccountAddFundsComponentFactory.create(
