@@ -14,11 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -35,11 +35,9 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
@@ -47,6 +45,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 private val CurrencyIconSize: Dp = 70.dp
 private val NetworkBadgeSize: Dp = 24.dp
@@ -90,16 +89,25 @@ internal fun TokenDetailsBalanceBlock(
         }
         if (!balanceBlockUM.isBalanceZeroContent()) {
             SpacerH(TangemTheme.dimens2.x10)
+            val hapticManager = LocalHapticManager.current
             val buttons = remember(
                 balanceBlockUM.addFundsButton,
                 balanceBlockUM.swapButton,
                 balanceBlockUM.transferButton,
+                hapticManager,
             ) {
                 persistentListOf(
                     balanceBlockUM.addFundsButton,
                     balanceBlockUM.swapButton,
                     balanceBlockUM.transferButton,
-                )
+                ).map { button ->
+                    button.copy(
+                        onClick = {
+                            hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                            button.onClick()
+                        },
+                    )
+                }.toPersistentList()
             }
             ActionButtons(buttons = buttons)
         }
