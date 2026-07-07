@@ -140,6 +140,17 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetTangemPayTariffPlanStateUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            getTangemPayTariffPlanTransitionsUseCase: GetTangemPayTariffPlanTransitionsUseCase,
+        ): GetTangemPayTariffPlanStateUseCase {
+            return GetTangemPayTariffPlanStateUseCase(
+                customerOrderRepository = customerOrderRepository,
+                getTariffPlanTransitions = getTangemPayTariffPlanTransitionsUseCase,
+            )
+        }
+
+        @Provides
         @Singleton
         fun providePaymentAccountStatusesStore(
             @NetworkMoshi moshi: Moshi,
