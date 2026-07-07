@@ -76,7 +76,7 @@ internal class DefaultMarketsTokenDetailsComponent(
         }
 
     private val portfolioBlockComponent: PortfolioBlockComponent? =
-        if (designFeatureToggles.isRedesignEnabled) {
+        if (updatedParams.shouldShowPortfolio && designFeatureToggles.isRedesignEnabled) {
             portfolioBlockComponentFactory.create(
                 context = child("portfolio_block"),
                 params = PortfolioBlockComponent.Params(token = updatedParams.token),
