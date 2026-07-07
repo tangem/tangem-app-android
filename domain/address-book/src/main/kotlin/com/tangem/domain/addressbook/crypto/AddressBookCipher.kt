@@ -10,6 +10,7 @@ import com.tangem.domain.addressbook.model.AddressBookBlob
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.extensions.hexToBytesOrNull
 import com.tangem.utils.extensions.toHexString
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.serialization.json.Json
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -35,6 +36,7 @@ class AddressBookCipher {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val secureRandom = SecureRandom()
+    private val logger = TangemLogger.withTag(LOG_TAG)
 
     fun encrypt(
         addressBook: AddressBook,
@@ -58,24 +60,97 @@ class AddressBookCipher {
             nonce = nonce.toHexString().lowercase(),
             ciphertext = ciphertext.toHexString().lowercase(),
             authTag = authTag.toHexString().lowercase(),
-        )
+        ).also { blob ->
+            // Metadata only — the plaintext (contact names/addresses/memos) is never logged.
+            logger.d(
+                "Encrypted address book for wallet ${blob.walletId}: contacts=${addressBook.contacts.size}, " +
+                    "plaintextBytes=${plaintext.size}, version=${blob.version}, " +
+                    "nonceLen=${blob.nonce.length}, ciphertextLen=${blob.ciphertext.length}, " +
+                    "authTagLen=${blob.authTag.length}",
+            )
+        }
     }
 
     fun decrypt(blob: AddressBookBlob, userWallet: UserWallet): Either<AddressBookCryptoError, AddressBook> = either {
-        ensure(blob.walletId == userWallet.walletId.stringValue) { AddressBookCryptoError.WalletMismatch }
+        // Metadata only — helps QA correlate a failing blob with what was received from the backend/other platform.
+        logger.d(
+            "Decrypting address book for wallet ${blob.walletId}: version=${blob.version}, " +
+                "updatedAt=${blob.updatedAt}, nonceLen=${blob.nonce.length}, " +
+                "ciphertextLen=${blob.ciphertext.length}, authTagLen=${blob.authTag.length}",
+        )
+
+        ensure(blob.walletId == userWallet.walletId.stringValue) {
+            logger.w(
+                "Wallet mismatch decrypting address book: blob wallet=${blob.walletId}, " +
+                    "target wallet=${userWallet.walletId.stringValue}",
+            )
+            AddressBookCryptoError.WalletMismatch
+        }
 
         val aesKey = deriveKey(userWallet)
-        val nonce = blob.nonce.hexToBytesOrNull() ?: raise(AddressBookCryptoError.DecryptionFailed)
-        val ciphertext = blob.ciphertext.hexToBytesOrNull() ?: raise(AddressBookCryptoError.DecryptionFailed)
-        val authTag = blob.authTag.hexToBytesOrNull() ?: raise(AddressBookCryptoError.DecryptionFailed)
+        val nonce = blob.nonce.hexToBytesOrNull() ?: raiseNonHex(blob, field = "nonce", value = blob.nonce)
+        val ciphertext = blob.ciphertext.hexToBytesOrNull() ?: raiseNonHex(
+            blob = blob,
+            field = "ciphertext",
+            value = blob.ciphertext,
+        )
+        val authTag = blob.authTag.hexToBytesOrNull() ?: raiseNonHex(blob, field = "authTag", value = blob.authTag)
 
         val plaintext = runCatching {
             cipher(Cipher.DECRYPT_MODE, aesKey, nonce).doFinal(ciphertext + authTag)
-        }.getOrElse { raise(AddressBookCryptoError.DecryptionFailed) }
+        }.getOrElse { error ->
+            logger.e(
+                "Failed to AES-GCM decrypt address book for wallet ${blob.walletId} " +
+                    "(nonceBytes=${nonce.size}, ciphertextBytes=${ciphertext.size}, authTagBytes=${authTag.size}): " +
+                    "${error.safeDescription()}. Usually a wrong key/nonce/tag or a corrupted blob.",
+                error,
+            )
+            raise(AddressBookCryptoError.DecryptionFailed)
+        }
 
         runCatching {
             json.decodeFromString(AddressBook.serializer(), plaintext.toString(Charsets.UTF_8))
-        }.getOrElse { raise(AddressBookCryptoError.MalformedBlob) }
+        }.getOrElse { error ->
+            // Decryption succeeded, so this is a payload schema/format mismatch — the prime suspect for a book
+
+            // reason (missing/extra field, wrong type, JSON path) but strips any raw plaintext the exception echoes.
+            logger.e(
+                "Failed to parse decrypted address book for wallet ${blob.walletId} " +
+                    "(plaintextBytes=${plaintext.size}, version=${blob.version}): ${error.safeDescription()}. " +
+                    "Decryption OK → cross-platform payload schema/format mismatch.",
+            )
+            raise(AddressBookCryptoError.MalformedBlob)
+        }.also { addressBook ->
+            logger.d(
+                messageString = "Decrypted address book for wallet ${blob.walletId}: " +
+                    "contacts=${addressBook.contacts.size}",
+            )
+        }
+    }
+
+    private fun Raise<AddressBookCryptoError>.raiseNonHex(
+        blob: AddressBookBlob,
+        field: String,
+        value: String,
+    ): Nothing {
+        logger.e(
+            "Address book blob has non-hex $field for wallet ${blob.walletId} " +
+                "(${field}Len=${value.length}, version=${blob.version}).",
+        )
+        raise(AddressBookCryptoError.DecryptionFailed)
+    }
+
+    /**
+     * A log-safe, one-line description of a failure: exception type + message, with any raw decrypted payload
+     * stripped. kotlinx.serialization appends the offending input after a `JSON input:` marker; everything before
+     * it (the reason and the `at path: …` location) is structural and safe to log.
+     */
+    private fun Throwable.safeDescription(): String {
+        val safeMessage = message.orEmpty().substringBefore("JSON input:").trim()
+        return buildString {
+            append(this@safeDescription::class.simpleName)
+            if (safeMessage.isNotEmpty()) append(": ").append(safeMessage)
+        }
     }
 
     private fun Raise<AddressBookCryptoError>.deriveKey(userWallet: UserWallet): ByteArray {
@@ -91,6 +166,7 @@ class AddressBookCipher {
     }
 
     private companion object {
+        const val LOG_TAG = "AddressBook"
         const val AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding"
         const val AES_ALGORITHM = "AES"
         const val NONCE_SIZE_BYTES = 12
