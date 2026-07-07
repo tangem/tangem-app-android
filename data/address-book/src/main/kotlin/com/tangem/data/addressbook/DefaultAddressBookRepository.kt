@@ -126,9 +126,8 @@ internal class DefaultAddressBookRepository(
 
     override suspend fun syncAddressBooks(): Either<AddressBookSyncError, Unit> = withContext(dispatchers.default) {
         val wallets = userWalletsListRepository.userWalletsSync()
-        // Debug (Logcat only, dev builds) — the persisted prod log stays quiet on the happy path; only failures
-        // below are written at Error level.
-        logger.d("Syncing address books for ${wallets.size} wallet(s)")
+        // Metadata only (wallet count) — persisted to the prod log so sync activity is traceable.
+        logger.i("Syncing address books for ${wallets.size} wallet(s)")
         // The backend rejects more than MAX_SYNC_WALLETS per request, so sync in chunks and stop on the
         // first failed chunk.
         wallets.chunked(MAX_SYNC_WALLETS)
@@ -150,13 +149,13 @@ internal class DefaultAddressBookRepository(
             call = {
                 val response = withContext(dispatchers.io) { addressBookApi.syncAddressBooks(request).bind() }
                 // Only wallets whose etag changed are returned; the rest keep their local copy.
-                logger.d("Sync response: ${response.items.size} updated book(s) out of ${wallets.size} requested")
+                logger.i("Sync response: ${response.items.size} updated book(s) out of ${wallets.size} requested")
                 response.items.forEach { item ->
                     val userWalletId = UserWalletId(stringValue = item.walletId)
-                    // Metadata only — helps QA verify what the backend delivered (esp. for cross-platform books).
-                    // Debug (Logcat only) to keep the persisted prod log free of happy-path sync noise.
-                    logger.d(
-                        "Storing synced address book for wallet ${item.walletId}: version=${item.version}, " +
+                    // Metadata only (no keys/ciphertext/plaintext) — helps QA verify what the backend delivered
+                    // (esp. for cross-platform books).
+                    logger.i(
+                        "Storing synced address book for wallet ${item.walletId}: " +
                             "updatedAt=${item.updatedAt}, nonceLen=${item.nonce.length}, " +
                             "ciphertextLen=${item.ciphertext.length}, authTagLen=${item.authTag.length}",
                     )

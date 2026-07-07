@@ -62,9 +62,9 @@ class AddressBookCipher {
             authTag = authTag.toHexString().lowercase(),
         ).also { blob ->
             // Metadata only — the plaintext (contact names/addresses/memos) is never logged.
-            logger.d(
+            logger.i(
                 "Encrypted address book for wallet ${blob.walletId}: contacts=${addressBook.contacts.size}, " +
-                    "plaintextBytes=${plaintext.size}, version=${blob.version}, " +
+                    "plaintextBytes=${plaintext.size}, " +
                     "nonceLen=${blob.nonce.length}, ciphertextLen=${blob.ciphertext.length}, " +
                     "authTagLen=${blob.authTag.length}",
             )
@@ -73,14 +73,14 @@ class AddressBookCipher {
 
     fun decrypt(blob: AddressBookBlob, userWallet: UserWallet): Either<AddressBookCryptoError, AddressBook> = either {
         // Metadata only — helps QA correlate a failing blob with what was received from the backend/other platform.
-        logger.d(
-            "Decrypting address book for wallet ${blob.walletId}: version=${blob.version}, " +
+        logger.i(
+            "Decrypting address book for wallet ${blob.walletId}: " +
                 "updatedAt=${blob.updatedAt}, nonceLen=${blob.nonce.length}, " +
                 "ciphertextLen=${blob.ciphertext.length}, authTagLen=${blob.authTag.length}",
         )
 
         ensure(blob.walletId == userWallet.walletId.stringValue) {
-            logger.w(
+            logger.e(
                 "Wallet mismatch decrypting address book: blob wallet=${blob.walletId}, " +
                     "target wallet=${userWallet.walletId.stringValue}",
             )
@@ -116,12 +116,12 @@ class AddressBookCipher {
             // reason (missing/extra field, wrong type, JSON path) but strips any raw plaintext the exception echoes.
             logger.e(
                 "Failed to parse decrypted address book for wallet ${blob.walletId} " +
-                    "(plaintextBytes=${plaintext.size}, version=${blob.version}): ${error.safeDescription()}. " +
+                    "(plaintextBytes=${plaintext.size}): ${error.safeDescription()}. " +
                     "Decryption OK → cross-platform payload schema/format mismatch.",
             )
             raise(AddressBookCryptoError.MalformedBlob)
         }.also { addressBook ->
-            logger.d(
+            logger.i(
                 messageString = "Decrypted address book for wallet ${blob.walletId}: " +
                     "contacts=${addressBook.contacts.size}",
             )
@@ -135,7 +135,7 @@ class AddressBookCipher {
     ): Nothing {
         logger.e(
             "Address book blob has non-hex $field for wallet ${blob.walletId} " +
-                "(${field}Len=${value.length}, version=${blob.version}).",
+                "(${field}Len=${value.length}).",
         )
         raise(AddressBookCryptoError.DecryptionFailed)
     }
