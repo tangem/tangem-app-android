@@ -10,8 +10,8 @@ interface MutableFeatureTogglesManager : FeatureTogglesManager {
     /** Check if the current state of the feature toggles matches the local config state. */
     fun isMatchLocalConfig(): Boolean
 
-    /** Get feature toggles */
-    fun getFeatureToggles(): Map<String, Boolean>
+    /** Get feature toggles with version info */
+    fun getFeatureToggles(): List<FeatureToggleInfo>
 
     /** Change availability [isEnabled] of toggle with name [name] */
     suspend fun changeToggle(name: String, isEnabled: Boolean)

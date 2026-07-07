@@ -71,6 +71,20 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideSignAndBroadcastPsbtUseCase(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        walletManagersFacade: WalletManagersFacade,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): SignAndBroadcastPsbtUseCase {
+        return SignAndBroadcastPsbtUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+            getHotTransactionSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideAssociateAssetUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
@@ -234,6 +248,12 @@ internal object TransactionDomainModule {
             walletManagersFacade = walletManagersFacade,
             getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideVerifySecp256k1MessagesUseCase(): VerifySecp256k1MessagesUseCase {
+        return VerifySecp256k1MessagesUseCase()
     }
 
     @Provides

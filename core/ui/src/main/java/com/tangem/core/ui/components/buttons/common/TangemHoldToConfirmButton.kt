@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
@@ -43,7 +44,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -104,7 +104,6 @@ internal fun TangemHoldToConfirmButton(
     colors: ButtonColors = TangemButtonsDefaults.primaryButtonColors,
     size: TangemButtonSize = TangemButtonSize.Default,
     textStyle: TextStyle = TangemTheme.typography.button,
-    shape: Shape = size.toShape(),
 ) {
     val coroutineScope = rememberCoroutineScope()
     val state = rememberHoldToConfirmState()
@@ -162,14 +161,14 @@ internal fun TangemHoldToConfirmButton(
                     onConfirm = onConfirm,
                 ),
             ),
-        shape = shape,
+        shape = CircleShape,
         color = containerColor,
     ) {
         HoldToConfirmButtonContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = buttonHeight)
-                .clip(shape),
+                .clip(CircleShape),
             contentPadding = contentPadding,
             state = state,
             shouldShowProgress = shouldShowProgress,

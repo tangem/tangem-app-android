@@ -325,6 +325,7 @@ private fun PromoItem(@DrawableRes icon: Int, title: TextReference, subtitle: Te
     }
 }
 
+@Suppress("UnnecessaryEventHandlerParameter")
 @Composable
 private fun YieldSupplyTosText(
     tosLink: String,
