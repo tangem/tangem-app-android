@@ -29,6 +29,8 @@ internal sealed class TangemPayDetailsNavigation {
     @Serializable
     data class VirtualAccountDeposit(
         val virtualAccountOnramp: VirtualAccountOnramp,
+        val userWalletId: UserWalletId,
+        val paymentAccountAddress: String,
     ) : TangemPayDetailsNavigation()
 
     @Serializable
