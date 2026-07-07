@@ -1,6 +1,9 @@
 package com.tangem.features.addressbook.common
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.MatchedContact
@@ -27,7 +30,7 @@ internal object ContactMatcher {
                     MatchedContact.ContactAddress(
                         address = entry.address,
                         memo = entry.memo,
-                        networkName = entry.networkName,
+                        networkName = entry.displayNetworkName(),
                     )
                 }.toImmutableList(),
             )
@@ -40,4 +43,8 @@ internal object ContactMatcher {
         color = CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == iconColor }
             ?: CryptoPortfolioIcon.Color.Azure,
     )
+
+    /** Display network name is derived from [AddressEntry.networkId] — it is not stored in the encrypted payload. */
+    private fun AddressEntry.displayNetworkName(): String =
+        Blockchain.fromNetworkId(networkId.value)?.fullName ?: networkId.value
 }
