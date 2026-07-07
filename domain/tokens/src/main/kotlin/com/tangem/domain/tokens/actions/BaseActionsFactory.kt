@@ -104,17 +104,20 @@ internal open class BaseActionsFactory(
     /**
      * Determines the unavailability reason for the SELL action
      *
-     * @param userWalletId             the ID of the user's wallet
+     * @param userWallet               the user's wallet
      * @param status                   the status of the cryptocurrency
      * @param sendUnavailabilityReason the reason for unavailability of the send action
      */
     protected suspend fun getSellUnavailabilityReason(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         status: CryptoCurrencyStatus,
         sendUnavailabilityReason: ScenarioUnavailabilityReason,
     ): ScenarioUnavailabilityReason {
+        if (userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isStart2Coin()) {
+            return ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)
+        }
         return rampStateManager.availableForSell(
-            userWalletId = userWalletId,
+            userWalletId = userWallet.walletId,
             status = status,
             sendUnavailabilityReason = sendUnavailabilityReason,
         ).fold(

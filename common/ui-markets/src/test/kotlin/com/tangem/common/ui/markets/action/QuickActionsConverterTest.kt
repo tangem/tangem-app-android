@@ -127,4 +127,55 @@ internal class QuickActionsConverterTest {
         assertThat(result).doesNotContain(QuickActionUM.V2.SwapAndSend)
         assertThat(result).doesNotContain(QuickActionUM.V2.Exchange(shouldShowBadge = false))
     }
+
+    @Test
+    fun `GIVEN buy and swap unavailable WHEN context is AddFunds THEN they are still shown (disabled) not hidden`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrencyName = "BTC")),
+            TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.SingleWallet, shouldShowBadge = false),
+            TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None),
+        )
+
+        // Act
+        val result = QuickActionsConverter.toQuickActions(
+            actions = actions,
+            isRedesignEnabled = true,
+            context = TokenActionsContext.AddFunds,
+        )
+
+        // Assert
+        assertThat(result).containsExactly(
+            QuickActionUM.V2.Buy,
+            QuickActionUM.V2.Exchange(shouldShowBadge = false),
+            QuickActionUM.V2.Receive,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN swap and sell unavailable WHEN context is Transfer THEN swap and sell shown disabled and no swapAndSend`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+            TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.SingleWallet, shouldShowBadge = false),
+            TokenActionsState.ActionState.Sell(
+                ScenarioUnavailabilityReason.NotSupportedBySellService(cryptoCurrencyName = "BTC"),
+            ),
+        )
+
+        // Act
+        val result = QuickActionsConverter.toQuickActions(
+            actions = actions,
+            isRedesignEnabled = true,
+            context = TokenActionsContext.Transfer,
+        )
+
+        // Assert
+        assertThat(result).containsExactly(
+            QuickActionUM.V2.Send,
+            QuickActionUM.V2.Exchange(shouldShowBadge = false),
+            QuickActionUM.V2.Sell,
+        ).inOrder()
+        assertThat(result).doesNotContain(QuickActionUM.V2.SwapAndSend)
+    }
 }
