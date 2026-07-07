@@ -235,7 +235,6 @@ internal class SwapInteractorImpl @Inject constructor(
                                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                                     provider = provider,
                                     amount = amount,
-                                    reduceBalanceBy = reduceBalanceBy,
                                     expressOperationType = ExpressOperationType.SWAP,
                                 )
                             } else {
@@ -244,7 +243,6 @@ internal class SwapInteractorImpl @Inject constructor(
                                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                                     provider = provider,
                                     amount = amount,
-                                    reduceBalanceBy = reduceBalanceBy,
                                     expressOperationType = ExpressOperationType.SWAP,
                                 )
                             }
@@ -255,7 +253,6 @@ internal class SwapInteractorImpl @Inject constructor(
                                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                                 provider = provider,
                                 amount = amount,
-                                reduceBalanceBy = reduceBalanceBy,
                             )
                         }
                     }
@@ -270,7 +267,6 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         provider: SwapProvider,
         amount: SwapAmount,
-        reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
         if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true) {
@@ -300,7 +296,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 provider = provider,
                 amount = amount,
-                reduceBalanceBy = reduceBalanceBy,
             )
         }
 
@@ -358,7 +353,6 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         provider: SwapProvider,
         amount: SwapAmount,
-        reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
         val maybeQuotes = repository.findBestQuote(
@@ -380,7 +374,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 provider = provider,
                 amount = amount,
-                reduceBalanceBy = reduceBalanceBy,
             )
         }
 
@@ -415,42 +408,26 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         provider: SwapProvider,
         amount: SwapAmount,
-        reduceBalanceBy: BigDecimal,
     ): Pair<SwapProvider, SwapState> {
         val fromToken = fromSwapCurrencyStatus.currency
         val toToken = toSwapCurrencyStatus.currency
 
-        val includeFeeInAmount = getIncludeFeeInAmountInternal(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            amount = amount,
-            reduceBalanceBy = reduceBalanceBy,
-            feeValue = BigDecimal.ZERO,
-        )
-
-        val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmountInternal.Included) {
-            includeFeeInAmount.amountSubtractFee
-        } else {
-            amount
-        }
-
+        // Always request the user-entered amount. The real balance/fee decision is deferred to the fee
+        // selector (`computeBalanceStatus` / `applySwapFee`), which correctly handles gasless (token) fee
+        // payment even when the native coin balance is zero. Do NOT derive the quote amount from the native
+        // balance here — that discards the entered amount ([REDACTED_TASK_KEY] regression: CEX always sent max).
         val quotes = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
             fromContractAddress = fromToken.getContractAddress(),
             fromNetwork = fromToken.network.rawId,
             toContractAddress = toToken.getContractAddress(),
             toNetwork = toToken.network.rawId,
-            fromAmount = amountToRequest.toStringWithRightOffset(),
+            fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = toToken.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
         )
-
-        val quoteBalanceStatus = if (includeFeeInAmount == IncludeFeeInAmountInternal.BalanceNotEnough) {
-            SwapBalanceStatus.InsufficientAmount
-        } else {
-            SwapBalanceStatus.Pending // fee not resolved yet
-        }
 
         return provider to getQuotesState(
             provider = provider,
@@ -459,7 +436,7 @@ internal class SwapInteractorImpl @Inject constructor(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             isAllowedToSpend = true,
-            quoteBalanceStatus = quoteBalanceStatus,
+            quoteBalanceStatus = SwapBalanceStatus.Pending,
         )
     }
 
@@ -1386,8 +1363,8 @@ internal class SwapInteractorImpl @Inject constructor(
      *    same-currency-token path: balance check on the from-token's own balance.
      *  - Otherwise → native-fee branch via [getIncludeFeeInAmountForNative].
      *
-     * Used both by [loadCexQuoteData] (with `feeValue = ZERO` at quote stage) and by
-     * [computeBalanceStatus] (with the actual fee once the selector resolves).
+     * Used by [computeBalanceStatus] with the actual fee once the fee selector resolves. The quote stage
+     * ([manageCex]) no longer consults this — it always requests the user-entered amount.
      */
     private suspend fun getIncludeFeeInAmountInternal(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
