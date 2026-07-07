@@ -127,14 +127,16 @@ private fun QuickActionsList(state: TokenActionsUM, modifier: Modifier = Modifie
                             Modifier.testTag(TokenActionsTestTags.BUY_ACTION)
                         else -> Modifier
                     }
+                    val isEnabled = actionUM !in state.quickActions.disabledActions
                     TokenActionRow(
                         modifier = actionModifier,
                         iconRes = actionUM.icon,
                         title = actionUM.title,
                         description = actionUM.description,
-                        onClick = { state.quickActions.onQuickActionClick(actionUM) },
+                        isEnabled = isEnabled,
+                        onClick = { state.quickActions.onQuickActionClick(actionUM) }.takeIf { isEnabled },
                         onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) }
-                            .takeIf { actionUM.isLongClickAvailable },
+                            .takeIf { actionUM.isLongClickAvailable && isEnabled },
                     )
                 }
             }
