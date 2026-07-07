@@ -7,6 +7,7 @@ import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.promobanners.impl.campaigns.component.DefaultCampaignsComponent
 import com.tangem.features.promobanners.impl.campaigns.deeplink.DefaultCampaignsDeepLinkHandler
 import com.tangem.features.promobanners.impl.campaigns.model.ActivateCampaignsModel
+import com.tangem.features.promobanners.impl.campaigns.model.CampaignAlreadyActivatedModel
 import com.tangem.features.promobanners.impl.campaigns.model.CampaignsModel
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.service.DefaultCampaignsService
@@ -50,4 +51,9 @@ internal interface CampaignsModelModule {
     @IntoMap
     @ClassKey(ActivateCampaignsModel::class)
     fun bindCampaignActivateModel(model: ActivateCampaignsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CampaignAlreadyActivatedModel::class)
+    fun bindCampaignAlreadyActivatedModel(model: CampaignAlreadyActivatedModel): Model
 }

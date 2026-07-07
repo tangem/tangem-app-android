@@ -1,50 +1,50 @@
 package com.tangem.features.promobanners.impl.campaigns.component
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
-import com.tangem.core.ui.components.bottomsheets.message.infoBlock
-import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
-import com.tangem.core.ui.components.bottomsheets.message.onClick
-import com.tangem.core.ui.components.bottomsheets.message.onDismiss
-import com.tangem.core.ui.components.bottomsheets.message.primaryButton
-import com.tangem.core.ui.components.bottomsheets.message.vector
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.extensions.resourceReference
+import androidx.compose.runtime.State
+import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.button.Close
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_success_24
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.entity.campaignName
+import com.tangem.features.promobanners.impl.campaigns.ui.CampaignEnrolledMessageContent
 
 internal class CampaignEnrolledBottomSheetComponent(
     private val campaignType: CampaignType,
     private val onDismissRequest: () -> Unit,
-) : ComposableBottomSheetComponent {
-
-    override fun dismiss() = onDismissRequest()
+) : CampaignsModularComponent {
 
     @Composable
-    override fun BottomSheet() {
-        MessageBottomSheet(
-            state = messageBottomSheetUM {
-                onDismiss(onDismissRequest)
-                infoBlock {
-                    vector(Icons.ic_success_24) {
-                        type = MessageBottomSheetUM.Vector.Type.Accent
-                        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.SameAsTint
-                    }
+    override fun Title(bottomSheetState: State<BottomSheetState>) {
+        TangemTopNavigation(
+            windowInsets = WindowInsets(0),
+            blurBackground = false,
+            endButton = { TangemButton.Close(onClick = onDismissRequest) },
+        )
+    }
 
-                    title = stringReference("You're successfully enrolled in ${campaignType.campaignName()}")
-                    body = stringReference("Your cashback will be applied to eligible swaps automatically.")
-                }
-                primaryButton {
-                    text = resourceReference(R.string.common_close)
-                    onClick { closeBs() }
-                }
-            },
-            onDismissRequest = onDismissRequest,
+    @Composable
+    override fun Content(bottomSheetState: State<BottomSheetState>, contentPadding: PaddingValues, modifier: Modifier) {
+        CampaignEnrolledMessageContent(
+            message = stringReference("You're successfully enrolled in ${campaignType.campaignName()}"),
+        )
+    }
+
+    @Composable
+    override fun Footer() {
+        PrimaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResourceSafe(R.string.common_close),
+            onClick = { onDismissRequest() },
         )
     }
 }
