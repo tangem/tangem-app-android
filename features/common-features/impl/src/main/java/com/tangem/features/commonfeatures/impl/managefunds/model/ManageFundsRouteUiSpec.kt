@@ -33,7 +33,7 @@ internal fun ManageFundsModel.UiRoute.uiSpec(flowType: ManageFundsComponent.Flow
             shouldApplyHorizontalPadding = false,
             shouldFillHeight = false,
         )
-        ManageFundsModel.UiRoute.TokenActions -> ManageFundsRouteUiSpec(
+        is ManageFundsModel.UiRoute.TokenActions -> ManageFundsRouteUiSpec(
             title = resourceReference(if (isTransfer) R.string.common_transfer else R.string.common_get_token),
             subtitle = null,
             shouldApplyHorizontalPadding = true,
