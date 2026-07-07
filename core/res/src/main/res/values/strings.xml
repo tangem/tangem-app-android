@@ -727,6 +727,7 @@
   <string name="generic_error">An error occurred</string>
   <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">Requires memo</string>
+  <string name="get_token_title">Get %1$s</string>
   <string name="give_permission_current_transaction">Transaction</string>
   <string name="give_permission_policy_type_footer">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="give_permission_rows_amount">Amount %s</string>
