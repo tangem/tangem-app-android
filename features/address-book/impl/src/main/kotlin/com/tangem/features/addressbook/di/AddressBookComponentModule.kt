@@ -1,12 +1,9 @@
 package com.tangem.features.addressbook.di
 
-import com.tangem.features.addressbook.AddressBookComponent
-import com.tangem.features.addressbook.AddressBookContactsBlockComponent
-import com.tangem.features.addressbook.AddressSelectorComponent
-import com.tangem.features.addressbook.ContactSelectionListener
-import com.tangem.features.addressbook.ContactSelectionTrigger
+import com.tangem.features.addressbook.*
 import com.tangem.features.addressbook.addressselector.DefaultAddressSelectorComponent
 import com.tangem.features.addressbook.block.DefaultAddressBookContactsBlockComponent
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.DefaultAddressBookComponent
 import com.tangem.features.addressbook.common.DefaultContactSelectionTrigger
 import dagger.Binds
@@ -42,4 +39,8 @@ internal interface AddressBookComponentModule {
     @Binds
     @Singleton
     fun bindContactSelectionListener(impl: DefaultContactSelectionTrigger): ContactSelectionListener
+
+    @Binds
+    @Singleton
+    fun bindAddressBookSendAnalytics(impl: AddressBookAnalyticsSender): AddressBookSendAnalytics
 }

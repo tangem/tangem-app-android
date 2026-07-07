@@ -39,8 +39,9 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         // Drop any results left over from a previous session before the (possibly preloaded) stack starts collecting.
         resultHolder.clear()
         selectNetworksResultHolder.clear()
-
-        analyticsSender.sendContactListScreenOpened(mode = params.addressBookOpenMode, scope = componentScope)
+        if (params.addressBookOpenMode is AddressBookOpenMode.WithContactCreation) {
+            analyticsSender.sendAddContactTapped(fromSendSuccess = true, scope = componentScope)
+        }
     }
 
     private val clickIntents = object : AddressBookClickIntents {
@@ -50,11 +51,14 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         }
 
         override fun onAddContactClick() {
+            analyticsSender.sendAddContactTapped(fromSendSuccess = false, scope = componentScope)
             navigation.pushNew(AddressBookRoute.EditContact())
         }
 
         override fun onEditContactBack() {
-            navigation.pop()
+            navigation.pop { isPopped ->
+                if (!isPopped) router.pop()
+            }
         }
 
         override fun onAddAddressClick(walletId: String, excludeContactId: String?, prefill: ValidatedAddress?) {
@@ -132,8 +136,6 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
             AddressBookRoute.List(mode = AddressBookRoute.ListMode.Selector(networkId = mode.networkId)),
         )
         is AddressBookOpenMode.WithContactCreation -> listOf(
-            AddressBookRoute.List(),
-            // Address + network are already known, so open the new contact with that address attached — no AddAddress.
             AddressBookRoute.EditContact(
                 predefinedAddress = mode.address,
                 predefinedNetworkId = mode.networkId,
