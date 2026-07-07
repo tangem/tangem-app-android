@@ -5,8 +5,12 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -29,14 +33,12 @@ import java.math.BigDecimal
  *
  * Modelled on `TokenListStateConverter` (a list converter delegating to a per-item converter).
  */
-@Suppress("LongParameterList")
 internal class ForYouTokenListConverter(
     private val appCurrency: AppCurrency,
     private val totalFiatBalance: BigDecimal,
     private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
-    private val otherAssetCount: Int,
-    private val otherFiatBalance: BigDecimal,
+    private val otherAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>>,
 ) : Converter<List<CryptoCurrencyStatus>, ImmutableList<ForYouTokenListItemUM>> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -48,7 +50,7 @@ internal class ForYouTokenListConverter(
             .map { (assetId, currencies) -> createListItem(assetId, currencies) }
 
         // Assets beyond the top ones are collapsed into a single non-expandable "Other" row at the bottom.
-        return if (otherAssetCount > 0) {
+        return if (otherAssets.count() > 0) {
             assetItems + createOtherItem()
         } else {
             assetItems
@@ -87,16 +89,16 @@ internal class ForYouTokenListConverter(
         val asset = currencies.first()
         val assetFiatBalance = currencies.sumOf { it.value.fiatAmount.orZero() }
 
-        val subtitle = if (networkCount > 1) {
-            stringReference("$networkCount networks")
-        } else {
-            val onlyCryptoCurrency = currencies.firstOrNull()?.currency
-            val isMain = onlyCryptoCurrency is CryptoCurrency.Coin
-            when {
-                isMain -> resourceReference(R.string.common_main_network)
-                onlyCryptoCurrency != null -> stringReference(onlyCryptoCurrency.network.standardType.name)
-                else -> TextReference.EMPTY
-            }
+        val endContent = rowConverter.toEndContent(statuses = currencies, fiatAmount = assetFiatBalance)
+
+        val onlyCryptoCurrency = currencies.firstOrNull()?.currency
+        val isMain = onlyCryptoCurrency is CryptoCurrency.Coin
+
+        val subtitle = when {
+            networkCount > 1 -> pluralReference(R.plurals.common_networks_count, networkCount)
+            isMain -> resourceReference(R.string.common_main_network)
+            onlyCryptoCurrency != null -> stringReference(onlyCryptoCurrency.network.standardType.name)
+            else -> TextReference.EMPTY
         }
 
         return TangemTokenRowUM.Content(
@@ -109,38 +111,44 @@ internal class ForYouTokenListConverter(
             subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
                 text = subtitle,
             ),
-            topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
-                text = assetFiatBalance.toForYouFiatText(appCurrency),
-            ),
-            bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
-                text = assetFiatBalance.toForYouPercentText(totalFiatBalance),
-            ),
+            topEndContentUM = endContent.top,
+            bottomEndContentUM = endContent.bottom,
             onItemClick = { expandClick(assetId) },
             onItemLongClick = null,
         )
     }
 
-    private fun createOtherItem(): ForYouTokenListItemUM = ForYouTokenListItemUM(
-        tokenRowUM = TangemTokenRowUM.Content(
-            id = OTHER_ROW_ID,
-            headIconUM = TangemIconUM.Currency(CurrencyIconState.Empty()),
-            titleUM = TangemTokenRowUM.TitleUM.Content(text = stringReference("Other")),
-            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
-                text = stringReference(if (otherAssetCount > 1) "$otherAssetCount assets" else "1 asset"),
+    private fun createOtherItem(): ForYouTokenListItemUM {
+        val otherAssetsBalance = otherAssets.sumOf { (_, assetBalance) -> assetBalance }
+        return ForYouTokenListItemUM(
+            tokenRowUM = TangemTokenRowUM.Content(
+                id = OTHER_ROW_ID,
+                headIconUM = TangemIconUM.Currency(CurrencyIconState.Empty()),
+                titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.common_other)),
+                subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
+                    text = pluralReference(R.plurals.common_assets, otherAssets.count()),
+                ),
+                topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+                    text = stringReference(
+                        otherAssetsBalance.format {
+                            fiat(
+                                fiatCurrencyCode = appCurrency.code,
+                                fiatCurrencySymbol = appCurrency.symbol,
+                            )
+                        },
+                    ),
+                ),
+                bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+                    text = stringReference(otherAssetsBalance.toForYouPercent(totalFiatBalance).format { percent() }),
+                ),
+                onItemClick = null,
+                onItemLongClick = null,
             ),
-            topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
-                text = otherFiatBalance.toForYouFiatText(appCurrency),
-            ),
-            bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
-                text = otherFiatBalance.toForYouPercentText(totalFiatBalance),
-            ),
-            onItemClick = null,
-            onItemLongClick = null,
-        ),
-        tokenList = persistentListOf(),
-        isExpanded = false,
-        isExpandable = false,
-    )
+            tokenList = persistentListOf(),
+            isExpanded = false,
+            isExpandable = false,
+        )
+    }
 
     private companion object {
         const val OTHER_ROW_ID = "for_you_other_assets"

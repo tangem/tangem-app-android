@@ -157,7 +157,7 @@ fun TangemMessageBanner(
     TangemMessageBanner(
         modifier = modifier,
         variant = state.variant,
-        showGlowRing = state.isShowGlowRing,
+        showGlowRing = state.shouldShowGlowRing,
         secondaryButton = state.secondaryButton,
         primaryButton = state.primaryButton,
     ) {
@@ -341,7 +341,7 @@ object TangemMessageBanner {
      * @param title Banner headline.
      * @param variant Visual appearance — background color + glow ring.
      * @param contentAlign Horizontal alignment of the text block.
-     * @param isShowGlowRing Whether the glow ring is drawn around the banner. `false` shows only the
+     * @param shouldShowGlowRing Whether the glow ring is drawn around the banner. `false` shows only the
      * background.
      * @param description Secondary line under the [title]. `null` hides it.
      * @param secondaryButton Start action. `null` hides it.
@@ -353,7 +353,7 @@ object TangemMessageBanner {
         val title: TextReference,
         val variant: Variant = Variant.Default,
         val contentAlign: ContentAlign = ContentAlign.Start,
-        val isShowGlowRing: Boolean = true,
+        val shouldShowGlowRing: Boolean = true,
         val description: TextReference? = null,
         val secondaryButton: Button? = null,
         val primaryButton: Button? = null,
