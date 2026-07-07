@@ -90,7 +90,6 @@ class CheckAddressDuplicateUseCaseTest {
                 networkId = Network.RawID(networkId),
                 memo = null,
                 signature = "sig",
-                networkName = "Ethereum",
             ),
         ),
     )
