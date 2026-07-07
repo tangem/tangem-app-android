@@ -16,6 +16,7 @@ import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
+import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
@@ -117,6 +118,10 @@ class DeepLinkFactoryTest {
         every { create(any(), any()) } returns mockk()
     }
 
+    private val campaignsDeepLinkHandlerFactory = mockk<CampaignsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val marketsTokenExchangesDeepLinkFactory =
         mockk<MarketsTokenExchangesDeepLinkHandler.Factory>(relaxed = true) {
             every { create(any(), any()) } returns mockk()
@@ -152,6 +157,7 @@ class DeepLinkFactoryTest {
         earnDeepLink = earnDeepLinkFactory,
         yieldDeepLink = yieldDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
+        promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)

@@ -44,6 +44,7 @@ import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
@@ -77,6 +78,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
+    private val campaignsComponentFactory: CampaignsComponent.Factory,
     private val deeplinkFactory: DeepLinkFactory,
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
@@ -103,6 +105,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val wcRoutingComponent: WcRoutingComponent by lazy {
         wcRoutingComponentFactory
             .create(child("wcRoutingComponent"), params = Unit)
+    }
+
+    private val campaignsComponent: CampaignsComponent by lazy {
+        campaignsComponentFactory
+            .create(child("swapCashbackCampaign"), params = Unit)
     }
 
     private val hotAccessCodeRequestComponent: HotAccessCodeRequestComponent by lazy {
@@ -234,6 +241,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             onBack = router::pop,
             modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
+            promoContent = { campaignsComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
             startupGateContent = { appStartupGateComponent.Content(it) },
             scanFailsContent = { scanFailsComponent.Content(it) },
