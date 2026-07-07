@@ -112,7 +112,6 @@ internal class ContactsBlockModelTest {
                 id = AddressEntryId("e-$id"),
                 address = "0x$id",
                 networkId = Network.RawID(ETHEREUM),
-                networkName = "Ethereum",
                 memo = null,
                 signature = "sig",
             ),
