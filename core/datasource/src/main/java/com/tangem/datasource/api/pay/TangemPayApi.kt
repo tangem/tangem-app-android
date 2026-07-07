@@ -95,6 +95,12 @@ interface TangemPayApi {
         @Body body: VirtualAccountOrderRequest,
     ): ApiResponse<OrderResponse>
 
+    @POST("v1/order/{order_id}/cancel")
+    suspend fun cancelOrder(
+        @Header("Authorization") authHeader: String,
+        @Path("order_id") orderId: String,
+    ): ApiResponse<Any>
+
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")
     suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>

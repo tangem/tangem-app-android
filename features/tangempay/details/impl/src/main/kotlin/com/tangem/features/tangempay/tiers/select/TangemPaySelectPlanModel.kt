@@ -5,12 +5,16 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
+import com.tangem.domain.pay.usecase.CreateTariffPlanTransitionOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -27,6 +31,8 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase,
+    private val createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
@@ -34,6 +40,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private var transitions: List<TangemPayTariffPlanTransition> = emptyList()
     private var selectedIndex: Int = 0
     private var isConfirm: Boolean = false
+    private var isProcessing: Boolean = false
 
     val state: StateFlow<TangemPaySelectPlanUM>
         field = MutableStateFlow(buildState())
@@ -73,11 +80,35 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun onBackClick() {
+        if (isProcessing) return
         if (isConfirm) {
             isConfirm = false
             state.update { buildState() }
         } else {
             router.pop()
+        }
+    }
+
+    private fun onConfirmClick() {
+        val transition = transitions.getOrNull(selectedIndex) ?: return
+        if (transition.type != TangemPayTariffPlanTransition.Type.UPGRADE) return
+        if (isProcessing) return
+
+        isProcessing = true
+        state.update { buildState() }
+        modelScope.launch {
+            createTransitionOrder(
+                userWalletId = params.userWalletId,
+                targetTariffPlanId = transition.plan.id,
+                transitionType = transition.type,
+            ).fold(
+                ifRight = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) },
+                ifLeft = {
+                    isProcessing = false
+                    state.update { buildState() }
+                    uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+                },
+            )
         }
     }
 
@@ -138,8 +169,9 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     R.string.tangempay_select_plan_btn_downgrade
                 },
             ),
+            isProcessing = isProcessing,
             onCancelClick = ::onBackClick,
-            onConfirmClick = {},
+            onConfirmClick = ::onConfirmClick,
         )
     }
 
@@ -187,7 +219,6 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         private val ALLOWED_TYPES = setOf(
             TangemPayTariffPlanTransition.Type.UPGRADE,
             TangemPayTariffPlanTransition.Type.DOWNGRADE,
-            TangemPayTariffPlanTransition.Type.ACTIVATION, // TODO v_rodionov: Only for test, must be removed in future
         )
     }
 }
