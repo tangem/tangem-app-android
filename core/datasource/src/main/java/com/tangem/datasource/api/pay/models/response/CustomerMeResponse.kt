@@ -40,6 +40,16 @@ data class CustomerMeResponse(
         @Json(name = "name") val name: String?,
         @Json(name = "description_items") val descriptionItems: List<DescriptionItem>?,
         @Json(name = "images") val images: List<Image>? = null,
+        @Json(name = "fees") val fees: List<Fee>? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Fee(
+        @Json(name = "type") val type: String?,
+        @Json(name = "amount") val amount: BigDecimal?,
+        @Json(name = "currency") val currency: String?,
+        @Json(name = "description") val description: String?,
+        @Json(name = "period") val period: String?,
     )
 
     @JsonClass(generateAdapter = true)
