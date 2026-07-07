@@ -22,6 +22,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -99,20 +100,22 @@ private fun AmountBlock(state: TangemPayCardLimitSetupUM, modifier: Modifier = M
                 text = "$5000",
             )
         } else {
+            val colors = TangemAmountTextFieldColors
             AmountTextField(
                 value = state.amountFieldModel.value,
                 decimals = state.amountFieldModel.decimals,
                 onValueChange = state.amountFieldModel.onValueChange,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = colors,
                 visualTransformation = AmountVisualTransformation(
                     decimals = state.amountFieldModel.decimals,
                     symbol = state.currencyCode,
                     currencyCode = state.currencyCode,
                     decimalFormat = rememberDecimalFormat(),
                     symbolColor = if (state.amountFieldModel.value.isBlank()) {
-                        TangemTheme.colors.text.disabled
+                        colors.disabledTextColor
                     } else {
-                        TangemTheme.colors.text.primary1
+                        colors.textColor
                     },
                 ),
                 textStyle = TangemTheme.typography.head.copy(

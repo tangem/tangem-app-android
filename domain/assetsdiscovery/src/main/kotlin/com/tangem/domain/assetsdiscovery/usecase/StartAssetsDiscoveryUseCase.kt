@@ -28,9 +28,10 @@ class StartAssetsDiscoveryUseCase(
             try {
                 analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.SyncStarted())
                 assetsDiscoveryRepository.runDiscovery(userWalletId)
-                applyDiscoveredTokens(userWalletId)
-                assetsDiscoveryRepository.completeDiscovery(userWalletId)
-                analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.SyncCompleted())
+                if (applyDiscoveredTokens(userWalletId)) {
+                    assetsDiscoveryRepository.completeDiscovery(userWalletId)
+                    analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.SyncCompleted())
+                }
             } catch (e: Exception) {
                 TangemLogger.e("Token sync failed for wallet: $userWalletId", e)
             } finally {
@@ -51,7 +52,13 @@ class StartAssetsDiscoveryUseCase(
                 val pendingIds = assetsDiscoveryRepository.getPendingDiscoveryWalletIds()
                 for (walletId in pendingIds) {
                     val isApplied = applyDiscoveredTokens(walletId)
-                    if (isApplied) {
+                    // Clear the pending flag only when discovery is not actively running for this wallet.
+                    // While runDiscovery is in progress it keeps appending tokens after our snapshot, so the
+                    // store may still hold un-applied tokens even though applyDiscoveredTokens returned true.
+                    // Clearing the flag now would strand those tokens if the app is killed before discovery
+                    // finishes; in that case invoke()/completeDiscovery owns clearing the flag once everything
+                    // has been applied.
+                    if (isApplied && !activeSyncJobs.containsKey(walletId)) {
                         assetsDiscoveryRepository.clearPendingFlag(walletId)
                     }
                 }
@@ -72,7 +79,7 @@ class StartAssetsDiscoveryUseCase(
             add = currencies,
         ).fold(
             ifRight = {
-                assetsDiscoveryRepository.clearDiscoveredTokens(userWalletId)
+                assetsDiscoveryRepository.removeAppliedCurrencies(userWalletId, currencies)
                 true
             },
             ifLeft = { error ->

@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampSource
+import java.math.BigDecimal
 
 internal interface OnrampMainComponent : ComposableContentComponent {
 
@@ -15,6 +16,7 @@ internal interface OnrampMainComponent : ComposableContentComponent {
         val source: OnrampSource,
         val openSettings: () -> Unit,
         val openRedirectPage: (quote: OnrampProviderWithQuote.Data) -> Unit,
+        val initialFiatAmount: BigDecimal? = null,
     )
 
     interface Factory : ComponentFactory<Params, OnrampMainComponent>

@@ -17,8 +17,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class UpdateRemoteWalletsInfoUseCaseTest {
 
@@ -28,7 +28,7 @@ class UpdateRemoteWalletsInfoUseCaseTest {
     private lateinit var userWalletListRepository: UserWalletsListRepository
     private lateinit var generateWalletNameUseCase: GenerateWalletNameUseCase
 
-    @Before
+    @BeforeEach
     fun setup() {
         walletsRepository = mockk()
         userWalletsSyncDelegate = mockk()

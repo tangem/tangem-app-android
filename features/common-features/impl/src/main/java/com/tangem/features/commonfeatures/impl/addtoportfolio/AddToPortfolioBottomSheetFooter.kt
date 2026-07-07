@@ -23,7 +23,7 @@ import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioFooterKind
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.uiSpec
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioUM
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
 import dev.chrisbanes.haze.rememberHazeState
 
 @Composable

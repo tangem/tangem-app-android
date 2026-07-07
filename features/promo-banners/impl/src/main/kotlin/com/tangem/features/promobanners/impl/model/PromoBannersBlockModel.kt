@@ -1,5 +1,6 @@
 package com.tangem.features.promobanners.impl.model
 
+import androidx.core.net.toUri
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -118,7 +119,18 @@ internal class PromoBannersBlockModel @Inject constructor(
 
     private fun onButtonClick(displayId: Int, deeplink: String?) {
         analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
-        deeplink?.let { deeplinkLauncher.launch(it) }
+        deeplink?.let { deeplinkLauncher.launch(appendSurveyDisplayId(it, displayId)) }
+    }
+
+    private fun appendSurveyDisplayId(deeplink: String, displayId: Int): String {
+        val uri = deeplink.toUri()
+        val isSurveyDeeplink = uri.scheme == DEEPLINK_SCHEME_TANGEM && uri.host == DEEPLINK_HOST_SURVEY
+        if (!isSurveyDeeplink || uri.getQueryParameter(QUERY_DISPLAY_ID) != null) return deeplink
+
+        return uri.buildUpon()
+            .appendQueryParameter(QUERY_DISPLAY_ID, displayId.toString())
+            .build()
+            .toString()
     }
 
     private fun getInitialState() = PromoBannersBlockUM(
@@ -151,5 +163,11 @@ internal class PromoBannersBlockModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private companion object {
+        const val DEEPLINK_SCHEME_TANGEM = "tangem"
+        const val DEEPLINK_HOST_SURVEY = "survey"
+        const val QUERY_DISPLAY_ID = "display_id"
     }
 }

@@ -27,7 +27,10 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -36,7 +39,7 @@ import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.model.earn.EarnModel
-import com.tangem.features.feed.ui.components.FeedSearchBar
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.earn.EarnContent
 import kotlinx.serialization.Serializable
 
@@ -60,9 +63,13 @@ internal class DefaultEarnComponent(
         val background = LocalMainBottomSheetColor.current.value
         val state by earnModel.state.collectAsStateWithLifecycle()
         if (LocalRedesignEnabled.current) {
-            FeedSearchBar(
-                isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
-                feedListSearchBar = state.feedListSearchBar,
+            TangemTopBar(
+                title = resourceReference(R.string.earn_title),
+                type = if (LocalIsOpenedInBottomSheet.current) {
+                    TangemTopBarType.BottomSheet
+                } else {
+                    TangemTopBarType.Default
+                },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -136,7 +143,6 @@ internal class DefaultEarnComponent(
     @Serializable
     data class Params(
         val onBackClick: () -> Unit,
-        val onSearchClicked: (source: String) -> Unit,
         val preselectedEarnType: PreselectedEarnType? = null,
         val preselectedNetworkId: String? = null,
     )

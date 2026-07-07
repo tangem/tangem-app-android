@@ -3,11 +3,6 @@ plugins {
     alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     api(projects.domain.common)
@@ -23,6 +18,5 @@ dependencies {
     // region Test libraries
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testRuntimeOnly(deps.test.junit5.engine)
     // endregion
 }

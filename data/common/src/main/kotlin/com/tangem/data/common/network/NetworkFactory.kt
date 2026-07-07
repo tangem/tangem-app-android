@@ -224,6 +224,7 @@ class NetworkFactory @Inject constructor(
             Blockchain.Binance,
             Blockchain.TON,
             Blockchain.Cosmos,
+            Blockchain.Gonka,
             Blockchain.TerraV1,
             Blockchain.TerraV2,
             Blockchain.Stellar,
