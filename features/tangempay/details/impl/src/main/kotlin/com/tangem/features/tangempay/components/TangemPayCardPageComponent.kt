@@ -112,6 +112,10 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
         )
+        TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess ->
+            TangemPayVirtualAccountDepositSuccessComponent(
+                appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            )
     }
 
     private fun onChildBack() {
