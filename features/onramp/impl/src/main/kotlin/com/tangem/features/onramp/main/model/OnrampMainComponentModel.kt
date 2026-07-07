@@ -6,7 +6,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.fields.InputManager
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
@@ -21,6 +23,7 @@ import com.tangem.features.onramp.main.entity.factory.OnrampAmountStateFactory
 import com.tangem.features.onramp.main.entity.factory.OnrampOffersStateFactory
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
+import com.tangem.features.onramp.utils.showDemoModeWarningIfNeeded
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
@@ -45,6 +48,8 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val messageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -146,6 +151,7 @@ internal class OnrampMainComponentModel @Inject constructor(
             onrampOfferAdvantagesUM = onrampOfferAdvantagesUM,
             categoryUM = categoryUM,
         )
+        if (messageSender.showDemoModeWarningIfNeeded(userWallet, isDemoCardUseCase)) return
         params.openRedirectPage(quote)
     }
 
@@ -274,7 +280,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                                     amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
                                 }
                                 is OnrampMainComponentUM.InitialLoading -> {
-                                    stateFactory.getReadyState(country.defaultCurrency)
+                                    stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
                                 }
                             }
                         }

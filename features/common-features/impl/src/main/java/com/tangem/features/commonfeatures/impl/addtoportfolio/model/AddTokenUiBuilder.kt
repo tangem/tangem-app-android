@@ -5,6 +5,7 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.addtoken.AddTokenUM
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -35,13 +36,18 @@ internal class AddTokenUiBuilder @Inject constructor(
         )
     }
 
-    private fun createPortfolio(selectedPortfolio: SelectedPortfolio): PortfolioSelectUM {
+    private fun createPortfolio(
+        selectedPortfolio: SelectedPortfolio,
+        walletImage: UserWalletItemUM.ImageState,
+    ): PortfolioSelectUM {
         val accountIcon: AccountIconUM?
         val portfolioName: TextReference
+        val imageState: UserWalletItemUM.ImageState?
         when (selectedPortfolio.isAccountMode) {
             false -> {
                 accountIcon = null
                 portfolioName = stringReference(selectedPortfolio.userWallet.name)
+                imageState = walletImage
             }
             true -> {
                 val accountStatus = selectedPortfolio.account.account
@@ -50,6 +56,7 @@ internal class AddTokenUiBuilder @Inject constructor(
                     is CryptoPortfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
                     is Payment -> AccountIconUM.Payment
                 }
+                imageState = null
             }
         }
         return PortfolioSelectUM(
@@ -58,12 +65,14 @@ internal class AddTokenUiBuilder @Inject constructor(
             isAccountMode = selectedPortfolio.isAccountMode,
             isMultiChoice = selectedPortfolio.isAvailableMorePortfolio,
             onClick = { params.callbacks.onChangePortfolioClick() },
+            imageState = imageState,
         )
     }
 
     fun updateContent(
         selectedPortfolio: SelectedPortfolio,
         selectedNetwork: SelectedNetwork,
+        walletImage: UserWalletItemUM.ImageState,
         isTangemIconVisible: Boolean,
         onConfirmClick: () -> Unit,
     ): AddTokenUM {
@@ -74,11 +83,11 @@ internal class AddTokenUiBuilder @Inject constructor(
             isEnabled = isAvailableNetwork,
             showProgress = false,
             isTangemIconVisible = isTangemIconVisible,
-            text = resourceReference(R.string.common_add),
+            text = resourceReference(R.string.common_confirm),
             onConfirmClick = onConfirmClick,
         )
         val networkUM = createNetwork(selectedNetwork)
-        val portfolioUM = createPortfolio(selectedPortfolio)
+        val portfolioUM = createPortfolio(selectedPortfolio, walletImage)
         val currency = selectedNetwork.cryptoCurrency
         val tokenToAdd = TokenItemState.Content(
             id = currency.id.value,
