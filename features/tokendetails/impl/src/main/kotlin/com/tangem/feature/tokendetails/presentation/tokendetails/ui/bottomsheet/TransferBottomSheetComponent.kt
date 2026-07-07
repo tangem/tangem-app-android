@@ -8,8 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
@@ -41,10 +44,17 @@ internal class TransferBottomSheetComponent(
             config = config,
             containerColor = TangemTheme.colors2.surface.level2,
             title = {
-                TangemModalBottomSheetTitle(
+                TangemTopBar(
                     title = resourceReference(CoreR.string.common_transfer),
-                    endIconRes = CoreR.drawable.ic_close_24,
-                    onEndClick = ::dismiss,
+                    type = TangemTopBarType.BottomSheet,
+                    endContent = {
+                        TangemButton(
+                            iconStart = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_close_24),
+                            onClick = ::dismiss,
+                            size = TangemButton.Size.X11,
+                            variant = TangemButton.Variant.Material,
+                        )
+                    },
                 )
             },
             content = { contentState ->

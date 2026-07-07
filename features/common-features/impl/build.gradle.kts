@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.features.commonfeatures.impl"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** Api */
     implementation(projects.features.commonFeatures.api)
@@ -86,7 +81,6 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
