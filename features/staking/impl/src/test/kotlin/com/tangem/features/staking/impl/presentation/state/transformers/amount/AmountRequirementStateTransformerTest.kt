@@ -70,6 +70,30 @@ internal class AmountRequirementStateTransformerTest {
         )
     }
 
+    private fun solanaCryptoStatus(): CryptoCurrencyStatus = mockk(relaxed = true) {
+        every { currency.network.rawId } returns "solana"
+    }
+
+    private fun solanaExitIntegration(exitMin: BigDecimal?, enterMin: BigDecimal? = null): StakingIntegration =
+        mockk {
+            every { exitMinimumAmount } returns exitMin
+            every { enterMinimumAmount } returns enterMin
+            every { exitArgs } returns null
+        }
+
+    private fun solanaTransformer(
+        staked: BigDecimal,
+        exitMin: BigDecimal?,
+        enterMin: BigDecimal? = null,
+        enabled: Boolean = true,
+    ) = AmountRequirementStateTransformer(
+        cryptoCurrencyStatus = solanaCryptoStatus(),
+        maxAmount = EnterAmountBoundary(amount = staked, fiatAmount = null, fiatRate = null),
+        integration = solanaExitIntegration(exitMin = exitMin, enterMin = enterMin),
+        actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+        isSolanaUnstakeValidationEnabled = enabled,
+    )
+
     @Test
     fun `WHEN amount exceeds positive maximum THEN max amount error string is used`() {
         val transformer = AmountRequirementStateTransformer(
@@ -148,5 +172,144 @@ internal class AmountRequirementStateTransformerTest {
         assertThat(result.amountTextField.isError).isTrue()
         assertThat((result.amountTextField.error as TextReference.Res).id)
             .isEqualTo(R.string.staking_max_amount_requirement_error)
+    }
+
+    @Test
+    fun `WHEN Solana full unstake THEN no error`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+        assertThat(result.isPrimaryButtonEnabled).isTrue()
+    }
+
+    @Test
+    fun `WHEN Solana full unstake of small stake below minimum THEN no error`() {
+        val small = BigDecimal("0.098090754")
+        val transformer = solanaTransformer(staked = small, exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(small)) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+        assertThat(result.isPrimaryButtonEnabled).isTrue()
+    }
+
+    @Test
+    fun `WHEN Solana partial unstake below minimum THEN unstake min error and button disabled`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isTrue()
+        assertThat(result.isPrimaryButtonEnabled).isFalse()
+        assertThat((result.amountTextField.error as TextReference.Res).id)
+            .isEqualTo(R.string.staking_unstake_amount_requirement_error)
+    }
+
+    @Test
+    fun `WHEN Solana partial unstake leaving remainder below minimum THEN low staked balance error and button disabled`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("4.5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isTrue()
+        assertThat(result.isPrimaryButtonEnabled).isFalse()
+        assertThat((result.amountTextField.error as TextReference.Res).id)
+            .isEqualTo(R.string.staking_notification_low_staked_balance_text)
+    }
+
+    @Test
+    fun `WHEN Solana partial unstake violating both minimums THEN unstake min error takes priority`() {
+        val transformer = solanaTransformer(staked = BigDecimal("1.5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("0.7"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isTrue()
+        assertThat((result.amountTextField.error as TextReference.Res).id)
+            .isEqualTo(R.string.staking_unstake_amount_requirement_error)
+    }
+
+    @Test
+    fun `WHEN Solana partial unstake with both parts above minimum THEN no error`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("1.5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+        assertThat(result.isPrimaryButtonEnabled).isTrue()
+    }
+
+    @Test
+    fun `WHEN Solana amount exactly at minimum THEN no error`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("1"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+        assertThat(result.isPrimaryButtonEnabled).isTrue()
+    }
+
+    @Test
+    fun `WHEN Solana remainder exactly at minimum THEN no error`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = BigDecimal("1"))
+
+        val result = transformer.transform(amountState(BigDecimal("4"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+    }
+
+    @Test
+    fun `WHEN Solana exit minimum is zero THEN falls back to enter minimum`() {
+        val transformer = solanaTransformer(
+            staked = BigDecimal("5"),
+            exitMin = BigDecimal.ZERO,
+            enterMin = BigDecimal("1"),
+        )
+
+        val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isTrue()
+        assertThat((result.amountTextField.error as TextReference.Res).id)
+            .isEqualTo(R.string.staking_unstake_amount_requirement_error)
+    }
+
+    @Test
+    fun `WHEN Solana both minimums null THEN partial unstake allowed`() {
+        val transformer = solanaTransformer(staked = BigDecimal("5"), exitMin = null, enterMin = null)
+
+        val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+        assertThat(result.isPrimaryButtonEnabled).isTrue()
+    }
+
+    @Test
+    fun `WHEN Solana validation disabled THEN partial unstake below minimum allowed`() {
+        val transformer = solanaTransformer(
+            staked = BigDecimal("5"),
+            exitMin = BigDecimal("1"),
+            enabled = false,
+        )
+
+        val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
+
+        assertThat(result.amountTextField.isError).isFalse()
+    }
+
+    @Test
+    fun `WHEN validation enabled but currency is not Solana THEN Solana rule does not apply`() {
+        val transformer = AmountRequirementStateTransformer(
+            cryptoCurrencyStatus = cryptoCurrencyStatus, // relaxed mock: network.rawId is not "solana"
+            maxAmount = EnterAmountBoundary(amount = BigDecimal("5"), fiatAmount = null, fiatRate = null),
+            integration = exitIntegrationWith(minimum = null, maximum = null),
+            actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+            isSolanaUnstakeValidationEnabled = true,
+        )
+
+        val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
+
+        // Non-Solana: falls through to legacy exitArgs path (minimum null → no error), NOT the Solana remainder rule.
+        assertThat(result.amountTextField.isError).isFalse()
     }
 }

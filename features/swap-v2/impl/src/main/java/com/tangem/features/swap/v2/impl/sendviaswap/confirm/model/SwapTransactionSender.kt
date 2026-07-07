@@ -23,7 +23,7 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.logging.TangemLogger

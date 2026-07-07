@@ -78,6 +78,13 @@ object DateTimeFormatters {
     }
 
     /**
+     * Example: "Jun 1, 2020", "1 Jun 2020"
+     */
+    val dateMMMdYYYY: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("MMM d, yyyy")
+    }
+
+    /**
      * Example: "2020"
      */
     val dateYYYY: DateTimeFormatter by lazy {
