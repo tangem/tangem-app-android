@@ -16,4 +16,8 @@ internal sealed class ChooseManageTokensBottomSheetConfig {
         val token: ManagedCryptoCurrency.Token,
         val isSearchedToken: Boolean,
     ) : ChooseManageTokensBottomSheetConfig()
+
+    /** Add the swap target token to the portfolio before opening the regular Swap screen. */
+    @Serializable
+    data object AddToPortfolioBottomSheetConfig : ChooseManageTokensBottomSheetConfig()
 }

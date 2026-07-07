@@ -335,7 +335,10 @@ class DefaultWalletAccountsFetcherTest {
                     body = SaveWalletAccountsResponse(savedAccountsResponse.accounts),
                 )
                 eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
-                userTokensSaver.push(userWalletId = userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+                userTokensSaver.push(
+                    userWalletId = userWalletId,
+                    response = savedAccountsResponse.toUserTokensResponse(),
+                )
                 tokensMigration.migrate(userWalletId)
             }
         }

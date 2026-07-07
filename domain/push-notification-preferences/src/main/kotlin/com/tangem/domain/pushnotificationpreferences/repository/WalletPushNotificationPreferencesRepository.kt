@@ -20,4 +20,14 @@ interface WalletPushNotificationPreferencesRepository {
         category: PushNotificationCategory,
         isEnabled: Boolean,
     ): Either<Throwable, Unit>
+
+    /**
+     * Set all categories at once
+     */
+    suspend fun setAllPreferences(
+        userWalletId: UserWalletId,
+        transactionAlerts: Boolean,
+        offersUpdates: Boolean,
+        priceAlerts: Boolean,
+    ): Either<Throwable, Unit>
 }

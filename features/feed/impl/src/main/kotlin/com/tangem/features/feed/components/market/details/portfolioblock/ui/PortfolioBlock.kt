@@ -25,7 +25,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.BottomFade
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -33,6 +33,7 @@ import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -42,24 +43,26 @@ import com.tangem.features.feed.impl.R
 
 @Composable
 internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifier) {
-    val isVisible = state is PortfolioBlockUM.AddToken || state is PortfolioBlockUM.Content
     val screenHeightPx = with(LocalDensity.current) { LocalWindowSize.current.height.toPx() }
 
     Box(modifier = modifier) {
         AnimatedVisibility(
-            visible = isVisible,
+            visible = state !is PortfolioBlockUM.Hidden,
             enter = fadeIn(animationSpec = tween(durationMillis = 300)),
         ) {
-            BottomFade(
+            TangemFade(
+                variant = TangemFade.Variant.Hard,
+                position = TangemFade.Position.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(174.dp)
                     .align(Alignment.BottomCenter),
             )
         }
 
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.BottomCenter),
-            visible = isVisible,
+            visible = state !is PortfolioBlockUM.Hidden,
             enter = fadeIn(animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)),
             exit = fadeOut(animationSpec = tween(durationMillis = 300)),
         ) {
@@ -83,9 +86,8 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
                 when (state) {
                     is PortfolioBlockUM.AddToken -> AddTokenBlock(state)
                     is PortfolioBlockUM.Content -> ContentBlock(state)
-                    is PortfolioBlockUM.Hidden,
-                    is PortfolioBlockUM.Loading,
-                    -> Unit
+                    is PortfolioBlockUM.Unsupported -> UnsupportedTokenBlock(state.tokenIcon)
+                    is PortfolioBlockUM.Hidden -> Unit
                 }
             }
         }
@@ -154,13 +156,19 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
     FloatingCard(modifier = modifier) {
         Row(
             modifier = Modifier
-                .padding(TangemTheme.dimens2.x3)
+                .padding(
+                    vertical = 12.dp,
+                    horizontal = 16.dp,
+                )
                 .clickableSingle(onClick = state.onAddClick),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CurrencyIcon(state.tokenIcon)
+            CurrencyIcon(
+                state = state.tokenIcon,
+                iconSize = 40.dp,
+            )
 
-            SpacerW(TangemTheme.dimens2.x3)
+            SpacerW(8.dp)
 
             Text(
                 text = formatAnnotatedWithBoldColor(
@@ -188,6 +196,39 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
     }
 }
 
+@Composable
+private fun UnsupportedTokenBlock(icon: CurrencyIconState, modifier: Modifier = Modifier) {
+    FloatingCard(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .padding(
+                    vertical = 12.dp,
+                    horizontal = 16.dp,
+                )
+                .clickableSingle(onClick = {}), // just intercept
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CurrencyIcon(
+                state = icon,
+                iconSize = 40.dp,
+            )
+
+            SpacerW(8.dp)
+
+            Text(
+                text = formatAnnotatedWithBoldColor(
+                    rawString = stringResourceSafe(R.string.markets_portfolio_block_token_unsupported),
+                    boldColor = TangemTheme.colors2.text.neutral.primary,
+                ),
+                style = TangemTheme.typography2.captionMedium12,
+                color = TangemTheme.colors2.text.neutral.secondary,
+                modifier = Modifier.weight(1f),
+                maxLines = 2,
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
@@ -197,8 +238,8 @@ private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () 
             .fillMaxWidth()
             .widthIn(max = BottomSheetDefaults.SheetMaxWidth)
             .padding(
-                start = TangemTheme.dimens2.x2,
-                end = TangemTheme.dimens2.x2,
+                start = TangemTheme.dimens2.x4,
+                end = TangemTheme.dimens2.x4,
                 bottom = TangemTheme.dimens2.x2,
             )
             .clip(RoundedCornerShape(size = TangemTheme.dimens2.x5))

@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import androidx.annotation.DrawableRes
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.TangemButtonType
@@ -31,6 +32,7 @@ import com.tangem.core.res.R as CoreResR
 internal class UpdateNotificationsTransformer(
     private val warnings: Set<CryptoCurrencyWarning>,
     private val clickIntents: TokenDetailsClickIntents,
+    @DrawableRes private val walletInteractionIcon: Int?,
 ) : Transformer<TokenDetailsUM> {
 
     override fun transform(prevState: TokenDetailsUM): TokenDetailsUM {
@@ -170,10 +172,12 @@ internal class UpdateNotificationsTransformer(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.alert_button_try_again),
                         type = TangemButtonType.Primary,
-                        tangemIconUM = TangemIconUM.Icon(
-                            R.drawable.ic_tangem_24,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
-                        ),
+                        tangemIconUM = walletInteractionIcon?.let { iconRes ->
+                            TangemIconUM.Icon(
+                                iconRes = iconRes,
+                                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                            )
+                        },
                         onClick = clickIntents::onRetryIncompleteTransactionClick,
                     ),
                 ),

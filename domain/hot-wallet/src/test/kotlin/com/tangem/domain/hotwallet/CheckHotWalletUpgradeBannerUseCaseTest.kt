@@ -10,7 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
 class CheckHotWalletUpgradeBannerUseCaseTest {
