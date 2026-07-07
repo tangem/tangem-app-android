@@ -312,9 +312,21 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickBankTransfer() {
-        val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount } ?: return
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        val onramp = loaded.virtualAccount ?: return
         bottomSheetNavigation.dismiss()
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.VirtualAccountDeposit(onramp))
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VirtualAccountDeposit(
+                virtualAccountOnramp = onramp,
+                userWalletId = userWalletId,
+                paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
+            ),
+        )
+    }
+
+    fun onVirtualAccountOrderCreated() {
+        bottomSheetNavigation.dismiss()
+        router.push(TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess)
     }
 
     fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
