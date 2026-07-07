@@ -130,34 +130,9 @@ internal class EditContactModelTest {
     }
 
     @Test
-    fun `GIVEN new contact without predefined address WHEN created THEN AddContactTapped sent from settings`() =
-        runTest {
-            // Act
-            createModel(testScope = this, params = createParams(contactId = null, predefinedAddress = null))
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { analyticsSender.sendAddContactTapped(fromSendSuccess = false, scope = any()) }
-        }
-
-    @Test
-    fun `GIVEN new contact with predefined address WHEN created THEN AddContactTapped sent from send success`() =
-        runTest {
-            // Arrange
-            val predefined = ValidatedAddress(address = "0xABC", networkIds = persistentListOf("ethereum"))
-
-            // Act
-            createModel(testScope = this, params = createParams(predefinedAddress = predefined))
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) { analyticsSender.sendAddContactTapped(fromSendSuccess = true, scope = any()) }
-        }
-
-    @Test
-    fun `GIVEN existing contactId WHEN model created THEN AddContactTapped not sent`() = runTest {
-        // Act
-        createModel(testScope = this, params = createParams(contactId = ContactId(value = "contact-id")))
+    fun `GIVEN editor opened WHEN model created THEN AddContactTapped not sent from editor`() = runTest {
+        // The Add-Contact-Tapped funnel event belongs to the "Add contact" button handlers, not the editor screen.
+        createModel(testScope = this, params = createParams(contactId = null))
         advanceUntilIdle()
 
         // Assert
@@ -283,7 +258,6 @@ internal class EditContactModelTest {
         // Assert
         assertThat(addClicked).isTrue()
         verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
-        verify(exactly = 1) { analyticsSender.sendAddressScreenOpened() }
     }
 
     @Test
@@ -311,7 +285,6 @@ internal class EditContactModelTest {
             assertThat(model.state.value.isAddAddressEnabled).isFalse()
             assertThat(addClicked).isFalse()
             verify { messageSender.send(any<DialogMessage>()) }
-            verify(exactly = 0) { analyticsSender.sendAddressScreenOpened() }
         }
 
     @Test
@@ -882,6 +855,153 @@ internal class EditContactModelTest {
             assertThat(model.state.value.addresses).isEmpty()
             verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
         }
+
+    @Test
+    fun `GIVEN new contact WHEN created THEN ContactScreenOpened sent with empty contactId`() = runTest {
+        // Act
+        createModel(testScope = this, params = createParams(contactId = null))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analyticsSender.sendContactScreenOpened(contactId = "", scope = any()) }
+    }
+
+    @Test
+    fun `GIVEN existing contact WHEN created THEN ContactScreenOpened sent with contactId`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        every { getContactByIdUseCase(ContactId("c-1")) } returns
+            MutableStateFlow(existingContact(walletId = "aa", name = "Alice", address = "0xABC"))
+
+        // Act
+        createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analyticsSender.sendContactScreenOpened(contactId = "c-1", scope = any()) }
+    }
+
+    @Test
+    fun `GIVEN duplicate name in selected wallet WHEN name entered THEN DuplicateNameErrorShown sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        coEvery { contactNameValidator.validate(any(), any()) } returns ContactNameValidationError.Duplicate.left()
+        val model = createModel(testScope = this, params = createParams(contactId = null))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onNameChange("Satoshi")
+        advanceUntilIdle()
+
+        // Assert — create mode reports a null contact id.
+        verify(exactly = 1) {
+            analyticsSender.sendDuplicateNameErrorShown(walletId = walletA.walletId, contactId = null)
+        }
+    }
+
+    @Test
+    fun `GIVEN unique name WHEN name entered THEN DuplicateNameErrorShown not sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onNameChange("Satoshi")
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsSender.sendDuplicateNameErrorShown(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN several addresses WHEN one is deleted THEN AddressRemoved sent AND ContactDeleted not sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(twoAddressContact())
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Act
+        model.createAddressInfoParams("0xAAA").onDeleteAddress()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analyticsSender.sendAddressRemoved(walletId = walletA.walletId, contactId = "c-1") }
+        verify(exactly = 0) { analyticsSender.sendContactDeleted(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN last address WHEN deleted AND confirmed THEN AddressRemoved then ContactDeleted sent`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        every { getContactByIdUseCase(ContactId("c-1")) } returns
+            MutableStateFlow(existingContact(walletId = "aa", name = "Alice", address = "0xABC"))
+        coEvery { deleteContactUseCase(ContactId("c-1")) } returns Unit.right()
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Act — deleting the only address prompts a contact deletion; confirming performs it.
+        model.createAddressInfoParams("0xABC").onDeleteAddress()
+        val dialog = slot<DialogMessage>()
+        verify { messageSender.send(capture(dialog)) }
+        dialog.captured.firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert — both events fire: the address removal, then the backend-confirmed deletion.
+        verify(exactly = 1) { analyticsSender.sendAddressRemoved(walletId = walletA.walletId, contactId = "c-1") }
+        verify(exactly = 1) { analyticsSender.sendContactDeleted(walletId = walletA.walletId, contactId = "c-1") }
+    }
+
+    @Test
+    fun `GIVEN existing contact WHEN explicitly deleted THEN ContactDeleted sent AND AddressRemoved not sent`() =
+        runTest {
+            // Arrange
+            val walletA = createWallet(id = "aa", name = "Wallet A")
+            setupWallets(wallets = listOf(walletA), selected = walletA)
+            every { getContactByIdUseCase(ContactId("c-1")) } returns
+                MutableStateFlow(existingContact(walletId = "aa", name = "Alice", address = "0xABC"))
+            coEvery { deleteContactUseCase(ContactId("c-1")) } returns Unit.right()
+            val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onDeleteClick?.invoke()
+            val dialog = slot<DialogMessage>()
+            verify { messageSender.send(capture(dialog)) }
+            dialog.captured.firstAction.onClick()
+            advanceUntilIdle()
+
+            // Assert — explicit deletion is not an address removal.
+            verify(exactly = 1) { analyticsSender.sendContactDeleted(walletId = walletA.walletId, contactId = "c-1") }
+            verify(exactly = 0) { analyticsSender.sendAddressRemoved(any(), any()) }
+        }
+
+    private fun twoAddressContact(): Contact = existingContact(walletId = "aa", name = "Alice", address = "0xAAA").copy(
+        addresses = listOf(
+            AddressEntry(
+                id = AddressEntryId("e-1"),
+                address = "0xAAA",
+                networkId = Network.RawID("ethereum"),
+                networkName = "Ethereum",
+                memo = null,
+                signature = "sig",
+            ),
+            AddressEntry(
+                id = AddressEntryId("e-2"),
+                address = "0xBBB",
+                networkId = Network.RawID("bsc"),
+                networkName = "BSC",
+                memo = null,
+                signature = "sig",
+            ),
+        ),
+    )
 
     private fun existingContact(walletId: String, name: String, address: String): Contact = Contact(
         id = ContactId("c-1"),

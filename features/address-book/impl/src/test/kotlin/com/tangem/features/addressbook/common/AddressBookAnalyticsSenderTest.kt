@@ -1,6 +1,5 @@
 package com.tangem.features.addressbook.common
 
-import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.SaveContactError
@@ -13,6 +12,7 @@ import com.tangem.features.addressbook.analytics.AddressBookEvents.ContactListSc
 import com.tangem.features.addressbook.analytics.AddressBookEvents.ContactSaved
 import com.tangem.features.addressbook.analytics.AddressBookEvents.SaveErrorShown.ErrorType
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -37,6 +37,7 @@ internal class AddressBookAnalyticsSenderTest {
     private val sender = AddressBookAnalyticsSender(
         analyticsEventHandler = analyticsEventHandler,
         userWalletsListRepository = userWalletsListRepository,
+        dispatcherProvider = TestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach
@@ -50,13 +51,14 @@ internal class AddressBookAnalyticsSenderTest {
     @ProvideTestModels
     fun sendContactListScreenOpened(model: ScreenOpenedModel) = runTest {
         // Act
-        sender.sendContactListScreenOpened(mode = model.mode, scope = this)
+        sender.sendContactListScreenOpened(source = model.source, contactsCount = model.contactsCount, scope = this)
         advanceUntilIdle()
 
         // Assert
         val expected = AddressBookEvents.ContactListScreenOpened(
             walletId = EXPECTED_WALLET_ID,
-            source = model.expectedSource,
+            source = model.source,
+            contactsCount = model.contactsCount,
         )
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
@@ -69,7 +71,7 @@ internal class AddressBookAnalyticsSenderTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = AddressBookEvents.AddContactTapped(
+        val expected = AddContactTapped(
             walletId = EXPECTED_WALLET_ID,
             source = model.expectedSource,
         )
@@ -83,7 +85,7 @@ internal class AddressBookAnalyticsSenderTest {
         sender.sendContactSaved(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID, isEdit = model.isEdit)
 
         // Assert
-        val expected = AddressBookEvents.ContactSaved(
+        val expected = ContactSaved(
             walletId = EXPECTED_WALLET_ID,
             contactId = CONTACT_ID,
             mode = model.expectedMode,
@@ -129,7 +131,92 @@ internal class AddressBookAnalyticsSenderTest {
         verify(exactly = 1) { analyticsEventHandler.send(AddressBookEvents.AddressScreenOpened) }
     }
 
-    internal data class ScreenOpenedModel(val mode: AddressBookOpenMode, val expectedSource: Source)
+    @Test
+    fun `WHEN sendContactScreenOpened THEN event sent with selected wallet`() = runTest {
+        // Act
+        sender.sendContactScreenOpened(contactId = CONTACT_ID, scope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val expected = AddressBookEvents.ContactScreenOpened(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @Test
+    fun `WHEN sendSendFlowWidgetShown THEN event sent with selected wallet`() = runTest {
+        // Act
+        sender.sendSendFlowWidgetShown(scope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val expected = AddressBookEvents.SendFlowWidgetShown(walletId = EXPECTED_WALLET_ID)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @Test
+    fun `WHEN sendContactSelectedInSend THEN event sent with selected wallet`() = runTest {
+        // Act
+        sender.sendContactSelectedInSend(contactId = CONTACT_ID, scope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val expected = AddressBookEvents.ContactSelectedInSend(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @Test
+    fun `WHEN onAddressSubstitutedInSend THEN event sent`() {
+        // Act
+        sender.onAddressSubstitutedInSend(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+
+        // Assert
+        val expected = AddressBookEvents.AddressSubstitutedInSend(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideContactIdModels")
+    fun sendAddressInvalid(contactId: String) {
+        // Act
+        sender.sendAddressInvalid(walletId = EXPECTED_WALLET_ID, contactId = contactId)
+
+        // Assert
+        val expected = AddressBookEvents.AddressInvalid(walletId = EXPECTED_WALLET_ID, contactId = contactId)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNullableContactIdModels")
+    fun sendDuplicateNameErrorShown(contactId: String?) {
+        // Act
+        sender.sendDuplicateNameErrorShown(walletId = EXPECTED_WALLET_ID, contactId = contactId)
+
+        // Assert
+        val expected = AddressBookEvents.DuplicateNameErrorShown(walletId = EXPECTED_WALLET_ID, contactId = contactId)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @Test
+    fun `WHEN sendAddressRemoved THEN event sent`() {
+        // Act
+        sender.sendAddressRemoved(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+
+        // Assert
+        val expected = AddressBookEvents.AddressRemoved(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    @Test
+    fun `WHEN sendContactDeleted THEN event sent`() {
+        // Act
+        sender.sendContactDeleted(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+
+        // Assert
+        val expected = AddressBookEvents.ContactDeleted(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+    }
+
+    internal data class ScreenOpenedModel(val source: Source, val contactsCount: Int)
 
     internal data class AddContactModel(val fromSendSuccess: Boolean, val expectedSource: AddContactTapped.Source)
 
@@ -138,15 +225,8 @@ internal class AddressBookAnalyticsSenderTest {
     internal data class SaveErrorModel(val error: SaveContactError, val expectedType: ErrorType?)
 
     private fun provideTestModels() = listOf(
-        ScreenOpenedModel(mode = AddressBookOpenMode.Default, expectedSource = Source.Settings),
-        ScreenOpenedModel(
-            mode = AddressBookOpenMode.ContactSelection(networkId = "ethereum"),
-            expectedSource = Source.SendFlow,
-        ),
-        ScreenOpenedModel(
-            mode = AddressBookOpenMode.WithContactCreation(address = "0xABC", networkId = "ethereum"),
-            expectedSource = Source.SendFlow,
-        ),
+        ScreenOpenedModel(source = Source.Settings, contactsCount = 0),
+        ScreenOpenedModel(source = Source.SendFlow, contactsCount = 3),
     )
 
     private fun provideAddContactModels() = listOf(
@@ -173,6 +253,12 @@ internal class AddressBookAnalyticsSenderTest {
         // Validation failures are shown inline, not as a save error.
         SaveErrorModel(error = SaveContactError.Name(mockk()), expectedType = null),
     )
+
+    // Create sends an empty contact id, edit sends the contact id.
+    private fun provideContactIdModels() = listOf("", CONTACT_ID)
+
+    // Duplicate-name allows a null contact id (create) as well as an edited contact's id.
+    private fun provideNullableContactIdModels() = listOf(null, CONTACT_ID)
 
     private companion object {
         val EXPECTED_WALLET_ID = UserWalletId("0011223344")
