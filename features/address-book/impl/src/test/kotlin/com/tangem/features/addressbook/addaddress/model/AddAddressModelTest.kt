@@ -12,21 +12,19 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.addressbook.usecase.CheckAddressDuplicateUseCase
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
 import com.tangem.features.addressbook.addaddress.state.AddAddressStateController
 import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM.ChosenNetworkStateUM
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.common.AddressMemoValidator
 import com.tangem.features.addressbook.common.SelectNetworksResultHolder
 import com.tangem.features.addressbook.common.SupportedNetworksMatcher
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -45,6 +43,7 @@ internal class AddAddressModelTest {
     private val clipboardManager: ClipboardManager = mockk()
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk()
     private val checkAddressDuplicateUseCase: CheckAddressDuplicateUseCase = mockk()
+    private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val selectNetworksResultHolder = SelectNetworksResultHolder()
 
@@ -58,6 +57,7 @@ internal class AddAddressModelTest {
             clipboardManager,
             listenToQrScanningUseCase,
             checkAddressDuplicateUseCase,
+            analyticsSender,
             router,
         )
         selectNetworksResultHolder.clear()
@@ -618,6 +618,81 @@ internal class AddAddressModelTest {
         }
     }
 
+    @Test
+    fun `WHEN model created THEN AddressScreenOpened sent`() = runTest {
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert — the add-address screen reports itself opened on creation, not the button that navigates to it.
+        verify(exactly = 1) { analyticsSender.sendAddressScreenOpened() }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AddressInvalidEvent {
+
+        @Test
+        fun `GIVEN edit mode WHEN address matches no network THEN AddressInvalid sent with contactId`() = runTest {
+            // Arrange
+            every { supportedNetworksMatcher.match(ADDRESS) } returns emptyList()
+            val model = createModel(testScope = this, params = params(walletId = "aa", excludeContactId = "c-1"))
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onAddressChange(ADDRESS)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsSender.sendAddressInvalid(walletId = UserWalletId("aa"), contactId = "c-1") }
+        }
+
+        @Test
+        fun `GIVEN create mode WHEN address matches no network THEN AddressInvalid sent with empty contactId`() =
+            runTest {
+                // Arrange
+                every { supportedNetworksMatcher.match(ADDRESS) } returns emptyList()
+                val model = createModel(testScope = this, params = params(walletId = "aa", excludeContactId = null))
+                advanceUntilIdle()
+
+                // Act
+                model.state.value.onAddressChange(ADDRESS)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analyticsSender.sendAddressInvalid(walletId = UserWalletId("aa"), contactId = "") }
+            }
+
+        @Test
+        fun `GIVEN valid address WHEN typed THEN AddressInvalid not sent`() = runTest {
+            // Arrange
+            every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum)
+            val model = createModel(testScope = this, params = params(walletId = "aa"))
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onAddressChange(ADDRESS)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsSender.sendAddressInvalid(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN empty field WHEN cleared THEN AddressInvalid not sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, params = params(walletId = "aa"))
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onAddressChange("")
+            advanceUntilIdle()
+
+            // Assert — a blank field is not a validation failure.
+            verify(exactly = 0) { analyticsSender.sendAddressInvalid(any(), any()) }
+        }
+    }
+
     private fun params(
         walletId: String? = null,
         excludeContactId: String? = null,
@@ -663,6 +738,7 @@ internal class AddAddressModelTest {
             stateController = AddAddressStateController(),
             selectNetworksResultHolder = selectNetworksResultHolder,
             checkAddressDuplicateUseCase = checkAddressDuplicateUseCase,
+            analyticsSender = analyticsSender,
             router = router,
         ).also { model = it }
     }

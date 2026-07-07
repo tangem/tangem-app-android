@@ -1,14 +1,15 @@
 package com.tangem.features.addressbook.common
 
-import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.SaveContactError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.addressbook.AddressBookSendAnalytics
 import com.tangem.features.addressbook.analytics.AddressBookEvents
 import com.tangem.features.addressbook.analytics.AddressBookEvents.ContactListScreenOpened.Source
 import com.tangem.features.addressbook.analytics.AddressBookEvents.SaveErrorShown.ErrorType
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -20,21 +21,75 @@ import javax.inject.Singleton
 internal class AddressBookAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletsListRepository: UserWalletsListRepository,
-) {
+    private val dispatcherProvider: CoroutineDispatcherProvider,
+) : AddressBookSendAnalytics {
 
-    fun sendContactListScreenOpened(mode: AddressBookOpenMode, scope: CoroutineScope) {
-        scope.launch {
+    fun sendContactListScreenOpened(source: Source, contactsCount: Int, scope: CoroutineScope) {
+        scope.launch(dispatcherProvider.default) {
             analyticsEventHandler.send(
                 AddressBookEvents.ContactListScreenOpened(
                     walletId = selectedWalletId(),
-                    source = mode.toAnalyticsSource(),
+                    source = source,
+                    contactsCount = contactsCount,
                 ),
             )
         }
     }
 
+    fun sendContactScreenOpened(contactId: String, scope: CoroutineScope) {
+        scope.launch(dispatcherProvider.default) {
+            analyticsEventHandler.send(
+                AddressBookEvents.ContactScreenOpened(walletId = selectedWalletId(), contactId = contactId),
+            )
+        }
+    }
+
+    fun sendSendFlowWidgetShown(scope: CoroutineScope) {
+        scope.launch(dispatcherProvider.default) {
+            analyticsEventHandler.send(AddressBookEvents.SendFlowWidgetShown(walletId = selectedWalletId()))
+        }
+    }
+
+    fun sendContactSelectedInSend(contactId: String, scope: CoroutineScope) {
+        scope.launch(dispatcherProvider.default) {
+            analyticsEventHandler.send(
+                AddressBookEvents.ContactSelectedInSend(walletId = selectedWalletId(), contactId = contactId),
+            )
+        }
+    }
+
+    override fun onAddressSubstitutedInSend(walletId: UserWalletId, contactId: String) {
+        analyticsEventHandler.send(
+            AddressBookEvents.AddressSubstitutedInSend(walletId = walletId, contactId = contactId),
+        )
+    }
+
+    fun sendAddressInvalid(walletId: UserWalletId, contactId: String) {
+        analyticsEventHandler.send(
+            AddressBookEvents.AddressInvalid(walletId = walletId, contactId = contactId),
+        )
+    }
+
+    fun sendDuplicateNameErrorShown(walletId: UserWalletId, contactId: String?) {
+        analyticsEventHandler.send(
+            AddressBookEvents.DuplicateNameErrorShown(walletId = walletId, contactId = contactId),
+        )
+    }
+
+    fun sendAddressRemoved(walletId: UserWalletId, contactId: String) {
+        analyticsEventHandler.send(
+            AddressBookEvents.AddressRemoved(walletId = walletId, contactId = contactId),
+        )
+    }
+
+    fun sendContactDeleted(walletId: UserWalletId, contactId: String) {
+        analyticsEventHandler.send(
+            AddressBookEvents.ContactDeleted(walletId = walletId, contactId = contactId),
+        )
+    }
+
     fun sendAddContactTapped(fromSendSuccess: Boolean, scope: CoroutineScope) {
-        scope.launch {
+        scope.launch(dispatcherProvider.default) {
             analyticsEventHandler.send(
                 AddressBookEvents.AddContactTapped(
                     walletId = selectedWalletId(),
@@ -99,11 +154,4 @@ internal class AddressBookAnalyticsSender @Inject constructor(
         .filterNotNull()
         .first()
         .walletId
-
-    private fun AddressBookOpenMode.toAnalyticsSource(): Source = when (this) {
-        AddressBookOpenMode.Default -> Source.Settings
-        is AddressBookOpenMode.ContactSelection,
-        is AddressBookOpenMode.WithContactCreation,
-        -> Source.SendFlow
-    }
 }
