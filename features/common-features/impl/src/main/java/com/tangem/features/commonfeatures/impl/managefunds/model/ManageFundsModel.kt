@@ -10,6 +10,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -26,6 +29,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPa
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.managefunds.analytics.ManageFundsAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
@@ -206,7 +210,7 @@ internal class ManageFundsModel @Inject constructor(
                     return@launch
                 }
             tokenActionsTrigger.value = TokenActionsRequest(wallet, match.first, match.second)
-            replaceRoot(UiRoute.TokenActions)
+            replaceRoot(tokenActionsRoute(match.second))
         }
     }
 
@@ -218,7 +222,7 @@ internal class ManageFundsModel @Inject constructor(
                 1 -> {
                     val entry = entries.first()
                     tokenActionsTrigger.value = TokenActionsRequest(entry.userWallet, entry.account, entry.status)
-                    replaceRoot(UiRoute.TokenActions)
+                    replaceRoot(tokenActionsRoute(entry.status))
                 }
                 else -> {
                     filteredEntries.value = entries
@@ -261,7 +265,12 @@ internal class ManageFundsModel @Inject constructor(
     private fun openTokenActions(request: TokenActionsRequest, bottomAction: BottomAction) {
         tokenActionsTrigger.value = request
         currentBottomAction.value = bottomAction
-        pushRoute(UiRoute.TokenActions)
+        pushRoute(tokenActionsRoute(request.status))
+    }
+
+    private fun tokenActionsRoute(status: CryptoCurrencyStatus): UiRoute.TokenActions {
+        val title = resourceReference(R.string.get_token_title, wrappedList(status.currency.name))
+        return UiRoute.TokenActions(title = title)
     }
 
     private fun replaceRoot(route: UiRoute) {
@@ -277,7 +286,7 @@ internal class ManageFundsModel @Inject constructor(
         data object Loading : UiRoute
         data object ChooseToken : UiRoute
         data object UserPortfolio : UiRoute
-        data object TokenActions : UiRoute
+        data class TokenActions(val title: TextReference) : UiRoute
     }
 
     private data class TokenActionsRequest(
