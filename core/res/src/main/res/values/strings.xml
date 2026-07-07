@@ -1905,6 +1905,7 @@
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
+  <string name="tangempay_common_error_loading">Error loading</string>
   <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
