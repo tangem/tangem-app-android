@@ -17,6 +17,7 @@ import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
+import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
@@ -66,6 +67,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val earnDeepLink: EarnDeepLinkHandler.Factory,
     private val yieldDeepLink: YieldDeepLinkHandler.Factory,
     private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
+    private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -181,6 +183,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
+            DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
             else -> {
                 TangemLogger.i(
                     """
