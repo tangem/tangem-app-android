@@ -34,7 +34,6 @@ internal class AddressBookSerializationTest {
                     id = AddressEntryId("addr-1"),
                     address = "0xabc",
                     networkId = Network.RawID("ethereum"),
-                    networkName = "Ethereum",
                     memo = null,
                     signature = "",
                 ),
@@ -71,7 +70,6 @@ internal class AddressBookSerializationTest {
                             id = AddressEntryId("addr-1"),
                             address = "0xabc",
                             networkId = Network.RawID("ethereum"),
-                            networkName = "Ethereum",
                             memo = "memo",
                             signature = "sig",
                         ),
@@ -101,5 +99,24 @@ internal class AddressBookSerializationTest {
 
         // Assert
         assertThat(error).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN entry with null memo WHEN serialized THEN memo key is omitted`() {
+        // Arrange — kotlinx omits properties equal to their default, so a null memo must not appear in the JSON,
+        // matching iOS's encodeIfPresent for String? optionals.
+        val entry = AddressEntry(
+            id = AddressEntryId("a1"),
+            address = "0xabc",
+            networkId = Network.RawID("ethereum"),
+            memo = null,
+            signature = "sig",
+        )
+
+        // Act
+        val obj = json.parseToJsonElement(json.encodeToString(AddressEntry.serializer(), entry)).jsonObject
+
+        // Assert
+        assertThat(obj.keys).doesNotContain("memo")
     }
 }

@@ -70,7 +70,6 @@ class GetVerifiedContactsInteractorTest {
                 id = AddressEntryId("addr-1"),
                 address = "0xabc",
                 networkId = Network.RawID("ethereum"),
-                networkName = "Ethereum",
                 memo = null,
                 signature = "AABB",
             ),
