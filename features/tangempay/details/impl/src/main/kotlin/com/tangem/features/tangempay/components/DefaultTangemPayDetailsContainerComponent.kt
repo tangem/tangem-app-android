@@ -84,6 +84,10 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 userWalletId = params.initialStatus.userWalletId,
             ),
         )
+        TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->
+            TangemPayVirtualAccountDepositSuccessComponent(
+                appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            )
     }
 
     private fun onChildBack() {
