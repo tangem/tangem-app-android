@@ -4,28 +4,29 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.commonfeatures.api.choosetoken.model.WalletListUM
+import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.model.ForYouNotification
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class ForYouUM(
-    val walletListUM: WalletListUM,
     val portfolioReviewUM: PortfolioReviewUM,
+    val notifications: ImmutableList<ForYouNotification>,
 )
 
 @Immutable
 internal sealed interface PortfolioReviewUM {
     val tokenList: ImmutableList<ForYouTokenListItemUM>
+    val marketChartUM: MarketChartUM
 
     data class Loading(
         override val tokenList: ImmutableList<ForYouTokenListItemUM>,
+        override val marketChartUM: MarketChartUM.NoData,
     ) : PortfolioReviewUM
 
     data class Content(
         override val tokenList: ImmutableList<ForYouTokenListItemUM>,
+        override val marketChartUM: MarketChartUM,
         val periodPickerUM: TangemSegmentedPickerUM,
-        val assetCount: TextReference,
-        val topHoldingPercent: TextReference,
         val onPeriodClick: (TangemSegmentUM) -> Unit,
     ) : PortfolioReviewUM
 }
