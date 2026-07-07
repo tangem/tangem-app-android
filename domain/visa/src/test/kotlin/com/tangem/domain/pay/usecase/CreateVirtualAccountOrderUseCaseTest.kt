@@ -28,7 +28,7 @@ internal class CreateVirtualAccountOrderUseCaseTest {
         val result = useCase(userWalletId, paymentAccountAddress)
 
         assertThat(result.isRight()).isTrue()
-        coVerify(exactly = 0) { onboardingRepository.createVirtualAccountOrder(any(), any()) }
+        coVerify(exactly = 0) { onboardingRepository.createVirtualAccountOrder(any(), any(), any()) }
         coVerify(exactly = 0) { onboardingRepository.storeVirtualAccountOrderId(any(), any()) }
         coVerify(exactly = 0) { pollingUseCase.invoke(any(), any()) }
     }
@@ -37,7 +37,7 @@ internal class CreateVirtualAccountOrderUseCaseTest {
     fun `GIVEN no stored id and create succeeds WHEN invoke THEN stores id and starts polling`() = runTest {
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery {
-            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress)
+            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, any())
         } returns "new-id".right()
 
         val result = useCase(userWalletId, paymentAccountAddress)
@@ -51,7 +51,7 @@ internal class CreateVirtualAccountOrderUseCaseTest {
     fun `GIVEN no stored id and create fails WHEN invoke THEN returns error and does not store or poll`() = runTest {
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery {
-            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress)
+            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, any())
         } returns VisaApiError.Unspecified.left()
 
         val result = useCase(userWalletId, paymentAccountAddress)
