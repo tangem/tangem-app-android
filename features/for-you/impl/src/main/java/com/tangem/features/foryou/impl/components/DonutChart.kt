@@ -8,18 +8,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -43,7 +34,10 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -88,7 +82,7 @@ import kotlin.math.min
 @Suppress("MagicNumber", "LongParameterList", "LongMethod", "NamedArguments")
 @Composable
 internal fun DonutChart(
-    segments: List<DonutSegmentUM>,
+    segments: ImmutableList<DonutSegmentUM>,
     modifier: Modifier = Modifier,
     selectedIndex: Int? = null,
     onSegmentClick: ((index: Int?) -> Unit)? = null,
@@ -99,6 +93,11 @@ internal fun DonutChart(
 ) {
     val strokePx = with(LocalDensity.current) { strokeWidth.toPx() }
     val dimOverlayColor = TangemTheme.colors3.border.inverse.tertiary
+
+    // Resolve each slice's themed colour once, here in composition (the palette reads TangemTheme, which
+    // isn't available inside the drawBehind DrawScope). Order is preserved 1:1 with [segments] so slice i
+    // keeps the colour its producer assigned by rank — the draw pass below indexes by i, not by paint order.
+    val segmentColors = segments.map { it.color.getColor() }
 
     // Fade the dim in/out in step with the segment tooltip's pop-in (same spring as DonutSegmentTooltip).
     val dimProgress by animateFloatAsState(
@@ -175,7 +174,7 @@ internal fun DonutChart(
                 for (i in segments.indices.reversed()) {
                     if (sweeps[i] <= 0f) continue
                     drawArc(
-                        color = segments[i].color,
+                        color = segmentColors[i],
                         startAngle = starts[i],
                         sweepAngle = sweeps[i],
                         useCenter = false,
@@ -352,28 +351,28 @@ private fun PreviewDonutChart() {
                 modifier = Modifier.size(260.dp),
                 selectedIndex = selectedIndex,
                 onSegmentClick = { index -> selectedIndex = index.takeIf { it != selectedIndex } },
-                segments = listOf(
+                segments = persistentListOf(
                     DonutSegmentUM(
                         weight = BigDecimal(0.55),
-                        color = TangemTheme.colors3.border.brand,
+                        color = DonutSegmentColor.Brand,
                         title = stringReference("Ethereum"),
                         fiatValue = stringReference("$5,720.22"),
                     ),
                     DonutSegmentUM(
                         weight = BigDecimal(0.07),
-                        color = TangemTheme.colors3.border.accent.violet,
+                        color = DonutSegmentColor.Violet,
                         title = stringReference("Solana"),
                         fiatValue = stringReference("$728.30"),
                     ),
                     DonutSegmentUM(
                         weight = BigDecimal(0.06),
-                        color = TangemTheme.colors3.border.accent.red,
+                        color = DonutSegmentColor.Red,
                         title = stringReference("Polkadot"),
                         fiatValue = stringReference("$624.26"),
                     ),
                     DonutSegmentUM(
                         weight = BigDecimal(0.05),
-                        color = TangemTheme.colors3.border.accent.green,
+                        color = DonutSegmentColor.Green,
                         title = stringReference("Tether"),
                         fiatValue = stringReference("$520.18"),
                     ),
@@ -409,7 +408,7 @@ private fun PreviewDonutChartEmpty() {
         ) {
             DonutChart(
                 modifier = Modifier.size(260.dp),
-                segments = emptyList(),
+                segments = persistentListOf(),
             ) {
                 Text(
                     text = stringResourceSafe(R.string.market_chart_bubble_no_data),
