@@ -13,4 +13,5 @@ dependencies {
     api(deps.compose.ui)
 
     api(projects.core.decompose)
+    api(projects.core.ui)
 }
