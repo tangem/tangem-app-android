@@ -46,6 +46,8 @@ internal class DefaultAddressBookRepository(
 
     private val writeMutex = Mutex()
 
+    private val logger = TangemLogger.withTag(LOG_TAG)
+
     override fun getContacts(userWalletId: UserWalletId): Flow<List<Contact>> {
         return getContactsForWallet(userWalletId)
             .onStart { syncAddressBooks() }
@@ -124,6 +126,9 @@ internal class DefaultAddressBookRepository(
 
     override suspend fun syncAddressBooks(): Either<AddressBookSyncError, Unit> = withContext(dispatchers.default) {
         val wallets = userWalletsListRepository.userWalletsSync()
+        // Debug (Logcat only, dev builds) — the persisted prod log stays quiet on the happy path; only failures
+        // below are written at Error level.
+        logger.d("Syncing address books for ${wallets.size} wallet(s)")
         // The backend rejects more than MAX_SYNC_WALLETS per request, so sync in chunks and stop on the
         // first failed chunk.
         wallets.chunked(MAX_SYNC_WALLETS)
@@ -145,22 +150,38 @@ internal class DefaultAddressBookRepository(
             call = {
                 val response = withContext(dispatchers.io) { addressBookApi.syncAddressBooks(request).bind() }
                 // Only wallets whose etag changed are returned; the rest keep their local copy.
+                logger.d("Sync response: ${response.items.size} updated book(s) out of ${wallets.size} requested")
                 response.items.forEach { item ->
                     val userWalletId = UserWalletId(stringValue = item.walletId)
+                    // Metadata only — helps QA verify what the backend delivered (esp. for cross-platform books).
+                    // Debug (Logcat only) to keep the persisted prod log free of happy-path sync noise.
+                    logger.d(
+                        "Storing synced address book for wallet ${item.walletId}: version=${item.version}, " +
+                            "updatedAt=${item.updatedAt}, nonceLen=${item.nonce.length}, " +
+                            "ciphertextLen=${item.ciphertext.length}, authTagLen=${item.authTag.length}",
+                    )
                     blobStore.storeBlob(item.toBlob())
                     eTagsStore.store(userWalletId, ETagsStore.Key.AddressBook, item.etag)
                 }
                 Unit.right()
             },
             onError = { error ->
-                TangemLogger.e(messageString = "Failed to sync address books: $error")
+                logger.e("Failed to sync address books: $error")
                 error.toSyncError().left()
             },
         )
     }
 
     private fun decryptContacts(blob: AddressBookBlob, userWallet: UserWallet): List<Contact> {
-        return cipher.decrypt(blob, userWallet).getOrNull()?.contacts.orEmpty()
+        return cipher.decrypt(blob, userWallet).fold(
+            ifLeft = { error ->
+                // The cipher already logged the low-level cause; this ties the failure to the read path so QA
+                // can see that a stored/synced book (e.g. one created on iOS) could not be shown to the user.
+                logger.e("Skipping address book for wallet ${blob.walletId}: decrypt failed with $error")
+                emptyList()
+            },
+            ifRight = { it.contacts },
+        )
     }
 
     private suspend fun currentContacts(userWalletId: UserWalletId, userWallet: UserWallet): List<Contact> {
@@ -176,9 +197,7 @@ internal class DefaultAddressBookRepository(
         val updatedAt = DateTime.parse(timestampProvider.now())
         return cipher.encrypt(addressBook, userWallet, updatedAt)
             .mapLeft { error ->
-                TangemLogger.e(
-                    messageString = "Failed to encrypt address book for wallet ${userWallet.walletId}: $error",
-                )
+                logger.e("Failed to encrypt address book for wallet ${userWallet.walletId}: $error")
                 AddressBookSyncError.Unknown
             }
             .flatMap { blob -> pushBlob(userWallet.walletId, blob) }
@@ -209,7 +228,7 @@ internal class DefaultAddressBookRepository(
                 Unit.right()
             },
             onError = { error ->
-                TangemLogger.e(messageString = "Failed to push address book for wallet $userWalletId: $error")
+                logger.e("Failed to push address book for wallet $userWalletId: $error")
                 val syncError = error.toSyncError()
                 // A 412 means the local etag is stale relative to the backend. Refresh the local blob + etag so the
                 // next save attempt (user re-taps Save) starts from the current backend state. We do NOT re-push here
@@ -249,6 +268,7 @@ internal class DefaultAddressBookRepository(
         userWalletsListRepository.userWalletsSync().find { it.walletId.stringValue == walletId }
 
     private companion object {
+        const val LOG_TAG = "AddressBook"
         const val MAX_SYNC_WALLETS = 20
     }
 }
