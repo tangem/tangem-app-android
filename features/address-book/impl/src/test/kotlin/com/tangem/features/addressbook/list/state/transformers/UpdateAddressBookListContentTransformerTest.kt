@@ -172,7 +172,6 @@ internal class UpdateAddressBookListContentTransformerTest {
                     networkId = Network.RawID("ethereum"),
                     memo = null,
                     signature = "sig",
-                    networkName = "Ethereum",
                 ),
             ),
         ),
