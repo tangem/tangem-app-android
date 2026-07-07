@@ -8,7 +8,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -132,12 +131,7 @@ internal class EditContactModel @Inject constructor(
         observeNameValidation()
         observeSaveButton()
         loadExistingContact()
-        sendAddContactTappedEvent()
-    }
-
-    private fun sendAddContactTappedEvent() {
-        if (params.contactId != null) return
-        analyticsSender.sendAddContactTapped(fromSendSuccess = params.predefinedAddress != null, scope = modelScope)
+        sendContactScreenOpenedEvent()
     }
 
     // region Initialization
@@ -231,9 +225,18 @@ internal class EditContactModel @Inject constructor(
             stateController.uiState.map { it.name }.distinctUntilChanged().debounce(NAME_DEBOUNCE_MS),
             selectedWallet.mapNotNull { it?.walletId }.distinctUntilChanged(),
         ) { name, walletId -> name to walletId }
-            .mapLatest { (name, walletId) -> validateName(name, walletId) }
+            .mapLatest { (name, walletId) -> walletId to validateName(name, walletId) }
+            .distinctUntilChanged()
+            .onEach { (walletId, error) ->
+                if (error == ContactNameValidationError.Duplicate) {
+                    analyticsSender.sendDuplicateNameErrorShown(
+                        walletId = walletId,
+                        contactId = params.contactId?.value,
+                    )
+                }
+                stateController.update(UpdateNameErrorTransformer(error?.let(ContactNameErrorConverter()::convert)))
+            }
             .flowOn(dispatchers.default)
-            .onEach { error -> stateController.update(UpdateNameErrorTransformer(error)) }
             .launchIn(modelScope)
     }
 
@@ -290,7 +293,6 @@ internal class EditContactModel @Inject constructor(
             )
         } else {
             val walletId = selectedWallet.value?.walletId?.stringValue ?: return
-            analyticsSender.sendAddressScreenOpened()
             params.onAddAddressClick(walletId, params.contactId?.value, null)
         }
     }
@@ -332,11 +334,6 @@ internal class EditContactModel @Inject constructor(
                 },
                 ifRight = { contact ->
                     if (existing == null) {
-                        analyticsSender.sendContactSaved(
-                            walletId = userWallet.walletId,
-                            contactId = contact.id.value,
-                            isEdit = params.contactId != null,
-                        )
                         messageSender.send(
                             SnackbarMessage(
                                 message = resourceReference(R.string.address_book_create_success_message),
@@ -344,6 +341,11 @@ internal class EditContactModel @Inject constructor(
                             ),
                         )
                     }
+                    analyticsSender.sendContactSaved(
+                        walletId = userWallet.walletId,
+                        contactId = contact.id.value,
+                        isEdit = params.contactId != null,
+                    )
                     params.onBackClick()
                 },
             )
@@ -356,6 +358,10 @@ internal class EditContactModel @Inject constructor(
     }
 
     private fun onDeleteClick() {
+        showDeleteContactDialog(fromLastAddressRemoval = false)
+    }
+
+    private fun showDeleteContactDialog(fromLastAddressRemoval: Boolean) {
         messageSender.send(
             DialogMessage(
                 message = resourceReference(R.string.address_book_delete_contact_description),
@@ -363,7 +369,7 @@ internal class EditContactModel @Inject constructor(
                     EventMessageAction(
                         title = resourceReference(R.string.common_delete),
                         isWarning = true,
-                        onClick = ::deleteContact,
+                        onClick = { deleteContact(fromLastAddressRemoval = fromLastAddressRemoval) },
                     )
                 },
             ),
@@ -396,8 +402,12 @@ internal class EditContactModel @Inject constructor(
         addressInfoNavigation.dismiss()
         val isLastAddress = stateController.uiState.value.addresses.size <= 1
         if (isLastAddress && params.contactId != null) {
-            onDeleteClick()
+            // Removing the last address deletes the whole contact — analytics is emitted from the confirmed delete.
+            showDeleteContactDialog(fromLastAddressRemoval = true)
         } else {
+            contactWalletId()?.let { walletId ->
+                analyticsSender.sendAddressRemoved(walletId = walletId, contactId = params.contactId?.value.orEmpty())
+            }
             stateController.update(RemoveValidatedAddressTransformer(address = address, maxAddresses = MAX_ADDRESSES))
         }
     }
@@ -405,6 +415,10 @@ internal class EditContactModel @Inject constructor(
     // endregion
 
     // region Helpers
+
+    private fun sendContactScreenOpenedEvent() {
+        analyticsSender.sendContactScreenOpened(contactId = params.contactId?.value.orEmpty(), scope = modelScope)
+    }
 
     private fun addAddress(address: ValidatedAddress) {
         stateController.update(AddValidatedAddressTransformer(address = address, maxAddresses = MAX_ADDRESSES))
@@ -415,12 +429,12 @@ internal class EditContactModel @Inject constructor(
         return params.contactId == null && unlockedWalletsCount > 1
     }
 
-    private suspend fun validateName(name: String, walletId: UserWalletId): TextReference? {
+    private suspend fun validateName(name: String, walletId: UserWalletId): ContactNameValidationError? {
         if (name.isBlank()) return null
         if (name == loadedContact.value?.name?.value) return null
         val error = contactNameValidator.validate(walletId, name).leftOrNull() ?: return null
         if (error is ContactNameValidationError.Format && error.error is ContactName.Error.Empty) return null
-        return ContactNameErrorConverter().convert(error)
+        return error
     }
 
     private fun refreshSaveButton() {
@@ -456,15 +470,27 @@ internal class EditContactModel @Inject constructor(
         }
     }
 
-    private fun deleteContact() {
+    private fun deleteContact(fromLastAddressRemoval: Boolean) {
         val contactId = params.contactId ?: return
+        val walletId = contactWalletId()
+        // The address removal precedes the backend delete; the contact-deleted event follows a successful response.
+        if (fromLastAddressRemoval && walletId != null) {
+            analyticsSender.sendAddressRemoved(walletId = walletId, contactId = contactId.value)
+        }
         modelScope.launch {
             deleteContactUseCase(contactId).fold(
                 ifLeft = { showDeleteError() },
-                ifRight = { params.onBackClick() },
+                ifRight = {
+                    if (walletId != null) {
+                        analyticsSender.sendContactDeleted(walletId = walletId, contactId = contactId.value)
+                    }
+                    params.onBackClick()
+                },
             )
         }
     }
+
+    private fun contactWalletId(): UserWalletId? = loadedContact.value?.walletId ?: selectedWallet.value?.walletId
 
     private fun showDiscardDialog() {
         messageSender.send(

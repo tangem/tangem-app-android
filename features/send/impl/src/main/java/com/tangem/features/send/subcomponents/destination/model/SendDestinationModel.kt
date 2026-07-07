@@ -37,6 +37,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.AddressBookSendAnalytics
 import com.tangem.features.addressbook.ContactSelectionListener
 import com.tangem.features.addressbook.MatchedContact
 import com.tangem.features.addressbook.SelectedContact
@@ -86,6 +87,7 @@ internal class SendDestinationModel @Inject constructor(
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    private val addressBookSendAnalytics: AddressBookSendAnalytics,
     getContactsUseCase: GetContactsUseCase,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
@@ -182,6 +184,7 @@ internal class SendDestinationModel @Inject constructor(
 
     fun applySelectedContact(contact: SelectedContact) {
         addressSelectorNavigation.dismiss()
+        addressBookSendAnalytics.onAddressSubstitutedInSend(walletId = userWalletId, contactId = contact.contactId)
         _uiState.update(SendDestinationAddressTransformer(address = contact.address, isPasted = true))
         _uiState.update(SendDestinationContactTransformer(contactName = contact.name, contactIcon = contact.icon))
 
