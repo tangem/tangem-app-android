@@ -35,6 +35,8 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -96,6 +98,7 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
 
 @Composable
 private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = Modifier) {
+    val hapticManager = LocalHapticManager.current
     FloatingCard(modifier = modifier) {
         TangemRowContainer(modifier = Modifier.clickableSingle(onClick = state.onRowClick)) {
             Text(
@@ -128,7 +131,10 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                     iconPosition = TangemButtonIconPosition.Start,
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onAddFundsClick,
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                        state.onAddFundsClick()
+                    },
                 ),
             )
 
@@ -144,7 +150,10 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                     ),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onRowClick,
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                        state.onRowClick()
+                    },
                 ),
             )
         }
@@ -153,6 +162,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
 
 @Composable
 private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier = Modifier) {
+    val hapticManager = LocalHapticManager.current
     FloatingCard(modifier = modifier) {
         Row(
             modifier = Modifier
@@ -189,7 +199,10 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
                     text = resourceReference(R.string.common_add),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onAddClick,
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                        state.onAddClick()
+                    },
                 ),
             )
         }
