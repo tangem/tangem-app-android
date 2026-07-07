@@ -82,4 +82,8 @@ dependencies {
     /** Other */
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
+
+    /** Tests */
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
 }
