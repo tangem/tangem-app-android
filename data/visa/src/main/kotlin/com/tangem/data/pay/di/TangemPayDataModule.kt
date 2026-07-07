@@ -130,6 +130,7 @@ internal interface TangemPayDataModule {
         repository: DefaultTariffPlanTransitionsRepository,
     ): TangemPayTariffPlanTransitionsRepository
 
+    @Suppress("TooManyFunctions")
     companion object {
 
         @Provides
@@ -333,6 +334,35 @@ internal interface TangemPayDataModule {
             return CreateVirtualAccountOrderUseCase(
                 onboardingRepository = onboardingRepository,
                 pollingUseCase = pollingUseCase,
+            )
+        }
+
+        @Provides
+        fun provideCancelTangemPayOrderUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+        ): CancelTangemPayOrderUseCase {
+            return CancelTangemPayOrderUseCase(
+                customerOrderRepository = customerOrderRepository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+            )
+        }
+
+        @Provides
+        fun provideCreateTariffPlanTransitionOrderUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): CreateTariffPlanTransitionOrderUseCase {
+            return CreateTariffPlanTransitionOrderUseCase(
+                customerOrderRepository = customerOrderRepository,
+                issueCardRepository = issueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
             )
         }
     }
