@@ -7,6 +7,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,11 +28,13 @@ import java.io.IOException
 internal class DefaultYieldPromoRepositoryTest {
 
     private val tangemApi: TangemTechApi = mockk()
+    private val promotionsSupplier: PromotionsSupplier = mockk()
     private val promoStore: YieldBoostPromoStore = mockk(relaxed = true)
     private val statusStore: YieldBoostStatusStore = mockk(relaxed = true)
 
     private val repository = DefaultYieldPromoRepository(
         tangemApi = tangemApi,
+        promotionsSupplier = promotionsSupplier,
         promoStore = promoStore,
         statusStore = statusStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -41,7 +44,7 @@ internal class DefaultYieldPromoRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemApi, promoStore, statusStore)
+        clearMocks(tangemApi, promotionsSupplier, promoStore, statusStore)
     }
 
     // region getYieldBoostPromo
@@ -56,7 +59,7 @@ internal class DefaultYieldPromoRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(cached)
-        coVerify(exactly = 0) { tangemApi.getPromotions(any(), any()) }
+        coVerify(exactly = 0) { promotionsSupplier.getPromotions(any(), any()) }
     }
 
     @Test
@@ -64,8 +67,8 @@ internal class DefaultYieldPromoRepositoryTest {
         // Arrange
         val dto = matchingPromoDto()
         coEvery { promoStore.getSyncOrNull(userWalletId) } returns null
-        coEvery { tangemApi.getPromotions(any(), any()) } returns ApiResponse.Success(
-            PromotionsResponse(promotions = listOf(dto)),
+        coEvery { promotionsSupplier.getPromotions(userWalletId, any()) } returns PromotionsResponse(
+            promotions = listOf(dto),
         )
         val expected = YieldBoostPromoConverter.convert(dto)
 
@@ -81,23 +84,23 @@ internal class DefaultYieldPromoRepositoryTest {
     fun `GIVEN cached promo and force refresh WHEN getYieldBoostPromo THEN fetches anyway`() = runTest {
         // Arrange
         coEvery { promoStore.getSyncOrNull(userWalletId) } returns YieldBoostPromo.None
-        coEvery { tangemApi.getPromotions(any(), any()) } returns ApiResponse.Success(
-            PromotionsResponse(promotions = listOf(matchingPromoDto())),
+        coEvery { promotionsSupplier.getPromotions(userWalletId, any()) } returns PromotionsResponse(
+            promotions = listOf(matchingPromoDto()),
         )
 
         // Act
         repository.getYieldBoostPromo(userWalletId, forceRefresh = true)
 
         // Assert
-        coVerify(exactly = 1) { tangemApi.getPromotions(any(), any()) }
+        coVerify(exactly = 1) { promotionsSupplier.getPromotions(any(), any()) }
     }
 
     @Test
     fun `GIVEN no matching promo name WHEN getYieldBoostPromo THEN returns None`() = runTest {
         // Arrange
         coEvery { promoStore.getSyncOrNull(userWalletId) } returns null
-        coEvery { tangemApi.getPromotions(any(), any()) } returns ApiResponse.Success(
-            PromotionsResponse(promotions = listOf(PromotionsResponse.PromotionDto(name = "other", all = null))),
+        coEvery { promotionsSupplier.getPromotions(userWalletId, any()) } returns PromotionsResponse(
+            promotions = listOf(PromotionsResponse.PromotionDto(name = "other", all = null)),
         )
 
         // Act
@@ -112,7 +115,7 @@ internal class DefaultYieldPromoRepositoryTest {
     fun `GIVEN fetch fails and cache present WHEN getYieldBoostPromo THEN falls back to cache`() = runTest {
         // Arrange — force refresh so the initial cache check is skipped and the fetch is attempted
         val cached = YieldBoostPromo.None
-        coEvery { tangemApi.getPromotions(any(), any()) } throws IOException("network")
+        coEvery { promotionsSupplier.getPromotions(any(), any()) } throws IOException("network")
         coEvery { promoStore.getSyncOrNull(userWalletId) } returns cached
 
         // Act
@@ -126,7 +129,7 @@ internal class DefaultYieldPromoRepositoryTest {
     @Test
     fun `GIVEN fetch fails and no cache WHEN getYieldBoostPromo THEN rethrows`() = runTest {
         // Arrange
-        coEvery { tangemApi.getPromotions(any(), any()) } throws IOException("network")
+        coEvery { promotionsSupplier.getPromotions(any(), any()) } throws IOException("network")
         coEvery { promoStore.getSyncOrNull(userWalletId) } returns null
 
         // Act
