@@ -78,12 +78,13 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun createVirtualAccountOrder(
         userWalletId: UserWalletId,
         paymentAccountAddress: String,
+        idempotencyKey: String,
     ): Either<VisaApiError, String> {
         if (isMockMode) {
             mockVaOrderIds.add(userWalletId)
             return MOCK_VA_ORDER_ID.right()
         }
-        return real.createVirtualAccountOrder(userWalletId, paymentAccountAddress)
+        return real.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
     }
 
     override suspend fun getVirtualAccountOrderId(userWalletId: UserWalletId): String? {
