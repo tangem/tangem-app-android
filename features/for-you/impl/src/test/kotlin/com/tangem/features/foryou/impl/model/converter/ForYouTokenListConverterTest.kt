@@ -2,6 +2,7 @@ package com.tangem.features.foryou.impl.model.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -77,7 +78,7 @@ internal class ForYouTokenListConverterTest {
             val item = result.single()
             val row = item.tokenRowUM as TangemTokenRowUM.Content
             val subtitle = row.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(stringReference("2 networks"))
+            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.common_networks_count, count = 2))
             assertThat(item.tokenList).hasSize(2)
         }
 
@@ -115,13 +116,13 @@ internal class ForYouTokenListConverterTest {
         }
 
         @Test
-        fun `GIVEN otherAssetCount is zero WHEN convert THEN no Other row is appended`() {
+        fun `GIVEN no other assets WHEN convert THEN no Other row is appended`() {
             // Arrange
             val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin")
             val status = createStatus(currency, loadedValue(BigDecimal("1"), BigDecimal("100")))
             val converter = createConverter(
                 totalFiatBalance = BigDecimal("100"),
-                otherAssetCount = 0,
+                otherAssets = emptyList(),
             )
 
             // Act
@@ -132,14 +133,13 @@ internal class ForYouTokenListConverterTest {
         }
 
         @Test
-        fun `GIVEN otherAssetCount is one WHEN convert THEN Other row subtitle is singular`() {
+        fun `GIVEN a single other asset WHEN convert THEN Other row subtitle is singular`() {
             // Arrange
             val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin")
             val status = createStatus(currency, loadedValue(BigDecimal("1"), BigDecimal("100")))
             val converter = createConverter(
                 totalFiatBalance = BigDecimal("100"),
-                otherAssetCount = 1,
-                otherFiatBalance = BigDecimal("50"),
+                otherAssets = listOf(otherAsset(BigDecimal("50"))),
             )
 
             // Act
@@ -149,18 +149,21 @@ internal class ForYouTokenListConverterTest {
             val otherRow = result.last().tokenRowUM as TangemTokenRowUM.Content
             assertThat(otherRow.id).isEqualTo("for_you_other_assets")
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(stringReference("1 asset"))
+            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.common_assets, count = 1))
         }
 
         @Test
-        fun `GIVEN otherAssetCount is more than one WHEN convert THEN Other row subtitle is plural`() {
+        fun `GIVEN more than one other asset WHEN convert THEN Other row subtitle is plural`() {
             // Arrange
             val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin")
             val status = createStatus(currency, loadedValue(BigDecimal("1"), BigDecimal("100")))
             val converter = createConverter(
                 totalFiatBalance = BigDecimal("100"),
-                otherAssetCount = 3,
-                otherFiatBalance = BigDecimal("50"),
+                otherAssets = listOf(
+                    otherAsset(BigDecimal("30")),
+                    otherAsset(BigDecimal("15")),
+                    otherAsset(BigDecimal("5")),
+                ),
             )
 
             // Act
@@ -169,7 +172,7 @@ internal class ForYouTokenListConverterTest {
             // Assert
             val otherRow = result.last().tokenRowUM as TangemTokenRowUM.Content
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(stringReference("3 assets"))
+            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.common_assets, count = 3))
         }
 
         @Test
@@ -210,16 +213,21 @@ internal class ForYouTokenListConverterTest {
     private fun createConverter(
         totalFiatBalance: BigDecimal,
         expandedAssetIds: Set<String> = emptySet(),
-        otherAssetCount: Int = 0,
-        otherFiatBalance: BigDecimal = BigDecimal.ZERO,
+        otherAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>> = emptyList(),
     ): ForYouTokenListConverter = ForYouTokenListConverter(
         appCurrency = appCurrency,
         totalFiatBalance = totalFiatBalance,
         expandedAssetIds = expandedAssetIds,
         expandClick = {},
-        otherAssetCount = otherAssetCount,
-        otherFiatBalance = otherFiatBalance,
+        otherAssets = otherAssets,
     )
+
+    /**
+     * Builds an "other" asset entry — only its summed [balance] and the number of entries drive the
+     * collapsed "Other" row, so the currency list is left empty.
+     */
+    private fun otherAsset(balance: BigDecimal): Pair<List<CryptoCurrencyStatus>, BigDecimal> =
+        emptyList<CryptoCurrencyStatus>() to balance
 
     private fun createStatus(currency: CryptoCurrency, value: CryptoCurrencyStatus.Value) = CryptoCurrencyStatus(
         currency = currency,
@@ -230,6 +238,7 @@ internal class ForYouTokenListConverterTest {
         every { this@mockk.amount } returns amount
         every { this@mockk.fiatAmount } returns fiatAmount
         every { isError } returns false
+        every { sources } returns CryptoCurrencyStatus.Sources()
     }
 
     private fun createCoin(rawCurrencyId: String, symbol: String, networkId: String): CryptoCurrency.Coin {
