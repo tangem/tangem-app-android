@@ -164,12 +164,12 @@ sealed class AddressBookEvents(
 
     // region Choose network
     class SelectAllNetworksTapped(
-        walletId: UserWalletId,
+        walletId: String,
         action: Action,
     ) : AddressBookEvents(
         event = "Select All Networks Tapped",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             ACTION to action.value,
         ),
     ) {
