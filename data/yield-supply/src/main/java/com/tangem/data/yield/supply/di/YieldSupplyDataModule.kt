@@ -9,6 +9,7 @@ import com.tangem.data.yield.supply.promo.DefaultYieldPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
@@ -92,12 +93,14 @@ internal object YieldSupplyDataModule {
     @Singleton
     fun provideYieldPromoRepository(
         tangemApi: TangemTechApi,
+        promotionsSupplier: PromotionsSupplier,
         promoStore: YieldBoostPromoStore,
         statusStore: YieldBoostStatusStore,
         dispatchers: CoroutineDispatcherProvider,
     ): YieldPromoRepository {
         return DefaultYieldPromoRepository(
             tangemApi = tangemApi,
+            promotionsSupplier = promotionsSupplier,
             promoStore = promoStore,
             statusStore = statusStore,
             dispatchers = dispatchers,
