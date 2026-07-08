@@ -1,5 +1,7 @@
 package com.tangem.features.addressbook.common
 
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.SaveContactError
@@ -56,7 +58,7 @@ internal class AddressBookAnalyticsSenderTest {
 
         // Assert
         val expected = AddressBookEvents.ContactListScreenOpened(
-            walletId = EXPECTED_WALLET_ID,
+            walletId = EXPECTED_WALLET_ID_HASH,
             source = model.source,
             contactsCount = model.contactsCount,
         )
@@ -72,7 +74,7 @@ internal class AddressBookAnalyticsSenderTest {
 
         // Assert
         val expected = AddContactTapped(
-            walletId = EXPECTED_WALLET_ID,
+            walletId = EXPECTED_WALLET_ID_HASH,
             source = model.expectedSource,
         )
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
@@ -86,7 +88,7 @@ internal class AddressBookAnalyticsSenderTest {
 
         // Assert
         val expected = ContactSaved(
-            walletId = EXPECTED_WALLET_ID,
+            walletId = EXPECTED_WALLET_ID_HASH,
             contactId = CONTACT_ID,
             mode = model.expectedMode,
         )
@@ -105,7 +107,7 @@ internal class AddressBookAnalyticsSenderTest {
             verify(exactly = 0) { analyticsEventHandler.send(any()) }
         } else {
             val expected = AddressBookEvents.SaveErrorShown(
-                walletId = EXPECTED_WALLET_ID,
+                walletId = EXPECTED_WALLET_ID_HASH,
                 contactId = CONTACT_ID,
                 errorType = expectedType,
             )
@@ -138,7 +140,7 @@ internal class AddressBookAnalyticsSenderTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = AddressBookEvents.ContactScreenOpened(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        val expected = AddressBookEvents.ContactScreenOpened(walletId = EXPECTED_WALLET_ID_HASH, contactId = CONTACT_ID)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -149,7 +151,7 @@ internal class AddressBookAnalyticsSenderTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = AddressBookEvents.SendFlowWidgetShown(walletId = EXPECTED_WALLET_ID)
+        val expected = AddressBookEvents.SendFlowWidgetShown(walletId = EXPECTED_WALLET_ID_HASH)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -160,7 +162,10 @@ internal class AddressBookAnalyticsSenderTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = AddressBookEvents.ContactSelectedInSend(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        val expected = AddressBookEvents.ContactSelectedInSend(
+            walletId = EXPECTED_WALLET_ID_HASH,
+            contactId = CONTACT_ID,
+        )
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -170,7 +175,8 @@ internal class AddressBookAnalyticsSenderTest {
         sender.onAddressSubstitutedInSend(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
 
         // Assert
-        val expected = AddressBookEvents.AddressSubstitutedInSend(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        val expected =
+            AddressBookEvents.AddressSubstitutedInSend(walletId = EXPECTED_WALLET_ID_HASH, contactId = CONTACT_ID)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -181,7 +187,7 @@ internal class AddressBookAnalyticsSenderTest {
         sender.sendAddressInvalid(walletId = EXPECTED_WALLET_ID, contactId = contactId)
 
         // Assert
-        val expected = AddressBookEvents.AddressInvalid(walletId = EXPECTED_WALLET_ID, contactId = contactId)
+        val expected = AddressBookEvents.AddressInvalid(walletId = EXPECTED_WALLET_ID_HASH, contactId = contactId)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -192,7 +198,10 @@ internal class AddressBookAnalyticsSenderTest {
         sender.sendDuplicateNameErrorShown(walletId = EXPECTED_WALLET_ID, contactId = contactId)
 
         // Assert
-        val expected = AddressBookEvents.DuplicateNameErrorShown(walletId = EXPECTED_WALLET_ID, contactId = contactId)
+        val expected = AddressBookEvents.DuplicateNameErrorShown(
+            walletId = EXPECTED_WALLET_ID_HASH,
+            contactId = contactId,
+        )
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -202,7 +211,7 @@ internal class AddressBookAnalyticsSenderTest {
         sender.sendAddressRemoved(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
 
         // Assert
-        val expected = AddressBookEvents.AddressRemoved(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        val expected = AddressBookEvents.AddressRemoved(walletId = EXPECTED_WALLET_ID_HASH, contactId = CONTACT_ID)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -212,7 +221,7 @@ internal class AddressBookAnalyticsSenderTest {
         sender.sendContactDeleted(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
 
         // Assert
-        val expected = AddressBookEvents.ContactDeleted(walletId = EXPECTED_WALLET_ID, contactId = CONTACT_ID)
+        val expected = AddressBookEvents.ContactDeleted(walletId = EXPECTED_WALLET_ID_HASH, contactId = CONTACT_ID)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -241,9 +250,15 @@ internal class AddressBookAnalyticsSenderTest {
 
     private fun provideSaveErrorModels() = listOf(
         SaveErrorModel(error = SaveContactError.Signing(mockk()), expectedType = ErrorType.Signing),
-        SaveErrorModel(error = SaveContactError.Backend(AddressBookSyncError.Network), expectedType = ErrorType.Network),
+        SaveErrorModel(
+            error = SaveContactError.Backend(AddressBookSyncError.Network),
+            expectedType = ErrorType.Network,
+        ),
         // 412
-        SaveErrorModel(error = SaveContactError.Backend(AddressBookSyncError.Conflict), expectedType = ErrorType.Server),
+        SaveErrorModel(
+            error = SaveContactError.Backend(AddressBookSyncError.Conflict),
+            expectedType = ErrorType.Server,
+        ),
         // 5xx / unmapped
         SaveErrorModel(error = SaveContactError.Backend(AddressBookSyncError.Unknown), expectedType = ErrorType.Server),
         SaveErrorModel(
@@ -262,6 +277,10 @@ internal class AddressBookAnalyticsSenderTest {
 
     private companion object {
         val EXPECTED_WALLET_ID = UserWalletId("0011223344")
+
+        // Analytics receives the SHA-256 (uppercase hex) of the wallet id, never the raw value.
+        val EXPECTED_WALLET_ID_HASH = EXPECTED_WALLET_ID.value.calculateSha256().toHexString()
+
         const val CONTACT_ID = "contact-42"
     }
 }
