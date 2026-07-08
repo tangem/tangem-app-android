@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -12,6 +13,7 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.components.TangemPayVirtualAccountDepositComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -39,10 +41,11 @@ internal class TangemPayVirtualAccountDepositModelTest {
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase = mockk()
     private val onShowDetails: (VirtualAccountOnramp.Available) -> Unit = mockk(relaxed = true)
     private val onOrderCreated: () -> Unit = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(createVirtualAccountOrderUseCase, onShowDetails, onOrderCreated, uiMessageSender)
+        clearMocks(createVirtualAccountOrderUseCase, onShowDetails, onOrderCreated, uiMessageSender, analytics)
     }
 
     @Test
@@ -58,6 +61,8 @@ internal class TangemPayVirtualAccountDepositModelTest {
         // Assert
         verify(exactly = 1) { onShowDetails(onramp) }
         coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaConditionsPopupShowed>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShowDetailsClicked>()) }
     }
 
     @Test
@@ -74,6 +79,8 @@ internal class TangemPayVirtualAccountDepositModelTest {
         coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress) }
         verify(exactly = 1) { onOrderCreated() }
         assertThat(model.uiState.value.isLoading).isFalse()
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaConditionsPopupShowedFirstTime>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked>()) }
     }
 
     @Test
@@ -130,6 +137,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
         urlOpener = urlOpener,
         uiMessageSender = uiMessageSender,
         createVirtualAccountOrderUseCase = createVirtualAccountOrderUseCase,
+        analytics = analytics,
     )
 
     private fun bankCredentials() = BankCredentials(
