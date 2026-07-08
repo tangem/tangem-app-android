@@ -11,9 +11,23 @@ android {
 
 dependencies {
 
-    // region Kotlin
-    api(deps.kotlin.coroutines)
-    // endregion
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.common)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.express)
+    implementation(projects.domain.express.models)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.onramp)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.visa)
+    implementation(projects.domain.visa.models)
 
     // region Other libraries
     implementation(deps.androidx.annotation)

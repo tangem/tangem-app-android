@@ -41,6 +41,7 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
             (outgoingSwaps + incomingSwaps).forEach { entity ->
                 add(entity.from.toAssetId())
                 add(entity.to.toAssetId())
+                entity.toRefundAssetId()?.let { add(it) }
             }
             onramps.forEach { entity -> add(entity.to.toAssetId()) }
         }
@@ -124,6 +125,16 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
 
 internal fun ExpressExchangeEntity.AssetEmbedded.toAssetId(): ExpressAsset.ID =
     ExpressAsset.ID(networkId = network, contractAddress = contractAddress)
+
+internal fun ExpressExchangeEntity.toRefundAssetId(): ExpressAsset.ID? {
+    val refundNetwork = refundNetwork
+    val refundContractAddress = refundContractAddress
+    return if (refundNetwork != null && refundContractAddress != null) {
+        ExpressAsset.ID(refundNetwork, refundContractAddress)
+    } else {
+        null
+    }
+}
 
 internal fun ExpressOnrampEntity.AssetEmbedded.toAssetId(): ExpressAsset.ID =
     ExpressAsset.ID(networkId = network, contractAddress = contractAddress)

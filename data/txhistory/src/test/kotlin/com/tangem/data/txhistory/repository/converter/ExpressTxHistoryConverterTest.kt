@@ -23,7 +23,16 @@ internal class ExpressTxHistoryConverterTest {
         val entity = createExchangeEntity(payinHash = "payin", payoutHash = "payout", status = "waiting")
 
         // Act
-        val swap = swapConverter.convert(ExpressSwapConverter.Input(entity, provider = null, isOutgoing = true))
+        val swap = swapConverter.convert(
+            ExpressSwapConverter.Input(
+                entity = entity,
+                provider = null,
+                isOutgoing = true,
+                fromCurrency = null,
+                toCurrency = null,
+                refundCurrency = null,
+            ),
+        )
 
         // Assert
         assertThat(swap.isOutgoing).isTrue()
@@ -42,7 +51,16 @@ internal class ExpressTxHistoryConverterTest {
         val entity = createExchangeEntity(payinHash = "payin", payoutHash = "payout")
 
         // Act
-        val swap = swapConverter.convert(ExpressSwapConverter.Input(entity, provider = null, isOutgoing = false))
+        val swap = swapConverter.convert(
+            ExpressSwapConverter.Input(
+                entity = entity,
+                provider = null,
+                isOutgoing = false,
+                fromCurrency = null,
+                toCurrency = null,
+                refundCurrency = null,
+            ),
+        )
 
         // Assert
         assertThat(swap.isOutgoing).isFalse()
@@ -55,7 +73,16 @@ internal class ExpressTxHistoryConverterTest {
         val entity = createExchangeEntity(toAmount = "100000", toActualAmount = "99000")
 
         // Act
-        val swap = swapConverter.convert(ExpressSwapConverter.Input(entity, provider = null, isOutgoing = true))
+        val swap = swapConverter.convert(
+            ExpressSwapConverter.Input(
+                entity = entity,
+                provider = null,
+                isOutgoing = true,
+                fromCurrency = null,
+                toCurrency = null,
+                refundCurrency = null,
+            ),
+        )
 
         // Assert
         assertThat(swap.tx.toAsset.amount).isEquivalentAccordingToCompareTo(BigDecimal("0.00099"))
