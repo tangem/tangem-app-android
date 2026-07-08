@@ -38,9 +38,9 @@ internal fun ActivateCampaignFooter(footerUM: FooterUM, modifier: Modifier = Mod
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
-        }
 
-        SpacerH12()
+            SpacerH12()
+        }
 
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
