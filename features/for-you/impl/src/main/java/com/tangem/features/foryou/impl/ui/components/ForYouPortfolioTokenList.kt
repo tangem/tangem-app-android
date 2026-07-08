@@ -46,7 +46,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_error_20
+import com.tangem.core.ui.res.generated.icons.ic_chevron_collapse_20
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.sharedBoundsSafely
@@ -129,7 +129,7 @@ private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, oute
             targetState = listItem.isExpanded,
             transitionSpec = { portfolioAssetExpandFadeAnimation() },
         ) { isExpandedWrapped ->
-            val composables = remember {
+            val composables = remember(isExpandedWrapped) {
                 SharedTokenRowComposables(
                     icon = { modifier ->
                         PortfolioSharedAssetIcon(
@@ -307,7 +307,7 @@ private fun ForYouPortfolioListHeader(
             }
             SpacerWMax()
             Icon(
-                imageVector = Icons.ic_error_20,
+                imageVector = Icons.ic_chevron_collapse_20,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
             )
