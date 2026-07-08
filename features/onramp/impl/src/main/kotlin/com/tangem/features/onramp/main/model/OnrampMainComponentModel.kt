@@ -27,6 +27,7 @@ import com.tangem.features.onramp.main.entity.factory.OnrampAmountStateFactory
 import com.tangem.features.onramp.main.entity.factory.OnrampOffersStateFactory
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
+import com.tangem.features.onramp.utils.sendProviderCalculatedEvent
 import com.tangem.features.onramp.utils.showDemoModeWarningIfNeeded
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -330,6 +331,10 @@ internal class OnrampMainComponentModel @Inject constructor(
                 state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
             }
             else -> {
+                analyticsEventHandler.sendProviderCalculatedEvent(
+                    quotes = quotes,
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                )
                 state.update { prevState ->
                     val resetState = amountStateFactory.getAmountSecondaryFieldResetState()
                     if (prevState is OnrampMainComponentUM.Content &&
