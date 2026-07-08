@@ -136,6 +136,30 @@ sealed class TokenScreenAnalyticsEvent(
             status = status,
             blockchain = blockchain,
         )
+
+        class ButtonAddFunds(
+            token: String,
+            blockchain: String,
+            derivationIndex: Int? = null,
+        ) : ButtonWithParams(
+            event = "Button - Add Funds",
+            token = token,
+            status = null,
+            blockchain = blockchain,
+            derivationIndex = derivationIndex,
+        )
+
+        class ButtonTransfer(
+            token: String,
+            blockchain: String,
+            derivationIndex: Int? = null,
+        ) : ButtonWithParams(
+            event = "Button - Transfer",
+            token = token,
+            status = null,
+            blockchain = blockchain,
+            derivationIndex = derivationIndex,
+        )
     }
 
     class ActionButtonDisabled(
