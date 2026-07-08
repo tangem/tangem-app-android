@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -17,7 +18,9 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.divider.DividerWithPadding
+import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
@@ -34,6 +37,8 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
+private val RESTART_BUTTON_OVERLAY_HEIGHT = 80.dp
+
 /**
  * Screen with feature toggles list
  *
@@ -42,69 +47,117 @@ import kotlinx.collections.immutable.toImmutableList
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
-    LazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.secondary),
     ) {
-        stickyHeader { TopBarWithRefresh(state = state.topBar) }
-
-        if (state.topBar.refreshButton.isVisible) {
-            item(key = "warning_notification", contentType = "warning_notification") {
-                CustomSetupNotification(
-                    subtitle = resourceReference(
-                        id = R.string.feature_toggles_custom_setup_warning_description,
-                        wrappedList(state.appVersion),
-                    ),
-                    modifier = Modifier
-                        .animateItem()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
-        } else {
-            item(key = "warning_notification", contentType = "warning_notification") {
-                InitialSetupNotification(
-                    subtitle = resourceReference(
-                        id = R.string.feature_toggles_initial_setup_warning_description,
-                        wrappedList(state.appVersion),
-                    ),
-                    modifier = Modifier
-                        .animateItem()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
-        }
-
-        state.featureToggleGroups.fastForEachIndexed { index, group ->
-            if (index != 0) {
-                item(key = "divider_${group.status.name}", contentType = "group_divider") {
-                    DividerWithPadding(horizontal = 16.dp, vertical = 8.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = RESTART_BUTTON_OVERLAY_HEIGHT),
+        ) {
+            stickyHeader {
+                Column(modifier = Modifier.background(TangemTheme.colors.background.secondary)) {
+                    TopBarWithRefresh(state = state.topBar)
+                    TangemSearch(
+                        state = state.searchBar,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
                 }
             }
 
-            item(key = "header_${group.status.name}", contentType = "group_header") {
-                GroupHeader(title = "${group.status.emoji} ${group.status.title}")
-            }
+            customSetup(state.topBar, state.appVersion)
 
-            items(
-                items = group.toggles,
-                key = TesterFeatureToggleUM::name,
-                contentType = { "feature_toggle_item" },
-            ) { featureToggle ->
-                FeatureToggleItem(
-                    toggle = featureToggle,
-                    onCheckedChange = { isChange -> state.onToggleValueChange(featureToggle.name, isChange) },
-                )
-            }
+            emptySearch(state.featureToggleGroups, state.searchBar)
+
+            featureTogglesList(state.featureToggleGroups, state.onToggleValueChange)
         }
 
-        item {
-            PrimaryButton(
-                text = stringResourceSafe(id = R.string.restart_app),
-                onClick = state.onRestartAppClick,
+        RestartButton(
+            onRestartAppClick = state.onRestartAppClick,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+}
+
+private fun LazyListScope.customSetup(topBar: TopBarWithRefreshUM, appVersion: String) {
+    if (topBar.refreshButton.isVisible) {
+        item(key = "warning_notification", contentType = "warning_notification") {
+            CustomSetupNotification(
+                subtitle = resourceReference(
+                    id = R.string.feature_toggles_custom_setup_warning_description,
+                    wrappedList(appVersion),
+                ),
+                modifier = Modifier
+                    .animateItem()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+    } else {
+        item(key = "warning_notification", contentType = "warning_notification") {
+            InitialSetupNotification(
+                subtitle = resourceReference(
+                    id = R.string.feature_toggles_initial_setup_warning_description,
+                    wrappedList(appVersion),
+                ),
+                modifier = Modifier
+                    .animateItem()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+    }
+}
+
+private fun LazyListScope.emptySearch(featureToggleGroups: List<FeatureToggleGroupUM>, searchBar: TangemSearch.State) {
+    if (featureToggleGroups.isEmpty() && searchBar.query.isNotBlank()) {
+        item(key = "nothing_found", contentType = "nothing_found") {
+            Text(
+                text = stringResourceSafe(R.string.feature_toggles_no_feature_toggles_found),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(TangemTheme.dimens.spacing16),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.body2,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RestartButton(onRestartAppClick: () -> Unit, modifier: Modifier = Modifier) {
+    PrimaryButton(
+        text = stringResourceSafe(id = R.string.restart_app),
+        onClick = onRestartAppClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .background(TangemTheme.colors.background.secondary)
+            .padding(TangemTheme.dimens.spacing16),
+    )
+}
+
+private fun LazyListScope.featureTogglesList(
+    featureToggleGroups: List<FeatureToggleGroupUM>,
+    onToggleValueChange: (String, Boolean) -> Unit,
+) {
+    featureToggleGroups.fastForEachIndexed { index, group ->
+        if (index != 0) {
+            item(key = "divider_${group.status.name}", contentType = "group_divider") {
+                DividerWithPadding(horizontal = 16.dp, vertical = 8.dp)
+            }
+        }
+
+        item(key = "header_${group.status.name}", contentType = "group_header") {
+            GroupHeader(title = "${group.status.emoji} ${group.status.title}")
+        }
+
+        items(
+            items = group.toggles,
+            key = TesterFeatureToggleUM::name,
+            contentType = { "feature_toggle_item" },
+        ) { featureToggle ->
+            FeatureToggleItem(
+                toggle = featureToggle,
+                onCheckedChange = { isChange -> onToggleValueChange(featureToggle.name, isChange) },
             )
         }
     }
@@ -189,6 +242,13 @@ private fun PreviewFeatureTogglesScreen() {
                     ),
                 ),
                 appVersion = "5.38",
+                searchBar = TangemSearch.State(
+                    placeholderText = stringReference(value = "Search"),
+                    query = "",
+                    onQueryChange = {},
+                    isActive = false,
+                    onActiveChange = {},
+                ),
                 featureToggleGroups = previewFeatureToggleGroups(),
                 onToggleValueChange = { _, _ -> isCustomSetup = true },
                 onRestartAppClick = {},
