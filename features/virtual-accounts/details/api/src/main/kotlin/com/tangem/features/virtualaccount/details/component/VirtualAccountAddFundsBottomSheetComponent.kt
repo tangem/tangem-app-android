@@ -18,6 +18,10 @@ interface VirtualAccountAddFundsBottomSheetComponent : ComposableBottomSheetComp
         val dailyDepositLimit: String,
         val listener: VirtualAccountAddFundsListener,
         val shouldSkipIntro: Boolean = false,
+        // Analytics hooks — supplied by callers that track this sheet (e.g. TangemPay VA topup); no-op otherwise.
+        val onDetailsShown: () -> Unit = {},
+        val onShareClicked: () -> Unit = {},
+        val onFieldCopied: (fieldName: String) -> Unit = {},
     )
 
     data class RequisitesRow(
