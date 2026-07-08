@@ -3,7 +3,6 @@ package com.tangem.features.addressbook.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
-import com.tangem.domain.models.wallet.UserWalletId
 
 private const val ADDRESS_BOOK_CATEGORY = "Address Book"
 
@@ -24,85 +23,85 @@ sealed class AddressBookEvents(
     data object AddressScreenOpened : AddressBookEvents(event = "Address Screen Opened")
 
     class ContactListScreenOpened(
-        walletId: UserWalletId,
+        walletId: String,
         source: Source,
         contactsCount: Int,
     ) : AddressBookEvents(
         event = "Contact List Screen Opened",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             SOURCE to source.value,
             CONTACTS_COUNT to contactsCount.toString(),
         ),
     ) {
         enum class Source(val value: String) {
-            Settings("settings"),
-            SendFlow("send_flow"),
+            Settings("Settings"),
+            SendFlow("Send Flow"),
         }
     }
 
     class AddContactTapped(
-        walletId: UserWalletId,
+        walletId: String,
         source: Source,
     ) : AddressBookEvents(
         event = "Add Contact Tapped",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             SOURCE to source.value,
         ),
     ) {
         enum class Source(val value: String) {
-            Settings("settings"),
-            SendSuccess("send_success"),
+            Settings("Settings"),
+            SendSuccess("Send Flow"),
         }
     }
 
     class ContactSaved(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String,
         mode: Mode,
     ) : AddressBookEvents(
         event = "Contact Saved",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             CONTACT_ID to contactId,
             MODE to mode.value,
         ),
     ) {
         enum class Mode(val value: String) {
-            Create("create"),
-            Edit("edit"),
+            Create("Create"),
+            Edit("Edit"),
         }
     }
 
     class SaveErrorShown(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String?,
         errorType: ErrorType,
     ) : AddressBookEvents(
         event = "Save Error Shown",
         params = buildMap {
-            put(WALLET_ID, walletId.stringValue)
+            put(WALLET_ID, walletId)
             contactId?.let { put(CONTACT_ID, it) }
             put(ERROR_TYPE, errorType.value)
         },
     ) {
         enum class ErrorType(val value: String) {
-            Network("network"),
-            Server("server"),
-            Signing("signing"),
+            Network("Network"),
+            Server("Server"),
+            Signing("Signing"),
         }
     }
     // endregion
 
     // region Contact editing
     class ContactScreenOpened(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String,
     ) : AddressBookEvents(
         event = "Contact Screen Opened",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             CONTACT_ID to contactId,
         ),
     )
@@ -110,30 +109,30 @@ sealed class AddressBookEvents(
 
     // region Send flow
     class SendFlowWidgetShown(
-        walletId: UserWalletId,
+        walletId: String,
     ) : AddressBookEvents(
         event = "Send Flow Widget Shown",
-        params = mapOf(WALLET_ID to walletId.stringValue),
+        params = mapOf(WALLET_ID to walletId),
     )
 
     class ContactSelectedInSend(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String,
     ) : AddressBookEvents(
         event = "Contact Selected",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             CONTACT_ID to contactId,
         ),
     )
 
     class AddressSubstitutedInSend(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String,
     ) : AddressBookEvents(
         event = "Address Substituted In Send",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             CONTACT_ID to contactId,
         ),
     )
@@ -141,23 +140,23 @@ sealed class AddressBookEvents(
 
     // region Input errors
     class AddressInvalid(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String?,
     ) : AddressBookEvents(
         event = "Address Invalid",
         params = buildMap {
-            put(WALLET_ID, walletId.stringValue)
+            put(WALLET_ID, walletId)
             put(CONTACT_ID, contactId.orEmpty())
         },
     )
 
     class DuplicateNameErrorShown(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String?,
     ) : AddressBookEvents(
         event = "Duplicate Name Error Shown",
         params = buildMap {
-            put(WALLET_ID, walletId.stringValue)
+            put(WALLET_ID, walletId)
             contactId?.let { put(CONTACT_ID, it) }
         },
     )
@@ -183,23 +182,23 @@ sealed class AddressBookEvents(
 
     // region Deletion
     class AddressRemoved(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String,
     ) : AddressBookEvents(
         event = "Address Removed",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             CONTACT_ID to contactId,
         ),
     )
 
     class ContactDeleted(
-        walletId: UserWalletId,
+        walletId: String,
         contactId: String,
     ) : AddressBookEvents(
         event = "Contact Deleted",
         params = mapOf(
-            WALLET_ID to walletId.stringValue,
+            WALLET_ID to walletId,
             CONTACT_ID to contactId,
         ),
     )
