@@ -163,6 +163,10 @@ object PreferencesKeys {
         )
     }
 
+    val PUSH_NOTIFICATION_FIRST_ACTIVATION_DONE_WALLET_IDS_KEY by lazy {
+        stringSetPreferencesKey(name = "pushNotificationFirstActivationDoneWalletIds")
+    }
+
     val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
