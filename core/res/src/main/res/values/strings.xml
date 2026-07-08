@@ -105,6 +105,7 @@
     <item quantity="other">%d addresses</item>
   </plurals>
   <string name="address_book_choose_address">Choose address</string>
+  <string name="address_book_clear_all_networks">Clear All</string>
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Contact name</string>
   <string name="address_book_copy_address">Copy address</string>
@@ -134,6 +135,7 @@
   <string name="address_book_save_to_wallet_title">Save to Wallet</string>
   <string name="address_book_save_wallet_to_description">This contact will be linked to this wallet’s address book.</string>
   <string name="address_book_search_no_results">No results found.\nTry another name</string>
+  <string name="address_book_select_all_networks">Select All</string>
   <string name="address_book_select_network">Select network</string>
   <string name="address_book_title">Address book</string>
   <string name="address_book_unsaved_changes">Unsaved changes</string>
