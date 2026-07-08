@@ -45,7 +45,7 @@ class ReferralTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Verify network $tokenNetwork and token $token is not displaying") {
+            step("Verify network $tokenNetwork and token $token is not displayed") {
                 onMainScreen {
                     assertTokenDoesNotExist(tokenNetwork)
                     assertTokenDoesNotExist(token)
@@ -94,10 +94,10 @@ class ReferralTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Verify token $token is not displaying") {
+            step("Verify token $token is not displayed") {
                 onMainScreen { assertTokenDoesNotExist(token) }
             }
-            step("Verify network $tokenNetwork is displaying") {
+            step("Verify network $tokenNetwork is displayed") {
                 onMainScreen { tokenWithTitleAndAddress(tokenNetwork) }
             }
             step("Take participate in Referral program") {
@@ -131,7 +131,7 @@ class ReferralTest : BaseTestCase() {
             step("Open 'Wallet settings' screen") {
                 onDetailsScreen { walletNameButton.clickWithAssertion() }
             }
-            step("Verify 'Referral program' button does not displaying") {
+            step("Verify 'Referral program' button is not displayed") {
                 onWalletSettingsScreen { referralProgramButton.assertDoesNotExist() }
             }
         }
