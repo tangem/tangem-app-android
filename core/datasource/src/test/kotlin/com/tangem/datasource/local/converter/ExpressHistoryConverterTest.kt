@@ -34,8 +34,7 @@ internal class ExpressHistoryConverterTest {
         Truth.assertThat(entity.refundNetwork).isEqualTo(item.refundNetwork)
         Truth.assertThat(entity.refundContractAddress).isEqualTo(item.refundContractAddress)
         Truth.assertThat(entity.createdAt).isEqualTo(item.createdAt)
-        // todo txHistory uncomment
-        // Truth.assertThat(entity.updatedAt).isEqualTo(item.updatedAt)
+        Truth.assertThat(entity.updatedAt).isEqualTo(item.updatedAt)
         Truth.assertThat(entity.payTill).isEqualTo(item.payTill)
         Truth.assertThat(entity.averageDuration).isEqualTo(item.averageDuration)
     }
@@ -233,8 +232,7 @@ internal class ExpressHistoryConverterTest {
         refundNetwork = refundNetwork,
         refundContractAddress = refundContractAddress,
         createdAt = "2026-06-01T00:00:00Z",
-        // todo txHistory uncomment
-        // updatedAt = "2026-06-01T00:05:00Z",
+        updatedAt = "2026-06-01T00:05:00Z",
         payTill = payTill,
         averageDuration = averageDuration,
         fromContractAddress = "0xfromContract",
@@ -266,8 +264,7 @@ internal class ExpressHistoryConverterTest {
         externalTxUrl = externalTxUrl,
         payoutHash = payoutHash,
         createdAt = "2026-06-01T00:00:00Z",
-        // todo txHistory uncomment
-        // updatedAt = "2026-06-01T00:05:00Z",
+        updatedAt = "2026-06-01T00:05:00Z",
         fromCurrencyCode = "USD",
         fromAmount = "100.0",
         fromPrecision = 2,
