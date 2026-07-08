@@ -489,6 +489,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onClickBankTransfer() {
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
         val onramp = loaded.virtualAccount ?: return
+        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VirtualAccountDeposit(
@@ -500,6 +501,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     fun onVirtualAccountOrderCreated() {
+        analytics.send(TangemPayAnalyticsEvents.VaSuccessScreenActivation())
         bottomSheetNavigation.dismiss()
         router.push(TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess)
     }
@@ -512,6 +514,18 @@ internal class TangemPayCardPageModel @Inject constructor(
                 bankCredentials = onramp.bankCredentials,
             ),
         )
+    }
+
+    fun onVaBankingDetailsShown() {
+        analytics.send(TangemPayAnalyticsEvents.VaBankingDetailsShowed())
+    }
+
+    fun onVaShareDetailsClicked() {
+        analytics.send(TangemPayAnalyticsEvents.VaShareDetailsButtonClicked())
+    }
+
+    fun onVaFieldCopied(field: String) {
+        analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field))
     }
 
     override fun onDismissAddFunds() {
