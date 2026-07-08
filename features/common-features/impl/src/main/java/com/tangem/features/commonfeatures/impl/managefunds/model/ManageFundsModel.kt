@@ -7,6 +7,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -150,11 +152,20 @@ internal class ManageFundsModel @Inject constructor(
     }
 
     override fun onQuickActionClick(action: TokenActionsBSContentUM.Action, shouldDismiss: Boolean) {
-        val event = when (action) {
-            TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
-            TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
-            TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
-            else -> null
+        val event = when (flowType) {
+            ManageFundsComponent.FlowType.AddFunds -> when (action) {
+                TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
+                TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
+                TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
+                else -> null
+            }
+            ManageFundsComponent.FlowType.Transfer -> when (action) {
+                TokenActionsBSContentUM.Action.Send -> TransferAnalyticsEvent.ButtonSend()
+                TokenActionsBSContentUM.Action.Exchange -> TransferAnalyticsEvent.ButtonSwap()
+                TokenActionsBSContentUM.Action.SendWithSwap -> TransferAnalyticsEvent.ButtonSwapAndSend()
+                TokenActionsBSContentUM.Action.Sell -> TransferAnalyticsEvent.ButtonSell()
+                else -> null
+            }
         }
         event?.let { analyticsEventHandler.send(it) }
         if (shouldDismiss) {
@@ -178,9 +189,7 @@ internal class ManageFundsModel @Inject constructor(
 
     private fun initChooseToken(mode: ManageFundsComponent.LaunchMode.ChooseToken) {
         chooseTokenBridge.selectWalletTab(mode.userWalletId)
-        analyticsEventHandler.send(
-            ManageFundsAnalyticsEvent.MethodScreenOpened(source = ManageFundsAnalyticsEvent.SOURCE_MAIN_SCREEN),
-        )
+        sendMethodScreenOpenedEvent()
         replaceRoot(UiRoute.ChooseToken)
         modelScope.launch {
             chooseTokenBridge.onCurrencyChosen.receiveAsFlow().collect(::openTokenActionsFromBridge)
@@ -209,6 +218,7 @@ internal class ManageFundsModel @Inject constructor(
                     params.onDismiss()
                     return@launch
                 }
+            sendMethodScreenOpenedEvent()
             tokenActionsTrigger.value = TokenActionsRequest(wallet, match.first, match.second)
             replaceRoot(tokenActionsRoute(match.second))
         }
@@ -217,6 +227,9 @@ internal class ManageFundsModel @Inject constructor(
     private fun initFilteredByRawId(mode: ManageFundsComponent.LaunchMode.FilteredByRawId) {
         modelScope.launch {
             val entries = collectFilteredEntries(mode.rawCurrencyId)
+            if (entries.isNotEmpty()) {
+                sendMethodScreenOpenedEvent()
+            }
             when (entries.size) {
                 0 -> params.onDismiss()
                 1 -> {
@@ -248,6 +261,19 @@ internal class ManageFundsModel @Inject constructor(
                     .map { status -> FilteredEntry(wallet, accountStatus, status) }
             }
         }
+    }
+
+    private fun sendMethodScreenOpenedEvent() {
+        val source = when (launchMode) {
+            is ManageFundsComponent.LaunchMode.ChooseToken -> AnalyticsParam.ScreensSources.Main
+            is ManageFundsComponent.LaunchMode.TokenActionsOnly -> AnalyticsParam.ScreensSources.Token
+            is ManageFundsComponent.LaunchMode.FilteredByRawId -> AnalyticsParam.ScreensSources.Market
+        }
+        val event = when (flowType) {
+            ManageFundsComponent.FlowType.AddFunds -> ManageFundsAnalyticsEvent.MethodScreenOpened(source = source)
+            ManageFundsComponent.FlowType.Transfer -> TransferAnalyticsEvent.MethodScreenOpened(source = source)
+        }
+        analyticsEventHandler.send(event)
     }
 
     private fun openTokenActionsFromBridge(result: ChooseTokenResult) {
