@@ -293,4 +293,55 @@ sealed class TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Extra Card Issuance Confirmed",
     )
+
+    class VaTopupButtonShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Visa VA Topup Button Showed",
+    )
+
+    class VaTopupButtonClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Visa VA Topup Button Clicked",
+    )
+
+    class VaConditionsPopupShowedFirstTime : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Conditions Popup Showed First Time",
+    )
+
+    class VaShowDetailsFirstTimeClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Show Details First Time Clicked",
+    )
+
+    class VaSuccessScreenActivation : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Success Screen Activation",
+    )
+
+    class VaConditionsPopupShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Conditions Popup Showed",
+    )
+
+    class VaShowDetailsClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Show Details Clicked",
+    )
+
+    class VaBankingDetailsShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Banking Details Showed",
+    )
+
+    class VaShareDetailsButtonClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Share Details Button Clicked",
+    )
+
+    data class VaCopyFieldClicked(val field: String) : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Copy Field Clicked",
+        params = mapOf("field" to field),
+    )
 }
