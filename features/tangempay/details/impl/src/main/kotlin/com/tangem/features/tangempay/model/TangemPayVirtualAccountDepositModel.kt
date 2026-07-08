@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,6 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayVirtualAccountDepositComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayVirtualAccountDepositUM
@@ -29,6 +31,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val uiMessageSender: UiMessageSender,
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayVirtualAccountDepositComponent.Params>()
@@ -55,14 +58,29 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
             ),
         )
 
+    init {
+        val event = if (params.virtualAccountOnramp is VirtualAccountOnramp.Eligible) {
+            TangemPayAnalyticsEvents.VaConditionsPopupShowedFirstTime()
+        } else {
+            TangemPayAnalyticsEvents.VaConditionsPopupShowed()
+        }
+        analytics.send(event)
+    }
+
     fun onDismiss() {
         params.onDismiss()
     }
 
     private fun onShowDetailsClick() {
         when (params.virtualAccountOnramp) {
-            is VirtualAccountOnramp.Available -> params.onShowDetails(params.virtualAccountOnramp)
-            VirtualAccountOnramp.Eligible -> createVirtualAccountOrder()
+            is VirtualAccountOnramp.Available -> {
+                analytics.send(TangemPayAnalyticsEvents.VaShowDetailsClicked())
+                params.onShowDetails(params.virtualAccountOnramp)
+            }
+            VirtualAccountOnramp.Eligible -> {
+                analytics.send(TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked())
+                createVirtualAccountOrder()
+            }
         }
     }
 
