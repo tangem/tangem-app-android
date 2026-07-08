@@ -61,6 +61,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
@@ -127,6 +128,7 @@ internal class WalletModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
+    private val addressBookFeatureToggles: AddressBookFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -164,7 +166,7 @@ internal class WalletModel @Inject constructor(
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
         applyPendingAssetsDiscovery()
-        syncAddressBooks()
+        syncAddressBooksIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -882,10 +884,12 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun syncAddressBooks() {
-        modelScope.launch {
-            syncAddressBooksUseCase()
-                .onLeft { TangemLogger.e("Failed to sync address books: $it") }
+    private fun syncAddressBooksIfNeeded() {
+        if (addressBookFeatureToggles.isAddressBookEnabled) {
+            modelScope.launch {
+                syncAddressBooksUseCase()
+                    .onLeft { TangemLogger.e("Failed to sync address books: $it") }
+            }
         }
     }
 
