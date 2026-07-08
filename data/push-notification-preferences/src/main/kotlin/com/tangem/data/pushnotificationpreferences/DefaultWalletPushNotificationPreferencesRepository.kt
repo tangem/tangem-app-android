@@ -6,6 +6,9 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesBody
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
@@ -28,10 +31,22 @@ import kotlinx.coroutines.withContext
 internal class DefaultWalletPushNotificationPreferencesRepository(
     private val tangemTechApi: TangemTechApi,
     private val cache: RuntimeSharedStore<Map<String, WalletPushNotificationPreferences>>,
+    private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletPushNotificationPreferencesRepository {
 
     private val walletMutexes = ConcurrentHashMap<String, Mutex>()
+
+    override suspend fun isFirstActivationDone(userWalletId: UserWalletId): Boolean =
+        appPreferencesStore.getSyncOrNull(PreferencesKeys.PUSH_NOTIFICATION_FIRST_ACTIVATION_DONE_WALLET_IDS_KEY)
+            ?.contains(userWalletId.stringValue) == true
+
+    override suspend fun markFirstActivationDone(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { preferences ->
+            val key = PreferencesKeys.PUSH_NOTIFICATION_FIRST_ACTIVATION_DONE_WALLET_IDS_KEY
+            preferences[key] = preferences.getOrDefault(key, emptySet()) + userWalletId.stringValue
+        }
+    }
 
     override suspend fun preload(userWalletId: UserWalletId) {
         if (isCached(userWalletId)) return
