@@ -125,6 +125,9 @@ internal class TangemPayCardPageScreenComponent(
                     dailyDepositLimit = VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER,
                     shouldSkipIntro = true,
                     listener = VirtualAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
+                    onDetailsShown = model::onVaBankingDetailsShown,
+                    onShareClicked = model::onVaShareDetailsClicked,
+                    onFieldCopied = model::onVaFieldCopied,
                 ),
             )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(
