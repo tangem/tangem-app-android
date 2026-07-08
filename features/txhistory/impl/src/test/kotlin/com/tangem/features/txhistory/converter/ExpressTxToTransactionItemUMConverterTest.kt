@@ -226,8 +226,8 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             provider = null,
             payinHash = null,
             payoutHash = null,
-            fromAddress = null,
-            payoutAddress = null,
+            fromAddress = "from-addr",
+            payoutAddress = "payout-addr",
             fromAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "eth", contractAddress = "0"),
                 amount = fromAmount,
@@ -238,34 +238,48 @@ internal class ExpressTxToTransactionItemUMConverterTest {
                 amount = toAmount,
                 decimals = 8,
             ),
+            externalTxUrl = null,
+            payinAddress = "payin-addr",
+            updatedAtMillis = 100,
+            refundAssetId = null,
+            refundCurrency = null,
+            fromAmount = fromAmount ?: BigDecimal.ZERO,
+            toAmount = toAmount ?: BigDecimal.ZERO,
+            toActualAmount = null,
         ),
         isOutgoing = isOutgoing,
         txInfo = null,
     )
 
-    private fun createOnramp(status: ExpressOnrampStatus, toAmount: BigDecimal? = BigDecimal("0.006339")) =
-        ExpressTx.Onramp(
-            tx = OnrampTransaction(
-                txId = "tx-2",
-                status = status,
-                createdAtMillis = 100,
-                provider = null,
-                payoutHash = null,
-                payoutAddress = null,
-                fromFiat = Amount(
-                    currencySymbol = "SEK",
-                    value = BigDecimal("100"),
-                    decimals = 2,
-                    type = AmountType.FiatType(code = "SEK"),
-                ),
-                toAsset = ExpressTransactionAsset(
-                    id = ExpressAssetId(networkId = "btc", contractAddress = "0"),
-                    amount = toAmount,
-                    decimals = 8,
-                ),
+    private fun createOnramp(
+        status: ExpressOnrampStatus,
+        toAmount: BigDecimal? = BigDecimal("0.006339"),
+    ) = ExpressTx.Onramp(
+        tx = OnrampTransaction(
+            txId = "tx-2",
+            status = status,
+            createdAtMillis = 100,
+            provider = null,
+            payoutHash = null,
+            payoutAddress = "payout-addr",
+            fromFiat = Amount(
+                currencySymbol = "SEK",
+                value = BigDecimal("100"),
+                decimals = 2,
+                type = AmountType.FiatType(code = "SEK"),
             ),
-            txInfo = null,
-        )
+            toAsset = ExpressTransactionAsset(
+                id = ExpressAssetId(networkId = "btc", contractAddress = "0"),
+                amount = toAmount,
+                decimals = 8,
+            ),
+            externalTxUrl = null,
+            country = null,
+            toAmount = toAmount,
+            toActualAmount = null,
+        ),
+        txInfo = null,
+    )
 
     private fun createCoin(symbol: String, decimals: Int): CryptoCurrency.Coin = CryptoCurrency.Coin(
         id = CryptoCurrency.ID(
