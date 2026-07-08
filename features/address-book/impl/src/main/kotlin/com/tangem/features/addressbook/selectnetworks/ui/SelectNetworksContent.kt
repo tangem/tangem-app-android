@@ -1,8 +1,15 @@
 package com.tangem.features.addressbook.selectnetworks.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,10 +33,9 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.search.TangemSearch
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.addressbook.selectnetworks.ui.state.SelectNetworksUM
@@ -79,11 +86,9 @@ internal fun SelectNetworksContent(state: SelectNetworksUM, modifier: Modifier =
                 contentPadding = PaddingValues(horizontal = 16.dp),
             ) {
                 item {
-                    Text(
-                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
-                        text = stringResourceSafe(R.string.common_available_networks),
-                        style = TangemTheme.typography3.caption.medium,
-                        color = TangemTheme.colors3.text.secondary,
+                    NetworksHeader(
+                        selectAllButton = state.selectAllButton,
+                        onSelectAllClick = state.onSelectAllClick,
                     )
                 }
                 items(items = state.networks, key = NetworkItemUM::id) { item ->
@@ -106,11 +111,63 @@ internal fun SelectNetworksContent(state: SelectNetworksUM, modifier: Modifier =
 }
 
 @Composable
+private fun NetworksHeader(
+    selectAllButton: SelectNetworksUM.SelectAllButtonUM,
+    onSelectAllClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val hapticManager = LocalHapticManager.current
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 16.dp, bottom = 4.dp),
+            text = stringResourceSafe(R.string.common_available_networks),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
+        )
+        AnimatedContent(
+            targetState = selectAllButton,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(durationMillis = 400)) togetherWith
+                    fadeOut(animationSpec = tween(durationMillis = 400))
+            },
+            label = "SelectAllButton",
+        ) { button ->
+            if (!button.text.isNullOrEmpty()) {
+                Text(
+                    modifier = Modifier
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {
+                                hapticManager.perform(TangemHapticEffect.View.SegmentTick)
+                                onSelectAllClick()
+                            },
+                        )
+                        .padding(start = 4.dp, top = 16.dp, bottom = 4.dp),
+                    text = button.text.resolveReference(),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.brand,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun NetworkRow(item: NetworkItemUM) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickableSingle(onClick = item.onCheckedChange)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = item.onCheckedChange,
+            )
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -182,6 +239,7 @@ private fun Preview_SelectNetworksContent() {
                         onCheckedChange = {},
                     ),
                 ),
+                selectAllButton = SelectNetworksUM.SelectAllButtonUM.SelectAll,
                 doneButton = TangemButtonUM(
                     text = TextReference.Res(R.string.common_done),
                     type = TangemButtonType.Primary,
@@ -189,6 +247,7 @@ private fun Preview_SelectNetworksContent() {
                     onClick = {},
                 ),
                 onBackClick = {},
+                onSelectAllClick = {},
             ),
         )
     }

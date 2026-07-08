@@ -88,6 +88,14 @@ internal class AddressBookAnalyticsSender @Inject constructor(
         )
     }
 
+    fun sendSelectAllNetworksTapped(action: AddressBookEvents.SelectAllNetworksTapped.Action, scope: CoroutineScope) {
+        scope.launch(dispatcherProvider.default) {
+            analyticsEventHandler.send(
+                AddressBookEvents.SelectAllNetworksTapped(walletId = selectedWalletId(), action = action),
+            )
+        }
+    }
+
     fun sendAddContactTapped(fromSendSuccess: Boolean, scope: CoroutineScope) {
         scope.launch(dispatcherProvider.default) {
             analyticsEventHandler.send(
