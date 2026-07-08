@@ -11,6 +11,7 @@ internal class UpdateNetworksContentTransformer(
     private val matchedBlockchains: List<Blockchain>,
     private val query: String,
     private val selectedNetworkIds: Set<String>,
+    private val isSearchActive: Boolean,
     private val onToggle: (networkId: String) -> Unit,
 ) : Transformer<SelectNetworksUM> {
 
@@ -36,9 +37,18 @@ internal class UpdateNetworksContentTransformer(
             }
             .toImmutableList()
 
+        val isAllSelected = matchedBlockchains.isNotEmpty() &&
+            selectedNetworkIds.size == matchedBlockchains.size
+        val selectAllButton = when {
+            isSearchActive -> SelectNetworksUM.SelectAllButtonUM.Empty
+            isAllSelected -> SelectNetworksUM.SelectAllButtonUM.ClearAll
+            else -> SelectNetworksUM.SelectAllButtonUM.SelectAll
+        }
+
         // Search field is owned by UpdateSelectNetworksSearchBarTransformer and intentionally left untouched here.
         return prevState.copy(
             networks = networks,
+            selectAllButton = selectAllButton,
             doneButton = prevState.doneButton.copy(isEnabled = selectedNetworkIds.isNotEmpty()),
         )
     }
