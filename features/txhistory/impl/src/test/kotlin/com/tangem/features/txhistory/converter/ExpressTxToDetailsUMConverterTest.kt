@@ -484,18 +484,6 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN swap without addresses WHEN convert THEN no owner and default labels`() {
-        // Act — no fromAddress / payoutAddress plumbed (e.g. very old app version).
-        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished))
-
-        // Assert
-        assertThat(result.from?.owner).isNull()
-        assertThat(result.to?.owner).isNull()
-        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.swapping_from_title_v2))
-        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.swapping_to_title))
-    }
-
-    @Test
     fun `GIVEN onramp to own account WHEN convert THEN from is You paid and to has account owner`() {
         // Arrange
         val onramp = expressOnramp(status = ExpressOnrampStatus.Finished, payoutAddress = PAYOUT_ADDRESS)

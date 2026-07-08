@@ -1,14 +1,9 @@
 package com.tangem.data.txhistory.repository.converter
 
+import com.tangem.data.txhistory.repository.factory.toRefundAssetId
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.domain.express.models.ExchangeTransaction
-import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
-import com.tangem.domain.express.models.ExpressExchangeStatus
-import com.tangem.domain.express.models.ExpressOnrampStatus
-import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.express.models.ExpressTransactionAsset
-import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.express.models.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.tokens.model.Amount
@@ -17,6 +12,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 
 /**
  * Maps an exchange entity into a swap [ExpressTx.Swap].
@@ -37,8 +33,9 @@ internal class ExpressSwapConverter : Converter<ExpressSwapConverter.Input, Expr
         val entity: ExpressExchangeEntity,
         val provider: ExpressProvider?,
         val isOutgoing: Boolean,
-        val fromCurrency: CryptoCurrency? = null,
-        val toCurrency: CryptoCurrency? = null,
+        val fromCurrency: CryptoCurrency?,
+        val toCurrency: CryptoCurrency?,
+        val refundCurrency: CryptoCurrency?,
     )
 }
 
@@ -46,6 +43,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
 
     override fun convert(value: Input): ExpressTx.Onramp {
         val entity = value.entity
+        val toActualAmount = (entity.to.actualAmount ?: entity.to.amount)?.toScaledBigDecimal(entity.to.decimals)
         return ExpressTx.Onramp(
             tx = OnrampTransaction(
                 txId = entity.txId,
@@ -58,16 +56,18 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                     currencySymbol = entity.fromCurrencyCode,
                     value = entity.fromAmount.toScaledBigDecimal(entity.fromPrecision),
                     decimals = entity.fromPrecision,
-                    type = AmountType.FiatType(code = entity.fromCurrencyCode),
+                    type = AmountType.FiatType(code = value.country?.defaultCurrency?.unit ?: entity.fromCurrencyCode),
                 ),
                 toAsset = ExpressTransactionAsset(
                     id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
-                    amount = (entity.to.actualAmount ?: entity.to.amount)?.toScaledBigDecimal(entity.to.decimals),
+                    amount = toActualAmount,
                     decimals = entity.to.decimals,
                     cryptoCurrency = value.toCurrency,
                 ),
                 country = value.country,
                 externalTxUrl = entity.externalTxUrl,
+                toAmount = entity.to.amount?.toScaledBigDecimal(entity.to.decimals),
+                toActualAmount = entity.to.actualAmount?.toScaledBigDecimal(entity.to.decimals),
             ),
             txInfo = null,
         )
@@ -83,6 +83,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
 
 private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): ExchangeTransaction {
     val entity = value.entity
+    val toActualAmount = (entity.to.actualAmount ?: entity.to.amount).toScaledBigDecimal(entity.to.decimals)
     return ExchangeTransaction(
         txId = entity.txId,
         status = ExpressExchangeStatus.fromRaw(entity.status),
@@ -100,11 +101,19 @@ private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): Excha
         ),
         toAsset = ExpressTransactionAsset(
             id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
-            amount = (entity.to.actualAmount ?: entity.to.amount).toScaledBigDecimal(entity.to.decimals),
+            amount = toActualAmount,
             decimals = entity.to.decimals,
             cryptoCurrency = value.toCurrency,
         ),
         externalTxUrl = entity.externalTxUrl,
+        payinAddress = entity.payinAddress,
+        updatedAtMillis = parseIsoMillis(entity.updatedAt),
+        refundAssetId = entity.toRefundAssetId(),
+        refundCurrency = value.refundCurrency,
+
+        fromAmount = entity.from.amount.toScaledBigDecimal(entity.from.decimals),
+        toAmount = entity.to.amount.toScaledBigDecimal(entity.to.decimals),
+        toActualAmount = entity.to.actualAmount?.toScaledBigDecimal(entity.to.decimals),
     )
 }
 
