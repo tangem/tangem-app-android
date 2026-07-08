@@ -16,17 +16,16 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.ds.image.DeviceIconUM
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.commonfeatures.api.choosetoken.model.WalletListUM
-import com.tangem.features.commonfeatures.api.choosetoken.model.WalletTabUM
+import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.entity.ForYouUM
-import com.tangem.features.foryou.impl.ui.components.WalletTabsBlock
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.collections.immutable.persistentListOf
@@ -54,14 +53,26 @@ internal fun ForYouContent(
             .padding(top = contentPadding.calculateTopPadding())
             .drawBehind { drawRect(background.value) },
     ) {
-        WalletTabsBlock(walletList = forYouUM.walletListUM)
-
-        SpacerH(12.dp)
-
         promoBannersBlockComponent.ContentWithPadding(
-            modifier = Modifier,
+            modifier = Modifier.padding(top = 12.dp),
             horizontalItemPadding = 16.dp,
         )
+
+        forYouUM.notifications.fastForEachIndexed { index, notification ->
+            key(notification.state) {
+                TangemMessageBanner(
+                    state = notification.state,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .conditional(index == 0) {
+                            padding(top = 12.dp)
+                        }
+                        .conditional(index == forYouUM.notifications.lastIndex) {
+                            padding(bottom = 48.dp)
+                        },
+                )
+            }
+        }
 
         ForYouPortfolioReview(
             portfolioReviewUM = forYouUM.portfolioReviewUM,
@@ -98,17 +109,7 @@ private class ForYouContentPreviewProvider : PreviewParameterProvider<ForYouUM> 
     override val values: Sequence<ForYouUM>
         get() = sequenceOf(
             ForYouUM(
-                walletListUM = WalletListUM(
-                    items = persistentListOf(
-                        WalletTabUM(
-                            text = stringReference("Wallet 1"),
-                            count = stringReference("1"),
-                            isSelected = true,
-                            onClick = {},
-                            deviceIcon = DeviceIconUM.Mobile,
-                        ),
-                    ),
-                ),
+                notifications = persistentListOf(ForYouNotification.UsedOutdatedData),
                 portfolioReviewUM = ForYouPortfolioReviewPreviewData.reviewContent,
             ),
         )
