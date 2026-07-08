@@ -144,6 +144,8 @@ object PreferencesKeys {
 
     val PENDING_ASSETS_DISCOVERY_KEY by lazy { stringPreferencesKey(name = "pendingAssetsDiscovery") }
 
+    val PROMO_ENROLLMENTS_KEY by lazy { stringPreferencesKey(name = "promoEnrollments") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
