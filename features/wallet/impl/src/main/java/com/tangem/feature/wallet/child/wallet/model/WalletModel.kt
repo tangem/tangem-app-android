@@ -894,6 +894,8 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun enableNotificationsIfNeeded() {
+        // New first-activation owns auto-enable when the feature is on; skip the legacy path.
+        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
         modelScope.launch {
             val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
             if (isUserAllowToEnableNotifications) {
