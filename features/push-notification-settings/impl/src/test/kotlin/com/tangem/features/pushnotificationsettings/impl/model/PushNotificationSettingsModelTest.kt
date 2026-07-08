@@ -8,20 +8,23 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.navigation.settings.SettingsManager
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
+import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
+import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.pushnotificationpreferences.UpdateWalletPushNotificationPreferenceUseCase
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
+import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
 import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
-import com.tangem.features.pushnotificationsettings.impl.entity.AllowPushNotificationsBannerUM
 import com.tangem.features.pushnotificationsettings.impl.entity.PushNotificationSettingsUM
 import com.tangem.features.pushnotificationsettings.impl.entity.ToggleId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -31,25 +34,32 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 class PushNotificationSettingsModelTest {
 
     private val userWalletId = UserWalletId("0011223344556677")
 
     private val observePreferences: ObserveWalletPushNotificationPreferencesUseCase = mockk()
     private val updatePreference: UpdateWalletPushNotificationPreferenceUseCase = mockk()
+    private val setAllPreferences: SetAllWalletPushNotificationPreferencesUseCase = mockk()
+    private val setNotificationsEnabled: SetNotificationsEnabledUseCase = mockk()
+    private val isFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase = mockk()
+    private val markFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase = mockk(relaxed = true)
     private val systemNotificationsStateProvider: SystemNotificationsStateProvider = mockk()
     private val settingsManager: SettingsManager = mockk(relaxed = true)
-    private val accountsCRUDRepository: AccountsCRUDRepository = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private fun model(
         osEnabled: Boolean = true,
+        firstActivationDone: Boolean = true,
         preferencesFlow: MutableSharedFlow<WalletPushNotificationPreferences> = MutableSharedFlow(replay = 1),
     ): PushNotificationSettingsModel {
         every { systemNotificationsStateProvider.areNotificationsEnabled() } returns osEnabled
         every { observePreferences(userWalletId) } returns preferencesFlow
+        coEvery { isFirstActivationDone(userWalletId) } returns firstActivationDone
+        coEvery { setNotificationsEnabled(any(), any()) } returns Either.Right(Unit)
+        coEvery { setAllPreferences(any(), any(), any(), any()) } returns Either.Right(Unit)
         return PushNotificationSettingsModel(
             paramsContainer = MutableParamsContainer(PushNotificationSettingsComponent.Params(userWalletId)),
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -59,7 +69,10 @@ class PushNotificationSettingsModelTest {
             updatePreference = updatePreference,
             systemNotificationsStateProvider = systemNotificationsStateProvider,
             settingsManager = settingsManager,
-            accountsCRUDRepository = accountsCRUDRepository,
+            setAllPreferences = setAllPreferences,
+            setNotificationsEnabled = setNotificationsEnabled,
+            isFirstActivationDone = isFirstActivationDone,
+            markFirstActivationDone = markFirstActivationDone,
         )
     }
 
@@ -79,6 +92,9 @@ class PushNotificationSettingsModelTest {
     fun `GIVEN observe throws WHEN model created THEN ui state becomes Error`() = runTest {
         every { observePreferences(userWalletId) } returns flow { throw IllegalStateException("boom") }
         every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
+        coEvery { isFirstActivationDone(userWalletId) } returns true
+        coEvery { setNotificationsEnabled(any(), any()) } returns Either.Right(Unit)
+        coEvery { setAllPreferences(any(), any(), any(), any()) } returns Either.Right(Unit)
 
         val model = PushNotificationSettingsModel(
             paramsContainer = MutableParamsContainer(PushNotificationSettingsComponent.Params(userWalletId)),
@@ -89,7 +105,10 @@ class PushNotificationSettingsModelTest {
             updatePreference = updatePreference,
             systemNotificationsStateProvider = systemNotificationsStateProvider,
             settingsManager = settingsManager,
-            accountsCRUDRepository = accountsCRUDRepository,
+            setAllPreferences = setAllPreferences,
+            setNotificationsEnabled = setNotificationsEnabled,
+            isFirstActivationDone = isFirstActivationDone,
+            markFirstActivationDone = markFirstActivationDone,
         )
         advanceUntilIdle()
 
@@ -198,6 +217,28 @@ class PushNotificationSettingsModelTest {
     }
 
     @Test
+    fun `GIVEN transaction alerts on WHEN written THEN tokens synced before preference`() = runTest {
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+        coEvery {
+            updatePreference(userWalletId, PushNotificationCategory.TransactionAlerts, true)
+        } returns Either.Right(Unit)
+        val model = model(osEnabled = true, firstActivationDone = true, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        (model.uiState.value as PushNotificationSettingsUM.Content)
+            .toggles.first { it.id == ToggleId.TransactionAlerts }
+            .onCheckedChange(true)
+        advanceUntilIdle()
+
+        // Order matters: token re-subscription (which carries addresses) precedes the preferences write (spec §13.2).
+        coVerifyOrder {
+            setNotificationsEnabled(userWalletId, isEnabled = true)
+            updatePreference(userWalletId, PushNotificationCategory.TransactionAlerts, true)
+        }
+    }
+
+    @Test
     fun `GIVEN OS disabled WHEN toggle ON THEN permission request is triggered`() = runTest {
         val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
         flow.tryEmit(allFalse())
@@ -237,52 +278,195 @@ class PushNotificationSettingsModelTest {
     }
 
     @Test
-    fun `WHEN Allow on a single tapped toggle THEN only that toggle is enabled`() = runTest {
+    fun `GIVEN first activation not done WHEN Allow THEN all three categories enabled`() = runTest {
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+        val model = model(osEnabled = false, firstActivationDone = false, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        // Tap a single toggle in not_determined state -> OS prompt fires.
+        (model.uiState.value as PushNotificationSettingsUM.Content)
+            .toggles.first { it.id == ToggleId.OffersUpdates }
+            .onCheckedChange(true)
+        advanceUntilIdle()
+        // User taps Allow.
+        every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
+        model.onPermissionResult(isGranted = true)
+        advanceUntilIdle()
+
+        // First-activation rule: all three enabled at once (not just the tapped one), token re-subscription, flag fixed.
+        coVerify(exactly = 1) { setAllPreferences(userWalletId, true, true, true) }
+        coVerify(exactly = 1) { setNotificationsEnabled(userWalletId, isEnabled = true) }
+        coVerify(exactly = 1) { markFirstActivationDone(userWalletId) }
+        coVerify(exactly = 0) { updatePreference(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN first activation done WHEN Allow THEN only tapped toggle enabled`() = runTest {
         val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
         flow.tryEmit(allFalse())
         coEvery {
             updatePreference(userWalletId, PushNotificationCategory.OffersUpdates, true)
         } returns Either.Right(Unit)
-
-        val model = model(osEnabled = false, preferencesFlow = flow)
+        val model = model(osEnabled = false, firstActivationDone = true, preferencesFlow = flow)
         advanceUntilIdle()
 
-        val offers = (model.uiState.value as PushNotificationSettingsUM.Content)
+        (model.uiState.value as PushNotificationSettingsUM.Content)
             .toggles.first { it.id == ToggleId.OffersUpdates }
-        offers.onCheckedChange(true)
+            .onCheckedChange(true)
         advanceUntilIdle()
-        // OS prompt fires; user taps Allow.
         every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
         model.onPermissionResult(isGranted = true)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) {
-            updatePreference(userWalletId, PushNotificationCategory.OffersUpdates, true)
-        }
-        coVerify(exactly = 0) {
-            updatePreference(userWalletId, PushNotificationCategory.TransactionAlerts, any())
-        }
-        coVerify(exactly = 0) {
-            updatePreference(userWalletId, PushNotificationCategory.PriceAlerts, any())
-        }
+        coVerify(exactly = 1) { updatePreference(userWalletId, PushNotificationCategory.OffersUpdates, true) }
+        // Selective: exactly one preference write (the tapped one), no bulk enable, and the flag is already set.
+        coVerify(exactly = 1) { updatePreference(any(), any(), any()) }
+        coVerify(exactly = 0) { setAllPreferences(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { markFirstActivationDone(userWalletId) }
     }
 
     @Test
-    fun `WHEN Deny THEN Enable Notifications dialog is shown and no PUT`() = runTest {
+    fun `GIVEN permission granted but notifications disabled WHEN result THEN no all-three and settings dialog`() =
+        runTest {
+            val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+            flow.tryEmit(allFalse())
+            val model = model(osEnabled = false, firstActivationDone = false, preferencesFlow = flow)
+            advanceUntilIdle()
+
+            (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.OffersUpdates }
+                .onCheckedChange(true)
+            advanceUntilIdle()
+            // POST_NOTIFICATIONS already granted (launcher returns true) but notifications stay OFF at OS level.
+            model.onPermissionResult(isGranted = true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { setAllPreferences(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { updatePreference(any(), any(), any()) }
+            coVerify(exactly = 1) { messageSender.send(any()) }
+            coVerify(exactly = 1) { markFirstActivationDone(userWalletId) }
+        }
+
+    @Test
+    fun `GIVEN transaction alerts on AND tokens write fails WHEN written THEN preference not written and reverted`() =
+        runTest {
+            val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+            flow.tryEmit(allFalse())
+            val model = model(osEnabled = true, firstActivationDone = true, preferencesFlow = flow)
+            // Registered AFTER model() so this specific stub wins over model()'s any()-> Right default.
+            coEvery {
+                setNotificationsEnabled(userWalletId, isEnabled = true)
+            } returns Either.Left(RuntimeException("net"))
+            advanceUntilIdle()
+
+            (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.TransactionAlerts }
+                .onCheckedChange(true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { updatePreference(userWalletId, PushNotificationCategory.TransactionAlerts, any()) }
+            coVerify(atLeast = 1) { messageSender.send(any()) }
+            val tx = (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.TransactionAlerts }
+            assertThat(tx.isOn).isFalse()
+        }
+
+    @Test
+    fun `GIVEN transaction alerts on AND preference write fails WHEN written THEN token subscription undone`() =
+        runTest {
+            val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+            flow.tryEmit(allFalse())
+            coEvery {
+                updatePreference(userWalletId, PushNotificationCategory.TransactionAlerts, true)
+            } returns Either.Left(RuntimeException("net"))
+            val model = model(osEnabled = true, firstActivationDone = true, preferencesFlow = flow)
+            advanceUntilIdle()
+
+            (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.TransactionAlerts }
+                .onCheckedChange(true)
+            advanceUntilIdle()
+
+            // tokens on -> preferences fail -> compensating tokens off; toggle reverted.
+            coVerifyOrder {
+                setNotificationsEnabled(userWalletId, isEnabled = true)
+                updatePreference(userWalletId, PushNotificationCategory.TransactionAlerts, true)
+                setNotificationsEnabled(userWalletId, isEnabled = false)
+            }
+            val tx = (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.TransactionAlerts }
+            assertThat(tx.isOn).isFalse()
+        }
+
+    @Test
+    fun `GIVEN first activation AND tokens write fails WHEN Allow THEN reverted and flag not marked`() = runTest {
         val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
         flow.tryEmit(allFalse())
-        val model = model(osEnabled = false, preferencesFlow = flow)
+        val model = model(osEnabled = false, firstActivationDone = false, preferencesFlow = flow)
+        // Registered AFTER model() so this specific stub wins over model()'s any()-> Right default.
+        coEvery { setNotificationsEnabled(userWalletId, isEnabled = true) } returns Either.Left(RuntimeException("net"))
         advanceUntilIdle()
 
-        val offers = (model.uiState.value as PushNotificationSettingsUM.Content)
+        (model.uiState.value as PushNotificationSettingsUM.Content)
             .toggles.first { it.id == ToggleId.OffersUpdates }
-        offers.onCheckedChange(true)
+            .onCheckedChange(true)
+        advanceUntilIdle()
+        every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
+        model.onPermissionResult(isGranted = true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { setAllPreferences(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { markFirstActivationDone(userWalletId) }
+        coVerify(atLeast = 1) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN first activation AND preferences write fails WHEN Allow THEN tokens undone and flag not marked`() =
+        runTest {
+            val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+            flow.tryEmit(allFalse())
+            val model = model(osEnabled = false, firstActivationDone = false, preferencesFlow = flow)
+            // Registered AFTER model() so this specific stub wins over model()'s any()-> Right default.
+            coEvery {
+                setAllPreferences(userWalletId, true, true, true)
+            } returns Either.Left(RuntimeException("net"))
+            advanceUntilIdle()
+
+            (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.OffersUpdates }
+                .onCheckedChange(true)
+            advanceUntilIdle()
+            every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
+            model.onPermissionResult(isGranted = true)
+            advanceUntilIdle()
+
+            coVerifyOrder {
+                setNotificationsEnabled(userWalletId, isEnabled = true)
+                setAllPreferences(userWalletId, true, true, true)
+                setNotificationsEnabled(userWalletId, isEnabled = false)
+            }
+            coVerify(exactly = 0) { markFirstActivationDone(userWalletId) }
+        }
+
+    @Test
+    fun `WHEN Deny THEN dialog shown AND flag marked AND no writes`() = runTest {
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+        val model = model(osEnabled = false, firstActivationDone = false, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        (model.uiState.value as PushNotificationSettingsUM.Content)
+            .toggles.first { it.id == ToggleId.OffersUpdates }
+            .onCheckedChange(true)
         advanceUntilIdle()
         model.onPermissionResult(isGranted = false)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { messageSender.send(any()) }
+        coVerify(exactly = 1) { markFirstActivationDone(userWalletId) }
         coVerify(exactly = 0) { updatePreference(any(), any(), any()) }
+        coVerify(exactly = 0) { setAllPreferences(any(), any(), any(), any()) }
     }
 
     private fun allFalse() = WalletPushNotificationPreferences(
