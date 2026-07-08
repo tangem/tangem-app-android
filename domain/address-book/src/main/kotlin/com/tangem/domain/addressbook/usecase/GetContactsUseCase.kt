@@ -30,7 +30,7 @@ class GetContactsUseCase(
     private fun Contact.matches(query: String): Boolean {
         val isNameContaining = name.value.contains(other = query, ignoreCase = true)
         val isAddressContaining = addresses.any { addressEntry ->
-            addressEntry.address.contains(other = query, ignoreCase = true)
+            addressEntry.address.contains(other = query, ignoreCase = false)
         }
         return isNameContaining || isAddressContaining
     }
