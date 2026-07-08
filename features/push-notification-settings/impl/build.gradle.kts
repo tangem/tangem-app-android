@@ -27,9 +27,9 @@ dependencies {
     implementation(projects.core.ui)
 
     /* Project - Domain */
-    api(projects.domain.account)
     api(projects.domain.pushNotificationPreferences)
     implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
 
     /* AndroidX */
     implementation(deps.androidx.activity)
