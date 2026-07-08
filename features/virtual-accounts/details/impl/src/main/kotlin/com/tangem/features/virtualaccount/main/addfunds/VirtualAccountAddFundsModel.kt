@@ -35,6 +35,13 @@ internal class VirtualAccountAddFundsModel @Inject constructor(
             ),
         )
 
+    init {
+        if (params.shouldSkipIntro) {
+            // send analytics
+            params.onDetailsShown()
+        }
+    }
+
     fun onDismiss() {
         params.listener.onAddFundsDismiss()
     }
@@ -44,6 +51,7 @@ internal class VirtualAccountAddFundsModel @Inject constructor(
     )
 
     private fun showDetailsContent() {
+        params.onDetailsShown()
         uiState.update { state -> state.copy(content = buildDetailsContent()) }
     }
 
@@ -52,13 +60,19 @@ internal class VirtualAccountAddFundsModel @Inject constructor(
             .map { detailItem(label = it.title, value = it.value) }
             .toImmutableList(),
         dailyLimit = params.dailyDepositLimit,
-        onShareClick = { shareManager.shareText(buildShareText()) },
+        onShareClick = {
+            params.onShareClicked()
+            shareManager.shareText(buildShareText())
+        },
     )
 
     private fun detailItem(label: String, value: String) = VirtualAccountAddFundsUM.DetailItem(
         label = stringReference(label),
         value = value,
-        onCopyClick = { clipboardManager.setText(text = value, isSensitive = true) },
+        onCopyClick = {
+            params.onFieldCopied(label)
+            clipboardManager.setText(text = value, isSensitive = true)
+        },
     )
 
     private fun buildShareText(): String {
