@@ -11,6 +11,7 @@ private const val WALLET_ID = "Wallet Id"
 private const val CONTACT_ID = "Contact Id"
 private const val MODE = "Mode"
 private const val CONTACTS_COUNT = "Contacts Count"
+private const val ACTION = "Action"
 
 sealed class AddressBookEvents(
     event: String,
@@ -160,6 +161,24 @@ sealed class AddressBookEvents(
             contactId?.let { put(CONTACT_ID, it) }
         },
     )
+    // endregion
+
+    // region Choose network
+    class SelectAllNetworksTapped(
+        walletId: UserWalletId,
+        action: Action,
+    ) : AddressBookEvents(
+        event = "Select All Networks Tapped",
+        params = mapOf(
+            WALLET_ID to walletId.stringValue,
+            ACTION to action.value,
+        ),
+    ) {
+        enum class Action(val value: String) {
+            SelectAll("Select All"),
+            ClearAll("Clear All"),
+        }
+    }
     // endregion
 
     // region Deletion
