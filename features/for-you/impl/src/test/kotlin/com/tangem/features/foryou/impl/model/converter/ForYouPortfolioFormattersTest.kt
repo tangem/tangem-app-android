@@ -1,11 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import io.mockk.every
@@ -15,8 +10,6 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class ForYouPortfolioFormattersTest {
-
-    private val appCurrency: AppCurrency = AppCurrency.Default
 
     @Nested
     inner class ForYouGroupKey {
@@ -62,102 +55,66 @@ internal class ForYouPortfolioFormattersTest {
     }
 
     @Nested
-    inner class ToForYouFiatText {
+    inner class ToForYouPercent {
 
         @Test
-        fun `GIVEN a fiat amount WHEN toForYouFiatText THEN delegates to fiat formatting`() {
-            // Arrange
-            val amount = BigDecimal("1234.5")
-
-            // Act
-            val result = amount.toForYouFiatText(appCurrency)
-
-            // Assert
-            val expected = stringReference(
-                amount.format { fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol) },
-            )
-            assertThat(result).isEqualTo(expected)
-        }
-
-        @Test
-        fun `GIVEN null amount WHEN toForYouFiatText THEN renders dash text`() {
+        fun `GIVEN null amount WHEN toForYouPercent THEN returns null`() {
             // Arrange
             val amount: BigDecimal? = null
 
             // Act
-            val result = amount.toForYouFiatText(appCurrency)
+            val result = amount.toForYouPercent(BigDecimal("100"))
 
             // Assert
-            val expected = stringReference(
-                amount.format { fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol) },
-            )
-            assertThat(result).isEqualTo(expected)
-        }
-    }
-
-    @Nested
-    inner class ToForYouPercentText {
-
-        @Test
-        fun `GIVEN null amount WHEN toForYouPercentText THEN returns EMPTY`() {
-            // Arrange
-            val amount: BigDecimal? = null
-
-            // Act
-            val result = amount.toForYouPercentText(BigDecimal("100"))
-
-            // Assert
-            assertThat(result).isEqualTo(TextReference.EMPTY)
+            assertThat(result).isNull()
         }
 
         @Test
-        fun `GIVEN zero total WHEN toForYouPercentText THEN returns EMPTY`() {
+        fun `GIVEN zero total WHEN toForYouPercent THEN returns null`() {
             // Arrange
             val amount = BigDecimal("10")
 
             // Act
-            val result = amount.toForYouPercentText(BigDecimal.ZERO)
+            val result = amount.toForYouPercent(BigDecimal.ZERO)
 
             // Assert
-            assertThat(result).isEqualTo(TextReference.EMPTY)
+            assertThat(result).isNull()
         }
 
         @Test
-        fun `GIVEN zero amount WHEN toForYouPercentText THEN returns EMPTY`() {
+        fun `GIVEN zero amount WHEN toForYouPercent THEN returns null`() {
             // Arrange
             val amount = BigDecimal.ZERO
 
             // Act
-            val result = amount.toForYouPercentText(BigDecimal("100"))
+            val result = amount.toForYouPercent(BigDecimal("100"))
 
             // Assert
-            assertThat(result).isEqualTo(TextReference.EMPTY)
+            assertThat(result).isNull()
         }
 
         @Test
-        fun `GIVEN non-zero amount and total WHEN toForYouPercentText THEN returns rounded percent share`() {
-            // Arrange
-            val amount = BigDecimal("25.00")
-            val total = BigDecimal("100")
+        fun `GIVEN non-zero amount and total WHEN toForYouPercent THEN returns the share as a ratio`() {
+            // Arrange — 50.00 / 200 = 0.25 (ratio, scaled to the amount's scale)
+            val amount = BigDecimal("50.00")
 
             // Act
-            val result = amount.toForYouPercentText(total)
+            val result = amount.toForYouPercent(BigDecimal("200"))
 
-            // Assert — 25.00 / 100 = 0.25 -> 25.00%
-            assertThat(result).isEqualTo(stringReference("25.00%"))
+            // Assert
+            assertThat(result).isEqualTo(BigDecimal("0.25"))
         }
 
         @Test
-        fun `GIVEN a share requiring rounding WHEN toForYouPercentText THEN applies HALF_UP rounding`() {
-            // Arrange — 1.0000 / 3 = 0.3333... -> rounds to 33.33%
+        fun `GIVEN a share requiring rounding WHEN toForYouPercent THEN applies HALF_UP rounding`() {
+            // Arrange — 1.0000 / 3 = 0.3333... rounds HALF_UP to the amount's scale (4)
             val amount = BigDecimal("1.0000")
-            val total = BigDecimal("3")
 
             // Act
-            val result = amount.toForYouPercentText(total)
+            val result = amount.toForYouPercent(BigDecimal("3"))
 
             // Assert
-            assertThat(result).isEqualTo(stringReference("33.33%"))
+            assertThat(result).isEqualTo(BigDecimal("0.3333"))
         }
     }
 }
