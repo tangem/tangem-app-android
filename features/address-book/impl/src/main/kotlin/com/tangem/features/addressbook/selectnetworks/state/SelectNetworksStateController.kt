@@ -36,6 +36,7 @@ internal class SelectNetworksStateController @Inject constructor() {
             onCloseClick = {},
         ),
         networks = persistentListOf(),
+        selectAllButton = SelectNetworksUM.SelectAllButtonUM.Empty,
         doneButton = TangemButtonUM(
             text = TextReference.Res(R.string.common_done),
             type = TangemButtonType.Primary,
@@ -43,5 +44,6 @@ internal class SelectNetworksStateController @Inject constructor() {
             onClick = {},
         ),
         onBackClick = {},
+        onSelectAllClick = {},
     )
 }

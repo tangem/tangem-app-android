@@ -5,15 +5,19 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
 import com.tangem.features.addressbook.selectnetworks.state.SelectNetworksStateController
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -23,6 +27,8 @@ internal class SelectNetworksModelTest {
     private val bsc = Blockchain.BSC
 
     private var model: SelectNetworksModel? = null
+
+    private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
 
     @AfterEach
     fun tearDown() {
@@ -147,6 +153,7 @@ internal class SelectNetworksModelTest {
             paramsContainer = paramsContainer,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             stateController = SelectNetworksStateController(),
+            analyticsSender = analyticsSender,
         ).also { model = it }
     }
 

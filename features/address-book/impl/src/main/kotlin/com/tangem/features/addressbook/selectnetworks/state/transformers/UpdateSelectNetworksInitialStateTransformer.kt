@@ -8,6 +8,7 @@ internal class UpdateSelectNetworksInitialStateTransformer(
     private val onActiveChange: (Boolean) -> Unit,
     private val onBackClick: () -> Unit,
     private val onDoneClick: () -> Unit,
+    private val onSelectAllClick: () -> Unit,
 ) : Transformer<SelectNetworksUM> {
 
     override fun transform(prevState: SelectNetworksUM): SelectNetworksUM {
@@ -20,6 +21,7 @@ internal class UpdateSelectNetworksInitialStateTransformer(
             ),
             doneButton = prevState.doneButton.copy(onClick = onDoneClick),
             onBackClick = onBackClick,
+            onSelectAllClick = onSelectAllClick,
         )
     }
 }
