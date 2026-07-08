@@ -139,12 +139,13 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     val walletImportedBanner: KNode = child {
-        hasTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER)
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.initial_wallet_sync_banner_title))
         useUnmergedTree = true
     }
 
     val walletImportedBannerCheckHereButton: KNode = child {
-        hasAnyAncestor(withTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER))
+        hasAnyAncestor(withTestTag(NotificationTestTags.CONTAINER))
         hasText(getResourceString(CoreResR.string.main_manage_tokens))
         useUnmergedTree = true
     }
