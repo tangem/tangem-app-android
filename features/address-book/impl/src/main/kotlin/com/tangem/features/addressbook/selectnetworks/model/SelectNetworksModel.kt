@@ -6,6 +6,8 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.features.addressbook.analytics.AddressBookEvents
+import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.selectnetworks.DefaultSelectNetworksComponent
 import com.tangem.features.addressbook.selectnetworks.state.SelectNetworksStateController
 import com.tangem.features.addressbook.selectnetworks.state.transformers.UpdateNetworksContentTransformer
@@ -22,6 +24,7 @@ internal class SelectNetworksModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val stateController: SelectNetworksStateController,
+    private val analyticsSender: AddressBookAnalyticsSender,
 ) : Model() {
 
     private val params: DefaultSelectNetworksComponent.Params = paramsContainer.require()
@@ -50,16 +53,18 @@ internal class SelectNetworksModel @Inject constructor(
                 onActiveChange = ::onActiveChange,
                 onBackClick = params.onBackClick,
                 onDoneClick = ::onDoneClick,
+                onSelectAllClick = ::onSelectAllClick,
             ),
         )
     }
 
     private fun subscribeToContent() {
-        combine(query, selectedNetworks) { query, selection ->
+        combine(query, selectedNetworks, isSearchActive) { query, selection, isSearchActive ->
             UpdateNetworksContentTransformer(
                 matchedBlockchains = matchedBlockchains,
                 query = query,
                 selectedNetworkIds = selection,
+                isSearchActive = isSearchActive,
                 onToggle = ::onToggle,
             )
         }
@@ -86,6 +91,22 @@ internal class SelectNetworksModel @Inject constructor(
     private fun onToggle(networkId: String) {
         val current = selectedNetworks.value
         selectedNetworks.value = if (networkId in current) current - networkId else current + networkId
+    }
+
+    private fun onSelectAllClick() {
+        val allNetworkIds = matchedBlockchains.map { blockchain -> blockchain.toNetworkId() }.toSet()
+        val isSelectingAll = allNetworkIds.isEmpty() || !selectedNetworks.value.containsAll(allNetworkIds)
+
+        analyticsSender.sendSelectAllNetworksTapped(
+            action = if (isSelectingAll) {
+                AddressBookEvents.SelectAllNetworksTapped.Action.SelectAll
+            } else {
+                AddressBookEvents.SelectAllNetworksTapped.Action.ClearAll
+            },
+            scope = modelScope,
+        )
+
+        selectedNetworks.value = if (isSelectingAll) allNetworkIds else emptySet()
     }
 
     private fun onDoneClick() {
