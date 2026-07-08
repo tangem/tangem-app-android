@@ -54,7 +54,11 @@ internal class IndexTableOnChainHistory @AssistedInject constructor(
     }
 
     private fun buildState(page: ExpressHistoryPage): HistoryState {
-        val merged = mergeTxHistoryInfos(onChain = emptyList(), express = page.items)
+        val merged = mergeTxHistoryInfos(
+            onChain = emptyList(),
+            express = page.items,
+            currency = env.currency,
+        )
         return if (merged.isEmpty()) {
             HistoryState.Empty
         } else {

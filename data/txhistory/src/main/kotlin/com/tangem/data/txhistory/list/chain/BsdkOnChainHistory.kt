@@ -2,6 +2,7 @@
 
 package com.tangem.data.txhistory.list.chain
 
+import com.tangem.data.txhistory.list.chain.BsdkOnChainHistory.Companion.AUTO_LOAD_MORE_TARGET_COUNT
 import com.tangem.data.txhistory.list.mergeTxHistoryInfos
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryEnvironment
@@ -80,8 +81,7 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
                 .flatMap { it.data.items.asSequence() }
                 .distinctBy(TxInfo::identityKey)
                 .toList()
-
-            mergeTxHistoryInfos(onChain = onChain, express = express)
+            mergeTxHistoryInfos(onChain = onChain, express = express, currency = currency)
         }
 
         return when (batchState.status) {

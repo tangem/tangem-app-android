@@ -8,6 +8,7 @@ import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.converter.OnrampCountryConverter
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
 import com.tangem.data.txhistory.repository.factory.toAssetId
+import com.tangem.data.txhistory.repository.factory.toRefundAssetId
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
@@ -170,6 +171,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                     isOutgoing = true,
                     fromCurrency = currencies[entity.from.toAssetId()],
                     toCurrency = currencies[entity.to.toAssetId()],
+                    refundCurrency = entity.toRefundAssetId()?.let { currencies[it] },
                 )
                 add(swapConverter.convert(input))
             }
@@ -180,6 +182,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                     isOutgoing = false,
                     fromCurrency = currencies[entity.from.toAssetId()],
                     toCurrency = currencies[entity.to.toAssetId()],
+                    refundCurrency = entity.toRefundAssetId()?.let { currencies[it] },
                 )
                 add(swapConverter.convert(input))
             }
