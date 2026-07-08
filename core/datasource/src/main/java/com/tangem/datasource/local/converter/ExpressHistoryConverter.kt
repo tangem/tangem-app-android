@@ -30,7 +30,7 @@ fun ExchangeItemResponse.toEntity(): ExpressExchangeEntity? {
         refundNetwork = refundNetwork,
         refundContractAddress = refundContractAddress,
         createdAt = createdAt,
-        updatedAt = ""/*updatedAt*/, // todo txHistory uncomment
+        updatedAt = updatedAt,
         payTill = payTill,
         averageDuration = averageDuration,
         from = ExpressExchangeEntity.AssetEmbedded(
@@ -61,7 +61,7 @@ fun OnrampItemResponse.toEntity(): ExpressOnrampEntity {
         externalTxUrl = externalTxUrl,
         payoutHash = payoutHash,
         createdAt = createdAt,
-        updatedAt = ""/*updatedAt*/, // todo txHistory uncomment,
+        updatedAt = updatedAt,
         fromCurrencyCode = fromCurrencyCode,
         fromAmount = fromAmount,
         fromPrecision = fromPrecision,
