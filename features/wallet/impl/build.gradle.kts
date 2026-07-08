@@ -128,6 +128,7 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
 
     /** Feature Apis */
+    api(projects.features.addressBook.api)
     api(projects.features.biometry.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
