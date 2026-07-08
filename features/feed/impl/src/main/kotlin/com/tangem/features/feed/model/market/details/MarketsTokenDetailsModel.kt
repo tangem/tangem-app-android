@@ -393,6 +393,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     fun openAddFunds(rawCurrencyId: com.tangem.domain.models.currency.CryptoCurrency.RawID) {
+        analyticsEventHandler.send(analyticsEventBuilder.addFundsClicked())
         addFundsSheetNavigation.activate(AddFundsSlotRoute(rawCurrencyId = rawCurrencyId))
     }
 
