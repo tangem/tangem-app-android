@@ -54,6 +54,41 @@ class GetContactsUseCaseTest {
     }
 
     @Test
+    fun `GIVEN address query matching case WHEN invoke THEN returns matching contact`() = runTest {
+        // Arrange
+        val carol = contact(name = "Carol", address = "0xAbCdEf")
+        every { repository.getAllContacts() } returns flowOf(listOf(alice, carol))
+
+        // Act
+        val result = useCase(query = "0xAbCdEf").first()
+
+        // Assert
+        assertThat(result).containsExactly(carol)
+    }
+
+    @Test
+    fun `GIVEN address query with different case WHEN invoke THEN returns empty`() = runTest {
+        // Arrange
+        val carol = contact(name = "Carol", address = "0xAbCdEf")
+        every { repository.getAllContacts() } returns flowOf(listOf(alice, carol))
+
+        // Act
+        val result = useCase(query = "0xabcdef").first()
+
+        // Assert
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN name query with different case WHEN invoke THEN returns matching contact`() = runTest {
+        // Act
+        val result = useCase(query = "ALICE").first()
+
+        // Assert
+        assertThat(result).containsExactly(alice)
+    }
+
+    @Test
     fun `GIVEN blank query WHEN invoke THEN returns all contacts unfiltered`() = runTest {
         // Act
         val result = useCase(query = "   ").first()
