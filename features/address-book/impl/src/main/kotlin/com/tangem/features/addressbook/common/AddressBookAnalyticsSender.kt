@@ -1,5 +1,7 @@
 package com.tangem.features.addressbook.common
 
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.SaveContactError
@@ -60,31 +62,31 @@ internal class AddressBookAnalyticsSender @Inject constructor(
 
     override fun onAddressSubstitutedInSend(walletId: UserWalletId, contactId: String) {
         analyticsEventHandler.send(
-            AddressBookEvents.AddressSubstitutedInSend(walletId = walletId, contactId = contactId),
+            AddressBookEvents.AddressSubstitutedInSend(walletId = walletId.hashForAnalytics(), contactId = contactId),
         )
     }
 
     fun sendAddressInvalid(walletId: UserWalletId, contactId: String) {
         analyticsEventHandler.send(
-            AddressBookEvents.AddressInvalid(walletId = walletId, contactId = contactId),
+            AddressBookEvents.AddressInvalid(walletId = walletId.hashForAnalytics(), contactId = contactId),
         )
     }
 
     fun sendDuplicateNameErrorShown(walletId: UserWalletId, contactId: String?) {
         analyticsEventHandler.send(
-            AddressBookEvents.DuplicateNameErrorShown(walletId = walletId, contactId = contactId),
+            AddressBookEvents.DuplicateNameErrorShown(walletId = walletId.hashForAnalytics(), contactId = contactId),
         )
     }
 
     fun sendAddressRemoved(walletId: UserWalletId, contactId: String) {
         analyticsEventHandler.send(
-            AddressBookEvents.AddressRemoved(walletId = walletId, contactId = contactId),
+            AddressBookEvents.AddressRemoved(walletId = walletId.hashForAnalytics(), contactId = contactId),
         )
     }
 
     fun sendContactDeleted(walletId: UserWalletId, contactId: String) {
         analyticsEventHandler.send(
-            AddressBookEvents.ContactDeleted(walletId = walletId, contactId = contactId),
+            AddressBookEvents.ContactDeleted(walletId = walletId.hashForAnalytics(), contactId = contactId),
         )
     }
 
@@ -114,7 +116,7 @@ internal class AddressBookAnalyticsSender @Inject constructor(
     fun sendContactSaved(walletId: UserWalletId, contactId: String, isEdit: Boolean) {
         analyticsEventHandler.send(
             AddressBookEvents.ContactSaved(
-                walletId = walletId,
+                walletId = walletId.hashForAnalytics(),
                 contactId = contactId,
                 mode = if (isEdit) {
                     AddressBookEvents.ContactSaved.Mode.Edit
@@ -133,7 +135,7 @@ internal class AddressBookAnalyticsSender @Inject constructor(
         val errorType = error.toErrorType() ?: return
         analyticsEventHandler.send(
             AddressBookEvents.SaveErrorShown(
-                walletId = walletId,
+                walletId = walletId.hashForAnalytics(),
                 contactId = contactId,
                 errorType = errorType,
             ),
@@ -158,8 +160,12 @@ internal class AddressBookAnalyticsSender @Inject constructor(
         analyticsEventHandler.send(AddressBookEvents.AddressScreenOpened)
     }
 
-    private suspend fun selectedWalletId(): UserWalletId = userWalletsListRepository.selectedUserWallet
+    private suspend fun selectedWalletId(): String = userWalletsListRepository.selectedUserWallet
         .filterNotNull()
         .first()
         .walletId
+        .hashForAnalytics()
+
+    /** Analytics must never receive a raw wallet id — send its SHA-256 (uppercase hex) instead. */
+    private fun UserWalletId.hashForAnalytics(): String = value.calculateSha256().toHexString()
 }
