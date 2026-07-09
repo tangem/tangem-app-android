@@ -12,69 +12,69 @@ android {
 }
 dependencies {
     /** Api */
-    implementation(projects.features.commonFeatures.api)
-    implementation(projects.features.wallet.api)
-    implementation(projects.features.tokenRecieve.api)
+    api(projects.features.commonFeatures.api)
+    api(projects.features.tokenRecieve.api)
+    api(projects.features.wallet.api)
 
     /** Core modules */
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-    implementation(projects.core.ui)
-    implementation(projects.core.error)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
+    implementation(projects.core.pagination)
 
     /** Domain */
-    implementation(projects.domain.models)
+    api(projects.domain.account.status)
+    api(projects.domain.appCurrency)
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.balanceHiding)
+    api(projects.domain.manageTokens)
+    api(projects.domain.markets)
+    api(projects.domain.markets.models)
+    api(projects.domain.models)
+    api(projects.domain.transaction)
+    api(projects.domain.wallets)
     implementation(projects.domain.account)
-    implementation(projects.domain.account.status)
+    implementation(projects.domain.card)
     implementation(projects.domain.core)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.markets)
-    implementation(projects.domain.transaction)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
-    implementation(projects.domain.manageTokens)
-    implementation(projects.domain.manageTokens.models)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.yieldSupply.models)
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
 
     /** Common */
-    implementation(projects.common.ui)
+    api(projects.common.routing)
+    api(projects.common.ui)
+    api(projects.common.uiMarkets)
+    implementation(projects.common)
     implementation(projects.common.uiCharts)
-    implementation(projects.common.uiMarkets)
-    implementation(projects.common.routing)
 
     /** Libs */
-    implementation(projects.libs.blockchainSdk)
+    api(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
 
     /** AndroidX libraries */
-    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
+    api(deps.compose.animation)
+    api(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.androidx.activity.compose)
 
     /** Other libraries */
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.haze)
     implementation(deps.kotlin.serialization)
+    implementation(deps.lifecycle.compose)
     implementation(deps.firebase.crashlytics)
 
     /** DI */
@@ -83,5 +83,4 @@ dependencies {
 
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testImplementation(projects.test.mock)
 }
