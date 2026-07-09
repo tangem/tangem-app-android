@@ -26,6 +26,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.stories.ShouldShowStoriesUseCase
@@ -103,6 +104,7 @@ internal abstract class SwapModelTestBase {
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
     protected val setSwapUiModeUseCase: SetSwapUiModeUseCase = mockk(relaxed = true)
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
+    protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk(relaxed = true)
     protected val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
 
@@ -175,6 +177,7 @@ internal abstract class SwapModelTestBase {
         getSwapUiModeUseCase = getSwapUiModeUseCase,
         setSwapUiModeUseCase = setSwapUiModeUseCase,
         calculateAmountUseCase = calculateAmountUseCase,
+        isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
         sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
     )

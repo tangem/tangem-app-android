@@ -10,12 +10,25 @@ android {
 }
 
 dependencies {
-    api(projects.core.utils)
 
-    api(deps.decompose)
-    api(deps.androidx.appCompat)
-    implementation(deps.kotlin.coroutines)
-
+    // region DI
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region AndroidX
+    api(deps.androidx.appCompat)
+    // endregion
+
+    // region Other libraries
+    api(deps.decompose)
+    // endregion
+
+    // region Core modules
+    api(projects.core.utils)
+    // endregion
 }

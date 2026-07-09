@@ -11,7 +11,9 @@ data class OrderRequest(
     @JsonClass(generateAdapter = true)
     data class Data(
         @Json(name = "customer_wallet_address") val customerWalletAddress: String,
-        @Json(name = "specification_name") val specificationName: String = "SP_000004",
-        @Json(name = "type") val type: String = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
+        @Json(name = "specification_name") val specificationName: String?,
+        @Json(name = "type") val type: String,
+        @Json(name = "target_tariff_plan_id") val targetTariffPlanId: String? = null,
+        @Json(name = "tariff_plan_transition_type") val tariffPlanTransitionType: String? = null,
     )
 }

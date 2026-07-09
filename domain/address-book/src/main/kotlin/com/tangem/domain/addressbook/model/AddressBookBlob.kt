@@ -19,18 +19,24 @@ import kotlinx.serialization.Serializable
  *   "updatedAt": "2026-05-22T09:00:00.000Z",
  *   "nonce": "…",
  *   "ciphertext": "…",
- *   "auth_tag": "…"
+ *   "authTag": "…"
  * }
  * ```
  */
 @Serializable
 data class AddressBookBlob(
+    @SerialName("version")
     val version: String = CURRENT_VERSION, // TODO Will come from BE in [REDACTED_TASK_KEY]
+    @SerialName("walletId")
     val walletId: String,
+    @SerialName("updatedAt")
     val updatedAt: String,
+    @SerialName("nonce")
     val nonce: String,
+    @SerialName("ciphertext")
     val ciphertext: String,
-    @SerialName("auth_tag") val authTag: String,
+    @SerialName("authTag")
+    val authTag: String,
 ) {
 
     companion object {

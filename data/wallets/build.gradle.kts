@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -10,42 +11,58 @@ android {
     namespace = "com.tangem.data.wallet"
 }
 dependencies {
-    implementation(projects.data.common)
 
-    /** Tangem libraries */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.hot.core)
-    implementation(projects.libs.tangemSdkApi)
-    implementation(projects.libs.blockchainSdk)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    /** Core */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-
-    /** Domain */
-    implementation(projects.domain.account)
-    implementation(projects.domain.card)
-    implementation(projects.domain.dynamicAddresses)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.settings)
-
-    /** DI */
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-
-    /** Other deps */
+    // region Other deps
+    api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    implementation(deps.retrofit)
+    // endregion
+
+    // region Tangem libraries
+    api(tangemDeps.blockchain)
+    api(tangemDeps.card.core)
+    api(tangemDeps.hot.core)
+    // endregion
+
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
+
+    // region Data
+    api(projects.data.common)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.dynamicAddresses)
+    api(projects.domain.models)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
+    implementation(projects.domain.card)
+    implementation(projects.domain.wallets.models)
+    runtimeOnly(projects.domain.account)
+    // endregion
+
+    // region Libs
+    api(projects.libs.tangemSdkApi)
+    implementation(projects.libs.blockchainSdk)
+    // endregion
 
     /** tests */
-    testImplementation(projects.test.core)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
 }

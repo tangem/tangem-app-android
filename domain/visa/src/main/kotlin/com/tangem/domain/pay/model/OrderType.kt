@@ -18,6 +18,7 @@ enum class OrderType(val wireValue: String) {
     CARD_FREEZE("CARD_FREEZE"),
     CARD_UNFREEZE("CARD_UNFREEZE"),
     WITHDRAW("WITHDRAW"),
+    TARIFF_PLAN_TRANSITION("TARIFF_PLAN_TRANSITION"),
     UNKNOWN(""),
     ;
 
