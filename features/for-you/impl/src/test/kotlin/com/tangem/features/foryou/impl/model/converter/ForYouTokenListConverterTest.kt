@@ -149,7 +149,7 @@ internal class ForYouTokenListConverterTest {
             val otherRow = result.last().tokenRowUM as TangemTokenRowUM.Content
             assertThat(otherRow.id).isEqualTo("for_you_other_assets")
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.common_assets, count = 1))
+            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.market_chart_assets_android, count = 1))
         }
 
         @Test
@@ -172,7 +172,7 @@ internal class ForYouTokenListConverterTest {
             // Assert
             val otherRow = result.last().tokenRowUM as TangemTokenRowUM.Content
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.common_assets, count = 3))
+            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.market_chart_assets_android, count = 3))
         }
 
         @Test

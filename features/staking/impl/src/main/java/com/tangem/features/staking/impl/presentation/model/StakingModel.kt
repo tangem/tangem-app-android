@@ -57,9 +57,13 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.approval.api.GiveApprovalComponent
@@ -72,14 +76,11 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
-import com.tangem.features.staking.impl.presentation.state.helpers.GetEffectiveStakingFee
-import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
-import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoader
-import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
-import com.tangem.features.staking.impl.presentation.state.helpers.StakingTransactionSender
+import com.tangem.features.staking.impl.presentation.state.helpers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.*
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.*
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalInProgressTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.confirmation.SetUpdatedAllowanceTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.DismissStakingNotificationsStateTransformer
@@ -151,6 +152,7 @@ internal class StakingModel @Inject constructor(
     private val coroutineScope: AppCoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
+    private val stakingFeatureToggles: StakingFeatureToggles,
     appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
@@ -374,6 +376,8 @@ internal class StakingModel @Inject constructor(
                                 minimumTransactionAmount = minimumTransactionAmount,
                                 actionType = uiState.value.actionType,
                                 integration = integration,
+                                isSolanaUnstakeValidationEnabled = stakingFeatureToggles
+                                    .isSolanaUnstakeValidationEnabled(),
                             )
 
                             addAll(
@@ -636,6 +640,7 @@ internal class StakingModel @Inject constructor(
                 minimumTransactionAmount = minimumTransactionAmount,
                 value = value,
                 integration = integration,
+                isSolanaUnstakeValidationEnabled = stakingFeatureToggles.isSolanaUnstakeValidationEnabled(),
             ),
         )
         checkSumLimitExceeded()
@@ -677,6 +682,7 @@ internal class StakingModel @Inject constructor(
                 minimumTransactionAmount = minimumTransactionAmount,
                 actionType = uiState.value.actionType,
                 integration = integration,
+                isSolanaUnstakeValidationEnabled = stakingFeatureToggles.isSolanaUnstakeValidationEnabled(),
             ),
         )
         checkSumLimitExceeded()
@@ -1359,6 +1365,7 @@ internal class StakingModel @Inject constructor(
                 value = amountValue,
                 minimumTransactionAmount = minimumTransactionAmount,
                 integration = integration,
+                isSolanaUnstakeValidationEnabled = stakingFeatureToggles.isSolanaUnstakeValidationEnabled(),
             ),
         )
     }

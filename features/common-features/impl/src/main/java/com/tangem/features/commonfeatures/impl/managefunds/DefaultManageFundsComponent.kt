@@ -30,7 +30,6 @@ import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
 import com.tangem.features.commonfeatures.impl.R
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -42,14 +41,11 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
     chooseTokenComponentFactory: ChooseTokenComponent.Factory,
     tokenActionsComponentFactory: TokenActionsComponent.Factory,
     userPortfolioComponentFactory: UserPortfolioComponent.Factory,
-    walletFeatureToggles: WalletFeatureToggles,
 ) : AppComponentContext by appComponentContext, ManageFundsComponent {
 
     private val model: ManageFundsModel = getOrCreateModel(params)
 
     private val isCompactTokenActions: Boolean = params.launchMode is ManageFundsComponent.LaunchMode.TokenActionsOnly
-
-    private val isAddFundsStage1Enabled: Boolean = walletFeatureToggles.isAddFundsStage1Enabled
 
     private val tokenActionsComponent: TokenActionsComponent by lazy {
         tokenActionsComponentFactory.create(
@@ -107,7 +103,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
             )
         }
 
-        WithOptionalRedesignTheme(isEnabled = isAddFundsStage1Enabled) {
+        TangemThemeRedesign {
             TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
                 onBack = if (canGoBack) model::onBack else ::dismiss,
                 config = TangemBottomSheetConfig(
@@ -179,7 +175,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
             ) {
                 userPortfolioComponent.Content(modifier)
             }
-            ManageFundsModel.UiRoute.TokenActions -> tokenActionsComponent.Content(modifier)
+            is ManageFundsModel.UiRoute.TokenActions -> tokenActionsComponent.Content(modifier)
         }
     }
 
@@ -191,8 +187,13 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
         onCloseClick: () -> Unit,
     ) {
         val spec = route.uiSpec(model.flowType)
+        val title = if (route is ManageFundsModel.UiRoute.TokenActions) {
+            route.title
+        } else {
+            spec.title
+        }
         TangemTopBar(
-            title = spec.title,
+            title = title,
             subtitle = spec.subtitle,
             type = TangemTopBarType.BottomSheet,
             startContent = if (canGoBack) {
@@ -217,15 +218,6 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                 )
             },
         )
-    }
-
-    @Composable
-    private fun WithOptionalRedesignTheme(isEnabled: Boolean, content: @Composable () -> Unit) {
-        if (isEnabled) {
-            TangemThemeRedesign(content = content)
-        } else {
-            content()
-        }
     }
 
     @AssistedFactory

@@ -17,18 +17,23 @@ import com.tangem.features.commonfeatures.api.addtoportfolio.SelectedPortfolio
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddTokenUiBuilder.Companion.toggleProgress
+import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
 @Suppress("LongParameterList")
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class AddTokenModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    private val walletImageFetcher: UserWalletImageFetcher,
     private val uiBuilder: AddTokenUiBuilder,
     private val messageSender: UiMessageSender,
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
@@ -46,15 +51,22 @@ internal class AddTokenModel @Inject constructor(
         field = MutableStateFlow(value = null)
 
     init {
+        val walletImageFlow = params.selectedPortfolio
+            .map { it.userWallet }
+            .distinctUntilChanged()
+            .flatMapLatest { walletImageFetcher.walletImage(it, ArtworkSize.SMALL) }
+
         combine(
             flow = params.selectedNetwork.distinctUntilChanged(),
             flow2 = params.selectedPortfolio.distinctUntilChanged(),
-            transform = { selectedNetwork, selectedPortfolio ->
+            flow3 = walletImageFlow,
+            transform = { selectedNetwork, selectedPortfolio, walletImage ->
                 addTokenJob.join()
                 val isTangemIconVisible = needColdWalletInteraction(selectedNetwork, selectedPortfolio)
                 uiBuilder.updateContent(
                     selectedPortfolio = selectedPortfolio,
                     selectedNetwork = selectedNetwork,
+                    walletImage = walletImage,
                     isTangemIconVisible = isTangemIconVisible,
                     onConfirmClick = { onAddClick(selectedNetwork, selectedPortfolio).saveIn(addTokenJob) },
                 )
