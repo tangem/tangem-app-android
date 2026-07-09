@@ -44,6 +44,7 @@ internal data class TangemPayTxHistoryDetailsUMV2(
     val subtitle: TextReference,
     val iconState: TangemIconUM,
     val transactionTitle: TextReference,
+    val detail: TransactionDetailUM?,
     val transactionCategory: TextReference,
     val mcc: TextReference?,
     val transactionAmount: String,
@@ -66,6 +67,15 @@ internal enum class TransactionStateType {
     Rejected,
     Reversed,
 }
+
+@Immutable
+internal sealed interface TransactionDetailUM {
+    data object Loading : TransactionDetailUM
+    data class Content(val card: TextReference) : TransactionDetailUM
+    data class Error(val onRefreshClick: () -> Unit) : TransactionDetailUM
+}
+
+internal enum class TransactionLoadState { Loading, Loaded, Error }
 
 @Immutable
 internal sealed interface TangemPayTxHistoryDetailsUiState {
