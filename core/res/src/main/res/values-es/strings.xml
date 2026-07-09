@@ -1580,9 +1580,9 @@
   <string name="staking_notification_ton_account_initialization_message">Para empezar a hacer staking, primero debes activar tu cuenta de TON.</string>
   <string name="staking_notification_ton_account_initialization_title">Activación de cuenta</string>
   <string name="staking_notification_ton_activate_account">Para empezar a hacer staking en TON, realice primero una transacción de salida de cualquier importe - esto activará su billetera.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Es posible que se requieran hasta 0.2 TON además de la tarifa de red para completar la transacción. Cualquier cantidad no utilizada será reembolsada.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">Se requieren 0.2 TON para realizar esta operación, además de la tarifa de red. Por favor, recargue su saldo.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Se requiere reserva de TON</string>
+  <string name="staking_notification_ton_extra_reserve_info">Es posible que se requieran hasta 0.2 GRAM además de la tarifa de red para completar la transacción. Cualquier cantidad no utilizada será reembolsada.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Se requieren 0.2 GRAM para realizar esta operación, además de la tarifa de red. Por favor, recargue su saldo.</string>
+  <string name="staking_notification_ton_extra_reserve_title">Se requiere reserva de GRAM</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Esta acción cerrará otras posiciones o las cambiará al estado de retiro, de acuerdo con las reglas de la red.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Estado de las posiciones</string>
   <string name="staking_notification_unlock_text">Desbloquee su dinero para retirarlo del proceso de staking. El desbloqueo demora %s minuto.</string>
