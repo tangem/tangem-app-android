@@ -129,8 +129,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class BackupError(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "BackupErrorNotification",
-            title = resourceReference(id = R.string.warning_backup_errors_title),
-            subtitle = resourceReference(id = R.string.warning_backup_errors_message),
+            title = resourceReference(id = R.string.warning_incomplete_backup_notification_title),
+            subtitle = resourceReference(id = R.string.warning_incomplete_backup_notification_message),
             messageEffect = TangemMessageEffect.Warning,
             iconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_attention_default_24,
