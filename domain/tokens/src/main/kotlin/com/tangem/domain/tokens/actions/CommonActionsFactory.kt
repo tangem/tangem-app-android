@@ -91,7 +91,12 @@ internal class CommonActionsFactory(
             // endregion
 
             // region Buy
-            addBuyAction(reason = ScenarioUnavailabilityReason.None)
+            addBuyAction(
+                reason = getBuyUnavailabilityReason(
+                    userWallet = userWallet,
+                    currency = cryptoCurrencyStatus.currency,
+                ),
+            )
             // endregion
 
             // region Sell
