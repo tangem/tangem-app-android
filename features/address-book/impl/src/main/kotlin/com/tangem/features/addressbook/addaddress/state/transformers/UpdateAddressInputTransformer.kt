@@ -19,10 +19,11 @@ internal class UpdateAddressInputTransformer(
 ) : Transformer<AddAddressUM> {
 
     override fun transform(prevState: AddAddressUM): AddAddressUM {
-        val chosenNetworkState = when {
-            value.isBlank() -> ChosenNetworkStateUM.Hidden
-            prevState.chosenNetworkStateUM is ChosenNetworkStateUM.Result -> prevState.chosenNetworkStateUM
-            else -> ChosenNetworkStateUM.Loading
+        val chosenNetworkState = when (prevState.chosenNetworkStateUM) {
+            is ChosenNetworkStateUM.Result,
+            ChosenNetworkStateUM.SelectNetwork,
+            -> if (value.isBlank()) ChosenNetworkStateUM.Hidden else prevState.chosenNetworkStateUM
+            else -> if (value.isBlank()) ChosenNetworkStateUM.Hidden else ChosenNetworkStateUM.Loading
         }
         val memoField = if (value.isBlank()) {
             prevState.memoField.copy(isVisible = false, value = "", isError = false)
