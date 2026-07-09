@@ -4,7 +4,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.utils.transformer.Transformer
 
-internal class TangemPayRenewSessionTransformer(
+internal class TangemPayErrorNotificationTransformer(
     private val shouldShowProgress: Boolean,
 ) : Transformer<TangemPayDetailsUM> {
 
