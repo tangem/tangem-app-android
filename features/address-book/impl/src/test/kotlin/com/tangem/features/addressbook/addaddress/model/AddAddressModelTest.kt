@@ -241,7 +241,7 @@ internal class AddAddressModelTest {
         }
 
         @Test
-        fun `GIVEN address matching several networks WHEN validated THEN all shown AND clickable`() = runTest {
+        fun `GIVEN address matching several networks WHEN validated THEN prompts to select network`() = runTest {
             // Arrange
             every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.Ethereum, Blockchain.BSC)
             val model = createModel(testScope = this)
@@ -251,11 +251,8 @@ internal class AddAddressModelTest {
             model.state.value.onAddressChange(ADDRESS)
             advanceUntilIdle()
 
-            // Assert — all matched networks are shown by default; the block opens the selection screen to narrow them.
-            val result = model.state.value.chosenNetworkStateUM as ChosenNetworkStateUM.Result
-            assertThat(result.networkUMList.map { it.networkName })
-                .containsExactly(Blockchain.Ethereum.fullName, Blockchain.BSC.fullName)
-            assertThat(result.isClickable).isTrue()
+            // Assert — nothing is selected yet, so the block only prompts the user to open the selection screen.
+            assertThat(model.state.value.chosenNetworkStateUM).isEqualTo(ChosenNetworkStateUM.SelectNetwork)
         }
 
         @Test
@@ -348,19 +345,19 @@ internal class AddAddressModelTest {
         }
 
         @Test
-        fun `GIVEN resolved networks WHEN address edited THEN keeps result without flashing loading`() = runTest {
-            // Arrange
+        fun `GIVEN resolved networks WHEN address edited THEN keeps state without flashing loading`() = runTest {
+            // Arrange — several networks match, so the resolved state is the "select network" prompt.
             every { supportedNetworksMatcher.match(any()) } returns listOf(Blockchain.Ethereum, Blockchain.BSC)
             val model = createModel(testScope = this)
             model.state.value.onAddressChange(ADDRESS)
             advanceUntilIdle()
-            assertThat(model.state.value.chosenNetworkStateUM).isInstanceOf(ChosenNetworkStateUM.Result::class.java)
+            assertThat(model.state.value.chosenNetworkStateUM).isEqualTo(ChosenNetworkStateUM.SelectNetwork)
 
             // Act — keep typing; validation is pending again.
             model.state.value.onAddressChange(ADDRESS + "00")
 
-            // Assert — the resolved networks stay on screen (no spinner), but the button is blocked while validating.
-            assertThat(model.state.value.chosenNetworkStateUM).isInstanceOf(ChosenNetworkStateUM.Result::class.java)
+            // Assert — the resolved state stays on screen (no spinner), but the button is blocked while validating.
+            assertThat(model.state.value.chosenNetworkStateUM).isEqualTo(ChosenNetworkStateUM.SelectNetwork)
             assertThat(model.state.value.buttonUM.isEnabled).isFalse()
         }
 

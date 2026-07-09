@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -44,23 +44,15 @@ internal fun AddressBookListScreen(
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     Column(modifier = modifier.fillMaxSize()) {
-        TangemTopBar(
-            modifier = Modifier.statusBarsPadding(),
+        TangemTopNavigation(
             title = resourceReference(R.string.address_book_title),
-            startContent = when (state.contentMode) {
-                is ContentMode.Default -> {
-                    {
-                        TangemButton(
-                            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_chevron_left_20),
-                            onClick = onBackClick,
-                            size = TangemButton.Size.X11,
-                            variant = TangemButton.Variant.Material,
-                        )
-                    }
-                }
+            contentAlign = TangemTopNavigation.ContentAlign.Center,
+            blurBackground = false,
+            onBack = when (state.contentMode) {
+                is ContentMode.Default -> onBackClick
                 ContentMode.Select -> null
             },
-            endContent = {
+            endButton = {
                 TangemButton(
                     iconStart = TangemIconUM.Icon(
                         imageVector = when (state.contentMode) {
