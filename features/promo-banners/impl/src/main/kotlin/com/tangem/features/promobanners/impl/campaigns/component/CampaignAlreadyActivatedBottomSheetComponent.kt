@@ -16,13 +16,18 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.promobanners.impl.R
+import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.model.CampaignAlreadyActivatedModel
 import com.tangem.features.promobanners.impl.campaigns.ui.ActivateCampaignContent
 
 internal class CampaignAlreadyActivatedBottomSheetComponent(
     appComponentContext: AppComponentContext,
-    private val params: CampaignAlreadyActivatedModel.Params,
+    params: Params,
+    val onDismiss: () -> Unit,
 ) : CampaignsModularComponent, AppComponentContext by appComponentContext {
 
     private val model: CampaignAlreadyActivatedModel = getOrCreateModel(params)
@@ -32,7 +37,7 @@ internal class CampaignAlreadyActivatedBottomSheetComponent(
         TangemTopNavigation(
             windowInsets = WindowInsets(0),
             blurBackground = false,
-            endButton = { TangemButton.Close(onClick = params.onDismiss) },
+            endButton = { TangemButton.Close(onClick = onDismiss) },
         )
     }
 
@@ -48,7 +53,14 @@ internal class CampaignAlreadyActivatedBottomSheetComponent(
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             text = stringResourceSafe(R.string.common_close),
-            onClick = params.onDismiss,
+            onClick = onDismiss,
         )
     }
+
+    data class Params(
+        val campaignType: CampaignType,
+        val account: Account?,
+        val appCurrency: AppCurrency,
+        val currency: CryptoCurrencyStatus,
+    )
 }
