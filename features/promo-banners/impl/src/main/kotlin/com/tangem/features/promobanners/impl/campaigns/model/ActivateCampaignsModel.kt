@@ -19,8 +19,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.promobanners.impl.R
+import com.tangem.features.promobanners.impl.campaigns.component.ActivateCampaignBottomSheetComponent
 import com.tangem.features.promobanners.impl.campaigns.entity.ActivateCampaignUM
-import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.entity.FooterUM
 import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 import com.tangem.features.promobanners.impl.campaigns.entity.TermsUM
@@ -45,7 +45,7 @@ internal class ActivateCampaignsModel @Inject constructor(
     private val urlOpener: UrlOpener,
 ) : Model() {
 
-    private val params = paramsContainer.require<Params>()
+    private val params = paramsContainer.require<ActivateCampaignBottomSheetComponent.Params>()
     private val accountIconConverter = AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall)
     private var appCurrency: AppCurrency = AppCurrency.Default
     private var selectedAccount: Account? = null
@@ -92,10 +92,10 @@ internal class ActivateCampaignsModel @Inject constructor(
             //  Success -> the "enrolled" sheet; "already activated" error -> hand the chosen token/account
             //  over to the "already activated" sheet.
             if (enrollInCampaign()) {
-                params.onActivated(params.campaignType)
+                params.modelCallbacks.onActivated(params.campaignType)
             } else {
                 selectedCurrency?.let {
-                    params.onAlreadyActivated(params.campaignType, appCurrency, selectedAccount, it)
+                    params.modelCallbacks.onAlreadyActivated(params.campaignType, appCurrency, selectedAccount, it)
                 }
             }
         }
@@ -178,13 +178,6 @@ internal class ActivateCampaignsModel @Inject constructor(
             onLearnMoreClick = ::onLearnMoreClick,
         )
     }
-
-    data class Params(
-        val campaignType: CampaignType,
-        val onDismiss: () -> Unit,
-        val onActivated: (CampaignType) -> Unit,
-        val onAlreadyActivated: (CampaignType, AppCurrency, Account?, CryptoCurrencyStatus) -> Unit,
-    )
 
     private companion object {
         // TODO([REDACTED_TASK_KEY]): replace with the real campaign terms URL.
