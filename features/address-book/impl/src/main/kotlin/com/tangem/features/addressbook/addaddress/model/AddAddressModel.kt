@@ -78,7 +78,6 @@ internal class AddAddressModel @Inject constructor(
         ChosenNetworks(
             address = validation.address,
             matched = matched,
-            displayed = displayedNetworks(matched, selected),
             selected = selectedNetworks(matched, selected),
         )
     }
@@ -86,7 +85,7 @@ internal class AddAddressModel @Inject constructor(
         .stateIn(
             modelScope,
             SharingStarted.Eagerly,
-            ChosenNetworks(address = "", matched = emptyList(), displayed = emptyList(), selected = emptyList()),
+            ChosenNetworks(address = "", matched = emptyList(), selected = emptyList()),
         )
 
     /**
@@ -161,7 +160,6 @@ internal class AddAddressModel @Inject constructor(
             UpdateAddressValidationTransformer(
                 address = networks.address,
                 matchedBlockchains = networks.matched,
-                displayedBlockchains = networks.displayed,
                 selectedBlockchains = networks.selected,
                 isMemoInvalid = memoInvalid,
                 duplicateName = duplicate,
@@ -263,12 +261,6 @@ internal class AddAddressModel @Inject constructor(
         )
     }
 
-    /** What the network block shows: all matched networks until the user narrows them down, then the picked subset. */
-    private fun displayedNetworks(matched: List<Blockchain>, selected: Set<String>?): List<Blockchain> {
-        if (selected == null) return matched
-        return matched.filter { it.toNetworkId() in selected }
-    }
-
     /**
      * What is actually selected for saving. A single matched network is auto-selected (there is nothing to choose and
      * the selection screen can't be opened); otherwise the user must pick explicitly before saving.
@@ -290,7 +282,6 @@ internal class AddAddressModel @Inject constructor(
     private data class ChosenNetworks(
         val address: String,
         val matched: List<Blockchain>,
-        val displayed: List<Blockchain>,
         val selected: List<Blockchain>,
     ) {
         /** The first selected network that supports a memo / destination tag, if any. */
