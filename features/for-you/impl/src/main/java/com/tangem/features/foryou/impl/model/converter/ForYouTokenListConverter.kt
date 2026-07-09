@@ -126,7 +126,7 @@ internal class ForYouTokenListConverter(
                 headIconUM = TangemIconUM.Currency(CurrencyIconState.Empty()),
                 titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.common_other)),
                 subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
-                    text = pluralReference(R.plurals.common_assets, otherAssets.count()),
+                    text = pluralReference(R.plurals.market_chart_assets_android, otherAssets.count()),
                 ),
                 topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
                     text = stringReference(

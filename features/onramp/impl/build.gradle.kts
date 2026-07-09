@@ -85,4 +85,9 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.kotlin.immutable.collections)
+
+    /** Tests */
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
 }

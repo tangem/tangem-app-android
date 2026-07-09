@@ -3,6 +3,7 @@ package com.tangem.data.staking.toggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.configtoggle.FeatureToggles
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -45,5 +46,31 @@ internal class DefaultStakingFeatureTogglesTest {
         }
 
         verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
+    }
+
+    @Test
+    fun `isSolanaUnstakeValidationEnabled returns true when toggle enabled`() {
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+        } returns true
+
+        assertThat(toggles.isSolanaUnstakeValidationEnabled()).isTrue()
+
+        verify(exactly = 1) {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+        }
+    }
+
+    @Test
+    fun `isSolanaUnstakeValidationEnabled returns false when toggle disabled`() {
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+        } returns false
+
+        assertThat(toggles.isSolanaUnstakeValidationEnabled()).isFalse()
+
+        verify(exactly = 1) {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+        }
     }
 }
