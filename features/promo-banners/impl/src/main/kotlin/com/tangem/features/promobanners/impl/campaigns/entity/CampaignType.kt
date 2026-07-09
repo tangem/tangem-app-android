@@ -3,10 +3,13 @@ package com.tangem.features.promobanners.impl.campaigns.entity
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface CampaignType {
+internal sealed class CampaignType {
 
-    val campaignId: String
+    abstract val campaignId: String
 
-    data class ReactivationCashback(override val campaignId: String) : CampaignType
-    data class WhaleSwapCashback(override val campaignId: String) : CampaignType
+    @Serializable
+    data class ReactivationCashback(override val campaignId: String) : CampaignType()
+
+    @Serializable
+    data class WhaleSwapCashback(override val campaignId: String) : CampaignType()
 }
