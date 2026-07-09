@@ -26,7 +26,7 @@ internal fun ContactRow(contact: ContactUM, modifier: Modifier = Modifier) {
             AccountIcon(
                 name = stringReference(contact.name),
                 icon = contact.icon,
-                size = AccountIconSize.Contact,
+                size = AccountIconSize.ContactDefault,
             )
         },
         titleSlot = {
