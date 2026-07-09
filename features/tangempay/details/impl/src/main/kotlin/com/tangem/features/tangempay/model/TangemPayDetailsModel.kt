@@ -173,11 +173,13 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onCancelPlusTransition(orderId: String) {
+        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
         modelScope.launch {
             cancelTangemPayOrderUseCase(userWalletId = userWalletId, orderId = orderId)
                 .onLeft {
                     uiMessageSender.send(TangemPayMessagesFactory.createGenericError())
                 }
+            uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
         }
     }
 
@@ -444,6 +446,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
+    override fun onClickVisaBenefits() {
+        urlOpener.openUrl(TangemPayConstants.visaBenefitsLink())
+    }
+
     override fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan) {
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
@@ -504,16 +510,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRenewSession() {
-        uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = true))
+        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
         modelScope.launch {
             produceTangemPayInitialDataUseCase(userWalletId)
                 .onRight {
                     paymentAccountStatusFetcher.invoke(userWalletId)
-                    uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
                 }
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
-                    uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
                 }
         }
     }

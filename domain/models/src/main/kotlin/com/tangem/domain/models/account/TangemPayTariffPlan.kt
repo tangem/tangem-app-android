@@ -133,6 +133,9 @@ data class TangemPayTariffPlan(
         @SerialName("PLAN_RELATED")
         PLAN_RELATED,
 
+        @SerialName("ONBOARDING_RELATED")
+        ONBOARDING_RELATED,
+
         @SerialName("UNKNOWN")
         UNKNOWN,
         ;
@@ -141,6 +144,7 @@ data class TangemPayTariffPlan(
             fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
                 "CARD_RELATED" -> CARD_RELATED
                 "PLAN_RELATED" -> PLAN_RELATED
+                "ONBOARDING_RELATED" -> ONBOARDING_RELATED
                 else -> UNKNOWN
             }
         }
