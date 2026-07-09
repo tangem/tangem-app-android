@@ -105,6 +105,7 @@
     <item quantity="other">Adressen</item>
   </plurals>
   <string name="address_book_choose_address">Adresse auswählen</string>
+  <string name="address_book_clear_all_networks">Alles löschen</string>
   <string name="address_book_contact">Kontakt</string>
   <string name="address_book_contact_name">Name der Kontaktperson</string>
   <string name="address_book_copy_address">Adresse kopieren</string>
@@ -134,6 +135,7 @@
   <string name="address_book_save_to_wallet_title">In Wallet speichern</string>
   <string name="address_book_save_wallet_to_description">Dieser Kontakt wird mit dem Adressbuch dieser Wallet verknüpft.</string>
   <string name="address_book_search_no_results">Es wurden keine Ergebnisse gefunden.\nVersuchen Sie es mit einem anderen Namen</string>
+  <string name="address_book_select_all_networks">Alle auswählen</string>
   <string name="address_book_select_network">Netzwerk auswählen</string>
   <string name="address_book_title">Adressbuch</string>
   <string name="address_book_unsaved_changes">Nicht gespeicherte Änderungen</string>
@@ -1298,6 +1300,19 @@
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
+  <string name="promo_campaign_already_activated_subtitle">Berechtigte Cashback-Zahlungen werden wie folgt ausgezahlt:</string>
+  <string name="promo_campaign_already_activated_title">Sie sind bereits eingeschrieben in %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Zulässige Token</string>
+  <string name="promo_campaign_enroll">Anmelden</string>
+  <string name="promo_campaign_enroll_success_title">Sie sind erfolgreich eingeschrieben in %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">Diese Aktion existiert nicht mehr oder ist abgelaufen.</string>
+  <string name="promo_campaign_not_active_title">Kampagne nicht aktiv</string>
+  <string name="promo_campaign_select_cashback_account">Cashback-Konto auswählen</string>
+  <string name="promo_campaign_summary_title">Melden Sie sich an %1$s</string>
+  <string name="promo_campaign_terms_agreement">Ich stimme zu, dass %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">Ich stimme zu, dass</string>
+  <string name="promo_campaign_terms_link">%1$s Bedingungen</string>
+  <string name="promo_campaign_whale_swap_summary_description">Erhalten Sie bis Ende Juli bei jedem Swap ab 10.000 $ Cashback.\n\nDie Sätze steigen mit dem Volumen: 0,10% ab 10.000 $, 0,20% ab 20.000 $, 0,50% ab 100.000 $.\n\nMaximale Auszahlung: 500 $ pro Swap und 10.000 $ pro Wallet und Swap-Richtung, solange die Aktion läuft. Swaps von Stablecoins in andere Stablecoins sind ausgeschlossen.\n\nDie Auszahlung erfolgt wöchentlich an eine USDT- oder USDC-Adresse Ihrer Wahl.</string>
   <string name="provider_name_support">%s Unterstützung</string>
   <string name="push_notification_settings_banner_description">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst, nachdem du Benachrichtigungen in den Geräteeinstellungen zugelassen hast.</string>
   <string name="push_notification_settings_banner_title">Benachrichtigungen zulassen</string>
@@ -1629,9 +1644,9 @@
   <string name="staking_notification_ton_account_initialization_message">Um mit dem Staking zu beginnen, musst Du zuerst Dein TON-Konto aktivieren.</string>
   <string name="staking_notification_ton_account_initialization_title">Kontoaktivierung</string>
   <string name="staking_notification_ton_activate_account">Um mit dem Staking in TON zu beginnen, sende zunächst eine kleine Transaktion an Deine eigene Adresse – dadurch wird Deine Wallet aktiviert.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 TON erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 TON erforderlich. Bitte lade Dein Guthaben auf.</string>
-  <string name="staking_notification_ton_extra_reserve_title">TON-Reserve erforderlich</string>
+  <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 GRAM erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 GRAM erforderlich. Bitte lade Dein Guthaben auf.</string>
+  <string name="staking_notification_ton_extra_reserve_title">GRAM-Reserve erforderlich</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Durch diese Aktion werden andere Positionen geschlossen oder gemäß den Netzwerkregeln in den Auszahlungsstatus versetzt.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Positionsstatus</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
@@ -1900,6 +1915,7 @@
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
+  <string name="tangempay_common_error_loading">Fehler beim Laden</string>
   <string name="tangempay_current_plan_change">Tarif wechseln</string>
   <string name="tangempay_current_plan_section_card">Kartenbezogen</string>
   <string name="tangempay_current_plan_section_plan">Planbezogen</string>
@@ -2037,6 +2053,7 @@
   <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
+  <string name="tangempay_visa_benefits">Visavorteile</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
@@ -2080,6 +2097,10 @@
   <string name="token_receive_show_qr_code_title">QR-Code anzeigen</string>
   <string name="token_summary_can_not_load_token">Die Daten des Tokens konnten nicht geladen werden.</string>
   <string name="token_summary_go_to_swap_button">Gehe zum Tauschen</string>
+  <string name="token_summary_last_update_subtitle">Letzte Aktualisierung: %1$s</string>
+  <string name="token_summary_negative_outlook_title">Negativer Ausblick</string>
+  <string name="token_summary_neutral_outlook_title">Neutraler Ausblick</string>
+  <string name="token_summary_positive_outlook_title">Positiver Ausblick</string>
   <string name="token_summary_title">Token-Zusammenfassung</string>
   <string name="token_swap_changelly_promotion_message">Tausche diesen Token gegen einen anderen zu %1$s Servicegebühren von Februar %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Tausche mit Changelly, %s Gebühren</string>

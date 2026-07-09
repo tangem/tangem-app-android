@@ -105,6 +105,7 @@
     <item quantity="other">%d addresses</item>
   </plurals>
   <string name="address_book_choose_address">Choose address</string>
+  <string name="address_book_clear_all_networks">Clear All</string>
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Contact name</string>
   <string name="address_book_copy_address">Copy address</string>
@@ -134,6 +135,7 @@
   <string name="address_book_save_to_wallet_title">Save to Wallet</string>
   <string name="address_book_save_wallet_to_description">This contact will be linked to this wallet’s address book.</string>
   <string name="address_book_search_no_results">No results found.\nTry another name</string>
+  <string name="address_book_select_all_networks">Select All</string>
   <string name="address_book_select_network">Select network</string>
   <string name="address_book_title">Address book</string>
   <string name="address_book_unsaved_changes">Unsaved changes</string>
@@ -636,6 +638,8 @@
   <string name="express_exchange_notification_long_transaction_time_title">Long transaction time</string>
   <string name="express_exchange_notification_refund_text">The transaction amount was refunded in %1$s to your wallet due to OKX or bridge rules. %2$s</string>
   <string name="express_exchange_notification_refund_title">The amount was refunded in %1$s (%2$s network)</string>
+  <string name="express_exchange_notification_refunded_in_text">Your funds have been refunded in %1$s  to your wallet on the %2$s network, in accordance with OKX exchange rules.</string>
+  <string name="express_exchange_notification_refunded_in_title">Refunded in %s</string>
   <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
   <string name="express_exchange_notification_verification_title">KYC verification required by provider</string>
   <string name="express_exchange_status_bought">Purchase completed</string>
@@ -1299,6 +1303,21 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
+  <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
+  <string name="promo_campaign_enroll">Enroll</string>
+  <string name="promo_campaign_enroll_success_title">You\'re successfully enrolled in %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">This campaign no longer exists or has expired</string>
+  <string name="promo_campaign_not_active_title">Campaign not active</string>
+  <string name="promo_campaign_reactivation_summary_description">Earn 0.5% cashback on every swap over $500, on any pair except stable to stable. Max payout $50 per swap.\n\nComplete five qualifying swaps and unlock an extra $10 bonus.\n\nRewards are paid weekly in USDT or USDC on the address selected.</string>
+  <string name="promo_campaign_select_cashback_account">Select cashback account</string>
+  <string name="promo_campaign_select_token">Select token</string>
+  <string name="promo_campaign_summary_title">Enroll in %1$s</string>
+  <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">I agree with</string>
+  <string name="promo_campaign_terms_link">%1$s Terms</string>
+  <string name="promo_campaign_whale_swap_summary_description">Earn cashback on every swap from $10K until the end of July.\n\nRates step up with size: 0.10% from $10K, 0.20% from $20K, 0.50% from $100K.\n\nMax payout: $500 per swap, and $10,000 per wallet per swap direction until campaign lasts. Stable coin into stablecoin swaps are excluded.\n\nPayout arrives weekly in USDT or USDC address of your choice.</string>
   <string name="provider_name_support">%s support</string>
   <string name="push_notification_settings_banner_description">Push Notifications are enabled but won\'t work until you allow them</string>
   <string name="push_notification_settings_banner_title">Allow notifications</string>
@@ -1522,7 +1541,7 @@
   <string name="send_validation_invalid_total">Total amount exceeds balance</string>
   <string name="send_with_swap_change_token_alert_message">Are you sure you want to change the receiving token? This will reset your previously entered data.</string>
   <string name="send_with_swap_change_token_alert_title">Changing token</string>
-  <string name="send_with_swap_confirm_title">Swap and send</string>
+  <string name="send_with_swap_confirm_title">Swap &amp; Send</string>
   <string name="send_with_swap_convert_token_alert_message">Proceed with swap? This will clear your previous data.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirm Conversion</string>
   <string name="send_with_swap_correct_recipient_network_notification_message">Sending any other currency will result in its irreversible loss.</string>
@@ -1630,9 +1649,9 @@
   <string name="staking_notification_ton_account_initialization_message">To begin staking, you need to activate your TON account first.</string>
   <string name="staking_notification_ton_account_initialization_title">Account activation</string>
   <string name="staking_notification_ton_activate_account">To start staking in TON, first send a small transaction to your own address — this will activate your wallet.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 TON may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">0.2 TON is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
-  <string name="staking_notification_ton_extra_reserve_title">TON reserve required</string>
+  <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 GRAM may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">0.2 GRAM is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
+  <string name="staking_notification_ton_extra_reserve_title">GRAM reserve required</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">This action will close other positions or switch them to withdrawal status, according to network rules.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Positions status</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
@@ -1901,6 +1920,7 @@
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
+  <string name="tangempay_common_error_loading">Error loading</string>
   <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
@@ -2038,6 +2058,7 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
+  <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
@@ -2081,6 +2102,10 @@
   <string name="token_receive_show_qr_code_title">Show QR code</string>
   <string name="token_summary_can_not_load_token">Can’t load data of the token</string>
   <string name="token_summary_go_to_swap_button">Go to swap</string>
+  <string name="token_summary_last_update_subtitle">Last update: %1$s</string>
+  <string name="token_summary_negative_outlook_title">Negative outlook</string>
+  <string name="token_summary_neutral_outlook_title">Neutral outlook</string>
+  <string name="token_summary_positive_outlook_title">Positive outlook</string>
   <string name="token_summary_title">Token summary</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
