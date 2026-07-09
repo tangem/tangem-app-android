@@ -95,7 +95,10 @@ internal class UpdateAddressBookListContentTransformer(
         isActive = false,
         onActiveChange = onActiveChange,
         onClearClick = onClearQuery,
-        onCloseClick = { onActiveChange(false) },
+        onCloseClick = {
+            onClearQuery()
+            onActiveChange(false)
+        },
     )
 
     private fun buildChips(matchingWalletIds: List<String>, effectiveSelected: String?) = buildList {
