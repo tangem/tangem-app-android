@@ -18,4 +18,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isMultipleCardsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15235_VISA_MULTIPLE_CARDS)
+
+    override val isTiersPlusPlanEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16041_VISA_TIERS_PLUS_PLAN)
 }

@@ -33,7 +33,6 @@ import com.tangem.domain.yield.supply.models.YieldBoostStatus
 import com.tangem.domain.yield.supply.promo.usecase.GetYieldBoostStatusUseCase
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
@@ -72,7 +71,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val appRouter: AppRouter,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
@@ -236,7 +234,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     private fun loadBoostBlock() {
-        if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
         modelScope.launch(dispatchers.io) {
             val token = cryptoCurrency as? CryptoCurrency.Token ?: return@launch
             val cached = getYieldBoostStatusUseCase(userWalletId).getOrNull()
