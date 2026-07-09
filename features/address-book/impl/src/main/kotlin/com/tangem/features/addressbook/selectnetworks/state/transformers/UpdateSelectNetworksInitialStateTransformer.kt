@@ -16,7 +16,10 @@ internal class UpdateSelectNetworksInitialStateTransformer(
             searchBar = prevState.searchBar.copy(
                 onQueryChange = onQueryChange,
                 onActiveChange = onActiveChange,
-                onCloseClick = { onActiveChange(false) },
+                onCloseClick = {
+                    onQueryChange("")
+                    onActiveChange(false)
+                },
                 onClearClick = { onQueryChange("") },
             ),
             doneButton = prevState.doneButton.copy(onClick = onDoneClick),
