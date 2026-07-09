@@ -18,7 +18,11 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
+import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.model.ActivateCampaignsModel
 import com.tangem.features.promobanners.impl.campaigns.ui.ActivateCampaignContent
 import com.tangem.features.promobanners.impl.campaigns.ui.ActivateCampaignFooter
@@ -26,7 +30,8 @@ import com.tangem.features.promobanners.impl.campaigns.ui.ActivateCampaignFooter
 internal class ActivateCampaignBottomSheetComponent(
     appComponentContext: AppComponentContext,
     chooseTokenComponentFactory: ChooseTokenComponent.Factory,
-    private val params: ActivateCampaignsModel.Params,
+    private val params: Params,
+    val onDismiss: () -> Unit,
 ) : CampaignsModularComponent, AppComponentContext by appComponentContext {
 
     private val model: ActivateCampaignsModel = getOrCreateModel(params)
@@ -41,7 +46,7 @@ internal class ActivateCampaignBottomSheetComponent(
         TangemTopNavigation(
             windowInsets = WindowInsets(0),
             blurBackground = false,
-            endButton = { TangemButton.Close(onClick = params.onDismiss) },
+            endButton = { TangemButton.Close(onClick = onDismiss) },
         )
     }
 
@@ -76,5 +81,15 @@ internal class ActivateCampaignBottomSheetComponent(
             onBack = onChooseTokenDismiss,
             content = { chooseTokenComponent.Content(modifier = Modifier.fillMaxWidth()) },
         )
+    }
+
+    data class Params(
+        val campaignType: CampaignType,
+        val modelCallbacks: ActivateCampaignModelCallbacks,
+    )
+
+    interface ActivateCampaignModelCallbacks {
+        val onActivated: (CampaignType) -> Unit
+        val onAlreadyActivated: (CampaignType, AppCurrency, Account?, CryptoCurrencyStatus) -> Unit
     }
 }
