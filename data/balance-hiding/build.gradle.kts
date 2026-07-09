@@ -11,18 +11,29 @@ android {
 }
 
 dependencies {
-    implementation(deps.androidx.datastore)
-    implementation(deps.androidx.appCompat)
 
-    /** DI */
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.lifecycle.runtime.ktx)
+    implementation(deps.androidx.datastore)
+    implementation(deps.moshi)
+    // endregion
+
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    implementation(deps.kotlin.coroutines)
-
+    // region Core modules
+    api(projects.core.datasource)
     implementation(projects.core.utils)
-    implementation(projects.core.datasource)
+    // endregion
 
-    implementation(projects.domain.balanceHiding)
+    // region Domain
+    api(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    // endregion
 }
