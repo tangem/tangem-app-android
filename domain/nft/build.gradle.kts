@@ -10,26 +10,31 @@ android {
 }
 
 dependencies {
-    // region Project – Core
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
     // endregion
 
-    // region Project – Domain
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Core modules
+    api(projects.core.analytics.models)
+    api(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.account)
+    api(projects.domain.networks)
+    api(projects.domain.quotes)
+    api(projects.domain.tokens)
+    api(projects.domain.wallets)
     implementation(projects.domain.core)
-    implementation(projects.domain.account)
-    implementation(projects.domain.models)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.nft.models)
-    implementation(projects.domain.quotes)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
     // endregion
 
-    // region Others
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
+    // region Domain models
+    api(projects.domain.models)
+    api(projects.domain.nft.models)
     // endregion
 }

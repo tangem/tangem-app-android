@@ -16,6 +16,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -26,6 +27,8 @@ import kotlinx.coroutines.flow.*
 private typealias TxHistoryBatchAction = BatchAction<Int, TxHistoryListConfig, Nothing>
 
 @Suppress("LongParameterList")
+@Deprecated("Remove with toggle [TxHistoryFeatureToggles.isNewTxHistoryEnabled]. Replaced by HistoryTxListManager.")
+@RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
 internal class TxHistoryListManager(
     private val repository: TxHistoryRepositoryV2,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -116,16 +119,6 @@ internal class TxHistoryListManager(
             ),
         )
     }
-
-    fun txInfoFlow(txHash: String, type: TxInfo.TransactionType): Flow<TxInfo> = state
-        .map { st ->
-            st.rawBatches.asSequence()
-                .flatMap { it.data.items }
-                .firstOrNull { it.txHash == txHash && it.type == type }
-        }
-        .filterNotNull()
-        .distinctUntilChanged()
-        .flowOn(dispatchers.default)
 
     private fun updateState(
         batchListState: BatchListState<Int, PaginationWrapper<TxInfo>>,
