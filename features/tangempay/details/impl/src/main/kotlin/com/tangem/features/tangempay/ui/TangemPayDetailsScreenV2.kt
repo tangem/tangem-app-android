@@ -255,6 +255,7 @@ private fun ErrorMessage(config: NotificationConfig, modifier: Modifier = Modifi
                     buttonUM = TangemButtonUM(
                         text = button.text,
                         onClick = button.onClick,
+                        isLoading = button.shouldShowProgress,
                         iconPosition = TangemButtonIconPosition.End,
                         tangemIconUM = if (iconResId != null) {
                             TangemIconUM.Icon(
@@ -352,10 +353,10 @@ private fun BalanceBlock(
                     style = TangemTheme.typography3.heading.medium,
                 )
                 is TangemPayDetailsBalanceBlockState.Content -> {
-                    val balanceColor = if (animatedState.isMuted) {
-                        TangemTheme.colors3.text.secondary
-                    } else {
-                        TangemTheme.colors3.text.primary
+                    val balanceColor = when {
+                        animatedState.isMuted -> TangemTheme.colors3.text.secondary
+                        animatedState.isNegative -> TangemTheme.colors3.text.status.error
+                        else -> TangemTheme.colors3.text.primary
                     }
                     Text(
                         modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
