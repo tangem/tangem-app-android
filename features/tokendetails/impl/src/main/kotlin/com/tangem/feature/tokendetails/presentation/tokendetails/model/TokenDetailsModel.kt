@@ -23,6 +23,7 @@ import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -368,6 +369,7 @@ internal class TokenDetailsModel @Inject constructor(
                             actions = state.states,
                             networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
+                            analyticsEventHandler = analyticsEventsHandler,
                             onActionDispatched = bottomSheetNavigation::dismiss,
                         ),
                     )
@@ -547,6 +549,13 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonAddFunds(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                derivationIndex = getAccountIndexOrNull(),
+            ),
+        )
         bottomSheetNavigation.activate(
             TokenDetailsBottomSheetConfig.AddFunds(
                 userWalletId = userWalletId,
@@ -556,15 +565,25 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onTransferClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonTransfer(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                derivationIndex = getAccountIndexOrNull(),
+            ),
+        )
         val amount = cryptoCurrencyStatus?.value?.amount
         if (amount == null || amount.signum() <= 0) {
-            uiMessageSender.send(
-                message = SnackbarMessage(
-                    message = resourceReference(R.string.token_button_unavailability_reason_empty_balance_send),
+            handleUnavailabilityReason(
+                unavailabilityReason = ScenarioUnavailabilityReason.EmptyBalance(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
                 ),
             )
             return
         }
+        analyticsEventsHandler.send(
+            TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
+        )
         bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
     }
 
