@@ -93,6 +93,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         override val cardsBlockState: CardsBlockState?,
         val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
+        val isNegative: Boolean,
         val isMuted: Boolean = false,
     ) : TangemPayDetailsBalanceBlockState()
 

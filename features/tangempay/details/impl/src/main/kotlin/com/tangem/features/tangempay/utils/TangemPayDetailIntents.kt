@@ -10,6 +10,7 @@ internal interface TangemPayDetailIntents {
     fun onClickAddFunds()
     fun onClickWithdraw()
     fun onClickTermsAndLimits()
+    fun onClickVisaBenefits()
     fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan)
     fun onCancelPlusTransition(orderId: String)
     fun onCardClick(cardId: String)
