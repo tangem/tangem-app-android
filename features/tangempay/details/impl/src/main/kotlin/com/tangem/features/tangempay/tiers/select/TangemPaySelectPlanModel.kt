@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,12 +9,16 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.pay.usecase.CreateTariffPlanTransitionOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
+import com.tangem.domain.pay.usecase.SetTariffPlanPendingTransitionUseCase
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
 import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -25,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPaySelectPlanModel @Inject constructor(
@@ -33,6 +39,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val router: Router,
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase,
     private val createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
+    private val setPendingTransition: SetTariffPlanPendingTransitionUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -95,21 +102,34 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun onConfirmClick() {
-        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
-
-        // TODO v_rodionov: #[REDACTED_TASK_KEY] - Downgrade
-        if (transition.type != TangemPayTariffPlanTransition.Type.UPGRADE) return
-
         if (isProcessing) return
 
+        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+        when (transition.type) {
+            TangemPayTariffPlanTransition.Type.ACTIVATION,
+            TangemPayTariffPlanTransition.Type.UPGRADE,
+            -> submitTransition {
+                createTransitionOrder(
+                    userWalletId = params.userWalletId,
+                    targetTariffPlanId = transition.plan.id,
+                    transitionType = transition.type,
+                )
+            }
+            TangemPayTariffPlanTransition.Type.DOWNGRADE -> submitTransition {
+                setPendingTransition(
+                    userWalletId = params.userWalletId,
+                    pendingTariffPlanId = transition.plan.id,
+                )
+            }
+            else -> Unit
+        }
+    }
+
+    private fun submitTransition(action: suspend () -> Either<VisaApiError, Unit>) {
         isProcessing = true
         state.update { buildState() }
         modelScope.launch {
-            createTransitionOrder(
-                userWalletId = params.userWalletId,
-                targetTariffPlanId = transition.plan.id,
-                transitionType = transition.type,
-            ).fold(
+            action().fold(
                 ifRight = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) },
                 ifLeft = {
                     isProcessing = false
@@ -121,11 +141,13 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun buildState(showPlanCompare: Boolean = false): TangemPaySelectPlanUM = TangemPaySelectPlanUM(
-        topBarTitle = if (isConfirm) {
-            resourceReference(R.string.tangempay_select_plan_confirm_title)
-        } else {
-            resourceReference(R.string.tangempay_select_plan_title)
-        },
+        topBarTitle = resourceReference(
+            if (isConfirm) {
+                R.string.tangempay_select_plan_confirm_title
+            } else {
+                R.string.tangempay_select_plan_title
+            },
+        ),
         plans = allowedTransitions.map { it.plan.toPlanUM() }.toImmutableList(),
         selectedIndex = selectedIndex,
         onPlanSelected = ::onPlanSelected,
@@ -141,7 +163,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     )
 
     private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
-        val plans = transitions.map { it.plan }
+        val plans = listOf(params.tariffPlan.plan) + transitions.map { it.plan }
         val orderedTitles = plans
             .flatMap { plan -> plan.descriptionItems.filter { it.section in COMPARE_SECTIONS } }
             .sortedWith(compareBy({ it.section.ordinal }, { it.order }))
@@ -164,19 +186,35 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         )
     }
 
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     private fun buildConfirmContent(): TangemPaySelectPlanUM.Content {
         val transition = allowedTransitions.getOrNull(selectedIndex) ?: return buildSelectContent()
-        val planName = transition.plan.name
-        val isUpgrade = transition.type == TangemPayTariffPlanTransition.Type.UPGRADE
+        val targetProgramme = transition.plan.name
         return TangemPaySelectPlanUM.Content.Confirm(
-            // TODO v_rodionov: strings hardcoded for now - wait for documentation update
-            title = stringReference("We will issue Visa $planName for you"),
-            points = buildConfirmPoints(transition, planName, isUpgrade),
+            title = when (transition.type) {
+                TangemPayTariffPlanTransition.Type.UPGRADE -> stringReference(
+                    "We will issue Visa $targetProgramme for you",
+                )
+                TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
+                    val nextBillingDate = nextBillingDate()
+                    if (nextBillingDate != null) {
+                        val programName = "UNKNOWN" // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
+                        val planName = params.tariffPlan.plan.name
+                        stringReference(
+                            "Your $planName plan and $programName cards will be active till $nextBillingDate",
+                        )
+                    } else {
+                        stringReference("You are switching to $targetProgramme")
+                    }
+                }
+                else -> stringReference("You are switching to $targetProgramme")
+            },
+            points = buildConfirmPoints(transition),
             confirmButtonText = resourceReference(
-                if (isUpgrade) {
-                    R.string.tangempay_select_plan_btn_upgrade
-                } else {
-                    R.string.tangempay_select_plan_btn_downgrade
+                when (transition.type) {
+                    TangemPayTariffPlanTransition.Type.UPGRADE -> R.string.tangempay_select_plan_btn_upgrade
+                    TangemPayTariffPlanTransition.Type.DOWNGRADE -> R.string.tangempay_select_plan_btn_downgrade
+                    else -> R.string.common_continue
                 },
             ),
             isProcessing = isProcessing,
@@ -185,29 +223,39 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         )
     }
 
-    // TODO v_rodionov: strings hardcoded for now - wait for documentation update
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     private fun buildConfirmPoints(
         transition: TangemPayTariffPlanTransition,
-        planName: String,
-        isUpgrade: Boolean,
-    ): ImmutableList<TangemPaySelectPlanUM.PointUM> = if (isUpgrade) {
-        val feeText = transition.plan.formatRecurringFeeOrNull()
-        listOf(
-            stringReference("You will get your virtual Visa $planName in minutes"),
-            if (feeText != null) {
-                stringReference("$feeText monthly fee will be taken from your account")
-            } else {
-                stringReference("No fee applied")
-            },
-        )
-    } else {
-        listOf(
-            stringReference("Your current Visa cards will be closed"),
-            stringReference("No fee applied"),
-        )
+    ): ImmutableList<TangemPaySelectPlanUM.PointUM> {
+        val programName = "UNKNOWN" // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
+        return when (transition.type) {
+            TangemPayTariffPlanTransition.Type.UPGRADE -> {
+                val feeText = transition.plan.formatRecurringFeeOrNull()
+                buildList {
+                    add("You will get your virtual Visa $programName in minutes")
+                    if (feeText != null) {
+                        add("$feeText monthly fee will be taken from your account")
+                    }
+                }
+            }
+            TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
+                val date = nextBillingDate()
+                buildList {
+                    if (date != null) {
+                        add("On $date we will move you to ${transition.plan.name} plan")
+                    }
+                    add("Your Visa $programName cards will be closed")
+                    if (date != null) {
+                        add("You can cancel this transition till $date")
+                    }
+                    add("No fee applied")
+                }
+            }
+            else -> listOf("No fee applied")
+        }
+            .map { TangemPaySelectPlanUM.PointUM(title = stringReference(it), body = null) }
+            .toImmutableList()
     }
-        .map { TangemPaySelectPlanUM.PointUM(title = it, body = null) }
-        .toImmutableList()
 
     private fun TangemPayTariffPlan.toPlanUM() = TangemPaySelectPlanUM.PlanUM(
         name = stringReference(name),
@@ -224,10 +272,15 @@ internal class TangemPaySelectPlanModel @Inject constructor(
             .toImmutableList(),
     )
 
+    private fun nextBillingDate(): String? {
+        return params.tariffPlan.formatNextBillingDateOrNull(DateTimeFormatters.dateMMMd)
+    }
+
     companion object {
         private val ALLOWED_TYPES = setOf(
             TangemPayTariffPlanTransition.Type.UPGRADE,
             TangemPayTariffPlanTransition.Type.DOWNGRADE,
+            TangemPayTariffPlanTransition.Type.ACTIVATION,
         )
         private val COMPARE_SECTIONS = setOf(
             TangemPayTariffPlan.Section.CARD_RELATED,
