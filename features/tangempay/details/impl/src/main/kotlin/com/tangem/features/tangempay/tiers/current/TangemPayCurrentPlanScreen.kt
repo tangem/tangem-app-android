@@ -109,6 +109,7 @@ private fun PlanNotification(notification: TangemPayCurrentPlanUM.Notification, 
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X11,
                 text = button.text,
+                isLoading = button.isProcessing,
                 onClick = button.onClick,
             )
         }
@@ -205,6 +206,7 @@ private fun previewState() = TangemPayCurrentPlanUM(
         ),
         button = TangemPayCurrentPlanUM.Notification.Button(
             text = stringReference("Stay on Plus"),
+            isProcessing = false,
             onClick = {},
         ),
     ),
