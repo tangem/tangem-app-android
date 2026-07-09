@@ -1,5 +1,6 @@
 package com.tangem.data.pay.repository
 
+import arrow.core.Either
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
@@ -11,6 +12,7 @@ import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
@@ -18,6 +20,7 @@ import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.fetcher.CursorBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import javax.inject.Inject
 
 private const val INITIAL_CURSOR = "initial_cursor_key"
@@ -76,20 +79,37 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         cursor: String?,
         limit: Int,
     ): List<TangemPayTxHistoryItem> {
-        cacheRegistry.invokeOnExpire(
-            key = getCacheKey(userWalletId = userWalletId, cursor = cursor),
-            skipCache = config.shouldRefresh,
-            block = { fetch(userWalletId = userWalletId, cursor = cursor, pageSize = limit) },
-        )
+        val storeKey = userWalletId.stringValue
+        val storeCursor = cursor ?: INITIAL_CURSOR
 
-        return txHistoryItemsStore.getSyncOrNull(
-            key = userWalletId.stringValue,
-            cursor = cursor ?: INITIAL_CURSOR,
-        ).orEmpty()
+        val fetchResult = runSuspendCatching {
+            cacheRegistry.invokeOnExpire(
+                key = getCacheKey(userWalletId = userWalletId, cursor = cursor),
+                skipCache = config.shouldRefresh,
+                block = { fetch(userWalletId = userWalletId, cursor = cursor, pageSize = limit) },
+            )
+        }
+        val storedPage = txHistoryItemsStore.getSyncOrNull(key = storeKey, cursor = storeCursor)
+
+        return fetchResult.fold(
+            onSuccess = { storedPage.orEmpty() },
+            onFailure = { e -> storedPage?.takeIf { it.isNotEmpty() } ?: throw e },
+        )
     }
 
     private fun getCacheKey(userWalletId: UserWalletId, cursor: String?): String {
         return "tangem_pay_tx_history_${userWalletId.stringValue}_${cursor ?: INITIAL_CURSOR}"
+    }
+
+    override suspend fun getTransaction(
+        userWalletId: UserWalletId,
+        transactionId: String,
+    ): Either<VisaApiError, TangemPayTxHistoryItem?> {
+        return requestPerformer.performRequest(userWalletId = userWalletId) { authHeader ->
+            visaApi.getCustomerTransaction(authHeader = authHeader, transactionId = transactionId)
+        }.map { response ->
+            txHistoryItemConverter.convert(response.result)
+        }
     }
 
     private suspend fun fetch(userWalletId: UserWalletId, cursor: String?, pageSize: Int) {

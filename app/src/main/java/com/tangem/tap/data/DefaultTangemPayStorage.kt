@@ -134,6 +134,23 @@ internal class DefaultTangemPayStorage @Inject constructor(
         appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
     }
 
+    override suspend fun storeVirtualAccountOrderId(customerWalletAddress: String, vaOrderId: String) {
+        appPreferencesStore.store(
+            key = PreferencesKeys.getTangemPayVirtualAccountOrderIdKey(customerWalletAddress),
+            value = vaOrderId,
+        )
+    }
+
+    override suspend fun getVirtualAccountOrderId(customerWalletAddress: String): String? {
+        return appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.getTangemPayVirtualAccountOrderIdKey(customerWalletAddress),
+        ).takeIf { !it.isNullOrEmpty() }
+    }
+
+    override suspend fun clearVirtualAccountOrderId(customerWalletAddress: String) {
+        appPreferencesStore.store(PreferencesKeys.getTangemPayVirtualAccountOrderIdKey(customerWalletAddress), "")
+    }
+
     override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean) {
         appPreferencesStore.store(
             PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId),

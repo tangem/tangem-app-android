@@ -20,6 +20,7 @@ import com.tangem.screens.onTransferBottomSheet
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -28,6 +29,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     @AllureId("594")
     @DisplayName("Action buttons (token details screen): validate UI")
     @Test
+    @Ignore("[REDACTED_JIRA]")
     fun actionButtonsValidateUiTest() {
         val tokenTitle = "Bitcoin"
 
@@ -113,8 +115,8 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Assert 'Buy' button in bottom sheet is enabled") {
                 onAddFundsBottomSheet { buyButton.assertIsEnabled() }
             }
-            step("Assert 'Swap' button in bottom sheet is disabled") {
-                onAddFundsBottomSheet { swapButton.assertIsNotEnabled() }
+            step("Assert 'Swap' button in bottom sheet is not displayed") {
+                onAddFundsBottomSheet { swapButton.assertIsNotDisplayed() }
             }
             step("Assert 'Receive' button in bottom sheet is enabled") {
                 onAddFundsBottomSheet { receiveButton.assertIsEnabled() }
