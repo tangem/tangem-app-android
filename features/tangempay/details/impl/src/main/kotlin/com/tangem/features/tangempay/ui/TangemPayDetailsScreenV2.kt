@@ -53,6 +53,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTransactionsComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
@@ -304,6 +305,7 @@ private fun PayDetailsTopBar(
                 var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
                 Box {
                     TangemButton(
+                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
                         onClick = {
                             config.onOpenMenu()
