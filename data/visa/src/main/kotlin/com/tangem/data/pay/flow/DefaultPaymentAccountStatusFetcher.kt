@@ -93,10 +93,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 .fold(
                     ifLeft = { error ->
                         logger.e("Failed check wallet ${params.userWalletId}: ${error.javaClass.simpleName}")
-                        when (error) {
-                            is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(params.userWalletId)
-                            else -> PaymentAccountStatusValue.Error.Unavailable
-                        }
+                        error.toStatusValueWhenTangemPayStatusUnknown(params.userWalletId)
                     },
                     ifRight = { hasTangemPay ->
                         proceedHasTangemPayResult(account = account, hasTangemPay = hasTangemPay)
@@ -169,14 +166,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 if (cache != null && cache.value.hasAccountData()) {
                     cache.value.copySealed(
                         source = StatusSource.ONLY_CACHE,
-                        error = when (error) {
-                            is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
-                            else -> PaymentAccountStatusValue.Error.Unavailable
-                        },
+                        error = error.toErrorValue(),
                     )
                 } else {
                     logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
-                    error.mapToPaymentAccountStatus(account.userWalletId)
+                    error.toStatusValueWhenHasTangemPay(account.userWalletId)
                 }
             },
             ifRight = { customerInfo ->
@@ -197,7 +191,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val customerInfo = onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId KYC check ${account.userWalletId} error: $error")
-                return error.mapToPaymentAccountStatus(account.userWalletId)
+                return error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { it },
         )
@@ -216,7 +210,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return customerOrderRepository.getOrderData(userWalletId = account.userWalletId, orderId = orderId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId ${account.userWalletId} orderId: $orderId error: $error")
-                error.mapToPaymentAccountStatus(account.userWalletId)
+                error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { orderData ->
                 logger.i("proceedWithOrderId ${account.userWalletId}: $orderId status: ${orderData.status}")
@@ -283,7 +277,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         onboardingRepository.clearOrderId(account.userWalletId)
         return onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
             .fold(
-                ifLeft = { it.mapToPaymentAccountStatus(account.userWalletId) },
+                ifLeft = { it.toStatusValueWhenHasTangemPay(account.userWalletId) },
                 ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus(account.userWalletId) },
             )
     }
@@ -467,12 +461,37 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         state = TangemPayCardState.Issuing,
     )
 
-    private suspend fun VisaApiError.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
+    private suspend fun VisaApiError.toStatusValueWhenHasTangemPay(
+        userWalletId: UserWalletId,
+    ): PaymentAccountStatusValue {
         return when (this) {
-            is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
             is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(userWalletId)
-            else -> PaymentAccountStatusValue.Error.Unavailable
+            else -> toErrorValue()
         }
+    }
+
+    private suspend fun VisaApiError.toStatusValueWhenTangemPayStatusUnknown(
+        userWalletId: UserWalletId,
+    ): PaymentAccountStatusValue {
+        return when (this) {
+            is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(userWalletId)
+            else -> {
+                val previousValue = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value
+                if (previousValue != null && previousValue.hasAccountData()) {
+                    previousValue.copySealed(
+                        source = StatusSource.ONLY_CACHE,
+                        error = toErrorValue(),
+                    )
+                } else {
+                    constructNotCreatedOrEmptyStatus(userWalletId)
+                }
+            }
+        }
+    }
+
+    private fun VisaApiError.toErrorValue(): PaymentAccountStatusValue.Error = when (this) {
+        is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
+        else -> PaymentAccountStatusValue.Error.Unavailable
     }
 
     private suspend fun constructNotCreatedOrEmptyStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
