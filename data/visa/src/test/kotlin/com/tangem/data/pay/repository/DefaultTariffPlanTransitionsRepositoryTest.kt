@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.models.request.SetPendingTariffPlanTransitionRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.TariffPlanTransitionResponse
 import com.tangem.datasource.api.pay.models.response.TariffPlanTransitionsResponse
@@ -14,7 +15,9 @@ import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -121,6 +124,65 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
             .containsExactly(TangemPayTariffPlanTransition.Type.ACTIVATION)
     }
 
+    @Test
+    fun `GIVEN success WHEN setPendingTransition THEN sends pending plan id and returns Unit`() = runTest {
+        // GIVEN
+        val bodySlot = slot<SetPendingTariffPlanTransitionRequest>()
+        coEvery {
+            tangemPayApi.setPendingTariffPlanTransition(any(), capture(bodySlot))
+        } returns ApiResponse.Success(Unit) as ApiResponse<Any>
+
+        // WHEN
+        val result = repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
+
+        // THEN
+        assertThat(result.isRight()).isTrue()
+        assertThat(bodySlot.captured.pendingTariffPlanId).isEqualTo(PENDING_PLAN_ID)
+    }
+
+    @Test
+    fun `GIVEN backend error WHEN setPendingTransition THEN returns error`() = runTest {
+        // GIVEN
+        coEvery {
+            tangemPayApi.setPendingTariffPlanTransition(any(), any())
+        } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Any>
+
+        // WHEN
+        val result = repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
+
+        // THEN
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+    }
+
+    @Test
+    fun `GIVEN success WHEN cancelPendingTransition THEN returns Unit`() = runTest {
+        // GIVEN
+        coEvery {
+            tangemPayApi.cancelPendingTariffPlanTransition(any())
+        } returns ApiResponse.Success(Unit) as ApiResponse<Any>
+
+        // WHEN
+        val result = repository.cancelPendingTransition(USER_WALLET_ID)
+
+        // THEN
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { tangemPayApi.cancelPendingTariffPlanTransition(AUTH_HEADER) }
+    }
+
+    @Test
+    fun `GIVEN backend error WHEN cancelPendingTransition THEN returns error`() = runTest {
+        // GIVEN
+        coEvery {
+            tangemPayApi.cancelPendingTariffPlanTransition(any())
+        } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Any>
+
+        // WHEN
+        val result = repository.cancelPendingTransition(USER_WALLET_ID)
+
+        // THEN
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+    }
+
     private fun tariffPlan(id: String? = PLAN_ID) = CustomerMeResponse.TariffPlan(
         id = id,
         type = "PLUS",
@@ -135,5 +197,6 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         const val AUTH_HEADER = "auth-header"
         const val PLAN_ID = "plan-plus"
         const val PLAN_NAME = "Plus"
+        const val PENDING_PLAN_ID = "plan-basic"
     }
 }

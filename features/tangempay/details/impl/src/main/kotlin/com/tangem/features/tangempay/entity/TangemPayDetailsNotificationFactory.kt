@@ -37,7 +37,7 @@ internal class TangemPayDetailsNotificationFactory(
         },
     )
 
-    // TODO v_rodionov: strings hardcoded for now - wait for localization
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     fun createAwaitingDepositConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
         if (!isTiersPlusPlanEnabled) return null
         if (tariffPlan == null) return null
@@ -81,7 +81,7 @@ internal class TangemPayDetailsNotificationFactory(
         iconResId = if (isRedesignEnabled) R.drawable.ic_alert_circle_24 else R.drawable.img_attention_20,
     )
 
-    // TODO v_rodionov: strings hardcoded for now - wait for localization
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     private fun createTariffSystemDownGradePendingConfig(tariffPlan: TangemPayTariffPlanState): NotificationConfig? {
         val date = tariffPlan.tariff.formatNextBillingDateOrNull() ?: return null
         val planName = tariffPlan.tariff.plan.name

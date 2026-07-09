@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal class TangemPayCurrentPlanComponent(
     appComponentContext: AppComponentContext,
@@ -22,5 +23,8 @@ internal class TangemPayCurrentPlanComponent(
         TangemPayCurrentPlanScreen(state = state, modifier = modifier)
     }
 
-    data class Params(val tariffPlan: TangemPayCustomerTariffPlan)
+    data class Params(
+        val userWalletId: UserWalletId,
+        val tariffPlan: TangemPayCustomerTariffPlan,
+    )
 }
