@@ -2138,6 +2138,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">Ce jeton doit être associé à votre compte Hedera avant que vous puissiez le recevoir</string>
   <string name="warning_hedera_missing_token_association_title">Associez votre jeton</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%s insuffisant. Renflouez votre compte Hedera pour associer ce jeton</string>
+  <string name="warning_incomplete_backup_notification_message">Nous avons constaté que le processus d\'activation de la carte n\'a pas été effectué correctement en raison de problèmes avec le module NFC de votre appareil ou d\'une méthode incorrecte pour maintenir les cartes sur votre téléphone. Veuillez contacter notre équipe d\'assistance pour plus de détails.</string>
+  <string name="warning_incomplete_backup_notification_title">Action requise. N\'utilisez pas votre portefeuille!</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Êtes-vous sûr(e) de vouloir annuler la transaction ? Vous ne pourrez plus réessayer.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Votre transaction d\'un montant de %1$s %2$s n\'a pas été finalisée. Vous pouvez réessayer plus tard pour la finaliser.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Vous avez une transaction inachevée</string>
