@@ -105,6 +105,7 @@
     <item quantity="other">%d endereços</item>
   </plurals>
   <string name="address_book_choose_address">Escolha o endereço</string>
+  <string name="address_book_clear_all_networks">Limpar tudo</string>
   <string name="address_book_contact">Contato</string>
   <string name="address_book_contact_name">Nome do contato</string>
   <string name="address_book_copy_address">Copiar endereço</string>
@@ -134,6 +135,7 @@
   <string name="address_book_save_to_wallet_title">Salvar na carteira</string>
   <string name="address_book_save_wallet_to_description">Este contato será vinculado à agenda de endereços desta carteira.</string>
   <string name="address_book_search_no_results">Nenhum resultado encontrado.\nTente outro nome</string>
+  <string name="address_book_select_all_networks">Selecionar tudo</string>
   <string name="address_book_select_network">Selecione a rede</string>
   <string name="address_book_title">Agenda de endereços</string>
   <string name="address_book_unsaved_changes">Alterações não salvas</string>
@@ -1174,13 +1176,13 @@
   <string name="onboarding_navbar_upgrade_wallet_biometrics">Biometria</string>
   <string name="onboarding_seed_button_read_more">Leia mais sobre a frase-semente.</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Escreva esta 1palavra na ordem indicada abaixo e guarde-a em um local seguro e secreto.</item>
-    <item quantity="other">Escreva estas %dpalavras na ordem indicada abaixo e guarde-as em um local seguro e secreto.</item>
+    <item quantity="one">Escreva esta %d palavra na ordem indicada abaixo e guarde-a em um local seguro e secreto.</item>
+    <item quantity="other">Escreva estas %d palavras na ordem indicada abaixo e guarde-as em um local seguro e secreto.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Sua frase-semente</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">%dpalavra</item>
-    <item quantity="other">%dpalavras</item>
+    <item quantity="one">%d palavra</item>
+    <item quantity="other">%d palavras</item>
   </plurals>
   <string name="onboarding_seed_import_message">Para importar sua carteira, insira sua frase mnemônica no campo abaixo.</string>
   <string name="onboarding_seed_intro_button_generate">Gerar frase-semente</string>
@@ -1284,6 +1286,8 @@
   <string name="onramp_title_available_from">Disponível em</string>
   <string name="onramp_title_available_up_to">Disponível até</string>
   <string name="onramp_title_you_get">Você recebe</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">Este token não é compatível. Escolha outro token para comprar.</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s não é suportado</string>
   <string name="onramp_tos_external_providers">O serviço é fornecido por um provedor externo. A Tangem não se responsabiliza por ele.</string>
   <string name="onramp_transaction_status_footer_text">Você pode fechar esta tela e verificar o status da transação na tela de detalhes do token.</string>
   <string name="onramp_up_to_rate">Até</string>
@@ -1296,6 +1300,18 @@
   <string name="organize_tokens_sort_by_balance">Por equilíbrio</string>
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
+  <string name="promo_campaign_already_activated_subtitle">O cashback elegível será distribuído para:</string>
+  <string name="promo_campaign_already_activated_title">Você já está matriculado(a) em %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Tokens elegíveis</string>
+  <string name="promo_campaign_enroll">Inscreva-se</string>
+  <string name="promo_campaign_enroll_success_title">Você se inscreveu com sucesso em %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">Esta campanha não existe mais ou expirou.</string>
+  <string name="promo_campaign_not_active_title">Campanha inativa</string>
+  <string name="promo_campaign_select_cashback_account">Selecione a conta de cashback</string>
+  <string name="promo_campaign_summary_title">Inscreva-se em %1$s</string>
+  <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
+  <string name="promo_campaign_terms_link">%1$s Termos</string>
+  <string name="promo_campaign_whale_swap_summary_description">Ganhe cashback em todas as suas transações a partir de US$ 10.000 até o final de julho.\n\nAs taxas aumentam conforme o tamanho da transação: 0,10% a partir de US$ 10 mil, 0,20% a partir de US$ 20 mil, 0,50% A partir de US$ 100 mil.\n\nPagamento máximo: US$ 500 por troca e US$ 10.000 por carteira por direção de troca, enquanto durar a campanha. Trocas de stablecoin por stablecoin estão excluídas.\n\nO pagamento é feito semanalmente em USDT ou USDC, no endereço de sua escolha.</string>
   <string name="provider_name_support">%s suporte</string>
   <string name="push_notification_settings_banner_description">As notificações push estão ativadas, mas só funcionarão depois que você as permitir nas configurações do seu dispositivo.</string>
   <string name="push_notification_settings_banner_title">Permitir notificações</string>
@@ -1627,9 +1643,9 @@
   <string name="staking_notification_ton_account_initialization_message">Para começar a fazer staking, você precisa ativar sua conta TON primeiro.</string>
   <string name="staking_notification_ton_account_initialization_title">Ativação de conta</string>
   <string name="staking_notification_ton_activate_account">Para começar a fazer staking de TON, primeiro envie uma pequena transação para o seu próprio endereço — isso ativará sua carteira.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Poderá ser necessário um valor adicional de até 0,2 TON, além da taxa de rede, para concluir a transação. Qualquer valor não utilizado será reembolsado.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">Para prosseguir com esta operação, é necessário um saldo de 0,2 TON, além da taxa de rede. Por favor, recarregue seu saldo.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Reserva TON necessária</string>
+  <string name="staking_notification_ton_extra_reserve_info">Poderá ser necessário um valor adicional de até 0,2 GRAM, além da taxa de rede, para concluir a transação. Qualquer valor não utilizado será reembolsado.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Para prosseguir com esta operação, é necessário um saldo de 0,2 GRAM, além da taxa de rede. Por favor, recarregue seu saldo.</string>
+  <string name="staking_notification_ton_extra_reserve_title">Reserva GRAM necessária</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Essa ação encerrará outras posições ou as converterá para o status de saque, de acordo com as regras da rede.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Status das posições</string>
   <string name="staking_notification_unlock_text">Desbloqueie seu dinheiro para retirá-lo do processo de staking. O desbloqueio leva... %s.</string>
@@ -1819,6 +1835,16 @@
   <string name="tangempay_account_deactivated_message_title">Sua conta foi encerrada</string>
   <string name="tangempay_account_unable_to_use_rooted">Não é possível usar em dispositivos com root.</string>
   <string name="tangempay_available_balance">Saldo disponível</string>
+  <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
+  <string name="tangempay_bank_transfer_fee_header">Taxa de acesso à rampa</string>
+  <string name="tangempay_bank_transfer_intro_subtitle">Os USD recebidos serão convertidos para USDC na proporção de 1:1.</string>
+  <string name="tangempay_bank_transfer_intro_title">A transferência bancária pode levar de 1 a 2 dias úteis</string>
+  <string name="tangempay_bank_transfer_legal">Ao utilizar o serviço, você concorda com o provedor. %1$s e %2$s</string>
+  <string name="tangempay_bank_transfer_show_details">Mostrar detalhes</string>
+  <string name="tangempay_bank_transfer_success_subtitle">Isso pode levar um pouco de tempo.</string>
+  <string name="tangempay_bank_transfer_success_title">Preparando seus dados bancários</string>
+  <string name="tangempay_bank_transfer_swift_warning">Depósito somente via ACH ou FedWire. Transferências SWIFT serão devolvidas.</string>
   <string name="tangempay_cancel_kyc">Ocultar KYC da tela principal</string>
   <string name="tangempay_card_default_name">Cartão Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Adicionar fundos</string>
@@ -1888,6 +1914,7 @@
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
   <string name="tangempay_common_card">Cartão</string>
+  <string name="tangempay_common_error_loading">Erro ao carregar</string>
   <string name="tangempay_current_plan_change">Alterar plano</string>
   <string name="tangempay_current_plan_section_card">relacionado a cartões</string>
   <string name="tangempay_current_plan_section_plan">Plano relacionado</string>
@@ -2018,11 +2045,14 @@
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_bank_transfer_body">Receba USD fiduciário via ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_title">Transferência bancária</string>
   <string name="tangempay_topup_receive_body">Envie USDC Polygon para o endereço da sua conta</string>
   <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
   <string name="tangempay_topup_swap_body">Recarregue sua conta com qualquer token da carteira</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
+  <string name="tangempay_visa_benefits">Benefícios do visto</string>
   <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
   <string name="tangempay_withdrawal_note_title">Observe</string>
   <string name="tangempay_your_pin_code">Seu código PIN</string>
@@ -2064,6 +2094,13 @@
   <string name="token_details_unable_hide_alert_title">Não foi possível ocultar %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Mostrar código QR</string>
+  <string name="token_summary_can_not_load_token">Não foi possível carregar os dados do token.</string>
+  <string name="token_summary_go_to_swap_button">Ir para o swap</string>
+  <string name="token_summary_last_update_subtitle">Última atualização: %1$s</string>
+  <string name="token_summary_negative_outlook_title">Perspectiva negativa</string>
+  <string name="token_summary_neutral_outlook_title">Perspectiva neutra</string>
+  <string name="token_summary_positive_outlook_title">Perspectiva positiva</string>
+  <string name="token_summary_title">Resumo do token</string>
   <string name="token_swap_changelly_promotion_message">Troque este token por outro em %1$s taxas de serviço a partir de fevereiro %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Trocar com Changelly, %s tarifas</string>
   <string name="token_swap_promotion_button">Troque agora</string>
@@ -2144,6 +2181,12 @@
   <string name="user_wallet_list_rename_popup_title">Renomear carteira</string>
   <string name="user_wallet_list_unlock_all">Desbloquear tudo</string>
   <string name="user_wallet_list_unlock_all_with">Desbloqueie tudo com %s</string>
+  <string name="virtual_account_requisites_account_number">Número de conta</string>
+  <string name="virtual_account_requisites_bank_address">Endereço do banco</string>
+  <string name="virtual_account_requisites_bank_name">Nome do banco</string>
+  <string name="virtual_account_requisites_beneficiary_address">Endereço do beneficiário</string>
+  <string name="virtual_account_requisites_beneficiary_name">Nome do beneficiário</string>
+  <string name="virtual_account_requisites_routing_number">Número de roteamento</string>
   <string name="virtual_account_title">Conta virtual</string>
   <string name="virtual_account_transactions_empty">Ainda não há transações. Comece a gastar e veja o histórico aqui.</string>
   <string name="visa_balance_limits_details_aml_verified">Verificado AML</string>
@@ -2656,6 +2699,8 @@
   <string name="yield_module_transaction_exit_subtitle">%1$s retirado de Aave</string>
   <string name="yield_module_transaction_initialize">Modo de rendimento inicializado</string>
   <string name="yield_module_transaction_reactivate">Modo de rendimento reativado</string>
+  <string name="yield_module_transaction_returned">Devolvido</string>
+  <string name="yield_module_transaction_supplied">Fornecido</string>
   <string name="yield_module_transaction_topup">Fornecimento para Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s fornecido à Aave</string>
   <string name="yield_module_transaction_withdraw">Retirar do Aave</string>
