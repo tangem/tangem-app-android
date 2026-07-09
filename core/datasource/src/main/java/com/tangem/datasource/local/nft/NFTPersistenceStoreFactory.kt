@@ -3,6 +3,7 @@ package com.tangem.datasource.local.nft
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.nft.models.NFTCollection
@@ -58,6 +59,7 @@ class NFTPersistenceStoreFactory @Inject constructor(
                 types = types,
                 defaultValue = defaultValue,
             ),
+            corruptionHandler = ReplaceFileCorruptionHandler { defaultValue },
             produceFile = { context.dataStoreFile(fileName = fileName) },
             scope = appScope,
         )
