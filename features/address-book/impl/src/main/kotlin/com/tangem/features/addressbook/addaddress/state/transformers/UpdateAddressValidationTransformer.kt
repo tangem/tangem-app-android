@@ -15,20 +15,19 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * Reflects the result of validating an address (and its memo) in the UI.
  *
- * [matchedBlockchains] are all supported networks the address resolves to. [displayedBlockchains] is what the network
- * block shows — all matched networks until the user narrows them down on the SelectNetworks screen, then the picked
- * subset. [selectedBlockchains] is what is actually chosen for saving (a single match is auto-selected; for several
- * matches the user must pick explicitly). While the address is blank or matches nothing the network selector stays
- * [ChosenNetworkStateUM.Hidden]; an invalid (non-empty, matching nothing) address surfaces the error in the field label.
+ * [matchedBlockchains] are all supported networks the address resolves to. [selectedBlockchains] is what is actually
+ * chosen for saving (a single match is auto-selected; for several matches the user must pick explicitly on the
+ * SelectNetworks screen). The network block shows only the selected networks — while several match but none is picked
+ * yet it prompts with [ChosenNetworkStateUM.SelectNetwork] rather than showing every matched network. While the address
+ * is blank or matches nothing the network selector stays [ChosenNetworkStateUM.Hidden]; an invalid (non-empty, matching
+ * nothing) address surfaces the error in the field label.
  *
- * The confirm button is enabled only once at least one network is actually selected (and the memo, if any, is valid) —
- * showing the available networks is not the same as selecting them. The memo field is shown when a selected network
- * supports transaction extras; [isMemoInvalid] marks a malformed memo.
+ * The confirm button is enabled only once at least one network is actually selected (and the memo, if any, is valid).
+ * The memo field is shown when a selected network supports transaction extras; [isMemoInvalid] marks a malformed memo.
  */
 internal class UpdateAddressValidationTransformer(
     private val address: String,
     private val matchedBlockchains: List<Blockchain>,
-    private val displayedBlockchains: List<Blockchain>,
     private val selectedBlockchains: List<Blockchain>,
     private val isMemoInvalid: Boolean,
     private val duplicateName: String?,
@@ -40,14 +39,14 @@ internal class UpdateAddressValidationTransformer(
         val isDuplicate = duplicateName != null
         val isError = isInvalidAddress || isDuplicate
 
-        val chosenNetworkState = if (hasMatch) {
-            ChosenNetworkStateUM.Result(
-                networkUMList = displayedBlockchains.map(ChosenNetworkConverter()::convert).toImmutableList(),
+        val chosenNetworkState = when {
+            !hasMatch -> ChosenNetworkStateUM.Hidden
+            selectedBlockchains.isEmpty() -> ChosenNetworkStateUM.SelectNetwork
+            else -> ChosenNetworkStateUM.Result(
+                networkUMList = selectedBlockchains.map(ChosenNetworkConverter()::convert).toImmutableList(),
                 // A single matched network leaves nothing to choose, so the selection screen is not opened.
                 isClickable = matchedBlockchains.size > 1,
             )
-        } else {
-            ChosenNetworkStateUM.Hidden
         }
 
         val label = when {

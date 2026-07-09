@@ -19,15 +19,14 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_20
-import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.features.addressbook.addressinfo.ui.state.AddressInfoUM
 import com.tangem.features.addressbook.impl.R
 
@@ -42,16 +41,10 @@ internal fun AddressInfoBottomSheet(state: AddressInfoUM, onDismiss: () -> Unit)
         type = TangemBottomSheetType.Modal,
         containerColor = TangemTheme.colors3.bg.secondary,
         title = {
-            TangemTopBar(
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    TangemButton(
-                        iconStart = TangemIconUM.Icon(imageVector = Icons.ic_cross_24),
-                        onClick = onDismiss,
-                        size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
-                    )
-                },
+            TangemTopNavigation(
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                endButton = { TangemButton.Close(onClick = onDismiss) },
             )
         },
         content = {
