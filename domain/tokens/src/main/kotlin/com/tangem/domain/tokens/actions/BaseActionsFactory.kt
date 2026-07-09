@@ -133,6 +133,23 @@ internal open class BaseActionsFactory(
         }
     }
 
+    /**
+     * Determines the unavailability reason for the BUY action
+     *
+     * @param userWallet the user's wallet
+     * @param currency   the cryptocurrency to check
+     */
+    protected fun getBuyUnavailabilityReason(
+        userWallet: UserWallet,
+        currency: CryptoCurrency,
+    ): ScenarioUnavailabilityReason {
+        return if (userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isStart2Coin()) {
+            ScenarioUnavailabilityReason.BuyUnavailable(currency.name)
+        } else {
+            ScenarioUnavailabilityReason.None
+        }
+    }
+
     /** Adds a "Buy" action to the builder based on the unavailability [reason] */
     protected fun ActionAvailabilityBuilder.addBuyAction(reason: ScenarioUnavailabilityReason) {
         val action = ActionState.Buy(unavailabilityReason = reason)
