@@ -507,6 +507,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     onAddCardClick = {},
                     isAddCardEnabled = true,
                 ),
+                isNegative = false,
             ),
             isBalanceHidden = false,
             addToWalletBlockState = AddToWalletBlockState(

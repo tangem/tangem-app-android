@@ -14,6 +14,7 @@ import com.tangem.domain.pay.usecase.CreateTariffPlanTransitionOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -38,6 +39,10 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
 
     private var transitions: List<TangemPayTariffPlanTransition> = emptyList()
+
+    private val allowedTransitions: List<TangemPayTariffPlanTransition>
+        get() = transitions.filter { it.type in ALLOWED_TYPES }
+
     private var selectedIndex: Int = 0
     private var isConfirm: Boolean = false
     private var isProcessing: Boolean = false
@@ -52,7 +57,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private fun loadTransitions() {
         modelScope.launch {
             getTransitions(params.userWalletId).onRight { result ->
-                transitions = result.filter { it.type in ALLOWED_TYPES }
+                transitions = result
                 state.update { buildState() }
             }
         }
@@ -65,13 +70,13 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun onSelectClick() {
-        if (transitions.isEmpty()) return
+        if (allowedTransitions.isEmpty()) return
         isConfirm = true
         state.update { buildState() }
     }
 
     private fun onComparePlansClick() {
-        if (transitions.isEmpty()) return
+        if (allowedTransitions.isEmpty()) return
         state.update { buildState(showPlanCompare = true) }
     }
 
@@ -90,8 +95,11 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun onConfirmClick() {
-        val transition = transitions.getOrNull(selectedIndex) ?: return
+        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+
+        // TODO v_rodionov: #[REDACTED_TASK_KEY] - Downgrade
         if (transition.type != TangemPayTariffPlanTransition.Type.UPGRADE) return
+
         if (isProcessing) return
 
         isProcessing = true
@@ -118,7 +126,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         } else {
             resourceReference(R.string.tangempay_select_plan_title)
         },
-        plans = transitions.map { it.plan.toPlanUM() }.toImmutableList(),
+        plans = allowedTransitions.map { it.plan.toPlanUM() }.toImmutableList(),
         selectedIndex = selectedIndex,
         onPlanSelected = ::onPlanSelected,
         onBackClick = ::onBackClick,
@@ -135,14 +143,16 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
         val plans = transitions.map { it.plan }
         val orderedTitles = plans
-            .flatMap { it.descriptionItems }
+            .flatMap { plan -> plan.descriptionItems.filter { it.section in COMPARE_SECTIONS } }
             .sortedWith(compareBy({ it.section.ordinal }, { it.order }))
             .map { it.title }
             .distinct()
         return TangemPaySelectPlanUM.ComparePlans(
             attributes = orderedTitles.map(::stringReference).toImmutableList(),
             plans = plans.map { plan ->
-                val valueByTitle = plan.descriptionItems.associate { it.title to it.body }
+                val valueByTitle = plan.descriptionItems
+                    .filter { it.section in COMPARE_SECTIONS }
+                    .associate { it.title to it.body }
                 TangemPaySelectPlanUM.ComparePlans.Plan(
                     name = stringReference(plan.name),
                     values = orderedTitles
@@ -154,8 +164,8 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         )
     }
 
-    private fun buildConfirmContent(): TangemPaySelectPlanUM.Content.Confirm {
-        val transition = transitions[selectedIndex]
+    private fun buildConfirmContent(): TangemPaySelectPlanUM.Content {
+        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return buildSelectContent()
         val planName = transition.plan.name
         val isUpgrade = transition.type == TangemPayTariffPlanTransition.Type.UPGRADE
         return TangemPaySelectPlanUM.Content.Confirm(
@@ -181,9 +191,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         planName: String,
         isUpgrade: Boolean,
     ): ImmutableList<TangemPaySelectPlanUM.PointUM> = if (isUpgrade) {
-        val feeText = transition.plan.descriptionItems
-            .firstOrNull { it.section == TangemPayTariffPlan.Section.PLAN_RELATED }
-            ?.title
+        val feeText = transition.plan.formatRecurringFeeOrNull()
         listOf(
             stringReference("You will get your virtual Visa $planName in minutes"),
             if (feeText != null) {
@@ -205,7 +213,8 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         name = stringReference(name),
         imageUrl = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url,
         points = descriptionItems
-            .sortedWith(compareBy({ it.section.ordinal }, { it.order }))
+            .filter { it.section == TangemPayTariffPlan.Section.ONBOARDING_RELATED }
+            .sortedBy { it.order }
             .map { item ->
                 TangemPaySelectPlanUM.PointUM(
                     title = stringReference(item.title),
@@ -219,6 +228,10 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         private val ALLOWED_TYPES = setOf(
             TangemPayTariffPlanTransition.Type.UPGRADE,
             TangemPayTariffPlanTransition.Type.DOWNGRADE,
+        )
+        private val COMPARE_SECTIONS = setOf(
+            TangemPayTariffPlan.Section.CARD_RELATED,
+            TangemPayTariffPlan.Section.PLAN_RELATED,
         )
     }
 }

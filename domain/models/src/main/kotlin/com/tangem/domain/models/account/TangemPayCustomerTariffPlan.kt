@@ -34,6 +34,12 @@ data class TangemPayCustomerTariffPlan(
         @SerialName("CANCELED")
         CANCELED,
 
+        @SerialName("SYSTEM_DOWNGRADE_PENDING")
+        SYSTEM_DOWNGRADE_PENDING,
+
+        @SerialName("DOWNGRADE_PENDING")
+        DOWNGRADE_PENDING,
+
         @SerialName("UNKNOWN")
         UNKNOWN,
         ;
@@ -43,6 +49,8 @@ data class TangemPayCustomerTariffPlan(
                 "ACTIVE" -> ACTIVE
                 "TRANSITIONING" -> TRANSITIONING
                 "CANCELED" -> CANCELED
+                "SYSTEM_DOWNGRADE_PENDING" -> SYSTEM_DOWNGRADE_PENDING
+                "DOWNGRADE_PENDING" -> DOWNGRADE_PENDING
                 else -> UNKNOWN
             }
         }
