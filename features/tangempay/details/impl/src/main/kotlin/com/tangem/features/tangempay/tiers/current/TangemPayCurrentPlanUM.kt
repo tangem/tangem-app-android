@@ -20,6 +20,7 @@ internal data class TangemPayCurrentPlanUM(
         @Immutable
         data class Button(
             val text: TextReference,
+            val isProcessing: Boolean,
             val onClick: () -> Unit,
         )
     }

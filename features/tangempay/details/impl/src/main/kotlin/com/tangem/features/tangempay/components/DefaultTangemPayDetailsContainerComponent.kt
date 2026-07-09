@@ -92,13 +92,15 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         is TangemPayAccountDetailsInnerRoute.CurrentPlan -> TangemPayCurrentPlanComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayCurrentPlanComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
                 tariffPlan = config.tariffPlan,
             ),
         )
-        TangemPayAccountDetailsInnerRoute.SelectPlan -> TangemPaySelectPlanComponent(
+        is TangemPayAccountDetailsInnerRoute.SelectPlan -> TangemPaySelectPlanComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPaySelectPlanComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
+                tariffPlan = config.tariffPlan,
             ),
         )
         TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->

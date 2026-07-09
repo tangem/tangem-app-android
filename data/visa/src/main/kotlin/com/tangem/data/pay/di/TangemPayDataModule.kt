@@ -141,6 +141,28 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideSetTariffPlanPendingTransitionUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): SetTariffPlanPendingTransitionUseCase {
+            return SetTariffPlanPendingTransitionUseCase(
+                repository = repository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
+        fun provideCancelTariffPlanPendingTransitionUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): CancelTariffPlanPendingTransitionUseCase {
+            return CancelTariffPlanPendingTransitionUseCase(
+                repository = repository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
         fun provideGetTangemPayTariffPlanStateUseCase(
             customerOrderRepository: CustomerOrderRepository,
             getTangemPayTariffPlanTransitionsUseCase: GetTangemPayTariffPlanTransitionsUseCase,
