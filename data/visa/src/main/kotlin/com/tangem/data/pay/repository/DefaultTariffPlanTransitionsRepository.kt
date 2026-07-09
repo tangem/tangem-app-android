@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.data.pay.converter.TangemPayTariffPlanConverter
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.models.request.SetPendingTariffPlanTransitionRequest
 import com.tangem.datasource.api.pay.models.response.TariffPlanTransitionResponse
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
@@ -25,6 +26,21 @@ internal class DefaultTariffPlanTransitionsRepository @Inject constructor(
 
         response.result.orEmpty().mapNotNull { it.toDomain() }
     }
+
+    override suspend fun setPendingTransition(
+        userWalletId: UserWalletId,
+        pendingTariffPlanId: String,
+    ): Either<VisaApiError, Unit> = requestHelper.performRequest(userWalletId) { authHeader ->
+        tangemPayApi.setPendingTariffPlanTransition(
+            authHeader = authHeader,
+            body = SetPendingTariffPlanTransitionRequest(pendingTariffPlanId = pendingTariffPlanId),
+        )
+    }.map {}
+
+    override suspend fun cancelPendingTransition(userWalletId: UserWalletId): Either<VisaApiError, Unit> =
+        requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.cancelPendingTariffPlanTransition(authHeader = authHeader)
+        }.map {}
 
     private fun TariffPlanTransitionResponse.toDomain(): TangemPayTariffPlanTransition? {
         val plan = TangemPayTariffPlanConverter.convert(tariffPlan) ?: return null
