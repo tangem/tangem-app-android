@@ -167,4 +167,36 @@ class DefaultStakingCleanerTest {
             }
         }
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ClearByWalletIds {
+
+        @Test
+        fun `GIVEN wallets WHEN clear THEN both balances stores removed once with all ids`() = runTest {
+            // Arrange
+            val ids = listOf(UserWalletId("011"), UserWalletId("022"))
+
+            // Act
+            cleaner.clear(userWalletIds = ids)
+
+            // Assert
+            coVerify(exactly = 1) {
+                stakeKitBalancesStore.remove(ids)
+                p2pEthPoolBalancesStore.remove(ids)
+            }
+        }
+
+        @Test
+        fun `GIVEN empty list WHEN clear THEN stores are not touched`() = runTest {
+            // Act
+            cleaner.clear(userWalletIds = emptyList())
+
+            // Assert
+            coVerify(inverse = true) {
+                stakeKitBalancesStore.remove(any())
+                p2pEthPoolBalancesStore.remove(any())
+            }
+        }
+    }
 }
