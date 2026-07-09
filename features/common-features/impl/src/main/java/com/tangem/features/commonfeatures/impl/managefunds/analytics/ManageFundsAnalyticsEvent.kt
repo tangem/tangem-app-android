@@ -8,9 +8,9 @@ internal sealed class ManageFundsAnalyticsEvent(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = CATEGORY, event = event, params = params) {
 
-    class MethodScreenOpened(source: String) : ManageFundsAnalyticsEvent(
+    class MethodScreenOpened(source: AnalyticsParam.ScreensSources) : ManageFundsAnalyticsEvent(
         event = "Method Screen Opened",
-        params = mapOf(AnalyticsParam.SOURCE to source),
+        params = mapOf(AnalyticsParam.SOURCE to source.value),
     )
 
     class ButtonBuy : ManageFundsAnalyticsEvent(event = "Button - Buy")
@@ -21,6 +21,5 @@ internal sealed class ManageFundsAnalyticsEvent(
 
     companion object {
         private const val CATEGORY = "Add Funds"
-        const val SOURCE_MAIN_SCREEN = "Main Screen"
     }
 }

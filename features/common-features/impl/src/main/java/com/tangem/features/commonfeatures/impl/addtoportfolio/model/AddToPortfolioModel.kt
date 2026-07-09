@@ -305,7 +305,9 @@ internal class AddToPortfolioModel @Inject constructor(
             setupTokenActionsFlow(selectedPortfolioSnapshot, addedToken)
                 .onEach { cryptoCurrencyData ->
                     tokenActionsData.emit(cryptoCurrencyData)
-                    navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
+                    navigation.replaceAll(
+                        AddToPortfolioRoutes.TokenActions(cryptoCurrencyData.status.currency.name),
+                    )
                 }
                 .onEmpty { finishSuccessFlow(result) }
                 .launchIn(this)
