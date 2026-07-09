@@ -16,8 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds2.shimmers.TextShimmer
-import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -44,11 +43,9 @@ fun TangemBalanceHeader(
             },
         ) { animatedState ->
             when (animatedState) {
-                is TangemBalanceHeaderState.Loading -> TextShimmer(
+                is TangemBalanceHeaderState.Loading -> TangemShimmer(
                     modifier = Modifier.size(width = 160.dp, height = 56.dp),
-                    text = "1234.00",
-                    style = TextShimmerStyle.HEADING_MEDIUM,
-                    radius = TangemTheme.dimens2.x25,
+                    style = TangemTheme.typography3.heading.medium,
                 )
                 is TangemBalanceHeaderState.Content -> Text(
                     modifier = balanceModifier,
