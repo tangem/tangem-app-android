@@ -8,11 +8,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.promobanners.impl.campaigns.component.CampaignAlreadyActivatedBottomSheetComponent
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignAlreadyActivatedUM
-import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +32,7 @@ internal class CampaignAlreadyActivatedModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    private val params = paramsContainer.require<Params>()
+    private val params = paramsContainer.require<CampaignAlreadyActivatedBottomSheetComponent.Params>()
     private val accountIconConverter = AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall)
 
     val uiState: StateFlow<CampaignAlreadyActivatedUM>
@@ -62,12 +60,4 @@ internal class CampaignAlreadyActivatedModel @Inject constructor(
             selectedAccount = selectedAccountUM,
         )
     }
-
-    data class Params(
-        val campaignType: CampaignType,
-        val account: Account?,
-        val appCurrency: AppCurrency,
-        val currency: CryptoCurrencyStatus,
-        val onDismiss: () -> Unit,
-    )
 }
