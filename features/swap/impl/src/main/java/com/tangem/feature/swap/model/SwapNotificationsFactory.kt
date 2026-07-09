@@ -25,6 +25,7 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
+import com.tangem.feature.swap.domain.models.domain.ExpressTxType
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
@@ -318,11 +319,16 @@ internal class SwapNotificationsFactory(
         val shouldShowCoverWarning = quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeCryptoCurrencyStatus.currency != fromCurrency
 
-        val isCEXProvider = quoteModel.swapProvider.type == ExchangeProviderType.CEX
+        // A DEX-typed provider whose quote returned txType=SEND executes as a CEX-style transfer,
+        // so it must follow the same gasless suppression rule as a real CEX provider.
+        val isCexLikeFlow = quoteModel.swapProvider.type == ExchangeProviderType.CEX ||
+            quoteModel.txType == ExpressTxType.SEND
 
-        val isNotEnoughFee = insufficientFee != null && !isCEXProvider
+        val isNotEnoughFee = insufficientFee != null
 
-        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCEXProvider
+        // Suppress only when the user can actually switch the fee to a token via the gasless
+        // selector; on networks without gasless support the warning must show for CEX too.
+        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
         if (shouldShowCoverWarning && !isGaslessAvailable && isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
