@@ -1,6 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test
 class UpdateTransferTransformerTest {
 
     private val clickIntents: TokenDetailsClickIntents = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val onActionDispatched: () -> Unit = mockk(relaxed = true)
 
     @Test
@@ -112,6 +115,7 @@ class UpdateTransferTransformerTest {
 
         // THEN
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSend>())
             onActionDispatched.invoke()
             clickIntents.onSendClick(ScenarioUnavailabilityReason.None)
         }
@@ -130,6 +134,7 @@ class UpdateTransferTransformerTest {
 
         // THEN
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSell>())
             onActionDispatched.invoke()
             clickIntents.onSellClick(ScenarioUnavailabilityReason.None)
         }
@@ -225,6 +230,7 @@ class UpdateTransferTransformerTest {
 
         // THEN
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSwap>())
             onActionDispatched.invoke()
             clickIntents.onSwapFromClick(ScenarioUnavailabilityReason.None)
         }
@@ -347,6 +353,7 @@ class UpdateTransferTransformerTest {
 
         // Assert
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSwapAndSend>())
             onActionDispatched.invoke()
             clickIntents.onSwapAndSendClick(ScenarioUnavailabilityReason.None)
         }
@@ -405,6 +412,7 @@ class UpdateTransferTransformerTest {
         // THEN
         verify(exactly = 0) { onActionDispatched.invoke() }
         verify(exactly = 0) { clickIntents.onSendClick(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     private fun createTransformer(
@@ -414,6 +422,7 @@ class UpdateTransferTransformerTest {
         actions = actions,
         networkSource = networkSource,
         clickIntents = clickIntents,
+        analyticsEventHandler = analyticsEventHandler,
         onActionDispatched = onActionDispatched,
     )
 
