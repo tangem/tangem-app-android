@@ -1,5 +1,6 @@
 package com.tangem.features.promobanners.impl.campaigns.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,29 +14,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import com.tangem.core.ui.components.PrimaryButton
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.token.TokenItem
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.entity.ActivateCampaignUM
+import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 
 @Composable
-internal fun ActivateCampaignContent(
-    state: ActivateCampaignUM,
-    onSelectTokenClick: () -> Unit,
-    onEnrollClick: () -> Unit,
-    onLearnMoreClick: () -> Unit,
-) {
+internal fun ActivateCampaignContent(um: ActivateCampaignUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16)
-            .navigationBarsPadding(),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
@@ -43,93 +41,99 @@ internal fun ActivateCampaignContent(
             painter = painterResource(R.drawable.ill_businessman_3d),
             contentDescription = null,
             modifier = Modifier
-                .size(TangemTheme.dimens.size96)
+                .size(80.dp)
                 .clip(CircleShape),
         )
-        SpacerH16()
+        SpacerH32()
+
         Text(
-            text = state.title.resolveReference(),
-            style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            text = um.title.resolveReference(),
+            style = TangemTheme.typography3.heading.small,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth(),
         )
+
         SpacerH8()
+
         Text(
-            text = state.description.resolveReference(),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            text = um.description.resolveReference(),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.fillMaxWidth(),
         )
+
         SpacerH12()
+
         Text(
             // TODO([REDACTED_TASK_KEY]): localize
             text = "Learn more",
-            style = TangemTheme.typography.button,
-            color = TangemTheme.colors.text.accent,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onLearnMoreClick),
+                .clickable(onClick = um.onLearnMoreClick),
         )
 
-        val selectedToken = state.selectedToken
-        if (selectedToken != null) {
-            SpacerH24()
-            Text(
-                text = "Select cashback account", // TODO([REDACTED_TASK_KEY]): localize
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            SpacerH12()
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
-                    .background(TangemTheme.colors.background.primary)
-                    .padding(vertical = TangemTheme.dimens.spacing12),
-            ) {
-                TokenItem(state = selectedToken, isBalanceHidden = false)
-            }
-        }
-
-        SpacerH24()
-
-        Footer(
-            campaignName = state.campaignName,
-            hasSelectedToken = selectedToken != null,
-            onSelectTokenClick = onSelectTokenClick,
-            onEnrollClick = onEnrollClick,
+        SelectedTokenContent(
+            selectedToken = um.selectedToken,
+            selectedAccount = um.selectedAccount,
         )
+
+        SpacerH32()
     }
 }
 
 @Composable
-private fun Footer(
-    campaignName: String,
-    hasSelectedToken: Boolean,
-    onSelectTokenClick: () -> Unit,
-    onEnrollClick: () -> Unit,
-) {
-    if (hasSelectedToken) {
+private fun SelectedTokenContent(selectedToken: TokenItemState?, selectedAccount: SelectedAccountUM?) {
+    if (selectedToken != null) {
+        SpacerH24()
+
         Text(
-            text = "I agree with $campaignName Terms", // TODO([REDACTED_TASK_KEY]): localize + clickable terms
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
-            textAlign = TextAlign.Center,
+            text = "Select cashback account", // TODO([REDACTED_TASK_KEY]): localize
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
             modifier = Modifier.fillMaxWidth(),
         )
-        SpacerH12()
-    }
 
-    PrimaryButton(
-        modifier = Modifier.fillMaxWidth(),
-        text = if (hasSelectedToken) {
-            "Enroll" // TODO([REDACTED_TASK_KEY]): localize
-        } else {
-            "Select token" // TODO([REDACTED_TASK_KEY]): localize
-        },
-        onClick = if (hasSelectedToken) onEnrollClick else onSelectTokenClick,
-    )
-    SpacerH16()
+        SpacerH12()
+
+        PromoCampaignTokenItem(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(TangemTheme.colors.background.primary),
+            selectedToken = selectedToken,
+            selectedAccount = selectedAccount,
+        )
+    }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ActivateCampaignContent_WithToken() {
+    TangemThemePreviewRedesign {
+        Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
+            ActivateCampaignContent(um = CampaignPreviewData.activateCampaign)
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ActivateCampaignContent_NoToken() {
+    TangemThemePreviewRedesign {
+        Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
+            ActivateCampaignContent(
+                um = CampaignPreviewData.activateCampaign.copy(
+                    selectedToken = null,
+                    selectedAccount = null,
+                ),
+            )
+        }
+    }
+}
+// endregion
