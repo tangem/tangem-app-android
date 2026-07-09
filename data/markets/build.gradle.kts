@@ -5,7 +5,6 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -14,40 +13,49 @@ android {
 }
 
 dependencies {
-    /** Libs */
-    implementation(projects.libs.crypto)
 
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    implementation(projects.core.pagination)
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.markets)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.tokens)
-
-    implementation(projects.data.common)
-
-    implementation(projects.libs.blockchainSdk)
+    // region Other libraries
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
+    implementation(tangemDeps.blockchain)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
 
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Others dependencies
-    implementation(deps.androidx.datastore)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.jodatime)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    implementation(tangemDeps.blockchain)
-    ksp(deps.moshi.kotlin.codegen)
-    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    implementation(projects.core.pagination)
+    // endregion
+
+    // region Data
+    api(projects.data.common)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.markets)
+    implementation(projects.domain.models)
+    runtimeOnly(projects.domain.tokens)
+    // endregion
+
+    // region Domain models
+    implementation(projects.domain.markets.models)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
     // endregion
 
     // region Tests dependencies

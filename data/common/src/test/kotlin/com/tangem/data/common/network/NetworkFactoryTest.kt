@@ -387,6 +387,7 @@ class NetworkFactoryTest {
                     Blockchain.CosmosTestnet,
                     Blockchain.Dogecoin,
                     Blockchain.Ducatus,
+                    Blockchain.Gonka,
                     Blockchain.Ethereum, Blockchain.EthereumTestnet,
                     Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet,
                     Blockchain.Fantom, Blockchain.FantomTestnet,

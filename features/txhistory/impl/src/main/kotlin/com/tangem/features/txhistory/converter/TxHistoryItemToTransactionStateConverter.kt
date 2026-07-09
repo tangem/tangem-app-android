@@ -14,10 +14,13 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.toBriefAddressFormat
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]. Produces pre-redesign TransactionState.")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 internal class TxHistoryItemToTransactionStateConverter(
     private val currency: CryptoCurrency,
     private val txHistoryUiActions: TxHistoryUiActions,

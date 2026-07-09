@@ -16,6 +16,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +42,7 @@ import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.ReferralProgramScreenTestTags
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.models.ReferralStateHolder
@@ -261,6 +263,7 @@ private fun ExtraItems(extraItems: List<ExpectedAward>, overallItemsLastIndex: I
 private fun PersonalCodeCard(code: String, accountAward: ReferralStateHolder.AccountAward?) {
     Column(
         modifier = Modifier
+            .testTag(ReferralProgramScreenTestTags.PERSONAL_CODE_CARD)
             .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
             .background(color = TangemTheme.colors.background.primary)
             .fillMaxWidth()

@@ -4,6 +4,7 @@ import com.tangem.data.yield.supply.promo.converter.YieldBoostPromoConverter
 import com.tangem.data.yield.supply.promo.converter.YieldBoostStatusConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,6 +16,7 @@ import kotlinx.coroutines.withContext
 
 internal class DefaultYieldPromoRepository(
     private val tangemApi: TangemTechApi,
+    private val promotionsSupplier: PromotionsSupplier,
     private val promoStore: YieldBoostPromoStore,
     private val statusStore: YieldBoostStatusStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -25,7 +27,7 @@ internal class DefaultYieldPromoRepository(
             promoStore.getSyncOrNull(userWalletId)?.let { return it }
         }
         return try {
-            val fresh = fetchPromo(userWalletId)
+            val fresh = fetchPromo(userWalletId, forceRefresh)
             promoStore.store(userWalletId, fresh)
             fresh
         } catch (e: Exception) {
@@ -46,11 +48,13 @@ internal class DefaultYieldPromoRepository(
         }
     }
 
-    private suspend fun fetchPromo(userWalletId: UserWalletId): YieldBoostPromo = withContext(dispatchers.io) {
-        val response = tangemApi.getPromotions(walletId = userWalletId.stringValue).getOrThrow()
-        val dto = response.promotions.firstOrNull { it.name == PROMO_NAME } ?: return@withContext YieldBoostPromo.None
-        YieldBoostPromoConverter.convert(dto)
-    }
+    private suspend fun fetchPromo(userWalletId: UserWalletId, forceRefresh: Boolean): YieldBoostPromo =
+        withContext(dispatchers.io) {
+            val response = promotionsSupplier.getPromotions(userWalletId, forceRefresh)
+            val dto = response.promotions.firstOrNull { it.name == PROMO_NAME }
+                ?: return@withContext YieldBoostPromo.None
+            YieldBoostPromoConverter.convert(dto)
+        }
 
     private suspend fun fetchStatus(userWalletId: UserWalletId): YieldBoostStatus = withContext(dispatchers.io) {
         val response = tangemApi.getYieldBoostStatus(walletId = userWalletId.stringValue).getOrThrow()
