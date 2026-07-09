@@ -22,7 +22,9 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     ) : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
-    data object SelectPlan : TangemPayAccountDetailsInnerRoute()
+    data class SelectPlan(
+        val tariffPlan: TangemPayCustomerTariffPlan,
+    ) : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
     data object VirtualAccountDepositSuccess : TangemPayAccountDetailsInnerRoute()

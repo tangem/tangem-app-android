@@ -34,6 +34,15 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
     ): ApiResponse<TariffPlanTransitionsResponse>
 
+    @POST("v1/customer/tariff-plan/pending-transition")
+    suspend fun setPendingTariffPlanTransition(
+        @Header("Authorization") authHeader: String,
+        @Body body: SetPendingTariffPlanTransitionRequest,
+    ): ApiResponse<Any>
+
+    @POST("v1/customer/tariff-plan/pending-transition/cancel")
+    suspend fun cancelPendingTariffPlanTransition(@Header("Authorization") authHeader: String): ApiResponse<Any>
+
     /** Fiat bank requisites for the Virtual Account on-ramp (VA MVP0, TWI-1638). */
     @GET("v1/account/bank-credentials/{product_instance_id}")
     suspend fun getBankCredentials(
