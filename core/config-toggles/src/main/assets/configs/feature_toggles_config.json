@@ -53,7 +53,7 @@
     },
     {
         "name": "TWI_1326_YIELD_MODE_SWAP_ENABLED",
-        "version": "6.0"
+        "version": "6.1"
     },
     {
         "name": "ADDRESS_SYNC_ENABLED",
@@ -150,6 +150,10 @@
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED",
+        "version": "6.0"
     },
     {
         "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
