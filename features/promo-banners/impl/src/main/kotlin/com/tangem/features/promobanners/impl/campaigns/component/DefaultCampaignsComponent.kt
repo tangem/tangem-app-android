@@ -26,11 +26,14 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.extensions.rememberLastNonNull
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
+import com.tangem.features.promobanners.impl.campaigns.component.ActivateCampaignBottomSheetComponent.ActivateCampaignModelCallbacks
+import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
-import com.tangem.features.promobanners.impl.campaigns.model.ActivateCampaignsModel
-import com.tangem.features.promobanners.impl.campaigns.model.CampaignAlreadyActivatedModel
 import com.tangem.features.promobanners.impl.campaigns.model.CampaignsModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -121,28 +124,28 @@ internal class DefaultCampaignsComponent @AssistedInject constructor(
             is CampaignsBottomSheetConfig.Activate -> ActivateCampaignBottomSheetComponent(
                 appComponentContext = context,
                 chooseTokenComponentFactory = chooseTokenComponentFactory,
-                params = ActivateCampaignsModel.Params(
+                onDismiss = model::onDismiss,
+                params = ActivateCampaignBottomSheetComponent.Params(
                     campaignType = config.campaignType,
-                    onDismiss = model::onDismiss,
-                    onActivated = model::onActivated,
-                    onAlreadyActivated = { campaignType, appCurrency, account, currency ->
-                        model.onAlreadyActivated(
-                            campaignType = campaignType,
-                            appCurrency = appCurrency,
-                            account = account,
-                            currency = currency,
-                        )
+                    modelCallbacks = object : ActivateCampaignModelCallbacks {
+                        override val onActivated: (CampaignType) -> Unit = model::onActivated
+                        override val onAlreadyActivated: (
+                            CampaignType,
+                            AppCurrency,
+                            Account?,
+                            CryptoCurrencyStatus,
+                        ) -> Unit = model::onAlreadyActivated
                     },
                 ),
             )
             is CampaignsBottomSheetConfig.AlreadyActivated -> CampaignAlreadyActivatedBottomSheetComponent(
                 appComponentContext = context,
-                params = CampaignAlreadyActivatedModel.Params(
+                onDismiss = model::onDismiss,
+                params = CampaignAlreadyActivatedBottomSheetComponent.Params(
                     campaignType = config.campaignType,
                     appCurrency = config.appCurrency,
                     account = config.account,
                     currency = config.currency,
-                    onDismiss = model::onDismiss,
                 ),
             )
         }
