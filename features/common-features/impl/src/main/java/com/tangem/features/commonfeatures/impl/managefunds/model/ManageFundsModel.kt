@@ -7,9 +7,14 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -26,6 +31,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPa
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.managefunds.analytics.ManageFundsAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
@@ -146,11 +152,20 @@ internal class ManageFundsModel @Inject constructor(
     }
 
     override fun onQuickActionClick(action: TokenActionsBSContentUM.Action, shouldDismiss: Boolean) {
-        val event = when (action) {
-            TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
-            TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
-            TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
-            else -> null
+        val event = when (flowType) {
+            ManageFundsComponent.FlowType.AddFunds -> when (action) {
+                TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
+                TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
+                TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
+                else -> null
+            }
+            ManageFundsComponent.FlowType.Transfer -> when (action) {
+                TokenActionsBSContentUM.Action.Send -> TransferAnalyticsEvent.ButtonSend()
+                TokenActionsBSContentUM.Action.Exchange -> TransferAnalyticsEvent.ButtonSwap()
+                TokenActionsBSContentUM.Action.SendWithSwap -> TransferAnalyticsEvent.ButtonSwapAndSend()
+                TokenActionsBSContentUM.Action.Sell -> TransferAnalyticsEvent.ButtonSell()
+                else -> null
+            }
         }
         event?.let { analyticsEventHandler.send(it) }
         if (shouldDismiss) {
@@ -174,9 +189,7 @@ internal class ManageFundsModel @Inject constructor(
 
     private fun initChooseToken(mode: ManageFundsComponent.LaunchMode.ChooseToken) {
         chooseTokenBridge.selectWalletTab(mode.userWalletId)
-        analyticsEventHandler.send(
-            ManageFundsAnalyticsEvent.MethodScreenOpened(source = ManageFundsAnalyticsEvent.SOURCE_MAIN_SCREEN),
-        )
+        sendMethodScreenOpenedEvent()
         replaceRoot(UiRoute.ChooseToken)
         modelScope.launch {
             chooseTokenBridge.onCurrencyChosen.receiveAsFlow().collect(::openTokenActionsFromBridge)
@@ -205,20 +218,24 @@ internal class ManageFundsModel @Inject constructor(
                     params.onDismiss()
                     return@launch
                 }
+            sendMethodScreenOpenedEvent()
             tokenActionsTrigger.value = TokenActionsRequest(wallet, match.first, match.second)
-            replaceRoot(UiRoute.TokenActions)
+            replaceRoot(tokenActionsRoute(match.second))
         }
     }
 
     private fun initFilteredByRawId(mode: ManageFundsComponent.LaunchMode.FilteredByRawId) {
         modelScope.launch {
             val entries = collectFilteredEntries(mode.rawCurrencyId)
+            if (entries.isNotEmpty()) {
+                sendMethodScreenOpenedEvent()
+            }
             when (entries.size) {
                 0 -> params.onDismiss()
                 1 -> {
                     val entry = entries.first()
                     tokenActionsTrigger.value = TokenActionsRequest(entry.userWallet, entry.account, entry.status)
-                    replaceRoot(UiRoute.TokenActions)
+                    replaceRoot(tokenActionsRoute(entry.status))
                 }
                 else -> {
                     filteredEntries.value = entries
@@ -246,6 +263,19 @@ internal class ManageFundsModel @Inject constructor(
         }
     }
 
+    private fun sendMethodScreenOpenedEvent() {
+        val source = when (launchMode) {
+            is ManageFundsComponent.LaunchMode.ChooseToken -> AnalyticsParam.ScreensSources.Main
+            is ManageFundsComponent.LaunchMode.TokenActionsOnly -> AnalyticsParam.ScreensSources.Token
+            is ManageFundsComponent.LaunchMode.FilteredByRawId -> AnalyticsParam.ScreensSources.Market
+        }
+        val event = when (flowType) {
+            ManageFundsComponent.FlowType.AddFunds -> ManageFundsAnalyticsEvent.MethodScreenOpened(source = source)
+            ManageFundsComponent.FlowType.Transfer -> TransferAnalyticsEvent.MethodScreenOpened(source = source)
+        }
+        analyticsEventHandler.send(event)
+    }
+
     private fun openTokenActionsFromBridge(result: ChooseTokenResult) {
         val account = result.account as? AccountStatus.CryptoPortfolio ?: return
         openTokenActions(
@@ -261,7 +291,12 @@ internal class ManageFundsModel @Inject constructor(
     private fun openTokenActions(request: TokenActionsRequest, bottomAction: BottomAction) {
         tokenActionsTrigger.value = request
         currentBottomAction.value = bottomAction
-        pushRoute(UiRoute.TokenActions)
+        pushRoute(tokenActionsRoute(request.status))
+    }
+
+    private fun tokenActionsRoute(status: CryptoCurrencyStatus): UiRoute.TokenActions {
+        val title = resourceReference(R.string.get_token_title, wrappedList(status.currency.name))
+        return UiRoute.TokenActions(title = title)
     }
 
     private fun replaceRoot(route: UiRoute) {
@@ -277,7 +312,7 @@ internal class ManageFundsModel @Inject constructor(
         data object Loading : UiRoute
         data object ChooseToken : UiRoute
         data object UserPortfolio : UiRoute
-        data object TokenActions : UiRoute
+        data class TokenActions(val title: TextReference) : UiRoute
     }
 
     private data class TokenActionsRequest(

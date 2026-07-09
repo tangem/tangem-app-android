@@ -301,6 +301,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         currency = route.currency,
                         navigationAction = route.navigationAction,
+                        shouldShowMarketBlock = route.shouldShowMarketBlock,
                     ),
                     componentFactory = tokenDetailsComponentFactory,
                 )

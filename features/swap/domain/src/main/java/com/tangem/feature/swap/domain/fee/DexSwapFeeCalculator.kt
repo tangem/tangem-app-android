@@ -383,11 +383,6 @@ class DexSwapFeeCalculator(
                     derivationPath = fromSwapCurrencyStatus.currency.network.derivationPath.value,
                 )
 
-                // if native balance is zero - we can't calculate fee
-                if (nativeBalance.signum() == 0) {
-                    raise(GetFeeError.UnknownError)
-                }
-
                 val txAmountValue = transaction.txValue ?: error("unable to get txValue")
                 val amountToSend = if (permissionState is PermissionDataState.PermissionSettings) {
                     transaction.fromAmount.value.convertToSdkAmount(fromSwapCurrencyStatus.status)

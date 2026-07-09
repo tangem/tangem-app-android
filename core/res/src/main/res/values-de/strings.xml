@@ -105,6 +105,7 @@
     <item quantity="other">Adressen</item>
   </plurals>
   <string name="address_book_choose_address">Adresse auswählen</string>
+  <string name="address_book_clear_all_networks">Alles löschen</string>
   <string name="address_book_contact">Kontakt</string>
   <string name="address_book_contact_name">Name der Kontaktperson</string>
   <string name="address_book_copy_address">Adresse kopieren</string>
@@ -134,6 +135,7 @@
   <string name="address_book_save_to_wallet_title">In Wallet speichern</string>
   <string name="address_book_save_wallet_to_description">Dieser Kontakt wird mit dem Adressbuch dieser Wallet verknüpft.</string>
   <string name="address_book_search_no_results">Es wurden keine Ergebnisse gefunden.\nVersuchen Sie es mit einem anderen Namen</string>
+  <string name="address_book_select_all_networks">Alle auswählen</string>
   <string name="address_book_select_network">Netzwerk auswählen</string>
   <string name="address_book_title">Adressbuch</string>
   <string name="address_book_unsaved_changes">Nicht gespeicherte Änderungen</string>
@@ -421,6 +423,7 @@
   <string name="common_or">oder</string>
   <string name="common_origin_card">Hauptkarte</string>
   <string name="common_origin_ring">Primärring</string>
+  <string name="common_other">Sonstiges</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
   <string name="common_privacy_policy">Datenschutzrichtlinie</string>
@@ -719,6 +722,7 @@
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
   <string name="for_you_description">Portfolio prüfen und Verdienstmöglichkeiten erkunden</string>
+  <string name="for_you_portfolio_review_title">Portfolio-Überprüfung</string>
   <string name="for_you_title">Für dich</string>
   <string name="force_update_action">Jetzt aktualisieren</string>
   <string name="force_update_banner_message">Aktualisiere die Anwendung auf die neueste Version, um die ordnungsgemäße Funktionalität zu gewährleisten</string>
@@ -735,6 +739,7 @@
   <string name="generic_error">Es ist ein Fehler aufgetreten</string>
   <string name="generic_error_code">Es ist ein Fehler aufgetreten. Code: %s.</string>
   <string name="generic_requires_memo_error">Memo erforderlich</string>
+  <string name="get_token_title">Erhalten %1$s</string>
   <string name="give_permission_current_transaction">Nur diese</string>
   <string name="give_permission_policy_type_footer">Mit Deiner Zustimmung erlaubst Du dem Smart Contract, Deine Token in zukünftigen Transaktionen zu verwenden.</string>
   <string name="give_permission_rows_amount">Betrag %s</string>
@@ -918,6 +923,7 @@
   <string name="markets_portfolio_block_add_token_title">**Hinzufügen zu Ihrem Portfolio**, um mit dem Kauf, Tausch oder Erhalt dieses Vermögenswerts zu beginnen</string>
   <string name="markets_portfolio_block_subtitle">Zum Portfolio hinzufügen</string>
   <string name="markets_portfolio_block_title">Dein Portfolio</string>
+  <string name="markets_portfolio_block_token_unsupported">**Token nicht unterstützt**. Dieser Token wird derzeit in der Wallet nicht unterstützt.</string>
   <string name="markets_pulse_common_title">Marktimpuls</string>
   <string name="markets_quick_actions">Schnelle Aktionen</string>
   <string name="markets_search_clear_all_hints">Alles löschen</string>
@@ -1280,6 +1286,8 @@
   <string name="onramp_title_available_from">Erhältlich ab</string>
   <string name="onramp_title_available_up_to">Verfügbar bis zu</string>
   <string name="onramp_title_you_get">Du erhältst</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">Dieser Token wird nicht unterstützt. Bitte wählen Sie einen anderen Token zum Kauf.</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s wird nicht unterstützt</string>
   <string name="onramp_tos_external_providers">Der Service wird von einem externen Anbieter bereitgestellt. \n Tangem übernimmt keine Verantwortung.</string>
   <string name="onramp_transaction_status_footer_text">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
   <string name="onramp_up_to_rate">Bis zu</string>
@@ -1292,6 +1300,19 @@
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
+  <string name="promo_campaign_already_activated_subtitle">Berechtigte Cashback-Zahlungen werden wie folgt ausgezahlt:</string>
+  <string name="promo_campaign_already_activated_title">Sie sind bereits eingeschrieben in %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Zulässige Token</string>
+  <string name="promo_campaign_enroll">Anmelden</string>
+  <string name="promo_campaign_enroll_success_title">Sie sind erfolgreich eingeschrieben in %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">Diese Aktion existiert nicht mehr oder ist abgelaufen.</string>
+  <string name="promo_campaign_not_active_title">Kampagne nicht aktiv</string>
+  <string name="promo_campaign_select_cashback_account">Cashback-Konto auswählen</string>
+  <string name="promo_campaign_summary_title">Melden Sie sich an %1$s</string>
+  <string name="promo_campaign_terms_agreement">Ich stimme zu, dass %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">Ich stimme zu, dass</string>
+  <string name="promo_campaign_terms_link">%1$s Bedingungen</string>
+  <string name="promo_campaign_whale_swap_summary_description">Erhalten Sie bis Ende Juli bei jedem Swap ab 10.000 $ Cashback.\n\nDie Sätze steigen mit dem Volumen: 0,10% ab 10.000 $, 0,20% ab 20.000 $, 0,50% ab 100.000 $.\n\nMaximale Auszahlung: 500 $ pro Swap und 10.000 $ pro Wallet und Swap-Richtung, solange die Aktion läuft. Swaps von Stablecoins in andere Stablecoins sind ausgeschlossen.\n\nDie Auszahlung erfolgt wöchentlich an eine USDT- oder USDC-Adresse Ihrer Wahl.</string>
   <string name="provider_name_support">%s Unterstützung</string>
   <string name="push_notification_settings_banner_description">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst, nachdem du Benachrichtigungen in den Geräteeinstellungen zugelassen hast.</string>
   <string name="push_notification_settings_banner_title">Benachrichtigungen zulassen</string>
@@ -1423,6 +1444,7 @@
   <string name="send_destination_tag_field">Ziel-Tag</string>
   <string name="send_enter_address_field">Adresse eingeben</string>
   <string name="send_enter_address_field_ens">ENS-Name oder Adresse</string>
+  <string name="send_enter_address_field_ens_name">Adresse, ENS oder Name</string>
   <string name="send_error_address_same_as_wallet">Die Adresse stimmt mit der Adresse Ihrer Brieftasche überein</string>
   <string name="send_error_dust_amount_format">Minimaler Betrag ist %s</string>
   <string name="send_error_dust_change_format">Minimaler Wechselgeld ist %s</string>
@@ -1622,9 +1644,9 @@
   <string name="staking_notification_ton_account_initialization_message">Um mit dem Staking zu beginnen, musst Du zuerst Dein TON-Konto aktivieren.</string>
   <string name="staking_notification_ton_account_initialization_title">Kontoaktivierung</string>
   <string name="staking_notification_ton_activate_account">Um mit dem Staking in TON zu beginnen, sende zunächst eine kleine Transaktion an Deine eigene Adresse – dadurch wird Deine Wallet aktiviert.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 TON erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 TON erforderlich. Bitte lade Dein Guthaben auf.</string>
-  <string name="staking_notification_ton_extra_reserve_title">TON-Reserve erforderlich</string>
+  <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 GRAM erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 GRAM erforderlich. Bitte lade Dein Guthaben auf.</string>
+  <string name="staking_notification_ton_extra_reserve_title">GRAM-Reserve erforderlich</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Durch diese Aktion werden andere Positionen geschlossen oder gemäß den Netzwerkregeln in den Auszahlungsstatus versetzt.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Positionsstatus</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
@@ -1803,6 +1825,8 @@
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">Eine Gebühr wird gemäß den Servicetarifen erhoben</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Die Transaktion wurde vom Händler teilweise oder vollständig storniert</string>
+  <string name="tangem_pay_unavailable_region_description">Wir führen das System schrittweise ein und werden Sie informieren, sobald Tangem Pay hier verfügbar ist.</string>
+  <string name="tangem_pay_unavailable_region_title">Tangem Pay ist in Ihrer Region nicht verfügbar.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Nutze Dein Geld weiterhin. Du kannst es jederzeit einfrieren.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Karte entsperren?</string>
   <string name="tangem_pay_unfreeze_card_failed">Entsperren der Karte fehlgeschlagen. Versuchen Sie es später erneut.</string>
@@ -1812,6 +1836,16 @@
   <string name="tangempay_account_deactivated_message_title">Ihr Konto wurde geschlossen</string>
   <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
   <string name="tangempay_available_balance">Verfügbares Guthaben</string>
+  <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
+  <string name="tangempay_bank_transfer_fee_header">Gebühr für die Auffahrt</string>
+  <string name="tangempay_bank_transfer_intro_subtitle">Eingegangene USD werden im Verhältnis 1:1 in USDC umgewandelt.</string>
+  <string name="tangempay_bank_transfer_intro_title">Eine Banküberweisung kann 1-2 Werktage dauern.</string>
+  <string name="tangempay_bank_transfer_legal">Durch die Nutzung des Dienstes stimmen Sie den Bedingungen des Anbieters zu. %1$s Und %2$s</string>
+  <string name="tangempay_bank_transfer_show_details">Details anzeigen</string>
+  <string name="tangempay_bank_transfer_success_subtitle">Dies kann etwas Zeit in Anspruch nehmen.</string>
+  <string name="tangempay_bank_transfer_success_title">Vorbereitung Ihrer Bankdaten</string>
+  <string name="tangempay_bank_transfer_swift_warning">Einzahlungen sind ausschließlich per ACH oder FedWire möglich. SWIFT-Überweisungen werden zurückgebucht.</string>
   <string name="tangempay_cancel_kyc">KYC vom Hauptbildschirm ausblenden</string>
   <string name="tangempay_card_default_name">Tangem Pay Karte 1</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
@@ -1881,6 +1915,7 @@
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
+  <string name="tangempay_common_error_loading">Fehler beim Laden</string>
   <string name="tangempay_current_plan_change">Tarif wechseln</string>
   <string name="tangempay_current_plan_section_card">Kartenbezogen</string>
   <string name="tangempay_current_plan_section_plan">Planbezogen</string>
@@ -2011,11 +2046,14 @@
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_bank_transfer_body">Empfangen Sie Fiat-USD per ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_title">Banküberweisung</string>
   <string name="tangempay_topup_receive_body">Senden Sie USDC Polygon an die Adresse Ihres Kontos</string>
   <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>
   <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
+  <string name="tangempay_visa_benefits">Visavorteile</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
@@ -2057,6 +2095,13 @@
   <string name="token_details_unable_hide_alert_title">%s kann nicht ausgeblendet werden</string>
   <string name="token_market_metrics_no_data">N / A</string>
   <string name="token_receive_show_qr_code_title">QR-Code anzeigen</string>
+  <string name="token_summary_can_not_load_token">Die Daten des Tokens konnten nicht geladen werden.</string>
+  <string name="token_summary_go_to_swap_button">Gehe zum Tauschen</string>
+  <string name="token_summary_last_update_subtitle">Letzte Aktualisierung: %1$s</string>
+  <string name="token_summary_negative_outlook_title">Negativer Ausblick</string>
+  <string name="token_summary_neutral_outlook_title">Neutraler Ausblick</string>
+  <string name="token_summary_positive_outlook_title">Positiver Ausblick</string>
+  <string name="token_summary_title">Token-Zusammenfassung</string>
   <string name="token_swap_changelly_promotion_message">Tausche diesen Token gegen einen anderen zu %1$s Servicegebühren von Februar %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Tausche mit Changelly, %s Gebühren</string>
   <string name="token_swap_promotion_button">Jetzt tauschen</string>
@@ -2137,6 +2182,12 @@
   <string name="user_wallet_list_rename_popup_title">Wallet umbenennen</string>
   <string name="user_wallet_list_unlock_all">Alle freischalten</string>
   <string name="user_wallet_list_unlock_all_with">Alle mit %s freischalten</string>
+  <string name="virtual_account_requisites_account_number">Kontonummer</string>
+  <string name="virtual_account_requisites_bank_address">Bankadresse</string>
+  <string name="virtual_account_requisites_bank_name">Name der Bank</string>
+  <string name="virtual_account_requisites_beneficiary_address">Adresse des Begünstigten</string>
+  <string name="virtual_account_requisites_beneficiary_name">Name des Begünstigten</string>
+  <string name="virtual_account_requisites_routing_number">Bankleitzahl</string>
   <string name="virtual_account_title">Virtuelles Konto</string>
   <string name="virtual_account_transactions_empty">Noch keine Transaktionen. Beginnen Sie mit dem Einkaufen und sehen Sie sich hier den Verlauf an</string>
   <string name="visa_balance_limits_details_aml_verified">AML-geprüft</string>
@@ -2358,6 +2409,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">Dieses Token muss mit deinem Hedera-Konto verknüpft sein, bevor du ihn erhalten kannst.</string>
   <string name="warning_hedera_missing_token_association_title">Verknüpfe deinen Token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Nicht genug %s. Lade dein Hedera-Konto auf, um dieses Token zuzuordnen</string>
+  <string name="warning_incomplete_backup_notification_message">Es scheint, dass die Aktivierung der Karte oder des Rings nicht korrekt abgeschlossen wurde. Dies kann an einem Problem mit dem NFC-Modul deines Gerätes oder an einem falschen Tippen der Karte oder Ring auf dein Gerät liegen. Bitte wende dich an unser Support-Team, um Unterstützung zu erhalten.</string>
+  <string name="warning_incomplete_backup_notification_title">Handeln ist gefragt. Benutzen Sie nicht Ihr Wallet!</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Bist Du sicher, dass Du die Transaktion stornieren willst? Du kannst die Transaktion nicht erneut starten.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Du hast eine nicht abgeschlossene Transaktion</string>
@@ -2647,6 +2700,8 @@
   <string name="yield_module_transaction_exit_subtitle">%1$s aus Aave zurücküberwiesen</string>
   <string name="yield_module_transaction_initialize">Yield-Modus initialisieren</string>
   <string name="yield_module_transaction_reactivate">Yield-Modus reaktivieren</string>
+  <string name="yield_module_transaction_returned">Zurückgegeben</string>
+  <string name="yield_module_transaction_supplied">Geliefert</string>
   <string name="yield_module_transaction_topup">Lieferung an Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s geliefert an Aave</string>
   <string name="yield_module_transaction_withdraw">Abheben von Aave</string>

@@ -1,5 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -13,6 +15,7 @@ internal class UpdateTransferTransformer(
     private val actions: List<TokenActionsState.ActionState>,
     private val networkSource: StatusSource,
     private val clickIntents: TokenDetailsClickIntents,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val onActionDispatched: () -> Unit,
 ) : Transformer<TokenDetailsUM> {
 
@@ -28,6 +31,7 @@ internal class UpdateTransferTransformer(
                 isLoading = action.unavailabilityReason.isOutdatedLoading(),
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
+                    analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSend())
                     onActionDispatched()
                     clickIntents.onSendClick(action.unavailabilityReason)
                 },
@@ -38,6 +42,7 @@ internal class UpdateTransferTransformer(
                 isLoading = action.unavailabilityReason.isLoading,
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
+                    analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSwap())
                     onActionDispatched()
                     clickIntents.onSwapFromClick(action.unavailabilityReason)
                 },
@@ -53,6 +58,7 @@ internal class UpdateTransferTransformer(
                     isLoading = false,
                     isEnabled = true,
                     onClick = {
+                        analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSwapAndSend())
                         onActionDispatched()
                         clickIntents.onSwapAndSendClick(it.unavailabilityReason)
                     },
@@ -63,6 +69,7 @@ internal class UpdateTransferTransformer(
                 isLoading = action.unavailabilityReason.isOutdatedLoading(),
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
+                    analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSell())
                     onActionDispatched()
                     clickIntents.onSellClick(action.unavailabilityReason)
                 },

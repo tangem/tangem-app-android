@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.utils.extensions.indexOfFirstOrNull
@@ -281,6 +283,7 @@ private fun Segment(
     modifier: Modifier = Modifier,
     minSegmentWidth: Dp = Dp.Unspecified,
 ) {
+    val hapticManager = LocalHapticManager.current
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = minSegmentWidth)
@@ -288,6 +291,9 @@ private fun Segment(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
             ) {
+                if (selectedIndex.value != index) {
+                    hapticManager.perform(TangemHapticEffect.View.SegmentTick)
+                }
                 selectedIndex.value = index
                 onClick()
             },
