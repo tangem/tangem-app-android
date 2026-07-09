@@ -104,6 +104,7 @@
     <item quantity="other">%d地址\n%d地址</item>
   </plurals>
   <string name="address_book_choose_address">选择地址</string>
+  <string name="address_book_clear_all_networks">全部清除</string>
   <string name="address_book_contact">联系人</string>
   <string name="address_book_contact_name">联系人姓名</string>
   <string name="address_book_copy_address">复制地址</string>
@@ -133,6 +134,7 @@
   <string name="address_book_save_to_wallet_title">保存到钱包</string>
   <string name="address_book_save_wallet_to_description">该联系人将与该钱包的通讯录关联。</string>
   <string name="address_book_search_no_results">未找到结果。\n请尝试其他名称</string>
+  <string name="address_book_select_all_networks">全选</string>
   <string name="address_book_select_network">选择网络</string>
   <string name="address_book_title">地址簿</string>
   <string name="address_book_unsaved_changes">未保存的更改</string>
@@ -1278,6 +1280,7 @@
   <string name="quick_action_buy_description">信用卡或银行账户</string>
   <string name="quick_action_receive_description">分享您的地址或二维码</string>
   <string name="quick_action_sell_description">安全出售加密货币</string>
+  <string name="quick_action_send_and_swap_description">发送并兑换成另一种代币</string>
   <string name="quick_action_send_description">发送到另一个钱包</string>
   <string name="quick_action_swap_description">在您的投资组合之间</string>
   <string name="quick_top_up_chip_other">其他</string>
@@ -1565,9 +1568,9 @@
   <string name="staking_notification_ton_account_initialization_message">要开始质押，您需要先激活您的 TON 账户。</string>
   <string name="staking_notification_ton_account_initialization_title">激活账户</string>
   <string name="staking_notification_ton_activate_account">要开始在 TON 上进行质押，首先向您自己的地址发送一笔小额交易——这将激活您的钱包。</string>
-  <string name="staking_notification_ton_extra_reserve_info">除网络费用外，完成交易可能还需要额外支付最多 0.2 TON 的费用。任何未使用的金额将予以退还。</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">除网络费用外，本次操作还需要 0.2 TON。请充值。</string>
-  <string name="staking_notification_ton_extra_reserve_title">需要TON储备</string>
+  <string name="staking_notification_ton_extra_reserve_info">除网络费用外，完成交易可能还需要额外支付最多 0.2 GRAM 的费用。任何未使用的金额将予以退还。</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">除网络费用外，本次操作还需要 0.2 GRAM。请充值。</string>
+  <string name="staking_notification_ton_extra_reserve_title">需要GRAM储备</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">根据网络规则，此操作将关闭其他仓位或将其切换为提现状态。</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">仓位状态</string>
   <string name="staking_notification_unlock_text">解锁您的资金即可从质押过程中提款。解锁需要一定时间。 %s。</string>
