@@ -1,7 +1,8 @@
 package com.tangem.common.ui.navigationButtons
 
+import com.tangem.core.decompose.navigation.Route
+
 interface NavigationModelCallback {
-    fun onNavigationResult(navigationUM: NavigationUM)
-    fun onBackClick()
-    fun onNextClick()
+    fun onBackClick(currentRoute: Route)
+    fun onNextClick(currentRoute: Route)
 }

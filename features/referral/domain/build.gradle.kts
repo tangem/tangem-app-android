@@ -11,30 +11,22 @@ android {
 }
 dependencies {
 
-    /** Libs */
-    implementation(projects.core.utils)
-    implementation(projects.core.decompose)
-
     /** Core modules */
-    implementation(projects.libs.crypto)
+    api(projects.core.decompose)
+    implementation(projects.core.utils)
 
     /** Domain modules */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.card)
-    implementation(projects.domain.common)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-
-    /** Feature Apis */
-    implementation(projects.features.tester.api)
-    implementation(projects.features.wallet.api)
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.common)
+    api(projects.domain.models)
+    api(projects.domain.walletManager)
+    implementation(projects.domain.core)
 
     /** Dependencies */
-    implementation(deps.arrow.core)
-    implementation(deps.jodatime)
+    api(deps.arrow.core)
+    api(deps.jodatime)
+    implementation(deps.kotlin.coroutines)
     implementation(tangemDeps.card.core)
 
     /** DI */
