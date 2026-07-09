@@ -61,6 +61,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
                 logError(error)
                 true
             }
+            .runningReduce { previous, new -> if (previous.isContent && !new.isContent) previous else new }
             .flowOn(dispatchers.io)
             .stateIn(modelScope, SharingStarted.Eagerly, HistoryState.Loading)
     }
@@ -73,7 +74,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
         actionsFlow.trySend(Action.LoadMore)
     }
 
-    private fun buildPipeline() = channelFlow {
+    private fun buildPipeline(): Flow<HistoryState> = channelFlow {
         val reloadInitialLoading = flow {
             // initial load
             emit(Unit)
