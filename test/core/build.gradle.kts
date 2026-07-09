@@ -4,9 +4,10 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.core.utils)
-    implementation(projects.domain.core)
-    implementation(deps.arrow.core)
+    api(projects.core.utils)
+    api(projects.domain.core)
+    api(deps.arrow.core)
+    api(deps.kotlin.coroutines)
 
     api(deps.androidx.datastore.core)
     api(deps.test.coroutine)

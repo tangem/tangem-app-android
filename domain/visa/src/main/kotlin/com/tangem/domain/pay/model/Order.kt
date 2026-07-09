@@ -14,6 +14,7 @@ package com.tangem.domain.pay.model
  * @property productInstanceId set for card-scoped orders.
  * @property paymentAccountId set for card-scoped and payment-account-level orders.
  * @property cardId set for card-scoped orders that are filtered by card.
+ * @property toTariffPlanId target tariff plan id for [OrderType.TARIFF_PLAN_TRANSITION] orders.
  * @property withdrawTxHash present for completed [OrderType.WITHDRAW] orders.
  * @property updatedAt ISO-8601 timestamp used to pick the most recent matching order.
  */
@@ -22,11 +23,12 @@ data class Order(
     val customerId: String?,
     val type: OrderType,
     val status: OrderStatus,
-    val step: String?,
+    val step: OrderStep,
     val stepChangeCode: Int?,
     val productInstanceId: String?,
     val paymentAccountId: String?,
     val cardId: String?,
+    val toTariffPlanId: String?,
     val withdrawTxHash: String?,
     val createdAt: String?,
     val updatedAt: String?,
