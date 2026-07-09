@@ -19,6 +19,8 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
@@ -117,6 +119,7 @@ private fun OptionsV2(
     modifier: Modifier = Modifier,
 ) {
     var isShowDropdownMenu by rememberSaveable { mutableStateOf(false) }
+    val hapticManager = LocalHapticManager.current
 
     val segmentItems = remember {
         persistentListOf(
@@ -147,7 +150,10 @@ private fun OptionsV2(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             PrimaryInverseTangemButton(
-                onClick = { isShowDropdownMenu = true },
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                    isShowDropdownMenu = true
+                },
                 iconPosition = RedesignTangemButtonIconPosition.End,
                 tangemIconUM = TangemIconUM.Icon(
                     iconRes = R.drawable.ic_chewron_down_20,
