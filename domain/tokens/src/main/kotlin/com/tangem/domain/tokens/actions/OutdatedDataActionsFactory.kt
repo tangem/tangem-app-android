@@ -79,7 +79,12 @@ internal class OutdatedDataActionsFactory(
             // endregion
 
             // region Buy
-            addBuyAction(reason = ScenarioUnavailabilityReason.None)
+            addBuyAction(
+                reason = getBuyUnavailabilityReason(
+                    userWallet = userWallet,
+                    currency = cryptoCurrencyStatus.currency,
+                ),
+            )
             // endregion
 
             // region Stake
