@@ -44,6 +44,12 @@ internal data class AddAddressUM(
         data object Loading : ChosenNetworkStateUM
 
         /**
+         * The address matched several networks but the user hasn't picked any yet — the row prompts them to open the
+         * selection screen instead of showing network icons.
+         */
+        data object SelectNetwork : ChosenNetworkStateUM
+
+        /**
          * A valid address resolved to [networkUMList] (the currently selected networks). [isClickable] is `false` when
          * the address matched only a single network — there is nothing to choose, so the network-selection screen is
          * not opened.
