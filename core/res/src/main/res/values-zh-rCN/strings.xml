@@ -98,14 +98,21 @@
   <string name="address_book_add_address">添加地址</string>
   <string name="address_book_add_address_description">添加地址并选择网络</string>
   <string name="address_book_add_contact">添加联系人</string>
+  <string name="address_book_address_copied">地址已复制</string>
+  <string name="address_book_address_taken_error">此地址已保存为 %1$s</string>
   <plurals name="address_book_addresses" formatted="false">
     <item quantity="other">%d地址\n%d地址</item>
   </plurals>
+  <string name="address_book_choose_address">选择地址</string>
+  <string name="address_book_clear_all_networks">全部清除</string>
   <string name="address_book_contact">联系人</string>
   <string name="address_book_contact_name">联系人姓名</string>
   <string name="address_book_copy_address">复制地址</string>
+  <string name="address_book_create_success_message">联系人已保存</string>
   <string name="address_book_creating_error">无法创建联系人。请稍后再试。</string>
+  <string name="address_book_delete_contact">删除联系人</string>
   <string name="address_book_delete_contact_description">该联系人将从您所有的通讯录中删除</string>
+  <string name="address_book_delete_last_address">“%1$s“只有一个地址。删除此地址也会删除联系人。继续吗？”</string>
   <string name="address_book_deleting_error">无法删除联系人，请稍后再试。</string>
   <string name="address_book_description">管理联系人及地址</string>
   <string name="address_book_discard">取消</string>
@@ -113,11 +120,21 @@
   <string name="address_book_enter_address">输入地址</string>
   <string name="address_book_invalid_address_error">无效地址</string>
   <string name="address_book_keep_editing">继续编辑</string>
+  <string name="address_book_max_networks_alert_description">您最多只能创建 20 个地址。删除一个地址即可添加新地址。</string>
+  <string name="address_book_max_networks_alert_title">无法添加新地址</string>
+  <string name="address_book_name_empty_error">必须填写联系人姓名</string>
+  <string name="address_book_name_invalid_chars_error">联系人姓名包含无效字符</string>
+  <string name="address_book_name_max_chars_error">联系人姓名不得超过 50 个字符</string>
+  <string name="address_book_name_taken_error">这个钱包的名字已经被注册了</string>
   <string name="address_book_new_contact">新联系人</string>
   <string name="address_book_no_contacts">尚无联系人</string>
   <string name="address_book_no_contacts_description">添加的联系人将显示在此处</string>
   <string name="address_book_remove_address">移除地址</string>
+  <string name="address_book_save_contact">保存联系人</string>
+  <string name="address_book_save_to_wallet_title">保存到钱包</string>
   <string name="address_book_save_wallet_to_description">该联系人将与该钱包的通讯录关联。</string>
+  <string name="address_book_search_no_results">未找到结果。\n请尝试其他名称</string>
+  <string name="address_book_select_all_networks">全选</string>
   <string name="address_book_select_network">选择网络</string>
   <string name="address_book_title">地址簿</string>
   <string name="address_book_unsaved_changes">未保存的更改</string>
@@ -1263,6 +1280,7 @@
   <string name="quick_action_buy_description">信用卡或银行账户</string>
   <string name="quick_action_receive_description">分享您的地址或二维码</string>
   <string name="quick_action_sell_description">安全出售加密货币</string>
+  <string name="quick_action_send_and_swap_description">发送并兑换成另一种代币</string>
   <string name="quick_action_send_description">发送到另一个钱包</string>
   <string name="quick_action_swap_description">在您的投资组合之间</string>
   <string name="quick_top_up_chip_other">其他</string>
@@ -1550,9 +1568,9 @@
   <string name="staking_notification_ton_account_initialization_message">要开始质押，您需要先激活您的 TON 账户。</string>
   <string name="staking_notification_ton_account_initialization_title">激活账户</string>
   <string name="staking_notification_ton_activate_account">要开始在 TON 上进行质押，首先向您自己的地址发送一笔小额交易——这将激活您的钱包。</string>
-  <string name="staking_notification_ton_extra_reserve_info">除网络费用外，完成交易可能还需要额外支付最多 0.2 TON 的费用。任何未使用的金额将予以退还。</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">除网络费用外，本次操作还需要 0.2 TON。请充值。</string>
-  <string name="staking_notification_ton_extra_reserve_title">需要TON储备</string>
+  <string name="staking_notification_ton_extra_reserve_info">除网络费用外，完成交易可能还需要额外支付最多 0.2 GRAM 的费用。任何未使用的金额将予以退还。</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">除网络费用外，本次操作还需要 0.2 GRAM。请充值。</string>
+  <string name="staking_notification_ton_extra_reserve_title">需要GRAM储备</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">根据网络规则，此操作将关闭其他仓位或将其切换为提现状态。</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">仓位状态</string>
   <string name="staking_notification_unlock_text">解锁您的资金即可从质押过程中提款。解锁需要一定时间。 %s。</string>
@@ -2262,6 +2280,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">您必须先将此代币与您的 Hedera 账户关联才能收到它。</string>
   <string name="warning_hedera_missing_token_association_title">关联您的代币</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%s不够。请为您的 Hedera 账户充值以关联此代币</string>
+  <string name="warning_incomplete_backup_notification_message">我们发现，由于您的设备NFC模块存在问题，或者将卡片轻触手机的方式不正确，导致卡片激活流程未能正常完成。请联系我们的客服团队以获取更多详情。</string>
+  <string name="warning_incomplete_backup_notification_title">必须采取行动。不要用你的钱包！</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">您确定要取消交易吗？取消后您将无法再次尝试交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">您金额为 %1$s %2$s 的交易未完成。您可以再次尝试完成交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">您有未完成的交易</string>
