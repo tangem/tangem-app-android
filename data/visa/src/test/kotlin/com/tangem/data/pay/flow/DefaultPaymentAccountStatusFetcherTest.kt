@@ -127,7 +127,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         availableForWithdrawal = BigDecimal.TEN,
         cards = listOf(cardInfo),
         productInstances = productInstances,
-        tariffPlan = null,
     )
 
     @BeforeEach
