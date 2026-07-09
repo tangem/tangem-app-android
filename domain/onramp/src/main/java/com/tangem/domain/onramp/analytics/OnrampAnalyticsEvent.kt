@@ -1,6 +1,7 @@
 package com.tangem.domain.onramp.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PAYMENT_METHOD
@@ -207,5 +208,18 @@ sealed class OnrampAnalyticsEvent(
     class AllOffersClicked : OnrampAnalyticsEvent(
         event = "Button - All Offers",
         params = emptyMap(),
+    )
+
+    data class NoticeBuyNotSupported(
+        private val source: OnrampSource,
+        private val tokenSymbol: String,
+        private val blockchain: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Notice - Buy Not Supported",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+            TOKEN_PARAM to tokenSymbol,
+            BLOCKCHAIN to blockchain,
+        ),
     )
 }

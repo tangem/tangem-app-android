@@ -65,6 +65,7 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val navigationAction: NavigationAction? = null,
+        val shouldShowMarketBlock: Boolean = true,
     ) : AppRoute(path = "/currency_details/${userWalletId.stringValue}/${currency.id.value}")
 
     @Serializable
