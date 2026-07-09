@@ -88,15 +88,15 @@ private fun AddressWithMemoBlock(
         val contactIcon = address.contactIcon
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = contactName ?: address.value,
+                text = address.value,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS),
             )
-            val recipient = if (contactName != null) address.value else address.briefBlockchainAddress
-            if (!recipient.isNullOrBlank()) {
+            val blockchainAddress = address.briefBlockchainAddress
+            if (!blockchainAddress.isNullOrBlank()) {
                 Text(
-                    text = recipient,
+                    text = blockchainAddress,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.testTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS),
@@ -107,7 +107,7 @@ private fun AddressWithMemoBlock(
             AccountIcon(
                 name = stringReference(contactName),
                 icon = contactIcon,
-                size = AccountIconSize.Medium,
+                size = AccountIconSize.ContactDefault,
                 modifier = Modifier.testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS_ICON),
             )
         } else {

@@ -19,9 +19,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -36,19 +35,14 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
         modifier = modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors3.bg.primary)
-            .systemBarsPadding(),
+            .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TangemTopBar(
+        TangemTopNavigation(
             title = resourceReference(R.string.address_book_add_address),
-            startContent = {
-                TangemButton(
-                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_back_24),
-                    onClick = state.onBackClick,
-                    size = TangemButton.Size.X11,
-                    variant = TangemButton.Variant.Material,
-                )
-            },
+            contentAlign = TangemTopNavigation.ContentAlign.Center,
+            blurBackground = false,
+            onBack = state.onBackClick,
         )
         BoxWithConstraints(
             modifier = Modifier
@@ -135,6 +129,7 @@ private fun NetworkSelector(chosenNetworkStateUM: AddAddressUM.ChosenNetworkStat
         when (networkState) {
             AddAddressUM.ChosenNetworkStateUM.Hidden -> Box(modifier = Modifier.fillMaxWidth())
             AddAddressUM.ChosenNetworkStateUM.Loading,
+            AddAddressUM.ChosenNetworkStateUM.SelectNetwork,
             is AddAddressUM.ChosenNetworkStateUM.Result,
             -> NetworkBlock(
                 modifier = Modifier

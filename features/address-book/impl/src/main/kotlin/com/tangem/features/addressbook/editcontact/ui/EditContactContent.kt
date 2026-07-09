@@ -8,11 +8,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,16 +30,17 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.fields.AutoSizeTextField
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -53,31 +56,21 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modifier) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(color = TangemTheme.colors3.bg.primary)
-            .imePadding()
-            .systemBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(color = TangemTheme.colors3.bg.primary),
     ) {
-        TangemTopBar(
-            modifier = Modifier.statusBarsPadding(),
-            title = state.title,
-            endContent = {
-                TangemButton(
-                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
-                    onClick = state.onCloseClick,
-                    size = TangemButton.Size.X11,
-                    variant = TangemButton.Variant.Material,
-                )
-            },
-        )
+        var topBarHeightPx by remember { mutableIntStateOf(0) }
+        val topBarHeight = with(LocalDensity.current) { topBarHeightPx.toDp() }
 
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .fillMaxSize()
+                .hazeSourceTangem()
+                .background(color = TangemTheme.colors3.bg.primary)
+                .imePadding()
+                .navigationBarsPadding(),
         ) {
             val minContentHeight = maxHeight
             Column(
@@ -88,7 +81,8 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
                 Column(
                     modifier = Modifier
                         .heightIn(min = minContentHeight)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp)
+                        .padding(top = topBarHeight + 12.dp, bottom = 12.dp),
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         ContactSummary(state = state)
@@ -110,6 +104,15 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
                 }
             }
         }
+
+        TangemTopNavigation(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .onSizeChanged { topBarHeightPx = it.height },
+            title = state.title,
+            onClose = state.onCloseClick,
+            contentAlign = TangemTopNavigation.ContentAlign.Center,
+        )
     }
 }
 
@@ -297,7 +300,6 @@ private fun DeleteContactButton(onClick: () -> Unit, modifier: Modifier = Modifi
             text = stringResourceSafe(R.string.address_book_delete_contact),
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.status.error,
-            textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -333,7 +335,7 @@ private fun ContactSummary(state: EditContactUM) {
         AccountIcon(
             name = stringReference(avatarName),
             icon = state.portfolioIcon,
-            size = AccountIconSize.RedesignLarge,
+            size = AccountIconSize.ContactLarge,
         )
 
         SpacerH(28.dp)
