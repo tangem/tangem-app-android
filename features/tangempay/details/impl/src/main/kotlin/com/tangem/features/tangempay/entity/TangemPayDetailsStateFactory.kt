@@ -3,19 +3,15 @@ package com.tangem.features.tangempay.entity
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.themedColor
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
-import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
@@ -41,6 +37,13 @@ internal class TangemPayDetailsStateFactory(
     private val isMultipleCardsEnabled: Boolean,
     private val isTiersPlusPlanEnabled: Boolean,
 ) {
+    private val notificationFactory = TangemPayDetailsNotificationFactory(
+        intents = intents,
+        isRemoveAccountEnabled = isRemoveAccountEnabled,
+        isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
+        isRedesignEnabled = isRedesignEnabled,
+    )
+
     fun getLoadingState(): TangemPayDetailsUM {
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -75,6 +78,8 @@ internal class TangemPayDetailsStateFactory(
         val isAddCardEnabled = isFresh && !hasIssuingCard
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val hasWithdrawableBalance = status.balance.hasWithdrawableAmount
+        val errorNotification = notificationFactory.createErrorConfig(status.error)
+        val awaitingDepositNotification = notificationFactory.createAwaitingDepositConfig(status.tariffPlan)
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -111,15 +116,9 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             addToWalletBlockState = null,
-            errorNotificationConfig = createErrorConfig(status.error) ?: createAwaitingDepositConfig(status.tariffPlan),
+            errorNotificationConfig = errorNotification ?: awaitingDepositNotification,
             accountDeactivatedNotificationConfig = null,
         )
-    }
-
-    private fun createErrorConfig(error: PaymentAccountStatusValue.Error?): NotificationConfig? = when (error) {
-        null -> null
-        PaymentAccountStatusValue.Error.NotSynced -> createRenewSessionNotificationConfig(isRedesignEnabled)
-        else -> createAccountUnavailableConfig(isRedesignEnabled)
     }
 
     private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? = when {
@@ -129,6 +128,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getDeactivatedState(hasWithdrawableBalance: Boolean): TangemPayDetailsUM {
+        val accountDeactivatedNotification = notificationFactory.createAccountDeactivatedConfig(isRedesignEnabled)
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -150,64 +150,9 @@ internal class TangemPayDetailsStateFactory(
             isBalanceHidden = false,
             addToWalletBlockState = null,
             errorNotificationConfig = null,
-            accountDeactivatedNotificationConfig = createAccountDeactivatedConfig(isRedesignEnabled),
+            accountDeactivatedNotificationConfig = accountDeactivatedNotification,
         )
     }
-
-    private fun createAccountUnavailableConfig(isRedesignEnabled: Boolean) = NotificationConfig(
-        title = resourceReference(R.string.tangempay_temporarily_unavailable),
-        subtitle = resourceReference(R.string.tangempay_service_unreachable_try_later),
-        iconResId = if (isRedesignEnabled) R.drawable.ic_alert_circle_24 else R.drawable.img_attention_20,
-    )
-
-    private fun createAccountDeactivatedConfig(isRedesignEnabled: Boolean) = NotificationConfig(
-        title = resourceReference(R.string.tangempay_account_deactivated_message_title),
-        subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
-        iconResId = if (isRedesignEnabled) R.drawable.ic_alert_circle_24 else R.drawable.img_attention_20,
-        buttonsState = if (isRemoveAccountEnabled) {
-            NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.tangempay_remove_account),
-                onClick = intents::onRemoveAccount,
-            )
-        } else {
-            null
-        },
-    )
-
-    // TODO v_rodionov: strings hardcoded for now - wait for localization
-    private fun createAwaitingDepositConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
-        val order = tariffPlan?.order ?: return null
-
-        val orderStep = order.step
-        if (orderStep !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit) return null
-
-        val recurringFee = orderStep.toPlan.fees.find { it.type == TangemPayTariffPlan.Fee.Type.RECURRING }
-        val feeText = recurringFee?.let { fee ->
-            val currency = getJavaCurrencyByCode(fee.currency)
-            fee.amount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
-        }
-        val title = if (feeText != null) "Top-up your account on $feeText" else "Top-up your account"
-        return NotificationConfig(
-            title = stringReference(title),
-            subtitle = stringReference("To pay monthly fee for plan and start use card"),
-            iconResId = R.drawable.ic_alert_circle_24,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = stringReference("Cancel ${orderStep.toPlan.name}, move to ${orderStep.fromPlan.name}"),
-                onClick = { intents.onCancelPlusTransition(order.orderId) },
-            ),
-        )
-    }
-
-    private fun createRenewSessionNotificationConfig(isRedesignEnabled: Boolean) = NotificationConfig(
-        title = resourceReference(R.string.tangempay_sync_needed_title),
-        subtitle = resourceReference(R.string.tangempay_sync_needed_body),
-        iconResId = if (isRedesignEnabled) 0 else R.drawable.img_attention_20,
-        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-            text = resourceReference(R.string.tangempay_sync_needed_button),
-            onClick = intents::onRenewSession,
-            iconResId = R.drawable.ic_tangem_24,
-        ),
-    )
 
     private fun getTopBarMenuItems(): ImmutableList<TangemDropdownMenuItem> {
         return persistentListOf(
@@ -285,6 +230,23 @@ internal class TangemPayDetailsStateFactory(
                             tintReference = { TangemTheme.colors3.icon.primary },
                         ),
                         subtitle = stringReference(tariffPlan.tariff.plan.name),
+                        isEnabled = tariffPlan.order?.step !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit &&
+                            tariffPlan.tariff.status != TangemPayCustomerTariffPlan.Status.TRANSITIONING,
+                    ),
+                )
+            }
+            if (isTiersPlusPlanEnabled &&
+                tariffPlan != null &&
+                tariffPlan.tariff.plan.type != TangemPayTariffPlan.Type.BASIC
+            ) {
+                add(
+                    TangemPayDropDownItemUM(
+                        title = resourceReference(R.string.tangempay_visa_benefits),
+                        onClick = intents::onClickVisaBenefits,
+                        icon = TangemIconUM.Icon(
+                            iconRes = CoreUiR.drawable.ic_heart_20,
+                            tintReference = { TangemTheme.colors3.icon.primary },
+                        ),
                     ),
                 )
             }
