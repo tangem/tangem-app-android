@@ -28,6 +28,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
@@ -449,6 +450,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         cryptoBalance = balance.cryptoBalance.balance,
                         depositAddress = balance.cryptoBalance.depositAddress,
                         cryptoCurrency = cryptoCurrency,
+                        virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
                     ),
                 )
             }
@@ -482,6 +484,48 @@ internal class TangemPayCardPageModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    override fun onClickBankTransfer() {
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        val onramp = loaded.virtualAccount ?: return
+        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.VirtualAccountDeposit(
+                virtualAccountOnramp = onramp,
+                userWalletId = userWalletId,
+                paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
+            ),
+        )
+    }
+
+    fun onVirtualAccountOrderCreated() {
+        analytics.send(TangemPayAnalyticsEvents.VaSuccessScreenActivation())
+        bottomSheetNavigation.dismiss()
+        router.push(TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess)
+    }
+
+    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.VirtualAccountRequisites(
+                userWalletId = userWalletId,
+                bankCredentials = onramp.bankCredentials,
+            ),
+        )
+    }
+
+    fun onVaBankingDetailsShown() {
+        analytics.send(TangemPayAnalyticsEvents.VaBankingDetailsShowed())
+    }
+
+    fun onVaShareDetailsClicked() {
+        analytics.send(TangemPayAnalyticsEvents.VaShareDetailsButtonClicked())
+    }
+
+    fun onVaFieldCopied(field: String) {
+        analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field))
     }
 
     override fun onDismissAddFunds() {

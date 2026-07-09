@@ -21,10 +21,10 @@ import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCas
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.NonceInserted
-import com.tangem.features.send.api.entity.FeeItem
-import com.tangem.features.send.api.entity.FeeNonce
-import com.tangem.features.send.api.entity.FeeSelectorUM
-import com.tangem.features.send.api.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadListener

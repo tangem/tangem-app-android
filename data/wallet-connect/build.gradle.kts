@@ -1,7 +1,8 @@
 plugins {
+    alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.android.library)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -11,59 +12,80 @@ android {
 
 dependencies {
 
-    /* Project - Domain */
-    implementation(projects.domain.account)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.walletConnect)
-    implementation(projects.domain.walletConnect.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.data.common)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
 
-    /* Project - Data */
-    implementation(projects.core.datasource)
+    // region Other libraries
+    api(deps.arrow.core)
+    api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
+    implementation(deps.jodatime)
+    implementation(deps.okio)
+    // endregion
 
-    /* Project - Core */
-    implementation(projects.core.utils)
-    implementation(projects.core.analytics)
-    api(projects.core.configToggles)
-
-    /* DI */
-    implementation(deps.hilt.core)
-    kapt(deps.hilt.kapt)
-
-    /* Tangem libraries */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
-
-    /* Reown - WalletConnect */
+    // region Reown - WalletConnect
+    api(deps.reownWeb3) {
+        exclude(group = "app.cash.sqldelight", module = "android-driver")
+    }
     implementation(deps.reownCore) {
         exclude(group = "app.cash.sqldelight", module = "android-driver")
     }
-    implementation(deps.reownWeb3) {
-        exclude(group = "app.cash.sqldelight", module = "android-driver")
-    }
+    // endregion
 
-    /* Other */
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
-    implementation(deps.jodatime)
-    implementation(projects.domain.blockaid)
+    // region Tangem libraries
+    api(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
+    // endregion
+
+    // region DI
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Project - Core
+    api(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    // endregion
+
+    // region Project - Data
+    implementation(projects.data.common)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.blockaid)
+    api(projects.domain.common)
+    api(projects.domain.transaction)
+    api(projects.domain.walletConnect)
+    api(projects.domain.walletConnect.models)
+    api(projects.domain.walletManager)
+    api(projects.domain.wallets)
+    implementation(projects.domain.core)
+    implementation(projects.domain.models)
+    runtimeOnly(projects.domain.tokens)
+    // endregion
+
+    // region Project - Domain models
     implementation(projects.domain.blockaid.models)
-    implementation(projects.libs.crypto)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
+    // endregion
 
-    /* Tests */
+    // region Project - Libs
+    api(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region Tests
     testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.turbine)
+    // endregion
 }
