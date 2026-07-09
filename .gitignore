@@ -48,4 +48,5 @@ find-latest-release-branch.output
 
 # Claude
 /.claude/worktrees/
+/.claude/settings.local.json
 CLAUDE.local.md

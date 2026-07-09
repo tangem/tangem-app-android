@@ -5,66 +5,76 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.data.staking"
 }
+
 dependencies {
-    /** Core modules */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
 
-    /** Common modules */
-    implementation(projects.data.common)
-
-    /** Domain modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.card)
-    implementation(projects.domain.models)
-
-    /** Feature Api modules */
-    implementation(projects.features.staking.api)
-
-    // region DI
-
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
     // endregion
 
-    // region Others dependencies
-
-    implementation(deps.androidx.datastore)
-    implementation(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.datetime)
-    implementation(deps.kotlin.immutable.collections)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
+    // region Other libraries
+    api(deps.androidx.datastore)
+    api(deps.moshi)
+    implementation(deps.arrow.core)
     implementation(deps.firebase.crashlytics)
-    ksp(deps.moshi.kotlin.codegen)
+    implementation(deps.jodatime)
+    implementation(deps.kotlin.immutable.collections)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
 
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.libs.crypto)
-
-    implementation(tangemDeps.card.core)
+    // region Tangem SDK
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
-
+    implementation(tangemDeps.card.core)
     // endregion
 
-    testImplementation(tangemDeps.card.core)
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Core modules
+    api(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    // endregion
+
+    // region Data
+    implementation(projects.data.common)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.core)
+    api(projects.domain.models)
+    api(projects.domain.staking)
+    api(projects.domain.walletManager)
+    api(projects.domain.wallets)
+    implementation(projects.domain.card)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.staking.models)
+    implementation(projects.domain.wallets.models)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region Tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    // endregion
 }
