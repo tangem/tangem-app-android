@@ -1,11 +1,14 @@
 package com.tangem.domain.account.status.utils
 
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
@@ -27,7 +30,32 @@ class CryptoCurrencyMetadataCleaner(
     private val stakingCleaner: StakingCleaner,
     private val nftCleaner: NFTCleaner,
     private val dispatchers: CoroutineDispatcherProvider,
-) {
+) : UserWalletDataCleaner {
+
+    /**
+     * Removes all currency metadata (networks, staking balances) for the given wallets.
+     *
+     * Invoked on wallet deletion, where the concrete currencies are no longer available, so cleanup happens by
+     * wallet id in bulk instead of per-currency.
+     *
+     * @param userWalletIds The IDs of the deleted user wallets.
+     */
+    override suspend fun clear(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        // Best-effort: isolate failures so a failing cleaner does not cancel the other.
+        withContext(dispatchers.default) {
+            awaitAll(
+                async { clearSafely(target = "networks") { networksCleaner.clear(userWalletIds) } },
+                async { clearSafely(target = "staking") { stakingCleaner.clear(userWalletIds) } },
+            )
+        }
+    }
+
+    private suspend fun clearSafely(target: String, clear: suspend () -> Unit) {
+        runSuspendCatching { clear() }
+            .onFailure { TangemLogger.e("Failed to clear $target metadata", it) }
+    }
 
     /**
      * Cleans up data for a single cryptocurrency in the specified user wallet.
