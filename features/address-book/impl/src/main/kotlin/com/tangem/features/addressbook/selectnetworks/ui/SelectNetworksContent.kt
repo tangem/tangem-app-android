@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,16 +29,17 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_search_24
 import com.tangem.features.addressbook.selectnetworks.ui.state.SelectNetworksUM
 import com.tangem.features.addressbook.selectnetworks.ui.state.SelectNetworksUM.NetworkItemUM
 import kotlinx.collections.immutable.persistentListOf
@@ -48,18 +50,13 @@ internal fun SelectNetworksContent(state: SelectNetworksUM, modifier: Modifier =
         modifier = modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors3.bg.primary)
-            .systemBarsPadding(),
+            .navigationBarsPadding(),
     ) {
-        TangemTopBar(
+        TangemTopNavigation(
             title = resourceReference(R.string.common_choose_network),
-            startContent = {
-                TangemButton(
-                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_back_24),
-                    onClick = state.onBackClick,
-                    size = TangemButton.Size.X11,
-                    variant = TangemButton.Variant.Material,
-                )
-            },
+            contentAlign = TangemTopNavigation.ContentAlign.Center,
+            blurBackground = false,
+            onBack = state.onBackClick,
         )
         TangemSearch(
             state = state.searchBar,
@@ -67,46 +64,89 @@ internal fun SelectNetworksContent(state: SelectNetworksUM, modifier: Modifier =
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
-        val doneButtonVerticalPadding = 12.dp
-        val doneButtonAreaHeight = 48.dp + doneButtonVerticalPadding * 2
-        Box(
+        AnimatedContent(
+            targetState = state.networks.isNotEmpty(),
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = doneButtonAreaHeight)
-                    .background(
-                        color = TangemTheme.colors3.bg.secondary,
-                        shape = RoundedCornerShape(24.dp),
-                    ),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            ) {
-                item {
-                    NetworksHeader(
-                        selectAllButton = state.selectAllButton,
-                        onSelectAllClick = state.onSelectAllClick,
-                    )
-                }
-                items(items = state.networks, key = NetworkItemUM::id) { item ->
-                    NetworkRow(item = item)
+        ) { hasNetworks ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (hasNetworks) {
+                    Content(state = state)
+                } else {
+                    NothingFoundContent(modifier = Modifier.fillMaxSize())
                 }
             }
-            TangemButton(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = doneButtonVerticalPadding)
-                    .imePadding(),
-                onClick = state.doneButton.onClick,
-                isEnabled = state.doneButton.isEnabled,
-                size = TangemButton.Size.X12,
-                text = state.doneButton.text,
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.Content(state: SelectNetworksUM, modifier: Modifier = Modifier) {
+    val doneButtonVerticalPadding = 12.dp
+    val doneButtonAreaHeight = 48.dp + doneButtonVerticalPadding * 2
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = doneButtonAreaHeight)
+            .background(
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(24.dp),
+            ),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+    ) {
+        item {
+            NetworksHeader(
+                selectAllButton = state.selectAllButton,
+                onSelectAllClick = state.onSelectAllClick,
             )
         }
+        items(items = state.networks, key = NetworkItemUM::id) { item ->
+            NetworkRow(item = item)
+        }
+    }
+    TangemButton(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = doneButtonVerticalPadding)
+            .imePadding(),
+        onClick = state.doneButton.onClick,
+        isEnabled = state.doneButton.isEnabled,
+        size = TangemButton.Size.X12,
+        text = state.doneButton.text,
+    )
+}
+
+@Composable
+private fun NothingFoundContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .imePadding(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.ic_search_24,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+        Text(
+            modifier = Modifier.padding(top = 32.dp),
+            text = stringResourceSafe(R.string.address_book_search_no_results),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
+        )
     }
 }
 
