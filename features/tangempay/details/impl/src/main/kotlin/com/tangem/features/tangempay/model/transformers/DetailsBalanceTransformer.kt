@@ -22,6 +22,7 @@ internal class DetailsBalanceTransformer(
             actionButtons = prevState.balanceBlockState.actionButtons,
             cardsBlockState = prevState.balanceBlockState.cardsBlockState,
             isMuted = isMuted,
+            isNegative = fiatBalance.availableBalance.signum() < 0,
         )
         return prevState.copy(balanceBlockState = balance)
     }
