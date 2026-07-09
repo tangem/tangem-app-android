@@ -57,22 +57,17 @@ internal class VirtualAccountMainModel @Inject constructor(
 
     private fun buildRequisites(details: VirtualAccountDepositDetails) = listOf(
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = "Beneficiary name and address",
-            titleForShare = "Beneficiary name and address",
-            value = "${details.beneficiaryName}\n${details.beneficiaryAddress}",
+            title = resourceReference(R.string.virtual_account_requisites_beneficiary_name),
+            titleForShare = "Beneficiary name",
+            value = details.beneficiaryName,
         ),
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = "Bank name and address",
-            titleForShare = "Bank name and address",
-            value = "${details.bankName}\n${details.bankAddress}",
-        ),
-        VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = "Account number",
+            title = resourceReference(R.string.virtual_account_requisites_account_number),
             titleForShare = "Account number",
             value = details.accountNumber,
         ),
         VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = "Routing number",
+            title = resourceReference(R.string.virtual_account_requisites_routing_number),
             titleForShare = "Routing number",
             value = details.routingNumber,
         ),
