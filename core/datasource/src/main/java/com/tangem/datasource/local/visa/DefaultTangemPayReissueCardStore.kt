@@ -1,5 +1,6 @@
 package com.tangem.datasource.local.visa
 
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -29,6 +30,10 @@ internal class DefaultTangemPayReissueCardStore(
             key = getReissueKey(cardId),
             value = orderId,
         )
+    }
+
+    override suspend fun removeReissueOrderId(cardId: String) {
+        prefs.edit { it.remove(getReissueKey(cardId)) }
     }
 
     override suspend fun getOrderId(cardId: String): String? {

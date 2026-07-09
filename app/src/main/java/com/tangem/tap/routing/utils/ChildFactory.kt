@@ -43,6 +43,7 @@ import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComp
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
+import com.tangem.features.virtualaccount.onboarding.component.VirtualAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
@@ -71,7 +72,6 @@ internal class ChildFactory @Inject constructor(
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
     private val sellCryptoComponentFactory: SellCryptoComponent.Factory,
-    private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val newWelcomeComponentFactory: NewWelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
@@ -114,6 +114,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
+    private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
@@ -253,13 +254,6 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = sellCryptoComponentFactory,
                 )
             }
-            is AppRoute.SwapCrypto -> {
-                createComponentChild(
-                    context = context,
-                    params = SwapSelectTokensComponent.Params(userWalletId = route.userWalletId),
-                    componentFactory = swapSelectTokensComponentFactory,
-                )
-            }
             is AppRoute.Onboarding -> {
                 createComponentChild(
                     context = context,
@@ -381,6 +375,7 @@ internal class ChildFactory @Inject constructor(
                     is AppRoute.QrScanning.Source.Send -> SourceType.SEND
                     is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
                     is AppRoute.QrScanning.Source.MainScreen -> SourceType.MAIN_SCREEN
+                    is AppRoute.QrScanning.Source.AddressBook -> SourceType.ADDRESS_BOOK
                 }
                 createComponentChild(
                     context = context,
@@ -496,10 +491,14 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = feedEntryComponentFactory,
                 )
             }
-            is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
+            is AppRoute.Usedesk -> {
                 createComponentChild(
                     context = context,
-                    params = UsedeskComponent.Params(),
+                    params = UsedeskComponent.Params(
+                        userWalletId = route.walletMetaInfo.userWalletId?.stringValue,
+                        source = route.source,
+                        prefilledMessage = route.prefilledMessage,
+                    ),
                     componentFactory = usedeskComponentFactory,
                 )
             }
@@ -692,6 +691,7 @@ internal class ChildFactory @Inject constructor(
                         )
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings -> FromBannerInSettings
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain
+                        is AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink -> MobileOnboardingDeeplink
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
                 )
@@ -701,6 +701,23 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = tangemPayWalletOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.VirtualAccountOnboarding -> {
+                createComponentChild(
+                    context = context,
+                    params = when (val mode = route.mode) {
+                        is AppRoute.VirtualAccountOnboarding.Mode.Deeplink ->
+                            VirtualAccountOnboardingComponent.Params.Deeplink(
+                                userWalletId = mode.userWalletId,
+                                deeplink = mode.deeplink,
+                            )
+                        is AppRoute.VirtualAccountOnboarding.Mode.FromMain ->
+                            VirtualAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
+                        is AppRoute.VirtualAccountOnboarding.Mode.FromDetailsScreen ->
+                            VirtualAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
+                    },
+                    componentFactory = virtualAccountOnboardingComponentFactory,
                 )
             }
             is AppRoute.Kyc -> {
@@ -760,7 +777,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.AddressBook -> {
                 createComponentChild(
                     context = context,
-                    params = AddressBookComponent.Params(route.predefinedAddress),
+                    params = AddressBookComponent.Params(addressBookOpenMode = route.addressBookOpenMode),
                     componentFactory = addressBookComponentFactory,
                 )
             }

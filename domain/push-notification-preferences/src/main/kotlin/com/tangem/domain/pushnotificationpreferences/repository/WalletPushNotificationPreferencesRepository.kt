@@ -6,11 +6,17 @@ import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCate
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
 import kotlinx.coroutines.flow.Flow
 
-/** Per-wallet push notification preferences. In-memory cache, not persisted. */
+/** Per-wallet push notification preferences. Values are cached in-memory; the first-activation flag is persisted. */
 interface WalletPushNotificationPreferencesRepository {
 
     /** Warms up the cache for [userWalletId]. No-op if already cached. */
     suspend fun preload(userWalletId: UserWalletId)
+
+    /** Whether the first push-permission activation has already run for [userWalletId]. Persisted. */
+    suspend fun isFirstActivationDone(userWalletId: UserWalletId): Boolean
+
+    /** Marks the first push-permission activation as done for [userWalletId]. */
+    suspend fun markFirstActivationDone(userWalletId: UserWalletId)
 
     fun observePreferences(userWalletId: UserWalletId): Flow<WalletPushNotificationPreferences>
 

@@ -23,15 +23,20 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -61,7 +66,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
@@ -83,6 +88,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
+    private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -108,12 +114,15 @@ internal class TangemPayDetailsModel @Inject constructor(
         isRedesignEnabled = isRedesignEnabled(),
         isRemoveAccountEnabled = tangemPayFeatureToggles.isRemoveAccountEnabled,
         isMultipleCardsEnabled = isMultipleCardsEnabled,
+        isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
         field = MutableStateFlow(
             when {
-                params.initialStatus.isDeactivated -> stateFactory.getDeactivatedState()
+                params.initialStatus.isDeactivated -> stateFactory.getDeactivatedState(
+                    hasWithdrawableBalance = params.initialStatus.balanceOrNull()?.hasWithdrawableAmount == true,
+                )
                 else -> stateFactory.getLoadingState()
             },
         )
@@ -134,13 +143,25 @@ internal class TangemPayDetailsModel @Inject constructor(
             .onEach { state ->
                 when (state) {
                     is PaymentAccountStatusValue.Deactivated -> {
-                        uiState.update { stateFactory.getDeactivatedState() }
-                        uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
+                        val balanceTransformer = DetailsBalanceTransformer(
+                            fiatBalance = state.balance.fiatBalance,
+                            isMuted = state.source != StatusSource.ACTUAL,
+                        )
+                        uiState.update {
+                            balanceTransformer.transform(
+                                stateFactory.getDeactivatedState(
+                                    hasWithdrawableBalance = state.balance.hasWithdrawableAmount,
+                                ),
+                            )
+                        }
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchAddToWalletBanner()
-                        uiState.update { stateFactory.getLoadedState(state) }
-                        uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
+                        val balanceTransformer = DetailsBalanceTransformer(
+                            fiatBalance = state.balance.fiatBalance,
+                            isMuted = !state.isFresh,
+                        )
+                        uiState.update { balanceTransformer.transform(stateFactory.getLoadedState(state)) }
                         state.cards.firstOrNull()?.let { card ->
                             subscribeToCardFrozenState(card.id)
                         }
@@ -151,13 +172,22 @@ internal class TangemPayDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    fun onResume() {
+    override fun onCancelPlusTransition(orderId: String) {
+        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
         modelScope.launch {
-            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
+            cancelTangemPayOrderUseCase(userWalletId = userWalletId, orderId = orderId)
+                .onLeft {
+                    uiMessageSender.send(TangemPayMessagesFactory.createGenericError())
+                }
+            uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
         }
     }
 
-    fun onPause() {
+    fun onStart() {
+        onRefreshSwipe(refreshState = ShowRefreshState(false))
+    }
+
+    fun onStop() {
         modelScope.launch {
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
         }
@@ -170,10 +200,17 @@ internal class TangemPayDetailsModel @Inject constructor(
         cardDetailsRepository
             .cardFrozenState(cardId)
             .onEach { frozenState ->
+                // Mirror getLoadedState gating so a live freeze update can't re-enable actions on stale data.
+                val isFresh = currentStatus.value.ifLoadedOrNull { it.isFresh } == true
+                val isUnfrozen = frozenState == TangemPayCardFrozenState.Unfrozen
+                val areActionButtonsEnabled = isFresh && isUnfrozen
+                val hasWithdrawableBalance = currentStatus.value.balanceOrNull()?.hasWithdrawableAmount == true
                 uiState.update(
-                    TangemPayFreezeUnfreezeStateTransformer(
-                        cardFrozenState = frozenState,
-                        isDataFresh = currentStatus.value.ifLoadedOrNull { it.isFresh } == true,
+                    TangemPayActionButtonsTransformer(
+                        stateFactory.getActionButtonsConfig(
+                            isAddFundsEnabled = areActionButtonsEnabled,
+                            isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
+                        ),
                     ),
                 )
             }
@@ -194,6 +231,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     cryptoBalance = balance.availableForWithdrawal,
                     depositAddress = balance.cryptoBalance.depositAddress,
                     cryptoCurrency = cryptoCurrency,
+                    virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
                 ),
             )
         }
@@ -328,6 +366,48 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
+    override fun onClickBankTransfer() {
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        val onramp = loaded.virtualAccount ?: return
+        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VirtualAccountDeposit(
+                virtualAccountOnramp = onramp,
+                userWalletId = userWalletId,
+                paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
+            ),
+        )
+    }
+
+    fun onVirtualAccountOrderCreated() {
+        analytics.send(TangemPayAnalyticsEvents.VaSuccessScreenActivation())
+        bottomSheetNavigation.dismiss()
+        router.push(TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess)
+    }
+
+    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VirtualAccountRequisites(
+                userWalletId = userWalletId,
+                bankCredentials = onramp.bankCredentials,
+            ),
+        )
+    }
+
+    fun onVaBankingDetailsShown() {
+        analytics.send(TangemPayAnalyticsEvents.VaBankingDetailsShowed())
+    }
+
+    fun onVaShareDetailsClicked() {
+        analytics.send(TangemPayAnalyticsEvents.VaShareDetailsButtonClicked())
+    }
+
+    fun onVaFieldCopied(field: String) {
+        analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field))
+    }
+
     override fun onClickReceive(data: TangemPayTopUpData) {
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
@@ -364,6 +444,14 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickTermsAndLimits() {
         analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+    }
+
+    override fun onClickVisaBenefits() {
+        urlOpener.openUrl(TangemPayConstants.visaBenefitsLink())
+    }
+
+    override fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan) {
+        router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
 
     override fun onCardClick(cardId: String) {
@@ -422,16 +510,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRenewSession() {
-        uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = true))
+        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
         modelScope.launch {
             produceTangemPayInitialDataUseCase(userWalletId)
                 .onRight {
                     paymentAccountStatusFetcher.invoke(userWalletId)
-                    uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
                 }
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
-                    uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
                 }
         }
     }

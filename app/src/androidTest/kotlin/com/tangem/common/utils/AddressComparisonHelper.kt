@@ -42,6 +42,17 @@ object AddressComparisonHelper {
         assertTrue(report, false)
     }
 
+    fun derivationPathForBlockchain(json: String, blockchain: String): String {
+        val array = JSONArray(json)
+        for (i in 0 until array.length()) {
+            val entry = array.getJSONObject(i)
+            if (entry.getString("blockchain").equals(blockchain, ignoreCase = true)) {
+                return entry.getString("derivationPath").trim()
+            }
+        }
+        error("No entry with blockchain '$blockchain' found in addresses JSON")
+    }
+
     private fun parseAndNormalize(json: String): List<AddressEntry> {
         val array = JSONArray(json)
         val entries = mutableListOf<AddressEntry>()

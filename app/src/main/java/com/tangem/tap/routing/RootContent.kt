@@ -42,8 +42,9 @@ internal fun RootContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     wcContent: @Composable (modifier: Modifier) -> Unit,
+    promoContent: @Composable (modifier: Modifier) -> Unit,
     hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
-    rootDetectedWarningContent: @Composable (modifier: Modifier) -> Unit,
+    startupGateContent: @Composable (modifier: Modifier) -> Unit,
     scanFailsContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
@@ -80,9 +81,11 @@ internal fun RootContent(
 
                 wcContent(Modifier.fillMaxSize())
 
+                promoContent(Modifier.fillMaxSize())
+
                 hotAccessCodeContent(Modifier.fillMaxSize())
 
-                rootDetectedWarningContent(Modifier.fillMaxSize())
+                startupGateContent(Modifier.fillMaxSize())
 
                 scanFailsContent(Modifier.fillMaxSize())
 

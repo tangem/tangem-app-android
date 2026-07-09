@@ -45,6 +45,9 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     else -> null
 }
 
+internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
+    get() = availableForWithdrawal.signum() > 0
+
 internal fun AccountStatus.Payment.findCard(
     initialCardId: String,
     initialStatus: AccountStatus.Payment,

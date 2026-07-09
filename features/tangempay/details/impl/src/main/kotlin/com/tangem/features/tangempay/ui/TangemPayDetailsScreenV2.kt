@@ -33,11 +33,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.components.topFade
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessage
@@ -77,6 +77,7 @@ internal fun TangemPayDetailsScreenV2(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
+    promoBannersBlockComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -116,6 +117,11 @@ internal fun TangemPayDetailsScreenV2(
                 ),
             ) {
                 payDetailsBody(state)
+                item("promoBannersBlock") {
+                    promoBannersBlockComponent.Content(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+                }
                 with(expressTransactionsComponent) {
                     expressTransactionsContent(
                         state = expressState.transactionsToDisplay,
@@ -249,6 +255,7 @@ private fun ErrorMessage(config: NotificationConfig, modifier: Modifier = Modifi
                     buttonUM = TangemButtonUM(
                         text = button.text,
                         onClick = button.onClick,
+                        isLoading = button.shouldShowProgress,
                         iconPosition = TangemButtonIconPosition.End,
                         tangemIconUM = if (iconResId != null) {
                             TangemIconUM.Icon(
@@ -345,21 +352,28 @@ private fun BalanceBlock(
                 is TangemPayDetailsBalanceBlockState.Loading -> TangemShimmer(
                     style = TangemTheme.typography3.heading.medium,
                 )
-                is TangemPayDetailsBalanceBlockState.Content -> Text(
-                    modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
-                    text = animatedState.fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                    style = TangemTheme.typography3.display.medium.applyBladeBrush(
-                        isEnabled = animatedState.isBalanceFlickering,
-                        textColor = TangemTheme.colors3.text.primary,
-                    ),
-                    color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = TangemTheme.typography3.heading.medium.fontSize,
-                        maxFontSize = TangemTheme.typography3.display.medium.fontSize,
-                    ),
-                )
+                is TangemPayDetailsBalanceBlockState.Content -> {
+                    val balanceColor = when {
+                        animatedState.isMuted -> TangemTheme.colors3.text.secondary
+                        animatedState.isNegative -> TangemTheme.colors3.text.status.error
+                        else -> TangemTheme.colors3.text.primary
+                    }
+                    Text(
+                        modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
+                        text = animatedState.fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                        style = TangemTheme.typography3.display.medium.applyBladeBrush(
+                            isEnabled = animatedState.isBalanceFlickering,
+                            textColor = balanceColor,
+                        ),
+                        color = balanceColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = TangemTheme.typography3.heading.medium.fontSize,
+                            maxFontSize = TangemTheme.typography3.display.medium.fontSize,
+                        ),
+                    )
+                }
                 is TangemPayDetailsBalanceBlockState.Error -> Text(
                     modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
                     text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
@@ -413,7 +427,7 @@ private fun CardsBlock(
 
 @Composable
 private fun LazyItemScope.ActionBlock(
-    actionButtons: ImmutableList<ActionButtonConfig>,
+    actionButtons: ImmutableList<TangemPayActionButtonUM>,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -423,14 +437,15 @@ private fun LazyItemScope.ActionBlock(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        actionButtons.fastForEach { actionConfig ->
+        actionButtons.fastForEach { actionButton ->
+            val config = actionButton.config
             TangemPayActionButton(
                 modifier = Modifier.testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
-                iconRes = actionConfig.iconResId,
-                onClick = actionConfig.onClick,
-                isEnabled = actionConfig.isEnabled,
-                isLoading = actionConfig.isInProgress,
-                title = actionConfig.text,
+                iconRes = config.iconResId,
+                onClick = config.onClick,
+                isEnabled = config.isEnabled,
+                isLoading = config.isInProgress,
+                title = config.text,
             )
         }
     }
@@ -451,6 +466,7 @@ private fun TangemPayDetailsScreenPreview(
                 txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
             ),
             expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
+            promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
 }
@@ -465,6 +481,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
             state = TangemPayDetailsUMProvider().values.first(),
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
             expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
+            promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
 }

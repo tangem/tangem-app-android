@@ -20,10 +20,13 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSearchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
 
 private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
@@ -39,6 +42,9 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "✨ TangemShimmer", factory = tangemShimmerStoryFactory),
     DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
     DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
+    DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
+    DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
+    DsStoryItem(title = "🔤 Text styles", factory = textStyleStoryFactory),
 )
 
 @Composable

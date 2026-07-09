@@ -23,61 +23,82 @@ android {
 }
 dependencies {
 
-    /** Project - Data */
-    implementation(projects.core.analytics)
-    implementation(projects.core.datasource)
-    implementation(projects.core.error)
-    implementation(projects.core.error.ext)
-    implementation(projects.core.security)
-    implementation(projects.data.common)
-    implementation(projects.data.wallets)
-
-    /** Project - Domain */
-    implementation(projects.domain.visa)
-    implementation(projects.domain.card)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.quotes)
-    implementation(projects.domain.common)
-    implementation(projects.features.swap.domain)
-
-
-    /** Project - Utils */
-    implementation(projects.core.utils)
-    implementation(projects.domain.legacy)
-    implementation(projects.libs.blockchainSdk)
-
-    /** Project - Libs */
-    implementation(projects.libs.visa)
-
-    /** Libs - Other */
-    implementation(deps.androidx.datastore)
+    // region Kotlin
     implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.moshi)
+    implementation(deps.androidx.datastore)
+    implementation(deps.androidx.paging.runtime)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
     implementation(deps.jodatime)
-    implementation(deps.androidx.paging.runtime)
-    implementation(deps.moshi.kotlin)
+    implementation(deps.okio)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
 
-    /** Libs - Tangem */
+    // region Libs - Tangem
+    api(tangemDeps.hot.core)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
-    implementation(tangemDeps.hot.core)
-    implementation(projects.libs.tangemSdkApi)
+    // endregion
 
-    /** DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Test */
+    // region Project - Core
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.security)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.error)
+    implementation(projects.core.error.ext)
+    implementation(projects.core.pagination)
+    // endregion
+
+    // region Project - Data
+    api(projects.data.common)
+    implementation(projects.data.wallets)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.common)
+    api(projects.domain.core)
+    api(projects.domain.networks)
+    api(projects.domain.quotes)
+    api(projects.domain.virtualAccount)
+    api(projects.domain.visa)
+    api(projects.domain.wallets)
+    implementation(projects.domain.card)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.walletManager)
+    runtimeOnly(projects.domain.tokens)
+    // endregion
+
+    // region Project - Domain models
+    api(projects.domain.visa.models)
+    implementation(projects.domain.appCurrency.models)
+    // endregion
+
+    // region Project - Features
+    api(projects.features.swap.domain)
+    api(projects.features.virtualAccounts.details.api)
+    // endregion
+
+    // region Project - Libs
+    api(projects.libs.blockchainSdk)
+    api(projects.libs.tangemSdkApi)
+    implementation(projects.libs.visa)
+    // endregion
+
+    // region Test
     testImplementation(projects.test.core)
+    // endregion
 }
