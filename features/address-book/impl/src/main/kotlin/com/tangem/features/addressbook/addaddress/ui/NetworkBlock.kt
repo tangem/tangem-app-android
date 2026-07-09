@@ -46,8 +46,8 @@ internal fun NetworkBlock(
     chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM,
     modifier: Modifier = Modifier,
 ) {
-    val isClickable = chosenNetworkStateUM is AddAddressUM.ChosenNetworkStateUM.Result &&
-        chosenNetworkStateUM.isClickable
+    val isClickable = chosenNetworkStateUM is AddAddressUM.ChosenNetworkStateUM.SelectNetwork ||
+        chosenNetworkStateUM is AddAddressUM.ChosenNetworkStateUM.Result && chosenNetworkStateUM.isClickable
     TangemRow(
         onClick = if (isClickable) onNetworkSelectClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -62,11 +62,24 @@ internal fun NetworkBlock(
         endSlot = {
             when (chosenNetworkStateUM) {
                 AddAddressUM.ChosenNetworkStateUM.Loading -> TangemLoader(size = TangemLoaderSize.X20)
+                AddAddressUM.ChosenNetworkStateUM.SelectNetwork -> SelectNetworkTextBlock()
                 is AddAddressUM.ChosenNetworkStateUM.Result -> NetworkRow(chosenNetworkStateUM = chosenNetworkStateUM)
                 AddAddressUM.ChosenNetworkStateUM.Hidden -> Unit
             }
         },
     )
+}
+
+@Composable
+private fun SelectNetworkTextBlock() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResourceSafe(R.string.address_book_select_network),
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.secondary,
+        )
+        ChevronIcon()
+    }
 }
 
 @Composable
@@ -120,7 +133,7 @@ private fun OverlappingNetworkIcons(networks: ImmutableList<NetworkUM>) {
                 modifier = Modifier
                     .padding(start = NetworkIconStep * index)
                     .networkIconRing()
-                    .size(24.dp),
+                    .size(20.dp),
             )
         }
         if (remaining > 0) {
@@ -129,7 +142,7 @@ private fun OverlappingNetworkIcons(networks: ImmutableList<NetworkUM>) {
                     .padding(start = NetworkIconStep * visible.size)
                     .networkIconRing()
                     .background(color = TangemTheme.colors3.bg.tertiary)
-                    .heightIn(min = 24.dp)
+                    .heightIn(min = 20.dp)
                     .padding(vertical = 2.dp, horizontal = 4.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -155,7 +168,7 @@ private fun Modifier.networkIconRing(): Modifier = this
 private fun ChevronIcon() {
     Icon(
         modifier = Modifier
-            .padding(start = 8.dp)
+            .padding(start = 4.dp)
             .size(20.dp),
         tint = TangemTheme.colors3.icon.secondary,
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_select_18_24),
@@ -168,6 +181,11 @@ private fun ChevronIcon() {
 private fun Preview_NetworkBlock() {
     TangemThemePreviewRedesign {
         Column {
+            NetworkBlock(
+                onNetworkSelectClick = {},
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.SelectNetwork,
+            )
+            SpacerH12()
             NetworkBlock(
                 onNetworkSelectClick = {},
                 chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Result(
