@@ -24,9 +24,10 @@ class TangemPayServiceUnavailableSheetPageObject(semanticsProvider: SemanticsNod
         useUnmergedTree = true
     }
 
+    // Merged tree: BUTTON_PRIMARY tags the button, its label is a child — only the merged node has both.
     val gotItButton: KNode = child {
         hasTestTag(WarningBottomSheetTestTags.BUTTON_PRIMARY)
-        useUnmergedTree = true
+        hasText(getResourceString(CoreResR.string.common_got_it))
     }
 }
 
