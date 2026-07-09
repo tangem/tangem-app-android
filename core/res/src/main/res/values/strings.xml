@@ -2045,6 +2045,7 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
+  <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
