@@ -52,14 +52,6 @@ internal class OutdatedDataActionsFactory(
             null
         }
 
-        val onrampUnavailabilityReasonDeferred = async {
-            getOnrampUnavailabilityReason(
-                userWallet = userWallet,
-                currency = cryptoCurrencyStatus.currency,
-                requirementsDeferred = requirementsDeferred,
-            )
-        }
-
         val sendUnavailabilityReasonDeferred = if (sources.networkSource == StatusSource.ACTUAL) {
             async {
                 getSendUnavailabilityReason(
@@ -87,7 +79,7 @@ internal class OutdatedDataActionsFactory(
             // endregion
 
             // region Buy
-            addBuyAction(reason = onrampUnavailabilityReasonDeferred.await())
+            addBuyAction(reason = ScenarioUnavailabilityReason.None)
             // endregion
 
             // region Stake
@@ -120,7 +112,7 @@ internal class OutdatedDataActionsFactory(
             // region Sell
             if (sendUnavailabilityReason == ScenarioUnavailabilityReason.None) {
                 val sellUnavailabilityReason = getSellUnavailabilityReason(
-                    userWalletId = userWallet.walletId,
+                    userWallet = userWallet,
                     status = cryptoCurrencyStatus,
                     sendUnavailabilityReason = sendUnavailabilityReason,
                 )
