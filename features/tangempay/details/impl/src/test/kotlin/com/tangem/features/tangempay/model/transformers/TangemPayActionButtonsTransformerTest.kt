@@ -60,6 +60,7 @@ internal class TangemPayActionButtonsTransformerTest {
             cardsBlockState = null,
             fiatBalance = TextReference.EMPTY,
             isBalanceFlickering = false,
+            isNegative = false,
         ),
         addToWalletBlockState = null,
         isBalanceHidden = false,
