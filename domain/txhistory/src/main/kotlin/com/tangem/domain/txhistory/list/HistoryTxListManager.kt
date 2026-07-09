@@ -34,6 +34,16 @@ interface HistoryTxListManager {
             val isLoadingMore: Boolean,
             val hasMore: Boolean,
         ) : HistoryState
+
+        val isContent: Boolean
+            get() = when (this) {
+                is Content -> true
+                Empty,
+                Error,
+                Loading,
+                Unavailable,
+                -> false
+            }
     }
 
     /** How the history starts for a currency: which on-chain backbone exists and whether express is available. */
