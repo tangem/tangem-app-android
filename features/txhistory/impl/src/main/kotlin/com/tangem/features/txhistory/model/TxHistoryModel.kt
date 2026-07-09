@@ -12,12 +12,9 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
-import com.tangem.domain.txhistory.model.ExpressTx
-import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.list.HistoryTxListManager
 import com.tangem.domain.txhistory.list.txHistoryInfoFlow
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -349,18 +346,10 @@ internal class TxHistoryModel @Inject constructor(
     override fun onTransactionClick(item: TxHistoryInfo) {
         // manager is non-null only under the new tx-history toggle.
         val manager = historyTxListManager
-        if (manager != null && item.opensInAppDetails()) {
+        if (manager != null) {
             params.onTxDetailsRequested(manager.txHistoryInfoFlow(item))
         } else {
             item.explorerHash?.let(::openTxInExplorer)
         }
     }
-}
-
-/** On-chain transfers/swaps and every express op open the in-app details sheet; everything else goes to the explorer. */
-private fun TxHistoryInfo.opensInAppDetails(): Boolean = when (this) {
-    is ExpressTx -> true
-    is OnChainTx.BSDK -> txInfo.type is TxInfo.TransactionType.Transfer || txInfo.type is TxInfo.TransactionType.Swap
-    // Standalone TangemPay rows are not yet rendered in-app; route them to the explorer for now.
-    is OnChainTx.TangemPay -> false
 }
