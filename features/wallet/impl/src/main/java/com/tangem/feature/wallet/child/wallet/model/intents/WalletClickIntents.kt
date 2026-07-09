@@ -125,6 +125,7 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onTransferClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonTransfer())
         router.openTransfer(userWalletId)
     }
 
