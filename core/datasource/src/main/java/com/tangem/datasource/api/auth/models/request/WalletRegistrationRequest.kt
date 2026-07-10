@@ -12,7 +12,7 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class WalletRegistrationRequest(
-    /** Deciphered nonce value from `/api/v1/auth/nonce/wallet`. */
+    /** Deciphered nonce value from the wallet nonce endpoint. */
     @Json(name = "nonce") val nonce: String,
     /**
      * Wallet identifier — Base64-encoded
