@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -238,6 +239,37 @@ internal class DefaultYieldSupplyTransactionRepository(
         ) ?: error("Wallet manager not found for $network")
         val versionStatus = walletManager.checkModuleVersionStatus()
         YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, callData)
+    }
+
+    override suspend fun getYieldModuleVersionStatus(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): YieldModuleVersionStatus = withContext(dispatchers.io) {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = network.toBlockchain(),
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found for $network")
+        walletManager.checkModuleVersionStatus()
+    }
+
+    override suspend fun createPartialWithdrawCallData(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        amount: Amount,
+    ): SmartContractCallData = withContext(dispatchers.io) {
+        require(cryptoCurrency is CryptoCurrency.Token)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = cryptoCurrency.network.toBlockchain(),
+            derivationPath = cryptoCurrency.network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+        val withdrawCallData = YieldSupplyContractCallDataProviderFactory.getWithdrawCallData(
+            tokenContractAddress = cryptoCurrency.contractAddress,
+            amount = amount,
+        )
+        val versionStatus = walletManager.checkModuleVersionStatus()
+        YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, withdrawCallData)
     }
 
     private suspend fun getYieldTokenStatus(

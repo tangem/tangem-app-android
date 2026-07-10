@@ -14,82 +14,41 @@ android {
 dependencies {
     /* Project - API */
     api(projects.features.markets.api)
-    api(projects.features.onramp.api)
-    api(projects.features.send.api)
-    api(projects.features.tokenRecieve.api)
-    api(projects.features.wallet.api)
-    api(projects.features.account.api)
-
-    /* Data */
-    implementation(projects.data.common)
 
     /* Domain */
-    implementation(projects.domain.account)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency)
+    api(projects.domain.appCurrency)
+    api(projects.domain.markets)
     implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.feedback)
-    implementation(projects.domain.feedback.models)
-    implementation(projects.domain.manageTokens)
-    implementation(projects.domain.markets)
-    implementation(projects.domain.offramp)
-    implementation(projects.domain.onramp.models)
-    implementation(projects.domain.staking.models)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.notifications.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.yieldSupply.models)
-    implementation(projects.domain.yieldSupply)
-
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.models)
 
     /* Compose */
-    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
     implementation(deps.lifecycle.compose)
-    implementation(deps.androidx.activity.compose)
-    implementation(deps.markdown.composeview)
 
     /* DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     /* Other */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
 
     /* Core */
-    implementation(projects.core.decompose)
+    api(projects.core.decompose)
+    api(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.navigation)
-    implementation(projects.core.utils)
 
     /* Common */
     implementation(projects.common.ui)
     implementation(projects.common.uiMarkets)
     implementation(projects.common.uiCharts)
     implementation(projects.common.routing)
-
-    /* Libs */
-    implementation(projects.libs.crypto)
-    implementation(projects.libs.blockchainSdk)
-
-    /** Tangem libraries */
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain)
 }

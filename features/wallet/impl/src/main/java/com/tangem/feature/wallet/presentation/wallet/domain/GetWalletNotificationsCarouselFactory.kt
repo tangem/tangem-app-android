@@ -15,7 +15,6 @@ import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBann
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -38,7 +37,6 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
     private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
 ) {
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
@@ -86,7 +84,6 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
         clickIntents: WalletClickIntents,
     ) {
         if (!shouldShowLocal) return
-        if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
         val shouldShow = shouldShowYieldBoostMainBannerUseCase(userWallet.walletId).getOrNull() == true
         if (!shouldShow) return
         add(
