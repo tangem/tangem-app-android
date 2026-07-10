@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
 import com.tangem.features.promobanners.impl.R
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
@@ -36,6 +38,7 @@ internal class CampaignsModel @Inject constructor(
     campaignsService: CampaignsService,
     private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val bottomSheetNavigation: SlotNavigation<CampaignsBottomSheetConfig> = SlotNavigation()
@@ -102,6 +105,7 @@ internal class CampaignsModel @Inject constructor(
     }
 
     fun onAlreadyActivated(campaignType: CampaignType) {
+        analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
         footerExtraHeightState.value = 0.dp
         bottomSheetNavigation.activate(CampaignsBottomSheetConfig.AlreadyActivated(campaignType = campaignType))
     }
