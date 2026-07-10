@@ -1,11 +1,15 @@
 package com.tangem.screens
 
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.captureToImage
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.TokenReceiveQrCodeBottomSheetTestTags
 import com.tangem.wallet.R
+import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -50,6 +54,17 @@ class TokenReceiveQrCodeBottomSheetPageObject(semanticsProvider: SemanticsNodeIn
         hasText(getResourceString(R.string.common_share))
         useUnmergedTree = true
     }
+
+    /** Captures the QR code node as a bitmap via the Kakao node delegate (no raw composeTestRule access). */
+    fun captureQrCodeBitmap(): Bitmap {
+        lateinit var bitmap: Bitmap
+        qrCode.delegate.perform(QrCodeAction.CAPTURE) {
+            bitmap = captureToImage().asAndroidBitmap()
+        }
+        return bitmap
+    }
+
+    private enum class QrCodeAction : ComposeOperationType { CAPTURE }
 }
 
 internal fun BaseTestCase.onTokenReceiveQrCodeBottomSheet(function: TokenReceiveQrCodeBottomSheetPageObject.() -> Unit) =
