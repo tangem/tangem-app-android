@@ -9,6 +9,7 @@ import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.ScanFailsRequester
+import com.tangem.domain.models.scan.ProductType
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import com.tangem.scenarios.checkFailedTransactionDialog
@@ -240,6 +241,23 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Assert 'Gmail' app is open") {
                 ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
+            }
+        }
+    }
+
+    @AllureId("3603")
+    @DisplayName("Send feedback: S2C card has Contact support option")
+    @Test
+    fun sendFeedbackForS2CTest() {
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(productType = ProductType.Start2Coin)
+            }
+            step("Open 'Details screen'") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Verify 'Contact support' button is displayed") {
+                onDetailsScreen { contactSupportButton.assertIsDisplayed() }
             }
         }
     }
