@@ -121,8 +121,8 @@ internal class DefaultNFTRuntimeStore(
                                 },
                         )
                     }
-                    val assetsCount = when (assets) {
-                        is NFTCollection.Assets.Value -> assets.items.size
+                    val assetsCount = when {
+                        assets is NFTCollection.Assets.Value && assets.items.isNotEmpty() -> assets.items.size
                         else -> data.count
                     }
                     data.copy(
