@@ -1,11 +1,8 @@
 package com.tangem.features.tangempay.utils
 
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal val AccountStatus.Payment.userWalletId: UserWalletId
@@ -41,20 +38,4 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     is PaymentAccountStatusValue.Loaded -> v.balance
     is PaymentAccountStatusValue.Deactivated -> v.balance
     else -> null
-}
-
-internal fun AccountStatus.Payment.findCard(
-    initialCardId: String,
-    initialStatus: AccountStatus.Payment,
-): TangemPayCard? {
-    val value = value
-
-    if (value !is PaymentAccountStatusValue.Loaded || value.source != StatusSource.ACTUAL) return null
-
-    val initialCard = value.findCardWithId(initialCardId)
-    val newCards = initialStatus.ifLoadedOrNull { status ->
-        val initialCardIds = status.cards.mapTo(mutableSetOf()) { it.id }
-        value.cards.filterNot { it.id in initialCardIds }
-    }
-    return initialCard ?: newCards?.firstOrNull()
 }
