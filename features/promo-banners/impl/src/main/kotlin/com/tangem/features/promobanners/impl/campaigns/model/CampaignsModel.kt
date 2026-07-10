@@ -1,20 +1,32 @@
 package com.tangem.features.promobanners.impl.campaigns.model
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.promo.models.PromoCampaignState
+import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
+import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
+import com.tangem.features.promobanners.impl.campaigns.entity.toPromoCampaignId
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
@@ -22,35 +34,62 @@ internal class CampaignsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val campaignIdConverter: CampaignIdConverter,
     campaignsService: CampaignsService,
+    private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase,
+    @GlobalUiMessageSender private val messageSender: UiMessageSender,
 ) : Model() {
 
     val bottomSheetNavigation: SlotNavigation<CampaignsBottomSheetConfig> = SlotNavigation()
 
+    val footerExtraHeightState: StateFlow<Dp>
+        field = MutableStateFlow(0.dp)
+
     init {
         campaignsService.campaignFlow
-            .onEach { campaignId -> resolveStartNavigation(campaignIdConverter.convert(campaignId)) }
+            .onEach { request ->
+                resolveStartNavigation(
+                    campaignType = campaignIdConverter.convert(request.campaignId),
+                    userWalletId = request.userWalletId,
+                )
+            }
             .launchIn(modelScope)
     }
 
-    @Suppress("UnusedPrivateMember")
-    private fun resolveStartNavigation(campaignType: CampaignType?) {
-        val config = when (campaignType) {
-            is CampaignType.ReactivationCashback -> checkReactivationCashbackCampaignState(campaignType)
-            is CampaignType.WhaleSwapCashback -> checkWhaleSwapCashbackCampaignState(campaignType)
-            null -> CampaignsBottomSheetConfig.NotActive
+    private fun resolveStartNavigation(campaignType: CampaignType?, userWalletId: UserWalletId) {
+        modelScope.launch {
+            val config = if (campaignType == null) {
+                CampaignsBottomSheetConfig.NotActive
+            } else {
+                checkCampaignState(campaignType, userWalletId)
+            }
+
+            config?.let { bottomSheetNavigation.activate(it) }
         }
-
-        bottomSheetNavigation.activate(config)
     }
 
-    // TODO
-    private fun checkReactivationCashbackCampaignState(campaignType: CampaignType): CampaignsBottomSheetConfig {
-        return CampaignsBottomSheetConfig.Activate(campaignType)
-    }
+    private suspend fun checkCampaignState(
+        campaignType: CampaignType,
+        userWalletId: UserWalletId,
+    ): CampaignsBottomSheetConfig? = getPromoCampaignStateUseCase.invoke(
+        campaign = campaignType.toPromoCampaignId(),
+        userWalletId = userWalletId,
+    ).fold(
+        ifLeft = { error ->
+            TangemLogger.e("Error getting campaign ${campaignType.campaignId} state", error)
+            messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
+            null
+        },
+        ifRight = { campaignState ->
+            when (campaignState) {
+                is PromoCampaignState.Enrolled,
+                is PromoCampaignState.Available,
+                -> CampaignsBottomSheetConfig.Activate(campaignType)
+                is PromoCampaignState.NotActive -> CampaignsBottomSheetConfig.NotActive
+            }
+        },
+    )
 
-    // TODO
-    private fun checkWhaleSwapCashbackCampaignState(campaignType: CampaignType): CampaignsBottomSheetConfig {
-        return CampaignsBottomSheetConfig.Activate(campaignType)
+    fun onFooterExtraHeightReady(height: Dp) {
+        footerExtraHeightState.value = height
     }
 
     fun onDismiss() {
@@ -58,22 +97,12 @@ internal class CampaignsModel @Inject constructor(
     }
 
     fun onActivated(campaignType: CampaignType) {
+        footerExtraHeightState.value = 0.dp
         bottomSheetNavigation.activate(CampaignsBottomSheetConfig.Enrolled(campaignType))
     }
 
-    fun onAlreadyActivated(
-        campaignType: CampaignType,
-        appCurrency: AppCurrency,
-        account: Account?,
-        currency: CryptoCurrencyStatus,
-    ) {
-        bottomSheetNavigation.activate(
-            CampaignsBottomSheetConfig.AlreadyActivated(
-                campaignType = campaignType,
-                appCurrency = appCurrency,
-                account = account,
-                currency = currency,
-            ),
-        )
+    fun onAlreadyActivated(campaignType: CampaignType) {
+        footerExtraHeightState.value = 0.dp
+        bottomSheetNavigation.activate(CampaignsBottomSheetConfig.AlreadyActivated(campaignType = campaignType))
     }
 }
