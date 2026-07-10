@@ -226,7 +226,7 @@ private fun TokenDetailsBody(
             item(key = "quick_top_up_block") {
                 QuickTopUpBlock(
                     state = quickTopUpBlock,
-                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x0),
+                    modifier = itemModifier.padding(top = 8.dp),
                 )
             }
         }
