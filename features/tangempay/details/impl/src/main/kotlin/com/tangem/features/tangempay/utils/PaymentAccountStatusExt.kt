@@ -39,3 +39,6 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     is PaymentAccountStatusValue.Deactivated -> v.balance
     else -> null
 }
+
+internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
+    get() = availableForWithdrawal.signum() > 0

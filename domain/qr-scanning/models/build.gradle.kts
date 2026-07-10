@@ -4,6 +4,7 @@ plugins {
 }
 dependencies {
 
-    /** Domain */
-    implementation(projects.domain.models)
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

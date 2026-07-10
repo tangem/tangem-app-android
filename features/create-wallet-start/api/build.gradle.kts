@@ -9,13 +9,7 @@ android {
 }
 
 dependencies {
-    /* Project - Domain */
-    implementation(projects.domain.models)
-
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-
-    /* Compose */
-    implementation(deps.compose.runtime)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 }

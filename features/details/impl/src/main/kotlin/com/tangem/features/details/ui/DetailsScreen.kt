@@ -2,13 +2,13 @@ package com.tangem.features.details.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,19 +28,27 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
-import com.tangem.core.ui.components.inputrow.InputRowImageBase
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
 import com.tangem.core.ui.test.DetailsScreenTestTags
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.impl.R
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun DetailsScreen(
@@ -67,6 +76,7 @@ internal fun DetailsScreen(
     }
 
     SelectFeedbackEmailTypeBottomSheet(state.selectFeedbackEmailTypeBSConfig)
+    SelectContactSupportTypeBottomSheet(state.selectContactSupportTypeBSConfig)
 }
 
 @Composable
@@ -159,9 +169,9 @@ private fun Block(
                     onClick = model.onClick,
                 )
             }
-            is DetailsItemUM.WalletConnectAddressBookBlock -> {
+            is DetailsItemUM.WalletActionBlock -> {
                 BlockCard {
-                    WalletConnectAddressBookBlockItems(
+                    WalletActionsBlock(
                         items = model.items,
                         modifier = itemModifier,
                     )
@@ -170,35 +180,104 @@ private fun Block(
             is DetailsItemUM.UserWalletList -> {
                 userWalletListBlockContent.Content(modifier = itemModifier)
             }
-            is DetailsItemUM.UnderSectionText -> { /* Handled above */
-            }
+            is DetailsItemUM.UnderSectionText -> Unit
         }
     }
 }
 
 @Composable
-private fun WalletConnectAddressBookBlockItems(
-    items: List<DetailsItemUM.WalletConnectAddressBookBlock.Item>,
+private fun WalletActionsBlock(
+    items: ImmutableList<DetailsItemUM.WalletActionBlock.Item>,
     modifier: Modifier = Modifier,
 ) {
     items.fastForEach { item ->
         when (item) {
-            is DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect -> InputRowImageBase(
-                modifier = modifier.clickable(onClick = item.onClick).padding(12.dp),
-                iconResVector = R.drawable.ic_wallet_connect_24,
-                iconTint = TangemTheme.colors.icon.primary1,
-                subtitle = TextReference.Res(R.string.wallet_connect_title),
-                caption = TextReference.Res(R.string.wallet_connect_subtitle),
+            is DetailsItemUM.WalletActionBlock.Item.WalletConnect -> WalletConnectActionRow(
+                onClick = item.onClick,
+                modifier = modifier,
             )
-            is DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook -> InputRowImageBase(
-                modifier = modifier.clickable(onClick = item.onClick).padding(12.dp),
-                iconResVector = R.drawable.ic_contact_20,
-                iconTint = TangemTheme.colors.icon.accent,
-                subtitle = TextReference.Res(R.string.address_book_title),
-                caption = TextReference.Res(R.string.address_book_description),
+            is DetailsItemUM.WalletActionBlock.Item.AddressBook -> AddressBookActionRow(
+                onClick = item.onClick,
+                modifier = modifier,
             )
         }
     }
+}
+
+@Composable
+private fun WalletConnectActionRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemRow(
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        modifier = modifier,
+        onClick = onClick,
+        startSlot = {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Image(R.drawable.img_wallet_connect_76),
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+        },
+        titleSlot = {
+            TangemRowText(
+                text = TextReference.Res(R.string.wallet_connect_title),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        subtitleSlot = {
+            TangemRowText(
+                text = TextReference.Res(R.string.wallet_connect_subtitle),
+                role = TangemRowTextRole.Subtitle,
+            )
+        },
+        endSlot = { ActionRowChevron() },
+    )
+}
+
+@Composable
+private fun AddressBookActionRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemRow(
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        modifier = modifier,
+        onClick = onClick,
+        startSlot = {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Icon(
+                    iconRes = R.drawable.ic_address_book_24,
+                    tintReference = { TangemTheme.colors3.icon.brand },
+                ),
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = TangemTheme.colors3.bg.status.infoSubtle,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(8.dp),
+            )
+        },
+        titleSlot = {
+            TangemRowText(
+                text = TextReference.Res(R.string.address_book_title),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        subtitleSlot = {
+            TangemRowText(
+                text = TextReference.Res(R.string.address_book_description),
+                role = TangemRowTextRole.Subtitle,
+            )
+        },
+        endSlot = { ActionRowChevron() },
+    )
+}
+
+@Composable
+private fun ActionRowChevron() {
+    Icon(
+        imageVector = Icons.ic_chevron_right_20,
+        contentDescription = null,
+        tint = TangemTheme.colors3.icon.secondary,
+    )
 }
 
 @Composable

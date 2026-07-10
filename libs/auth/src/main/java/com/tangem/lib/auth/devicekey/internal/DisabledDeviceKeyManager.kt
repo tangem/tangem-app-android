@@ -9,9 +9,17 @@ internal object DisabledDeviceKeyManager : DeviceKeyManager {
 
     override suspend fun generateIfMissing(): Boolean = false
 
-    override suspend fun getPublicKey(): Option<ByteArray> = None
+    override suspend fun getPublicKeyEncoded(): Option<ByteArray> = None
+
+    override suspend fun getPublicKeyRawPoint(): Option<ByteArray> = None
 
     override suspend fun sign(data: ByteArray): ByteArray {
+        throw DeviceKeySigningException(
+            "DeviceKeyManager is disabled: feature toggle is off or keystore is unavailable",
+        )
+    }
+
+    override suspend fun signDer(data: ByteArray): ByteArray {
         throw DeviceKeySigningException(
             "DeviceKeyManager is disabled: feature toggle is off or keystore is unavailable",
         )
