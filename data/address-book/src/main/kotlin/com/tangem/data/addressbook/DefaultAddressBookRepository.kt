@@ -50,7 +50,6 @@ internal class DefaultAddressBookRepository(
 
     override fun getContacts(userWalletId: UserWalletId): Flow<List<Contact>> {
         return getContactsForWallet(userWalletId)
-            .onStart { syncAddressBooks() }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
@@ -70,7 +69,6 @@ internal class DefaultAddressBookRepository(
                     }
                 }
             }
-            .onStart { syncAddressBooks() }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
