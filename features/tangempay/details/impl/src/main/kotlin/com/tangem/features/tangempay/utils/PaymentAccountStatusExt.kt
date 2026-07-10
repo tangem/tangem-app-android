@@ -22,13 +22,11 @@ internal val AccountStatus.Payment.isDeactivated: Boolean
     get() = value is PaymentAccountStatusValue.Deactivated
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
-    get() = source == StatusSource.ACTUAL && error == null
+    get() = source.isActual() && error == null
 
 internal fun AccountStatus.Payment.requireLoaded(): PaymentAccountStatusValue.Loaded =
     value as? PaymentAccountStatusValue.Loaded
         ?: error("Card-detail subflow requires Loaded status, got ${value::class.simpleName}")
-
-internal fun AccountStatus.Payment.firstCard(): TangemPayCard = requireLoaded().cards.first()
 
 internal inline fun <T> AccountStatus.Payment.ifLoadedOrNull(call: (PaymentAccountStatusValue.Loaded) -> T): T? {
     val value = value
