@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
+import com.tangem.feature.swap.domain.models.domain.ExpressTxType
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.ui.*
@@ -211,6 +212,76 @@ internal class SwapInteractorImplApplySwapFeeMatrixTest : SwapInteractorImplTest
 
             assertThat(result.preparedSwapConfigState.balanceStatus)
                 .isInstanceOf(SwapBalanceStatus.Sufficient::class.java)
+        }
+    }
+
+    // =========================================================================
+    // Section A2: DEX provider re-routed to the CEX-like flow via txType=SEND ([REDACTED_TASK_KEY])
+    // =========================================================================
+
+    @Nested
+    inner class `DEX provider with SEND txType follows CEX semantics` {
+
+        /**
+         * [REDACTED_TASK_KEY]: a DEX-typed provider (e.g. Moonpay trade) whose quote returned txType=SEND
+         * executes as a plain transfer built by the app, so the fee must be folded into the amount
+         * exactly like for a CEX provider.
+         *
+         * GIVEN  ExchangeProviderType.DEX, txType = SEND
+         *        fromToken is Coin, amount = full native balance (max amount), fee = 0.01
+         * WHEN   applySwapFee runs
+         * THEN   balanceStatus == FeeAdjustedAmount with adjustedAmount = balance - fee
+         *        (NOT InsufficientAmount — the pre-fix behavior that showed "Insufficient funds")
+         */
+        @Test
+        fun `applySwapFee DEX with SEND txType — max amount returns FeeAdjustedAmount like CEX`() = runTest {
+            coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
+            coEvery {
+                walletManagersFacade.getNativeTokenBalance(any(), any(), any())
+            } returns BigDecimal("1.0")
+
+            val state = buildQuotesLoadedState(
+                providerType = ExchangeProviderType.DEX,
+                fromAmount = SwapAmount(BigDecimal("1.0"), 18),
+                isCoin = true,
+                fromBalance = BigDecimal("1.0"),
+                txType = ExpressTxType.SEND,
+            )
+            val fee = buildSwapFeeWithCoinToken(feeValue = BigDecimal("0.01"))
+
+            val result = sut.applySwapFee(state, fee, lastReducedBalanceBy)
+
+            val balanceStatus = result.preparedSwapConfigState.balanceStatus
+            assertThat(balanceStatus).isInstanceOf(SwapBalanceStatus.FeeAdjustedAmount::class.java)
+            assertThat((balanceStatus as SwapBalanceStatus.FeeAdjustedAmount).adjustedAmount.value)
+                .isEqualTo(BigDecimal("0.99"))
+        }
+
+        /**
+         * Twin guard: the same max-amount scenario with txType = SWAP keeps the DEX invariant —
+         * the fee is never deducted from the amount, and the amount alone exceeding
+         * balance-with-fee yields InsufficientAmount.
+         */
+        @Test
+        fun `applySwapFee DEX with SWAP txType — max amount keeps DEX semantics without fee deduction`() = runTest {
+            coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
+            coEvery {
+                walletManagersFacade.getNativeTokenBalance(any(), any(), any())
+            } returns BigDecimal("1.0")
+
+            val state = buildQuotesLoadedState(
+                providerType = ExchangeProviderType.DEX,
+                fromAmount = SwapAmount(BigDecimal("1.0"), 18),
+                isCoin = true,
+                fromBalance = BigDecimal("1.0"),
+                txType = ExpressTxType.SWAP,
+            )
+            val fee = buildSwapFeeWithCoinToken(feeValue = BigDecimal("0.01"))
+
+            val result = sut.applySwapFee(state, fee, lastReducedBalanceBy)
+
+            assertThat(result.preparedSwapConfigState.balanceStatus)
+                .isInstanceOf(SwapBalanceStatus.InsufficientAmount::class.java)
         }
     }
 
@@ -749,6 +820,7 @@ internal class SwapInteractorImplApplySwapFeeMatrixTest : SwapInteractorImplTest
         fromAmount: SwapAmount,
         isCoin: Boolean,
         fromBalance: BigDecimal,
+        txType: ExpressTxType? = null,
     ): SwapState.QuotesLoadedState {
         val from = buildSwapCurrencyStatus(
             networkRawId = ethNetwork,
@@ -778,6 +850,7 @@ internal class SwapInteractorImplApplySwapFeeMatrixTest : SwapInteractorImplTest
             validationResult = null,
             minAdaValue = null,
             swapProvider = buildSwapProvider(providerType),
+            txType = txType,
         )
     }
 

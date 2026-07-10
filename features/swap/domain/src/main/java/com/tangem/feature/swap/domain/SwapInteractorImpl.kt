@@ -1581,6 +1581,7 @@ internal class SwapInteractorImpl @Inject constructor(
             feeValue = nativeFee,
             selectedFeeToken = fee.selectedFeeToken,
             provider = state.swapProvider,
+            txType = state.txType,
         )
         val currencyCheck = manageWarnings(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1621,6 +1622,7 @@ internal class SwapInteractorImpl @Inject constructor(
      * from-currencies but "fee > native balance" for Token from-currencies is resolved here
      * by consulting `isBalanceEnough` (amount-alone check) directly.
      */
+    @Suppress("LongParameterList")
     private suspend fun computeBalanceStatus(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         amount: SwapAmount,
@@ -1628,9 +1630,10 @@ internal class SwapInteractorImpl @Inject constructor(
         feeValue: BigDecimal,
         selectedFeeToken: CryptoCurrencyStatus?,
         provider: SwapProvider,
+        txType: ExpressTxType?,
     ): SwapBalanceStatus {
-        when (provider.type) {
-            ExchangeProviderType.CEX -> {
+        when (resolveQuoteFlow(provider, txType)) {
+            ResolvedFlow.CexLike -> {
                 val includeStatus = getIncludeFeeInAmountInternal(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     amount = amount,
@@ -1642,9 +1645,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     return SwapBalanceStatus.FeeAdjustedAmount(adjustedAmount = includeStatus.amountSubtractFee)
                 }
             }
-            ExchangeProviderType.DEX,
-            ExchangeProviderType.DEX_BRIDGE,
-            -> Unit
+            ResolvedFlow.DexLike -> Unit
         }
 
         val isAmountAlone = isBalanceEnough(fromSwapCurrencyStatus, amount, fee = feeValue)
