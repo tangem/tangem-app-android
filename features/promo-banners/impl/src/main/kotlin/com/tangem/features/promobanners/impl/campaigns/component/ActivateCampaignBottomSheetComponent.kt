@@ -1,12 +1,11 @@
 package com.tangem.features.promobanners.impl.campaigns.component
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -14,13 +13,10 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.model.ActivateCampaignsModel
@@ -32,7 +28,8 @@ internal class ActivateCampaignBottomSheetComponent(
     chooseTokenComponentFactory: ChooseTokenComponent.Factory,
     private val params: Params,
     val onDismiss: () -> Unit,
-) : CampaignsModularComponent, AppComponentContext by appComponentContext {
+    val onFooterExtraHeightReady: (Dp) -> Unit,
+) : ComposableModularContentComponent, AppComponentContext by appComponentContext {
 
     private val model: ActivateCampaignsModel = getOrCreateModel(params)
 
@@ -42,7 +39,7 @@ internal class ActivateCampaignBottomSheetComponent(
     )
 
     @Composable
-    override fun Title(bottomSheetState: State<BottomSheetState>) {
+    override fun Title() {
         TangemTopNavigation(
             windowInsets = WindowInsets(0),
             blurBackground = false,
@@ -51,10 +48,10 @@ internal class ActivateCampaignBottomSheetComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, contentPadding: PaddingValues, modifier: Modifier) {
+    override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        ActivateCampaignContent(um = state)
+        ActivateCampaignContent(um = state, modifier = modifier)
 
         if (state.isChoosingToken) {
             ChooseTokenBottomSheet(state.onChooseTokenDismiss)
@@ -67,6 +64,7 @@ internal class ActivateCampaignBottomSheetComponent(
 
         ActivateCampaignFooter(
             footerUM = state.footerUM,
+            onFooterTextHeightReady = onFooterExtraHeightReady,
         )
     }
 
@@ -90,6 +88,6 @@ internal class ActivateCampaignBottomSheetComponent(
 
     interface ActivateCampaignModelCallbacks {
         val onActivated: (CampaignType) -> Unit
-        val onAlreadyActivated: (CampaignType, AppCurrency, Account?, CryptoCurrencyStatus) -> Unit
+        val onAlreadyActivated: (CampaignType) -> Unit
     }
 }
