@@ -44,7 +44,7 @@ data class TokenActionsBSContentUM(
             iconRes = R.drawable.ic_exchange_horizontal_24,
         ),
         SendWithSwap(
-            text = resourceReference(R.string.common_send_with_swap),
+            text = resourceReference(R.string.send_with_swap_confirm_title),
             iconRes = R.drawable.ic_exchange_horizontal_24,
         ),
         Stake(
