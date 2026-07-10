@@ -1,5 +1,7 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
+import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
@@ -45,5 +47,21 @@ internal object PushNotificationPreferencesDomainModule {
         repository: WalletPushNotificationPreferencesRepository,
     ): SetAllWalletPushNotificationPreferencesUseCase {
         return SetAllWalletPushNotificationPreferencesUseCase(repository = repository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsPushNotificationFirstActivationDoneUseCase(
+        repository: WalletPushNotificationPreferencesRepository,
+    ): IsPushNotificationFirstActivationDoneUseCase {
+        return IsPushNotificationFirstActivationDoneUseCase(repository = repository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesMarkPushNotificationFirstActivationDoneUseCase(
+        repository: WalletPushNotificationPreferencesRepository,
+    ): MarkPushNotificationFirstActivationDoneUseCase {
+        return MarkPushNotificationFirstActivationDoneUseCase(repository = repository)
     }
 }

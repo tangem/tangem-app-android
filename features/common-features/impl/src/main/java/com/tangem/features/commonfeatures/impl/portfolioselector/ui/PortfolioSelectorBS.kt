@@ -9,15 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 
 @Composable
@@ -27,20 +27,21 @@ internal fun PortfolioSelectorBS(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBack,
-        scrollableContent = false,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
+        type = TangemBottomSheetType.Modal,
         title = {
-            TangemModalBottomSheetTitle(
+            TangemTopNavigation(
                 title = state.title,
-                startIconRes = R.drawable.ic_back_24,
-                onStartClick = onBack,
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                blurBackground = false,
+                onClose = onDismiss,
             )
         },
         content = {

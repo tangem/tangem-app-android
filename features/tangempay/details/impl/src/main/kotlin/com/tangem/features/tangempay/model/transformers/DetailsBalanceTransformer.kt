@@ -12,6 +12,7 @@ import java.util.Currency
 
 internal class DetailsBalanceTransformer(
     private val fiatBalance: PaymentAccountStatusValue.FiatBalance,
+    private val isMuted: Boolean = false,
 ) : Transformer<TangemPayDetailsUM> {
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
@@ -20,6 +21,8 @@ internal class DetailsBalanceTransformer(
             fiatBalance = getFiatBalanceText(fiatBalance),
             actionButtons = prevState.balanceBlockState.actionButtons,
             cardsBlockState = prevState.balanceBlockState.cardsBlockState,
+            isMuted = isMuted,
+            isNegative = fiatBalance.availableBalance.signum() < 0,
         )
         return prevState.copy(balanceBlockState = balance)
     }

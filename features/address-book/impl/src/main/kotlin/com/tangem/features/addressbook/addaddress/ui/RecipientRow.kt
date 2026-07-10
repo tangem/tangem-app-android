@@ -3,11 +3,7 @@ package com.tangem.features.addressbook.addaddress.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -19,7 +15,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -28,13 +23,14 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_circle_20_filled
-import com.tangem.features.addressbook.addaddress.contract.AddressFieldUM
+import com.tangem.core.ui.res.generated.icons.ic_scan_20
+import com.tangem.features.addressbook.addaddress.ui.state.AddressFieldUM
 
 @Composable
 internal fun RecipientRow(
@@ -43,19 +39,23 @@ internal fun RecipientRow(
     onAddressClear: () -> Unit,
     onQrClick: () -> Unit,
     onPasteClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
             .fillMaxWidth()
             .background(TangemTheme.colors3.bg.secondary),
     ) {
         Text(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-            text = stringResourceSafe(R.string.common_address),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors3.text.secondary,
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+            text = addressField.label.resolveReference(),
+            style = TangemTheme.typography3.caption.medium,
+            color = if (addressField.isError) {
+                TangemTheme.colors3.text.status.error
+            } else {
+                TangemTheme.colors3.text.secondary
+            },
         )
         TangemRow(
             modifier = Modifier.fillMaxWidth(),
@@ -64,7 +64,7 @@ internal fun RecipientRow(
             startSlot = {
                 TangemIcon(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(TangemTheme.colors3.bg.tertiary),
                     tangemIconUM = TangemIconUM.Ident(text = addressField.value),
@@ -72,40 +72,52 @@ internal fun RecipientRow(
             },
             titleSlot = {
                 SimpleTextField(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp),
+                    modifier = Modifier.weight(1f),
                     value = addressField.value,
                     onValueChange = onValueChange,
-                    placeholder = TextReference.Res(R.string.address_book_enter_address),
-                    singleLine = false,
+                    placeholder = addressField.placeholder,
                 )
             },
             endSlot = {
-                if (addressField.value.isNotEmpty()) {
-                    Icon(
-                        modifier = Modifier.clickable(onClick = onAddressClear),
-                        imageVector = Icons.ic_cross_circle_20_filled,
-                        tint = TangemTheme.colors3.icon.tertiary,
-                        contentDescription = null,
-                    )
-                } else {
-                    Row {
-                        TangemButton(
-                            variant = TangemButton.Variant.Secondary,
-                            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_qrcode_scaner_24),
-                            onClick = onQrClick,
-                        )
-                        SpacerW8()
-                        TangemButton(
-                            variant = TangemButton.Variant.Primary,
-                            text = TextReference.Res(id = R.string.common_paste),
-                            onClick = onPasteClick,
-                        )
-                    }
-                }
+                RecipientEndSlot(
+                    hasValue = addressField.value.isNotEmpty(),
+                    onAddressClear = onAddressClear,
+                    onQrClick = onQrClick,
+                    onPasteClick = onPasteClick,
+                )
             },
         )
+    }
+}
+
+@Composable
+private fun RecipientEndSlot(
+    hasValue: Boolean,
+    onAddressClear: () -> Unit,
+    onQrClick: () -> Unit,
+    onPasteClick: () -> Unit,
+) {
+    if (hasValue) {
+        Icon(
+            modifier = Modifier
+                .clip(CircleShape)
+                .clickable(onClick = onAddressClear),
+            imageVector = Icons.ic_cross_circle_20_filled,
+            tint = TangemTheme.colors3.icon.tertiary,
+            contentDescription = null,
+        )
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TangemButton(
+                variant = TangemButton.Variant.Secondary,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_scan_20),
+                onClick = onQrClick,
+            )
+            TangemButton(
+                text = TextReference.Res(id = R.string.common_paste),
+                onClick = onPasteClick,
+            )
+        }
     }
 }
 
