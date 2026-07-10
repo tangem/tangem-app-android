@@ -131,7 +131,7 @@ internal class DefaultSessionTokenRefresher(
     private suspend fun runAuthenticate(): Either<SessionRefreshError, SessionTokens> = either {
         TangemLogger.i("Starting /authenticate")
 
-        val devicePublicKey = deviceKeyManager.getPublicKey().getOrNull()
+        val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
             ?: raise(SessionRefreshError.DeviceKeyUnavailable)
 
         val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
@@ -160,7 +160,7 @@ internal class DefaultSessionTokenRefresher(
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {
-            deviceKeyManager.sign(signedRequestPayload.canonicalize(payload)).toBase64NoWrap()
+            deviceKeyManager.signDer(signedRequestPayload.canonicalize(payload)).toBase64NoWrap()
         } catch (e: Exception) {
             TangemLogger.e("Failed to sign authentication payload", e)
             raise(SessionRefreshError.SigningFailed(e))
