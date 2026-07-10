@@ -164,7 +164,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickAddFunds() {
         analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
         val balance = currentStatus.value.balanceOrNull()
-        if (balance == null) {
+        val address = currentStatus.value.ifLoadedOrNull { it.depositAddress }
+        if (balance == null || address.isNullOrEmpty()) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             bottomSheetNavigation.activate(
