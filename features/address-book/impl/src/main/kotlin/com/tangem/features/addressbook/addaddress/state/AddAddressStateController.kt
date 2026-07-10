@@ -40,7 +40,7 @@ internal class AddAddressStateController @Inject constructor() {
             onPasteClick = {},
         ),
         buttonUM = TangemButtonUM(
-            text = TextReference.Res(R.string.address_book_add_address),
+            text = TextReference.Res(R.string.address_book_save_address),
             type = TangemButtonType.Primary,
             isEnabled = false,
             onClick = {},
@@ -52,5 +52,6 @@ internal class AddAddressStateController @Inject constructor() {
         onQrClick = {},
         onBackClick = {},
         onNetworkClick = {},
+        title = resourceReference(R.string.address_book_add_address),
     )
 }
