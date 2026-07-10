@@ -15,9 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
+import com.tangem.features.promobanners.impl.R
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_warning_24
@@ -48,7 +49,7 @@ fun NotActiveCampaignMessageContent(modifier: Modifier = Modifier) {
         SpacerH32()
 
         Text(
-            text = " Campaign not active", // TODO localization
+            text = stringResourceSafe(R.string.promo_campaign_not_active_title),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
@@ -58,13 +59,13 @@ fun NotActiveCampaignMessageContent(modifier: Modifier = Modifier) {
         SpacerH8()
 
         Text(
-            text = "This campaign no longer exists or has expired", // TODO localization
+            text = stringResourceSafe(R.string.promo_campaign_not_active_subtitle),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
 
-        SpacerH(48.dp)
+        SpacerH32()
     }
 }
