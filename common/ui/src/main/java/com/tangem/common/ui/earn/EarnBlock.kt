@@ -304,7 +304,9 @@ private fun EarnBlockTitle(titleUM: EarnBlockUM.TitleUM, type: Type, modifier: M
                 iconRes = icon.tone.iconRes(),
                 tintReference = { icon.tone.tint() },
             ),
-            modifier = Modifier.size(TangemTheme.dimens2.x4),
+            modifier = Modifier
+                .size(TangemTheme.dimens2.x4)
+                .testTag(TokenDetailsScreenTestTags.EARN_BLOCK_TITLE_ICON),
         )
     }
 }
