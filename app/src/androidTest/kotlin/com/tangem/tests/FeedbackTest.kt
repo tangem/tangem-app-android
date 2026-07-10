@@ -203,7 +203,10 @@ class FeedbackTest : BaseTestCase() {
         val gmailText = "Welcome to Gmail"
 
         setupHooks(
-            additionalAfterSection = { MockProvider.resetEmulateError() },
+            additionalAfterSection = {
+                device.uiDevice.pressBack()
+                MockProvider.resetEmulateError()
+            }
         ).run {
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -221,6 +224,7 @@ class FeedbackTest : BaseTestCase() {
                 onDetailsScreen { addWalletButton.clickWithAssertion() }
             }
             step("Force show 'Scan warning' dialog"){
+                waitForIdle()
                 runOnUiThread {
                     MainScope().launch {
                         scanFailsRequester.show(AnalyticsParam.ScreensSources.Main)
