@@ -141,7 +141,7 @@ internal class SendDestinationModel @Inject constructor(
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
-        modelScope.launch { syncAddressBooksUseCase() }
+        modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
         subscribeOnQRScannerResult()
         initialState()
         resetContactOnEdit()
