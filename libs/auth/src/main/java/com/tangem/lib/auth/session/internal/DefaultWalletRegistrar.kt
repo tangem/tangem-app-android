@@ -65,7 +65,7 @@ internal class DefaultWalletRegistrar(
 
             TangemLogger.i("Starting wallet registration")
 
-            val devicePublicKey = deviceKeyManager.getPublicKey().getOrNull()
+            val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
                 ?: raise(WalletRegistrationError.DeviceKeyUnavailable)
             val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
 
