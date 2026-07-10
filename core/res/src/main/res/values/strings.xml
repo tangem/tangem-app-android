@@ -131,6 +131,7 @@
   <string name="address_book_no_contacts">No contacts yet</string>
   <string name="address_book_no_contacts_description">Contacts added will appear here</string>
   <string name="address_book_remove_address">Remove address</string>
+  <string name="address_book_save_address">Save address</string>
   <string name="address_book_save_contact">Save contact</string>
   <string name="address_book_save_to_wallet_title">Save to Wallet</string>
   <string name="address_book_save_wallet_to_description">This contact will be linked to this wallet’s address book.</string>
@@ -1310,9 +1311,12 @@
   <string name="promo_campaign_enroll_success_title">You\'re successfully enrolled in %1$s</string>
   <string name="promo_campaign_not_active_subtitle">This campaign no longer exists or has expired</string>
   <string name="promo_campaign_not_active_title">Campaign not active</string>
+  <string name="promo_campaign_reactivation_summary_description">Earn 0.5% cashback on every swap over $500, on any pair except stable to stable. Max payout $50 per swap.\n\nComplete five qualifying swaps and unlock an extra $10 bonus.\n\nRewards are paid weekly in USDT or USDC on the address selected.</string>
   <string name="promo_campaign_select_cashback_account">Select cashback account</string>
+  <string name="promo_campaign_select_token">Select token</string>
   <string name="promo_campaign_summary_title">Enroll in %1$s</string>
   <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">I agree with</string>
   <string name="promo_campaign_terms_link">%1$s Terms</string>
   <string name="promo_campaign_whale_swap_summary_description">Earn cashback on every swap from $10K until the end of July.\n\nRates step up with size: 0.10% from $10K, 0.20% from $20K, 0.50% from $100K.\n\nMax payout: $500 per swap, and $10,000 per wallet per swap direction until campaign lasts. Stable coin into stablecoin swaps are excluded.\n\nPayout arrives weekly in USDT or USDC address of your choice.</string>
   <string name="provider_name_support">%s support</string>
