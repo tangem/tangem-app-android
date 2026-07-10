@@ -3,9 +3,10 @@ package com.tangem.features.promobanners.impl.campaigns.ui
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.entity.ActivateCampaignUM
-import com.tangem.features.promobanners.impl.campaigns.entity.CampaignAlreadyActivatedUM
 import com.tangem.features.promobanners.impl.campaigns.entity.FooterUM
 import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 import com.tangem.features.promobanners.impl.campaigns.entity.TermsUM
@@ -51,6 +52,7 @@ internal object CampaignPreviewData {
     )
 
     val activateCampaign: ActivateCampaignUM = ActivateCampaignUM(
+        logo = TangemIconUM.Icon(R.drawable.ic_alert_24),
         title = stringReference("Whale Swap Cashback"),
         description = stringReference(
             "Get cashback on every swap. Pick a token and the account where your rewards will be paid out.",
@@ -61,10 +63,6 @@ internal object CampaignPreviewData {
         footerUM = footer,
         onChooseTokenDismiss = {},
         onLearnMoreClick = {},
-    )
-
-    val alreadyActivated: CampaignAlreadyActivatedUM = CampaignAlreadyActivatedUM(
-        selectedToken = tokenItem,
-        selectedAccount = selectedAccount,
+        onChooseTokenClick = {},
     )
 }
