@@ -12,6 +12,7 @@ internal data class AddAddressUM(
     val memoField: MemoFieldUM,
     val buttonUM: TangemButtonUM,
     val chosenNetworkStateUM: ChosenNetworkStateUM,
+    val title: TextReference,
     val onAddressChange: (String) -> Unit,
     val onAddressClear: () -> Unit,
     val onPasteClick: () -> Unit,
