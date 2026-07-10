@@ -23,6 +23,8 @@ import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.addresses.ui.AddressesInfoScreen
 import com.tangem.feature.tester.presentation.addresses.viewmodels.AddressesInfoViewModel
+import com.tangem.feature.tester.presentation.backendauth.ui.BackendAuthStatusScreen
+import com.tangem.feature.tester.presentation.backendauth.viewmodels.BackendAuthStatusViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
 import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
 import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsScreen
@@ -99,6 +101,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.ADDRESSES_INFO,
                             ButtonUM.STORY_BOOK,
                             ButtonUM.SURVEY_SPARROW,
+                            ButtonUM.BACKEND_AUTH_STATUS,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -112,6 +115,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
                                 ButtonUM.STORY_BOOK -> TesterScreen.STORY_BOOK
                                 ButtonUM.SURVEY_SPARROW -> TesterScreen.SURVEY_SPARROW
+                                ButtonUM.BACKEND_AUTH_STATUS -> TesterScreen.BACKEND_AUTH_STATUS
                             }
 
                             innerTesterRouter.open(route)
@@ -211,6 +215,15 @@ internal class TesterActivity : ComposeActivity() {
                         innerTesterRouter.back()
                     }
                 }
+            }
+
+            composable(route = TesterScreen.BACKEND_AUTH_STATUS.name) {
+                val viewModel = hiltViewModel<BackendAuthStatusViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                BackendAuthStatusScreen(state)
             }
         }
     }

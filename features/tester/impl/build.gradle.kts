@@ -83,6 +83,7 @@ dependencies {
     api(projects.libs.blockchainSdk)
     implementation(projects.common)
     implementation(projects.common.ui)
+    implementation(projects.libs.auth)
     implementation(projects.libs.crypto)
     implementation(projects.libs.tangemSdkApi)
 }
