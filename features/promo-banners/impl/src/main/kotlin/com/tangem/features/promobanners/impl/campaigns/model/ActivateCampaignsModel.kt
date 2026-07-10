@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl.campaigns.model
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -13,13 +14,12 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.EnrollResult
 import com.tangem.domain.promo.models.PromoCampaignId
@@ -28,6 +28,7 @@ import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.promobanners.impl.R
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.component.ActivateCampaignBottomSheetComponent
 import com.tangem.features.promobanners.impl.campaigns.entity.ActivateCampaignUM
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignTypeToContentConverter
@@ -57,6 +58,7 @@ internal class ActivateCampaignsModel @Inject constructor(
     private val enrollPromoCampaignUseCase: EnrollPromoCampaignUseCase,
     private val urlOpener: UrlOpener,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<ActivateCampaignBottomSheetComponent.Params>()
@@ -80,6 +82,8 @@ internal class ActivateCampaignsModel @Inject constructor(
     )
 
     init {
+        analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.PromotionScreenOpened(campaignType))
+
         getSelectedAppCurrencyUseCase.invokeOrDefault()
             .onEach { appCurrency = it }
             .launchIn(modelScope)
@@ -120,20 +124,26 @@ internal class ActivateCampaignsModel @Inject constructor(
         uiState.update { it.copy(isChoosingToken = false) }
     }
 
-    private fun onEnrollClick(selectedWalletId: UserWalletId, selectedCurrencyStatus: CryptoCurrencyStatus) {
-        val token = selectedCurrencyStatus.currency as? CryptoCurrency.Token ?: return
+    private fun onEnrollClick(selectedWalletId: UserWalletId, selectedToken: CryptoCurrency.Token) {
+        analyticsEventHandler.send(
+            PromoCampaignsAnalyticsEvent.EnrollButtonClicked(
+                campaignType = campaignType,
+                token = selectedToken.symbol,
+                blockchain = selectedToken.network.name,
+            ),
+        )
 
         modelScope.launch {
             enrollPromoCampaignUseCase.invoke(
                 campaign = campaignId,
                 tokenReward = TokenReward(
-                    tokenAddress = token.contractAddress,
-                    networkId = token.network.rawId,
+                    tokenAddress = selectedToken.contractAddress,
+                    networkId = selectedToken.network.rawId,
                 ),
                 walletIds = listOf(selectedWalletId),
             ).onLeft { error ->
                 TangemLogger.e("Error enrolling campaign ${campaignType.campaignId}", error)
-                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
+                messageSender.send(ToastMessage(message = resourceReference(R.string.common_unknown_error)))
             }.onRight {
                 handleEnrollResponse(it)
             }
@@ -156,6 +166,8 @@ internal class ActivateCampaignsModel @Inject constructor(
     }
 
     private fun onTokenChosen(result: ChooseTokenResult) {
+        val selectedToken = result.currency.currency as? CryptoCurrency.Token ?: return
+
         modelScope.launch {
             val selectedAccountUM = if (isAccountsModeEnabledUseCase.invokeSync()) {
                 when (val account = result.account.account) {
@@ -185,7 +197,7 @@ internal class ActivateCampaignsModel @Inject constructor(
                         onPrimaryButtonClick = {
                             onEnrollClick(
                                 selectedWalletId = result.walletId,
-                                selectedCurrencyStatus = result.currency,
+                                selectedToken = selectedToken,
                             )
                         },
                         terms = TermsUM(
