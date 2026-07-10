@@ -12,79 +12,80 @@ android {
 }
 dependencies {
     /** Api */
-    implementation(projects.features.onboardingV2.api)
-    implementation(projects.features.manageTokens.api)
-    implementation(projects.features.biometry.api)
-    implementation(projects.features.pushNotifications.api)
-    implementation(projects.features.hotWallet.api)
-    implementation(projects.features.tokenRecieve.api)
+    api(projects.features.biometry.api)
+    api(projects.features.hotWallet.api)
+    api(projects.features.manageTokens.api)
+    api(projects.features.onboardingV2.api)
+    api(projects.features.pushNotifications.api)
 
     /** Core modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-    implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.ui)
+    api(projects.core.utils)
+    implementation(projects.core.error)
     implementation(projects.core.error.ext)
 
     /** Common */
-    implementation(projects.common.ui)
+    api(projects.common.ui)
     implementation(projects.common.routing)
     implementation(projects.common)
 
     /** Domain */
-    implementation(projects.domain.account)
-    implementation(projects.domain.models)
-    implementation(projects.domain.feedback)
+    api(projects.domain.account)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.feedback)
+    api(projects.domain.models)
+    api(projects.domain.networks)
+    api(projects.domain.onboarding)
+    api(projects.domain.settings)
+    api(projects.domain.staking)
+    api(projects.domain.tokens)
+    api(projects.domain.visa)
+    api(projects.domain.wallets)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.card)
-    implementation(projects.domain.wallets)
+    implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.onboarding)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.onramp)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.staking)
+    runtimeOnly(projects.domain.onramp)
+    runtimeOnly(projects.domain.transaction)
 
     /** Tangem libraries */
+    api(tangemDeps.card.core)
+    api(projects.libs.tangemSdkApi)
     implementation(tangemDeps.hot.core)
-    implementation(projects.libs.tangemSdkApi)
-    implementation(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
 
     /** AndroidX libraries */
-    implementation(deps.androidx.core.ktx)
+    api(deps.androidx.appCompat)
+    implementation(deps.androidx.annotation)
+    implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
+    api(deps.compose.animation)
+    api(deps.compose.foundation)
+    api(deps.decompose.ext.compose)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
-    implementation(deps.compose.shimmer)
+    implementation(deps.lottie)
     implementation(deps.lottie.compose)
-    implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
-    implementation(deps.androidx.datastore)
 
     /** Other libraries */
-    implementation(deps.kotlin.immutable.collections)
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.serialization)
     implementation(deps.firebase.crashlytics)
-    implementation(tangemDeps.card.core)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -93,6 +94,5 @@ dependencies {
     /** Test */
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
 }

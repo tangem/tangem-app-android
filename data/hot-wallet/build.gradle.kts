@@ -11,17 +11,29 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
 
-    implementation(projects.domain.hotWallet)
-    implementation(projects.domain.models)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
+    // region Other libraries
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.datastore)
+    implementation(deps.moshi)
+    // endregion
+
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    implementation(deps.androidx.datastore)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
+    // region Core modules
+    api(projects.core.datasource)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.hotWallet)
+    implementation(projects.domain.models)
+    // endregion
 }

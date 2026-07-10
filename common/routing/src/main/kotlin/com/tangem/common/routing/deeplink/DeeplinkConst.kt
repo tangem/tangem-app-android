@@ -16,6 +16,7 @@ object DeeplinkConst {
     const val PROMO_CODE_KEY = "promo_code"
     const val REF_KEY = "ref"
     const val CAMPAIGN_KEY = "campaign"
+    const val CAMPAIGN_ID_KEY = "campaignId"
     const val NAME_KEY = "name"
     const val ORDER_KEY = "order"
     const val INTERVAL_KEY = "interval"
