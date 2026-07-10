@@ -377,6 +377,7 @@
   <string name="common_from">Из</string>
   <string name="common_from_wallet_name">Из %s</string>
   <string name="common_generate_addresses">Синхронизировать адреса</string>
+  <string name="common_get">Приобрести</string>
   <string name="common_get_started">Начать</string>
   <string name="common_get_token">Получить токен</string>
   <string name="common_go_to_provider">К провайдеру</string>
@@ -2010,6 +2011,7 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Внесите USDC на счёт, чтобы покрыть комиссию</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Невозможно покрыть комиссию</string>
   <string name="tangempay_reissue_card_title">Перевыпустить карту?</string>
+  <string name="tangempay_remove_account">Удалить аккаунт</string>
   <string name="tangempay_service_unavailable_description">Мы устраняем техническую проблему. Пожалуйста, попробуйте позже.</string>
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
@@ -2519,7 +2521,7 @@
   <string name="yield_module_approve_sheet_fee_note">Комиссия будет списана, и ваши активы снова начнут приносить доход.</string>
   <string name="yield_module_approve_sheet_subtitle">Чтобы продолжить зарабатывать, нужно выдать разрешение.</string>
   <string name="yield_module_approve_sheet_title">Подтвердить разрешение</string>
-  <string name="yield_module_average_apy">Средний APY %1$s%%</string>
+  <string name="yield_module_average_apy">Текущий APY %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Ваши средства в данный момент размещены в протоколе Aave, но вы можете воспользоваться ими в любое время.</string>
   <string name="yield_module_balance_info_sheet_title">Ваш %s внесён в Aave</string>
   <string name="yield_module_chart_loading_error">Невозможно загрузить график</string>

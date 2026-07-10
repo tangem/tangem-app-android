@@ -29,7 +29,6 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -129,7 +128,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
-    private val frozenStateJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -162,9 +160,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                             isMuted = !state.isFresh,
                         )
                         uiState.update { balanceTransformer.transform(stateFactory.getLoadedState(state)) }
-                        state.cards.firstOrNull()?.let { card ->
-                            subscribeToCardFrozenState(card.id)
-                        }
                     }
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
@@ -195,33 +190,11 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
 
-    private fun subscribeToCardFrozenState(cardId: String) {
-        frozenStateJobHolder.cancel()
-        cardDetailsRepository
-            .cardFrozenState(cardId)
-            .onEach { frozenState ->
-                // Mirror getLoadedState gating so a live freeze update can't re-enable actions on stale data.
-                val isFresh = currentStatus.value.ifLoadedOrNull { it.isFresh } == true
-                val isUnfrozen = frozenState == TangemPayCardFrozenState.Unfrozen
-                val areActionButtonsEnabled = isFresh && isUnfrozen
-                val hasWithdrawableBalance = currentStatus.value.balanceOrNull()?.hasWithdrawableAmount == true
-                uiState.update(
-                    TangemPayActionButtonsTransformer(
-                        stateFactory.getActionButtonsConfig(
-                            isAddFundsEnabled = areActionButtonsEnabled,
-                            isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
-                        ),
-                    ),
-                )
-            }
-            .launchIn(modelScope)
-            .saveIn(frozenStateJobHolder)
-    }
-
     override fun onClickAddFunds() {
         analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
         val balance = currentStatus.value.balanceOrNull()
-        if (balance == null) {
+        val address = currentStatus.value.ifLoadedOrNull { it.depositAddress }
+        if (balance == null || address.isNullOrEmpty()) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             bottomSheetNavigation.activate(
