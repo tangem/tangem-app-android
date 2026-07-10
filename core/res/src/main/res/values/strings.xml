@@ -131,6 +131,7 @@
   <string name="address_book_no_contacts">No contacts yet</string>
   <string name="address_book_no_contacts_description">Contacts added will appear here</string>
   <string name="address_book_remove_address">Remove address</string>
+  <string name="address_book_save_address">Save address</string>
   <string name="address_book_save_contact">Save contact</string>
   <string name="address_book_save_to_wallet_title">Save to Wallet</string>
   <string name="address_book_save_wallet_to_description">This contact will be linked to this wallet’s address book.</string>
