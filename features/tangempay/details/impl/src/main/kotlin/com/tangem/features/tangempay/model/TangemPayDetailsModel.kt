@@ -120,7 +120,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
-    private val frozenStateJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -141,9 +140,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                         fetchAddToWalletBanner()
                         uiState.update { stateFactory.getLoadedState(state) }
                         uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
-                        state.cards.firstOrNull()?.let { card ->
-                            subscribeToCardFrozenState(card.id)
-                        }
                     }
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
@@ -164,22 +160,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
-
-    private fun subscribeToCardFrozenState(cardId: String) {
-        frozenStateJobHolder.cancel()
-        cardDetailsRepository
-            .cardFrozenState(cardId)
-            .onEach { frozenState ->
-                uiState.update(
-                    TangemPayFreezeUnfreezeStateTransformer(
-                        cardFrozenState = frozenState,
-                        isDataFresh = currentStatus.value.ifLoadedOrNull { it.isFresh } == true,
-                    ),
-                )
-            }
-            .launchIn(modelScope)
-            .saveIn(frozenStateJobHolder)
-    }
 
     override fun onClickAddFunds() {
         analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
