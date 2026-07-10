@@ -12,9 +12,9 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -34,7 +34,7 @@ internal class EarnApyConverter(
                 )
             }?.value
             if (yieldSupplyApy != null) {
-                val isActive = value.value.yieldSupplyStatus?.isActive == false
+                val isActive = value.value.yieldSupplyStatus?.isActive == true
                 return EarnApyInfo(
                     text = resourceReference(
                         R.string.yield_module_earn_badge,
