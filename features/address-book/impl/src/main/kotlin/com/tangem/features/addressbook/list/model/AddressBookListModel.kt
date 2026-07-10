@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.VerifiedContact
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -26,12 +27,13 @@ import com.tangem.features.addressbook.route.AddressBookRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Backs the contacts list. The list content is the same however the address book was opened — the open
  * [AddressBookRoute.ListMode] only decides what tapping a contact does:
- *  - [AddressBookRoute.ListMode.Default]: browse / manage contacts (editor is TODO [REDACTED_TASK_KEY]).
+ *  - [AddressBookRoute.ListMode.Default]: browse / manage contacts
  *  - [AddressBookRoute.ListMode.Selector]: pick a recipient for the given network — a single matching address is
  *    returned right away, several open the address selector first.
  */
@@ -45,6 +47,7 @@ internal class AddressBookListModel @Inject constructor(
     private val router: Router,
     private val contactSelectionTrigger: ContactSelectionTrigger,
     private val analyticsSender: AddressBookAnalyticsSender,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
@@ -60,11 +63,22 @@ internal class AddressBookListModel @Inject constructor(
     private val searchActive = MutableStateFlow(value = false)
     private val selectedWalletId = MutableStateFlow<String?>(value = null)
 
+    // We keep skeletons during stale state
+    private val isInitialSyncDone = MutableStateFlow(value = false)
+
     private val allContacts: SharedFlow<List<VerifiedContact>> =
         getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null)
             .shareIn(modelScope, SharingStarted.Lazily, replay = 1)
 
     init {
+        modelScope.launch {
+            try {
+                syncAddressBooksUseCase()
+            } finally {
+                isInitialSyncDone.value = true
+            }
+        }
+
         val matchedContacts = searchQuery.flatMapLatest { query ->
             if (query.isBlank()) {
                 allContacts
@@ -72,7 +86,7 @@ internal class AddressBookListModel @Inject constructor(
                 getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
             }
         }
-        combine(
+        val listInputs = combine(
             allContacts,
             matchedContacts,
             searchQuery,
@@ -87,7 +101,8 @@ internal class AddressBookListModel @Inject constructor(
                 wallets = wallets,
             )
         }
-            .onEach(::updateState)
+        combine(listInputs, isInitialSyncDone) { inputs, syncDone -> inputs to syncDone }
+            .onEach { (inputs, syncDone) -> if (syncDone) updateState(inputs) }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
 
