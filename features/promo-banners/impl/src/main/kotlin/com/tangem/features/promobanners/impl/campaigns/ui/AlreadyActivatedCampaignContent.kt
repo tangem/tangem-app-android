@@ -13,21 +13,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_24
-import com.tangem.features.promobanners.impl.campaigns.entity.CampaignAlreadyActivatedUM
-import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 
 @Composable
-internal fun ActivateCampaignContent(um: CampaignAlreadyActivatedUM) {
+internal fun AlreadyActivatedCampaignContent(message: TextReference, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
@@ -48,7 +46,7 @@ internal fun ActivateCampaignContent(um: CampaignAlreadyActivatedUM) {
         SpacerH32()
 
         Text(
-            text = "You’re already enrolled in Whale Swap Cashback", // TODO localization
+            text = message.resolveReference(),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
@@ -57,37 +55,8 @@ internal fun ActivateCampaignContent(um: CampaignAlreadyActivatedUM) {
                 .padding(horizontal = 16.dp),
         )
 
-        SpacerH12()
-
-        SelectedTokenContent(
-            selectedToken = um.selectedToken,
-            selectedAccount = um.selectedAccount,
-        )
-
         SpacerH32()
     }
-}
-
-@Composable
-private fun SelectedTokenContent(selectedToken: TokenItemState, selectedAccount: SelectedAccountUM?) {
-    SpacerH24()
-
-    Text(
-        text = "Eligible cashback will be distributed to:", // TODO([REDACTED_TASK_KEY]): localize
-        style = TangemTheme.typography.subtitle1,
-        color = TangemTheme.colors.text.primary1,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-    )
-
-    SpacerH12()
-
-    PromoCampaignTokenItem(
-        modifier = Modifier.fillMaxWidth(),
-        selectedToken = selectedToken,
-        selectedAccount = selectedAccount,
-    )
 }
 
 // region Preview
@@ -97,7 +66,7 @@ private fun SelectedTokenContent(selectedToken: TokenItemState, selectedAccount:
 private fun Preview_AlreadyActivatedCampaignContent() {
     TangemThemePreviewRedesign {
         Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            ActivateCampaignContent(um = CampaignPreviewData.alreadyActivated)
+            AlreadyActivatedCampaignContent(message = stringReference("You’re already enrolled in Whale Swap Cashback"))
         }
     }
 }
