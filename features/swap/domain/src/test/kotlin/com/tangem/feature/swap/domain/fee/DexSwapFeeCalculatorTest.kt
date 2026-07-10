@@ -27,6 +27,7 @@ import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -49,6 +50,7 @@ internal class DexSwapFeeCalculatorTest {
     private val ethNetwork = Blockchain.Ethereum.toNetworkId()
     private val solanaNetwork = Blockchain.Solana.toNetworkId()
     private val bitcoinNetwork = Blockchain.Bitcoin.toNetworkId()
+    private val tronNetwork = Blockchain.Tron.toNetworkId()
 
     private val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
     private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase = mockk(relaxed = true)
@@ -56,6 +58,7 @@ internal class DexSwapFeeCalculatorTest {
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
+    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -68,6 +71,7 @@ internal class DexSwapFeeCalculatorTest {
             walletManagersFacade = walletManagersFacade,
             patchEthGasLimitForSwap = dexBump,
             wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
+            swapFeatureToggles = swapFeatureToggles,
         )
     }
 
@@ -899,6 +903,73 @@ internal class DexSwapFeeCalculatorTest {
         gasLimit = BigInteger.valueOf(100_000),
         gasPrice = BigInteger.valueOf(20_000_000_000),
     )
+
+    // -------------------------------------------------------------------------
+    // TRON ([REDACTED_TASK_KEY]) — gated by SwapFeatureToggles.isTronDexSwapEnabled
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN tron toggle ON WHEN calculate THEN tron fee path estimates fee with no evm gas`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isTronDexSwapEnabled } returns true
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = tronNetwork, isCoin = true)
+        val transaction = buildDex(
+            txValue = "5000000", // 5 TRX
+            txTo = "TRouterAddress",
+            txFrom = "TSenderAddress",
+            txData = "a9059cbb",
+        )
+        val capturedTxData = slot<TransactionData>()
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = capture(capturedTxData))
+        } returns mockk<TransactionFee.Single>(relaxed = true).right()
+
+        // Act
+        val result = sut.calculate(fromStatus, transaction)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(capturedTxData.captured).isInstanceOf(TransactionData.Uncompiled::class.java)
+        result.onRight { dexFeeResult ->
+            // TRON path carries no EVM gas and applies no gas-limit bump.
+            assertThat(dexFeeResult.gas).isNull()
+        }
+        // No eth-specific fallback on the TRON path.
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN tron toggle OFF WHEN calculate THEN evm path is used and carries gas`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isTronDexSwapEnabled } returns false
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = tronNetwork, isCoin = true)
+        val transaction = buildDex(
+            txValue = "5000000",
+            txTo = "TRouterAddress",
+            txFrom = "TSenderAddress",
+            txData = "a9059cbb",
+        )
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        } returns mockk<TransactionFee.Single>(relaxed = true).right()
+
+        // Act
+        val result = sut.calculate(fromStatus, transaction)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            // Toggle off → TRON falls through to the EVM branch, which carries the tx gas.
+            assertThat(dexFeeResult.gas).isEqualTo(transaction.gas)
+        }
+    }
 
     private fun buildDex(
         txData: String = "dGVzdA==",

@@ -4,5 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.domain.account)
+    api(projects.domain.account)
+    api(projects.domain.models)
+    implementation(deps.arrow.core)
 }
