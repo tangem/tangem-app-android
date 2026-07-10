@@ -16,6 +16,7 @@ import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAdd
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
@@ -93,6 +94,7 @@ internal class SendDestinationModelTest {
     private val sendDestinationAlertFactory: SendDestinationAlertFactory = mockk(relaxed = true)
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val getContactsUseCase: GetContactsUseCase = mockk(relaxed = true)
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val contactSelectionListener: ContactSelectionListener = mockk(relaxed = true)
     private val addressBookSendAnalytics: AddressBookSendAnalytics = mockk(relaxed = true)
     private val callback: SendDestinationComponent.ModelCallback = mockk(relaxed = true)
@@ -571,6 +573,7 @@ internal class SendDestinationModelTest {
             sendDestinationAlertFactory = sendDestinationAlertFactory,
             sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
             addressBookSendAnalytics = addressBookSendAnalytics,
+            syncAddressBooksUseCase = syncAddressBooksUseCase,
             getContactsUseCase = getContactsUseCase,
             contactSelectionListener = contactSelectionListener,
         )
