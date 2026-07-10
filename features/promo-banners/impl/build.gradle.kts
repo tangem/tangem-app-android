@@ -54,7 +54,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.kotlin.serialization)
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
 }
