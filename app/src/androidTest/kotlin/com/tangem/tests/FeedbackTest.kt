@@ -196,4 +196,47 @@ class FeedbackTest : BaseTestCase() {
             }
         }
     }
+    @AllureId("3960")
+    @DisplayName("Send feedback: Failed card scanning on Details screen")
+    @Test
+    fun sendFeedbackFailedScanningOnDetails() {
+        val gmailText = "Welcome to Gmail"
+
+        setupHooks(
+            additionalAfterSection = { MockProvider.resetEmulateError() },
+        ).run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Details screen'") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Set scanning error (the next card scan will fail with TagLost)") {
+                MockProvider.setEmulateError(TangemSdkError.TagLost())
+            }
+            step("Click 'Add new wallet' button") {
+                onDetailsScreen { addWalletButton.clickWithAssertion() }
+            }
+            step("Force show 'Scan warning' dialog"){
+                runOnUiThread {
+                    MainScope().launch {
+                        scanFailsRequester.show(AnalyticsParam.ScreensSources.Main)
+                    }
+                }
+            }
+            step("Check 'Scan warning' dialog") {
+                waitForIdle()
+                checkScanWarningDialog()
+            }
+            step("Click on 'Request support' button") {
+                onScanWarningDialog { requestSupportButton.performClick() }
+            }
+            step("Assert 'Gmail' app is open") {
+                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
+            }
+        }
+    }
 }
