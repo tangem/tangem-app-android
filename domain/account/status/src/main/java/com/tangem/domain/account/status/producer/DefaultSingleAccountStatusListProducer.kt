@@ -146,38 +146,14 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             flattenCurrency = flattenCurrency,
         )
 
-        val accounts = accountListFlow.value.accounts
-        val hasPaymentAccount = accounts.any { it is Account.Payment }
-        val hasVirtualAccount = accounts.any { it is Account.Virtual }
-        logger.i("flattenFlow[$walletId]: payment=$hasPaymentAccount, virtual=$hasVirtualAccount")
-        val specialStatusFlows = buildList<Flow<AccountStatus>> {
-            if (hasPaymentAccount) {
-                add(
-                    paymentAccountStatusSupplier.invoke(userWalletId = walletId)
-                        .onEach { status ->
-                            logger.i(
-                                "flattenFlow[$walletId]: paymentAccountStatus emitted " +
-                                    "valueType=${status.value::class.simpleName}",
-                            )
-                        },
-                )
-            }
-            if (hasVirtualAccount) {
-                add(
-                    virtualAccountStatusSupplier.invoke(userWalletId = walletId)
-                        .onEach { status ->
-                            logger.i(
-                                "flattenFlow[$walletId]: virtualAccountStatus emitted " +
-                                    "valueType=${status.value::class.simpleName}",
-                            )
-                        },
-                )
-            }
-        }
-        val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = if (specialStatusFlows.isEmpty()) {
-            flowOf(emptyMap())
-        } else {
-            combine(specialStatusFlows) { statuses -> statuses.associateBy(AccountStatus::accountId) }
+        val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
+            paymentAccountStatusSupplier.invoke(userWalletId = walletId),
+            virtualAccountStatusSupplier.invoke(userWalletId = walletId),
+        ) { paymentStatus, virtualStatus ->
+            mapOf(
+                paymentStatus.accountId to paymentStatus,
+                virtualStatus.accountId to virtualStatus,
+            )
         }
 
         combine(
