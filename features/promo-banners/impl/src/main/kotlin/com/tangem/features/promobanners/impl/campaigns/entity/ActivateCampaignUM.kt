@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl.campaigns.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -19,6 +20,7 @@ import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
 internal data class ActivateCampaignUM(
+    val logo: TangemIconUM,
     val title: TextReference,
     val description: TextReference,
     val selectedToken: TokenItemState?,
@@ -27,6 +29,7 @@ internal data class ActivateCampaignUM(
     val footerUM: FooterUM,
     val onChooseTokenDismiss: () -> Unit,
     val onLearnMoreClick: () -> Unit,
+    val onChooseTokenClick: () -> Unit,
 )
 
 @Immutable
