@@ -85,44 +85,38 @@ private fun SwapTopBar(stateHolder: SwapStateHolder) {
         AppBarWithBackButtonAndIcon(
             text = stringResourceSafe(stateHolder.titleId),
             backIconRes = R.drawable.ic_close_24,
-            iconRes = if (stateHolder.shouldShowAbMenu) R.drawable.ic_more_vertical_24 else null,
-            onIconClick = if (stateHolder.shouldShowAbMenu) {
-                {
-                    stateHolder.onSwapTypeMenuOpened()
-                    shouldShowModeMenu = true
-                }
-            } else {
-                null
+            iconRes = R.drawable.ic_more_vertical_24,
+            onIconClick = {
+                stateHolder.onSwapTypeMenuOpened()
+                shouldShowModeMenu = true
             },
             onBackClick = stateHolder.onBackClicked,
         )
-        if (stateHolder.shouldShowAbMenu) {
-            Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                TangemDropdownMenu(
-                    expanded = shouldShowModeMenu,
-                    modifier = Modifier.background(TangemTheme.colors.background.primary),
-                    offset = DpOffset(x = TangemTheme.dimens.spacing20, y = 44.dp),
-                    onDismissRequest = { shouldShowModeMenu = false },
-                    content = {
-                        SwapUiModeMenuItem(
-                            title = stringResourceSafe(R.string.swap_simple_mode),
-                            isSelected = stateHolder.swapUIMode == SwapUIMode.Simple,
-                            onClick = {
-                                shouldShowModeMenu = false
-                                stateHolder.onSwapUIModeChange(SwapUIMode.Simple)
-                            },
-                        )
-                        SwapUiModeMenuItem(
-                            title = stringResourceSafe(R.string.swap_detailed_mode),
-                            isSelected = stateHolder.swapUIMode == SwapUIMode.Detailed,
-                            onClick = {
-                                shouldShowModeMenu = false
-                                stateHolder.onSwapUIModeChange(SwapUIMode.Detailed)
-                            },
-                        )
-                    },
-                )
-            }
+        Box(modifier = Modifier.align(Alignment.TopEnd)) {
+            TangemDropdownMenu(
+                expanded = shouldShowModeMenu,
+                modifier = Modifier.background(TangemTheme.colors.background.primary),
+                offset = DpOffset(x = TangemTheme.dimens.spacing20, y = 44.dp),
+                onDismissRequest = { shouldShowModeMenu = false },
+                content = {
+                    SwapUiModeMenuItem(
+                        title = stringResourceSafe(R.string.swap_simple_mode),
+                        isSelected = stateHolder.swapUIMode == SwapUIMode.Simple,
+                        onClick = {
+                            shouldShowModeMenu = false
+                            stateHolder.onSwapUIModeChange(SwapUIMode.Simple)
+                        },
+                    )
+                    SwapUiModeMenuItem(
+                        title = stringResourceSafe(R.string.swap_detailed_mode),
+                        isSelected = stateHolder.swapUIMode == SwapUIMode.Detailed,
+                        onClick = {
+                            shouldShowModeMenu = false
+                            stateHolder.onSwapUIModeChange(SwapUIMode.Detailed)
+                        },
+                    )
+                },
+            )
         }
     }
 }
