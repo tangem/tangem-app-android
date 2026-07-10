@@ -9,6 +9,7 @@ import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.ScanFailsRequester
+import com.tangem.domain.models.scan.ProductType
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import com.tangem.scenarios.checkFailedTransactionDialog
@@ -193,6 +194,70 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Assert 'Gmail' app is open") {
                 ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
+            }
+        }
+    }
+    @AllureId("3960")
+    @DisplayName("Send feedback: Failed card scanning on Details screen")
+    @Test
+    fun sendFeedbackFailedScanningOnDetails() {
+        val gmailText = "Welcome to Gmail"
+
+        setupHooks(
+            additionalAfterSection = {
+                device.uiDevice.pressBack()
+                MockProvider.resetEmulateError()
+            }
+        ).run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Details screen'") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Set scanning error (the next card scan will fail with TagLost)") {
+                MockProvider.setEmulateError(TangemSdkError.TagLost())
+            }
+            step("Click 'Add new wallet' button") {
+                onDetailsScreen { addWalletButton.clickWithAssertion() }
+            }
+            step("Force show 'Scan warning' dialog"){
+                waitForIdle()
+                runOnUiThread {
+                    MainScope().launch {
+                        scanFailsRequester.show(AnalyticsParam.ScreensSources.Main)
+                    }
+                }
+            }
+            step("Check 'Scan warning' dialog") {
+                waitForIdle()
+                checkScanWarningDialog()
+            }
+            step("Click on 'Request support' button") {
+                onScanWarningDialog { requestSupportButton.performClick() }
+            }
+            step("Assert 'Gmail' app is open") {
+                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
+            }
+        }
+    }
+
+    @AllureId("3603")
+    @DisplayName("Send feedback: S2C card has Contact support option")
+    @Test
+    fun sendFeedbackForS2CTest() {
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(productType = ProductType.Start2Coin)
+            }
+            step("Open 'Details screen'") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Verify 'Contact support' button is displayed") {
+                onDetailsScreen { contactSupportButton.assertIsDisplayed() }
             }
         }
     }
