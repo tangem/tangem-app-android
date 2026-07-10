@@ -131,6 +131,7 @@
   <string name="address_book_no_contacts">Noch keine Kontakte</string>
   <string name="address_book_no_contacts_description">Die von Ihnen hinzugefügten Kontakte werden hier angezeigt</string>
   <string name="address_book_remove_address">Adresse entfernen</string>
+  <string name="address_book_save_address">Adresse speichern</string>
   <string name="address_book_save_contact">Kontakt speichern</string>
   <string name="address_book_save_to_wallet_title">In Wallet speichern</string>
   <string name="address_book_save_wallet_to_description">Dieser Kontakt wird mit dem Adressbuch dieser Wallet verknüpft.</string>
@@ -638,6 +639,8 @@
   <string name="express_exchange_notification_long_transaction_time_title">Lange Transaktionszeit</string>
   <string name="express_exchange_notification_refund_text">Der Transaktionsbetrag wurde aufgrund von OKX- oder Bridge-Regeln in %1$s auf deine Wallet zurückerstattet. %2$s</string>
   <string name="express_exchange_notification_refund_title">Der Betrag wurde in %1$s (%2$s Netzwerk) zurückerstattet.</string>
+  <string name="express_exchange_notification_refunded_in_text">Ihr Guthaben wurde gemäß den Regeln der OKX-Börse in %1$s  an Ihre Wallet im %2$s -Netzwerk zurückerstattet.</string>
+  <string name="express_exchange_notification_refunded_in_title">Rückerstattung erfolgt in %s</string>
   <string name="express_exchange_notification_verification_text">Besuche die Website des Anbieters zur Überprüfung</string>
   <string name="express_exchange_notification_verification_title">KYC-Überprüfung durch den Anbieter erforderlich</string>
   <string name="express_exchange_status_bought">Kauf abgeschlossen</string>
@@ -1307,9 +1310,12 @@
   <string name="promo_campaign_enroll_success_title">Sie sind erfolgreich eingeschrieben in %1$s</string>
   <string name="promo_campaign_not_active_subtitle">Diese Aktion existiert nicht mehr oder ist abgelaufen.</string>
   <string name="promo_campaign_not_active_title">Kampagne nicht aktiv</string>
+  <string name="promo_campaign_reactivation_summary_description">Erhalten Sie bei jedem Swap über 500 $ ein Cashback von 0,5% , und zwar für alle Währungspaare außer „Stablecoin zu Stablecoin“. Die maximale Auszahlung beträgt 50 $ pro Swap.\n\nFühren Sie fünf qualifizierende Swaps durch und sichern Sie sich einen zusätzlichen Bonus von 10 $.\n\nDie Prämien werden wöchentlich in USDT oder USDC an die ausgewählte Adresse ausgezahlt.</string>
   <string name="promo_campaign_select_cashback_account">Cashback-Konto auswählen</string>
+  <string name="promo_campaign_select_token">Token auswählen</string>
   <string name="promo_campaign_summary_title">Melden Sie sich an %1$s</string>
   <string name="promo_campaign_terms_agreement">Ich stimme zu, dass %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">Ich stimme zu, dass</string>
   <string name="promo_campaign_terms_link">%1$s Bedingungen</string>
   <string name="promo_campaign_whale_swap_summary_description">Erhalten Sie bis Ende Juli bei jedem Swap ab 10.000 $ Cashback.\n\nDie Sätze steigen mit dem Volumen: 0,10% ab 10.000 $, 0,20% ab 20.000 $, 0,50% ab 100.000 $.\n\nMaximale Auszahlung: 500 $ pro Swap und 10.000 $ pro Wallet und Swap-Richtung, solange die Aktion läuft. Swaps von Stablecoins in andere Stablecoins sind ausgeschlossen.\n\nDie Auszahlung erfolgt wöchentlich an eine USDT- oder USDC-Adresse Ihrer Wahl.</string>
   <string name="provider_name_support">%s Unterstützung</string>

@@ -1288,6 +1288,7 @@
   <string name="quick_action_buy_description">Tarjeta de crédito o cuenta bancaria</string>
   <string name="quick_action_receive_description">Comparta su dirección o código QR</string>
   <string name="quick_action_sell_description">Venda criptomonedas de forma segura</string>
+  <string name="quick_action_send_and_swap_description">Enviar con intercambio a otro token</string>
   <string name="quick_action_send_description">Enviar a otra billetera</string>
   <string name="quick_action_swap_description">Entre sus portafolios</string>
   <string name="quick_top_up_chip_other">Otro</string>
