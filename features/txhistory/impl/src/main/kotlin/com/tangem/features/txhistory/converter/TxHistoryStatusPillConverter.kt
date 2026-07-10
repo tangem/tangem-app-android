@@ -146,7 +146,7 @@ private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): 
     )
 }
 
-private fun PillLabels.resolve(status: TransactionItemUM.Content.Status): TextReference = when (status) {
+internal fun PillLabels.resolve(status: TransactionItemUM.Content.Status): TextReference = when (status) {
     is TransactionItemUM.Content.Status.Confirmed -> resourceReference(confirmed)
     is TransactionItemUM.Content.Status.Unconfirmed -> resourceReference(pending)
     is TransactionItemUM.Content.Status.Failed -> if (hasFailedTemplate) {
