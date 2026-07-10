@@ -104,6 +104,21 @@ internal class PaymentAccountStatusValueDMConverterTest {
         }
 
         @Test
+        fun `GIVEN domain AwaitingPlanSelection WHEN convert THEN returns null (transient, not persisted)`() {
+            // GIVEN
+            val domain = PaymentAccountStatusValue.AwaitingPlanSelection(
+                source = StatusSource.ACTUAL,
+                tariffPlan = null,
+            )
+
+            // WHEN
+            val result = converter.convert(domain)
+
+            // THEN
+            assertThat(result).isNull()
+        }
+
+        @Test
         fun `GIVEN domain Error Unavailable WHEN convert THEN returns null (transient, not persisted)`() {
             // GIVEN
             val domain = PaymentAccountStatusValue.Error.Unavailable

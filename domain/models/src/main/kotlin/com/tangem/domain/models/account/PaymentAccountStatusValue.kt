@@ -27,6 +27,7 @@ sealed class PaymentAccountStatusValue {
         get() = when (this) {
             is Error,
             is IssuingCard,
+            is AwaitingPlanSelection,
             is Empty,
             is NotCreated,
             is UnderReview,
@@ -54,6 +55,7 @@ sealed class PaymentAccountStatusValue {
             is UnderReview -> copy(source = source)
             is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
+            is AwaitingPlanSelection,
             is Empty,
             is NotCreated,
             is Error,
@@ -100,6 +102,19 @@ sealed class PaymentAccountStatusValue {
      */
     @Serializable
     data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where KYC is approved but no tariff plan has been selected yet
+     *
+     * @property source The source of the status information.
+     * @property tariffPlan Current tariff plan (fallback Basic) if the backend already returns one
+     *                      Transient: not persisted in the local cache.
+     */
+    @Serializable
+    data class AwaitingPlanSelection(
+        override val source: StatusSource,
+        val tariffPlan: TangemPayCustomerTariffPlan?,
+    ) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where the account is deactivated.
