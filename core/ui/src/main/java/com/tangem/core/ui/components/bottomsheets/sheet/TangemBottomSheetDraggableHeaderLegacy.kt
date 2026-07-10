@@ -47,7 +47,7 @@ fun TangemBottomSheetDraggableHeader() {
                 height = TangemTheme.dimens2.x1,
             )
             .background(
-                color = TangemTheme.colors2.graphic.neutral.primaryInverted,
+                color = TangemTheme.colors3.icon.tertiary,
                 shape = RoundedCornerShape(TangemTheme.dimens2.x0_5),
             ),
     )
