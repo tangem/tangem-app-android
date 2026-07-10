@@ -17,11 +17,38 @@ interface TangemPayApi {
         @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
     ): ApiResponse<TangemPayTxHistoryResponse>
 
+    @GET("v1/customer/transactions/{transaction_id}")
+    suspend fun getCustomerTransaction(
+        @Header("Authorization") authHeader: String,
+        @Path("transaction_id") transactionId: String,
+    ): ApiResponse<TangemPayTransactionResponse>
+
     @GET("v1/customer/kyc")
     suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
 
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
+
+    @GET("v1/customer/tariff-plan/transitions")
+    suspend fun getTariffPlanTransitions(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<TariffPlanTransitionsResponse>
+
+    @POST("v1/customer/tariff-plan/pending-transition")
+    suspend fun setPendingTariffPlanTransition(
+        @Header("Authorization") authHeader: String,
+        @Body body: SetPendingTariffPlanTransitionRequest,
+    ): ApiResponse<Any>
+
+    @POST("v1/customer/tariff-plan/pending-transition/cancel")
+    suspend fun cancelPendingTariffPlanTransition(@Header("Authorization") authHeader: String): ApiResponse<Any>
+
+    /** Fiat bank requisites for the Virtual Account on-ramp (VA MVP0, TWI-1638). */
+    @GET("v1/account/bank-credentials/{product_instance_id}")
+    suspend fun getBankCredentials(
+        @Header("Authorization") authHeader: String,
+        @Path("product_instance_id") productInstanceId: String,
+    ): ApiResponse<BankCredentialsResponse>
 
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(
@@ -39,6 +66,12 @@ interface TangemPayApi {
 
     @GET("v1/eligibility/channels")
     suspend fun getEligibilityChannels(): ApiResponse<TangemPayEligibilityChannels>
+
+    /** Eligibility channels fetched with the user (customer-wallet) token (VA MVP0, TWI-1638). */
+    @GET("v1/eligibility/channels")
+    suspend fun getUserEligibilityChannels(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<TangemPayEligibilityChannels>
 
     @GET("v1/order/{order_id}")
     suspend fun getOrder(
@@ -63,6 +96,19 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: OrderRequest,
     ): ApiResponse<OrderResponse>
+
+    // TODO: Doston: [REDACTED_TASK_KEY] Unify with method above
+    @POST("v1/order")
+    suspend fun createVirtualAccountOrder(
+        @Header("Authorization") authHeader: String,
+        @Body body: VirtualAccountOrderRequest,
+    ): ApiResponse<OrderResponse>
+
+    @POST("v1/order/{order_id}/cancel")
+    suspend fun cancelOrder(
+        @Header("Authorization") authHeader: String,
+        @Path("order_id") orderId: String,
+    ): ApiResponse<Any>
 
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")
