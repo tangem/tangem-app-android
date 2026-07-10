@@ -71,10 +71,13 @@ private fun bannerContainerColor(placeholder: Placeholder): Color = if (LocalRed
     when (placeholder) {
         Placeholder.MAIN -> TangemTheme.colors2.surface.level1
         Placeholder.FEED -> TangemTheme.colors2.surface.level3
+        Placeholder.PAYMENT_ACCOUNT_MAIN -> TangemTheme.colors3.bg.opaque.primary
     }
 } else {
     when (placeholder) {
-        Placeholder.MAIN -> TangemTheme.colors.background.primary
+        Placeholder.MAIN,
+        Placeholder.PAYMENT_ACCOUNT_MAIN,
+        -> TangemTheme.colors.background.primary
         Placeholder.FEED -> TangemTheme.colors.background.action
     }
 }

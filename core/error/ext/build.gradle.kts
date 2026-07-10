@@ -9,8 +9,13 @@ android {
 }
 
 dependencies {
-    api(projects.core.error)
 
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain)
+    // region Tangem
+    api(tangemDeps.blockchain)
+    api(tangemDeps.card.core)
+    // endregion
+
+    // region Core modules
+    api(projects.core.error)
+    // endregion
 }

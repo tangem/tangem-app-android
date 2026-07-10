@@ -16,33 +16,34 @@ dependencies {
     implementation(tangemDeps.card.core)
 
     /* Project - API */
-    implementation(projects.features.manageTokens.api)
-    implementation(projects.features.swapV2.api)
-    implementation(projects.features.commonFeatures.api)
+    api(projects.features.commonFeatures.api)
+    api(projects.features.manageTokens.api)
+    api(projects.features.swapV2.api)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
-    implementation(projects.core.utils)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.pagination)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /* Project - Domain */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.account)
-    implementation(projects.domain.card)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.manageTokens)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.swap.models)
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.dynamicAddresses)
+    api(projects.domain.manageTokens)
+    api(projects.domain.manageTokens.models)
+    api(projects.domain.models)
+    api(projects.domain.notifications)
+    api(projects.domain.wallets)
+    implementation(projects.domain.core)
     implementation(projects.domain.markets.models)
-    implementation(projects.domain.notifications)
-    implementation(projects.domain.dynamicAddresses)
+    implementation(projects.domain.swap.models)
+    runtimeOnly(projects.domain.card)
+    runtimeOnly(projects.domain.tokens)
 
     // region Project - Libs
     implementation(projects.libs.blockchainSdk)
@@ -54,21 +55,24 @@ dependencies {
     // endregion
 
     /* AndroidX */
-    implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
 
     /* Compose */
+    api(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.shimmer)
 
     /* DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     /* Other */
-    implementation(deps.kotlin.immutable.collections)
+    api(deps.kotlin.coroutines)
+    implementation(deps.arrow.core)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 }

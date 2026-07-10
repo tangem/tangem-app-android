@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { stripCr, compareCodeUnits } from './hash-util.mjs';
 
 // ── Paths ──────────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -252,16 +253,17 @@ object Icons
 
 function computeIconsHash() {
   const files = [...walkSvgs(iconsDir)];
-  files.sort((a, b) => {
-    const ra = path.relative(iconsDir, a).split(path.sep).join('/');
-    const rb = path.relative(iconsDir, b).split(path.sep).join('/');
-    return ra.localeCompare(rb);
-  });
+  // Code-unit order (not localeCompare) to match the Kotlin verifier's invariantSeparatorsPath
+  // sort deterministically across locales/ICU versions — see hash-util.mjs.
+  files.sort((a, b) => compareCodeUnits(
+    path.relative(iconsDir, a).split(path.sep).join('/'),
+    path.relative(iconsDir, b).split(path.sep).join('/'),
+  ));
   const hash = crypto.createHash('sha256');
   for (const file of files) {
     hash.update(path.relative(iconsDir, file).split(path.sep).join('/'));
     hash.update('\0');
-    hash.update(fs.readFileSync(file));
+    hash.update(stripCr(fs.readFileSync(file)));
     hash.update('\0');
   }
   return hash.digest('hex');

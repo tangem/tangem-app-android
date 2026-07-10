@@ -2,6 +2,8 @@ package com.tangem.features.txhistory.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -10,10 +12,19 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
+import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * The transaction details bottom sheet ("Operation"): the [TangemModalBottomSheet] shell shared by all transaction
@@ -52,20 +63,41 @@ private fun TxHistoryDetailsModalBottomSheetContentPreview() {
     }
 }
 
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun TxHistoryDetailsModalBottomSheetContentTwoAssetsPreview() {
+    TangemThemePreviewRedesign {
+        TxHistoryDetailsModalBottomSheetContent(state = previewTwoAssets(), onDismiss = {})
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun TxHistoryDetailsModalBottomSheetContentRefundedPreview() {
+    TangemThemePreviewRedesign {
+        TxHistoryDetailsModalBottomSheetContent(state = previewRefunded(), onDismiss = {})
+    }
+}
+
 /** Fully-populated single-asset state exercising every sub-view: header, amount block, counterparty and info rows. */
 private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     header = TxHistoryDetailsUM.HeaderUM(
-        iconRes = R.drawable.ic_arrow_up_24,
+        icon = TxIcon.Vector(Icons.ic_arrow_up_20),
         status = Status.Confirmed,
         title = stringReference("Sent"),
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
     ),
     amountBlock = TxHistoryDetailsUM.AmountBlockUM(
-        currencyIcon = CurrencyIconState.CoinIcon(
-            url = null,
-            fallbackResId = R.drawable.img_eth_22,
-            isGrayscale = false,
-            shouldShowCustomBadge = false,
+        icon = TxHistoryDetailsUM.AmountIconUM.Single(
+            CurrencyIconState.CoinIcon(
+                url = null,
+                fallbackResId = R.drawable.img_eth_22,
+                isGrayscale = false,
+                shouldShowCustomBadge = false,
+            ),
         ),
         amount = stringReference("- 350.31 USDT"),
         fiatAmount = stringReference("$350.31"),
@@ -79,8 +111,104 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         ),
         onCopyClick = {},
     ),
-    rows = listOf(
+    rows = persistentListOf(
         TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+    ),
+)
+
+/** Failed swap exercising the two-asset body: both legs, the error status banner, provider link row and the CTA. */
+private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
+    header = TxHistoryDetailsUM.HeaderUM(
+        icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+        status = Status.Failed,
+        title = stringReference("Swap"),
+        subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
+    ),
+    from = TxHistoryDetailsUM.AssetUM(
+        label = stringReference("You send"),
+        owner = null,
+        amount = stringReference("- 1.5 ETH"),
+        currencyIcon = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_eth_22,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        ),
+        isFaded = false,
+    ),
+    to = TxHistoryDetailsUM.AssetUM(
+        label = stringReference("You receive"),
+        owner = null,
+        amount = stringReference("0.001 BTC"),
+        currencyIcon = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_btc_22,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        ),
+        isFaded = true,
+    ),
+    statusBanner = TxHistoryDetailsUM.StatusBannerUM(
+        severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+        title = stringReference("Failed"),
+        subtitle = stringReference("Funds will be refunded by the provider"),
+        isLoading = false,
+    ),
+    rows = persistentListOf(
+        TxHistoryDetailsUM.InfoRowUM(
+            label = stringReference("Provider"),
+            value = stringReference("Changelly"),
+            trailingIconRes = R.drawable.ic_arrow_top_right_24,
+            onClick = {},
+        ),
+        TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+    ),
+    providerButton = TxHistoryDetailsUM.ProviderButtonUM(
+        text = stringReference("Go to provider"),
+        onClick = {},
+    ),
+)
+
+/** Refunded swap exercising the "Refunded in {symbol}" banner with the "Learn more" link and the "Go to token" CTA. */
+private fun previewRefunded() = previewTwoAssets().copy(
+    header = TxHistoryDetailsUM.HeaderUM(
+        icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+        status = Status.Failed,
+        title = stringReference("Swapping failed"),
+        subtitle = stringReference("Jan 20 2026, 9:24 PM"),
+        menu = previewMenu(),
+    ),
+    statusBanner = TxHistoryDetailsUM.StatusBannerUM(
+        severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+        title = stringReference("Refunded in WBTC"),
+        subtitle = stringReference(
+            "Your funds have been refunded in WBTC to your wallet on the Polygon network, " +
+                "in accordance with OKX exchange rules. ",
+        ) + styledStringReference(
+            value = "Learn more",
+            spanStyleReference = { SpanStyle(textDecoration = TextDecoration.Underline) },
+            onClick = {},
+        ),
+        isLoading = false,
+    ),
+    providerButton = TxHistoryDetailsUM.ProviderButtonUM(
+        text = stringReference("Go to token"),
+        onClick = {},
+    ),
+)
+
+/** Sample header `•••` menu used by the previews. */
+private fun previewMenu() = persistentListOf(
+    TxHistoryDetailsUM.MenuItemUM(
+        icon = Icons.ic_copy_24,
+        title = stringReference("Transaction ID"),
+        onClick = {},
+    ),
+    TxHistoryDetailsUM.MenuItemUM(
+        icon = Icons.ic_globe_24,
+        title = stringReference("Explore"),
+        onClick = {},
     ),
 )
 

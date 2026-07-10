@@ -62,7 +62,7 @@ class DefaultDeviceKeyManagerTest {
     }
 
     @Test
-    fun `getPublicKey returns last 65 bytes from encoded key`() = runTest {
+    fun `getPublicKeyEncoded returns full X509 SPKI encoding`() = runTest {
         val rawPoint = ByteArray(65) { (it + 1).toByte() }.apply { this[0] = 0x04 }
         val x509Header = ByteArray(26) { 0x30 }
         val encoded = x509Header + rawPoint
@@ -74,22 +74,49 @@ class DefaultDeviceKeyManagerTest {
         every { cert.publicKey } returns publicKey
         every { keyStore.getCertificate(KEY_ALIAS) } returns cert
 
-        val result = manager.getPublicKey()
+        val result = manager.getPublicKeyEncoded()
 
-        assertThat(result.getOrNull()).isEqualTo(rawPoint)
+        assertThat(result.getOrNull()).isEqualTo(encoded)
     }
 
     @Test
-    fun `getPublicKey returns None when certificate not found`() = runTest {
+    fun `getPublicKeyEncoded returns None when certificate not found`() = runTest {
         every { keyStore.getCertificate(KEY_ALIAS) } returns null
 
-        val result = manager.getPublicKey()
+        val result = manager.getPublicKeyEncoded()
 
         assertThat(result).isEqualTo(None)
     }
 
     @Test
-    fun `getPublicKey returns None when point prefix is not uncompressed`() = runTest {
+    fun `getPublicKeyRawPoint returns last 65 bytes from encoded key`() = runTest {
+        val rawPoint = ByteArray(65) { (it + 1).toByte() }.apply { this[0] = 0x04 }
+        val x509Header = ByteArray(26) { 0x30 }
+        val encoded = x509Header + rawPoint
+
+        val publicKey = mockk<java.security.PublicKey>()
+        every { publicKey.encoded } returns encoded
+
+        val cert = mockk<Certificate>()
+        every { cert.publicKey } returns publicKey
+        every { keyStore.getCertificate(KEY_ALIAS) } returns cert
+
+        val result = manager.getPublicKeyRawPoint()
+
+        assertThat(result.getOrNull()).isEqualTo(rawPoint)
+    }
+
+    @Test
+    fun `getPublicKeyRawPoint returns None when certificate not found`() = runTest {
+        every { keyStore.getCertificate(KEY_ALIAS) } returns null
+
+        val result = manager.getPublicKeyRawPoint()
+
+        assertThat(result).isEqualTo(None)
+    }
+
+    @Test
+    fun `getPublicKeyRawPoint returns None when point prefix is not uncompressed`() = runTest {
         val rawPoint = ByteArray(65) { (it + 1).toByte() }.apply { this[0] = 0x02 }
         val x509Header = ByteArray(26) { 0x30 }
         val encoded = x509Header + rawPoint
@@ -101,7 +128,7 @@ class DefaultDeviceKeyManagerTest {
         every { cert.publicKey } returns publicKey
         every { keyStore.getCertificate(KEY_ALIAS) } returns cert
 
-        val result = manager.getPublicKey()
+        val result = manager.getPublicKeyRawPoint()
 
         assertThat(result).isEqualTo(None)
     }
@@ -128,6 +155,28 @@ class DefaultDeviceKeyManagerTest {
         assertThat(result).hasLength(64)
         assertThat(result.copyOfRange(0, 32)).isEqualTo(r)
         assertThat(result.copyOfRange(32, 64)).isEqualTo(s)
+    }
+
+    @Test
+    fun `signDer returns the DER signature unchanged`() = runTest {
+        val data = "test data".toByteArray()
+        val r = ByteArray(32) { 0x01 }
+        val s = ByteArray(32) { 0x02 }
+        val derSignature = buildDer(r, s)
+
+        val privateKey = mockk<PrivateKey>()
+        every { keyStore.getKey(KEY_ALIAS, null) } returns privateKey
+
+        val javaSig = mockk<java.security.Signature>()
+        every { javaSig.initSign(privateKey) } returns Unit
+        every { javaSig.update(data) } returns Unit
+        every { javaSig.sign() } returns derSignature
+
+        mockkSignatureGetInstance(javaSig)
+
+        val result = manager.signDer(data)
+
+        assertThat(result).isEqualTo(derSignature)
     }
 
     @Test

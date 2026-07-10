@@ -256,7 +256,7 @@
   <string name="common_action_failed">%s falló</string>
   <string name="common_activate">Activar</string>
   <string name="common_add">Agregar</string>
-  <string name="common_add_funds">Agregar fondos</string>
+  <string name="common_add_funds">Depositar</string>
   <string name="common_add_to_portfolio">Añadir al portafolio</string>
   <string name="common_add_token">Agregar token</string>
   <string name="common_add_tokens">Añada tokens</string>
@@ -347,8 +347,9 @@
   <string name="common_from">De</string>
   <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Sincronizar direcciones</string>
+  <string name="common_get">Comprar</string>
   <string name="common_get_started">Comenzar</string>
-  <string name="common_get_token">Obtener token</string>
+  <string name="common_get_token">Comprar token</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_got_it">Entendido</string>
@@ -1241,6 +1242,8 @@
   <string name="onramp_title_available_from">Disponible desde</string>
   <string name="onramp_title_available_up_to">Disponible hasta</string>
   <string name="onramp_title_you_get">Obtiene</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">Este token no está soportado. Por favor, elija otro token para comprar.</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s no está soportado</string>
   <string name="onramp_tos_external_providers">El servicio es proporcionado por un proveedor externo. \nTangem no es responsable.</string>
   <string name="onramp_transaction_status_footer_text">Puede comprobar el estado de la transacción desde la página detallada del token</string>
   <string name="onramp_up_to_rate">Hasta</string>
@@ -2505,7 +2508,7 @@
   <string name="yield_module_approve_sheet_fee_note">Se le descontará la comisión y se volverán a suministrar sus activos.</string>
   <string name="yield_module_approve_sheet_subtitle">Para seguir generando rendimiento, se requiere aprobación.</string>
   <string name="yield_module_approve_sheet_title">Confirmar aprobación</string>
-  <string name="yield_module_average_apy">APY promedio %1$s%%</string>
+  <string name="yield_module_average_apy">APY actual %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Sus fondos se suministran actualmente al protocolo Aave, pero puede gestionarlos en cualquier momento.</string>
   <string name="yield_module_balance_info_sheet_title">Su %s está depositado en Aave</string>
   <string name="yield_module_chart_loading_error">No se puede cargar el gráfico...</string>

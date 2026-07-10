@@ -17,56 +17,67 @@ android {
     }
 }
 dependencies {
-    /* Project - API */
-    implementation(projects.features.txhistory.api)
-
-    /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
-    implementation(projects.common.routing)
-    implementation(projects.common.ui)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
+    /** Core */
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.ui)
+    api(projects.core.utils)
     implementation(projects.core.pagination)
-    implementation(projects.core.navigation)
 
-    /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.card)
-    implementation(projects.domain.txhistory)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.balanceHiding)
+    /** Common */
+    api(projects.common.ui)
+    implementation(projects.common)
+
+    /** Features api */
+    api(projects.features.txhistory.api)
+
+    /** Domain */
+    api(projects.domain.account.status)
+    api(projects.domain.balanceHiding)
+    api(projects.domain.common)
+    api(projects.domain.models)
+    api(projects.domain.staking)
+    api(projects.domain.txhistory)
+    api(projects.domain.wallets)
+    implementation(projects.domain.account)
     implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.account.status)
+    implementation(projects.domain.express.models)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory.models)
+    runtimeOnly(projects.domain.card)
+    runtimeOnly(projects.domain.tokens)
 
-    /* AndroidX */
-    implementation(deps.androidx.activity.compose)
-    implementation(deps.lifecycle.compose)
-
-    /* Compose */
+    /** Compose */
+    api(deps.compose.foundation)
+    implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.foundation)
-    implementation(deps.compose.material3)
-    implementation(deps.compose.shimmer)
+    implementation(deps.decompose.ext.compose)
 
-    /* DI */
+    /** AndroidX */
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.lifecycle.compose)
+
+    /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    /* Other */
+    /** Other */
     implementation(deps.arrow.core)
+    implementation(deps.jodatime)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.decompose.ext.compose)
 
-    /* Tests */
+    /** Test */
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(projects.domain.express.models)
+    testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)

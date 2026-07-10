@@ -3,7 +3,7 @@ package com.tangem.feature.swap.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

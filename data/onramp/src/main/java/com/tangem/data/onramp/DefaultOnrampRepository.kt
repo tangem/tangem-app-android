@@ -4,6 +4,7 @@ import android.net.Uri
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
 import com.tangem.data.onramp.converters.PaymentMethodConverter
@@ -76,6 +77,7 @@ internal class DefaultOnrampRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val expressHistoryDao: ExpressHistoryDao,
+    private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : OnrampRepository {
@@ -115,7 +117,7 @@ internal class DefaultOnrampRepository(
     override suspend fun fetchCountries(userWallet: UserWallet): List<OnrampCountry> = withContext(dispatchers.io) {
         if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext emptyList()
 
-        val result = onrampApi.getCountries(
+        val response = onrampApi.getCountries(
             userWalletId = userWallet.walletId.stringValue,
             refCode = ExpressUtils.getRefCode(
                 userWallet = userWallet,
@@ -123,8 +125,12 @@ internal class DefaultOnrampRepository(
             ),
         )
             .getOrThrow()
-            .map(countryConverter::convert)
 
+        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+            expressHistoryDao.upsertCountries(response.map { it.toEntity() })
+        }
+
+        val result = response.map(countryConverter::convert)
         countriesStore.store(COUNTRIES_KEY, result)
 
         result
@@ -168,7 +174,7 @@ internal class DefaultOnrampRepository(
             .getOrThrow()
 
         if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryDao.upsertOnramps(listOf(response.toEntity(ownerAddress = response.payoutAddress)))
+            expressHistoryRepository.storeOnramps(items = listOf(response))
         }
 
         statusConverter.convert(response)

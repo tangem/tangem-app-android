@@ -31,4 +31,6 @@ internal interface FeedModelClickIntents {
     fun onOpenEarnPage()
 
     fun openSearch(source: String)
+
+    fun openForYou()
 }

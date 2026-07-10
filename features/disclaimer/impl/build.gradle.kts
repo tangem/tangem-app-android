@@ -12,39 +12,37 @@ android {
 
 dependencies {
     /* AndroidX */
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
-    implementation(deps.androidx.activity.compose)
 
     /** Compose */
-    implementation(deps.compose.foundation)
+    api(deps.compose.foundation)
+    implementation(deps.compose.animation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.accompanist.permission)
     implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.material3)
 
     /** Core modules */
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.utils)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.navigation)
-    implementation(projects.core.decompose)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Domain modules */
-    implementation(projects.domain.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.notifications)
+    api(projects.domain.card)
+    api(projects.domain.notifications)
+    api(projects.domain.settings)
 
     /** Feature modules */
-    implementation(projects.features.disclaimer.api)
+    api(projects.features.disclaimer.api)
     implementation(projects.features.pushNotifications.api)
 
     /** Other dependencies */
-    implementation(deps.arrow.core)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
 
     /** DI */
     implementation(deps.hilt.android)
