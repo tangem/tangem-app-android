@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackModel
 import com.tangem.features.tangempay.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupModel
 import com.tangem.features.tangempay.model.*
@@ -96,4 +97,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPaySelectPlanModel::class)
     fun bindTangemPaySelectPlanModel(model: TangemPaySelectPlanModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCashbackModel::class)
+    fun bindTangemPayCashbackModel(model: TangemPayCashbackModel): Model
 }
