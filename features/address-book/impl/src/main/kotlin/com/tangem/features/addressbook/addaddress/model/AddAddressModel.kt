@@ -142,6 +142,7 @@ internal class AddAddressModel @Inject constructor(
                     onMemoPasteClick = ::onMemoPaste,
                     onConfirmClick = ::validateAndConfirm,
                 ),
+                isEditMode = params.prefillAddress != null,
             ),
         )
     }
