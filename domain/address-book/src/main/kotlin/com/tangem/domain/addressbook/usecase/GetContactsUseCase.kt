@@ -32,6 +32,9 @@ class GetContactsUseCase(
         val isAddressContaining = addresses.any { addressEntry ->
             addressEntry.address.contains(other = query, ignoreCase = false)
         }
-        return isNameContaining || isAddressContaining
+        val isNetworkContaining = addresses.any { addressEntry ->
+            addressEntry.networkId.value.contains(other = query, ignoreCase = true)
+        }
+        return isNameContaining || isAddressContaining || isNetworkContaining
     }
 }
