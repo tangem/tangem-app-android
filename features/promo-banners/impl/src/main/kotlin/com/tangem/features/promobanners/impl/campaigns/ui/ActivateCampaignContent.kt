@@ -1,7 +1,6 @@
 package com.tangem.features.promobanners.impl.campaigns.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,7 +19,9 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.impl.R
@@ -29,21 +29,20 @@ import com.tangem.features.promobanners.impl.campaigns.entity.ActivateCampaignUM
 import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 
 @Composable
-internal fun ActivateCampaignContent(um: ActivateCampaignUM) {
+internal fun ActivateCampaignContent(um: ActivateCampaignUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            // TODO([REDACTED_TASK_KEY]): replace placeholder with the real campaign illustration.
-            painter = painterResource(R.drawable.ill_businessman_3d),
-            contentDescription = null,
+        TangemIcon(
+            tangemIconUM = um.logo,
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape),
         )
+
         SpacerH32()
 
         Text(
@@ -66,18 +65,18 @@ internal fun ActivateCampaignContent(um: ActivateCampaignUM) {
         SpacerH12()
 
         Text(
-            // TODO([REDACTED_TASK_KEY]): localize
-            text = "Learn more",
+            text = stringResourceSafe(R.string.common_learn_more),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.primary,
             modifier = Modifier
-                .fillMaxWidth()
+                .align(Alignment.Start)
                 .clickable(onClick = um.onLearnMoreClick),
         )
 
         SelectedTokenContent(
             selectedToken = um.selectedToken,
             selectedAccount = um.selectedAccount,
+            onChooseTokenClick = um.onChooseTokenClick,
         )
 
         SpacerH32()
@@ -85,12 +84,16 @@ internal fun ActivateCampaignContent(um: ActivateCampaignUM) {
 }
 
 @Composable
-private fun SelectedTokenContent(selectedToken: TokenItemState?, selectedAccount: SelectedAccountUM?) {
+private fun SelectedTokenContent(
+    selectedToken: TokenItemState?,
+    selectedAccount: SelectedAccountUM?,
+    onChooseTokenClick: () -> Unit,
+) {
     if (selectedToken != null) {
         SpacerH24()
 
         Text(
-            text = "Select cashback account", // TODO([REDACTED_TASK_KEY]): localize
+            text = stringResourceSafe(R.string.promo_campaign_select_cashback_account),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier.fillMaxWidth(),
@@ -102,7 +105,10 @@ private fun SelectedTokenContent(selectedToken: TokenItemState?, selectedAccount
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.tertiary)
+                .clickable {
+                    onChooseTokenClick.invoke()
+                },
             selectedToken = selectedToken,
             selectedAccount = selectedAccount,
         )

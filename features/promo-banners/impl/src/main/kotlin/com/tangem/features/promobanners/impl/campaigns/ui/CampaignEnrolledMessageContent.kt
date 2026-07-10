@@ -1,5 +1,6 @@
 package com.tangem.features.promobanners.impl.campaigns.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_success_24
 
@@ -56,6 +59,21 @@ fun CampaignEnrolledMessageContent(message: TextReference, modifier: Modifier = 
             modifier = Modifier.fillMaxWidth(),
         )
 
-        SpacerH(48.dp)
+        SpacerH32()
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_CampaignEnrolledMessageContent() {
+    TangemThemePreviewRedesign {
+        Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
+            CampaignEnrolledMessageContent(
+                message = stringReference("You’re successfully enrolled in Enroll in Whale Swap Cashback"),
+            )
+        }
+    }
+}
+// endregion
