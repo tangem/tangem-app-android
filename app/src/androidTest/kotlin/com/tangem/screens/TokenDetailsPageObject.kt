@@ -118,6 +118,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    /** 'Receive' row of the zero-balance actions block (Buy / Swap / Receive), shown instead of the action buttons. */
+    val receiveButton: KNode = child {
+        hasText(getResourceString(R.string.common_receive))
+    }
+
     fun networkFeeNotificationIcon(feeCurrencyName: String): KNode = child {
         hasAnySibling(withText(getResourceString(R.string.warning_send_blocked_funds_for_fee_title, feeCurrencyName)))
         hasTestTag(NotificationTestTags.ICON)

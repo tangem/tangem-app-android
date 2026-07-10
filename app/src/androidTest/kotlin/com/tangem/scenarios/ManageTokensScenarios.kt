@@ -1,7 +1,6 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.screens.accounts.onAccountDetailsScreen
@@ -15,11 +14,6 @@ import io.qameta.allure.kotlin.Allure.step
 import com.tangem.core.res.R as CoreResR
 
 private fun mainAccountName(): String = getResourceString(CoreResR.string.account_main_account_title)
-
-// flakySafely is unavailable in BaseTestCase extensions — wait until the assertion/action stops throwing.
-private fun BaseTestCase.awaitSuccess(block: () -> Unit) {
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT) { runCatching(block).isSuccess }
-}
 
 fun BaseTestCase.openManageTokens(accountName: String = mainAccountName()) {
     openWalletSettingsScreen()
