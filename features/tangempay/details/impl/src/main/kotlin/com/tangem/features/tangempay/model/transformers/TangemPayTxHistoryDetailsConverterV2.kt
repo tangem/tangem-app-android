@@ -297,19 +297,18 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
         return when (transactionLoadState) {
             TransactionLoadState.Loading -> TransactionDetailUM.Loading
             TransactionLoadState.Error -> TransactionDetailUM.Error(onRefreshClick = onCardRefreshClick)
-            TransactionLoadState.Loaded -> spend.extractCardValue()?.let(TransactionDetailUM::Content)
+            TransactionLoadState.Loaded -> spend.extractCardDetail()
         }
     }
 
-    private fun TangemPayTxHistoryItem.Spend.extractCardValue(): TextReference? {
+    private fun TangemPayTxHistoryItem.Spend.extractCardDetail(): TransactionDetailUM.Content? {
         val name = cardName?.takeIf { it.isNotEmpty() }
         val last4 = cardNumberLast4?.takeIf { it.isNotEmpty() }
-        return when {
-            name != null && last4 != null -> stringReference("$name *$last4")
-            last4 != null -> stringReference("*$last4")
-            name != null -> stringReference(name)
-            else -> null
-        }
+        if (name == null && last4 == null) return null
+        return TransactionDetailUM.Content(
+            cardNumber = last4?.let { stringReference("*$it") },
+            cardName = name?.let(::stringReference),
+        )
     }
 
     private fun Input.extractButtonState(): ButtonState {
