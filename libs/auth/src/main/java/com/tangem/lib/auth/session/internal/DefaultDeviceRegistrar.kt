@@ -41,7 +41,7 @@ internal class DefaultDeviceRegistrar(
 
     override suspend fun register(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
         // `Mutex` guards against the unlikely case of two concurrent callers passing the
-        // already-registered check together and consuming the same `/nonce/device` value twice.
+        // already-registered check together and consuming the same device nonce twice.
         mutex.withLock { runRegister() }
     }
 
@@ -57,7 +57,7 @@ internal class DefaultDeviceRegistrar(
 
         TangemLogger.i("Starting device registration")
 
-        val devicePublicKey = deviceKeyManager.getPublicKey().getOrNull()
+        val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
             ?: raise(DeviceRegistrationError.DeviceKeyUnavailable)
 
         val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
@@ -86,7 +86,7 @@ internal class DefaultDeviceRegistrar(
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {
-            deviceKeyManager.sign(signedRequestPayload.canonicalize(payload)).toBase64NoWrap()
+            deviceKeyManager.signDer(signedRequestPayload.canonicalize(payload)).toBase64NoWrap()
         } catch (e: Exception) {
             TangemLogger.e("Failed to sign device-registration payload", e)
             raise(DeviceRegistrationError.SigningFailed(e))
