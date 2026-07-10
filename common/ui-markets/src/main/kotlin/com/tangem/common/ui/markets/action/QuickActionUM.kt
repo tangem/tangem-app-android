@@ -139,7 +139,7 @@ sealed class QuickActionUM(
         )
 
         data object SwapAndSend : V2(
-            title = resourceReference(R.string.common_send_with_swap),
+            title = resourceReference(R.string.send_with_swap_confirm_title),
             description = resourceReference(R.string.quick_action_send_and_swap_description),
             icon = R.drawable.ic_exchange_mini_24,
         )

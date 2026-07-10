@@ -178,7 +178,11 @@ private fun FeeInfoRow(titleRes: Int, value: String, showDivider: Boolean = fals
         },
         valueSlot = {
             if (value.isEmpty()) {
-                TangemShimmer(style = TangemTheme.typography3.body.medium)
+                TangemShimmer(
+                    modifier = Modifier.width(80.dp),
+                    style = TangemTheme.typography3.body.medium,
+                    textAlign = TextAlign.End,
+                )
             } else {
                 TangemRowText(
                     text = value,
@@ -299,7 +303,7 @@ private fun ReissueCardSheetPreview(state: TangemPayReissueCardUM) {
 
 private class TangemPayReissueCardUMPreviewProvider : CollectionPreviewParameterProvider<TangemPayReissueCardUM>(
     collection = listOf(
-        TangemPayReissueCardUM.stub(error = null),
+        TangemPayReissueCardUM.stub(error = null, feeAmount = ""),
         TangemPayReissueCardUM.stub(
             error = TangemPayReissueCardError.InsufficientFunds,
             cardBalance = "$0.05",

@@ -1,10 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -87,7 +83,7 @@ private fun SwapAndSendActionRow(state: TransferUM) {
     if (state is TransferUM.Content && row == null) return
     ActionRow(
         iconRes = CoreR.drawable.ic_exchange_mini_24,
-        title = resourceReference(CoreR.string.common_send_with_swap),
+        title = resourceReference(CoreR.string.send_with_swap_confirm_title),
         description = resourceReference(CoreR.string.quick_action_send_and_swap_description),
         row = row,
         isLoading = state is TransferUM.Loading,
