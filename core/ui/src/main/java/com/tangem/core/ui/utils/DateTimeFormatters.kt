@@ -109,6 +109,23 @@ object DateTimeFormatters {
     }
 
     /**
+     * Example: "June"
+     */
+    val dateMMMM: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("MMMM")
+    }
+
+    /**
+     * Example: "June 1"
+     */
+    val dateMMMMd: DateTimeFormatter by lazy {
+        DateTimeFormatterBuilder()
+            .appendPattern("MMMM d")
+            .toFormatter()
+            .withLocale(Locale.getDefault())
+    }
+
+    /**
      * Example: "31.06.2020 12:00", "06/31/2020 12:00", "06/31/2020 12:00 PM"
      */
     val dateTimeFormatter: DateTimeFormatter by lazy {
