@@ -158,6 +158,10 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(AppRoute.TangemPayDetails(status = status))
     }
 
+    override fun openTangemPaySelectPlan(status: AccountStatus.Payment) {
+        // TODO v_rodionov: [REDACTED_TASK_KEY] Tiers Onboarding - part 2
+    }
+
     override fun openYieldSupplyBottomSheet(
         cryptoCurrency: CryptoCurrency,
         tokenAction: TokenAction,
