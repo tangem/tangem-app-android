@@ -16,6 +16,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
@@ -36,6 +37,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
+    private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -107,6 +109,12 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             TangemPayVirtualAccountDepositSuccessComponent(
                 appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             )
+        TangemPayAccountDetailsInnerRoute.Cashback -> cashbackComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayCashbackComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+            ),
+        )
     }
 
     private fun onChildBack() {
