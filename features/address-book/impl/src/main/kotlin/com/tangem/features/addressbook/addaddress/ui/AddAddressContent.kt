@@ -39,7 +39,7 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemTopNavigation(
-            title = resourceReference(R.string.address_book_add_address),
+            title = state.title,
             contentAlign = TangemTopNavigation.ContentAlign.Center,
             blurBackground = false,
             onBack = state.onBackClick,
@@ -193,6 +193,7 @@ private fun Preview_AddAddressContent() {
                 onQrClick = {},
                 onBackClick = {},
                 onNetworkClick = {},
+                title = resourceReference(R.string.address_book_add_address),
             ),
         )
     }
