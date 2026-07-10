@@ -17,7 +17,7 @@ data class AuthErrorResponse(
     @SerialName("status") val status: Int,
     /** Human-readable explanation. */
     @SerialName("detail") val detail: String? = null,
-    /** URI reference to this occurrence (e.g. `"/api/v1/auth/refresh"`). */
+    /** URI reference to this occurrence (the request path that produced the error). */
     @SerialName("instance") val instance: String? = null,
     /** Application-specific error code. */
     @SerialName("code") val code: String? = null,
