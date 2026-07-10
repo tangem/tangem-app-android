@@ -11,12 +11,9 @@ android {
 dependencies {
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Common */
-    implementation(projects.common.routing)
-
-    /* Compose */
-    implementation(deps.compose.runtime)
+    api(projects.common.routing)
 }

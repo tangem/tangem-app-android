@@ -14,6 +14,7 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
@@ -822,6 +823,114 @@ class SendViaSwapTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onSendConfirmScreen { recipientMemo.assertTextContains(memoFirst, substring = true) }
                 }
+            }
+        }
+    }
+
+    @AllureId("3972")
+    @DisplayName("Send via Swap: single-currency card has no 'Convert' button in Send")
+    @Test
+    fun singleCurrencyCardNoConvertButtonInSendTest() {
+        val cardType = ProductType.Note
+        val tokenTitle = "Dogecoin"
+
+        setupHooks().run {
+            step("Open 'Main Screen' on '${cardType.name}' card") {
+                openMainScreen(cardType)
+            }
+            step("Assert 'Add funds' button is displayed") {
+                onMainScreen { addFundsButton.assertIsDisplayed() }
+            }
+            step("Assert 'Transfer' button is displayed") {
+                onMainScreen { transferButton.assertIsDisplayed() }
+            }
+            step("Assert 'Swap' button is not displayed") {
+                onMainScreen { swapButton.assertIsNotDisplayed() }
+            }
+            step("Click on 'Transfer' button") {
+                onMainScreen { transferButton.performClick() }
+            }
+            step("Click on token: '$tokenTitle'") {
+                onChooseTokenBottomSheet { tokenWithTitle(tokenTitle).clickWithAssertion() }
+            }
+            step("Click on 'Send' button in bottom sheet") {
+                onTransferBottomSheet { sendButton.clickWithAssertion() }
+            }
+            step("Assert amount input text field is displayed") {
+                flakySafely { onSendScreen { amountInputTextField.assertIsDisplayed() } }
+            }
+            step("Assert 'Swap to another token' button is not displayed") {
+                onSendScreen { swapToAnotherTokenButton.assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("10196")
+    @DisplayName("Send via Swap: memo-restricted network is not selectable as a receive token")
+    @Test
+    fun memoRestrictedNetworkNotSelectableAsReceiveTokenTest() {
+        val tokenName = "Bitcoin"
+        val algorand = "Algorand"
+        val bitcoinBalanceScenarioName = "bitcoin_utxo"
+        val bitcoinBalanceScenarioState = "Balance"
+        val assetsScenarioName = "express_api_assets"
+        val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
+        val coinsScenarioName = "coins_api"
+        val coinsScenarioState = "WithAlgorand"
+        val warningTitle = getResourceString(R.string.express_swap_not_supported_title, algorand)
+        val warningMessage = getResourceString(R.string.express_swap_not_supported_text)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(bitcoinBalanceScenarioName)
+                resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(coinsScenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
+                setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
+            }
+            step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
+            }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
+            step("Set WireMock scenario: '$coinsScenarioName' to state: '$coinsScenarioState'") {
+                setWireMockScenarioState(scenarioName = coinsScenarioName, state = coinsScenarioState)
+            }
+            step("Open 'Send' screen") {
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
+            }
+            step("Click on 'Swap to another token' button") {
+                onSendScreen { swapToAnotherTokenButton.performClick() }
+            }
+            step("Type '$algorand' in search text field") {
+                onSendViaSwapScreen {
+                    searchField.performClick()
+                    searchField.performTextInput(algorand)
+                }
+            }
+            step("Click on token: '$algorand'") {
+                onSendViaSwapScreen { tokenItem(algorand).performClick() }
+            }
+            step("Assert warning bottom sheet icon is displayed") {
+                onWarningBottomSheet { icon.assertIsDisplayed() }
+            }
+            step("Assert warning bottom sheet title is displayed") {
+                onWarningBottomSheet { title(warningTitle).assertIsDisplayed() }
+            }
+            step("Assert warning bottom sheet message is displayed") {
+                onWarningBottomSheet { message(warningMessage).assertIsDisplayed() }
+            }
+            step("Click on 'Ok, Got it!' button") {
+                onWarningBottomSheet { okGotItButton.performClick() }
+            }
+            step("Assert 'Swap to another token' screen is displayed") {
+                onSendViaSwapScreen { tokenItem(algorand).assertIsDisplayed() }
             }
         }
     }
