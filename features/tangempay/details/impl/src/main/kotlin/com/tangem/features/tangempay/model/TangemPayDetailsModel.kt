@@ -427,6 +427,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
 
+    override fun onClickCashback() {
+        router.push(TangemPayAccountDetailsInnerRoute.Cashback)
+    }
+
     override fun onCardClick(cardId: String) {
         analytics.send(TangemPayAnalyticsEvents.CardIconClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = cardId))
