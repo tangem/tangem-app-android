@@ -44,7 +44,12 @@ internal class UnreachableActionsFactory(
                 // endregion
 
                 // region Buy
-                addBuyAction(reason = ScenarioUnavailabilityReason.None)
+                addBuyAction(
+                    reason = getBuyUnavailabilityReason(
+                        userWallet = userWallet,
+                        currency = cryptoCurrencyStatus.currency,
+                    ),
+                )
                 // endregion
 
                 // region Receive
