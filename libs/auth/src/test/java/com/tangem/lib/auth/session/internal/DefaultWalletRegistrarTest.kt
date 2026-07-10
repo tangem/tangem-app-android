@@ -167,7 +167,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register returns DeviceKeyUnavailable when keystore has no key`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns None
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
@@ -178,7 +178,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register surfaces nonce-endpoint API error`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.requestWalletNonce(any()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -197,7 +197,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register returns NonceDecryptionFailed when decryptor throws`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestWalletNonce(any()) } returns nonceSuccess()
         coEvery { nonceDecryptor.decryptNonce("abc") } throws IllegalStateException("OAEP failed")
 
@@ -209,7 +209,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register returns SigningFailed when signer throws (e g cancelled NFC or biometric)`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestWalletNonce(any()) } returns nonceSuccess()
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
         val failingSigner = WalletSigner { throw IllegalStateException("user cancelled") }
@@ -272,7 +272,7 @@ class DefaultWalletRegistrarTest {
     }
 
     private fun stubHappyPath() {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestWalletNonce(any()) } returns nonceSuccess()
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
     }
