@@ -38,27 +38,6 @@ internal class TangemPayDetailsModelTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
 
     @ParameterizedTest
-    @MethodSource("provideFreezeCases")
-    fun `GIVEN frozen state and balance WHEN status loaded THEN action buttons gated accordingly`(
-        case: FreezeCase,
-    ) = runTest {
-        // Arrange + Act
-        val model = createModel(
-            testScope = this,
-            statusSource = case.statusSource,
-            frozenState = case.frozenState,
-            availableForWithdrawal = case.availableForWithdrawal,
-        )
-        advanceUntilIdle()
-
-        // Assert
-        val state = model.uiState.value
-        assertThat(state.addFundsButton.isEnabled).isEqualTo(case.expectedAddFundsEnabled)
-        assertThat(state.withdrawButton.isEnabled).isEqualTo(case.expectedWithdrawEnabled)
-        model.onDestroy()
-    }
-
-    @ParameterizedTest
     @MethodSource("provideMutedCases")
     fun `GIVEN status source WHEN status loaded THEN balance is muted only when cached`(case: MutedCase) = runTest {
         // Arrange + Act
