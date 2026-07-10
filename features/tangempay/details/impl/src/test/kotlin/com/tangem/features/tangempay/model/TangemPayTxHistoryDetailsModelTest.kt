@@ -86,7 +86,12 @@ internal class TangemPayTxHistoryDetailsModelTest {
 
         // Assert
         assertThat(model.uiState.value.redesign.detail)
-            .isEqualTo(TransactionDetailUM.Content(stringReference("Loaded card *4321")))
+            .isEqualTo(
+                TransactionDetailUM.Content(
+                    cardNumber = stringReference("*4321"),
+                    cardName = stringReference("Loaded card"),
+                ),
+            )
         model.onDestroy()
     }
 
@@ -140,7 +145,12 @@ internal class TangemPayTxHistoryDetailsModelTest {
 
         // Assert
         assertThat(model.uiState.value.redesign.detail)
-            .isEqualTo(TransactionDetailUM.Content(stringReference("Loaded card *4321")))
+            .isEqualTo(
+                TransactionDetailUM.Content(
+                    cardNumber = stringReference("*4321"),
+                    cardName = stringReference("Loaded card"),
+                ),
+            )
         coVerify(exactly = 2) { repository.getTransaction(any(), any()) }
         model.onDestroy()
     }

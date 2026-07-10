@@ -71,7 +71,10 @@ internal enum class TransactionStateType {
 @Immutable
 internal sealed interface TransactionDetailUM {
     data object Loading : TransactionDetailUM
-    data class Content(val card: TextReference) : TransactionDetailUM
+    data class Content(
+        val cardNumber: TextReference?,
+        val cardName: TextReference?,
+    ) : TransactionDetailUM
     data class Error(val onRefreshClick: () -> Unit) : TransactionDetailUM
 }
 
