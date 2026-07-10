@@ -4,11 +4,7 @@ import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.getRewardStakingBalance
 import com.tangem.common.getTotalStakingBalance
 import com.tangem.common.ui.earn.EarnBlockUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -20,10 +16,12 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
@@ -217,6 +215,7 @@ internal class UpdateStakingNotificationTransformer(
         )
     }
 
+    @Suppress("LongMethod")
     private fun getRewardSubtitle(
         status: CryptoCurrencyStatus,
         stakingRewardAmount: BigDecimal?,
@@ -267,13 +266,23 @@ internal class UpdateStakingNotificationTransformer(
             }
             RewardBlockType.RewardsRequirementsError,
             RewardBlockType.Rewards,
-            -> resourceReference(
-                R.string.staking_details_rewards_to_claim,
-                wrappedList(
-                    stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
-                        .orMaskWithStars(isBalanceHidden),
-                ),
-            )
+            -> {
+                val rewardAmount = stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
+                    .orMaskWithStars(isBalanceHidden)
+                val rateReference = rewardRateReference()
+                if (rateReference != null) {
+                    combinedReference(
+                        rateReference,
+                        stringReference(" ${StringsSigns.DOT} "),
+                        stringReference(rewardAmount),
+                    )
+                } else {
+                    resourceReference(
+                        R.string.staking_details_rewards_to_claim,
+                        wrappedList(rewardAmount),
+                    )
+                }
+            }
         }
 
         val isAccent = rewardBlockType == RewardBlockType.Rewards ||
@@ -283,6 +292,21 @@ internal class UpdateStakingNotificationTransformer(
             text = text,
             style = EarnBlockUM.SubtitleUM.Style.Small,
             tone = if (isAccent) EarnBlockUM.SubtitleUM.Tone.Accent else EarnBlockUM.SubtitleUM.Tone.Disabled,
+        )
+    }
+
+    private fun rewardRateReference(): TextReference? {
+        val rewardInfo = stakingAvailability.optionOrNull?.displayRewardInfo ?: return null
+        val rateTypeResId = when (rewardInfo.type) {
+            RewardType.APR -> CoreResR.string.staking_details_apr
+            RewardType.APY,
+            RewardType.UNKNOWN,
+            -> CoreResR.string.staking_details_apy
+        }
+        return combinedReference(
+            stringReference(rewardInfo.rate.format { percent() }),
+            stringReference(" "),
+            resourceReference(rateTypeResId),
         )
     }
 }
