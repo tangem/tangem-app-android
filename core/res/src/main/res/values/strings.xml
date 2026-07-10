@@ -2015,6 +2015,7 @@
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
   <string name="tangempay_pay_support">Pay Support</string>
+  <string name="tangempay_main_select_plan">Select plan</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>

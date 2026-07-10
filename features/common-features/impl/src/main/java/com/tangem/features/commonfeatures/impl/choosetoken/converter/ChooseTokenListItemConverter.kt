@@ -182,6 +182,7 @@ internal class ChooseTokenListItemConverter(
         val paymentCurrency: CryptoCurrencyStatus = when (val status = this.value) {
             is PaymentAccountStatusValue.Error,
             is PaymentAccountStatusValue.IssuingCard,
+            is PaymentAccountStatusValue.AwaitingPlanSelection,
             PaymentAccountStatusValue.NotCreated,
             is PaymentAccountStatusValue.UnderReview,
             PaymentAccountStatusValue.Loading,
