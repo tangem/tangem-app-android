@@ -284,6 +284,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             is PaymentAccountStatusValue.Error.CardIssueFailed,
             is PaymentAccountStatusValue.Error.ExposedDevice,
             is PaymentAccountStatusValue.IssuingCard,
+            is PaymentAccountStatusValue.AwaitingPlanSelection,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.UnderReview,
