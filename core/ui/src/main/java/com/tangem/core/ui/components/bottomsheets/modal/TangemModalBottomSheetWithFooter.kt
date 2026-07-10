@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
@@ -38,6 +39,9 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.toPx
 
+/** Default reserved height for the [TangemModalBottomSheetWithFooter] footer slot. */
+val DEFAULT_FOOTER_HEIGHT: Dp = 80.dp
+
 /**
  * Modal bottom sheet with [content], [footer] and optional [title].
  *
@@ -50,6 +54,12 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWi
     config: TangemBottomSheetConfig,
     containerColor: Color = TangemTheme.colors.background.primary,
     skipPartiallyExpanded: Boolean = true,
+    // FIXME([REDACTED_TASK_KEY]): temp workaround
+    //  The footer slot reserves a fixed [DEFAULT_FOOTER_HEIGHT];
+    //  callers whose footer differs must pass the real height explicitly. Exposed as an opt-in
+    //  parameter so existing usages keep the previous behavior and nothing else is affected.
+    //  Rework so the sheet measures the actual footer height internally and drops this parameter.
+    footerHeight: Dp = DEFAULT_FOOTER_HEIGHT,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable (T) -> Unit,
@@ -65,6 +75,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWi
             content = content,
             footer = footer,
             skipPartiallyExpanded = skipPartiallyExpanded,
+            footerHeight = footerHeight,
         )
     } else {
         DefaultModalBottomSheetWithFooter<T>(
@@ -75,6 +86,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWi
             footer = footer,
             onBack = onBack,
             skipPartiallyExpanded = skipPartiallyExpanded,
+            footerHeight = footerHeight,
         )
     }
 }
@@ -85,6 +97,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     config: TangemBottomSheetConfig,
     containerColor: Color,
     skipPartiallyExpanded: Boolean = true,
+    footerHeight: Dp = DEFAULT_FOOTER_HEIGHT,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
@@ -117,6 +130,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
             onBack = onBack,
             content = content,
             footer = footer,
+            footerHeight = footerHeight,
         )
     }
 
@@ -135,6 +149,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
     config: TangemBottomSheetConfig,
     containerColor: Color,
     skipPartiallyExpanded: Boolean = true,
+    footerHeight: Dp = DEFAULT_FOOTER_HEIGHT,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
     noinline footer: @Composable (BoxScope.(T) -> Unit)?,
@@ -150,6 +165,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
         title = title,
         content = content,
         footer = footer,
+        footerHeight = footerHeight,
     )
 }
 
@@ -161,6 +177,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
     sheetState: TangemSheetState,
     containerColor: Color,
     modifier: Modifier = Modifier,
+    footerHeight: Dp = DEFAULT_FOOTER_HEIGHT,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
@@ -178,11 +195,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
 
         val isKeyboardOpen by rememberIsKeyboardVisible()
         val buttonHeight by animateDpAsState(
-            if (footer != null) {
-                80.dp
-            } else {
-                0.dp
-            },
+            targetValue = if (footer != null) footerHeight else 0.dp,
+            label = "FooterHeight",
         )
         // Offset calculation for keyboard scroll adjustment:
         // 1) Button height (footer)
