@@ -1,0 +1,5 @@
+# Gitignored files copied into new Claude Code worktrees.
+# Syntax: .gitignore patterns. Only gitignored matches are copied.
+.claude/settings.local.json
+app/google-services.json
+local.properties

@@ -1,0 +1,255 @@
+package com.tangem.features.txhistory.converter
+
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
+import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_stack_20
+import com.tangem.core.ui.res.generated.icons.ic_success_20
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.network.TxInfo.TransactionType
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.impl.R
+import com.tangem.utils.StringsSigns
+import com.tangem.utils.extensions.isZero
+import com.tangem.utils.toBriefAddressFormat
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+
+/** Website the yield-supply protocol row links to — the hard-wired Aave integration's home page. */
+private const val AAVE_WEBSITE = "https://aave.com/"
+
+/**
+ * Converts an on-chain [TxInfo] to the [TxHistoryDetailsUM.SingleAsset] details card (Receive / Send / Transfer /
+ * staking / yield-supply). A two-asset swap always surfaces as an [com.tangem.domain.txhistory.model.ExpressTx.Swap]
+ * (handled by [ExpressTxToDetailsUMConverter]); an on-chain `TxInfo` of type `Swap` (e.g. a DEX swap with no express
+ * record) carries no legs, so it falls back to the single amount it does have rather than an empty two-asset card.
+ */
+internal class OnChainTxToDetailsUMConverter(
+    private val currency: CryptoCurrency,
+    private val onCopyAddress: (String) -> Unit,
+    private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
+    /** Staking validators of the viewed currency keyed by on-chain address; resolves the validator row's name/link. */
+    private val validatorsByAddress: Map<String, Yield.Validator>,
+    private val onOpenValidator: (String) -> Unit,
+    /** Own deposit addresses on the viewed currency's network — drives the on-chain own-vs-external transfer title. */
+    private val ownAddresses: Set<String>,
+) {
+
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
+    private val titleConverter = TxHistoryTitleConverter()
+
+    fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset = TxHistoryDetailsUM.SingleAsset(
+        header = value.toHeaderUM(),
+        amountBlock = value.toAmountBlockUM(),
+        counterparty = value.toCounterpartyUM(),
+        // Validator (staking) / protocol (yield-supply), then the network fee from the tx itself; rate is not surfaced.
+        rows = buildList {
+            value.validatorRow()?.let(::add)
+            value.protocolRow()?.let(::add)
+            addAll(value.toInfoRows())
+        }.toImmutableList(),
+    )
+
+    /**
+     * Protocol row of a yield-supply tx: the DeFi protocol the funds are supplied to. The yield-supply product is a
+     * single hard-wired integration across the app (Aave — the [yield_module_provider][R.string.yield_module_provider]
+     * name), so the value is that constant provider rather than a per-tx resolved name, and the tap opens the
+     * constant [AAVE_WEBSITE]. Mutually exclusive with [validatorRow] — a tx is either staking or yield-supply,
+     * never both.
+     */
+    private fun TxInfo.protocolRow(): TxHistoryDetailsUM.InfoRowUM? {
+        if (type !is TransactionType.YieldSupply) return null
+        return TxHistoryDetailsUM.InfoRowUM(
+            label = resourceReference(R.string.staking_validator),
+            value = resourceReference(R.string.yield_module_provider),
+            trailingIconRes = R.drawable.ic_arrow_top_right_24,
+            onClick = { onOpenValidator(AAVE_WEBSITE) },
+        )
+    }
+
+    /**
+     * Validator row of a staking tx: its display [name][Yield.Validator.name] and a link to the validator page. Present
+     * only when the tx carries a validator address ([validatorAddress]) that resolves in [validatorsByAddress]; otherwise
+     * `null` (non-staking tx, an address the current yield doesn't list, or a chain that omits the validator address).
+     * The trailing arrow-link and tap are offered only when the validator has a [website][Yield.Validator.website].
+     */
+    private fun TxInfo.validatorRow(): TxHistoryDetailsUM.InfoRowUM? {
+        val validator = validatorAddress()?.let(validatorsByAddress::get) ?: return null
+        val website = validator.website?.ifBlank { null }
+        return TxHistoryDetailsUM.InfoRowUM(
+            label = resourceReference(R.string.staking_validator),
+            value = stringReference(validator.name),
+            trailingIconRes = website?.let { R.drawable.ic_arrow_top_right_24 },
+            onClick = website?.let { url -> { onOpenValidator(url) } },
+        )
+    }
+
+    /**
+     * On-chain address of the validator a staking tx interacts with, or `null` for a non-staking tx or a staking tx that
+     * does not surface it. A `Vote` carries it in the type itself; other staking types expose it through the interaction
+     * or destination address typed as `Validator`.
+     */
+    private fun TxInfo.validatorAddress(): String? = when (val txType = type) {
+        is TransactionType.Staking.Vote -> txType.validatorAddress
+        is TransactionType.Staking -> interactionValidatorAddress() ?: destinationValidatorAddress()
+        else -> null
+    }
+
+    private fun TxInfo.interactionValidatorAddress(): String? =
+        (interactionAddressType as? TxInfo.InteractionAddressType.Validator)?.address
+
+    private fun TxInfo.destinationValidatorAddress(): String? = when (val destination = destinationType) {
+        is TxInfo.DestinationType.Single -> (destination.addressType as? TxInfo.AddressType.Validator)?.address
+        is TxInfo.DestinationType.Multiple ->
+            destination.addressTypes.filterIsInstance<TxInfo.AddressType.Validator>().firstOrNull()?.address
+    }
+
+    private fun TxInfo.toHeaderUM(): TxHistoryDetailsUM.HeaderUM = TxHistoryDetailsUM.HeaderUM(
+        icon = headerIcon(),
+        status = status.toUiStatus(),
+        title = titleConverter.convert(this, isOwnTransfer = isOwnTransfer()),
+        subtitle = headerSubtitle(timestampInMillis),
+        menu = menu,
+    )
+
+    /** A transfer whose counterparty is one of the viewed currency's own deposit addresses reads "Transfer". */
+    private fun TxInfo.isOwnTransfer(): Boolean {
+        val counterpartyAddress = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
+        return counterpartyAddress != null && counterpartyAddress in ownAddresses
+    }
+
+    private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
+        icon = amountIcon(),
+        amount = stringReference(signedAmount(currency)),
+        label = amountLabel(),
+        isFailed = status is TxInfo.TransactionStatus.Failed,
+    )
+
+    /**
+     * Amount icon. Yield-supply enter/exit shows the asset paired with the hard-wired Aave protocol icon, ordered by
+     * direction (Aave leads on "Supplied"/enter, the asset leads on "Returned"/exit — mirroring the two states in the
+     * design); every other type shows the single token avatar. Only enter/exit are paired for now — the remaining
+     * yield-supply variants (topup / withdraw) can adopt the same pair later.
+     */
+    private fun TxInfo.amountIcon(): TxHistoryDetailsUM.AmountIconUM {
+        val asset = TxHistoryDetailsUM.AmountIconUM.Item.Currency(iconStateConverter.convert(currency))
+        val aave = TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22)
+        return when (type) {
+            is TransactionType.YieldSupply.Enter ->
+                TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = aave, trailing = asset)
+            is TransactionType.YieldSupply.Exit ->
+                TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = asset, trailing = aave)
+            else -> TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency))
+        }
+    }
+
+    /** "Supplied"/"Returned" label above the amount for yield-supply enter/exit; `null` (no label) for other types. */
+    private fun TxInfo.amountLabel(): TextReference? = when (type) {
+        is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_supplied)
+        is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_returned)
+        else -> null
+    }
+
+    /**
+     * Counterparty card ("Recipient" / "From"). Only the external-address avatar is produced — built from the `User`
+     * interaction address (the same source the history list uses for its external-address subtitle); a counterparty that
+     * is not a plain external `User` address yields no card (`null`).
+     *
+     * The lookup needed to resolve an own-account / own-wallet avatar here is already available (it drives the
+     * swap/onramp leg owners), but applying it to the single-asset counterparty card is intentionally out of scope for
+     * now — a follow-up.
+     */
+    private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
+        // Contract interactions (yield-supply / staking / approve) talk to a protocol/validator, not a real recipient —
+        // no copyable counterparty card.
+        val isContractInteraction = type is TransactionType.YieldSupply ||
+            type is TransactionType.Staking ||
+            type is TransactionType.Approve
+        if (isContractInteraction) return null
+        val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
+        return TxHistoryDetailsUM.CounterpartyUM(
+            label = counterpartyLabel(),
+            title = stringReference(address.toBriefAddressFormat()),
+            avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = address),
+            onCopyClick = { onCopyAddress(address) },
+        )
+    }
+
+    /** Section label above the counterparty: "Recipient" for outgoing transfers, "From" for incoming. */
+    private fun TxInfo.counterpartyLabel(): TextReference =
+        if (isOutgoing) resourceReference(R.string.send_recipient) else resourceReference(R.string.common_from)
+}
+
+// region Amount / header building helpers
+
+/** How the header amount is signed, decided by the transaction type. */
+private enum class AmountSign {
+
+    /** `-` for outgoing, `+` for incoming — plain value transfers. */
+    BY_DIRECTION,
+
+    /** Always `+` — an inflow regardless of the reported direction (staking rewards). */
+    ALWAYS_PLUS,
+
+    /**
+     * No sign — protocol interactions (staking, approvals, yield-supply enter/exit) whose amount is a parameter of the
+     * operation, not a transfer in/out of the account.
+     */
+    NONE,
+}
+
+private fun TransactionType.amountSign(): AmountSign = when (this) {
+    is TransactionType.Staking.ClaimRewards -> AmountSign.ALWAYS_PLUS
+    is TransactionType.Staking,
+    is TransactionType.Approve,
+    is TransactionType.YieldSupply.Enter,
+    is TransactionType.YieldSupply.Exit,
+    -> AmountSign.NONE
+    else -> AmountSign.BY_DIRECTION
+}
+
+/**
+ * Signed crypto amount with inline symbol, e.g. `+ 350.31 USDT` / `- 350.31 USDT`. The sign is decided per transaction
+ * type by [amountSign], and is dropped for zero amounts and for the failed state (a failed tx moved nothing) — the UI
+ * then only strikes the amount through and dims it via [TxHistoryDetailsUM.AmountBlockUM.isFailed].
+ */
+private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
+    val formatted = amount.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+    val prefix = when {
+        status is TxInfo.TransactionStatus.Failed -> ""
+        amount.isZero() -> ""
+        else -> when (type.amountSign()) {
+            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.MINUS} " else "${StringsSigns.PLUS} "
+            AmountSign.ALWAYS_PLUS -> "${StringsSigns.PLUS} "
+            AmountSign.NONE -> ""
+        }
+    }
+    return (prefix + formatted).trim()
+}
+
+/** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
+private fun TxInfo.headerIcon(): TxIcon = when (type) {
+    is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
+    is TransactionType.Staking.Stake,
+    is TransactionType.Staking.Unstake,
+    is TransactionType.Staking.Restake,
+    -> TxIcon.Vector(Icons.ic_stack_20)
+    is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
+    is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
+    is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
+    else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+}
+
+// endregion

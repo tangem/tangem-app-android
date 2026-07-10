@@ -19,6 +19,9 @@ sealed class AuthError(open val problem: AuthErrorResponse?) {
     /** `404` — token / resource not found. */
     data class NotFound(override val problem: AuthErrorResponse?) : AuthError(problem)
 
+    /** `409` — conflict / already exists (e.g. device or wallet already registered). */
+    data class Conflict(override val problem: AuthErrorResponse?) : AuthError(problem)
+
     /** `429` — server-side rate limit; honour [retryAfterSeconds] before retrying. */
     data class RateLimited(
         val retryAfterSeconds: Int?,

@@ -6,6 +6,7 @@ import com.tangem.common.R
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseSearchBarTestTags
 import com.tangem.core.ui.test.ManageTokensScreenTestTags
+import com.tangem.core.ui.test.SearchBarTestTags
 import com.tangem.core.ui.test.SwitchTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.hasText as withText
 import androidx.compose.ui.test.hasAnySibling as withAnySibling
 import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import androidx.compose.ui.test.hasAnyAncestor as withAnyAncestor
+import com.tangem.core.res.R as CoreResR
 
 class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<ManageTokensPageObject>(semanticsProvider = semanticsProvider) {
@@ -35,9 +37,41 @@ class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasTestTag(BaseSearchBarTestTags.SEARCH_BAR)
     }
 
+    val searchClearButton: KNode = child {
+        hasTestTag(SearchBarTestTags.CLEAR_BUTTON)
+    }
+
+    val addCustomTokenButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.MORE_BUTTON)
+    }
+
     fun tokenItem(tokenName: String): KNode = child {
         hasTestTag(ManageTokensScreenTestTags.TOKEN_ITEM)
         hasText(tokenName)
+    }
+
+    fun networkStandard(networkName: String, standard: String): KNode = child {
+        useUnmergedTree = true
+        addSemanticsMatcher(
+            withText(standard).and(
+                withAnyAncestor(
+                    withTestTag(ManageTokensScreenTestTags.NETWORK_NAME)
+                        .and(withAnyDescendant(withText(networkName, ignoreCase = true))),
+                ),
+            ),
+        )
+    }
+
+    fun networkName(networkName: String): KNode = child {
+        useUnmergedTree = true
+        addSemanticsMatcher(
+            withTestTag(ManageTokensScreenTestTags.NETWORK_NAME)
+                .and(withAnyDescendant(withText(networkName))),
+        )
+    }
+
+    val contractAddressCopiedMessage: KNode = child {
+        hasText(getResourceString(CoreResR.string.contract_address_copied_message))
     }
 
     fun networkSwitch(networkName: String): KNode = child {

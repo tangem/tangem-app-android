@@ -9,21 +9,21 @@ android {
 }
 
 dependencies {
+    /** Kotlin */
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+
     /** Project - Core */
-    implementation(projects.core.ui)
-    implementation(projects.core.decompose)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /** Domain models */
     api(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
+    api(projects.domain.txhistory)
 
     /** Compose */
+    api(deps.compose.foundation)
     implementation(deps.compose.runtime)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
-
-    /** Other */
-    implementation(deps.kotlin.immutable.collections)
 }

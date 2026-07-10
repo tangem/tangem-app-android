@@ -9,19 +9,30 @@ android {
 }
 
 dependencies {
-    /** Project - Core */
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+    // endregion
 
-    /** Compose */
-    implementation(tangemDeps.vico.core)
-    implementation(tangemDeps.vico.compose)
-    implementation(tangemDeps.vico.compose.m3)
-
-    implementation(deps.lifecycle.compose)
-    implementation(deps.compose.foundation)
+    // region Compose
+    api(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
-    implementation(deps.kotlin.immutable.collections)
+    // endregion
+
+    // region Other libraries
+    implementation(deps.androidx.annotation)
+    implementation(deps.jodatime)
+    // endregion
+
+    // region Vico
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
+    // endregion
+
+    // region Project - Core
+    implementation(projects.core.ui)
+    implementation(projects.core.utils)
+    // endregion
 }
