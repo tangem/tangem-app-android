@@ -20,6 +20,7 @@ internal fun BaseExtension.configureCompilerOptions() {
 internal fun BaseExtension.configureCompose(project: Project) {
     val useCompose = with(project.path) {
         contains(":ui") ||
+            contains(Regex(pattern = ":common-ui\$")) || // shared Composable UI component modules
             contains(":common:ui-charts") ||
             contains(":features:onboarding") || // TODO: divide on api/impl after migrating all onboarding to module
             contains(Regex(pattern = ":presentation\$")) ||

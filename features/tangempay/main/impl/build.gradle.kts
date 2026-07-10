@@ -13,14 +13,15 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
+    api(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Features api */
     implementation(projects.features.tangempay.main.api)
 
     /** Compose */
-    implementation(deps.compose.foundation)
+    api(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -28,4 +29,9 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Other */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
 }
