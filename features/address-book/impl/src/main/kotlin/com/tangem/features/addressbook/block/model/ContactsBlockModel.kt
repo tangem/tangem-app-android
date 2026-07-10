@@ -37,7 +37,7 @@ internal class ContactsBlockModel @Inject constructor(
     val state: StateFlow<ContactsBlockUM> get() = stateController.uiState
 
     init {
-        modelScope.launch { syncAddressBooksUseCase() }
+        modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
 
         combine(
             params.queryFlow.flatMapLatest { query ->
