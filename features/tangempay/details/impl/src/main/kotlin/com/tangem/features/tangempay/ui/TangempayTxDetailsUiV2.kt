@@ -231,62 +231,58 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUMV2, modifi
         when (val detail = state.detail) {
             null -> Unit
             TransactionDetailUM.Loading -> CardRowShimmer()
-            is TransactionDetailUM.Content -> CardRow(value = detail.card)
+            is TransactionDetailUM.Content -> CardRow(content = detail)
             is TransactionDetailUM.Error -> CardRowError(onRefreshClick = detail.onRefreshClick)
         }
         TangemRow(
             divider = state.mcc != null,
-            contentLead = TangemRowContentLead.Start,
+            contentLead = TangemRowContentLead.End,
             titleSlot = {
                 TangemRowText(
                     text = resourceReference(R.string.tangem_pay_transaction_details_category),
                     role = TangemRowTextRole.Title,
                 )
             },
-            valueSlot = {
-                TangemRowText(
-                    text = state.transactionCategory,
-                    role = TangemRowTextRole.Value,
-                )
-            },
+            valueSlot = { DetailRowValue(text = state.transactionCategory) },
         )
         if (state.mcc != null) {
             TangemRow(
-                contentLead = TangemRowContentLead.Start,
+                contentLead = TangemRowContentLead.End,
                 titleSlot = {
                     TangemRowText(
                         text = resourceReference(R.string.tangem_pay_transaction_details_mcc),
                         role = TangemRowTextRole.Title,
                     )
                 },
-                valueSlot = {
-                    TangemRowText(
-                        text = state.mcc,
-                        role = TangemRowTextRole.Value,
-                    )
-                },
+                valueSlot = { DetailRowValue(text = state.mcc) },
             )
         }
     }
 }
 
 @Composable
-private fun CardRow(value: TextReference, modifier: Modifier = Modifier) {
+private fun CardRow(content: TransactionDetailUM.Content, modifier: Modifier = Modifier) {
+    val cardNumber = content.cardNumber
+    val cardName = content.cardName
     TangemRow(
         modifier = modifier,
         divider = true,
-        contentLead = TangemRowContentLead.Start,
+        contentLead = TangemRowContentLead.End,
         titleSlot = {
             TangemRowText(
                 text = resourceReference(R.string.tangempay_common_card),
                 role = TangemRowTextRole.Title,
             )
         },
-        valueSlot = {
-            TangemRowText(
-                text = value,
-                role = TangemRowTextRole.Value,
-            )
+        valueSlot = if (cardNumber != null) {
+            { DetailRowValue(text = cardNumber) }
+        } else {
+            null
+        },
+        subvalueSlot = if (cardName != null) {
+            { DetailRowSubvalue(text = cardName) }
+        } else {
+            null
         },
     )
 }
@@ -296,7 +292,7 @@ private fun CardRowShimmer(modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier,
         divider = true,
-        contentLead = TangemRowContentLead.Start,
+        contentLead = TangemRowContentLead.End,
         titleSlot = {
             TangemShimmer(style = TangemTheme.typography3.body.medium)
         },
@@ -308,7 +304,7 @@ private fun CardRowError(onRefreshClick: () -> Unit, modifier: Modifier = Modifi
     TangemRow(
         modifier = modifier,
         divider = true,
-        contentLead = TangemRowContentLead.Start,
+        contentLead = TangemRowContentLead.End,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
             TangemRowText(
@@ -343,6 +339,32 @@ private fun CardRowError(onRefreshClick: () -> Unit, modifier: Modifier = Modifi
     )
 }
 
+@Composable
+private fun DetailRowValue(text: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text.resolveReference(),
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.body.medium,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun DetailRowSubvalue(text: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text.resolveReference(),
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
 @Preview(device = Devices.PIXEL_7_PRO)
 @Preview(device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -363,7 +385,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
-                detail = TransactionDetailUM.Content(stringReference("Basic card *9092")),
+                detail = TransactionDetailUM.Content(
+                    cardNumber = stringReference("*9092"),
+                    cardName = stringReference("Basic card"),
+                ),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = stringReference("5814"),
                 transactionAmount = "-$5.86",
@@ -385,7 +410,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("NuCaloric"),
-                detail = TransactionDetailUM.Content(stringReference("Basic card *9092")),
+                detail = TransactionDetailUM.Content(
+                    cardNumber = stringReference("*9092"),
+                    cardName = stringReference("Basic card"),
+                ),
                 transactionCategory = stringReference("Groceries"),
                 mcc = stringReference("0000"),
                 transactionAmount = "-$820.52",
@@ -408,7 +436,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
-                detail = TransactionDetailUM.Content(stringReference("Basic card *9092")),
+                detail = TransactionDetailUM.Content(
+                    cardNumber = stringReference("*9092"),
+                    cardName = stringReference("Basic card"),
+                ),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = null,
                 transactionAmount = "-$5.86",
