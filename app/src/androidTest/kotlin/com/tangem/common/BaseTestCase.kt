@@ -18,6 +18,7 @@ import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -178,6 +179,14 @@ abstract class BaseTestCase : TestCase(
     }
 
     fun waitForIdle() = composeTestRule.waitForIdle()
+
+    /**
+     * Waits until [block] stops throwing (or [timeoutMillis] elapses). Use in scenario (BaseTestCase extension)
+     * code where flakySafely is unavailable; in test bodies prefer flakySafely.
+     */
+    fun awaitSuccess(timeoutMillis: Long = WAIT_UNTIL_TIMEOUT, block: () -> Unit) {
+        composeTestRule.waitUntil(timeoutMillis = timeoutMillis) { runCatching(block).isSuccess }
+    }
 
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         return ApplicationInjectionExecutionRule(
