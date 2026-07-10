@@ -48,8 +48,8 @@ internal class AddressBookListModel @Inject constructor(
     private val contactSelectionTrigger: ContactSelectionTrigger,
     private val analyticsSender: AddressBookAnalyticsSender,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
-    getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
-    getWalletsUseCase: GetWalletsUseCase,
+    private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultAddressBookListComponent.Params>()
@@ -63,22 +63,19 @@ internal class AddressBookListModel @Inject constructor(
     private val searchActive = MutableStateFlow(value = false)
     private val selectedWalletId = MutableStateFlow<String?>(value = null)
 
-    // We keep skeletons during stale state
-    private val isInitialSyncDone = MutableStateFlow(value = false)
-
     private val allContacts: SharedFlow<List<VerifiedContact>> =
         getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null)
             .shareIn(modelScope, SharingStarted.Lazily, replay = 1)
 
     init {
-        modelScope.launch {
-            try {
-                syncAddressBooksUseCase()
-            } finally {
-                isInitialSyncDone.value = true
-            }
+        modelScope.launch(context = dispatchers.default) {
+            syncAddressBooksUseCase()
+            sendContactListScreenOpenedEvent()
+            observeContacts()
         }
+    }
 
+    private suspend fun observeContacts() {
         val matchedContacts = searchQuery.flatMapLatest { query ->
             if (query.isBlank()) {
                 allContacts
@@ -86,7 +83,7 @@ internal class AddressBookListModel @Inject constructor(
                 getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
             }
         }
-        val listInputs = combine(
+        combine(
             allContacts,
             matchedContacts,
             searchQuery,
@@ -101,12 +98,9 @@ internal class AddressBookListModel @Inject constructor(
                 wallets = wallets,
             )
         }
-        combine(listInputs, isInitialSyncDone) { inputs, syncDone -> inputs to syncDone }
-            .onEach { (inputs, syncDone) -> if (syncDone) updateState(inputs) }
+            .onEach(::updateState)
             .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-
-        sendContactListScreenOpenedEvent()
+            .collect()
     }
 
     fun deliverSelection(contact: SelectedContact) {
@@ -170,17 +164,13 @@ internal class AddressBookListModel @Inject constructor(
         }
     }
 
-    private fun sendContactListScreenOpenedEvent() {
-        allContacts
-            .take(count = 1)
-            .onEach { contacts ->
-                analyticsSender.sendContactListScreenOpened(
-                    source = params.mode.toAnalyticsSource(),
-                    contactsCount = contacts.size,
-                    scope = modelScope,
-                )
-            }
-            .launchIn(modelScope)
+    private suspend fun sendContactListScreenOpenedEvent() {
+        val contacts = allContacts.first()
+        analyticsSender.sendContactListScreenOpened(
+            source = params.mode.toAnalyticsSource(),
+            contactsCount = contacts.size,
+            scope = modelScope,
+        )
     }
 
     private fun AddressBookRoute.ListMode.toAnalyticsSource(): Source = when (this) {
