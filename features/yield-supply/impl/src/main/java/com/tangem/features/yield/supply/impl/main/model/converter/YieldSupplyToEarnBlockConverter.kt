@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
@@ -80,9 +81,10 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
                 iconUM = buildTitleIcon(value),
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = resourceReference(
-                    id = CoreResR.string.yield_module_average_apy,
-                    formatArgs = wrappedList(value.apy),
+                text = combinedReference(
+                    resourceReference(CoreResR.string.yield_module_earn_sheet_current_apy_title),
+                    stringReference(StringsSigns.WHITE_SPACE),
+                    stringReference(value.apy + StringsSigns.PERCENT),
                 ),
                 style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
