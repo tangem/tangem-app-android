@@ -97,6 +97,23 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN actual status with frozen first card but unfrozen second card WHEN getLoadedState THEN action buttons enabled`() {
+        val factory = createFactory()
+        val frozenFirstCard = activeUnfrozenCard.copy(id = "card_frozen", frozenState = TangemPayCardFrozenState.Frozen)
+        val status = loadedStatus(
+            statusSource = StatusSource.ACTUAL,
+            statusError = null,
+            statusCards = listOf(frozenFirstCard, activeUnfrozenCard),
+        )
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(true, true)
+    }
+
+    @Test
     fun `GIVEN actual status with issuing card WHEN getLoadedState THEN add card disabled`() {
         // Arrange
         val factory = createFactory()
