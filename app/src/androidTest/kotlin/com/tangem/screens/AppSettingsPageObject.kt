@@ -14,6 +14,10 @@ class AppSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         hasTestTag(AppSettingsScreenTestTags.CURRENCY_BUTTON)
         useUnmergedTree = true
     }
+
+    val backButton: KNode = child {
+        hasTestTag(AppSettingsScreenTestTags.BACK_BUTTON)
+    }
 }
 
 internal fun BaseTestCase.onAppSettingsScreen(function: AppSettingsPageObject.() -> Unit) =
