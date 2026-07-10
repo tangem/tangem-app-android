@@ -3,9 +3,8 @@ package com.tangem.lib.auth.session
 import arrow.core.Either
 
 /**
- * Binds a wallet to the already-registered device with the Tangem Auth Service
- * (`POST /api/v1/auth/wallet`), proving wallet (and, for cold cards, card) ownership over a
- * server-issued wallet nonce.
+ * Binds a wallet to the already-registered device with the Tangem Auth Service, proving wallet
+ * (and, for cold cards, card) ownership over a server-issued wallet nonce.
  *
  * Idempotent per wallet: once a `walletId` is registered it is remembered, and subsequent calls
  * for it short-circuit without network traffic. Layered on top of device registration — requires a
@@ -17,7 +16,7 @@ import arrow.core.Either
  * fetched before signing (the signature is over the nonce), so the registrar fetches it and hands
  * the deciphered bytes to the signer.
  *
- * Tokens returned by `/wallet` are written to `SessionTokensStore`, not surfaced to callers — the
+ * Tokens returned by wallet registration are written to `SessionTokensStore`, not surfaced to callers — the
  * result type carries only success/failure so callers can log transient errors.
  */
 interface WalletRegistrar {

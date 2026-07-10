@@ -166,12 +166,12 @@ class DefaultSessionTokenRefresherTest {
     fun `refresh clears store when authenticate returns 403`() = runTest {
         coEvery { store.get() } returns None
 
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestAuthNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "nonce-decrypted"
-        coEvery { deviceKeyManager.sign(any()) } returns ByteArray(64)
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.authenticate(any<AuthApiRequest>()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -191,7 +191,7 @@ class DefaultSessionTokenRefresherTest {
     @Test
     fun `refresh returns DeviceKeyUnavailable when authenticate fallback has no key`() = runTest {
         coEvery { store.get() } returns None
-        coEvery { deviceKeyManager.getPublicKey() } returns None
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
 
         val result = refresher.refresh()
 
@@ -343,12 +343,12 @@ class DefaultSessionTokenRefresherTest {
     }
 
     private fun stubAuthenticateHappyPath() {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestAuthNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "nonce-decrypted"
-        coEvery { deviceKeyManager.sign(any()) } returns ByteArray(64)
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
         coEvery { authApi.authenticate(any<AuthApiRequest>()) } returns ApiResponse.Success(
             data = TokenApiResponse(
                 accessToken = "post-auth-access",
