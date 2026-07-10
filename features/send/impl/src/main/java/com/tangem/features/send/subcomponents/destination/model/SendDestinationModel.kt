@@ -18,6 +18,7 @@ import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAdd
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -88,6 +89,7 @@ internal class SendDestinationModel @Inject constructor(
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     getContactsUseCase: GetContactsUseCase,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
@@ -139,6 +141,7 @@ internal class SendDestinationModel @Inject constructor(
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
+        modelScope.launch { syncAddressBooksUseCase() }
         subscribeOnQRScannerResult()
         initialState()
         resetContactOnEdit()

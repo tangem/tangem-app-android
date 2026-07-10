@@ -80,6 +80,33 @@ class GetContactsUseCaseTest {
     }
 
     @Test
+    fun `GIVEN query matches a network id WHEN invoke THEN returns only contacts on that network`() = runTest {
+        // Arrange
+        val ethContact = contact(name = "Eth", address = "0x1", networkId = "ethereum")
+        val tronContact = contact(name = "Tron", address = "T1", networkId = "tron")
+        every { repository.getAllContacts() } returns flowOf(listOf(ethContact, tronContact))
+
+        // Act
+        val result = useCase(query = "tron").first()
+
+        // Assert
+        assertThat(result).containsExactly(tronContact)
+    }
+
+    @Test
+    fun `GIVEN network query with different case WHEN invoke THEN returns matching contact`() = runTest {
+        // Arrange
+        val tronContact = contact(name = "Tron", address = "T1", networkId = "tron")
+        every { repository.getAllContacts() } returns flowOf(listOf(alice, tronContact))
+
+        // Act
+        val result = useCase(query = "TRON").first()
+
+        // Assert
+        assertThat(result).containsExactly(tronContact)
+    }
+
+    @Test
     fun `GIVEN name query with different case WHEN invoke THEN returns matching contact`() = runTest {
         // Act
         val result = useCase(query = "ALICE").first()
@@ -139,6 +166,7 @@ class GetContactsUseCaseTest {
         name: String,
         address: String,
         createdAt: String = "2026-01-01T00:00:00.000Z",
+        networkId: String = "ethereum",
     ): Contact = Contact(
         id = ContactId("id-$name"),
         walletId = UserWalletId("011"),
@@ -151,7 +179,7 @@ class GetContactsUseCaseTest {
             AddressEntry(
                 id = AddressEntryId("addr-$name"),
                 address = address,
-                networkId = Network.RawID("ethereum"),
+                networkId = Network.RawID(networkId),
                 memo = null,
                 signature = "sig",
             ),
