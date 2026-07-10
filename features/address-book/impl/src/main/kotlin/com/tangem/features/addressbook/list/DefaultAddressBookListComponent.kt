@@ -71,7 +71,7 @@ internal class DefaultAddressBookListComponent(
 
     /**
      * @property mode               Default (management) or Selector (pick a contact for a network)
-     * @property onContactClick     management mode — opens the contact editor (TODO [REDACTED_TASK_KEY])
+     * @property onContactClick     management mode — opens the contact editor
      * @property onAddContactClick  opens the new-contact editor
      */
     data class Params(
