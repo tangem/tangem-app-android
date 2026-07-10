@@ -1,5 +1,7 @@
 package com.tangem.features.addressbook.addaddress.state.transformers
 
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.addressbook.addaddress.ui.state.AddAddressUM
 import com.tangem.utils.transformer.Transformer
 
@@ -9,6 +11,7 @@ import com.tangem.utils.transformer.Transformer
  */
 internal class UpdateAddAddressInitialStateTransformer(
     private val intents: Intents,
+    private val isEditMode: Boolean,
 ) : Transformer<AddAddressUM> {
 
     override fun transform(prevState: AddAddressUM): AddAddressUM {
@@ -24,6 +27,11 @@ internal class UpdateAddAddressInitialStateTransformer(
                 onPasteClick = intents.onMemoPasteClick,
             ),
             buttonUM = prevState.buttonUM.copy(onClick = intents.onConfirmClick),
+            title = if (isEditMode) {
+                resourceReference(R.string.address_book_edit_address)
+            } else {
+                resourceReference(R.string.address_book_add_address)
+            },
         )
     }
 
