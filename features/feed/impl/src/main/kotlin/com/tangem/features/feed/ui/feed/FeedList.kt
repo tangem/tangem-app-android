@@ -111,9 +111,8 @@ private fun FeedListContent(
         }
         DateBlock(state.currentDate)
 
-        SpacerH(16.dp)
-
         if (state.forYouBannerUM is ForYouBannerUM.Content && LocalRedesignEnabled.current) {
+            SpacerH(16.dp)
             TangemMessageBanner(
                 title = resourceReference(R.string.for_you_title),
                 description = resourceReference(R.string.for_you_description),
