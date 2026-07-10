@@ -3,29 +3,40 @@ package com.tangem.features.promobanners.impl.campaigns.model
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.promo.models.EnrollResult
+import com.tangem.domain.promo.models.PromoCampaignId
+import com.tangem.domain.promo.models.TokenReward
+import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.component.ActivateCampaignBottomSheetComponent
 import com.tangem.features.promobanners.impl.campaigns.entity.ActivateCampaignUM
+import com.tangem.features.promobanners.impl.campaigns.entity.CampaignTypeToContentConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.FooterUM
 import com.tangem.features.promobanners.impl.campaigns.entity.SelectedAccountUM
 import com.tangem.features.promobanners.impl.campaigns.entity.TermsUM
-import com.tangem.features.promobanners.impl.campaigns.entity.campaignName
+import com.tangem.features.promobanners.impl.campaigns.entity.toPromoCampaignId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -35,6 +46,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class ActivateCampaignsModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -42,17 +54,20 @@ internal class ActivateCampaignsModel @Inject constructor(
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val enrollPromoCampaignUseCase: EnrollPromoCampaignUseCase,
     private val urlOpener: UrlOpener,
+    @GlobalUiMessageSender private val messageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<ActivateCampaignBottomSheetComponent.Params>()
+    private val campaignType = params.campaignType
     private val accountIconConverter = AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall)
     private var appCurrency: AppCurrency = AppCurrency.Default
-    private var selectedAccount: Account? = null
-    private var selectedCurrency: CryptoCurrencyStatus? = null
+    private val campaignId: PromoCampaignId = params.campaignType.toPromoCampaignId()
+    private val campaignContent = CampaignTypeToContentConverter().convert(campaignType)
 
     val uiState: StateFlow<ActivateCampaignUM>
-        field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(buildInitialModel())
 
     val bridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
@@ -78,7 +93,26 @@ internal class ActivateCampaignsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onSelectTokenClick() {
+    private fun buildInitialModel(): ActivateCampaignUM = ActivateCampaignUM(
+        logo = campaignContent.logo,
+        title = resourceReference(
+            R.string.promo_campaign_summary_title,
+            wrappedList(campaignContent.name),
+        ),
+        description = campaignContent.description,
+        selectedToken = null,
+        selectedAccount = null,
+        isChoosingToken = false,
+        footerUM = FooterUM(
+            label = resourceReference(R.string.promo_campaign_select_token),
+            onPrimaryButtonClick = ::onChooseTokenClick,
+        ),
+        onChooseTokenDismiss = ::onChooseTokenDismiss,
+        onLearnMoreClick = ::onLearnMoreClick,
+        onChooseTokenClick = ::onChooseTokenClick,
+    )
+
+    private fun onChooseTokenClick() {
         uiState.update { it.copy(isChoosingToken = true) }
     }
 
@@ -86,42 +120,45 @@ internal class ActivateCampaignsModel @Inject constructor(
         uiState.update { it.copy(isChoosingToken = false) }
     }
 
-    private fun onEnrollClick() {
+    private fun onEnrollClick(selectedWalletId: UserWalletId, selectedCurrencyStatus: CryptoCurrencyStatus) {
+        val token = selectedCurrencyStatus.currency as? CryptoCurrency.Token ?: return
+
         modelScope.launch {
-            // TODO([REDACTED_TASK_KEY]): call the real campaign enrollment use case; its result decides the next sheet.
-            //  Success -> the "enrolled" sheet; "already activated" error -> hand the chosen token/account
-            //  over to the "already activated" sheet.
-            if (enrollInCampaign()) {
-                params.modelCallbacks.onActivated(params.campaignType)
-            } else {
-                selectedCurrency?.let {
-                    params.modelCallbacks.onAlreadyActivated(params.campaignType, appCurrency, selectedAccount, it)
-                }
+            enrollPromoCampaignUseCase.invoke(
+                campaign = campaignId,
+                tokenReward = TokenReward(
+                    tokenAddress = token.contractAddress,
+                    networkId = token.network.rawId,
+                ),
+                walletIds = listOf(selectedWalletId),
+            ).onLeft { error ->
+                TangemLogger.e("Error enrolling campaign ${campaignType.campaignId}", error)
+                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
+            }.onRight {
+                handleEnrollResponse(it)
             }
         }
     }
 
-    @Suppress("FunctionOnlyReturningConstant") // TODO([REDACTED_TASK_KEY]): stub until the real enrollment use case exists.
-    private fun enrollInCampaign(): Boolean {
-        // TODO([REDACTED_TASK_KEY]): replace with the real enrollment use case call; `true` = enrolled, `false` = already active.
-        return true
+    private fun handleEnrollResponse(enrollResult: EnrollResult) {
+        when (enrollResult) {
+            is EnrollResult.AlreadyEnrolled -> params.modelCallbacks.onAlreadyActivated(campaignType)
+            is EnrollResult.Success -> params.modelCallbacks.onActivated(campaignType)
+        }
     }
 
     private fun onTermsClick() {
-        urlOpener.openUrl(CAMPAIGN_TERMS_URL)
+        urlOpener.openUrl(campaignContent.termsUrl)
     }
 
     private fun onLearnMoreClick() {
-        urlOpener.openUrl(CAMPAIGN_TERMS_URL)
+        urlOpener.openUrl(campaignContent.learnMoreUrl)
     }
 
     private fun onTokenChosen(result: ChooseTokenResult) {
         modelScope.launch {
             val selectedAccountUM = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                val account = result.account.account
-                selectedAccount = account
-
-                when (account) {
+                when (val account = result.account.account) {
                     is Account.CryptoPortfolio -> SelectedAccountUM(
                         iconState = accountIconConverter.convert(account),
                         name = account.accountName.toUM().value,
@@ -136,7 +173,6 @@ internal class ActivateCampaignsModel @Inject constructor(
                 null
             }
 
-            selectedCurrency = result.currency
             val tokenItem = TokenItemStateConverter(appCurrency = appCurrency).convert(result.currency)
 
             uiState.update { state ->
@@ -145,42 +181,24 @@ internal class ActivateCampaignsModel @Inject constructor(
                     selectedToken = tokenItem,
                     selectedAccount = selectedAccountUM,
                     footerUM = FooterUM(
-                        label = stringReference("Enroll"),
-                        onPrimaryButtonClick = ::onEnrollClick,
+                        label = resourceReference(R.string.promo_campaign_enroll),
+                        onPrimaryButtonClick = {
+                            onEnrollClick(
+                                selectedWalletId = result.walletId,
+                                selectedCurrencyStatus = result.currency,
+                            )
+                        },
                         terms = TermsUM(
-                            // TODO([REDACTED_TASK_KEY]): localize
-                            text = stringReference("I agree with"),
-                            linkText = stringReference("${params.campaignType.campaignName()} Terms"),
+                            text = resourceReference(R.string.promo_campaign_terms_agreement_android),
+                            linkText = resourceReference(
+                                R.string.promo_campaign_terms_link,
+                                wrappedList(campaignContent.name),
+                            ),
                             onTermsClick = ::onTermsClick,
                         ),
                     ),
                 )
             }
         }
-    }
-
-    private fun getInitialState(): ActivateCampaignUM {
-        return ActivateCampaignUM(
-            // TODO([REDACTED_TASK_KEY]): source real campaign copy.
-            title = stringReference("Enroll in ${params.campaignType.campaignName()}"),
-            description = stringReference(
-                "Earn cashback on every swap from \$10K until the end of July.\n\n" +
-                    "Rates step up with size: 0.10% from \$10K, 0.20% from \$20K, 0.50% from \$100K.",
-            ),
-            selectedToken = null,
-            selectedAccount = null,
-            isChoosingToken = false,
-            footerUM = FooterUM(
-                label = stringReference("Select token"),
-                onPrimaryButtonClick = ::onSelectTokenClick,
-            ),
-            onChooseTokenDismiss = ::onChooseTokenDismiss,
-            onLearnMoreClick = ::onLearnMoreClick,
-        )
-    }
-
-    private companion object {
-        // TODO([REDACTED_TASK_KEY]): replace with the real campaign terms URL.
-        const val CAMPAIGN_TERMS_URL = "https://tangem.com/en/"
     }
 }
