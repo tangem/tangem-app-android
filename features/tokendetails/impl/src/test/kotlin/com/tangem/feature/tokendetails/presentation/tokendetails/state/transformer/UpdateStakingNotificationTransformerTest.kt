@@ -11,29 +11,21 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalanceItem
-import com.tangem.domain.models.staking.YieldToken
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
+import com.tangem.utils.StringsSigns.THREE_STARS
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import com.tangem.core.res.R as CoreResR
 
 class UpdateStakingNotificationTransformerTest {
 
@@ -194,8 +186,40 @@ class UpdateStakingNotificationTransformerTest {
         assertThat(rewardFormatArg(subtitle.text)).isNotEqualTo(THREE_STARS)
     }
 
-    private fun rewardFormatArg(text: TextReference): Any? =
-        (text as TextReference.Res).formatArgs.data.firstOrNull()
+    @Test
+    fun `GIVEN rewards to claim AND rate known WHEN transform THEN subtitle shows rate and reward amount`() {
+        // Arrange
+        val status = buildStatus(
+            networkRawId = "ethereum",
+            symbol = "ETH",
+            isCoin = false,
+            stakingBalance = stakeKitBalance(staked = BigDecimal("100"), rewards = BigDecimal("5")),
+        )
+        val transformer = createTransformer(
+            availability = availableOption(BigDecimal("4.2")),
+            entryInfo = StakingEntryInfo(tokenSymbol = "ETH"),
+            status = status,
+            isBalanceHidden = false,
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.earnBlockState as EarnBlockUM.Content
+        val subtitle = content.subtitleUM as EarnBlockUM.SubtitleUM.Text
+        val combined = subtitle.text as TextReference.Combined
+        val rateLabel = combined.refs.data.first() as TextReference.Combined
+        val apyLabel = rateLabel.refs.data.filterIsInstance<TextReference.Res>().first()
+        assertThat(apyLabel.id).isEqualTo(CoreResR.string.staking_details_apy)
+        assertThat((combined.refs.data.last() as TextReference.Str).value).isNotEqualTo(THREE_STARS)
+    }
+
+    private fun rewardFormatArg(text: TextReference): Any? = when (text) {
+        is TextReference.Res -> text.formatArgs.data.firstOrNull()
+        is TextReference.Combined -> (text.refs.data.last() as? TextReference.Str)?.value
+        else -> null
+    }
 
     private fun createTransformer(
         availability: StakingAvailability,
@@ -265,17 +289,16 @@ class UpdateStakingNotificationTransformerTest {
     )
 
     private fun availableOption(apy: BigDecimal): StakingAvailability.Available {
-        val option = mockk<StakingOption>(relaxed = true) {
-            every { this@mockk.apy } returns apy
-        }
-        return StakingAvailability.Available(option = option)
+        return StakingAvailability.Available(option = stakingOption(apy))
     }
 
     private fun fullOption(apy: BigDecimal): StakingAvailability.Full {
-        val option = mockk<StakingOption>(relaxed = true) {
-            every { this@mockk.apy } returns apy
-        }
-        return StakingAvailability.Full(option = option)
+        return StakingAvailability.Full(option = stakingOption(apy))
+    }
+
+    /** Deterministic concrete [StakingOption] whose [displayRewardInfo] resolves to [apy] with an APY rate. */
+    private fun stakingOption(apy: BigDecimal): StakingOption.P2PEthPool = mockk(relaxed = true) {
+        every { this@mockk.apy } returns apy
     }
 
     private fun buildStatusWithStake(stakedAmount: BigDecimal): CryptoCurrencyStatus {
