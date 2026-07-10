@@ -171,7 +171,7 @@ internal class ProdApiConfigsManagerTest {
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (environment) {
-                    ApiEnvironment.PROD -> "https://authentication.tangem.org/"
+                    ApiEnvironment.PROD -> "https://api.tangem.org/"
                     else -> "[REDACTED_ENV_URL]"
                 },
                 headers = emptyMap(),
