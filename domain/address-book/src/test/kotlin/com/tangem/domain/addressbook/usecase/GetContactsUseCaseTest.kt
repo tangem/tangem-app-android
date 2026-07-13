@@ -54,29 +54,42 @@ class GetContactsUseCaseTest {
     }
 
     @Test
-    fun `GIVEN address query matching case WHEN invoke THEN returns matching contact`() = runTest {
-        // Arrange
-        val carol = contact(name = "Carol", address = "0xAbCdEf")
-        every { repository.getAllContacts() } returns flowOf(listOf(alice, carol))
-
-        // Act
-        val result = useCase(query = "0xAbCdEf").first()
-
-        // Assert
-        assertThat(result).containsExactly(carol)
-    }
-
-    @Test
-    fun `GIVEN address query with different case WHEN invoke THEN returns empty`() = runTest {
-        // Arrange
-        val carol = contact(name = "Carol", address = "0xAbCdEf")
+    fun `GIVEN EVM address query differing only in case WHEN invoke THEN returns matching contact`() = runTest {
+        // Arrange — EVM (ethereum) addresses are case-insensitive, so a lowercased query matches a checksummed address
+        val carol = contact(name = "Carol", address = "0xAbCdEf", networkId = "ethereum")
         every { repository.getAllContacts() } returns flowOf(listOf(alice, carol))
 
         // Act
         val result = useCase(query = "0xabcdef").first()
 
         // Assert
+        assertThat(result).containsExactly(carol)
+    }
+
+    @Test
+    fun `GIVEN non-EVM address query differing only in case WHEN invoke THEN returns empty`() = runTest {
+        // Arrange — non-EVM (solana) addresses are case-sensitive, so a differently-cased query must not match
+        val dave = contact(name = "Dave", address = "SoLAnaAddr", networkId = "solana")
+        every { repository.getAllContacts() } returns flowOf(listOf(alice, dave))
+
+        // Act
+        val result = useCase(query = "solanaaddr").first()
+
+        // Assert
         assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN non-EVM address query with exact case WHEN invoke THEN returns matching contact`() = runTest {
+        // Arrange
+        val dave = contact(name = "Dave", address = "SoLAnaAddr", networkId = "solana")
+        every { repository.getAllContacts() } returns flowOf(listOf(alice, dave))
+
+        // Act
+        val result = useCase(query = "SoLAnaAddr").first()
+
+        // Assert
+        assertThat(result).containsExactly(dave)
     }
 
     @Test
