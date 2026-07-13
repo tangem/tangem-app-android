@@ -43,13 +43,28 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
 
     @Test
     fun `GIVEN matching pending offramp WHEN deeplink handled THEN request passes the gate`() = runTest {
-        coEvery { offrampRepository.consumePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
+        coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
 
         createHandler(validParams())
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { offrampRepository.consumePendingOfframp(requestId, userWalletId, currencyId) }
+        coVerify(exactly = 1) { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) }
         coVerify(exactly = 1) { singleAccountListSupplier.getSyncOrNull(userWalletId) }
+    }
+
+    @Test
+    fun `GIVEN matching pending offramp WHEN deeplink handled twice THEN gate passes both times`() = runTest {
+        // The pending sell is not single-use: resolving it does not remove it, so re-opening the same deeplink must
+        // pass the gate again. Guards against reintroducing single-use behavior in the handler.
+        coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
+
+        createHandler(validParams())
+        advanceUntilIdle()
+        createHandler(validParams())
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) }
+        coVerify(exactly = 2) { singleAccountListSupplier.getSyncOrNull(userWalletId) }
     }
 
     @Test
@@ -57,14 +72,14 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
         createHandler(validParams() - REQUEST_ID_KEY)
         advanceUntilIdle()
 
-        coVerify(exactly = 0) { offrampRepository.consumePendingOfframp(any(), any(), any()) }
+        coVerify(exactly = 0) { offrampRepository.resolvePendingOfframp(any(), any(), any()) }
         coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
         verify(exactly = 0) { appRouter.push(any()) }
     }
 
     @Test
     fun `GIVEN no matching pending offramp WHEN deeplink handled THEN rejected`() = runTest {
-        coEvery { offrampRepository.consumePendingOfframp(requestId, userWalletId, currencyId) } returns null
+        coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns null
 
         createHandler(validParams())
         advanceUntilIdle()
