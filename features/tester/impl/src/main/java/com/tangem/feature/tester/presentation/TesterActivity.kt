@@ -38,6 +38,8 @@ import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
 import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersScreen
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
+import com.tangem.feature.tester.presentation.sellredirect.ui.SellRedirectGeneratorScreen
+import com.tangem.feature.tester.presentation.sellredirect.viewmodels.SellRedirectGeneratorViewModel
 import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
@@ -102,6 +104,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.STORY_BOOK,
                             ButtonUM.SURVEY_SPARROW,
                             ButtonUM.BACKEND_AUTH_STATUS,
+                            ButtonUM.SELL_REDIRECT_GENERATOR,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -116,6 +119,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.STORY_BOOK -> TesterScreen.STORY_BOOK
                                 ButtonUM.SURVEY_SPARROW -> TesterScreen.SURVEY_SPARROW
                                 ButtonUM.BACKEND_AUTH_STATUS -> TesterScreen.BACKEND_AUTH_STATUS
+                                ButtonUM.SELL_REDIRECT_GENERATOR -> TesterScreen.SELL_REDIRECT_GENERATOR
                             }
 
                             innerTesterRouter.open(route)
@@ -224,6 +228,15 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 BackendAuthStatusScreen(state)
+            }
+
+            composable(route = TesterScreen.SELL_REDIRECT_GENERATOR.name) {
+                val viewModel = hiltViewModel<SellRedirectGeneratorViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                SellRedirectGeneratorScreen(state)
             }
         }
     }
