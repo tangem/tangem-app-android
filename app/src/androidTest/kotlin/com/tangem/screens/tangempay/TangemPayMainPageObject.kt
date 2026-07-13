@@ -20,6 +20,12 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    fun tileWithSubtitle(subtitle: String): KNode = child {
+        hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+        hasAnyDescendant(withText(subtitle))
+        useUnmergedTree = true
+    }
+
     val balance: KNode = child {
         hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE)
         useUnmergedTree = true
