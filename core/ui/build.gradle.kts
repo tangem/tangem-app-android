@@ -21,6 +21,10 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val iconsDir: DirectoryProperty
 
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val assetsDir: DirectoryProperty
+
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val hashFile: RegularFileProperty
@@ -48,14 +52,23 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
                 "Run: git submodule update --init --recursive"
         }
 
+        val assetsDirValue = assetsDir.get().asFile
+        require(assetsDirValue.exists() && assetsDirValue.isDirectory) {
+            "ds-tokens assets folder not found: ${assetsDirValue.absolutePath}\n" +
+                "Run: git submodule update --init --recursive"
+        }
+
         val tokensInputHash = hashTreeHex(tokensDirValue, "json")
         val iconsHash = hashTreeHex(iconsDirValue, "svg")
+        val assetsHash = hashTreeHex(assetsDirValue, "svg")
 
-        // Mirror build-tokens.mjs: sha256(tokensInputHash + 0x00 + iconsHash), all hex strings.
+        // Mirror build-tokens.mjs: sha256(tokensInputHash + 0x00 + iconsHash + 0x00 + assetsHash).
         val outer = MessageDigest.getInstance("SHA-256")
         outer.update(tokensInputHash.toByteArray())
         outer.update(0)
         outer.update(iconsHash.toByteArray())
+        outer.update(0)
+        outer.update(assetsHash.toByteArray())
         val actual = outer.digest()
             .joinToString("") { b: Byte -> b.toInt().and(0xFF).toString(16).padStart(2, '0') }
         val expected = hashFileValue.readText().trim()
@@ -116,6 +129,7 @@ android {
 val verifyDesignTokens = tasks.register<VerifyDesignTokensTask>("verifyDesignTokens") {
     tokensDir.set(file("ds-tokens/tokens"))
     iconsDir.set(file("ds-tokens/icons"))
+    assetsDir.set(file("ds-tokens/assets"))
     hashFile.set(file("src/main/java/com/tangem/core/ui/res/generated/.tokens-hash"))
     stampFile.set(layout.buildDirectory.file("tokens-verified.stamp"))
 }
