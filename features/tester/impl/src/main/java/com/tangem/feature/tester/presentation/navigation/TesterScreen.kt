@@ -18,4 +18,5 @@ internal enum class TesterScreen {
     STORY_BOOK,
     SURVEY_SPARROW,
     BACKEND_AUTH_STATUS,
+    SELL_REDIRECT_GENERATOR,
 }
