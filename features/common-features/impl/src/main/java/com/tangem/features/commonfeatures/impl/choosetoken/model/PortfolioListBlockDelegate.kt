@@ -25,7 +25,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -164,8 +163,7 @@ internal interface ClickIntents {
 private const val UM_UPDATES_THROTTLE_MS = 100L
 
 /** Emits the first value immediately, then at most one (latest) value per [windowMs]. */
-@OptIn(ExperimentalCoroutinesApi::class)
-private fun <T> Flow<T>.throttleLatest(windowMs: Long): Flow<T> = conflate().transformLatest { value ->
+private fun <T> Flow<T>.throttleLatest(windowMs: Long): Flow<T> = conflate().transform { value ->
     emit(value)
     delay(windowMs)
 }
