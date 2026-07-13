@@ -38,6 +38,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.addressbook.AddressBookSendAnalytics
 import com.tangem.features.addressbook.ContactSelectionListener
 import com.tangem.features.addressbook.MatchedContact
@@ -90,6 +91,7 @@ internal class SendDestinationModel @Inject constructor(
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    private val addressBookFeatureToggles: AddressBookFeatureToggles,
     getContactsUseCase: GetContactsUseCase,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
@@ -141,7 +143,7 @@ internal class SendDestinationModel @Inject constructor(
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
-        modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
+        syncAddressBooksIfNeeded()
         subscribeOnQRScannerResult()
         initialState()
         resetContactOnEdit()
@@ -287,6 +289,12 @@ internal class SendDestinationModel @Inject constructor(
         senderAddresses.onEach {
             getWalletsAndRecent()
         }.launchIn(modelScope)
+    }
+
+    private fun syncAddressBooksIfNeeded() {
+        if (addressBookFeatureToggles.isAddressBookEnabled) {
+            modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
+        }
     }
 
     private fun subscribeOnQRScannerResult() {
