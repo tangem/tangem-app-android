@@ -893,6 +893,7 @@
   <string name="markets_search_header_title">トークンを探す</string>
   <string name="markets_search_hint_header">最近の検索</string>
   <string name="markets_search_portfolio_header">ポートフォリオ内</string>
+  <string name="markets_search_recent_tokens_header">最近表示したトークン</string>
   <string name="markets_search_result_title">結果</string>
   <string name="markets_search_see_tokens_under_100k">時価総額10万ドル以下のトークンを見る</string>
   <string name="markets_search_show_tokens">トークンを表示</string>
@@ -1238,6 +1239,8 @@
   <string name="onramp_title_available_from">利用可能：</string>
   <string name="onramp_title_available_up_to">利用可能金額</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">このトークンはサポートされていません。別のトークンを選択して購入してください。</string>
+  <string name="onramp_token_is_not_supported_banner_title">%sはサポートされていません</string>
   <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
   <string name="onramp_up_to_rate">最大</string>
@@ -1301,7 +1304,7 @@
   <string name="quick_action_sell_description">暗号資産を安全に売却</string>
   <string name="quick_action_send_and_swap_description">別のトークンにスワップして送る</string>
   <string name="quick_action_send_description">別のウォレットに送信</string>
-  <string name="quick_action_swap_description">ポートフォリオ間で</string>
+  <string name="quick_action_swap_description">暗号資産を別の暗号資産に交換</string>
   <string name="quick_top_up_chip_other">その他</string>
   <string name="quick_top_up_title">クイック入金</string>
   <string name="receive_bottom_sheet_no_memo_required_message">メモ不要</string>
@@ -2511,7 +2514,7 @@
   <string name="yield_module_approve_sheet_fee_note">手数料が差し引かれ、暗号資産が補充されます。</string>
   <string name="yield_module_approve_sheet_subtitle">利息を継続的に生み出すには承認が必要です。</string>
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
-  <string name="yield_module_average_apy">平均APY %1$s%%</string>
+  <string name="yield_module_average_apy">現在のAPY %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">あなたの資金は現在Aaveプロトコルに預けられていますが、いつでも自由に管理できます。</string>
   <string name="yield_module_balance_info_sheet_title">%sはAaveに供給されています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
