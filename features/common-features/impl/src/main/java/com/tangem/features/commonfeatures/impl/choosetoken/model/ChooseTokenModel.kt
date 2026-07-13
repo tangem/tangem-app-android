@@ -20,7 +20,9 @@ import com.tangem.features.commonfeatures.impl.choosetoken.market.state.SwapMark
 import com.tangem.features.commonfeatures.impl.choosetoken.ui.ChooseTokenFullUM
 import com.tangem.features.commonfeatures.impl.choosetoken.ui.ChooseTokenInitialUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -77,6 +79,13 @@ internal class ChooseTokenModel @Inject constructor(
     )
 
     init {
+        if (bridge.settings.isShowMarketBlock) {
+            modelScope.launch {
+                delay(MARKETS_INITIAL_LOAD_DELAY)
+                marketBlockDelegate.loadDefaultMarkets()
+            }
+        }
+
         addToPortfolioManager.onDismiss.receiveAsFlow()
             .onEach { marketBlockDelegate.addToPortfolioSlot.dismiss() }
             .launchIn(modelScope)
@@ -128,5 +137,8 @@ internal class ChooseTokenModel @Inject constructor(
 
     companion object {
         const val DEBOUNCE_SEARCH_DELAY = 500L
+
+        /** Roughly the bottom sheet entrance animation duration. */
+        private const val MARKETS_INITIAL_LOAD_DELAY = 400L
     }
 }
