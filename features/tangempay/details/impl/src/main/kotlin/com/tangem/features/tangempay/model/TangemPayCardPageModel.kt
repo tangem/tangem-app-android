@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -24,6 +25,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
@@ -72,11 +76,12 @@ import com.tangem.core.ui.R as CoreUiR
 @ModelScoped
 internal class TangemPayCardPageModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val analytics: AnalyticsEventHandler,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
@@ -488,7 +493,16 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onClickBankTransfer() {
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-        val onramp = loaded.virtualAccount ?: return
+        when (val onramp = loaded.virtualAccount) {
+            null -> return
+            is VirtualAccountOnramp.BankCredentialsError -> showVaBankingDetailsError()
+            is VirtualAccountOnramp.Available,
+            VirtualAccountOnramp.Eligible,
+            -> openVirtualAccountDeposit(onramp, loaded)
+        }
+    }
+
+    private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
@@ -498,6 +512,31 @@ internal class TangemPayCardPageModel @Inject constructor(
                 paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
             ),
         )
+    }
+
+    private fun showVaBankingDetailsError() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.VaBankingDetailsError(userWalletId = userWalletId),
+        )
+    }
+
+    fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        openVirtualAccountDeposit(onramp, loaded)
+    }
+
+    fun onContactSupportClicked() {
+        analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
+        val customerId = currentStatus.value.ifLoadedOrNull { it.customerId } ?: return
+        modelScope.launch {
+            sendFeedbackEmailUseCase.invoke(
+                type = FeedbackEmailType.Visa.FeatureIsBeta(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                    customerId = customerId,
+                ),
+            )
+        }
     }
 
     fun onVirtualAccountOrderCreated() {
