@@ -100,9 +100,10 @@ internal class DefaultAddressBookRepository(
             writeMutex.withLock {
                 val userWallet = findUserWallet(contact.walletId.stringValue)
                     ?: return@withLock AddressBookSyncError.Unknown.left()
-                val current = currentContacts(contact.walletId, userWallet)
-                val merged = current.filterNot { it.id == contact.id } + contact
-                persist(userWallet, AddressBook(contacts = merged))
+                currentContacts(contact.walletId, userWallet).flatMap { current ->
+                    val merged = current.filterNot { it.id == contact.id } + contact
+                    persist(userWallet, AddressBook(contacts = merged))
+                }
             }
         }
 
@@ -181,9 +182,28 @@ internal class DefaultAddressBookRepository(
         )
     }
 
-    private suspend fun currentContacts(userWalletId: UserWalletId, userWallet: UserWallet): List<Contact> {
-        val blob = blobStore.getBlobSync(userWalletId) ?: return emptyList()
-        return decryptContacts(blob, userWallet)
+    /**
+     * The contacts currently stored for [userWalletId], as the base a write is merged onto.
+     *
+     * A missing blob means no book exists yet → an empty base, so the first contact legitimately creates it.
+     * But a blob that fails to decrypt must surface as [AddressBookSyncError.DecryptionFailed] rather than an empty
+     * list: treating a broken book as empty would let a merged write overwrite the (non-empty) backend copy with a
+     * book built from a single new contact, wiping every existing one.
+     */
+    private suspend fun currentContacts(
+        userWalletId: UserWalletId,
+        userWallet: UserWallet,
+    ): Either<AddressBookSyncError, List<Contact>> {
+        val blob = blobStore.getBlobSync(userWalletId) ?: return emptyList<Contact>().right()
+        return cipher.decrypt(blob, userWallet)
+            .map { it.contacts }
+            .mapLeft { error ->
+                logger.e(
+                    "Refusing to overwrite address book for wallet $userWalletId: it is stored but decrypt " +
+                        "failed with $error",
+                )
+                AddressBookSyncError.DecryptionFailed
+            }
     }
 
     /**

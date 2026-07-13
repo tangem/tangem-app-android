@@ -22,6 +22,13 @@ sealed interface AddressBookSyncError {
     /** No network or the request could not be completed. */
     data object Network : AddressBookSyncError
 
+    /**
+     * The wallet already has a stored book that could not be decrypted. The write is refused so the broken
+     * (but non-empty) backend book is not overwritten by a fresh one built on the device — see
+     * [com.tangem.domain.addressbook.repository.AddressBookRepository.saveContact].
+     */
+    data object DecryptionFailed : AddressBookSyncError
+
     /** Any other unexpected failure (encryption, missing data, unmapped HTTP code). */
     data object Unknown : AddressBookSyncError
 }
