@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingCampaignTarget
 import com.tangem.domain.marketing.models.MarketingScreen
-import com.tangem.domain.marketing.models.MarketingScreenType
+import com.tangem.domain.marketing.models.matchesUsdAmount
 import java.math.BigDecimal
 
 class GetMarketingBannerUseCase(
@@ -28,7 +28,7 @@ class GetMarketingBannerUseCase(
             campaigns.asSequence()
                 .filterNot { it.id in dismissed }
                 .filter { matchesTarget(it, screen) }
-                .filter { matchesAmount(it, amountUsd) }
+                .filter { it.matchesUsdAmount(amountUsd) }
                 .sortedBy { it.priority }
                 .toList()
         }
@@ -70,16 +70,5 @@ class GetMarketingBannerUseCase(
                 normalizedTarget.equals(normalizedScreen, ignoreCase = true)
             else -> false
         }
-    }
-
-    private fun matchesAmount(campaign: MarketingCampaign, amountUsd: BigDecimal?): Boolean {
-        val isAmountScreen = campaign.type == MarketingScreenType.SWAP || campaign.type == MarketingScreenType.ONRAMP
-        if (!isAmountScreen || amountUsd == null) return true
-
-        val min = campaign.minAmount
-        val max = campaign.maxAmount
-        if (min != null && amountUsd < min) return false
-        if (max != null && amountUsd > max) return false
-        return true
     }
 }
