@@ -27,7 +27,6 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -88,7 +87,7 @@ internal class DefaultAddressBookRepositoryTest {
     }
 
     @Test
-    fun `GIVEN blob WHEN getContacts THEN syncs before reading contacts`() = runTest {
+    fun `GIVEN blob WHEN getContacts THEN does not sync on collection`() = runTest {
         // Arrange
         val contact = createContact(id = "c1", name = "Alice")
         val blob = createBlob()
@@ -99,10 +98,8 @@ internal class DefaultAddressBookRepositoryTest {
         repository.getContacts(UserWalletId(WALLET_A)).first()
 
         // Assert
-        coVerifyOrder {
-            addressBookApi.syncAddressBooks(any())
-            cipher.decrypt(blob, userWallet)
-        }
+        // Sync is now triggered by the feature entry points, not on flow collection.
+        coVerify(exactly = 0) { addressBookApi.syncAddressBooks(any()) }
     }
 
     @Test
@@ -122,7 +119,7 @@ internal class DefaultAddressBookRepositoryTest {
     }
 
     @Test
-    fun `GIVEN blob WHEN getAllContacts THEN syncs before reading contacts`() = runTest {
+    fun `GIVEN blob WHEN getAllContacts THEN does not sync on collection`() = runTest {
         // Arrange
         val contact = createContact(id = "c1", name = "Alice")
         val blob = createBlob()
@@ -134,10 +131,8 @@ internal class DefaultAddressBookRepositoryTest {
         repository.getAllContacts().first()
 
         // Assert
-        coVerifyOrder {
-            addressBookApi.syncAddressBooks(any())
-            cipher.decrypt(blob, userWallet)
-        }
+        // Sync is now triggered by the feature entry points, not on flow collection.
+        coVerify(exactly = 0) { addressBookApi.syncAddressBooks(any()) }
     }
 
     @Test
