@@ -59,7 +59,6 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -83,6 +82,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
@@ -98,7 +98,7 @@ internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -142,7 +142,7 @@ private fun WalletContent(
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
     onAutoScrollReset: () -> Unit,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -226,7 +226,11 @@ private fun WalletContent(
 
                 promoBannersBlockComponent?.let { component ->
                     item(key = "PromoBannersBlock") {
-                        component.Content(modifier = itemModifier)
+                        component.ContentWithPadding(
+                            horizontalItemPadding = 12.dp,
+                            modifier = itemModifier,
+                            walletId = null,
+                        )
                     }
                 }
 
