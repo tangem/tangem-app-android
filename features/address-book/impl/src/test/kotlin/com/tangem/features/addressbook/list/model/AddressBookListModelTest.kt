@@ -1,13 +1,14 @@
 package com.tangem.features.addressbook.list.model
 
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.*
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.ContactSelectionTrigger
@@ -20,9 +21,11 @@ import com.tangem.features.addressbook.list.ui.state.ContentMode
 import com.tangem.features.addressbook.route.AddressBookRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -44,14 +47,21 @@ internal class AddressBookListModelTest {
     private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
 
     private var model: AddressBookListModel? = null
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getVerifiedContactsInteractor, getWalletsUseCase, analyticsSender, contactSelectionTrigger)
+        clearMocks(
+            getVerifiedContactsInteractor,
+            getWalletsUseCase,
+            analyticsSender,
+            contactSelectionTrigger,
+            syncAddressBooksUseCase,
+        )
         every { getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true) } returns
-            flowOf(linkedMapOf<UserWalletId, UserWallet>())
+            flowOf(linkedMapOf())
     }
 
     @AfterEach
@@ -70,6 +80,29 @@ internal class AddressBookListModelTest {
 
         // Assert — shimmer placeholder until the first emission arrives.
         assertThat(model.state.value).isEqualTo(AddressBookListUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN cached contacts AND sync in progress WHEN created THEN stays Loading until sync completes`() = runTest {
+        // Arrange — contacts are already cached locally, but the open-time sync has not returned yet.
+        val syncGate = CompletableDeferred<Unit>()
+        coEvery { syncAddressBooksUseCase() } coAnswers { syncGate.await(); Unit.right() }
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
+            flowOf(listOf(verifiedContact(id = "1", name = "Alice")))
+
+        // Act
+        val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
+        advanceUntilIdle()
+
+        // Assert — the possibly-stale cache is not revealed while the sync is still running.
+        assertThat(model.state.value).isEqualTo(AddressBookListUM.Loading)
+
+        // Act — the sync finishes.
+        syncGate.complete(Unit)
+        advanceUntilIdle()
+
+        // Assert — the list is revealed only after the sync completed.
+        assertThat(model.state.value).isInstanceOf(AddressBookListUM.Content::class.java)
     }
 
     @Test
@@ -212,6 +245,7 @@ internal class AddressBookListModelTest {
             router = router,
             contactSelectionTrigger = contactSelectionTrigger,
             analyticsSender = analyticsSender,
+            syncAddressBooksUseCase = syncAddressBooksUseCase,
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             getWalletsUseCase = getWalletsUseCase,
         ).also { model = it }
