@@ -3,10 +3,12 @@ package com.tangem.domain.promo.models
 import kotlinx.datetime.Instant
 
 data class PromoPayoutToken(
+    val tokenId: String,
     val tokenAddress: String,
     val tokenSymbol: String,
     val tokenName: String,
     val networkId: String,
+    val decimals: Int,
 )
 
 data class PromoTimeline(
