@@ -709,6 +709,7 @@
   <string name="generic_error">Ocurrió un error</string>
   <string name="generic_error_code">Ocurrió un error. Código: %s</string>
   <string name="generic_requires_memo_error">Requiere memo</string>
+  <string name="get_token_title">Obtener %1$s</string>
   <string name="give_permission_current_transaction">Esta transacción</string>
   <string name="give_permission_policy_type_footer">Al aprobar, permite que el contrato inteligente utilice sus tokens en transacciones futuras.</string>
   <string name="give_permission_rows_amount">Montante %s</string>

@@ -377,6 +377,7 @@
   <string name="common_from">З</string>
   <string name="common_from_wallet_name">З %s</string>
   <string name="common_generate_addresses">Синхронізувати адреси</string>
+  <string name="common_get">Поповнити</string>
   <string name="common_get_started">Почати</string>
   <string name="common_get_token">Отримати токен</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
@@ -748,6 +749,7 @@
   <string name="generic_error">Виникла помилка</string>
   <string name="generic_error_code">Виникла помилка. Код: %s.</string>
   <string name="generic_requires_memo_error">Вимагається memo</string>
+  <string name="get_token_title">Поповнити %1$s</string>
   <string name="give_permission_current_transaction">Транзакція</string>
   <string name="give_permission_policy_type_footer">Вкажіть ліміт доступу для обраного токена</string>
   <string name="give_permission_rows_amount">Кількість %s</string>
