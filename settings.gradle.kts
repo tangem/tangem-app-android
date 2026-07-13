@@ -339,6 +339,9 @@ include(":features:feed:impl")
 include(":features:promo-banners:api")
 include(":features:promo-banners:impl")
 
+include(":features:marketing:api")
+include(":features:marketing:impl")
+
 include(":features:payment:api")
 include(":features:payment:impl")
 
