@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -37,6 +38,7 @@ internal class ContactsBlockModelTest {
 
     private val getContactsUseCase: GetContactsUseCase = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
     private val network: Network = mockk { every { rawId } returns ETHEREUM }
 
@@ -134,6 +136,7 @@ internal class ContactsBlockModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             stateController = ContactsBlockStateController(),
             analyticsSender = analyticsSender,
+            syncAddressBooksUseCase = syncAddressBooksUseCase,
             getContactsUseCase = getContactsUseCase,
             getWalletsUseCase = getWalletsUseCase,
         ).also { model = it }
