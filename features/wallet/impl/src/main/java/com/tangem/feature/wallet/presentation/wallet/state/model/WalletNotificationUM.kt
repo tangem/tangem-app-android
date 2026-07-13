@@ -24,6 +24,7 @@ import com.tangem.core.ui.R as CoreUiR
  */
 internal enum class WalletNotificationType {
     Status,
+    AddFundsPromo,
     Critical,
     Warning,
     Promo,
@@ -367,7 +368,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 ),
             ),
         ),
-        type = WalletNotificationType.Promo,
+        type = WalletNotificationType.AddFundsPromo,
     )
 
     data class NoteMigration(val onClick: () -> Unit) : WalletNotificationUM(
