@@ -1924,6 +1924,10 @@
     <item quantity="one">%d Karte</item>
     <item quantity="other">%d Karten</item>
   </plurals>
+  <string name="tangempay_cashback_deactivated_description">Dies geschah aufgrund Ihres verdächtigen Verhaltens. Wenden Sie sich an den Support, um mehr zu erfahren.</string>
+  <string name="tangempay_cashback_deactivated_title">Cashback deaktiviert</string>
+  <string name="tangempay_cashback_deposited_on">Wird eingezahlt am %1$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s Cashback in %2$s</string>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
@@ -2066,6 +2070,8 @@
   <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
+  <string name="tangempay_va_banking_details_error_description">Bitte versuche es später erneut. Sollte das Problem weiterhin bestehen, kontaktiere bitte unseren Support. Wir helfen Dir gerne bei der Lösung.</string>
+  <string name="tangempay_va_banking_details_error_title">Die Bankdaten konnten nicht geladen werden</string>
   <string name="tangempay_visa_benefits">Visavorteile</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
