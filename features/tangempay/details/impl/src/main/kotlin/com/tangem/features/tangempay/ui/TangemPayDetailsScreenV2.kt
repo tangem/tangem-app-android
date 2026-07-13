@@ -118,6 +118,15 @@ internal fun TangemPayDetailsScreenV2(
                 ),
             ) {
                 payDetailsBody(state)
+                state.cashbackBlockState?.let { cashbackState ->
+                    item("cashbackBlock") {
+                        SpacerH12()
+                        CashbackBlock(
+                            state = cashbackState,
+                            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                        )
+                    }
+                }
                 item("promoBannersBlock") {
                     promoBannersBlockComponent.Content(
                         modifier = Modifier.padding(vertical = 12.dp),
