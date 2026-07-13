@@ -59,7 +59,7 @@ internal class DefaultOfframpRepository(
             requestId
         }
 
-    override suspend fun consumePendingOfframp(
+    override suspend fun resolvePendingOfframp(
         requestId: String,
         userWalletId: UserWalletId,
         currencyId: String,
@@ -73,15 +73,17 @@ internal class DefaultOfframpRepository(
                     entry.currencyId == currencyId &&
                     now - entry.createdAt < EXPIRY_MS
             }
-            // Remove only the fully-matched record (single-use); always prune expired ones. A request_id that
-            // matches but with a mismatched wallet/currency is left intact so a tampered redirect cannot burn it.
-            stored.filter { it != matched }.filterNotExpired(now)
+            // Keep the matched record so the same redirect can be followed again until it expires; only prune the
+            // expired ones. The record is dropped naturally once it ages past EXPIRY_MS.
+            stored.filterNotExpired(now)
         }
         matched?.let(pendingOfframpConverter::convert)
     }
 
+    // Returns the same instance when nothing is expired, so DataStore.updateData sees an unchanged value and skips
+    // both the extra allocation and the write.
     private fun List<PendingOfframpEntry>.filterNotExpired(now: Long): List<PendingOfframpEntry> =
-        filter { now - it.createdAt < EXPIRY_MS }
+        if (none { now - it.createdAt >= EXPIRY_MS }) this else filter { now - it.createdAt < EXPIRY_MS }
 
     private companion object {
         val EXPIRY_MS: Long = TimeUnit.HOURS.toMillis(1)
