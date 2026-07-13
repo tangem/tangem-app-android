@@ -68,7 +68,7 @@ internal class AddressBookListModel @Inject constructor(
             .shareIn(modelScope, SharingStarted.Lazily, replay = 1)
 
     init {
-        modelScope.launch(context = dispatchers.default) {
+        modelScope.launch {
             syncAddressBooksUseCase()
             sendContactListScreenOpenedEvent()
             observeContacts()
