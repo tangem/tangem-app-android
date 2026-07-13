@@ -34,6 +34,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import com.tangem.test.core.ProvideTestModels
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -695,6 +697,43 @@ internal class DexSwapFeeCalculatorTest {
             assertThat(error).isEqualTo(GetFeeError.UnknownError)
         }
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `UTXO DEX reads the PSBT fee from the wallet manager and skips the gas patch`(
+        blockchain: Blockchain,
+    ) = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = blockchain.toNetworkId(), isCoin = true)
+        val transaction = buildDex(txData = "cHNidP8B-base64-psbt", gas = null)
+
+        coEvery {
+            walletManagersFacade.getPsbtFee(any(), any(), psbtBase64 = "cHNidP8B-base64-psbt")
+        } returns BigDecimal("1329")
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        coVerify(exactly = 0) {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        }
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(userWallet = any(), cryptoCurrency = any(), gasLimit = any())
+        }
+        coVerify(exactly = 1) {
+            walletManagersFacade.getPsbtFee(any(), any(), psbtBase64 = "cHNidP8B-base64-psbt")
+        }
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            assertThat(dexFeeResult.transactionFee).isInstanceOf(TransactionFeeResult.Loaded::class.java)
+            assertThat(dexFeeResult.gas).isNull()
+        }
+    }
+
+    private fun provideTestModels() = listOf(
+        Blockchain.Litecoin,
+        Blockchain.Dogecoin,
+        Blockchain.Dash,
+        Blockchain.BitcoinCash,
+    )
 
     // -------------------------------------------------------------------------
     // Integrated-approve simulated estimation override ([REDACTED_TASK_KEY])

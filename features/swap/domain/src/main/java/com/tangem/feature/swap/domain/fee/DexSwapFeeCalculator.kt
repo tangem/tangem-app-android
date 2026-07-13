@@ -34,7 +34,7 @@ import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoinBasedPsbtSwap
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.logging.TangemLogger
@@ -85,7 +85,7 @@ class DexSwapFeeCalculator(
             ?: BigDecimal.ZERO
 
         when {
-            isBitcoin(networkRawId) -> calculateBitcoinFee(
+            isBitcoinBasedPsbtSwap(networkRawId) -> calculateBitcoinFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 nativeCoinDecimals = nativeCoinDecimals,
