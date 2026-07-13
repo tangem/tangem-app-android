@@ -717,6 +717,7 @@
   <string name="generic_error">エラーが発生しました</string>
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
+  <string name="get_token_title">%1$sを入手</string>
   <string name="give_permission_current_transaction">取引</string>
   <string name="give_permission_policy_type_footer">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="give_permission_rows_amount">金額%s</string>
@@ -733,6 +734,8 @@
   <string name="hardware_wallet_key_feature_title">鍵生成</string>
   <string name="hardware_wallet_security_feature_description">すべての暗号処理は、複製や物理的な改ざんに対する認証を受けたセキュアチップ内で行われます。</string>
   <string name="hardware_wallet_security_feature_title">ハードウェアレベルのセキュリティ</string>
+  <string name="high_fee_warning_description">ネットワークが混雑しています。今すぐ続けることもできますが、後でお試しいただくと、手数料が安くなる場合があります。</string>
+  <string name="high_fee_warning_title">ネットワーク手数料が通常より高くなっています</string>
   <string name="home_button_add_existing_wallet">既存のウォレットを追加</string>
   <string name="home_button_create_new_wallet">新しいウォレットを作成する</string>
   <string name="home_button_order">Tangemを注文</string>
