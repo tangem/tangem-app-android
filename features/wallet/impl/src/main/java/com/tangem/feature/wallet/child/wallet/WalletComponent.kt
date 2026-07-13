@@ -25,7 +25,6 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
-import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
@@ -36,6 +35,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
@@ -295,14 +295,10 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
-        val promoBannersBlockComponentContentComponent = ComposableContentComponent { promoModifier ->
-            promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 12.dp)
-        }
-
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
                 state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponentContentComponent,
+                promoBannersBlockComponent = promoBannersBlockComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
                 virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->
@@ -319,7 +315,7 @@ internal class WalletComponent @AssistedInject constructor(
         } else {
             WalletScreen(
                 state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponentContentComponent,
+                promoBannersBlockComponent = promoBannersBlockComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
                 virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->
