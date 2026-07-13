@@ -1,5 +1,6 @@
 package com.tangem.features.commonfeatures.impl.choosetoken.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.card.WalletData
@@ -45,7 +46,7 @@ internal class MarketBlockDelegateTest {
     private val marketsListBatchFlowManagerFactory: MarketsListBatchFlowManager.Factory = mockk()
     private val excludedBlockchains: ExcludedBlockchains = mockk(relaxed = true)
     private val getUserWalletsUseCase: GetWalletsUseCase = mockk(relaxed = true)
-    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk()
+    private val addToPortfolioManager: AddToPortfolioManager = mockk(relaxed = true)
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
 
     private val defaultManager: MarketsListBatchFlowManager = mockk(relaxed = true)
@@ -61,7 +62,6 @@ internal class MarketBlockDelegateTest {
     fun setup() {
         clearMocks(
             marketsListBatchFlowManagerFactory,
-            addToPortfolioManagerFactory,
             singleAccountStatusListSupplier,
             defaultManager,
             searchManager,
@@ -86,7 +86,6 @@ internal class MarketBlockDelegateTest {
                 any()
             )
         } returns searchManager
-        every { addToPortfolioManagerFactory.create(any(), any(), any()) } returns mockk(relaxed = true)
 
         every { defaultManager.uiItems } returns defaultUiItems
         every { defaultManager.isInInitialLoadingErrorState } returns MutableStateFlow(false)
@@ -206,13 +205,13 @@ internal class MarketBlockDelegateTest {
             marketsListBatchFlowManagerFactory = marketsListBatchFlowManagerFactory,
             excludedBlockchains = excludedBlockchains,
             getUserWalletsUseCase = getUserWalletsUseCase,
-            addToPortfolioManagerFactory = addToPortfolioManagerFactory,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             modelScope = backgroundScope,
             searchQueryState = searchQueryState,
-            screensSourcesName = "test",
             selectedWalletFlow = selectedWalletFlow,
             shouldShowSingleCurrencyWallets = showSingleCurrencyWallets,
+            addToPortfolioManager = addToPortfolioManager,
+            addToPortfolioSlot = SlotNavigation(),
         )
     }
 
