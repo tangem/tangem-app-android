@@ -4,6 +4,7 @@ import com.tangem.domain.marketing.DismissMarketingBannerUseCase
 import com.tangem.domain.marketing.GetMarketingBannerUseCase
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingRepository
+import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,4 +26,11 @@ internal object MarketingDomainModule {
     @Singleton
     fun provideDismissMarketingBannerUseCase(repository: MarketingRepository): DismissMarketingBannerUseCase =
         DismissMarketingBannerUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideWarmUpMarketingCampaignsUseCase(
+        repository: MarketingRepository,
+        featureToggles: MarketingFeatureToggles,
+    ): WarmUpMarketingCampaignsUseCase = WarmUpMarketingCampaignsUseCase(repository, featureToggles)
 }
