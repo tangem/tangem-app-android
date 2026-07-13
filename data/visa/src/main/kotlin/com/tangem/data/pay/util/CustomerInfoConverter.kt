@@ -92,6 +92,15 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             cardStatus = TangemPayCard.Status.fromString(card.cardStatus),
             lastFourDigits = card.cardNumberEnd,
             isPinSet = card.isPinSet == true,
+            images = card.images.orEmpty().mapNotNull(::convertCardImage),
+        )
+    }
+
+    private fun convertCardImage(image: CustomerMeResponse.Image): TangemPayTariffPlan.Image? {
+        val url = image.url ?: return null
+        return TangemPayTariffPlan.Image(
+            type = TangemPayTariffPlan.Image.Type.fromString(image.type),
+            url = url,
         )
     }
 
