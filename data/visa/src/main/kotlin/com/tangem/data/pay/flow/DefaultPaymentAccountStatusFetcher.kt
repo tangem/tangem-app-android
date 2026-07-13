@@ -408,7 +408,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
                 ifLeft = { error ->
                     logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
-                    null
+                    VirtualAccountOnramp.BankCredentialsError
                 },
                 ifRight = { credentials ->
                     VirtualAccountOnramp.Available(
