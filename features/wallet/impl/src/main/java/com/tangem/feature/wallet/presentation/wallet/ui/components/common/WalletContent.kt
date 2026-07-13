@@ -10,12 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
-import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -26,6 +26,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollection
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
 import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
@@ -40,7 +41,8 @@ internal fun WalletListContent(
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
+    walletId: String? = null,
 ) {
     val containerColor = TangemTheme.colors2.surface.level1
 
@@ -67,7 +69,11 @@ internal fun WalletListContent(
 
         promoBannersBlockComponent?.let { component ->
             item(key = "PromoBannersBlock") {
-                component.Content(modifier = Modifier.padding(top = TangemTheme.dimens2.x3))
+                component.ContentWithPadding(
+                    horizontalItemPadding = 12.dp,
+                    modifier = Modifier.padding(top = TangemTheme.dimens2.x3),
+                    walletId = walletId,
+                )
             }
         }
 
