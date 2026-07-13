@@ -93,6 +93,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.marketing)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
