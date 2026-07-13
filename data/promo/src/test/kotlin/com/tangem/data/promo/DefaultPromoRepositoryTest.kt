@@ -54,7 +54,16 @@ internal class DefaultPromoRepositoryTest {
         name = campaign.slug,
         all = All(
             timeline = Timeline("2026-06-23T00:00:00.000Z", "2026-08-31T20:59:59.000Z"),
-            tokens = listOf(PromoToken("0xToken", "USDT", "Tether USD", "ethereum")),
+            tokens = listOf(
+                PromoToken(
+                    tokenId = "tether",
+                    tokenAddress = "0xToken",
+                    tokenSymbol = "USDT",
+                    tokenName = "Tether USD",
+                    networkId = "ethereum",
+                    decimals = 6,
+                ),
+            ),
             status = "active",
             link = "",
         ),
