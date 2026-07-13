@@ -284,6 +284,25 @@ internal class DefaultAddressBookRepositoryTest {
     }
 
     @Test
+    fun `GIVEN stored book that fails to decrypt WHEN saveContact THEN returns DecryptionFailed and pushes nothing`() =
+        runTest {
+            // Arrange
+            val storedBlob = createBlob()
+            coEvery { blobStore.getBlobSync(UserWalletId(WALLET_A)) } returns storedBlob
+            every { cipher.decrypt(storedBlob, userWallet) } returns AddressBookCryptoError.DecryptionFailed.left()
+
+            // Act
+            val result = repository.saveContact(createContact(id = "c2", name = "Bob"))
+
+            // Assert
+            assertThat(result).isEqualTo(AddressBookSyncError.DecryptionFailed.left())
+            // The broken book is left untouched: nothing is encrypted, pushed, or stored.
+            coVerify(exactly = 0) { addressBookApi.updateAddressBook(any(), any(), any()) }
+            coVerify(exactly = 0) { blobStore.storeBlob(any()) }
+            coVerify(exactly = 0) { eTagsStore.store(any(), any(), any()) }
+        }
+
+    @Test
     fun `GIVEN existing contact id WHEN saveContact THEN replaces it`() = runTest {
         // Arrange
         val original = createContact(id = "c1", name = "Alice")
