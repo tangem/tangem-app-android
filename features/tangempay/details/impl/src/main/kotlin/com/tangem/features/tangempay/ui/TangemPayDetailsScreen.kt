@@ -491,6 +491,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
+                            imageUrl = null,
                             onClick = {},
                             isEnabled = false,
                             isFrozen = false,
@@ -498,6 +499,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         ),
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
+                            imageUrl = null,
                             onClick = {},
                             isEnabled = true,
                             isFrozen = false,
@@ -531,6 +533,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
+                            imageUrl = null,
                             onClick = {},
                             isFrozen = false,
                             isEnabled = true,
