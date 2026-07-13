@@ -12,4 +12,10 @@ interface CashbackRepository {
 
     /** Loads the cashback summary for the customer of [userWalletId]. */
     suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary>
+
+    /** Whether the "Cashback deactivated" banner was permanently dismissed for [userWalletId]. */
+    suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean
+
+    /** Permanently dismisses the "Cashback deactivated" banner for [userWalletId]. */
+    suspend fun setDeactivationBannerDismissed(userWalletId: UserWalletId)
 }

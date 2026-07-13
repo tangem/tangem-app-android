@@ -43,6 +43,10 @@ dependencies {
     api(tangemDeps.hot.core)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    // AndroidSecureStorageV2 for TangemPay secure token storage (see com.tangem.data.pay.store).
+    implementation(tangemDeps.card.android) {
+        exclude(module = "joda-time")
+    }
     // endregion
 
     // region DI

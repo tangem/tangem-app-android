@@ -36,12 +36,16 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
+import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.pay.usecase.SetCashbackDeactivationDismissedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayIssueAdditionalCardComponent
@@ -88,6 +92,9 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
+    private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
+    private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
+    private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -128,6 +135,8 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
+    private val cashbackBlockJobHolder = JobHolder()
+    private val cashbackDateFormatter = TangemPayCashbackDateFormatter()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -155,6 +164,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchAddToWalletBanner()
+                        fetchCashbackBlock()
                         val balanceTransformer = DetailsBalanceTransformer(
                             fiatBalance = state.balance.fiatBalance,
                             isMuted = !state.isFresh,
@@ -263,6 +273,31 @@ internal class TangemPayDetailsModel @Inject constructor(
                 ),
             )
         }.saveIn(addToWalletBannerJobHolder)
+    }
+
+    private fun fetchCashbackBlock() {
+        if (!tangemPayFeatureToggles.isCashbackEnabled) return
+        modelScope.launch {
+            getCashbackSummaryUseCase(userWalletId).onRight { summary ->
+                val isDismissed = getCashbackDeactivationDismissedUseCase(userWalletId)
+                uiState.update(
+                    transformer = CashbackBlockTransformer(
+                        summary = summary,
+                        isDeactivationDismissed = isDismissed,
+                        dateFormatter = cashbackDateFormatter,
+                        onClick = ::onClickCashback,
+                        onGotIt = ::onDismissCashbackDeactivation,
+                    ),
+                )
+            }
+        }.saveIn(cashbackBlockJobHolder)
+    }
+
+    private fun onDismissCashbackDeactivation() {
+        modelScope.launch {
+            setCashbackDeactivationDismissedUseCase(userWalletId)
+            uiState.update { it.copy(cashbackBlockState = null) }
+        }.saveIn(cashbackBlockJobHolder)
     }
 
     private fun handleBalanceHiding() {

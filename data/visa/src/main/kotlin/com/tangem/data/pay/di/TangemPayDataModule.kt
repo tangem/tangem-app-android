@@ -307,6 +307,20 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetCashbackDeactivationDismissedUseCase(
+            cashbackRepository: CashbackRepository,
+        ): GetCashbackDeactivationDismissedUseCase {
+            return GetCashbackDeactivationDismissedUseCase(cashbackRepository)
+        }
+
+        @Provides
+        fun provideSetCashbackDeactivationDismissedUseCase(
+            cashbackRepository: CashbackRepository,
+        ): SetCashbackDeactivationDismissedUseCase {
+            return SetCashbackDeactivationDismissedUseCase(cashbackRepository)
+        }
+
+        @Provides
         fun provideCheckOrderConflictUseCase(
             customerOrderRepository: CustomerOrderRepository,
         ): CheckOrderConflictUseCase {

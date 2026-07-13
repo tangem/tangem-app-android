@@ -1,4 +1,4 @@
-package com.tangem.tap.data
+package com.tangem.data.pay.store
 
 import android.content.Context
 import com.squareup.moshi.JsonAdapter
@@ -14,7 +14,6 @@ import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
@@ -128,6 +127,19 @@ internal class DefaultTangemPayStorage @Inject constructor(
 
     override suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean) {
         appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), isDone)
+    }
+
+    override suspend fun getCashbackDeactivationDismissed(customerWalletAddress: String): Boolean {
+        return appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.getTangemPayCashbackDeactivationDismissedKey(customerWalletAddress),
+        ) == true
+    }
+
+    override suspend fun storeCashbackDeactivationDismissed(customerWalletAddress: String, isDismissed: Boolean) {
+        appPreferencesStore.store(
+            key = PreferencesKeys.getTangemPayCashbackDeactivationDismissedKey(customerWalletAddress),
+            value = isDismissed,
+        )
     }
 
     override suspend fun clearOrderId(customerWalletAddress: String) {
