@@ -85,7 +85,7 @@ internal class CampaignsModel @Inject constructor(
             when (campaignState) {
                 is PromoCampaignState.Enrolled,
                 is PromoCampaignState.Available,
-                -> CampaignsBottomSheetConfig.Activate(campaignType)
+                -> CampaignsBottomSheetConfig.Activate(campaignType, userWalletId)
                 is PromoCampaignState.NotActive -> CampaignsBottomSheetConfig.NotActive
             }
         },
