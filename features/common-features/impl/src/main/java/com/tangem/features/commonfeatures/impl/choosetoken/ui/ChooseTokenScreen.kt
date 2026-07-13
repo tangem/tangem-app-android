@@ -3,6 +3,7 @@ package com.tangem.features.commonfeatures.impl.choosetoken.ui
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -160,7 +161,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
     val lazyListState = rememberLazyListState()
 
-    TangemSharedTransitionLayout(modifier) {
+    Box(modifier) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -228,10 +229,13 @@ private fun SetupMarketScrollTracker(marketsState: SwapMarketState, lazyListStat
 
 @Composable
 private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapMarketState.Content) {
-    val visibleItems by remember {
+    val keyToId = remember(marketState.items) {
+        marketState.items.associateBy({ it.getComposeKey() }, { it.id })
+    }
+    val visibleItems by remember(keyToId) {
         derivedStateOf {
             lazyListState.layoutInfo.visibleItemsInfo.mapNotNull { itemInfo ->
-                marketState.items.find { it.getComposeKey() == itemInfo.key }?.id
+                (itemInfo.key as? String)?.let(keyToId::get)
             }
         }
     }
@@ -476,7 +480,7 @@ private fun AccountRow(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ProvideSharedTransitionScope(Modifier.weight(1f)) {
+        AccountRowSharedTransitionLayout(Modifier.weight(1f)) {
             val iconSharedContentState = rememberSharedContentState(key = "account-icon-${portfolio.id}")
             val titleSharedContentState = rememberSharedContentState(key = "account-title-${portfolio.id}")
             val boundsTransform = BoundsTransform { _, _ -> tween(ACCOUNT_BOUNDS_ANIM_MS) }
@@ -528,9 +532,7 @@ private fun AccountRow(
                             )
                             val startStyle = TangemTheme.typography2.captionSemibold12
                             val stopStyle = TangemTheme.typography2.bodySemibold16
-                            val textStyle by remember(animationFraction.value) {
-                                derivedStateOf { lerp(startStyle, stopStyle, animationFraction.value) }
-                            }
+                            val textStyle = lerp(startStyle, stopStyle, animationFraction.value)
                             val resizedTitle = when (val titleUM = tokenRowUM.titleUM) {
                                 is TangemTokenRowUM.TitleUM.Content -> titleUM.copy(
                                     text = styledStringReference(
@@ -576,6 +578,17 @@ private fun AccountRow(
             isExpanded = portfolio.isExpanded,
             onClick = { tokenRowUM.onItemClick?.invoke() },
         )
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun AccountRowSharedTransitionLayout(
+    modifier: Modifier = Modifier,
+    content: @Composable SharedTransitionScope.() -> Unit,
+) {
+    TangemSharedTransitionLayout(modifier) {
+        ProvideSharedTransitionScope(content = content)
     }
 }
 
