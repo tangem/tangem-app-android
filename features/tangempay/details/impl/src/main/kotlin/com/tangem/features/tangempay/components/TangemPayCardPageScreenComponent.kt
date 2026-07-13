@@ -130,6 +130,15 @@ internal class TangemPayCardPageScreenComponent(
                     onFieldCopied = model::onVaFieldCopied,
                 ),
             )
+            is TangemPayCardNavigation.VaBankingDetailsError -> TangemPayVaBankingDetailsErrorComponent(
+                appComponentContext = context,
+                params = TangemPayVaBankingDetailsErrorComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onContactSupport = model::onContactSupportClicked,
+                    onResolved = model::onVaBankingDetailsResolved,
+                ),
+            )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(
                 context = context,
                 params = TokenReceiveComponent.Params(
