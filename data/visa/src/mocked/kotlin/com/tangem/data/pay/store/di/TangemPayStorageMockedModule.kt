@@ -1,7 +1,7 @@
-package com.tangem.tap.di.data
+package com.tangem.data.pay.store.di
 
-import com.tangem.datasource.local.visa.TangemPayStorage
-import com.tangem.tap.data.MockAwareTangemPayStorage
+import com.tangem.data.pay.store.MockAwareTangemPayStorage
+import com.tangem.data.pay.store.TangemPayStorage
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
