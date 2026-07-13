@@ -55,7 +55,6 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
-import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
@@ -74,12 +73,15 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletPagerIndicator
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -95,7 +97,7 @@ internal fun WalletScreen2(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     modifier: Modifier = Modifier,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -147,7 +149,7 @@ internal fun WalletScreen2(
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
         modifier = modifier,
-        listStates = listStates,
+        listStates = remember(listStates) { listStates.toImmutableMap() },
     )
 
     WalletEventEffect(
@@ -171,9 +173,9 @@ private fun WalletContent2(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
-    listStates: Map<Int, LazyListState>,
+    listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -282,6 +284,7 @@ private fun WalletContent2(
                 val currentWallet = state.wallets2.getOrElse(currentWalletIndex) {
                     state.wallets2[state.selectedWalletIndex]
                 }
+                val currentWalletId = currentWallet.walletsBalanceUM.id.stringValue
 
                 LaunchedEffect(walletsPagerState.currentPage, currentWallet.walletsBalanceUM) {
                     if (walletsPagerState.currentPage == currentWalletIndex) {
@@ -350,6 +353,7 @@ private fun WalletContent2(
                                     contentPadding = contentPadding,
                                     tangemPayComponent = tangemPayComponent,
                                     promoBannersBlockComponent = promoBannersBlockComponent,
+                                    walletId = currentWalletId,
                                     virtualAccountComponent = virtualAccountComponent,
                                     modifier = Modifier
                                         .fillMaxSize()
