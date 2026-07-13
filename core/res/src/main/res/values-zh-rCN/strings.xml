@@ -713,6 +713,7 @@
   <string name="generic_error">发生错误</string>
   <string name="generic_error_code">发生错误。错误代码： %s。</string>
   <string name="generic_requires_memo_error">需要备忘录</string>
+  <string name="get_token_title">获取 %1$s</string>
   <string name="give_permission_current_transaction">交易</string>
   <string name="give_permission_policy_type_footer">批准后，您即允许智能合约在未来的交易中使用您的代币。</string>
   <string name="give_permission_rows_amount">金额 %s</string>
@@ -729,6 +730,8 @@
   <string name="hardware_wallet_key_feature_title">密钥生成</string>
   <string name="hardware_wallet_security_feature_description">所有加密操作都在安全芯片内部进行，该芯片经过认证，可防止克隆和物理篡改。</string>
   <string name="hardware_wallet_security_feature_title">硬件级安全</string>
+  <string name="high_fee_warning_description">网络流量较大，您现在可以继续，也可以稍后再试，届时手续费可能会更低。</string>
+  <string name="high_fee_warning_title">网络费用比平时高</string>
   <string name="home_button_add_existing_wallet">添加现有钱包</string>
   <string name="home_button_create_new_wallet">创建新钱包</string>
   <string name="home_button_order">订购 Tangem</string>
