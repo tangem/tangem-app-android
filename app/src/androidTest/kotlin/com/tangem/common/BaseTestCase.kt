@@ -223,6 +223,8 @@ abstract class BaseTestCase : TestCase(
                 "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED" to true,
                 "AND_15235_VISA_MULTIPLE_CARDS" to true,
                 "AND_15715_SWAP_BEST_DEX_RATE_ENABLED" to true,
+                // 6.1
+                "TWI_1638_VA_MVP0_ENABLED" to true,
             )
         )
     }
