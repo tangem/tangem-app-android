@@ -58,5 +58,6 @@ internal fun tangemPayCard(
     limit = null,
     frozenState = frozenState,
     lastDigits = lastDigits,
+    images = emptyList(),
     state = state,
 )
