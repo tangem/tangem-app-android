@@ -34,6 +34,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.addressbook.AddressBookSendAnalytics
 import com.tangem.features.addressbook.ContactSelectionListener
 import com.tangem.features.addressbook.MatchedContact
@@ -95,6 +96,7 @@ internal class SendDestinationModelTest {
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val getContactsUseCase: GetContactsUseCase = mockk(relaxed = true)
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
+    private val addressBookFeatureToggles: AddressBookFeatureToggles = mockk(relaxed = true)
     private val contactSelectionListener: ContactSelectionListener = mockk(relaxed = true)
     private val addressBookSendAnalytics: AddressBookSendAnalytics = mockk(relaxed = true)
     private val callback: SendDestinationComponent.ModelCallback = mockk(relaxed = true)
@@ -515,6 +517,36 @@ internal class SendDestinationModelTest {
         )
     }
 
+    @Nested
+    inner class SyncAddressBooks {
+
+        @Test
+        fun `GIVEN address book enabled WHEN model initialized THEN sync address books`() = runTest {
+            // Arrange
+            every { addressBookFeatureToggles.isAddressBookEnabled } returns true
+
+            // Act
+            buildModel()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { syncAddressBooksUseCase() }
+        }
+
+        @Test
+        fun `GIVEN address book disabled WHEN model initialized THEN do NOT sync address books`() = runTest {
+            // Arrange
+            every { addressBookFeatureToggles.isAddressBookEnabled } returns false
+
+            // Act
+            buildModel()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { syncAddressBooksUseCase() }
+        }
+    }
+
     // region fixtures
 
     private fun TestScope.buildModel(
@@ -574,6 +606,7 @@ internal class SendDestinationModelTest {
             sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
+            addressBookFeatureToggles = addressBookFeatureToggles,
             getContactsUseCase = getContactsUseCase,
             contactSelectionListener = contactSelectionListener,
         )
