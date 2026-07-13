@@ -2,12 +2,12 @@ package com.tangem.features.tangempay.tiers.select
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -16,7 +16,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.Back
@@ -268,31 +266,29 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
 @Suppress("MagicNumber")
 @Composable
 private fun PlanCard(imageUrl: String?, modifier: Modifier = Modifier) {
-    SubcomposeAsyncImage(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(ratio = 266f / 172f)
-            .clip(RoundedCornerShape(12.dp)),
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
-            .crossfade(true)
-            .build(),
-        loading = {
-            RectangleShimmer(
-                modifier = Modifier.fillMaxSize(),
-                radius = 12.dp,
-            )
-        },
-        error = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(TangemTheme.colors3.bg.secondary),
-            )
-        },
-        contentScale = ContentScale.Crop,
-        contentDescription = null,
-    )
+            .aspectRatio(ratio = 266f / 172f),
+    ) {
+        Image(
+            modifier = Modifier.matchParentSize(),
+            painter = painterResource(R.drawable.img_tangem_pay_visa_reissuing),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+        )
+        SubcomposeAsyncImage(
+            modifier = Modifier.matchParentSize(),
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(imageUrl)
+                .crossfade(true)
+                .build(),
+            loading = {},
+            error = {},
+            contentScale = ContentScale.FillBounds,
+            contentDescription = null,
+        )
+    }
 }
 
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
