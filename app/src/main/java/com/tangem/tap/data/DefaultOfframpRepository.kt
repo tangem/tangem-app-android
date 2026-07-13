@@ -10,9 +10,9 @@ import com.tangem.tap.data.converter.PendingOfframpEntryConverter
 import com.tangem.tap.data.model.PendingOfframpEntry
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 /**
  * Default implementation of [OfframpRepository].
@@ -27,7 +27,7 @@ internal class DefaultOfframpRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : OfframpRepository {
 
-    private val pendingOfframpConverter = PendingOfframpEntryConverter()
+    private val converter = PendingOfframpEntryConverter()
 
     override fun getOfframpUrl(
         cryptoCurrency: CryptoCurrency,
@@ -71,19 +71,21 @@ internal class DefaultOfframpRepository(
                 entry.requestId == requestId &&
                     entry.userWalletId == userWalletId.stringValue &&
                     entry.currencyId == currencyId &&
-                    now - entry.createdAt < EXPIRY_MS
+                    !entry.isExpired(now)
             }
             // Remove only the fully-matched record (single-use); always prune expired ones. A request_id that
             // matches but with a mismatched wallet/currency is left intact so a tampered redirect cannot burn it.
             stored.filter { it != matched }.filterNotExpired(now)
         }
-        matched?.let(pendingOfframpConverter::convert)
+        matched?.let(converter::convert)
+    }
+
+    override suspend fun getAllStoredOfframps(): List<PendingOfframp> = withContext(dispatchers.io) {
+        pendingOfframpStore.data.first().map(converter::convert)
     }
 
     private fun List<PendingOfframpEntry>.filterNotExpired(now: Long): List<PendingOfframpEntry> =
-        filter { now - it.createdAt < EXPIRY_MS }
+        filterNot { it.isExpired(now) }
 
-    private companion object {
-        val EXPIRY_MS: Long = TimeUnit.HOURS.toMillis(1)
-    }
+    private fun PendingOfframpEntry.isExpired(now: Long): Boolean = converter.convert(this).isExpired(now)
 }
