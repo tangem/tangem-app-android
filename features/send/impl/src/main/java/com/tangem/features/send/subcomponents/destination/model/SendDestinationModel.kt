@@ -18,6 +18,7 @@ import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAdd
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -37,6 +38,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.addressbook.AddressBookSendAnalytics
 import com.tangem.features.addressbook.ContactSelectionListener
 import com.tangem.features.addressbook.MatchedContact
@@ -88,6 +90,8 @@ internal class SendDestinationModel @Inject constructor(
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    private val addressBookFeatureToggles: AddressBookFeatureToggles,
     getContactsUseCase: GetContactsUseCase,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
@@ -139,6 +143,7 @@ internal class SendDestinationModel @Inject constructor(
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
+        syncAddressBooksIfNeeded()
         subscribeOnQRScannerResult()
         initialState()
         resetContactOnEdit()
@@ -284,6 +289,12 @@ internal class SendDestinationModel @Inject constructor(
         senderAddresses.onEach {
             getWalletsAndRecent()
         }.launchIn(modelScope)
+    }
+
+    private fun syncAddressBooksIfNeeded() {
+        if (addressBookFeatureToggles.isAddressBookEnabled) {
+            modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
+        }
     }
 
     private fun subscribeOnQRScannerResult() {
