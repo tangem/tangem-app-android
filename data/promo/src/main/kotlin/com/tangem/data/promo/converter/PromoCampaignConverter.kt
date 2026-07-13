@@ -14,10 +14,12 @@ internal object PromoCampaignConverter {
             campaign = campaign,
             payoutTokens = all.tokens.orEmpty().map { token ->
                 PromoPayoutToken(
+                    tokenId = token.tokenId,
                     tokenAddress = token.tokenAddress,
                     tokenSymbol = token.tokenSymbol,
                     tokenName = token.tokenName,
                     networkId = token.networkId,
+                    decimals = token.decimals,
                 )
             },
             timeline = PromoTimeline(
