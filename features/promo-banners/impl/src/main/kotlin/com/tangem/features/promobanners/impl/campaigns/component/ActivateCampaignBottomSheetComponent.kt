@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.model.ActivateCampaignsModel
 import com.tangem.features.promobanners.impl.campaigns.ui.ActivateCampaignContent
@@ -83,6 +84,7 @@ internal class ActivateCampaignBottomSheetComponent(
 
     data class Params(
         val campaignType: CampaignType,
+        val userWalletId: UserWalletId,
         val modelCallbacks: ActivateCampaignModelCallbacks,
     )
 
