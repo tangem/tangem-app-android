@@ -69,5 +69,7 @@ object TestConstants {
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
     const val TANGEM_PAY_ELIGIBILITY_SCENARIO = "tangem_pay_eligibility"
+    const val TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO = "tangem_pay_eligibility_channels"
+    const val TANGEM_PAY_KYC_STATUS_SCENARIO = "tangem_pay_kyc_status"
     const val TANGEM_PAY_ACCESS_CODE = "517384"
 }
