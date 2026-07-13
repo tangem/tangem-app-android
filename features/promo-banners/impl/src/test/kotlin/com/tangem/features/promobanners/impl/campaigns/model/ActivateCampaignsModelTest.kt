@@ -20,6 +20,7 @@ import com.tangem.domain.promo.models.EnrollResult
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.TokenReward
 import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
+import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
@@ -54,6 +55,8 @@ internal class ActivateCampaignsModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase = mockk()
+    private val predefinedTokenResolver: PredefinedTokenResolver = mockk(relaxed = true)
     private val modelCallbacks: ActivateCampaignBottomSheetComponent.ActivateCampaignModelCallbacks =
         mockk(relaxed = true)
 
@@ -219,10 +222,12 @@ internal class ActivateCampaignsModelTest {
         every { chooseTokenBridgeFactory.create(any(), any(), any()) } returns bridge
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery { getPromoCampaignStateUseCase(any(), any(), any()) } returns Either.Left(Throwable())
         return ActivateCampaignsModel(
             paramsContainer = MutableParamsContainer(
                 ActivateCampaignBottomSheetComponent.Params(
                     campaignType = campaignType,
+                    userWalletId = userWalletId,
                     modelCallbacks = modelCallbacks,
                 ),
             ),
@@ -234,6 +239,8 @@ internal class ActivateCampaignsModelTest {
             urlOpener = urlOpener,
             messageSender = messageSender,
             analyticsEventHandler = analyticsEventHandler,
+            getPromoCampaignStateUseCase = getPromoCampaignStateUseCase,
+            predefinedTokenResolver = predefinedTokenResolver,
         )
     }
 

@@ -28,7 +28,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
 
     data class Settings(
         val title: TextReference,
-        val isShowMarketBlock: Boolean,
+        val chooserBlock: ChooserBlock,
         val isShowPaymentAccount: Boolean,
         val isAppBarShown: Boolean = true,
         /**
@@ -40,24 +40,24 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
         companion object {
             val SwapFrom = Settings(
                 title = resourceReference(R.string.swapping_from_title),
-                isShowMarketBlock = true,
+                chooserBlock = ChooserBlock.Market,
                 isShowPaymentAccount = true,
             )
             val SwapTo = Settings(
                 title = resourceReference(R.string.swapping_to_title),
-                isShowMarketBlock = true,
+                chooserBlock = ChooserBlock.Market,
                 isShowPaymentAccount = true,
             )
             val AddFunds = Settings(
                 title = resourceReference(R.string.swapping_to_title),
-                isShowMarketBlock = true,
+                chooserBlock = ChooserBlock.Market,
                 isShowPaymentAccount = false,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
             )
             val Transfer = Settings(
                 title = resourceReference(R.string.common_transfer),
-                isShowMarketBlock = false,
+                chooserBlock = ChooserBlock.None,
                 isShowPaymentAccount = false,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
@@ -114,6 +114,20 @@ data class ChooseTokenResult(
         get() = analyticsPayload
             .filterIsInstance<ChooseTokenAnalyticsPayload.IsMarketTokenSelected>()
             .any { it.value }
+}
+
+/**
+ * Which "add a token" block the chooser shows. Mutually exclusive by construction.
+ */
+sealed interface ChooserBlock {
+    data object None : ChooserBlock
+    data object Market : ChooserBlock
+
+    /**
+     * Shows an "add these tokens" block (e.g. Onramp promo payout). The caller owns [predefinedTokens]
+     * and pushes into it; the chooser derives the "add" cells and a network filter from it.
+     */
+    data class Predefined(val predefinedTokens: StateFlow<List<PredefinedTokenToAdd>>) : ChooserBlock
 }
 
 sealed interface ChooseTokenAnalyticsPayload {
