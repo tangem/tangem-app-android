@@ -105,6 +105,7 @@ internal class DefaultCampaignsComponent @AssistedInject constructor(
                 onFooterExtraHeightReady = model::onFooterExtraHeightReady,
                 params = ActivateCampaignBottomSheetComponent.Params(
                     campaignType = config.campaignType,
+                    userWalletId = config.userWalletId,
                     modelCallbacks = object : ActivateCampaignModelCallbacks {
                         override val onActivated: (CampaignType) -> Unit = model::onActivated
                         override val onAlreadyActivated: (CampaignType) -> Unit = model::onAlreadyActivated
