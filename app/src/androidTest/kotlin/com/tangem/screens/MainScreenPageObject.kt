@@ -96,7 +96,7 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
      * Required because TangemCollapsingTopBar places the body at y=collapsingHeight, which
      * pushes lower list items off-screen when the header is expanded.
      */
-    private fun collapseHeader() {
+    fun collapseHeader() {
         screenContainer {
             performTouchInput { swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f) }
         }
