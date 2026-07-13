@@ -1,9 +1,8 @@
-package com.tangem.tap.data
+package com.tangem.data.pay.store
 
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
@@ -77,6 +76,12 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     override suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean) =
         real.storeAddToWalletDone(customerWalletAddress, isDone)
+
+    override suspend fun getCashbackDeactivationDismissed(customerWalletAddress: String): Boolean =
+        real.getCashbackDeactivationDismissed(customerWalletAddress)
+
+    override suspend fun storeCashbackDeactivationDismissed(customerWalletAddress: String, isDismissed: Boolean) =
+        real.storeCashbackDeactivationDismissed(customerWalletAddress, isDismissed)
 
     override suspend fun clearOrderId(customerWalletAddress: String) =
         real.clearOrderId(customerWalletAddress)
