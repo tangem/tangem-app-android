@@ -78,6 +78,19 @@ The app uses [Decompose](https://github.com/arkivanov/Decompose) for lifecycle-a
 - Exposes `StateFlow<{Name}UM>` (UM = UI Model, state class in `ui/state/` subpackage)
 - Has `modelScope` (SupervisorJob + mainImmediate), auto-cancelled on destroy
 
+**State exposure (preferred pattern):** expose a public read-only `StateFlow` backed by a Kotlin
+**explicit backing field** rather than a separate `private val _state` + `asStateFlow()`. The project
+enables the `ExplicitBackingFields` compiler feature, so write:
+
+```kotlin
+val uiState: StateFlow<FooUM>
+    field = MutableStateFlow(FooUM())
+// inside the class, mutate via uiState.update { … }; callers see StateFlow<FooUM>
+```
+
+This applies to both Decompose `Model`s and Android `ViewModel`s. Avoid the `_uiState`/`asStateFlow()`
+duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
+
 **Child navigation within features:**
 - `childStack()` — stacked screen navigation (back stack)
 - `childSlot()` — optional overlays/bottom sheets (single or no child)
