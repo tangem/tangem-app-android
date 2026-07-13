@@ -187,4 +187,7 @@ interface TangemPayApi {
         @Body body: UpdateCardRequest,
         @Path("card_id") cardId: String,
     ): ApiResponse<UpdateCardDisplayNameResponse>
+
+    @GET("v1/customer/cashback/summary")
+    suspend fun getCashbackSummary(@Header("Authorization") authHeader: String): ApiResponse<CashbackSummaryResponse>
 }
