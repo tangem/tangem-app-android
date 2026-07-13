@@ -243,6 +243,8 @@ dependencies {
     /** Features */
     implementation(projects.features.addressBook.api)
     implementation(projects.features.addressBook.impl)
+    implementation(projects.features.marketing.api)
+    implementation(projects.features.marketing.impl)
     implementation(projects.features.rating.impl)
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
