@@ -21,4 +21,12 @@ sealed interface VirtualAccountOnramp {
         val productInstanceId: String,
         val bankCredentials: BankCredentials,
     ) : VirtualAccountOnramp
+
+    /**
+     * VA product instance exists, but its bank credentials failed to load. The bank-transfer entry point
+     * stays visible; tapping it surfaces a retryable "couldn't load banking details" error instead of the
+     * requisites. Transient — never persisted, re-resolved on the next status fetch.
+     */
+    @Serializable
+    data object BankCredentialsError : VirtualAccountOnramp
 }
