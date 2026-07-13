@@ -26,9 +26,9 @@ class AddTokenBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractions
         useUnmergedTree = true
     }
 
-    val addButton: KNode = child {
+    val confirmButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_add))
+        hasText(getResourceString(R.string.common_confirm))
         useUnmergedTree = true
     }
 

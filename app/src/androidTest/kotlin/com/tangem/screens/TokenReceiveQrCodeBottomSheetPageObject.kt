@@ -6,7 +6,6 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.captureToImage
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
-import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.TokenReceiveQrCodeBottomSheetTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
@@ -44,15 +43,13 @@ class TokenReceiveQrCodeBottomSheetPageObject(semanticsProvider: SemanticsNodeIn
     }
 
     val copyButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_copy))
-        useUnmergedTree = true
+        hasClickAction()
     }
 
     val shareButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_share))
-        useUnmergedTree = true
+        hasClickAction()
     }
 
     /** Captures the QR code node as a bitmap via the Kakao node delegate (no raw composeTestRule access). */
