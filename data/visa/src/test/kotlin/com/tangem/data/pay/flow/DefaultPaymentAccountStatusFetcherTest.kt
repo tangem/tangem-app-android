@@ -238,7 +238,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             }
 
         @Test
-        fun `GIVEN toggle on and ACCOUNT instance but bank credentials fetch fails WHEN invoke THEN virtualAccount is null`() =
+        fun `GIVEN toggle on and ACCOUNT instance but bank credentials fetch fails WHEN invoke THEN virtualAccount is Error`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -256,7 +256,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
                 // Assert
                 val loaded = storedStatuses.lastLoaded()
-                assertThat(loaded.virtualAccount).isNull()
+                assertThat(loaded.virtualAccount).isEqualTo(VirtualAccountOnramp.BankCredentialsError)
             }
 
         @Test
