@@ -126,9 +126,6 @@ internal class MarketBlockDelegate @AssistedInject constructor(
             }
             .launchIn(modelScope)
 
-        // Initial load of default markets
-        defaultMarketsListManager.reload()
-
         visibleMarketItemIds
             .mapNotNull { rawIDS ->
                 if (rawIDS.isNotEmpty()) {
@@ -155,6 +152,15 @@ internal class MarketBlockDelegate @AssistedInject constructor(
                 defaultMarketsListManager.loadCharts(visibleBatchKeys)
             }
             .launchIn(modelScope)
+    }
+
+    /**
+     * Starts the initial load of the default markets list. Not invoked in [init] on purpose:
+     * the caller decides *if* (market block may be disabled entirely, e.g. Transfer flow) and
+     * *when* (deferred past the bottom sheet entrance animation, [REDACTED_TASK_KEY]) to trigger it.
+     */
+    fun loadDefaultMarkets() {
+        defaultMarketsListManager.reload()
     }
 
     private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
