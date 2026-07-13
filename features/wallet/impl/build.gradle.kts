@@ -116,6 +116,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.demo.models)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.marketing)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.onramp.models)
