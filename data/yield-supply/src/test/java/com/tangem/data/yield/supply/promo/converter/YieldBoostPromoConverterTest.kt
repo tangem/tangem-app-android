@@ -100,16 +100,20 @@ class YieldBoostPromoConverterTest {
             ),
             tokens = listOf(
                 PromotionsResponse.PromotionDto.PromoToken(
+                    tokenId = "usd-coin",
                     tokenAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                     tokenSymbol = "USDC",
                     tokenName = "USD Coin",
                     networkId = "ethereum",
+                    decimals = 6,
                 ),
                 PromotionsResponse.PromotionDto.PromoToken(
+                    tokenId = "tether",
                     tokenAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7",
                     tokenSymbol = "USDT",
                     tokenName = "Tether USD",
                     networkId = "ethereum",
+                    decimals = 6,
                 ),
             ),
             status = "active",
