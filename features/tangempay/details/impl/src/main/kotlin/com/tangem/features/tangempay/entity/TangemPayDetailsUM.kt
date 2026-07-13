@@ -22,7 +22,22 @@ internal data class TangemPayDetailsUM(
     val isBalanceHidden: Boolean,
     val errorNotificationConfig: NotificationConfig?,
     val accountDeactivatedNotificationConfig: NotificationConfig?,
+    val cashbackBlockState: CashbackBlockUM? = null,
 )
+
+@Immutable
+internal sealed interface CashbackBlockUM {
+
+    data class Widget(
+        val title: TextReference,
+        val subtitle: TextReference,
+        val onClick: () -> Unit,
+    ) : CashbackBlockUM
+
+    data class DeactivatedBanner(
+        val onGotIt: () -> Unit,
+    ) : CashbackBlockUM
+}
 
 internal data class TangemPayCardDetailsUM(
     val number: String,
