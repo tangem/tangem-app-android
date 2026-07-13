@@ -27,6 +27,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowSto
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSearchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangemTokenIconStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
 
 private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
@@ -37,6 +38,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
     DsStoryItem(title = "☑️ TangemCheckbox", factory = tangemCheckboxV2StoryFactory),
     DsStoryItem(title = "⭕ TangemCheckmark", factory = tangemCheckmarkStoryFactory),
+    DsStoryItem(title = "🎨 TangemTokenIcon", factory = tangemTokenIconStoryFactory),
     DsStoryItem(title = "📋 TangemRow", factory = tangemRowStoryFactory),
     DsStoryItem(title = "🔎 TangemSearch", factory = tangemSearchStoryFactory),
     DsStoryItem(title = "✨ TangemShimmer", factory = tangemShimmerStoryFactory),
