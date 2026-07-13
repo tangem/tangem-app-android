@@ -41,26 +41,19 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val marketsListBatchFlowManagerFactory: MarketsListBatchFlowManager.Factory,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
-    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val searchQueryState: StateFlow<SearchQuery>,
-    @Assisted private val screensSourcesName: String,
     @Assisted private val selectedWalletFlow: SharedFlow<UserWallet>,
     @Assisted private val shouldShowSingleCurrencyWallets: Boolean,
+    @Assisted private val addToPortfolioManager: AddToPortfolioManager,
+    @Assisted private val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute>,
 ) {
 
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
     private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
     private val selectedCategoryFlow = MutableStateFlow(SwapMarketCategory.MarketCap)
-
-    val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
-    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
-        scope = modelScope,
-        settings = AddToPortfolioManager.Settings.ChooseToken,
-        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = screensSourcesName),
-    )
 
     private val baseMarketsStateFlow: Flow<SwapMarketState> = searchQueryState
         // Switch between default and search market flows
@@ -319,9 +312,10 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         fun create(
             searchQueryState: StateFlow<SearchQuery>,
             modelScope: CoroutineScope,
-            screensSourcesName: String,
             selectedWalletFlow: SharedFlow<UserWallet>,
             shouldShowSingleCurrencyWallets: Boolean,
+            addToPortfolioManager: AddToPortfolioManager,
+            addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute>,
         ): MarketBlockDelegate
     }
 }
