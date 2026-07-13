@@ -159,6 +159,15 @@ internal class TangemPayDetailsComponent(
                     onFieldCopied = model::onVaFieldCopied,
                 ),
             )
+            is TangemPayDetailsNavigation.VaBankingDetailsError -> TangemPayVaBankingDetailsErrorComponent(
+                appComponentContext = context,
+                params = TangemPayVaBankingDetailsErrorComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onContactSupport = model::onContactSupportClicked,
+                    onResolved = model::onVaBankingDetailsResolved,
+                ),
+            )
             is TangemPayDetailsNavigation.IssueAdditionalCard -> TangemPayIssueAdditionalCardComponent(
                 appComponentContext = context,
                 params = TangemPayIssueAdditionalCardComponent.Params(
