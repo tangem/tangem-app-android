@@ -69,6 +69,7 @@ internal class TangemPayDetailsStateFactory(
             addToWalletBlockState = null,
             errorNotificationConfig = null,
             accountDeactivatedNotificationConfig = null,
+            cashbackBlockState = null,
         )
     }
 
@@ -120,6 +121,7 @@ internal class TangemPayDetailsStateFactory(
             addToWalletBlockState = null,
             errorNotificationConfig = errorNotification ?: awaitingDepositNotification,
             accountDeactivatedNotificationConfig = null,
+            cashbackBlockState = null,
         )
     }
 
@@ -153,6 +155,7 @@ internal class TangemPayDetailsStateFactory(
             addToWalletBlockState = null,
             errorNotificationConfig = null,
             accountDeactivatedNotificationConfig = accountDeactivatedNotification,
+            cashbackBlockState = null,
         )
     }
 

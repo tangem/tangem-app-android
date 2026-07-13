@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.visa
+package com.tangem.data.pay.store
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
@@ -32,6 +32,10 @@ interface TangemPayStorage {
     suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean
 
     suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean)
+
+    suspend fun getCashbackDeactivationDismissed(customerWalletAddress: String): Boolean
+
+    suspend fun storeCashbackDeactivationDismissed(customerWalletAddress: String, isDismissed: Boolean)
     suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean)
     suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean?
 
