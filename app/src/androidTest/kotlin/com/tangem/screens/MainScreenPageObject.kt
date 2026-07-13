@@ -202,6 +202,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    val getTangemPayBanner: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.tangempay_onboarding_banner_title))
+        useUnmergedTree = true
+    }
+
     val devCardNotificationIcon: KNode = child {
         hasAnySibling(withText(getResourceString(R.string.warning_developer_card_title)))
         hasTestTag(NotificationTestTags.ICON)
