@@ -19,12 +19,15 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.choosetoken.SettingContextUseCase
 import com.tangem.features.commonfeatures.impl.choosetoken.converter.ChooseTokenListItemConverter
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.mapNotNullValues
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
 @Suppress("LongParameterList")
@@ -33,6 +36,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     private val settingContext: SettingContextUseCase,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getWalletsUseCase: GetWalletsUseCase,
+    dispatchers: CoroutineDispatcherProvider,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val searchQueryState: StateFlow<SearchQuery>,
     @Assisted private val featureSettings: ChooseTokenBridge.Settings,
@@ -48,6 +52,8 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
 
     val portfolioList: SharedFlow<Map<UserWalletId, TokenListUMData>> = buildDataFlow()
         .distinctUntilChanged()
+        .throttleLatest(windowMs = UM_UPDATES_THROTTLE_MS)
+        .flowOn(dispatchers.default)
         .shareIn(modelScope, SharingStarted.Eagerly, replay = 1)
 
     private fun buildDataFlow(): Flow<Map<UserWalletId, TokenListUMData>> = channelFlow {
@@ -153,4 +159,13 @@ internal interface ClickIntents {
     fun onAccountExpandClick(account: Account)
 
     fun onAccountCollapseClick(account: Account)
+}
+
+private const val UM_UPDATES_THROTTLE_MS = 100L
+
+/** Emits the first value immediately, then at most one (latest) value per [windowMs]. */
+@OptIn(ExperimentalCoroutinesApi::class)
+private fun <T> Flow<T>.throttleLatest(windowMs: Long): Flow<T> = conflate().transformLatest { value ->
+    emit(value)
+    delay(windowMs)
 }
