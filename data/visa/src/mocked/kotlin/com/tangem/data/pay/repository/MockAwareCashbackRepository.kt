@@ -33,6 +33,12 @@ internal class MockAwareCashbackRepository @Inject constructor(
         return real.getCashbackSummary(userWalletId)
     }
 
+    override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean =
+        real.isDeactivationBannerDismissed(userWalletId)
+
+    override suspend fun setDeactivationBannerDismissed(userWalletId: UserWalletId) =
+        real.setDeactivationBannerDismissed(userWalletId)
+
     private companion object {
         val MOCK_SUMMARY = CashbackSummary.Enabled(
             displayMode = CashbackDisplayMode.FULL,
