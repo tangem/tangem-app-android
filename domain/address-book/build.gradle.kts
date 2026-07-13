@@ -25,6 +25,10 @@ dependencies {
     implementation(projects.core.utils)
     // endregion
 
+    // region Libs
+    implementation(projects.libs.crypto)
+    // endregion
+
     // region Domain
     api(projects.domain.common)
     api(projects.domain.tokens)
