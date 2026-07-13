@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookContactsBlockComponent
 import com.tangem.features.addressbook.MatchedContact
@@ -15,15 +16,18 @@ import com.tangem.features.addressbook.common.ContactMatcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @ModelScoped
+@Suppress("LongParameterList")
 internal class ContactsBlockModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val stateController: ContactsBlockStateController,
     private val analyticsSender: AddressBookAnalyticsSender,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     getContactsUseCase: GetContactsUseCase,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
@@ -33,6 +37,8 @@ internal class ContactsBlockModel @Inject constructor(
     val state: StateFlow<ContactsBlockUM> get() = stateController.uiState
 
     init {
+        modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
+
         combine(
             params.queryFlow.flatMapLatest { query ->
                 getContactsUseCase(query = query, userWalletId = null)
