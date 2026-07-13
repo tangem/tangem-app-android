@@ -302,6 +302,11 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetCashbackSummaryUseCase(cashbackRepository: CashbackRepository): GetCashbackSummaryUseCase {
+            return GetCashbackSummaryUseCase(cashbackRepository)
+        }
+
+        @Provides
         fun provideCheckOrderConflictUseCase(
             customerOrderRepository: CustomerOrderRepository,
         ): CheckOrderConflictUseCase {
