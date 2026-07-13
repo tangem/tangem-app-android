@@ -162,6 +162,7 @@ internal class TangemPayEditDisplayNameModelTest {
         limit = null,
         frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
+        images = emptyList(),
         state = TangemPayCardState.Active,
     )
 }

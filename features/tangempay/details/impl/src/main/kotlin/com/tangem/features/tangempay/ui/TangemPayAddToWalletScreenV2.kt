@@ -220,6 +220,7 @@ private fun PreviewTangemPayAddToWalletScreen() {
                 buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
                 cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 displayNameState = null,
+                cardImageUrl = null,
             ),
         )
     }
