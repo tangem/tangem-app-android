@@ -178,5 +178,9 @@
     {
         "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
+        "version": "undefined"
     }
 ]
