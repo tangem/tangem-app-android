@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.VerifiedContact
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -26,12 +27,13 @@ import com.tangem.features.addressbook.route.AddressBookRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Backs the contacts list. The list content is the same however the address book was opened — the open
  * [AddressBookRoute.ListMode] only decides what tapping a contact does:
- *  - [AddressBookRoute.ListMode.Default]: browse / manage contacts (editor is TODO [REDACTED_TASK_KEY]).
+ *  - [AddressBookRoute.ListMode.Default]: browse / manage contacts
  *  - [AddressBookRoute.ListMode.Selector]: pick a recipient for the given network — a single matching address is
  *    returned right away, several open the address selector first.
  */
@@ -45,8 +47,9 @@ internal class AddressBookListModel @Inject constructor(
     private val router: Router,
     private val contactSelectionTrigger: ContactSelectionTrigger,
     private val analyticsSender: AddressBookAnalyticsSender,
-    getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
-    getWalletsUseCase: GetWalletsUseCase,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultAddressBookListComponent.Params>()
@@ -65,6 +68,14 @@ internal class AddressBookListModel @Inject constructor(
             .shareIn(modelScope, SharingStarted.Lazily, replay = 1)
 
     init {
+        modelScope.launch {
+            syncAddressBooksUseCase()
+            sendContactListScreenOpenedEvent()
+            observeContacts()
+        }
+    }
+
+    private suspend fun observeContacts() {
         val matchedContacts = searchQuery.flatMapLatest { query ->
             if (query.isBlank()) {
                 allContacts
@@ -89,9 +100,7 @@ internal class AddressBookListModel @Inject constructor(
         }
             .onEach(::updateState)
             .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-
-        sendContactListScreenOpenedEvent()
+            .collect()
     }
 
     fun deliverSelection(contact: SelectedContact) {
@@ -155,17 +164,13 @@ internal class AddressBookListModel @Inject constructor(
         }
     }
 
-    private fun sendContactListScreenOpenedEvent() {
-        allContacts
-            .take(count = 1)
-            .onEach { contacts ->
-                analyticsSender.sendContactListScreenOpened(
-                    source = params.mode.toAnalyticsSource(),
-                    contactsCount = contacts.size,
-                    scope = modelScope,
-                )
-            }
-            .launchIn(modelScope)
+    private suspend fun sendContactListScreenOpenedEvent() {
+        val contacts = allContacts.first()
+        analyticsSender.sendContactListScreenOpened(
+            source = params.mode.toAnalyticsSource(),
+            contactsCount = contacts.size,
+            scope = modelScope,
+        )
     }
 
     private fun AddressBookRoute.ListMode.toAnalyticsSource(): Source = when (this) {
