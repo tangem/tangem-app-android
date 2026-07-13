@@ -30,10 +30,12 @@ data class PromotionsResponse(
 
         @JsonClass(generateAdapter = true)
         data class PromoToken(
+            @Json(name = "tokenId") val tokenId: String,
             @Json(name = "tokenAddress") val tokenAddress: String,
             @Json(name = "tokenSymbol") val tokenSymbol: String,
             @Json(name = "tokenName") val tokenName: String,
             @Json(name = "networkId") val networkId: String,
+            @Json(name = "decimals") val decimals: Int,
         )
     }
 }

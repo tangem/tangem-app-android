@@ -18,7 +18,16 @@ internal class PromoCampaignConverterTest {
         // Arrange
         val all = All(
             timeline = Timeline(start = "2026-06-23T00:00:00.000Z", end = "2026-08-31T20:59:59.000Z"),
-            tokens = listOf(PromoToken("0xdac1", "USDT", "Tether USD", "ethereum")),
+            tokens = listOf(
+                PromoToken(
+                    tokenId = "tether",
+                    tokenAddress = "0xdac1",
+                    tokenSymbol = "USDT",
+                    tokenName = "Tether USD",
+                    networkId = "ethereum",
+                    decimals = 6,
+                ),
+            ),
             status = "active",
             link = "",
         )
@@ -29,7 +38,14 @@ internal class PromoCampaignConverterTest {
         // Assert
         assertThat(result.campaign).isEqualTo(campaign)
         assertThat(result.payoutTokens).containsExactly(
-            PromoPayoutToken("0xdac1", "USDT", "Tether USD", "ethereum"),
+            PromoPayoutToken(
+                tokenId = "tether",
+                tokenAddress = "0xdac1",
+                tokenSymbol = "USDT",
+                tokenName = "Tether USD",
+                networkId = "ethereum",
+                decimals = 6,
+            ),
         )
         assertThat(result.timeline.start).isEqualTo(Instant.parse("2026-06-23T00:00:00.000Z"))
         assertThat(result.timeline.end).isEqualTo(Instant.parse("2026-08-31T20:59:59.000Z"))
