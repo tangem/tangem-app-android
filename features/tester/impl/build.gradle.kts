@@ -48,6 +48,7 @@ dependencies {
     implementation(projects.domain.manageTokens.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.offramp)
     implementation(projects.domain.walletManager)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.manageTokens)
