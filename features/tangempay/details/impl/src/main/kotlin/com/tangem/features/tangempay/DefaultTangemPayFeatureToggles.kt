@@ -21,4 +21,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isTiersPlusPlanEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16041_VISA_TIERS_PLUS_PLAN)
+
+    override val isCashbackEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1192_TANGEM_PAY_CASHBACK_ENABLED)
 }
