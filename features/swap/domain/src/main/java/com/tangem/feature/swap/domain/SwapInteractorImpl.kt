@@ -64,7 +64,7 @@ import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainFeeUtils.patchIntegratedApprovalPriorityFee
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoinBasedPsbtSwap
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
@@ -737,7 +737,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 amountToSwap = amountToSwap,
             )
-            isBitcoin(networkId) -> onSwapBitcoinPsbt(
+            isBitcoinBasedPsbtSwap(networkId) -> onSwapBitcoinPsbt(
                 provider = swapProvider,
                 swapData = swapData,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
