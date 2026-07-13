@@ -23,10 +23,14 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.EnrollResult
 import com.tangem.domain.promo.models.PromoCampaignId
+import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.models.TokenReward
 import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
+import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
+import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
 import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.component.ActivateCampaignBottomSheetComponent
@@ -59,6 +63,8 @@ internal class ActivateCampaignsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase,
+    private val predefinedTokenResolver: PredefinedTokenResolver,
 ) : Model() {
 
     private val params = paramsContainer.require<ActivateCampaignBottomSheetComponent.Params>()
@@ -68,6 +74,8 @@ internal class ActivateCampaignsModel @Inject constructor(
     private val campaignId: PromoCampaignId = params.campaignType.toPromoCampaignId()
     private val campaignContent = CampaignTypeToContentConverter().convert(campaignType)
 
+    private val predefinedTokensFlow = MutableStateFlow<List<PredefinedTokenToAdd>>(emptyList())
+
     val uiState: StateFlow<ActivateCampaignUM>
         field = MutableStateFlow(buildInitialModel())
 
@@ -75,7 +83,7 @@ internal class ActivateCampaignsModel @Inject constructor(
         modelScope = modelScope,
         settings = ChooseTokenBridge.Settings(
             title = resourceReference(R.string.common_choose_token),
-            isShowMarketBlock = false,
+            chooserBlock = ChooserBlock.Predefined(predefinedTokensFlow),
             isShowPaymentAccount = false,
             isShowSingleCurrencyWallets = true,
         ),
@@ -95,6 +103,18 @@ internal class ActivateCampaignsModel @Inject constructor(
         bridge.onClose.receiveAsFlow()
             .onEach { onChooseTokenDismiss() }
             .launchIn(modelScope)
+
+        modelScope.launch { loadPredefinedTokens() }
+    }
+
+    private suspend fun loadPredefinedTokens() {
+        getPromoCampaignStateUseCase(campaignId, params.userWalletId)
+            .onLeft { error -> TangemLogger.e("Error loading campaign ${campaignType.campaignId} state", error) }
+            .onRight { state ->
+                if (state is PromoCampaignState.Available) {
+                    predefinedTokensFlow.value = predefinedTokenResolver.resolve(state.payoutTokens)
+                }
+            }
     }
 
     private fun buildInitialModel(): ActivateCampaignUM = ActivateCampaignUM(

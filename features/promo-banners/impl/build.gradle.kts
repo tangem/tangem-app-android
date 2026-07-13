@@ -24,6 +24,10 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.account.status)
     implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
+
+    /** Data */
+    implementation(projects.data.common)
 
     /** Core */
     api(projects.core.configToggles)
