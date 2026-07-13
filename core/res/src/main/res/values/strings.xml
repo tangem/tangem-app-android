@@ -1925,6 +1925,10 @@
     <item quantity="one">%d card</item>
     <item quantity="other">%d cards</item>
   </plurals>
+  <string name="tangempay_cashback_deactivated_description">It was made due to your suspicious behavior. Contact support to learn more</string>
+  <string name="tangempay_cashback_deactivated_title">Cashback deactivated</string>
+  <string name="tangempay_cashback_deposited_on">Will be deposited on %1$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s cashback in %2$s</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
@@ -2052,6 +2056,7 @@
   <string name="tangempay_set_pin_header">Set up new PIN</string>
   <string name="tangempay_set_pin_title">Set PIN</string>
   <string name="tangempay_status_deactivated">Account closed</string>
+  <string name="tangempay_status_inactive">Inactive</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
   <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
@@ -2067,6 +2072,8 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
+  <string name="tangempay_va_banking_details_error_description">Please try again or contact support if the issue persists</string>
+  <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
