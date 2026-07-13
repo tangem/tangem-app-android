@@ -52,6 +52,11 @@ internal interface TangemPayModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(TangemPayVaBankingDetailsErrorModel::class)
+    fun bindTangemPayVaBankingDetailsErrorModel(model: TangemPayVaBankingDetailsErrorModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(TangemPayViewPinModel::class)
     fun bindTangemPayViewPinModel(model: TangemPayViewPinModel): Model
 
