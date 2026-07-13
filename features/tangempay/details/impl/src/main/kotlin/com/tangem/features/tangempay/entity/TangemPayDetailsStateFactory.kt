@@ -18,6 +18,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
+import com.tangem.domain.models.pay.thumbnailUrl
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.hasWithdrawableAmount
@@ -102,6 +103,7 @@ internal class TangemPayDetailsStateFactory(
                         .map { cardItem ->
                             TangemPayDetailsBalanceBlockState.Card(
                                 lastDigits = cardItem.lastDigits,
+                                imageUrl = cardItem.thumbnailUrl,
                                 onClick = { intents.onCardClick(cardItem.id) },
                                 isEnabled = status.error == null,
                                 isFrozen = cardItem.isFrozen,
