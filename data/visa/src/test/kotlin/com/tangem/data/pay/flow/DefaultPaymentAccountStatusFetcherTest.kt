@@ -108,6 +108,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardStatus = TangemPayCard.Status.ACTIVE,
         lastFourDigits = "1234",
         isPinSet = true,
+        images = emptyList(),
     )
 
     private fun buildCustomerInfo(

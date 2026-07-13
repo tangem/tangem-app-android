@@ -5,6 +5,7 @@ import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -51,6 +52,12 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
                         frozenState = card.frozenState.toString(),
                         lastDigits = card.lastDigits,
+                        images = card.images.map { image ->
+                            PaymentAccountStatusValueDM.ImageDM(
+                                type = image.type.name,
+                                url = image.url,
+                            )
+                        },
                         state = card.state.toString(),
                     )
                 },
@@ -91,11 +98,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
                 depositAddress = value.depositAddress,
-                balance = PaymentAccountStatusValue.Balance(
-                    fiatBalance = value.fiatBalance.toDomain(),
-                    cryptoBalance = value.cryptoBalance.toDomain(),
-                    availableForWithdrawal = value.availableForWithdrawal,
-                ),
+                balance = value.getBalance(),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
@@ -115,6 +118,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         ),
                         frozenState = TangemPayCardFrozenState.fromString(card.frozenState),
                         lastDigits = card.lastDigits,
+                        images = card.getImages(),
                         state = TangemPayCardState.fromString(card.state),
                     )
                 },
@@ -160,6 +164,14 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         )
     }
 
+    private fun PaymentAccountStatusValueDM.ActiveAccount.getBalance(): PaymentAccountStatusValue.Balance {
+        return PaymentAccountStatusValue.Balance(
+            fiatBalance = fiatBalance.toDomain(),
+            cryptoBalance = cryptoBalance.toDomain(),
+            availableForWithdrawal = availableForWithdrawal,
+        )
+    }
+
     private fun PaymentAccountStatusValueDM.FiatBalanceDM.toDomain(): PaymentAccountStatusValue.FiatBalance {
         return PaymentAccountStatusValue.FiatBalance(
             availableBalance = availableBalance,
@@ -175,5 +187,14 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             tokenContractAddress = tokenContractAddress,
             balance = balance,
         )
+    }
+
+    private fun PaymentAccountStatusValueDM.TangemPayCard.getImages(): List<TangemPayTariffPlan.Image> {
+        return images.map { image ->
+            TangemPayTariffPlan.Image(
+                type = TangemPayTariffPlan.Image.Type.fromString(image.type),
+                url = image.url,
+            )
+        }
     }
 }

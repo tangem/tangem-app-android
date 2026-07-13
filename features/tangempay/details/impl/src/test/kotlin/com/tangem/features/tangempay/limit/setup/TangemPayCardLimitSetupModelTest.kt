@@ -47,6 +47,7 @@ internal class TangemPayCardLimitSetupModelTest {
         frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
         limit = null,
+        images = emptyList(),
         state = TangemPayCardState.Active,
     )
 
@@ -72,6 +73,7 @@ internal class TangemPayCardLimitSetupModelTest {
                     )
                 }
             ),
+            images = emptyList(),
             state = TangemPayCardState.Active,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {

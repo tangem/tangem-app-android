@@ -360,6 +360,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     productInstance.frozenState
                 },
                 lastDigits = cardInfo.lastFourDigits,
+                images = cardInfo.images,
                 state = getCardState(cardId, userWalletId),
             )
         }
@@ -509,6 +510,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         limit = null,
         frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "",
+        images = emptyList(),
         state = TangemPayCardState.Issuing,
     )
 

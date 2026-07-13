@@ -36,6 +36,7 @@ internal data class TangemPayCardDetailsUM(
     val isLoading: Boolean = false,
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
+    val cardImageUrl: String?,
     val isActionsAvailable: Boolean = false,
     val shouldShowCardDetailsButtonOnCard: Boolean = false,
     val cardState: TangemPayCardState = TangemPayCardState.Active,
@@ -111,6 +112,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
 
     data class Card(
         val lastDigits: String,
+        val imageUrl: String?,
         val onClick: () -> Unit,
         val state: TangemPayCardUiState,
         val isFrozen: Boolean,
