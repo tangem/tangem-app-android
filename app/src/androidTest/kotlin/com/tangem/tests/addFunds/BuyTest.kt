@@ -68,8 +68,8 @@ class BuyTest : BaseTestCase() {
             step("Click on $token in Trending list") {
                 onAddFundsBottomSheet { trendingTokenWithTitle(token).clickWithAssertion() }
             }
-            step("Click on 'Add' button") {
-                onAddTokenBottomSheet { addButton.clickWithAssertion() }
+            step("Click on 'Confirm' button") {
+                onAddTokenBottomSheet { confirmButton.clickWithAssertion() }
             }
             step("Close 'Get token' screen") {
                 onAddFundsBottomSheet { closeButton.clickWithAssertion() }
