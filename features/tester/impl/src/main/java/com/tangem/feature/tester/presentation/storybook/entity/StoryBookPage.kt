@@ -14,6 +14,7 @@ import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 
 internal sealed interface StoryBookPage
@@ -352,6 +353,27 @@ internal data class TangemCheckmarkStory(
     val onCheckedChange: (Boolean) -> Unit,
     val onEnabledToggle: () -> Unit,
 ) : DsStoryBookPage
+
+internal data class TangemTokenIconStory(
+    val uiState: UiStateVariant,
+    val size: TangemTokenIcon.Size,
+    val hasUrl: Boolean,
+    val isGrayscale: Boolean,
+    val hasIndicator: Boolean,
+    val isIndicatorPurple: Boolean,
+    val hasTopIcon: Boolean,
+    val onUiStateChange: (UiStateVariant) -> Unit,
+    val onSizeChange: (TangemTokenIcon.Size) -> Unit,
+    val onUrlToggle: () -> Unit,
+    val onGrayscaleToggle: () -> Unit,
+    val onIndicatorToggle: () -> Unit,
+    val onIndicatorPurpleToggle: () -> Unit,
+    val onTopIconToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Selects which [TangemTokenIcon.UiState] the high-level overload is rendered with. */
+    enum class UiStateVariant { Token, Shimmer, Error }
+}
 
 internal data class TangemGlowRingStory(
     val variant: TangemGlowRing.Variant,
