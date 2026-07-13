@@ -149,7 +149,8 @@ private fun TangemPayStateRow(
         modifier = modifier
             .clip(RoundedCornerShape(size = 18.dp))
             .background(TangemTheme.colors2.surface.level3)
-            .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) },
+            .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) }
+            .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
     ) {
         Image(
             painter = getVisaIconPainter(),
