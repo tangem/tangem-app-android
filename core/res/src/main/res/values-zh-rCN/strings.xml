@@ -887,8 +887,9 @@
   <string name="markets_quick_actions">快速行动</string>
   <string name="markets_search_clear_all_hints">全部清除</string>
   <string name="markets_search_header_title">搜索代币</string>
-  <string name="markets_search_hint_header">最近的</string>
+  <string name="markets_search_hint_header">最近搜索</string>
   <string name="markets_search_portfolio_header">在您的投资组合中</string>
+  <string name="markets_search_recent_tokens_header">近期代币</string>
   <string name="markets_search_result_title">结果</string>
   <string name="markets_search_see_tokens_under_100k">查看市值低于 10 万美元的代币</string>
   <string name="markets_search_show_tokens">显示代币</string>
@@ -1234,6 +1235,8 @@
   <string name="onramp_title_available_from">可从</string>
   <string name="onramp_title_available_up_to">最高可提供</string>
   <string name="onramp_title_you_get">你得到</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">不支持该代币。请选择其他代币进行购买。</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s 不支持</string>
   <string name="onramp_tos_external_providers">服务由外部供应商提供。\nTangem 不承担任何责任。</string>
   <string name="onramp_transaction_status_footer_text">您可以关闭此屏幕，并在代币详情屏幕上查看交易状态。</string>
   <string name="onramp_up_to_rate">至多</string>
@@ -1940,6 +1943,9 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">将USDC存入支付账户以支付发行费用</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">无法支付费用</string>
   <string name="tangempay_reissue_card_title">要重新发行您的卡片吗？</string>
+  <string name="tangempay_remove_account">删除账户</string>
+  <string name="tangempay_remove_account_alert_description">Tangem Pay 将从主屏幕中移除，即使重新安装该应用，它也不会再次出现。</string>
+  <string name="tangempay_remove_account_alert_title">删除账号？</string>
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题，请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服务暂时不可用</string>
   <string name="tangempay_service_unreachable_try_later">无法显示详细信息。但刷卡支付功能仍然可用。</string>
