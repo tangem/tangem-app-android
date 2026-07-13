@@ -662,6 +662,7 @@
   <string name="generic_error">Une erreur s\'est produite</string>
   <string name="generic_error_code">Une erreur s\'est produite. Code:%s</string>
   <string name="generic_requires_memo_error">Un mémo est requis</string>
+  <string name="get_token_title">Obtenir des %1$s</string>
   <string name="give_permission_current_transaction">Cette transaction</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
   <string name="give_permission_rows_amount">Montant %s</string>
@@ -677,6 +678,8 @@
   <string name="hardware_wallet_key_feature_title">Génération de clés</string>
   <string name="hardware_wallet_security_feature_description">Toutes les opérations cryptographiques s\'effectuent à l\'intérieur de la puce sécurisée, certifiée contre le clonage et la falsification physique.</string>
   <string name="hardware_wallet_security_feature_title">Sécurité au niveau matériel</string>
+  <string name="high_fee_warning_description">L\'activité du réseau est élevée. Vous pouvez continuer maintenant ou réessayer plus tard, lorsque les frais seront peut-être moins élevés.</string>
+  <string name="high_fee_warning_title">Les frais de réseau sont plus élevés que d\'habitude</string>
   <string name="home_button_add_existing_wallet">Ajouter un Portefeuille existant</string>
   <string name="home_button_create_new_wallet">Créer un nouveau Portefeuille</string>
   <string name="home_button_order">Commandez</string>
@@ -1175,6 +1178,8 @@
   <string name="onramp_title_available_from">Disponible auprès de</string>
   <string name="onramp_title_available_up_to">Disponible jusqu\'à</string>
   <string name="onramp_title_you_get">Vous obtenez</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">Ce token n\'est pas pris en charge. Veuillez choisir un autre token à acheter.</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s n\'est pas pris en charge</string>
   <string name="onramp_tos_external_providers">Le service est fourni par un prestataire externe. Tangem n\'est pas responsable.</string>
   <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_up_to_rate">Jusqu\'à</string>
@@ -1187,6 +1192,21 @@
   <string name="organize_tokens_sort_by_balance">Par solde</string>
   <string name="organize_tokens_title">Organiser les jetons</string>
   <string name="organize_tokens_ungroup">Dégrouper</string>
+  <string name="promo_campaign_already_activated_subtitle">Le cashback éligible sera distribué à :</string>
+  <string name="promo_campaign_already_activated_title">Vous êtes déjà inscrit(e) à %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Tokens éligibles</string>
+  <string name="promo_campaign_enroll">S\'inscrire</string>
+  <string name="promo_campaign_enroll_success_title">Vous êtes bien inscrit(e) à %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">Cette campagne n\'existe plus ou a expiré</string>
+  <string name="promo_campaign_not_active_title">Campagne non active</string>
+  <string name="promo_campaign_reactivation_summary_description">Gagnez 0,5% de cashback sur chaque swap de plus de 500 $, sur toute paire sauf stablecoin vers stablecoin. Gain maximum : 50 $ par swap.\n\nComplétez cinq swaps éligibles et débloquez un bonus supplémentaire de 10 $.\n\nLes récompenses sont versées chaque semaine en USDT ou USDC à l\'adresse sélectionnée.</string>
+  <string name="promo_campaign_select_cashback_account">Sélectionner le compte pour recevoir le cashback</string>
+  <string name="promo_campaign_select_token">Sélectionner le token</string>
+  <string name="promo_campaign_summary_title">S\'inscrire à %1$s</string>
+  <string name="promo_campaign_terms_agreement">J\'accepte les %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">J\'accepte les</string>
+  <string name="promo_campaign_terms_link">Conditions de %1$s</string>
+  <string name="promo_campaign_whale_swap_summary_description">Gagnez du cashback sur chaque swap à partir de 10 000 $ jusqu\'à fin juillet.\n\nLes taux augmentent selon le montant : 0,10% à partir de 10 000 $, 0,20% à partir de 20 000 $, 0,50% à partir de 100 000 $.\n\nGain maximum : 500 $ par swap, et 10 000 $ par wallet et par sens de swap pendant toute la durée de la campagne. Les swaps stablecoin vers stablecoin sont exclus.\n\nLe paiement arrive chaque semaine à l\'adresse USDT ou USDC de votre choix.</string>
   <string name="provider_name_support">Assistance %s</string>
   <string name="push_notification_settings_banner_description">Les notifications push sont activées mais ne fonctionneront pas avant que vous les autorisiez</string>
   <string name="push_notification_settings_banner_title">Autoriser les notifications</string>
