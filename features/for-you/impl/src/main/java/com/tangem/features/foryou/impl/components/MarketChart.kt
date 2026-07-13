@@ -1,10 +1,6 @@
 package com.tangem.features.foryou.impl.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -16,23 +12,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.button.SecondaryTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
@@ -41,6 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.*
+import com.tangem.features.foryou.impl.ui.components.AiInsightContent
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -69,7 +61,13 @@ internal fun MarketChart(marketChart: MarketChartUM, modifier: Modifier = Modifi
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            AiInsightContent(marketChart.aiInsight)
+
+            if (marketChart.aiInsight is AiInsightUM.Displayed) SpacerH8()
+
+            AiInsightContent(
+                aiInsightUM = marketChart.aiInsight,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            )
         }
     }
 }
@@ -242,65 +240,6 @@ private fun ColumnScope.CantLoadDataBlock() {
         color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography3.heading.small,
     )
-}
-
-// IntrinsicSize.Min lets the gradient divider match the AI text height — heightIn wouldn't achieve that.
-@Suppress("ModifierHeightWithText")
-@Composable
-private fun AiInsightContent(aiInsightUM: AiInsightUM) {
-    AnimatedContent(
-        targetState = aiInsightUM,
-        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
-    ) { currentState ->
-        when (currentState) {
-            is AiInsightUM.AskAiInsight -> {
-                SecondaryTangemButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    onClick = currentState.askAiInsightClick,
-                    size = TangemButtonSize.X9,
-                    text = resourceReference(R.string.market_chart_ask_for_ai_summary_button),
-                )
-            }
-            is AiInsightUM.Displayed -> {
-                Row(
-                    modifier = Modifier
-                        .height(IntrinsicSize.Min)
-                        .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-                ) {
-                    CanvasGradientDivider(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(vertical = 2.dp),
-                    )
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 12.dp),
-                        text = buildAnnotatedString {
-                            withStyle(
-                                SpanStyle(
-                                    brush = Brush.horizontalGradient(
-                                        listOf(
-                                            TangemTheme.colors3.icon.accent.violet,
-                                            TangemTheme.colors3.icon.accent.blue,
-                                        ),
-                                    ),
-                                    alpha = 1f,
-                                ),
-                            ) { append(stringResourceSafe(R.string.market_chart_ai_total)) }
-                            append(" ")
-                            append(currentState.text)
-                        },
-                        color = TangemTheme.colors3.text.secondary,
-                        style = TangemTheme.typography3.caption.medium,
-                    )
-                }
-            }
-            AiInsightUM.Hide -> {}
-        }
-    }
 }
 
 // region Previews
