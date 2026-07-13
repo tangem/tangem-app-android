@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -31,6 +32,7 @@ dependencies {
 
     /** Project - Common */
     api(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Project - Domain */
     api(projects.domain.account.status)
@@ -54,6 +56,7 @@ dependencies {
     /** Other libraries */
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.decompose)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
