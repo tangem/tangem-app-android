@@ -67,7 +67,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
@@ -313,7 +313,16 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickBankTransfer() {
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-        val onramp = loaded.virtualAccount ?: return
+        when (val onramp = loaded.virtualAccount) {
+            null -> return
+            is VirtualAccountOnramp.BankCredentialsError -> showVaBankingDetailsError()
+            is VirtualAccountOnramp.Available,
+            VirtualAccountOnramp.Eligible,
+            -> openVirtualAccountDeposit(onramp, loaded)
+        }
+    }
+
+    private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
@@ -323,6 +332,18 @@ internal class TangemPayDetailsModel @Inject constructor(
                 paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
             ),
         )
+    }
+
+    private fun showVaBankingDetailsError() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VaBankingDetailsError(userWalletId = userWalletId),
+        )
+    }
+
+    fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        openVirtualAccountDeposit(onramp, loaded)
     }
 
     fun onVirtualAccountOrderCreated() {
