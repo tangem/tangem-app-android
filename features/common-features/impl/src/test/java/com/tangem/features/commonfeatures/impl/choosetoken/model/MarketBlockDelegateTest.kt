@@ -27,6 +27,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,6 +118,23 @@ internal class MarketBlockDelegateTest {
     }
 
     @Test
+    fun `GIVEN more than 5 market items WHEN default flow emitted THEN only first 5 shown`() = runTest {
+        // Arrange
+        val items = (1..7).map { marketItem("token-$it") }
+        defaultUiItems.value = items.toPersistentList()
+        val delegate = createDelegate(wallet = MockUserWalletFactory.create())
+
+        // Act
+        val result = lastMarketState(delegate)
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapMarketState.Content::class.java)
+        val content = result as SwapMarketState.Content
+        assertThat(content.items).containsExactlyElementsIn(items.take(5)).inOrder()
+        assertThat(content.total).isEqualTo(5)
+    }
+
+    @Test
     fun `GIVEN single-currency wallet WHEN trending emitted THEN market block is hidden`() = runTest {
         // Arrange
         defaultUiItems.value = persistentListOf(marketItem("token-1"))
@@ -186,6 +204,28 @@ internal class MarketBlockDelegateTest {
 
         // Assert
         assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN NODL wallet WHEN network token is beyond first 5 THEN block still shows it`() = runTest {
+        // Arrange — 5 tokens on another network first, the wallet-network token only at position 6.
+        val nodlWallet = MockUserWalletFactory.createSingleWalletWithToken()
+        val otherNetworkItems = (1..5).map { marketItem("token-eth-$it") }
+        val walletNetworkItem = marketItem("token-stellar")
+        (1..5).forEach { tokenMarketsByRawId["token-eth-$it"] = tokenMarket(ETHEREUM_NETWORK_ID) }
+        tokenMarketsByRawId["token-stellar"] = tokenMarket(STELLAR_NETWORK_ID)
+        defaultUiItems.value = (otherNetworkItems + walletNetworkItem).toPersistentList()
+
+        every {
+            singleAccountStatusListSupplier(nodlWallet.walletId)
+        } returns flowOf(accountStatusList(STELLAR_NETWORK_ID))
+
+        // Act
+        val result = lastMarketState(createDelegate(wallet = nodlWallet))
+
+        // Assert — network filtering runs on the full list before the 5-item cap, so it isn't dropped.
+        assertThat(result).isInstanceOf(SwapMarketState.Content::class.java)
+        assertThat((result as SwapMarketState.Content).items).containsExactly(walletNetworkItem)
     }
 
     // region Helpers
