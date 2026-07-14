@@ -23,6 +23,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.VirtualAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
@@ -46,7 +47,7 @@ class MockTangemSdkManager(
 
     override val canUseBiometry: Boolean = false
 
-    override val needEnrollBiometrics: Boolean = false
+    override val isEnrollBiometricsNeeded: Boolean = false
 
     override val keystoreManager = DummyKeystoreManager()
 
@@ -57,7 +58,7 @@ class MockTangemSdkManager(
 
     override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean = canUseBiometry
 
-    override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean = needEnrollBiometrics
+    override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean = isEnrollBiometricsNeeded
 
     override suspend fun scanProduct(
         cardId: String?,
@@ -238,6 +239,12 @@ class MockTangemSdkManager(
     override suspend fun tangemPayProduceInitialCredentials(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials> {
+        error("Not implemented")
+    }
+
+    override suspend fun tangemPayProduceVirtualAccountData(
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, VirtualAccountActivationData> {
         error("Not implemented")
     }
 

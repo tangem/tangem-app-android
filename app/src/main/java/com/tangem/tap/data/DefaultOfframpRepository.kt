@@ -4,15 +4,16 @@ import androidx.datastore.core.DataStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.model.PendingOfframp
+import com.tangem.domain.offramp.model.PendingOfframp.Companion.EXPIRY_MS
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.data.converter.PendingOfframpEntryConverter
 import com.tangem.tap.data.model.PendingOfframpEntry
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 /**
  * Default implementation of [OfframpRepository].
@@ -27,7 +28,7 @@ internal class DefaultOfframpRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : OfframpRepository {
 
-    private val pendingOfframpConverter = PendingOfframpEntryConverter()
+    private val converter = PendingOfframpEntryConverter()
 
     override fun getOfframpUrl(
         cryptoCurrency: CryptoCurrency,
@@ -71,13 +72,17 @@ internal class DefaultOfframpRepository(
                 entry.requestId == requestId &&
                     entry.userWalletId == userWalletId.stringValue &&
                     entry.currencyId == currencyId &&
-                    now - entry.createdAt < EXPIRY_MS
+                    !entry.isExpired(now)
             }
             // Keep the matched record so the same redirect can be followed again until it expires; only prune the
             // expired ones. The record is dropped naturally once it ages past EXPIRY_MS.
             stored.filterNotExpired(now)
         }
-        matched?.let(pendingOfframpConverter::convert)
+        matched?.let(converter::convert)
+    }
+
+    override suspend fun getAllStoredOfframps(): List<PendingOfframp> = withContext(dispatchers.io) {
+        pendingOfframpStore.data.first().map(converter::convert)
     }
 
     // Returns the same instance when nothing is expired, so DataStore.updateData sees an unchanged value and skips
@@ -85,7 +90,5 @@ internal class DefaultOfframpRepository(
     private fun List<PendingOfframpEntry>.filterNotExpired(now: Long): List<PendingOfframpEntry> =
         if (none { now - it.createdAt >= EXPIRY_MS }) this else filter { now - it.createdAt < EXPIRY_MS }
 
-    private companion object {
-        val EXPIRY_MS: Long = TimeUnit.HOURS.toMillis(1)
-    }
+    private fun PendingOfframpEntry.isExpired(now: Long): Boolean = converter.convert(this).isExpired(now)
 }

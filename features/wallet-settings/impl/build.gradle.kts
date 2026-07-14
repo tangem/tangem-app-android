@@ -14,58 +14,51 @@ android {
 dependencies {
 
     /* Project - API */
-    implementation(projects.features.walletSettings.api)
-    implementation(projects.features.manageTokens.api)
-    implementation(projects.features.nft.api)
-    implementation(projects.features.onboardingV2.api)
+    api(projects.features.hotWallet.api)
+    api(projects.features.pushNotificationSettings.api)
+    api(projects.features.wallet.api)
+    api(projects.features.walletSettings.api)
     implementation(projects.features.pushNotifications.api)
-    implementation(projects.features.pushNotificationSettings.api)
-    implementation(projects.features.hotWallet.api)
-    implementation(projects.features.wallet.api)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.navigation)
-    implementation(projects.core.analytics)
-    implementation(projects.core.utils)
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.datasource)
+    implementation(projects.core.ui)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /* Project - Domain */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency)
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.appCurrency)
+    api(projects.domain.assetsdiscovery)
+    api(projects.domain.balanceHiding)
+    api(projects.domain.demo)
+    api(projects.domain.nft)
+    api(projects.domain.notifications)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.legacy)
     implementation(projects.domain.card)
+    implementation(projects.domain.common)
     implementation(projects.domain.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.nft)
-    implementation(projects.domain.settings)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.notifications)
-    implementation(projects.domain.assetsdiscovery)
+    implementation(projects.domain.wallets.models)
 
     /* AndroidX */
-    implementation(deps.androidx.fragment.ktx)
-    implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
 
     /* Compose */
+    api(deps.compose.foundation)
+    api(deps.decompose.ext.compose)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.shimmer)
-    implementation(deps.decompose.ext.compose)
     implementation(deps.compose.reorderableV2)
 
     /* DI */
@@ -73,7 +66,10 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /* Other */
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Tangem libraries */
     implementation(tangemDeps.hot.core)

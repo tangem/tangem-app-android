@@ -11,15 +11,10 @@ android {
 dependencies {
 
     /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.nft.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.account)
+    api(projects.domain.models)
+    api(projects.domain.nft.models)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-
-    /* Compose */
-    implementation(deps.compose.runtime)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 }

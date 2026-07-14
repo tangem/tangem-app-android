@@ -101,6 +101,20 @@ internal class PaymentAccountStatusesStore(
         return runtimeStore.getSyncOrDefault(emptyMap()).containsKey(userWalletId.stringValue)
     }
 
+    suspend fun remove(userWalletId: UserWalletId) {
+        logger.i("remove($userWalletId)")
+        remove(userWalletIds = listOf(userWalletId))
+    }
+
+    suspend fun remove(userWalletIds: List<UserWalletId>) {
+        logger.i("remove($userWalletIds)")
+        val keys = userWalletIds.map { it.stringValue }.toSet()
+        coroutineScope {
+            launch { runtimeStore.update(default = emptyMap()) { it - keys } }
+            launch { persistenceDataStore.updateData { it - keys } }
+        }
+    }
+
     private suspend fun storeInRuntime(userWalletId: UserWalletId, status: AccountStatus.Payment) {
         runtimeStore.update(default = emptyMap()) { stored ->
             stored.toMutableMap().apply {

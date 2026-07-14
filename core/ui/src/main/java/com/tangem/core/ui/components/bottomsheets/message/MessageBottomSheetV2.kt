@@ -63,6 +63,7 @@ fun MessageBottomSheetV2(state: MessageBottomSheetUM, onDismissRequest: () -> Un
                 type = TangemTopBarType.BottomSheet,
                 endContent = {
                     TangemButton(
+                        modifier = Modifier.testTag(WarningBottomSheetTestTags.CLOSE_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                         onClick = stateWithOnDismiss.onDismissRequest,
                         size = TangemButton.Size.X11,
@@ -214,6 +215,7 @@ private fun BottomSheetVector(vector: MessageBottomSheetUM.Vector, modifier: Mod
         MessageBottomSheetUM.Vector.Type.Informative -> TangemTheme.colors3.icon.status.info
         MessageBottomSheetUM.Vector.Type.Attention -> TangemTheme.colors3.icon.status.warning
         MessageBottomSheetUM.Vector.Type.Warning -> TangemTheme.colors3.icon.status.error
+        MessageBottomSheetUM.Vector.Type.Success -> TangemTheme.colors3.icon.status.success
     }
 
     val backgroundColor = when (vector.backgroundType) {
@@ -223,6 +225,7 @@ private fun BottomSheetVector(vector: MessageBottomSheetUM.Vector, modifier: Mod
         MessageBottomSheetUM.Vector.BackgroundType.Informative -> TangemTheme.colors3.bg.status.infoSubtle
         MessageBottomSheetUM.Vector.BackgroundType.Attention -> TangemTheme.colors3.bg.status.warningSubtle
         MessageBottomSheetUM.Vector.BackgroundType.Warning -> TangemTheme.colors3.bg.status.errorSubtle
+        MessageBottomSheetUM.Vector.BackgroundType.Success -> TangemTheme.colors3.bg.status.successSubtle
     }
 
     Box(

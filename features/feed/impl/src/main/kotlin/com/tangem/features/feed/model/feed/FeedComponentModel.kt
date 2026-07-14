@@ -37,6 +37,7 @@ import com.tangem.features.feed.model.feed.state.transformers.*
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.*
+import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
@@ -61,6 +62,7 @@ internal class FeedComponentModel @Inject constructor(
     private val appRouter: AppRouter,
     private val designFeatureToggles: DesignFeatureToggles,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val forYouFeatureToggles: ForYouFeatureToggles,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -273,6 +275,11 @@ internal class FeedComponentModel @Inject constructor(
             ),
             globalState = GlobalFeedState.Loading,
             earnListUM = EarnListUM.Loading,
+            forYouBannerUM = if (forYouFeatureToggles.isForYouEnabled) {
+                ForYouBannerUM.Content(onClick = params.feedClickIntents::openForYou)
+            } else {
+                ForYouBannerUM.Empty
+            },
         )
     }
 

@@ -4,28 +4,25 @@ import arrow.core.Either
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.hasAccountData
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardLimitData
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayEntryPoint
+import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,6 +63,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
+    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
+    private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -341,7 +340,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         fiatRate: BigDecimal?,
     ): PaymentAccountStatusValue {
         val cardsById = cards.associateBy { it.cardId }
-        val tangemPayCards = productInstances.mapNotNull { productInstance ->
+        val tangemPayCards = cardProductInstances.mapNotNull { productInstance ->
             val cardInfo = cardsById[productInstance.cardId] ?: return@mapNotNull null
             val cardId = productInstance.cardId
             val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
@@ -361,6 +360,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     productInstance.frozenState
                 },
                 lastDigits = cardInfo.lastFourDigits,
+                images = cardInfo.images,
                 state = getCardState(cardId, userWalletId),
             )
         }
@@ -376,6 +376,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         // the previously shown order and append newly seen cards at the end.
         val orderedCards = tangemPayCards.stableOrder(previousRealCardOrder(userWalletId))
 
+        val virtualAccount = resolveVirtualAccountOnramp(userWalletId)
+
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = customerId,
@@ -389,6 +391,55 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 availableForWithdrawal = availableForWithdrawal.orZero(),
             ),
             error = null,
+            virtualAccount = virtualAccount,
+            tariffPlan = tariffPlan?.let { tariff ->
+                getTangemPayTariffPlanStateUseCase(
+                    userWalletId = userWalletId,
+                    tariff = tariff,
+                )
+            },
+        )
+    }
+
+    /**
+     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638). Gated by the feature toggle.
+     * If a product instance with [SpecificationDataType.ACCOUNT] exists, eagerly fetches its bank credentials
+     * ([VirtualAccountOnramp.Available]); otherwise surfaces [VirtualAccountOnramp.Eligible] when the wallet has
+     * the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
+     */
+    private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
+        if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return null
+
+        val accountInstance = productInstances.firstOrNull {
+            it.specificationDataType == SpecificationDataType.ACCOUNT
+        }
+        if (accountInstance != null) {
+            return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
+                ifLeft = { error ->
+                    logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
+                    null
+                },
+                ifRight = { credentials ->
+                    VirtualAccountOnramp.Available(
+                        productInstanceId = accountInstance.id,
+                        bankCredentials = credentials,
+                    )
+                },
+            )
+        }
+
+        return onboardingRepository.fetchCustomerEligibility(userWalletId).fold(
+            ifLeft = { error ->
+                logger.e("fetchCustomerEligibility failed for $userWalletId: $error")
+                null
+            },
+            ifRight = { channels ->
+                if (channels.contains(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT)) {
+                    VirtualAccountOnramp.Eligible
+                } else {
+                    null
+                }
+            },
         )
     }
 
@@ -413,7 +464,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return if (closingOrderId != null) {
             val order = cardDetailsRepository.getOrderInfo(userWalletId, closingOrderId).getOrNull()
             if (order != null && order.orderStatus.isTerminal) {
-                closeCardRepository.setCloseOrderId(cardId, null)
+                closeCardRepository.removeCloseOrderId(cardId)
                 TangemPayCardState.Active
             } else {
                 TangemPayCardState.Closing
@@ -421,6 +472,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         } else if (reissueOrderId != null) {
             val order = cardDetailsRepository.getOrderInfo(userWalletId, reissueOrderId).getOrNull()
             if (order != null && order.orderStatus.isTerminal) {
+                reissueCardRepository.removeReissueOrderId(cardId)
                 TangemPayCardState.Active
             } else {
                 TangemPayCardState.Reissuing
@@ -458,6 +510,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         limit = null,
         frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "",
+        images = emptyList(),
         state = TangemPayCardState.Issuing,
     )
 

@@ -37,7 +37,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBot
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.collectLatest
@@ -114,7 +113,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val uiMessageSender: UiMessageSender,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -123,12 +121,8 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onOrganizeTokensClick() {
         val userWalletId = stateHolder.getSelectedWalletId()
-        if (walletFeatureToggles.isAddAndManageTokensEnabled) {
-            analyticsEventHandler.send(PortfolioAnalyticsEvent.ButtonAddManage())
-            router.openAddAndManageBottomSheet(userWalletId = userWalletId)
-        } else {
-            router.openOrganizeTokensScreen(userWalletId = userWalletId)
-        }
+        analyticsEventHandler.send(PortfolioAnalyticsEvent.ButtonAddManage())
+        router.openAddAndManageBottomSheet(userWalletId = userWalletId)
     }
 
     override fun onDismissMarketsTooltip() {

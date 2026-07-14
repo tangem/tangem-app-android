@@ -51,7 +51,10 @@ inline fun <reified T : StoryConfig> StoriesContainer(
 ) {
     var watchedCounter by remember { mutableIntStateOf(1) }
     var isPressed by remember { mutableStateOf(value = false) }
-    val storyState by remember(config) {
+    // Key on content (stories + repeatability), not the whole config object: an unrelated change
+    // to the config instance (e.g. a caller folding a changing flag into it) must not recreate the
+    // state machine and rewind stories to the first page.
+    val storyState by remember(config.stories, config.isRestartable) {
         mutableStateOf(
             StoriesStepStateMachine(
                 stories = config.stories,
@@ -59,7 +62,9 @@ inline fun <reified T : StoryConfig> StoriesContainer(
             ),
         )
     }
-    BackHandler(onBack = { config.onClose(watchedCounter) })
+    if (config.isCloseButtonVisible) {
+        BackHandler(onBack = { config.onClose(watchedCounter) })
+    }
 
     val isPaused = isPressed || isPauseStories
 
@@ -90,22 +95,24 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                 paused = isPaused,
                 onStepFinish = onNextClick,
             )
-            Icon(
-                painter = rememberVectorPainter(
-                    image = ImageVector.vectorResource(R.drawable.ic_close_24),
-                ),
-                tint = TangemTheme.colors.icon.constant,
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(top = 14.dp, end = 16.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = LocalIndication.current,
-                        onClick = { config.onClose(watchedCounter) },
-                    )
-                    .testTag(SwapStoriesScreenTestTags.CLOSE_BUTTON),
-            )
+            if (config.isCloseButtonVisible) {
+                Icon(
+                    painter = rememberVectorPainter(
+                        image = ImageVector.vectorResource(R.drawable.ic_close_24),
+                    ),
+                    tint = TangemTheme.colors.icon.constant,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 14.dp, end = 16.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = LocalIndication.current,
+                            onClick = { config.onClose(watchedCounter) },
+                        )
+                        .testTag(SwapStoriesScreenTestTags.CLOSE_BUTTON),
+                )
+            }
         }
     }
 }

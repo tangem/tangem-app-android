@@ -29,6 +29,9 @@ interface HotMapDerivationsRepository {
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Pair<UserWallet.Hot, Map<ByteArrayKey, ExtendedPublicKeysMap>>
 
+    /** Merges already-derived [keys] into [userWallet]'s stored derivations. */
+    fun mergeDerivedKeys(userWallet: UserWallet.Hot, keys: Map<ByteArrayKey, ExtendedPublicKeysMap>): UserWallet.Hot
+
     /** Check if user [userWallet] has missed derivations using map of [Network.ID] with extraDerivationPath */
     suspend fun hasMissedDerivations(
         userWallet: UserWallet.Hot,

@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 /**
  * Registration request — registers a new device and establishes initial trust.
  *
- * Posted to `POST /api/v1/auth/register`; on success the server returns
+ * On success the server returns
  * [com.tangem.datasource.api.auth.models.response.TokenApiResponse] (the initial session token pair).
  */
 @JsonClass(generateAdapter = true)
@@ -22,7 +22,7 @@ data class RegisterApiRequest(
 data class RegisterPayload(
     /** Base64-encoded EC public key of the device. */
     @Json(name = "devicePublicKey") val devicePublicKey: String,
-    /** Deciphered nonce value from the `/api/v1/auth/nonce/device` endpoint. */
+    /** Deciphered nonce value from the device nonce endpoint. */
     @Json(name = "nonce") val nonce: String,
     /** Platform attestation token (Play Integrity / App Attest). Optional; backend accepts `null`. */
     @Json(name = "attestationToken") val attestationToken: String?,

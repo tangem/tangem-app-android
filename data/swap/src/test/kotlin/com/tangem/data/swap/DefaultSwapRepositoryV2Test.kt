@@ -539,7 +539,7 @@ internal class DefaultSwapRepositoryV2Test {
     }
 
     @Test
-    fun `getPairs keeps DEX providers when yield supply is active and flag is on`() = runTest {
+    fun `GIVEN yield active and flag on WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
         // Arrange
         every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
@@ -580,10 +580,155 @@ internal class DefaultSwapRepositoryV2Test {
             swapTxType = SwapTxType.Swap,
         )
 
-        // Assert — both providers should remain
+        // Assert — non-allowlisted DEX (dex-provider-1) dropped, only CEX remains
         assertThat(result).hasSize(2)
         val providers = result.first().providers
-        assertThat(providers).hasSize(2)
+        assertThat(providers).hasSize(1)
+        assertThat(providers.first().type).isEqualTo(ExpressProviderType.CEX)
+    }
+
+    @Test
+    fun `GIVEN yield active and flag on WHEN getPairs THEN allowlisted DEX kept with CEX`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
+        val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
+        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
+        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+
+        val allowedDexProvider = dexProvider.copy(providerId = "1inch")
+        val swapPair = SwapPair(
+            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
+            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
+            providers = listOf(
+                SwapPairProvider(providerId = "1inch", rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+            ),
+        )
+
+        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(allowedDexProvider, cexProvider)
+
+        // Act
+        val result = repository.getPairs(
+            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
+            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
+            filterProviderTypes = emptyList(),
+            swapTxType = SwapTxType.Swap,
+        )
+
+        // Assert — allow-listed DEX (1inch) + CEX both kept
+        assertThat(result).hasSize(2)
+        val providers = result.first().providers
+        assertThat(providers.map { it.providerId }).containsExactly("1inch", CEX_PROVIDER_ID)
+    }
+
+    @Test
+    fun `GIVEN yield active and flag on WHEN getPairs THEN allowlisted DEX_BRIDGE kept with CEX`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
+        val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
+        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
+        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+
+        val lifiProvider = dexProvider.copy(providerId = "li-fi", type = ExpressProviderType.DEX_BRIDGE)
+        val swapPair = SwapPair(
+            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
+            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
+            providers = listOf(
+                SwapPairProvider(providerId = "li-fi", rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+            ),
+        )
+
+        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(lifiProvider, cexProvider)
+
+        // Act
+        val result = repository.getPairs(
+            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
+            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
+            filterProviderTypes = emptyList(),
+            swapTxType = SwapTxType.Swap,
+        )
+
+        // Assert — allow-listed DEX_BRIDGE (li-fi) + CEX both kept
+        assertThat(result).hasSize(2)
+        val providers = result.first().providers
+        assertThat(providers.map { it.providerId }).containsExactly("li-fi", CEX_PROVIDER_ID)
+    }
+
+    @Test
+    fun `GIVEN yield active and flag on WHEN getPairs THEN ONRAMP provider filtered out`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
+        val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
+        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
+        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+
+        val onrampProvider = dexProvider.copy(providerId = "onramp-provider", type = ExpressProviderType.ONRAMP)
+        val swapPair = SwapPair(
+            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
+            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
+            providers = listOf(
+                SwapPairProvider(providerId = "onramp-provider", rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+            ),
+        )
+
+        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(onrampProvider, cexProvider)
+
+        // Act
+        val result = repository.getPairs(
+            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
+            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
+            filterProviderTypes = emptyList(),
+            swapTxType = SwapTxType.Swap,
+        )
+
+        // Assert — ONRAMP dropped, only CEX remains
+        assertThat(result).hasSize(2)
+        val providers = result.first().providers
+        assertThat(providers).hasSize(1)
+        assertThat(providers.first().type).isEqualTo(ExpressProviderType.CEX)
+    }
+
+    @Test
+    fun `GIVEN yield inactive and flag on WHEN getPairs THEN all providers kept`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
+        val primaryStatus = createCryptoCurrencyStatus(primaryCoin)
+        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
+        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+
+        val swapPair = SwapPair(
+            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
+            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
+            providers = listOf(
+                SwapPairProvider(providerId = PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+            ),
+        )
+
+        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(dexProvider, cexProvider)
+
+        // Act
+        val result = repository.getPairs(
+            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
+            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
+            filterProviderTypes = emptyList(),
+            swapTxType = SwapTxType.Swap,
+        )
+
+        // Assert — yield inactive → non-allow-listed DEX (dex-provider-1) survives alongside CEX
+        assertThat(result).hasSize(2)
+        val providers = result.first().providers
+        assertThat(providers.map { it.providerId }).containsExactly(PROVIDER_ID, CEX_PROVIDER_ID)
     }
 
     // endregion

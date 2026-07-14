@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -16,6 +17,12 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val mainScreenTile: KNode = child {
         hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+        useUnmergedTree = true
+    }
+
+    fun tileWithSubtitle(subtitle: String): KNode = child {
+        hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+        hasAnyDescendant(withText(subtitle))
         useUnmergedTree = true
     }
 
@@ -39,6 +46,15 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_card_details_withdraw)))
         useUnmergedTree = true
+    }
+
+    val moreActionsButton: KNode = child {
+        hasTestTag(TokenDetailsTopBarTestTags.MORE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val termsAndFeesMenuItem: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangem_pay_terms_limits))
     }
 
     fun transactionRowWithText(text: String): KNode = child {

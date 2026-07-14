@@ -128,8 +128,13 @@ internal class RetrofitApiBuilder @Inject constructor(
         // feature toggle is OFF we skip installing the hooks entirely (avoids wiring up DPoP
         // header generation and 401 retry logic on builds where auth isn't live yet).
         if (condition && isBackendAuthEnabled.get()) {
-            addInterceptor(sessionAuthInterceptor.get())
-            authenticator(sessionAuthenticator.get())
+            // Resolve the providers lazily, at request time, instead of eagerly here. The session
+            // authenticator depends (via SessionTokenRefresher) back on AuthApi, so calling `.get()`
+            // while AuthApi is still being built would recurse into provideAuthApi → applySessionAuth
+            // → `.get()` → … and overflow the stack. Deferring `.get()` to the first HTTP call lets
+            // AuthApi finish constructing (and get cached) first, breaking the cycle.
+            addInterceptor(Interceptor { chain -> sessionAuthInterceptor.get().intercept(chain) })
+            authenticator { route, response -> sessionAuthenticator.get().authenticate(route, response) }
         }
 
         return this
