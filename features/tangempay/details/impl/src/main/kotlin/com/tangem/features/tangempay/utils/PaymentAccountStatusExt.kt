@@ -12,6 +12,8 @@ internal val AccountStatus.Payment.cryptoCurrency: CryptoCurrency.Token
     get() = when (val v = value) {
         is PaymentAccountStatusValue.Loaded -> v.cryptoCurrency
         is PaymentAccountStatusValue.Deactivated -> v.cryptoCurrency
+        is PaymentAccountStatusValue.Inactive -> v.cryptoCurrency
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> v.cryptoCurrency
         else -> error("TangemPayDetails opened with unsupported status: $v")
     }
 
@@ -39,3 +41,6 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     is PaymentAccountStatusValue.Deactivated -> v.balance
     else -> null
 }
+
+internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
+    get() = availableForWithdrawal.signum() > 0

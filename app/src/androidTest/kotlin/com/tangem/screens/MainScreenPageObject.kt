@@ -96,7 +96,7 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
      * Required because TangemCollapsingTopBar places the body at y=collapsingHeight, which
      * pushes lower list items off-screen when the header is expanded.
      */
-    private fun collapseHeader() {
+    fun collapseHeader() {
         screenContainer {
             performTouchInput { swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f) }
         }
@@ -139,12 +139,13 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     val walletImportedBanner: KNode = child {
-        hasTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER)
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.initial_wallet_sync_banner_title))
         useUnmergedTree = true
     }
 
     val walletImportedBannerCheckHereButton: KNode = child {
-        hasAnyAncestor(withTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER))
+        hasAnyAncestor(withTestTag(NotificationTestTags.CONTAINER))
         hasText(getResourceString(CoreResR.string.main_manage_tokens))
         useUnmergedTree = true
     }
@@ -198,6 +199,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
 
     val notificationContainer: KNode = child {
         hasTestTag(NotificationTestTags.CONTAINER)
+        useUnmergedTree = true
+    }
+
+    val getTangemPayBanner: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.tangempay_onboarding_banner_title))
         useUnmergedTree = true
     }
 
