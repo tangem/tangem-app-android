@@ -3,6 +3,7 @@ package com.tangem.features.foryou.impl.model
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
@@ -15,6 +16,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -199,6 +201,13 @@ internal class ForYouModelTest {
 
     private fun createModel(testScope: TestScope): ForYouModel {
         return ForYouModel(
+            paramsContainer = MutableParamsContainer(
+                ForYouComponent.Params(
+                    callbacks = object : ForYouComponent.ForYouModelCallbacks {
+                        override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) = Unit
+                    },
+                ),
+            ),
             userWalletsListRepository = userWalletsListRepository,
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),

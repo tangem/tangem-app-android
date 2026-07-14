@@ -288,6 +288,7 @@ internal class SetPortfolioReviewTransformerTest {
         expandedAssetIds = expandedAssetIds,
         expandClick = {},
         onPeriodClick = {},
+        onTokenClick = {},
     )
 
     private fun accountStatusList(
