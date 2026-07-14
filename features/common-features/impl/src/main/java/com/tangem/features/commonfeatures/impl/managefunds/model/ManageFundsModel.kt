@@ -7,6 +7,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -23,6 +24,7 @@ import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddData
@@ -153,12 +155,7 @@ internal class ManageFundsModel @Inject constructor(
 
     override fun onQuickActionClick(action: TokenActionsBSContentUM.Action, shouldDismiss: Boolean) {
         val event = when (flowType) {
-            ManageFundsComponent.FlowType.AddFunds -> when (action) {
-                TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
-                TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
-                TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
-                else -> null
-            }
+            ManageFundsComponent.FlowType.AddFunds -> addFundsQuickActionEvent(action)
             ManageFundsComponent.FlowType.Transfer -> when (action) {
                 TokenActionsBSContentUM.Action.Send -> TransferAnalyticsEvent.ButtonSend()
                 TokenActionsBSContentUM.Action.Exchange -> TransferAnalyticsEvent.ButtonSwap()
@@ -170,6 +167,51 @@ internal class ManageFundsModel @Inject constructor(
         event?.let { analyticsEventHandler.send(it) }
         if (shouldDismiss) {
             params.onDismiss()
+        }
+    }
+
+    private fun addFundsQuickActionEvent(action: TokenActionsBSContentUM.Action): AnalyticsEvent? {
+        val request = tokenActionsTrigger.value
+        return if (launchMode is ManageFundsComponent.LaunchMode.TokenActionsOnly && request != null) {
+            tokenScreenQuickActionEvent(action, request)
+        } else {
+            when (action) {
+                TokenActionsBSContentUM.Action.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
+                TokenActionsBSContentUM.Action.Exchange -> ManageFundsAnalyticsEvent.ButtonSwap()
+                TokenActionsBSContentUM.Action.Receive -> ManageFundsAnalyticsEvent.ButtonReceive()
+                else -> null
+            }
+        }
+    }
+
+    private fun tokenScreenQuickActionEvent(
+        action: TokenActionsBSContentUM.Action,
+        request: TokenActionsRequest,
+    ): AnalyticsEvent? {
+        val token = request.status.currency.symbol
+        val blockchain = request.status.currency.network.name
+        val derivationIndex = request.account.account
+            .takeUnless { it.isMainAccount }
+            ?.derivationIndex?.value
+        return when (action) {
+            TokenActionsBSContentUM.Action.Buy -> TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
+                token = token,
+                blockchain = blockchain,
+                status = TokenScreenAnalyticsEvent.AVAILABLE,
+                derivationIndex = derivationIndex,
+            )
+            TokenActionsBSContentUM.Action.Exchange -> TokenScreenAnalyticsEvent.ButtonWithParams.ButtonExchange(
+                token = token,
+                status = TokenScreenAnalyticsEvent.AVAILABLE,
+                blockchain = blockchain,
+                derivationIndex = derivationIndex,
+            )
+            TokenActionsBSContentUM.Action.Receive -> TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
+                token = token,
+                status = TokenScreenAnalyticsEvent.AVAILABLE,
+                blockchain = blockchain,
+            )
+            else -> null
         }
     }
 
