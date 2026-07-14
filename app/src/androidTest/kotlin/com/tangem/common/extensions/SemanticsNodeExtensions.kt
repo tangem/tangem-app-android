@@ -9,7 +9,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 /** Returns the first non-blank text found in this node or its subtree (unmerged tree). */
 fun SemanticsNode.firstTextOrNull(): String? {
     config.getOrNull(SemanticsProperties.Text)
-        ?.firstOrNull()?.text?.toString()?.takeIf { it.isNotBlank() }
+        ?.firstOrNull()?.text?.takeIf { it.isNotBlank() }
         ?.let { return it }
     children.forEach { child -> child.firstTextOrNull()?.let { return it } }
     return null
