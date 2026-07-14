@@ -339,15 +339,19 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onNFTClick(userWallet: UserWallet) {
-        val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        when (val state = selectedWallet.nftState) {
+        val nftState = if (stateHolder.value.isRedesignEnabled) {
+            stateHolder.getSelectedWalletUM().nftState
+        } else {
+            (stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content)?.nftState
+        }
+        when (nftState) {
             is WalletNFTItemUM.Content -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
                         state = AnalyticsParam.EmptyFull.Full,
-                        allAssetsCount = state.allAssetsCount,
-                        collectionsCount = state.collectionsCount,
-                        noCollectionAssetsCount = state.noCollectionAssetsCount,
+                        allAssetsCount = nftState.allAssetsCount,
+                        collectionsCount = nftState.collectionsCount,
+                        noCollectionAssetsCount = nftState.noCollectionAssetsCount,
                     ),
                 )
             }
@@ -364,6 +368,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Failed,
             is WalletNFTItemUM.Hidden,
             is WalletNFTItemUM.Loading,
+            null,
             -> Unit
         }
 
