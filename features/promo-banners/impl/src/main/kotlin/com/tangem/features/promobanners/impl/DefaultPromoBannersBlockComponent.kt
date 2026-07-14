@@ -26,8 +26,15 @@ internal class DefaultPromoBannersBlockComponent @AssistedInject constructor(
     }
 
     @Composable
-    override fun ContentWithPadding(horizontalItemPadding: Dp, modifier: Modifier) {
-        val state by model.uiState.collectAsStateWithLifecycle()
+    override fun ContentWithPadding(horizontalItemPadding: Dp, walletId: String?, modifier: Modifier) {
+        val state = if (walletId != null) {
+            val statesByWallet by model.bannerStates.collectAsStateWithLifecycle()
+            statesByWallet[walletId]
+        } else {
+            val selectedState by model.uiState.collectAsStateWithLifecycle()
+            selectedState
+        } ?: return
+
         PromoBannersBlock(
             state = state,
             modifier = modifier,

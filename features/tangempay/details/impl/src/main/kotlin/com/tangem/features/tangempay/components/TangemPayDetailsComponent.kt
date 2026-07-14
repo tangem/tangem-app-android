@@ -92,7 +92,11 @@ internal class TangemPayDetailsComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val promoBannersBlock = ComposableContentComponent { promoModifier ->
-            promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 16.dp)
+            promoBannersBlockComponent.ContentWithPadding(
+                modifier = promoModifier,
+                walletId = null,
+                horizontalItemPadding = 16.dp,
+            )
         }
         CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
             NavigationBar3ButtonsScrim()

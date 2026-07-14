@@ -57,9 +57,11 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
 
                     scope.launch {
                         // Only trust the redirect if it carries a request_id we issued for a sell this
-                        // app actually started (single-use, bound to the wallet + currency). Otherwise an external
-                        // deeplink could inject a locked attacker recipient/amount into the Send confirm screen.
-                        val pendingOfframp = offrampRepository.consumePendingOfframp(
+                        // app actually started (bound to the wallet + currency, valid until it expires). Otherwise an
+                        // external deeplink could inject a locked attacker recipient/amount into the Send confirm
+                        // screen. The record is kept until expiry so the user can re-open the redirect within that
+                        // window.
+                        val pendingOfframp = offrampRepository.resolvePendingOfframp(
                             requestId = requestId,
                             userWalletId = userWallet.walletId,
                             currencyId = currencyId,
