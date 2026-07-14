@@ -14,8 +14,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.*
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -34,11 +34,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.addressbook.AddressBookFeatureToggles
-import com.tangem.features.addressbook.AddressBookSendAnalytics
-import com.tangem.features.addressbook.ContactSelectionListener
-import com.tangem.features.addressbook.MatchedContact
-import com.tangem.features.addressbook.SelectedContact
+import com.tangem.features.addressbook.*
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
@@ -94,7 +90,7 @@ internal class SendDestinationModelTest {
         mockk(relaxed = true)
     private val sendDestinationAlertFactory: SendDestinationAlertFactory = mockk(relaxed = true)
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
-    private val getContactsUseCase: GetContactsUseCase = mockk(relaxed = true)
+    private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk(relaxed = true)
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val addressBookFeatureToggles: AddressBookFeatureToggles = mockk(relaxed = true)
     private val contactSelectionListener: ContactSelectionListener = mockk(relaxed = true)
@@ -115,7 +111,7 @@ internal class SendDestinationModelTest {
         every { listenToQrScanningUseCase(any()) } returns emptyFlow<String>().right()
         coEvery { validateWalletMemoUseCase(any(), any(), any()) } returns Unit.right()
         coEvery { isMemoRequiredUseCase(any(), any()) } returns false
-        every { getContactsUseCase(any(), any()) } returns flowOf(emptyList())
+        every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns flowOf(emptyList())
         every { contactSelectionListener.resultFlow } returns MutableSharedFlow()
         coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns null
         every { cryptoCurrency.network.rawId } returns networkRawId
@@ -393,8 +389,8 @@ internal class SendDestinationModelTest {
             coEvery {
                 validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
             } returns AddressValidation.Success.Valid.right()
-            every { getContactsUseCase(any(), any()) } returns
-                flowOf(listOf(buildContact(name = model.savedName, address = model.savedAddress)))
+            every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns
+                flowOf(listOf(verified(buildContact(name = model.savedName, address = model.savedAddress))))
             val sut = buildModel()
             advanceUntilIdle()
 
@@ -479,8 +475,8 @@ internal class SendDestinationModelTest {
             coEvery {
                 validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
             } returns AddressValidation.Success.Valid.right()
-            every { getContactsUseCase(any(), any()) } returns
-                flowOf(model.savedAddresses.map { buildContact(address = it) })
+            every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns
+                flowOf(model.savedAddresses.map { verified(buildContact(address = it)) })
             val sut = buildBlockModel(isAddContactAvailable = model.isAddContactAvailable)
             advanceUntilIdle()
 
@@ -607,10 +603,13 @@ internal class SendDestinationModelTest {
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
             addressBookFeatureToggles = addressBookFeatureToggles,
-            getContactsUseCase = getContactsUseCase,
+            getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             contactSelectionListener = contactSelectionListener,
         )
     }
+
+    private fun verified(contact: Contact): VerifiedContact =
+        VerifiedContact(contact = contact, invalidEntries = emptyList())
 
     private fun buildContact(name: String = "Alice", address: String = "0xAddr"): Contact = Contact(
         id = ContactId("c1"),
