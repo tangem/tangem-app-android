@@ -337,7 +337,11 @@ internal class ManageFundsModel @Inject constructor(
     }
 
     private fun tokenActionsRoute(status: CryptoCurrencyStatus): UiRoute.TokenActions {
-        val title = resourceReference(R.string.get_token_title, wrappedList(status.currency.name))
+        val title = when (flowType) {
+            ManageFundsComponent.FlowType.Transfer -> resourceReference(R.string.common_transfer)
+            ManageFundsComponent.FlowType.AddFunds ->
+                resourceReference(R.string.get_token_title, wrappedList(status.currency.name))
+        }
         return UiRoute.TokenActions(title = title)
     }
 
