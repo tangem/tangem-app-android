@@ -317,6 +317,9 @@ fun BaseTestCase.openSwapInTransferModeWithHotWallet(
 }
 
 private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountName: String) {
+    step("Collapse header") {
+        onMainScreen { collapseHeader() }
+    }
     step("Scroll '$fromAccountName' into view (semantics, not touch — avoids the Markets sheet)") {
         onMainScreen { scrollToAccount(fromAccountName) }
     }
