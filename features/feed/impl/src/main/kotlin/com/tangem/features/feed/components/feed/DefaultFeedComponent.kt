@@ -87,7 +87,11 @@ internal class DefaultFeedComponent(
             modifier = modifier,
             state = state,
             promoBannersBlockComponent = ComposableContentComponent { promoModifier ->
-                promoBannersBlockComponent.ContentWithPadding(modifier = promoModifier, horizontalItemPadding = 16.dp)
+                promoBannersBlockComponent.ContentWithPadding(
+                    modifier = promoModifier,
+                    horizontalItemPadding = 16.dp,
+                    walletId = null,
+                )
             },
             contentPadding = contentPadding,
         )
