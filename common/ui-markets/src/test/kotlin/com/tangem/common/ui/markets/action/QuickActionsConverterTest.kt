@@ -3,6 +3,7 @@ package com.tangem.common.ui.markets.action
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 
 internal class QuickActionsConverterTest {
@@ -177,5 +178,97 @@ internal class QuickActionsConverterTest {
             QuickActionUM.V2.Sell,
         ).inOrder()
         assertThat(result).doesNotContain(QuickActionUM.V2.SwapAndSend)
+    }
+
+    @Test
+    fun `GIVEN send and sell unavailable WHEN context is Transfer THEN no actions are marked disabled`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.EmptyBalance(SEND_SCENARIO)),
+            TokenActionsState.ActionState.Sell(
+                ScenarioUnavailabilityReason.NotSupportedBySellService(cryptoCurrencyName = "BTC"),
+            ),
+        )
+
+        // Act
+        val result = QuickActionsConverter.quickActions(
+            cryptoData = cryptoData(actions),
+            tokenActionsHandler = mockk(relaxed = true),
+            isRedesignEnabled = true,
+            context = TokenActionsContext.Transfer,
+        )
+
+        // Assert
+        assertThat(result.actions).containsExactly(QuickActionUM.V2.Send, QuickActionUM.V2.Sell).inOrder()
+        assertThat(result.disabledActions).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN buy unavailable WHEN context is AddFunds THEN buy is marked disabled`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrencyName = "BTC")),
+            TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None),
+        )
+
+        // Act
+        val result = QuickActionsConverter.quickActions(
+            cryptoData = cryptoData(actions),
+            tokenActionsHandler = mockk(relaxed = true),
+            isRedesignEnabled = true,
+            context = TokenActionsContext.AddFunds,
+        )
+
+        // Assert
+        assertThat(result.disabledActions).containsExactly(QuickActionUM.V2.Buy)
+    }
+
+    @Test
+    fun `GIVEN unavailable action in list WHEN unavailabilityReason THEN returns its reason`() {
+        // Arrange
+        val reason = ScenarioUnavailabilityReason.NotSupportedBySellService(cryptoCurrencyName = "BTC")
+        val actions = listOf(
+            TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+            TokenActionsState.ActionState.Sell(reason),
+        )
+
+        // Act
+        val result = QuickActionsConverter.unavailabilityReason(TokenActionsBSContentUM.Action.Sell, actions)
+
+        // Assert
+        assertThat(result).isEqualTo(reason)
+    }
+
+    @Test
+    fun `GIVEN available action WHEN unavailabilityReason THEN returns None`() {
+        // Arrange
+        val actions = listOf(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None))
+
+        // Act
+        val result = QuickActionsConverter.unavailabilityReason(TokenActionsBSContentUM.Action.Send, actions)
+
+        // Assert
+        assertThat(result).isEqualTo(ScenarioUnavailabilityReason.None)
+    }
+
+    @Test
+    fun `GIVEN action absent from list WHEN unavailabilityReason THEN returns None`() {
+        // Act
+        val result = QuickActionsConverter.unavailabilityReason(TokenActionsBSContentUM.Action.Sell, actions = emptyList())
+
+        // Assert
+        assertThat(result).isEqualTo(ScenarioUnavailabilityReason.None)
+    }
+
+    private fun cryptoData(actions: List<TokenActionsState.ActionState>) = CryptoCurrencyData(
+        userWallet = mockk(relaxed = true),
+        status = mockk(relaxed = true),
+        actions = actions,
+        isAccountMode = false,
+        account = mockk(relaxed = true),
+    )
+
+    private companion object {
+        val SEND_SCENARIO = ScenarioUnavailabilityReason.WithdrawalScenario.SEND
     }
 }
