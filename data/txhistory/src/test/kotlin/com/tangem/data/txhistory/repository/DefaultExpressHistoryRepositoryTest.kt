@@ -36,6 +36,7 @@ import io.mockk.slot
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.joda.time.DateTimeUtils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -67,6 +68,9 @@ internal class DefaultExpressHistoryRepositoryTest {
     @BeforeEach
     fun setup() {
         clearMocks(exchangeApi, onrampApi, expressHistoryDao, historyIndexDao, expressSyncStateDao, tokenInfoRepository)
+        // todo txHistory the persisted `updatedAt` is a `DateTime.now()` placeholder until the backend sends it;
+        //  freeze the clock so the entity built inside the repository matches the one rebuilt in verify blocks.
+        DateTimeUtils.setCurrentMillisFixed(FIXED_NOW_MILLIS)
         // Run the withTransaction block inline so the DAO writes inside it actually happen and can be verified.
         mockkStatic("androidx.room.RoomDatabaseKt")
         val block = slot<suspend () -> Any?>()
@@ -75,6 +79,7 @@ internal class DefaultExpressHistoryRepositoryTest {
 
     @AfterEach
     fun tearDown() {
+        DateTimeUtils.setCurrentMillisSystem()
         unmockkStatic("androidx.room.RoomDatabaseKt")
     }
 
@@ -333,7 +338,8 @@ internal class DefaultExpressHistoryRepositoryTest {
         refundNetwork = null,
         refundContractAddress = null,
         createdAt = "2026-06-01T00:00:00Z",
-        updatedAt = "2026-06-01T00:00:00Z",
+        // todo txHistory uncomment
+        // updatedAt = "2026-06-01T00:00:00Z",
         payTill = null,
         averageDuration = null,
         fromContractAddress = "0xfromContract",
@@ -357,7 +363,8 @@ internal class DefaultExpressHistoryRepositoryTest {
         externalTxUrl = null,
         payoutHash = "payout-hash",
         createdAt = "2026-06-01T00:00:00Z",
-        updatedAt = "2026-06-01T00:00:00Z",
+        // todo txHistory uncomment
+        // updatedAt = "2026-06-01T00:00:00Z",
         fromCurrencyCode = "USD",
         fromAmount = "100.0",
         fromPrecision = 2,
@@ -377,5 +384,8 @@ internal class DefaultExpressHistoryRepositoryTest {
         const val AFTER_CURSOR = "after-cursor"
         const val DELTA_CURSOR = "delta-cursor"
         const val DEFAULT_LIMIT = 100
+
+        // Fixed instant the Joda clock is pinned to during each test (2026-06-01T00:00:00Z).
+        const val FIXED_NOW_MILLIS = 1_780_272_000_000L
     }
 }
