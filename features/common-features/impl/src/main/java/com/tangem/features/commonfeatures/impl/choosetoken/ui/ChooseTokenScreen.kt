@@ -3,6 +3,7 @@ package com.tangem.features.commonfeatures.impl.choosetoken.ui
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -97,6 +98,7 @@ import com.tangem.utils.StringsSigns.DOT
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 
 private const val LOAD_MORE_BUFFER = 25
@@ -173,7 +175,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
     val lazyListState = rememberLazyListState()
 
-    TangemSharedTransitionLayout(modifier) {
+    Box(modifier) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -249,10 +251,13 @@ private fun SetupMarketScrollTracker(marketsState: SwapMarketState, lazyListStat
 
 @Composable
 private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapMarketState.Content) {
-    val visibleItems by remember {
+    val keyToId = remember(marketState.items) {
+        marketState.items.associateBy({ it.getComposeKey() }, { it.id })
+    }
+    val visibleItems by remember(keyToId) {
         derivedStateOf {
             lazyListState.layoutInfo.visibleItemsInfo.mapNotNull { itemInfo ->
-                marketState.items.find { it.getComposeKey() == itemInfo.key }?.id
+                (itemInfo.key as? String)?.let(keyToId::get)
             }
         }
     }
@@ -282,14 +287,36 @@ private fun LazyListScope.assetsTitle() {
 private fun LazyListScope.walletListItem(walletList: WalletListUM) {
     if (walletList.items.isEmpty()) return
     item("wallet_list") {
-        LazyRow(
-            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-        ) {
-            items(walletList.items) { um ->
-                WalletTabItem(um)
-            }
+        WalletList(walletList)
+    }
+}
+
+@Composable
+private fun WalletList(walletList: WalletListUM, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+    val selectedIndex = walletList.items.indexOfFirst { it.isSelected }
+
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex < 0) return@LaunchedEffect
+        val layoutInfo = snapshotFlow { listState.layoutInfo }
+            .first { it.visibleItemsInfo.isNotEmpty() }
+        val selectedItem = layoutInfo.visibleItemsInfo.firstOrNull { it.index == selectedIndex }
+        val isFullyVisible = selectedItem != null &&
+            selectedItem.offset >= layoutInfo.viewportStartOffset &&
+            selectedItem.offset + selectedItem.size <= layoutInfo.viewportEndOffset
+        if (!isFullyVisible) {
+            listState.scrollToItem(selectedIndex)
+        }
+    }
+
+    LazyRow(
+        state = listState,
+        modifier = modifier.padding(top = 16.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+    ) {
+        items(walletList.items) { um ->
+            WalletTabItem(um)
         }
     }
 }
@@ -497,7 +524,7 @@ private fun AccountRow(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ProvideSharedTransitionScope(Modifier.weight(1f)) {
+        AccountRowSharedTransitionLayout(Modifier.weight(1f)) {
             val iconSharedContentState = rememberSharedContentState(key = "account-icon-${portfolio.id}")
             val titleSharedContentState = rememberSharedContentState(key = "account-title-${portfolio.id}")
             val boundsTransform = BoundsTransform { _, _ -> tween(ACCOUNT_BOUNDS_ANIM_MS) }
@@ -549,9 +576,7 @@ private fun AccountRow(
                             )
                             val startStyle = TangemTheme.typography2.captionSemibold12
                             val stopStyle = TangemTheme.typography2.bodySemibold16
-                            val textStyle by remember(animationFraction.value) {
-                                derivedStateOf { lerp(startStyle, stopStyle, animationFraction.value) }
-                            }
+                            val textStyle = lerp(startStyle, stopStyle, animationFraction.value)
                             val resizedTitle = when (val titleUM = tokenRowUM.titleUM) {
                                 is TangemTokenRowUM.TitleUM.Content -> titleUM.copy(
                                     text = styledStringReference(
@@ -597,6 +622,17 @@ private fun AccountRow(
             isExpanded = portfolio.isExpanded,
             onClick = { tokenRowUM.onItemClick?.invoke() },
         )
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun AccountRowSharedTransitionLayout(
+    modifier: Modifier = Modifier,
+    content: @Composable SharedTransitionScope.() -> Unit,
+) {
+    TangemSharedTransitionLayout(modifier) {
+        ProvideSharedTransitionScope(content = content)
     }
 }
 

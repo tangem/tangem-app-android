@@ -34,6 +34,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
+private const val MARKET_PULSE_ITEM_LIMIT = 5
+
 @Suppress("LongParameterList")
 internal class MarketBlockDelegate @AssistedInject constructor(
     private val marketsListBatchFlowManagerFactory: MarketsListBatchFlowManager.Factory,
@@ -77,13 +79,17 @@ internal class MarketBlockDelegate @AssistedInject constructor(
      * When single-currency wallets aren't selectable here (e.g. swap), the wallet is always
      * multi-currency, so we skip the per-wallet logic entirely and return [baseMarketsStateFlow].
      */
-    val marketsStateFlow: Flow<SwapMarketState?> = if (!shouldShowSingleCurrencyWallets) {
+    private val walletAwareMarketsStateFlow: Flow<SwapMarketState?> = if (!shouldShowSingleCurrencyWallets) {
         baseMarketsStateFlow
     } else {
         selectedWalletFlow
             .flatMapLatest(::marketsFlowForWallet)
             .distinctUntilChanged()
     }
+
+    val marketsStateFlow: Flow<SwapMarketState?> = walletAwareMarketsStateFlow
+        .map { it.limitMarketPulseItems() }
+        .distinctUntilChanged()
 
     private val defaultMarketsListManager by lazy {
         marketsListBatchFlowManagerFactory.create(
@@ -113,9 +119,6 @@ internal class MarketBlockDelegate @AssistedInject constructor(
             }
             .launchIn(modelScope)
 
-        // Initial load of default markets
-        defaultMarketsListManager.reload()
-
         visibleMarketItemIds
             .mapNotNull { rawIDS ->
                 if (rawIDS.isNotEmpty()) {
@@ -144,14 +147,22 @@ internal class MarketBlockDelegate @AssistedInject constructor(
             .launchIn(modelScope)
     }
 
+    /**
+     * Starts the initial load of the default markets list. Not invoked in [init] on purpose:
+     * the caller decides *if* (market block may be disabled entirely, e.g. Transfer flow) and
+     * *when* (deferred past the bottom sheet entrance animation, [REDACTED_TASK_KEY]) to trigger it.
+     */
+    fun loadDefaultMarkets() {
+        defaultMarketsListManager.reload()
+    }
+
     private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
         val marketsTitle = TextReference.Res(R.string.markets_pulse_common_title)
         return combine(
             flow = defaultMarketsListManager.uiItems,
             flow2 = defaultMarketsListManager.isInInitialLoadingErrorState,
-            flow3 = defaultMarketsListManager.totalCount,
-            flow4 = selectedCategoryFlow,
-        ) { uiItems, isError, total, selectedCategory ->
+            flow3 = selectedCategoryFlow,
+        ) { uiItems, isError, selectedCategory ->
             val categories = buildCategoriesUM(selectedCategory)
             when {
                 isError -> SwapMarketState.LoadingError(
@@ -167,10 +178,10 @@ internal class MarketBlockDelegate @AssistedInject constructor(
                 )
                 else -> SwapMarketState.Content(
                     items = uiItems,
-                    loadMore = { defaultMarketsListManager.loadMore() },
+                    loadMore = {},
                     onItemClick = { item -> addToPortfolioItem(item) },
                     visibleIdsChanged = { visibleDefaultMarketItemIds.value = it },
-                    total = total ?: uiItems.size,
+                    total = uiItems.size,
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = false,
                     categories = categories,
@@ -256,6 +267,13 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         } else {
             state.copy(items = filteredItems, total = filteredItems.size)
         }
+    }
+
+    private fun SwapMarketState?.limitMarketPulseItems(): SwapMarketState? {
+        if (this !is SwapMarketState.Content || shouldAssetsCount) return this
+        if (items.size <= MARKET_PULSE_ITEM_LIMIT) return this
+        val limitedItems = items.take(MARKET_PULSE_ITEM_LIMIT).toImmutableList()
+        return copy(items = limitedItems, total = limitedItems.size)
     }
 
     private fun addToPortfolioItem(item: MarketsListItemUM) {

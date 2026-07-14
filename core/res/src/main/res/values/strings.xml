@@ -93,7 +93,7 @@
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
   <string name="addfunds_fund_token">Fund token</string>
   <string name="addfunds_receive_row_description">Share your address or QR-code</string>
-  <string name="addfunds_swap_row_description">Between your portfolios</string>
+  <string name="addfunds_swap_row_description">Exchange one crypto for another</string>
   <string name="addfunds_you_receive_title">You receive</string>
   <string name="address_book_add_address">Add address</string>
   <string name="address_book_add_address_description">Add address and select network</string>
@@ -726,6 +726,11 @@
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
   <string name="for_you_description">Review portfolio and explore earn opportunities</string>
+  <string name="for_you_earn_opportunities">Earn opportunities</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">All your assets are at work, explore new opportunities</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">Get up to %1$s annually</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">Max potential rewards %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/year</string>
   <string name="for_you_portfolio_review_title">Portfolio review</string>
   <string name="for_you_title">For You</string>
   <string name="force_update_action">Update now</string>
@@ -933,8 +938,9 @@
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_clear_all_hints">Clear all</string>
   <string name="markets_search_header_title">Search tokens</string>
-  <string name="markets_search_hint_header">Recent\'s</string>
+  <string name="markets_search_hint_header">Recent searches</string>
   <string name="markets_search_portfolio_header">In your portfolio</string>
+  <string name="markets_search_recent_tokens_header">Recent tokens</string>
   <string name="markets_search_result_title">Result</string>
   <string name="markets_search_see_tokens_under_100k">See tokens under 100k USD market cap</string>
   <string name="markets_search_show_tokens">Show tokens</string>
@@ -1352,12 +1358,12 @@
   <string name="qr_scanner_error_unsupported_network_title">No supported tokens found</string>
   <string name="qr_scanner_warning_unknown_parameters_message">This QR code contains parameters that are not recognized: %s. Some payment details may be lost if you continue.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Unknown Parameters</string>
-  <string name="quick_action_buy_description">Credit card or bank account</string>
+  <string name="quick_action_buy_description">Get crypto by card, bank transfer &amp; more</string>
   <string name="quick_action_receive_description">Share your address or QR-code</string>
-  <string name="quick_action_sell_description">Sell crypto securely</string>
-  <string name="quick_action_send_and_swap_description">Send with swap to another token</string>
-  <string name="quick_action_send_description">Send to another wallet</string>
-  <string name="quick_action_swap_description">Between your portfolios</string>
+  <string name="quick_action_sell_description">Convert crypto to fiat currency</string>
+  <string name="quick_action_send_and_swap_description">Exchange and send in one step</string>
+  <string name="quick_action_send_description">Transfer crypto to another wallet</string>
+  <string name="quick_action_swap_description">Exchange one crypto for another</string>
   <string name="quick_top_up_chip_other">Other</string>
   <string name="quick_top_up_title">Quick top up</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
@@ -1986,6 +1992,7 @@
   <string name="tangempay_kyc_rejected_button_text">Hide KYC block</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
+  <string name="tangempay_main_select_plan">Select plan</string>
   <string name="tangempay_maximum_cards_issued_description">You can have up to 3 cards. Delete one to add a new card.</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
@@ -2019,8 +2026,6 @@
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
   <string name="tangempay_pay_support">Pay Support</string>
-  <string name="tangempay_main_select_plan">Select plan</string>
-  <string name="tangempay_status_inactive">Inactive</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
@@ -2051,6 +2056,7 @@
   <string name="tangempay_set_pin_header">Set up new PIN</string>
   <string name="tangempay_set_pin_title">Set PIN</string>
   <string name="tangempay_status_deactivated">Account closed</string>
+  <string name="tangempay_status_inactive">Inactive</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
   <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
@@ -2066,6 +2072,8 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
+  <string name="tangempay_va_banking_details_error_description">Please try again or contact support if the issue persists</string>
+  <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
