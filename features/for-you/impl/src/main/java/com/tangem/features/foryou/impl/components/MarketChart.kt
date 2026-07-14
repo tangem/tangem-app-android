@@ -315,25 +315,25 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
     totalAmount = "$10,123456.1333",
     donutSegmentList = persistentListOf(
         DonutSegmentUM(
-            weight = BigDecimal(0.55),
+            weight = BigDecimal(0.90),
             color = DonutSegmentColor.Brand,
             title = stringReference("Ethereum"),
             fiatValue = stringReference("$5,720.22"),
         ),
         DonutSegmentUM(
-            weight = BigDecimal(0.077),
+            weight = BigDecimal(0.03),
             color = DonutSegmentColor.Violet,
             title = stringReference("Solana"),
             fiatValue = stringReference("$728.30"),
         ),
         DonutSegmentUM(
-            weight = BigDecimal(0.0666),
+            weight = BigDecimal(0.03),
             color = DonutSegmentColor.Red,
             title = stringReference("Polkadot"),
             fiatValue = stringReference("$624.26"),
         ),
         DonutSegmentUM(
-            weight = BigDecimal(0.05),
+            weight = BigDecimal(0.02),
             color = DonutSegmentColor.Green,
             title = stringReference("Tether"),
             fiatValue = stringReference("$520.18"),

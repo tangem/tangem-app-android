@@ -114,10 +114,12 @@ internal fun DonutChart(
 
     val clickModifier = if (onSegmentClick != null && segments.isNotEmpty()) {
         Modifier.pointerInput(segments, startAngle, strokePx) {
-            detectTapGestures { tap ->
-                val clickedIndex = segmentIndexAt(tap, size.toSize(), strokePx, segments, startAngle)
-                if (latestSelectedIndex != clickedIndex) latestOnSegmentClick?.invoke(clickedIndex)
-            }
+            detectTapGestures(
+                onPress = { tap ->
+                    val clickedIndex = segmentIndexAt(tap, size.toSize(), strokePx, segments, startAngle)
+                    if (latestSelectedIndex != clickedIndex) latestOnSegmentClick?.invoke(clickedIndex)
+                },
+            )
         }
     } else {
         Modifier
@@ -164,8 +166,14 @@ internal fun DonutChart(
                     )
                 }
 
-                // Precompute each slice's [start, sweep] once.
-                val sweeps = segments.map { it.weight.toFloat().coerceIn(0f, 1f) * 360f }
+                // Precompute each slice's [start, sweep] once. Sweeps are the *visual* angles: every
+                // non-zero slice is floored to a minimum share (see [visualSweepAngles]) so tiny holdings
+                // stay visible; larger slices shrink proportionally to make room. On a full ring the last
+                // slice's floor is bumped by the exact width its two lapped-over caps eat (see below).
+                val sweeps = visualSweepAngles(
+                    weights = segments.map { it.weight.toFloat() },
+                    capDeg = lastSegmentOverlapDeg(strokePx, arc.size.width),
+                )
                 val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
 
                 // 2. Slices — reversed so slice 0 sits on top of its neighbor. Each slice gets its own
@@ -248,7 +256,13 @@ private fun segmentIndexAt(
     // Degrees clockwise from 3 o'clock — same convention as Canvas.drawArc.
     val angle = Math.toDegrees(atan2(dy, dx).toDouble()).toFloat().mod(360f)
 
-    val sweeps = segments.map { it.weight.toFloat().coerceIn(0f, 1f) * 360f }
+    // Same cap compensation as the draw pass — centerline diameter is `min(size) - strokePx` (see
+    // [arcRect]) — so hit-testing matches the drawn geometry exactly.
+    val arcDiameter = min(size.width, size.height) - strokePx
+    val sweeps = visualSweepAngles(
+        weights = segments.map { it.weight.toFloat() },
+        capDeg = lastSegmentOverlapDeg(strokePx, arcDiameter),
+    )
     val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
     for (i in segments.indices) {
         if (sweeps[i] <= 0f) continue
@@ -257,6 +271,19 @@ private fun segmentIndexAt(
     }
     return null
 }
+
+/**
+ * Exact extra sweep (degrees) the last slice needs on a full ring to read the same visible width as a
+ * middle slice (see [visualSweepAngles]).
+ *
+ * A round cap bulges past its arc's angular end by one cap radius (`strokePx / 2`), i.e.
+ * `capAngle = toDegrees((strokePx / 2) / R)` with `R = arcDiameter / 2` → `toDegrees(strokePx / arcDiameter)`.
+ * A middle slice loses one such bulge at its start (covered by the previous slice's end cap) but keeps its
+ * own end cap, so its visible width equals its sweep. The last slice additionally has its end covered by
+ * slice 0's start cap at the wrap — a second cap's worth — so it needs `2 × capAngle` back.
+ */
+private fun lastSegmentOverlapDeg(strokePx: Float, arcDiameter: Float): Float =
+    2f * Math.toDegrees((strokePx / arcDiameter).toDouble()).toFloat()
 
 /** Square arc bounds, centered in this [DrawScope], inset by half the stroke so the ring fits inside. */
 private fun DrawScope.arcRect(strokePx: Float): ArcRect {

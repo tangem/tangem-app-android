@@ -216,6 +216,7 @@ internal class ForYouTokenRowConverterTest {
     private fun createConverter(totalFiatBalance: BigDecimal) = ForYouTokenRowConverter(
         appCurrency = appCurrency,
         totalFiatBalance = totalFiatBalance,
+        onTokenClick = {},
     )
 
     /** Mirrors the production fiat rendering used by [ForYouTokenRowConverter] for a resolved row. */
