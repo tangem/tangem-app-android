@@ -128,7 +128,10 @@ internal class CashbackBlockTransformerTest {
         displayMode = CashbackDisplayMode.FULL,
         cashback = TangemPayCashback(
             confirmedAmount = confirmedAmount,
+            pendingAmount = BigDecimal("13.65"),
             currency = currency,
+            payoutCurrency = "USDC",
+            payoutNetwork = "Polygon",
             period = TangemPayCashback.Period(
                 year = year,
                 month = month,
@@ -136,7 +139,6 @@ internal class CashbackBlockTransformerTest {
                 payoutEnd = payoutEnd,
             ),
         ),
-        pendingAmount = BigDecimal("13.65"),
     )
 
     private fun contentState(): TangemPayDetailsUM = TangemPayDetailsUM(

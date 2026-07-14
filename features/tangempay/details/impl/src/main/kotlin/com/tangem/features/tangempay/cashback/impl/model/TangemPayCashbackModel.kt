@@ -29,7 +29,10 @@ internal class TangemPayCashbackModel @Inject constructor(
         // TODO([REDACTED_TASK_KEY]): replace stub with repository load
         val STUB_CASHBACK = TangemPayCashback(
             confirmedAmount = BigDecimal("22.54"),
+            pendingAmount = BigDecimal("13.65"),
             currency = "USD",
+            payoutCurrency = "USDC",
+            payoutNetwork = "Polygon",
             period = TangemPayCashback.Period(
                 year = 2026,
                 month = 6,
