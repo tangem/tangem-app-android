@@ -22,8 +22,25 @@ import arrow.core.Either
 interface WalletRegistrar {
 
     /**
-     * Registers the wallet identified by [walletId] (Base64 `UserWalletId`), using [signer] to
-     * produce the signature material over the deciphered wallet nonce.
+     * Registers the wallet identified by [walletId] (Base64 `UserWalletId`) in one shot: [prepare]
+     * followed by [submit]. Use this when there is no session/UX constraint (MOBILE wallets).
      */
     suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit>
+
+    /**
+     * Phase 1: idempotency check, nonce request/decryption, and signing via [signer]. For COLD
+     * wallets this must run while the card session is open (the signer taps the card). Returns the
+     * assembled registration to hand to [submit] later, or `null` if the wallet is already
+     * registered (no-op). Performs NO network write — pair it with [submit] after the session closes.
+     */
+    suspend fun prepare(
+        walletId: String,
+        signer: WalletSigner,
+    ): Either<WalletRegistrationError, PreparedWalletRegistration?>
+
+    /**
+     * Phase 2: sends the [prepared] registration, persists the reissued tokens, and marks the wallet
+     * registered. No card needed — safe to run after the session has closed.
+     */
+    suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit>
 }
