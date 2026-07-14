@@ -126,24 +126,13 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     /**
-     * Switches to the previous/next wallet in the pager.
-     *
-     * The pager only accepts horizontal swipes while the collapsing balance header is fully
-     * expanded and pinned to the top (`canPagerScroll = heightOffset == 0`). A *partially* collapsed
-     * header still shows the wallet card, yet the horizontal swipe is a silent no-op — so a visible
-     * card is not a reliable "ready to page" signal. We therefore try the swipe, and whenever the
-     * wallet identity doesn't change we expand the header and retry, so a no-op swipe can't pass
-     * unnoticed. Identity is title+balance rather than just the name: a still-restoring wallet (hot
-     * wallet) shows "Restoring…" instead of a title, but always shows a balance.
+     * Switches to the previous/next wallet in the pager. A horizontal swipe is a silent no-op unless
+     * the collapsing balance header is fully expanded and pinned to the top, so we retry: swipe, and
+     * whenever the wallet identity doesn't change, expand the header and try again.
      */
-    @OptIn(ExperimentalTestApi::class)
     fun swipeToAdjacentWallet(toPrevious: Boolean) {
         val before = displayedWalletIdentity()
         repeat(times = WALLET_SWITCH_ATTEMPTS) {
-            // Swipe first. The pager only pages while the header is pinned to the top; if it already
-            // is (the common case), a swipe-down here would instead trigger pull-to-refresh and
-            // un-pin it, breaking the horizontal swipe — so we only expand *after* a swipe that
-            // didn't page (i.e. the header was collapsed).
             swipeCurrentPage(toPrevious)
             val now = displayedWalletIdentity()
             if (now != null && now != before) return
@@ -152,85 +141,57 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         error("Wallet did not switch from '$before' after $WALLET_SWITCH_ATTEMPTS attempts")
     }
 
-    /** Expands the collapsing balance header (pins the balance to the top) so the pager can page. */
-    @OptIn(ExperimentalTestApi::class)
+    // Expand only *after* a swipe that didn't page: if the header is already pinned, a swipe-down here
+    // would trigger pull-to-refresh and un-pin it, breaking the horizontal swipe.
     private fun expandCollapsingHeader() {
-        onScreenPageNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))?.performTouchInput {
+        onScreenPage()?.performTouchInput {
             swipeDown(startY = visibleSize.height * 0.3f, endY = visibleSize.height * 0.8f)
         }
     }
 
-    /**
-     * Pages to the previous/next wallet by swiping horizontally on the on-screen token list.
-     * The list is a vertical scroller, so it passes the horizontal drag up to the HorizontalPager
-     * instead of consuming it (a per-page balance card may consume horizontal gestures itself).
-     */
-    @OptIn(ExperimentalTestApi::class)
     private fun swipeCurrentPage(toPrevious: Boolean) {
-        onScreenPageNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))?.performTouchInput {
-            if (toPrevious) swipeRight() else swipeLeft()
-        }
+        onScreenPage()?.performTouchInput { if (toPrevious) swipeRight() else swipeLeft() }
     }
 
-    /**
-     * A best-effort identity of the on-screen wallet: its title combined with its balance. Works in
-     * every sync state — a still-restoring wallet has no [MainScreenTestTags.CARD_TITLE] but always
-     * shows a [MainScreenTestTags.WALLET_BALANCE] — so the value reliably differs across a swap.
-     */
+    // Identity = title + balance: a still-restoring wallet has no CARD_TITLE but always a WALLET_BALANCE.
     private fun displayedWalletIdentity(): String? {
-        val page = onScreenPageRect() ?: return null
-        val title = firstTextInPage(page, MainScreenTestTags.CARD_TITLE)
-        val balance = firstTextInPage(page, MainScreenTestTags.WALLET_BALANCE)
+        val title = onScreenPageChild(withTestTag(MainScreenTestTags.CARD_TITLE))?.firstText()
+        val balance = onScreenPageChild(withTestTag(MainScreenTestTags.WALLET_BALANCE))?.firstText()
         return listOfNotNull(title, balance).joinToString(separator = "|").ifBlank { null }
     }
 
     /**
-     * Horizontal bounds of the on-screen wallet page, taken from its token list. SCREEN_CONTAINER is
-     * reliably one-per-page and full-width (unlike WALLET_LIST_ITEM, which also tags a multi-page
-     * wrapper), so it is the trustworthy anchor for "which page is on-screen".
+     * The full-width pager-page container currently on-screen. The pager keeps adjacent pages composed
+     * off-screen at ±pageWidth (so [assertIsDisplayed] can't tell them apart), hence selection by
+     * geometry: the on-screen page is the only one whose left edge is within half a page of x=0.
      */
-    private fun onScreenPageRect(): Rect? =
-        onScreenPageNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))?.fetchSemanticsNode()?.boundsInRoot
-
-    /** First text of the node tagged [tag] whose centre lies within the on-screen [page]. */
-    private fun firstTextInPage(page: Rect, tag: String): String? {
-        val nodes = semanticsProvider.onAllNodes(withTestTag(tag), useUnmergedTree = true)
-        for (i in 0 until nodes.fetchSemanticsNodes().size) {
-            val text = runCatching {
-                val bounds = nodes[i].fetchSemanticsNode().boundsInRoot
-                // Skip zero-size nodes: off-screen pager pages collapse to bounds (0,0,0,0), whose
-                // centre (0,0) would otherwise pass the "centre within page" test (page.left is 0)
-                // and leak a stale wallet's text — the exact cause of undetected wallet switches.
-                if (bounds.width > 0f && bounds.height > 0f &&
-                    bounds.center.x >= page.left && bounds.center.x < page.right
-                ) {
-                    nodes[i].fetchSemanticsNode().firstTextOrNull()
-                } else {
-                    null
-                }
-            }.getOrNull()
-            if (text != null) return text
+    private fun onScreenPage(): SemanticsNodeInteraction? =
+        firstNodeMatching(withTestTag(MainScreenTestTags.SCREEN_CONTAINER), useUnmergedTree = false) {
+            abs(it.left) < it.width / 2f
         }
-        return null
+
+    /** A node matching [matcher] whose centre lies within the on-screen page (skips zero-size off-screen copies). */
+    private fun onScreenPageChild(matcher: SemanticsMatcher): SemanticsNodeInteraction? {
+        val page = onScreenPage()?.fetchSemanticsNode()?.boundsInRoot ?: return null
+        return firstNodeMatching(matcher) {
+            it.width > 0f && it.height > 0f && it.center.x >= page.left && it.center.x < page.right
+        }
     }
 
-    /**
-     * The full-width pager-page node matching [matcher] that is currently centred on-screen.
-     *
-     * The wallet pager keeps adjacent pages composed (beyondViewportPageCount=1) at ±pageWidth, so
-     * `onAllNodes` returns nodes from off-screen pages too. `assertIsDisplayed` is unreliable here
-     * (off-screen pages are placed, not clipped away), so we select by geometry: the on-screen page
-     * is the only full-width node whose left edge is within half a page of x=0.
-     */
-    private fun onScreenPageNode(matcher: SemanticsMatcher): SemanticsNodeInteraction? {
-        val nodes = semanticsProvider.onAllNodes(matcher)
-        for (i in 0 until nodes.fetchSemanticsNodes().size) {
-            val node = nodes[i]
-            val onScreen = runCatching {
-                val bounds = node.fetchSemanticsNode().boundsInRoot
-                abs(bounds.left) < bounds.width / 2f
-            }.getOrDefault(false)
-            if (onScreen) return node
+    private fun SemanticsNodeInteraction.firstText(): String? = fetchSemanticsNode().firstTextOrNull()
+
+    // Single geometry primitive behind the pager helpers: the first node matching [matcher] whose
+    // bounds satisfy [predicate]. Replaces the per-caller onAllNodes(...)[i] loops.
+    private fun firstNodeMatching(
+        matcher: SemanticsMatcher,
+        useUnmergedTree: Boolean = true,
+        predicate: (Rect) -> Boolean,
+    ): SemanticsNodeInteraction? {
+        val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = useUnmergedTree)
+        repeat(times = nodes.fetchSemanticsNodes().size) { index ->
+            val node = nodes[index]
+            val matches = runCatching { predicate(node.fetchSemanticsNode().boundsInRoot) }.getOrDefault(false)
+            if (matches) return node
         }
         return null
     }
@@ -482,49 +443,21 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
-    /**
-     * Collapses the header, scrolls to and clicks the 'Add & manage' button on the wallet page
-     * that is actually on-screen.
-     *
-     * The wallet pager keeps the adjacent page composed (beyondViewportPageCount=1) at ±pageWidth,
-     * so both pages' MAIN_SCREEN_CONTAINER / button nodes are in the tree at once. We select the
-     * on-screen page by geometry (see [onScreenPageNode]) and click only the button within it.
-     */
+    /** Collapses the header, scrolls to and clicks the 'Add & manage' button on the on-screen wallet page. */
     @OptIn(ExperimentalTestApi::class)
     fun clickDisplayedAddAndManageButton() {
-        val container = onScreenPageNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
-            ?: error("No on-screen wallet page found")
-        // Best-effort: collapse the header and scroll the button into view. The button is a footer
-        // outside the scrollable list, so performScrollToNode can throw — harmless when it's already
-        // visible, but it must not abort the click below.
+        val container = onScreenPage() ?: error("No on-screen wallet page found")
+        // Best-effort: the button is a footer outside the scrollable list, so performScrollToNode can
+        // throw when it's already visible — that must not abort the click below.
         runCatching {
             container.performTouchInput {
                 swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f)
             }
             container.performScrollToNode(withTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON))
         }
-
-        val page = container.fetchSemanticsNode().boundsInRoot
-        val buttons = semanticsProvider.onAllNodes(
-            withTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON),
-            useUnmergedTree = true,
-        )
-        for (i in 0 until buttons.fetchSemanticsNodes().size) {
-            val clicked = runCatching {
-                val bounds = buttons[i].fetchSemanticsNode().boundsInRoot
-                // Skip zero-size (off-screen page) buttons and require the centre within the page.
-                if (bounds.width > 0f && bounds.height > 0f &&
-                    bounds.center.x >= page.left && bounds.center.x < page.right
-                ) {
-                    buttons[i].performClick()
-                    true
-                } else {
-                    false
-                }
-            }.getOrDefault(false)
-            if (clicked) return
-        }
-        error("'Add & manage' button is not displayed on the current wallet page")
+        val button = onScreenPageChild(withTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON))
+            ?: error("'Add & manage' button is not displayed on the current wallet page")
+        button.performClick()
     }
 
     val searchThroughMarketPlaceholder: KNode = child {
