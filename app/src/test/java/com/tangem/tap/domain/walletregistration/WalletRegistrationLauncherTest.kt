@@ -4,6 +4,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletSigner
@@ -75,17 +76,29 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
-    fun `retryMobileRegistrations registers only hot wallets`() = runTest {
+    fun `retryMobileRegistrations registers only silently-signable hot wallets`() = runTest {
         every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
 
-        launcher.retryMobileRegistrations(listOf(hotWallet(), mockk<UserWallet.Cold>()))
+        launcher.retryMobileRegistrations(
+            listOf(
+                hotWallet(authType = HotWalletId.AuthType.NoPassword), // registered — signs silently
+                hotWallet(authType = HotWalletId.AuthType.Password), // skipped — would prompt
+                hotWallet(authType = HotWalletId.AuthType.Biometry), // skipped — would prompt
+                mockk<UserWallet.Cold>(), // skipped — not a hot wallet
+            ),
+        )
 
         coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
     }
 
-    private fun hotWallet(walletIdValue: ByteArray = ByteArray(32) { 1 }): UserWallet.Hot {
+    private fun hotWallet(
+        walletIdValue: ByteArray = ByteArray(32) { 1 },
+        authType: HotWalletId.AuthType = HotWalletId.AuthType.NoPassword,
+    ): UserWallet.Hot {
+        val hotWalletId = mockk<HotWalletId> { every { this@mockk.authType } returns authType }
         val wallet = mockk<UserWallet.Hot>()
         every { wallet.walletId } returns UserWalletId(value = walletIdValue)
+        every { wallet.hotWalletId } returns hotWalletId
         return wallet
     }
 }
