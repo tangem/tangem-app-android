@@ -109,6 +109,7 @@ class IsAccountsModeEnabledUseCase(
             is PaymentAccountStatusValue.Error,
             is PaymentAccountStatusValue.IssuingCard,
             is PaymentAccountStatusValue.AwaitingPlanSelection,
+            is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.UnderReview,
