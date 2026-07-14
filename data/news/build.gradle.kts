@@ -9,21 +9,13 @@ android {
     namespace = "com.tangem.data.news"
 }
 dependencies {
-    // region Project - Core
-    implementation(projects.core.datasource)
-    api(projects.core.utils)
+
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
     // endregion
 
-    // region Project - Data
-    implementation(projects.data.common)
-    // endregion
-
-    // region Project - Domain
-    implementation(projects.domain.news)
-    // endregion
-
-    // region Project - Libs
-    implementation(projects.libs.blockchainSdk)
+    // region Other libraries
+    implementation(deps.arrow.core)
     // endregion
 
     // region DI
@@ -31,16 +23,19 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Other libraries
-    implementation(deps.androidx.datastore)
-    implementation(deps.moshi.kotlin)
+    // region Project - Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    implementation(projects.core.pagination)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.news)
+    implementation(projects.domain.models)
     // endregion
 
     // region Tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
     // endregion
 }

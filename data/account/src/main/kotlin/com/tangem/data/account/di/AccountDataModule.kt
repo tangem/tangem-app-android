@@ -1,6 +1,7 @@
 package com.tangem.data.account.di
 
 import android.content.Context
+import com.tangem.data.account.cleaner.AccountsUserWalletDataCleaner
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher
 import com.tangem.data.account.repository.DefaultAccountsCRUDRepository
@@ -16,6 +17,7 @@ import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -23,6 +25,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -52,6 +55,10 @@ internal object AccountDataModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @IntoSet
+    fun provideAccountsUserWalletDataCleaner(impl: AccountsUserWalletDataCleaner): UserWalletDataCleaner = impl
 
     @Provides
     @Singleton

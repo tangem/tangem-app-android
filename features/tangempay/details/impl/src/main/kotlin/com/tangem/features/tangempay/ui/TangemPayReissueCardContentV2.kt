@@ -42,6 +42,7 @@ import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayReissueCardError
 import com.tangem.features.tangempay.entity.TangemPayReissueCardUM
+import com.tangem.features.tangempay.ui.components.TangemPayInsufficientFundsNotification
 
 @Composable
 internal fun TangemPayReissueCardContentV2(state: TangemPayReissueCardUM) {
@@ -101,6 +102,10 @@ private fun Content(state: TangemPayReissueCardUM) {
             state = state,
             appearance = appearance,
         )
+        if (state.error == TangemPayReissueCardError.InsufficientFunds) {
+            SpacerH(8.dp)
+            TangemPayInsufficientFundsNotification(onAddFundsClick = state.onAddFundsClick)
+        }
         SpacerH(8.dp)
         BottomButtonsBlock(state = state, appearance = appearance)
     }
@@ -238,17 +243,6 @@ private fun TangemPayReissueCardUM.contentAppearance(): ReissueCardContentAppear
     val warningIconBackgroundColor = TangemTheme.colors3.bg.status.warningSubtle
 
     return when (error) {
-        TangemPayReissueCardError.InsufficientFunds -> ReissueCardContentAppearance(
-            titleRes = R.string.tangempay_reissue_card_insufficient_funds_title,
-            subtitleRes = R.string.tangempay_reissue_card_insufficient_funds_subtitle,
-            icon = Icons.ic_error_28,
-            iconColor = warningIconColor,
-            iconBackgroundColor = warningIconBackgroundColor,
-            primaryButtonTextRes = R.string.tangempay_card_details_add_funds,
-            primaryAction = { it.onAddFundsClick },
-            shouldShowFeeBlock = true,
-            shouldShowBalanceRow = true,
-        )
         TangemPayReissueCardError.InitialDataLoading -> ReissueCardContentAppearance(
             titleRes = R.string.tangempay_reissue_card_fee_unreachable_error_title,
             subtitleRes = R.string.send_fee_unreachable_error_text,
@@ -260,7 +254,7 @@ private fun TangemPayReissueCardUM.contentAppearance(): ReissueCardContentAppear
             shouldShowFeeBlock = false,
             shouldShowBalanceRow = false,
         )
-        null -> ReissueCardContentAppearance(
+        else -> ReissueCardContentAppearance(
             titleRes = R.string.tangempay_reissue_card_title,
             subtitleRes = R.string.tangempay_reissue_card_description,
             icon = Icons.ic_arrow_refresh_32,

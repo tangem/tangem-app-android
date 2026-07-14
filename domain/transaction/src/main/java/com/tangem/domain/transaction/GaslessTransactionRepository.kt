@@ -3,6 +3,7 @@ package com.tangem.domain.transaction
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import java.math.BigInteger
@@ -51,6 +52,33 @@ interface GaslessTransactionRepository {
      */
     suspend fun signGaslessTransaction(
         gaslessTransactionData: GaslessTransactionData,
+        signature: String,
+        userAddress: String,
+        network: Network,
+        eip7702Auth: Eip7702Authorization? = null,
+    ): GaslessSignedTransactionResult
+
+    /**
+     * Sends a gasless BATCH transaction to the gasless service for signing and returns the signed result.
+     *
+     * Mirrors [signGaslessTransaction] but accepts multiple transactions executed in array order.
+     * Index 0 is the user's main transaction; subsequent entries are appended operations
+     * (e.g. a yield `withdraw` to cover the fee from staked balance).
+     *
+     * @param gaslessBatchTransactionData domain model containing:
+     *                                    - transactions: ordered list of calls (to, value, data)
+     *                                    - fee: token payment configuration
+     *                                    - nonce: user's contract nonce to prevent replay attacks
+     * @param signature user's ECDSA signature of the batch transaction in hex format (0x...)
+     * @param userAddress user's Ethereum address (EOA or contract wallet)
+     * @param network blockchain network used to determine chainId for the request
+     * @param eip7702Auth optional EIP-7702 authorization for EOA delegation to smart contract
+     * @return [GaslessSignedTransactionResult] containing the fully signed transaction ready to broadcast
+     * @throws IllegalStateException if network is not supported or chainId cannot be determined
+     * @throws Exception if service returns error or network request fails
+     */
+    suspend fun signGaslessBatchTransaction(
+        gaslessBatchTransactionData: GaslessBatchTransactionData,
         signature: String,
         userAddress: String,
         network: Network,

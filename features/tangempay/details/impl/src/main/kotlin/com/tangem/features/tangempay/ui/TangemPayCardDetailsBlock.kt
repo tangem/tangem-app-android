@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -46,6 +47,8 @@ import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
@@ -123,6 +126,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 .zIndex(0f),
             cardFrozenState = state.cardFrozenState,
             cardState = state.cardState,
+            cardImageUrl = state.cardImageUrl,
         )
 
         Box(
@@ -219,6 +223,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
 private fun TangemPayCardBackground(
     cardState: TangemPayCardState,
     cardFrozenState: TangemPayCardFrozenState,
+    cardImageUrl: String?,
     modifier: Modifier = Modifier,
 ) {
     val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
@@ -233,7 +238,7 @@ private fun TangemPayCardBackground(
 
     Box(modifier = modifier.fillMaxSize()) {
         Image(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.matchParentSize(),
             painter = when (cardState) {
                 TangemPayCardState.Active,
                 -> painterResource(R.drawable.img_tangem_pay_visa)
@@ -245,7 +250,19 @@ private fun TangemPayCardBackground(
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
         )
-
+        if (cardImageUrl != null && cardState == TangemPayCardState.Active) {
+            SubcomposeAsyncImage(
+                modifier = Modifier.matchParentSize(),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(cardImageUrl)
+                    .crossfade(true)
+                    .build(),
+                loading = {},
+                error = {},
+                contentScale = ContentScale.FillBounds,
+                contentDescription = null,
+            )
+        }
         if (isFrozen || freezeProgress > 0f) {
             Image(
                 modifier = Modifier
@@ -756,6 +773,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
             onCopy = { _, _ -> },
+            cardImageUrl = null,
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Frozen,
             displayNameState = DisplayNameState.Editing(
@@ -776,6 +794,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
             onCopy = { _, _ -> },
+            cardImageUrl = null,
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
             displayNameState = DisplayNameState.Editing(
@@ -796,6 +815,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
             onCopy = { _, _ -> },
+            cardImageUrl = null,
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Pending,
             displayNameState = DisplayNameState.Display(
@@ -809,6 +829,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onClick = {},
             buttonText = resourceReference(R.string.tangempay_card_details_hide_details),
             onCopy = { _, _ -> },
+            cardImageUrl = null,
             isHidden = false,
             number = "1234 5678 9012 3456",
             numberShort = "*3456",

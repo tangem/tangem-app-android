@@ -16,6 +16,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -23,6 +24,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
@@ -60,6 +62,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
@@ -126,7 +129,10 @@ internal class WalletModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
+    private val addressBookFeatureToggles: AddressBookFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
+    private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -151,6 +157,7 @@ internal class WalletModel @Inject constructor(
         maybeMigrateNames()
         maybeSetWalletFirstTimeUsage()
         preloadPushNotificationPreferences()
+        warmUpMarketingCampaigns()
         updateYieldSupplyApy()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
@@ -162,6 +169,7 @@ internal class WalletModel @Inject constructor(
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
         applyPendingAssetsDiscovery()
+        syncAddressBooksIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -195,6 +203,12 @@ internal class WalletModel @Inject constructor(
     private fun maybeMigrateNames() {
         modelScope.launch {
             walletNameMigrationUseCase()
+        }
+    }
+
+    private fun warmUpMarketingCampaigns() {
+        modelScope.launch(dispatchers.io) {
+            warmUpMarketingCampaignsUseCase()
         }
     }
 
@@ -644,7 +658,9 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        fetchWalletContent(userWallet = action.selectedWallet)
+        // Force update: a re-added wallet reuses the same id, so a stale (completed) fetch job from a previous
+        // session would otherwise make the fetcher skip loading, leaving the screen stuck on infinite loading.
+        fetchWalletContent(userWallet = action.selectedWallet, forceUpdate = true)
 
         stateHolder.update(
             AddWalletTransformer(
@@ -767,7 +783,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun fetchWalletContent(userWallet: UserWallet) {
+    private fun fetchWalletContent(userWallet: UserWallet, forceUpdate: Boolean = false) {
         if (userWallet.isLocked) return
 
         /*
@@ -775,7 +791,7 @@ internal class WalletModel @Inject constructor(
          * so the coroutine is launched in the current context
          */
         modelScope.launch {
-            walletContentFetcher(userWalletId = userWallet.walletId)
+            walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = forceUpdate)
         }
     }
 
@@ -877,7 +893,18 @@ internal class WalletModel @Inject constructor(
         }
     }
 
+    private fun syncAddressBooksIfNeeded() {
+        if (addressBookFeatureToggles.isAddressBookEnabled) {
+            modelScope.launch {
+                syncAddressBooksUseCase()
+                    .onLeft { TangemLogger.e("Failed to sync address books: $it") }
+            }
+        }
+    }
+
     private fun enableNotificationsIfNeeded() {
+        // New first-activation owns auto-enable when the feature is on; skip the legacy path.
+        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
         modelScope.launch {
             val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
             if (isUserAllowToEnableNotifications) {

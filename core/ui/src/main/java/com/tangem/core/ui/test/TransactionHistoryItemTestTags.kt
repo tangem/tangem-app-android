@@ -9,4 +9,5 @@ object TransactionHistoryItemTestTags {
     /** Status is conveyed visually (icon + color), so it is exposed via a status-suffixed tag. */
     const val STATUS_PREFIX = "TRANSACTION_HISTORY_ITEM_STATUS_"
     const val STATUS_CONFIRMED = STATUS_PREFIX + "CONFIRMED"
+    const val STATUS_UNCONFIRMED = STATUS_PREFIX + "UNCONFIRMED"
 }

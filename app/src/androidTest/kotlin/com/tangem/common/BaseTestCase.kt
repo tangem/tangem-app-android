@@ -18,6 +18,7 @@ import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -179,14 +180,20 @@ abstract class BaseTestCase : TestCase(
 
     fun waitForIdle() = composeTestRule.waitForIdle()
 
+    /**
+     * Waits until [block] stops throwing (or [timeoutMillis] elapses). Use in scenario (BaseTestCase extension)
+     * code where flakySafely is unavailable; in test bodies prefer flakySafely.
+     */
+    fun awaitSuccess(timeoutMillis: Long = WAIT_UNTIL_TIMEOUT, block: () -> Unit) {
+        composeTestRule.waitUntil(timeoutMillis = timeoutMillis) { runCatching(block).isSuccess }
+    }
+
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         return ApplicationInjectionExecutionRule(
             toggleStates = mapOf(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
-                "GASLESS_APPROVAL_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
-                "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
                 "ASSETS_DISCOVERY_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
                 // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
@@ -195,20 +202,13 @@ abstract class BaseTestCase : TestCase(
                 // 5.37
                 "HEDERA_ERC20_ENABLED" to true,
                 // 5.39
-                "STAKING_ETH_ENABLED" to true,
                 "DYNAMIC_ADDRESSES_ENABLED" to true,
                 "SOLANA_TX_HISTORY_ENABLED" to true,
                 "SOLANA_SCALED_UI_AMOUNT_ENABLED" to true,
-                "SWAP_AB_ENABLED" to true,
                 "AND_15310_ADD_FUNDS_STAGE1" to true,
-                "AND_15009_SWAP_PROVIDER_FILTER_ENABLED" to true,
                 "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
                 "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED" to true,
-                "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED" to true,
-                "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
                 "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
-                // 5.39.2
-                "AND_15154_YIELD_PROMO_ENABLED" to true,
                 // 5.40
                 "TWI_1377_MANAGE_FUNDS" to true,
                 // 6.0
@@ -223,6 +223,8 @@ abstract class BaseTestCase : TestCase(
                 "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED" to true,
                 "AND_15235_VISA_MULTIPLE_CARDS" to true,
                 "AND_15715_SWAP_BEST_DEX_RATE_ENABLED" to true,
+                // 6.1
+                "TWI_1638_VA_MVP0_ENABLED" to true,
             )
         )
     }
