@@ -39,10 +39,15 @@ internal class ForYouTokenListConverter(
     private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val otherAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>>,
+    private val onTokenClick: (CryptoCurrency) -> Unit,
 ) : Converter<List<CryptoCurrencyStatus>, ImmutableList<ForYouTokenListItemUM>> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
-    private val rowConverter = ForYouTokenRowConverter(appCurrency = appCurrency, totalFiatBalance = totalFiatBalance)
+    private val rowConverter = ForYouTokenRowConverter(
+        appCurrency = appCurrency,
+        totalFiatBalance = totalFiatBalance,
+        onTokenClick = onTokenClick,
+    )
 
     override fun convert(value: List<CryptoCurrencyStatus>): ImmutableList<ForYouTokenListItemUM> {
         val assetItems = value
