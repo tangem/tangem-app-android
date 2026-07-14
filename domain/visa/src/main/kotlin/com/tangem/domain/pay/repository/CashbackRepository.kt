@@ -2,6 +2,8 @@ package com.tangem.domain.pay.repository
 
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CashbackDocument
+import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.visa.error.VisaApiError
 
@@ -12,6 +14,10 @@ interface CashbackRepository {
 
     /** Loads the cashback summary for the customer of [userWalletId]. */
     suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary>
+
+    suspend fun getCashbackPromotions(userWalletId: UserWalletId): Either<VisaApiError, CashbackPromotions>
+
+    suspend fun getCashbackAccrualDocs(userWalletId: UserWalletId): Either<VisaApiError, List<CashbackDocument>>
 
     /** Whether the "Cashback deactivated" banner was permanently dismissed for [userWalletId]. */
     suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean
