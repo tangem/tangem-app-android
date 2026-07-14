@@ -68,17 +68,11 @@ internal class MarketingBannerModel @Inject constructor(
         val requestFlow: Flow<MarketingRequest?> = when (val p = params) {
             is MarketingBannerComponent.Params.Standalone ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd, providerId = null) }
+                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
                 }
-            is MarketingBannerComponent.Params.LinkedToProvider ->
+            is MarketingBannerComponent.Params.Linked ->
                 p.requestFlow.map { request ->
-                    request?.let { linked ->
-                        MarketingRequest(
-                            screen = linked.screen,
-                            amountUsd = linked.amountUsd,
-                            providerId = linked.currentProviderId,
-                        )
-                    }
+                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
                 }
         }
 
@@ -89,19 +83,17 @@ internal class MarketingBannerModel @Inject constructor(
             .mapLatest { screen -> if (screen != null) fetch(screen) else emptyList() }
 
         val amountUsd: Flow<BigDecimal?> = requestFlow.map { it?.amountUsd }.distinctUntilChanged()
-        val providerId: Flow<String?> = requestFlow.map { it?.providerId }.distinctUntilChanged()
 
         modelScope.launch {
             combine(
                 flow = campaigns,
                 flow2 = amountUsd,
-                flow3 = providerId,
-                flow4 = dismissedIds,
-            ) { list, usd, provider, dismissed ->
+                flow3 = dismissedIds,
+            ) { list, usd, dismissed ->
                 list.asSequence()
                     .filterNot { it.id in dismissed }
                     .filter { it.matchesUsdAmount(usd) }
-                    .filter { matchesUiTypeAndProvider(it, provider) }
+                    .filter { matchesUiType(it) }
                     .map { it.toUM() }
                     .toList()
             }.collect { banners ->
@@ -117,18 +109,16 @@ internal class MarketingBannerModel @Inject constructor(
     private suspend fun fetch(screen: MarketingScreen): List<MarketingCampaign> =
         getMarketingBanner(screen, amountUsd = null).getOrElse { emptyList() }
 
-    private fun matchesUiTypeAndProvider(campaign: MarketingCampaign, providerId: String?): Boolean = when (params) {
+    private fun matchesUiType(campaign: MarketingCampaign): Boolean = when (params) {
         is MarketingBannerComponent.Params.Standalone ->
             campaign.banner.uiType == MarketingBanner.UiType.STANDALONE
-        is MarketingBannerComponent.Params.LinkedToProvider ->
-            campaign.banner.uiType == MarketingBanner.UiType.LINKED_TO_PROVIDER &&
-                providerId != null && campaign.providerIds?.contains(providerId) == true
+        is MarketingBannerComponent.Params.Linked ->
+            campaign.banner.uiType == MarketingBanner.UiType.LINKED_TO_PROVIDER
     }
 
     private data class MarketingRequest(
         val screen: MarketingScreen,
         val amountUsd: BigDecimal?,
-        val providerId: String?,
     )
 
     private fun MarketingCampaign.toUM() = MarketingBannerUM(
@@ -141,6 +131,7 @@ internal class MarketingBannerModel @Inject constructor(
         },
         isDismissible = banner.isDismissible,
         deeplink = banner.deeplink,
+        providerIds = providerIds?.toSet().orEmpty(),
     )
 
     private companion object {
