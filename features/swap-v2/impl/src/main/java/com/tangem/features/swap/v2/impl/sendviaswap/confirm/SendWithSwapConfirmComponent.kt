@@ -179,10 +179,9 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             .launchIn(componentScope)
     }
 
-    fun updateState(sendWithSwapUM: SendWithSwapUM) {
+    fun updateEditedState(sendWithSwapUM: SendWithSwapUM) {
         amountBlockComponent.updateState(sendWithSwapUM.amountUM)
-        feeSelectorBlockComponent.updateState(sendWithSwapUM.feeSelectorUM)
-        model.updateState(sendWithSwapUM)
+        model.updateEditedState(sendWithSwapUM)
     }
 
     // Re-sync destination from parent on Confirm entry, bypassing the edit-mode gate; Empty only occurs on
