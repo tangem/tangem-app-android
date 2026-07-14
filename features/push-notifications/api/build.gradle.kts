@@ -10,13 +10,13 @@ android {
 
 dependencies {
     /** AndroidX */
-    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.androidx.annotation)
 
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.analytics.models)
+    api(projects.core.analytics.models)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /** Common */
-    implementation(projects.common.routing)
+    api(projects.common.routing)
 }

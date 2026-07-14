@@ -31,7 +31,7 @@ interface VisaContractInfoProvider {
     suspend fun getContractInfo(walletAddress: String, paymentAccountAddress: String?): VisaContractInfo
 
     class Builder(
-        private val useTestnetRpc: Boolean,
+        private val isTestnetRpcEnabled: Boolean,
         private val bridgeProcessorAddress: String,
         private val paymentAccountRegistryAddress: String,
         private val isNetworkLoggingEnabled: Boolean,
@@ -59,7 +59,7 @@ interface VisaContractInfoProvider {
         }
 
         private fun createWeb3J(): Web3j {
-            val baseUrl: String = if (useTestnetRpc) Constants.TESTNET_RPC_URL else Constants.MAINNET_RPC_URL
+            val baseUrl: String = if (isTestnetRpcEnabled) Constants.TESTNET_RPC_URL else Constants.MAINNET_RPC_URL
 
             val httpClient = OkHttpClient.Builder().apply {
                 connectTimeout(networkTimeoutSeconds, TimeUnit.SECONDS)

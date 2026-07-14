@@ -10,12 +10,9 @@ android {
 
 dependencies {
     /** Domain models */
-    implementation(projects.domain.qrScanning.models)
+    api(projects.domain.qrScanning.models)
 
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-
-    /** AndroidX */
-    implementation(deps.androidx.fragment.ktx)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 }

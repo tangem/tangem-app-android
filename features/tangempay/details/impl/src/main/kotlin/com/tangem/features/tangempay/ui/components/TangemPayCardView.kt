@@ -19,12 +19,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.clickableSingle
@@ -40,11 +44,13 @@ private const val DEFAULT_CARD_BG = 0xFF1C1F29
 private const val REISSUING_CARD_BG = 0xFF1E1E1E
 private const val DISABLED_ALPHA = 0.5f
 
+@Suppress("LongParameterList")
 @Composable
 internal fun TangemPayCardView(
     isIssueInProgress: Boolean,
     isEnabled: Boolean,
     lastDigits: String,
+    imageUrl: String?,
     onClick: () -> Unit,
     isFrozen: Boolean,
     modifier: Modifier = Modifier,
@@ -58,6 +64,7 @@ internal fun TangemPayCardView(
             .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
         isIssueInProgress = isIssueInProgress,
         isEnabled = isEnabled,
+        imageUrl = imageUrl,
         onClick = onClick,
     ) {
         Row(
@@ -78,7 +85,6 @@ internal fun TangemPayCardView(
                 tint = TangemTheme.colors3.icon.staticDark,
                 contentDescription = null,
             )
-
             Icon(
                 modifier = Modifier.size(height = TangemTheme.dimens2.x2, width = 22.dp),
                 imageVector = ImageVector.vectorResource(R.drawable.ic_visa_logo),
@@ -126,6 +132,7 @@ internal fun TangemPayAddCardView(onClick: () -> Unit, isEnabled: Boolean, modif
 private fun CardBackground(
     isIssueInProgress: Boolean,
     isEnabled: Boolean,
+    imageUrl: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
@@ -137,7 +144,6 @@ private fun CardBackground(
             Color(DEFAULT_CARD_BG)
         }
     }
-
     Box(
         modifier = modifier
             .alpha(if (isEnabled) 1f else DISABLED_ALPHA)
@@ -171,8 +177,22 @@ private fun CardBackground(
                 shape = RoundedCornerShape(6.dp),
             )
             .clickableSingle(onClick = onClick, enabled = isEnabled),
-        content = content,
-    )
+    ) {
+        if (imageUrl != null) {
+            SubcomposeAsyncImage(
+                modifier = Modifier.matchParentSize(),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
+                loading = {},
+                error = {},
+                contentScale = ContentScale.Crop,
+                contentDescription = null,
+            )
+        }
+        content()
+    }
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO)
@@ -189,6 +209,7 @@ private fun CardBackgroundPreview() {
                 onClick = {},
                 content = {},
                 isEnabled = true,
+                imageUrl = null,
             )
             SpacerH(TangemTheme.dimens2.x4)
             CardBackground(
@@ -197,6 +218,7 @@ private fun CardBackgroundPreview() {
                     width = TangemTheme.dimens2.x14,
                 ),
                 isIssueInProgress = true,
+                imageUrl = null,
                 onClick = {},
                 content = {},
                 isEnabled = true,
@@ -206,6 +228,7 @@ private fun CardBackgroundPreview() {
                 isIssueInProgress = false,
                 onClick = {},
                 lastDigits = "1234",
+                imageUrl = null,
                 isEnabled = true,
                 isFrozen = false,
             )
@@ -214,6 +237,7 @@ private fun CardBackgroundPreview() {
                 isIssueInProgress = true,
                 onClick = {},
                 lastDigits = "",
+                imageUrl = null,
                 isEnabled = true,
                 isFrozen = false,
             )
@@ -224,6 +248,7 @@ private fun CardBackgroundPreview() {
                 isIssueInProgress = false,
                 onClick = {},
                 lastDigits = "1234",
+                imageUrl = null,
                 isEnabled = true,
                 isFrozen = true,
             )
