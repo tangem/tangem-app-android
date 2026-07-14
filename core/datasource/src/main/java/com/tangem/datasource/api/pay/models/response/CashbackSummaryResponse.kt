@@ -17,6 +17,8 @@ data class CashbackSummaryResponse(
     @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal?,
     @Json(name = "pending_amount") val pendingAmount: BigDecimal?,
     @Json(name = "currency") val currency: String?,
+    @Json(name = "payout_currency") val payoutCurrency: String?,
+    @Json(name = "payout_network") val payoutNetwork: String?,
 ) {
 
     @JsonClass(generateAdapter = true)

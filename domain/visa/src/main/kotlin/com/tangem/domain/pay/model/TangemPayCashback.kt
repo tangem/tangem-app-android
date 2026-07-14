@@ -5,7 +5,10 @@ import java.math.BigDecimal
 
 data class TangemPayCashback(
     val confirmedAmount: BigDecimal,
+    val pendingAmount: BigDecimal,
     val currency: String,
+    val payoutCurrency: String,
+    val payoutNetwork: String,
     val period: Period,
 ) {
     data class Period(
