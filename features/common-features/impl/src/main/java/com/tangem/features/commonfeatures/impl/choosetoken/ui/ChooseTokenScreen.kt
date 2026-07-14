@@ -88,6 +88,7 @@ import com.tangem.utils.StringsSigns.DOT
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 
 private const val LOAD_MORE_BUFFER = 25
@@ -265,14 +266,36 @@ private fun LazyListScope.assetsTitle() {
 private fun LazyListScope.walletListItem(walletList: WalletListUM) {
     if (walletList.items.isEmpty()) return
     item("wallet_list") {
-        LazyRow(
-            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-        ) {
-            items(walletList.items) { um ->
-                WalletTabItem(um)
-            }
+        WalletList(walletList)
+    }
+}
+
+@Composable
+private fun WalletList(walletList: WalletListUM, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+    val selectedIndex = walletList.items.indexOfFirst { it.isSelected }
+
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex < 0) return@LaunchedEffect
+        val layoutInfo = snapshotFlow { listState.layoutInfo }
+            .first { it.visibleItemsInfo.isNotEmpty() }
+        val selectedItem = layoutInfo.visibleItemsInfo.firstOrNull { it.index == selectedIndex }
+        val isFullyVisible = selectedItem != null &&
+            selectedItem.offset >= layoutInfo.viewportStartOffset &&
+            selectedItem.offset + selectedItem.size <= layoutInfo.viewportEndOffset
+        if (!isFullyVisible) {
+            listState.scrollToItem(selectedIndex)
+        }
+    }
+
+    LazyRow(
+        state = listState,
+        modifier = modifier.padding(top = 16.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+    ) {
+        items(walletList.items) { um ->
+            WalletTabItem(um)
         }
     }
 }
