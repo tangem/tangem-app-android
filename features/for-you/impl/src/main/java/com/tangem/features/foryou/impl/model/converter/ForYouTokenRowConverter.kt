@@ -42,6 +42,7 @@ import java.math.BigDecimal
 internal class ForYouTokenRowConverter(
     private val appCurrency: AppCurrency,
     private val totalFiatBalance: BigDecimal,
+    private val onTokenClick: (CryptoCurrency) -> Unit,
 ) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -65,7 +66,7 @@ internal class ForYouTokenRowConverter(
             subtitleUM = toRowSubtitle(state, currency, cryptoAmount),
             topEndContentUM = toRowTopEnd(state, fiatAmount),
             bottomEndContentUM = toRowBottomEnd(state, fiatAmount),
-            onItemClick = null,
+            onItemClick = { onTokenClick(currency) },
             onItemLongClick = null,
         )
     }
