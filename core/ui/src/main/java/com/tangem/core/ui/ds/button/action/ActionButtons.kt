@@ -15,10 +15,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
@@ -62,23 +64,30 @@ fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = M
         if (measurables.isEmpty()) {
             return@Layout layout(constraints.minWidth, constraints.minHeight) {}
         }
-        val cellWidth = measurables.maxOf { it.maxIntrinsicWidth(constraints.maxHeight) }
+        val count = measurables.size
+        val desiredCellWidth = measurables.maxOf { it.maxIntrinsicWidth(constraints.maxHeight) }
+        val cellWidth = if (constraints.hasBoundedWidth) {
+            val maxCellWidth = ((constraints.maxWidth - spacingPx * (count - 1)) / count).coerceAtLeast(0)
+            desiredCellWidth.coerceAtMost(maxCellWidth)
+        } else {
+            desiredCellWidth
+        }
         val cellConstraints = Constraints(
             minWidth = cellWidth,
             maxWidth = cellWidth,
             minHeight = 0,
-            maxHeight = constraints.maxHeight,
+            maxHeight = Constraints.Infinity,
         )
         val placeables = measurables.map { it.measure(cellConstraints) }
 
         val contentWidth = cellWidth * placeables.size + spacingPx * (placeables.size - 1)
         val width = if (constraints.hasBoundedWidth) maxOf(constraints.maxWidth, contentWidth) else contentWidth
-        val height = placeables.maxOf { it.height }
+        val height = constraints.constrainHeight(placeables.maxOf { it.height })
 
         layout(width, height) {
             var x = (width - contentWidth) / 2
             placeables.forEach { placeable ->
-                placeable.place(x = x, y = (height - placeable.height) / 2)
+                placeable.place(x = x, y = 0)
                 x += cellWidth + spacingPx
             }
         }
@@ -112,7 +121,8 @@ private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) 
             style = TangemTheme.typography2.subheadlineMedium14,
             color = textColor,
             textAlign = TextAlign.Center,
-            maxLines = 1,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
