@@ -3,6 +3,7 @@ package com.tangem.domain.addressbook.usecase
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.repository.AddressBookRepository
+import com.tangem.domain.addressbook.verification.ContactSignatureVerifier
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
@@ -17,13 +18,18 @@ import org.junit.jupiter.api.TestInstance
 class CheckAddressDuplicateUseCaseTest {
 
     private val repository: AddressBookRepository = mockk()
-    private val useCase = CheckAddressDuplicateUseCase(repository)
+    private val contactSignatureVerifier: ContactSignatureVerifier = mockk()
+    private val useCase = CheckAddressDuplicateUseCase(repository, contactSignatureVerifier)
 
     private val walletId = UserWalletId("0001")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository)
+        clearMocks(repository, contactSignatureVerifier)
+        // Default: every stored address verifies, so the use case sees the contacts unchanged.
+        coEvery { contactSignatureVerifier.verifyContacts(any()) } answers {
+            firstArg<List<Contact>>().map { VerifiedContact(contact = it, invalidEntries = emptyList()) }
+        }
     }
 
     @Test
@@ -70,6 +76,21 @@ class CheckAddressDuplicateUseCaseTest {
 
         // Act
         val result = useCase(walletId, networkId = ETHEREUM, address = "0xBBB")
+
+        // Assert
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN the pair belongs only to an unverified entry WHEN invoke THEN returns null`() = runTest {
+        // Arrange
+        val contact = contact("Binance", "0xAAA", ETHEREUM)
+        coEvery { repository.getContactsSync(walletId) } returns listOf(contact)
+        // Verification strips the unverified address, so the pair is no longer held by any contact.
+        coEvery { contactSignatureVerifier.verifyContacts(listOf(contact)) } returns emptyList()
+
+        // Act
+        val result = useCase(walletId, networkId = ETHEREUM, address = "0xAAA")
 
         // Assert
         assertThat(result).isNull()
