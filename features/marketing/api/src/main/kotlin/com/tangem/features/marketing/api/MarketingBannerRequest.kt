@@ -9,9 +9,11 @@ data class MarketingBannerRequest(
     val amountUsd: BigDecimal? = null,
 )
 
-/** Context for a LINKED_TO_PROVIDER banner request (onramp only), matched against the shown provider. */
+/**
+ * Context for LINKED_TO_PROVIDER banner requests (onramp only). Provider matching happens per offer at
+ * render time via [MarketingBannerComponent.LinkedContent], so the request carries no provider id.
+ */
 data class LinkedBannerRequest(
     val screen: MarketingScreen.Onramp,
     val amountUsd: BigDecimal?,
-    val currentProviderId: String,
 )

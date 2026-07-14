@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.send.api)
     api(projects.features.swap.api)
     api(projects.features.swap.domain)
+    implementation(projects.features.marketing.api)
     implementation(projects.features.send.impl)
 
     /** Core modules */
@@ -59,7 +60,9 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.core)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.marketing.models)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.visa.models)

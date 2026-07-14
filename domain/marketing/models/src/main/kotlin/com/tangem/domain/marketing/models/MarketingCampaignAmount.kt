@@ -3,14 +3,15 @@ package com.tangem.domain.marketing.models
 import java.math.BigDecimal
 
 /**
- * USD min/max eligibility gate. Applies only to swap/onramp campaigns and only when [amountUsd] is known;
- * otherwise the campaign passes (non-amount screens and the "amount unknown" case are not gated).
+ * USD min/max eligibility gate (mirrors iOS `satisfiesAmount`). A campaign without min/max bounds is
+ * always eligible. A bounded campaign requires a known [amountUsd] — while the amount is unknown the
+ * campaign is NOT eligible (hidden until a quote/amount arrives), then it must fall within the bounds.
  */
 fun MarketingCampaign.matchesUsdAmount(amountUsd: BigDecimal?): Boolean {
-    val isAmountScreen = type == MarketingScreenType.SWAP || type == MarketingScreenType.ONRAMP
-    if (!isAmountScreen || amountUsd == null) return true
+    if (minAmount == null && maxAmount == null) return true
 
-    if (minAmount != null && amountUsd < minAmount) return false
-    if (maxAmount != null && amountUsd > maxAmount) return false
+    val usd = amountUsd ?: return false
+    if (minAmount != null && usd < minAmount) return false
+    if (maxAmount != null && usd > maxAmount) return false
     return true
 }
