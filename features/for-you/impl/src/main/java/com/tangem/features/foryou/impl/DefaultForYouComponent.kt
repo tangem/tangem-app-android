@@ -35,11 +35,11 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultForYouComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Suppress("UnusedPrivateMember") @Assisted params: Unit,
+    @Assisted params: ForYouComponent.Params,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
 ) : AppComponentContext by context, ForYouComponent {
 
-    private val model: ForYouModel = getOrCreateModel()
+    private val model: ForYouModel = getOrCreateModel(params = params)
 
     private val promoBannersBlockComponent: PromoBannersBlockComponent by lazy {
         promoBannersBlockComponentFactory.create(
@@ -94,6 +94,6 @@ internal class DefaultForYouComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : ForYouComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultForYouComponent
+        override fun create(context: AppComponentContext, params: ForYouComponent.Params): DefaultForYouComponent
     }
 }
