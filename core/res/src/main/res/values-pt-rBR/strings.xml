@@ -131,6 +131,7 @@
   <string name="address_book_no_contacts">Ainda não há contatos.</string>
   <string name="address_book_no_contacts_description">Os contatos que você adicionar aparecerão aqui.</string>
   <string name="address_book_remove_address">Remover endereço</string>
+  <string name="address_book_save_address">Salvar endereço</string>
   <string name="address_book_save_contact">Salvar contato</string>
   <string name="address_book_save_to_wallet_title">Salvar na carteira</string>
   <string name="address_book_save_wallet_to_description">Este contato será vinculado à agenda de endereços desta carteira.</string>
@@ -638,6 +639,8 @@
   <string name="express_exchange_notification_long_transaction_time_title">Tempo de transação longo</string>
   <string name="express_exchange_notification_refund_text">O valor da transação foi reembolsado em %1$s para sua carteira devido às regras do OKX ou da ponte. %2$s</string>
   <string name="express_exchange_notification_refund_title">O valor foi reembolsado em %1$s (%2$s rede)</string>
+  <string name="express_exchange_notification_refunded_in_text">Seus fundos foram reembolsados ​​em %1$s  para sua carteira no %2$s rede, de acordo com as regras da bolsa OKX.</string>
+  <string name="express_exchange_notification_refunded_in_title">Reembolsado em %s</string>
   <string name="express_exchange_notification_verification_text">Visite o site do fornecedor para verificação.</string>
   <string name="express_exchange_notification_verification_title">Verificação KYC exigida pelo fornecedor</string>
   <string name="express_exchange_status_bought">Compra concluída</string>
@@ -924,12 +927,14 @@
   <string name="markets_portfolio_block_subtitle">Em seu portfólio</string>
   <string name="markets_portfolio_block_title">Seu portfólio</string>
   <string name="markets_portfolio_block_token_unsupported">**Token não suportado**. Este token não é suportado na carteira neste momento.</string>
+  <string name="markets_portfolio_eligible_block_title">Outros tokens elegíveis</string>
   <string name="markets_pulse_common_title">Pulso do mercado</string>
   <string name="markets_quick_actions">Ações rápidas</string>
   <string name="markets_search_clear_all_hints">Limpar tudo</string>
   <string name="markets_search_header_title">Pesquisar tokens</string>
-  <string name="markets_search_hint_header">Recentes</string>
+  <string name="markets_search_hint_header">Pesquisas recentes</string>
   <string name="markets_search_portfolio_header">Em seu portfólio</string>
+  <string name="markets_search_recent_tokens_header">Tokens recentes</string>
   <string name="markets_search_result_title">Resultado</string>
   <string name="markets_search_see_tokens_under_100k">Veja tokens com capitalização de mercado inferior a 100 mil dólares.</string>
   <string name="markets_search_show_tokens">Mostrar tokens</string>
@@ -1305,9 +1310,11 @@
   <string name="promo_campaign_eligible_tokens">Tokens elegíveis</string>
   <string name="promo_campaign_enroll">Inscreva-se</string>
   <string name="promo_campaign_enroll_success_title">Você se inscreveu com sucesso em %1$s</string>
-  <string name="promo_campaign_not_active_subtitle">Esta campanha não existe mais ou expirou.</string>
+  <string name="promo_campaign_not_active_subtitle">Esta campanha não existe ou expirou.</string>
   <string name="promo_campaign_not_active_title">Campanha inativa</string>
+  <string name="promo_campaign_reactivation_summary_description">Ganhe 0,5% Cashback em todas as trocas acima de US$ 500, em qualquer par, exceto entre pares estáveis. Pagamento máximo de US$ 50 por troca.\n\nComplete cinco trocas qualificadas e desbloqueie um bônus extra de US$ 10.\n\nAs recompensas são pagas semanalmente em USDT ou USDC no endereço selecionado.</string>
   <string name="promo_campaign_select_cashback_account">Selecione a conta de cashback</string>
+  <string name="promo_campaign_select_token">Selecionar token</string>
   <string name="promo_campaign_summary_title">Inscreva-se em %1$s</string>
   <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Concordo com</string>
@@ -1350,7 +1357,7 @@
   <string name="quick_action_sell_description">Venda criptomoedas com segurança</string>
   <string name="quick_action_send_and_swap_description">Enviar com troca para outro token</string>
   <string name="quick_action_send_description">Enviar para outra carteira</string>
-  <string name="quick_action_swap_description">Entre seus portfólios</string>
+  <string name="quick_action_swap_description">Uma cripto por outra</string>
   <string name="quick_top_up_chip_other">Outro</string>
   <string name="quick_top_up_title">Recarga rápida</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Não é necessário memorando</string>
@@ -1975,6 +1982,7 @@
   <string name="tangempay_kyc_rejected_button_text">Ocultar bloco KYC</string>
   <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
+  <string name="tangempay_main_select_plan">Selecione o plano</string>
   <string name="tangempay_maximum_cards_issued_description">Você pode ter até 3 cartões. Exclua um para adicionar um novo.</string>
   <string name="tangempay_maximum_cards_issued_title">Número máximo de cartões emitidos</string>
   <string name="tangempay_newonboard_Q1_body">Sim — para usar um cartão Visa regulado, a verificação de identidade é obrigatória. O KYC é feito pela Sumsub, parceira de compliance.</string>

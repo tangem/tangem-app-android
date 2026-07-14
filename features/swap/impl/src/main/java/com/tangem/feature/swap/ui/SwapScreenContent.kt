@@ -13,14 +13,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.footers.SendingText
@@ -305,7 +305,16 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size48)
-            .shadow(elevation = 2.dp, shape = CircleShape)
+            .dropShadow(
+                shape = CircleShape,
+                shadow = Shadow(
+                    radius = 6.dp,
+                    spread = 0.5.dp,
+                    color = Color.Black.copy(alpha = 0.1f),
+                    offset = DpOffset(1.dp, 1.dp),
+                ),
+            )
+            .clip(CircleShape)
             .background(TangemTheme.colors.background.action)
             .clickable(
                 enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
