@@ -196,8 +196,19 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         updateConfirmNotifications()
     }
 
-    fun updateState(sendWithSwapUM: SendWithSwapUM) {
-        uiState.value = sendWithSwapUM
+    /**
+     * Applies the fields editable outside Confirm (amount, destination) from the parent's [sendWithSwapUM].
+     * Confirm-local fields (confirmUM, feeSelectorUM) must be kept — the parent's copies of them
+     * stay stale until a successful send.
+     */
+    fun updateEditedState(sendWithSwapUM: SendWithSwapUM) {
+        uiState.update { state ->
+            state.copy(
+                amountUM = sendWithSwapUM.amountUM,
+                destinationUM = sendWithSwapUM.destinationUM,
+            )
+        }
+        updateConfirmNotifications()
     }
 
     override fun onFeeReload() {

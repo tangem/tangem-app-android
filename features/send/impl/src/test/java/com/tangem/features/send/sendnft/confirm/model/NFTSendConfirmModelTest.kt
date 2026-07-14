@@ -3,6 +3,7 @@ package com.tangem.features.send.sendnft.confirm.model
 import android.os.SystemClock
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
@@ -259,6 +260,36 @@ internal class NFTSendConfirmModelTest {
             verify(exactly = 1) { alertFactory.getGenericErrorState(any(), any()) }
             coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
         }
+    }
+
+    @Nested
+    inner class UpdateEditedState {
+
+        @Test
+        fun `GIVEN stale parent state WHEN updateEditedState THEN destination applied and local state kept`() =
+            runTest {
+                // Arrange
+                val sut = buildModel()
+                advanceUntilIdle()
+                val feeSelectorUMBefore = sut.uiState.value.feeSelectorUM
+                val editedDestination = mockk<DestinationUM.Content>(relaxed = true)
+
+                // Act: the parent's confirmUM/feeSelectorUM stay Empty/Loading until a successful send —
+                // they must not leak into the confirm model (blocks turn unclickable on ConfirmUM.Empty)
+                sut.updateEditedState(
+                    NFTSendUM(
+                        destinationUM = editedDestination,
+                        feeSelectorUM = FeeSelectorUM.Loading,
+                        confirmUM = ConfirmUM.Empty,
+                    ),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.destinationUM).isEqualTo(editedDestination)
+                assertThat(sut.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Content::class.java)
+                assertThat(sut.uiState.value.feeSelectorUM).isEqualTo(feeSelectorUMBefore)
+            }
     }
 
     // region fixtures
