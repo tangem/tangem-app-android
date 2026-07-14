@@ -17,11 +17,18 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 
 @Composable
-internal fun OnrampMainScreen(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
+internal fun OnrampMainScreen(
+    state: OnrampMainComponentUM,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier.systemBarsPadding(),
         topBar = {
@@ -36,13 +43,20 @@ internal fun OnrampMainScreen(state: OnrampMainComponentUM, modifier: Modifier =
     ) { scaffoldPaddings ->
         OnrampMainComponentContent(
             state = state,
+            marketingBannerComponent = marketingBannerComponent,
+            linkedMarketingBannerComponent = linkedMarketingBannerComponent,
             modifier = Modifier.padding(scaffoldPaddings),
         )
     }
 }
 
 @Composable
-internal fun OnrampMainComponentContent(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
+internal fun OnrampMainComponentContent(
+    state: OnrampMainComponentUM,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -56,7 +70,11 @@ internal fun OnrampMainComponentContent(state: OnrampMainComponentUM, modifier: 
         ) {
             when (state) {
                 is OnrampMainComponentUM.InitialLoading -> InitialLoading(state = state)
-                is OnrampMainComponentUM.Content -> Content(state = state)
+                is OnrampMainComponentUM.Content -> Content(
+                    state = state,
+                    marketingBannerComponent = marketingBannerComponent,
+                    linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                )
             }
         }
 
@@ -118,7 +136,12 @@ private fun OnrampAmountContentLoading() {
 }
 
 @Composable
-private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
+private fun Content(
+    state: OnrampMainComponentUM.Content,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -133,7 +156,14 @@ private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = M
     ) {
         OnrampAmountContent(state = state)
 
-        OnrampOffersContent(state = state.offersBlockState)
+        TangemThemeRedesign {
+            marketingBannerComponent.Content(Modifier.fillMaxWidth())
+        }
+
+        OnrampOffersContent(
+            state = state.offersBlockState,
+            linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+        )
 
         OnrampNotifications(state = state)
     }
