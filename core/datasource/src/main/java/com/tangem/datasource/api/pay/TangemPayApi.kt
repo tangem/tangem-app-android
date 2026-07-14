@@ -202,4 +202,10 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Header("Accept-Language") language: String,
     ): ApiResponse<CashbackAccrualDocsResponse>
+
+    @GET("v1/customer/cashback/history")
+    suspend fun getCashbackHistory(
+        @Header("Authorization") authHeader: String,
+        @Query("months") months: Int,
+    ): ApiResponse<CashbackHistoryResponse>
 }
