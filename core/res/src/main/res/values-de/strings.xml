@@ -80,7 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Token hinzufügen</string>
   <string name="action_buttons_you_want_to_receive">Wähle den Token aus, den Du erhalten möchtest</string>
   <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
-  <string name="actionbutton_addfunds_title">Guthaben hinzufügen</string>
+  <string name="actionbutton_addfunds_title">Einzahlen</string>
   <string name="actionbutton_swap_title">Tauschen</string>
   <string name="actionbutton_transfer_title">Übertragung</string>
   <string name="add_and_manage_sheet_manage_subtitle">Zum Portfolio hinzufügen</string>
