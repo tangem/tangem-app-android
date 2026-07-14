@@ -7,6 +7,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -21,7 +22,7 @@ import javax.inject.Inject
  * never blocks the user). MOBILE wallets register without UI; COLD wallets attest inside a live
  * card session (no extra tap) and POST after the session closes.
  */
-internal class WalletRegistrationLauncher @Inject constructor(
+class WalletRegistrationLauncher @Inject internal constructor(
     private val walletRegistrar: WalletRegistrar,
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
@@ -71,11 +72,21 @@ internal class WalletRegistrationLauncher @Inject constructor(
         }
     }
 
-    /** Launch-time safety net: registers any not-yet-registered MOBILE wallets (no UI). */
+    /**
+     * Launch-time safety net: registers not-yet-registered MOBILE wallets without any UI.
+     *
+     * Only wallets that can sign **silently** are retried — i.e. [HotWalletId.AuthType.NoPassword].
+     * Password/Biometry wallets would pop an unlock prompt (see `DefaultHotWalletAccessor`), which
+     * must never happen at startup; those are left to register when a real unlock context exists
+     * (e.g. on creation, or the next time the user unlocks them).
+     */
     suspend fun retryMobileRegistrations(userWallets: List<UserWallet>) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
 
-        userWallets.filterIsInstance<UserWallet.Hot>().forEach { registerMobile(it) }
+        userWallets.asSequence()
+            .filterIsInstance<UserWallet.Hot>()
+            .filter { it.hotWalletId.authType == HotWalletId.AuthType.NoPassword }
+            .forEach { registerMobile(it) }
     }
 
     private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)
