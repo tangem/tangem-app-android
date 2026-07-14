@@ -890,6 +890,7 @@
   <string name="markets_portfolio_block_add_token_title">**ポートフォリオに追加して**、この資産の買付・交換・受け取りを始めましょう</string>
   <string name="markets_portfolio_block_subtitle">ポートフォリオ内</string>
   <string name="markets_portfolio_block_title">ポートフォリオ</string>
+  <string name="markets_portfolio_block_token_unsupported">**トークンはサポートされていません**。このトークンは現在、このウォレットではサポートされていません</string>
   <string name="markets_pulse_common_title">マーケット動向</string>
   <string name="markets_quick_actions">クイックアクション</string>
   <string name="markets_search_clear_all_hints">すべてクリア</string>
