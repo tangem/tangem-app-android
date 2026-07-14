@@ -63,6 +63,7 @@ internal fun SwapScreenContent(
     state: SwapStateHolder,
     modifier: Modifier = Modifier,
     feeBlock: @Composable ((Modifier) -> Unit)? = null,
+    marketingBanner: @Composable ((Modifier) -> Unit)? = null,
 ) {
     val keyboard by keyboardAsState()
 
@@ -85,6 +86,8 @@ internal fun SwapScreenContent(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         ) {
             MainInfo(state)
+
+            marketingBanner?.invoke(Modifier.fillMaxWidth())
 
             if (state.swapUIMode == SwapUIMode.Simple) {
                 ProviderItemBlockSimple(state = state.providerState)
