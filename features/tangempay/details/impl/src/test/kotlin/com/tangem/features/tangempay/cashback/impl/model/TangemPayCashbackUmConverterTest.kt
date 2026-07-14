@@ -141,7 +141,10 @@ internal class TangemPayCashbackUmConverterTest {
         payoutEnd: DateTime = DateTime.parse("2026-07-05"),
     ): TangemPayCashback = TangemPayCashback(
         confirmedAmount = confirmedAmount,
+        pendingAmount = BigDecimal.ZERO,
         currency = currency,
+        payoutCurrency = "USDC",
+        payoutNetwork = "Polygon",
         period = TangemPayCashback.Period(
             year = year,
             month = month,
