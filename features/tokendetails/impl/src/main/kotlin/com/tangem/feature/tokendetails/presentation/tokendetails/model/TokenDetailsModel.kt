@@ -376,7 +376,6 @@ internal class TokenDetailsModel @Inject constructor(
                     redesignStateController.update(
                         UpdateZeroBalanceActionsTransformer(
                             actions = state.states,
-                            networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
                         ),
                     )
