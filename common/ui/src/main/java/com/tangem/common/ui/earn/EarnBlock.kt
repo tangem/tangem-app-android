@@ -13,7 +13,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.innerShadow
 import androidx.compose.ui.platform.testTag
@@ -35,6 +34,7 @@ import com.tangem.common.ui.earn.EarnBlockUM.Type
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -44,6 +44,8 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 import com.tangem.core.res.R as CoreResR
 
 private const val TINTED_BACKGROUND_ALPHA = 0.1f
@@ -365,7 +367,14 @@ private fun EarnBlockIcon(type: Type, iconUM: EarnBlockUM.IconUM, modifier: Modi
             Box(
                 modifier = Modifier
                     .size(TangemTheme.dimens2.x6)
-                    .blur(radius = TangemTheme.dimens2.x4, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+                    .hazeForegroundEffectTangem(
+                        style = HazeStyle(
+                            tint = HazeTint(Color.Transparent),
+                            blurRadius = TangemTheme.dimens2.x4,
+                        ),
+                    ) {
+                        blurredEdgeTreatment = BlurredEdgeTreatment.Unbounded
+                    }
                     .background(color = type.accentGlow().copy(alpha = GLOW_ALPHA), shape = glowShape),
             )
         }
