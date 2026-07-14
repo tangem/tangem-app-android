@@ -17,7 +17,7 @@ internal class SignedRequestPayload @Inject constructor(
     private val appInfoProvider: AppInfoProvider,
 ) {
 
-    /** Snapshot of [appInfoProvider]'s device facts as the network DTO. `userAgent` is intentionally null. */
+    /** Snapshot of [appInfoProvider]'s device facts as the network DTO. */
     val deviceMetadata: DeviceMetadata
         get() = DeviceMetadata(
             deviceModel = appInfoProvider.device,
@@ -25,7 +25,7 @@ internal class SignedRequestPayload @Inject constructor(
             os = appInfoProvider.platform.lowercase(),
             osVersion = appInfoProvider.osVersion,
             appVersion = appInfoProvider.appVersion,
-            userAgent = null,
+            userAgent = with(appInfoProvider) { "Tangem/$appVersion ($device; $platform $osVersion)" },
             locale = appInfoProvider.language,
             timezone = appInfoProvider.timezone,
         )
@@ -47,11 +47,11 @@ internal class SignedRequestPayload @Inject constructor(
     )
 
     /**
-     * Stable, newline-separated representation of the signed payload. Backend treats the bytes
-     * opaquely; must stay aligned with the server-side canonicalisation. Field order matches the
-     * declaration order of [RegisterPayload] / [AuthenticationPayload], with one exception:
-     * [DeviceMetadata.userAgent] is intentionally NOT included in the signed bytes (it's always
-     * `null` in [deviceMetadata] and the server doesn't sign it either).
+     * Stable, colon-separated representation of the signed payload. Must stay byte-for-byte aligned
+     * with the server-side canonicalisation (`RegistrationService` / `AuthenticationService`):
+     * fields joined with `:` in this exact order, with a missing `attestationToken` collapsing to
+     * an empty segment, and no trailing separator. The server verifies via `SHA256withECDSA` over
+     * these UTF-8 bytes.
      */
     private fun canonicalize(
         devicePublicKey: String,
@@ -59,15 +59,16 @@ internal class SignedRequestPayload @Inject constructor(
         attestationToken: String?,
         metadata: DeviceMetadata,
     ): ByteArray = buildString {
-        append(devicePublicKey).append('\n')
-        append(nonce).append('\n')
-        append(attestationToken.orEmpty()).append('\n')
-        append(metadata.deviceModel.orEmpty()).append('\n')
-        append(metadata.os).append('\n')
-        append(metadata.osVersion.orEmpty()).append('\n')
-        append(metadata.appVersion.orEmpty()).append('\n')
-        append(metadata.locale.orEmpty()).append('\n')
-        append(metadata.timezone.orEmpty())
+        append(devicePublicKey).append(':')
+        append(nonce).append(':')
+        append(attestationToken.orEmpty()).append(':')
+        append(metadata.deviceModel).append(':')
+        append(metadata.os).append(':')
+        append(metadata.osVersion).append(':')
+        append(metadata.appVersion).append(':')
+        append(metadata.userAgent).append(':')
+        append(metadata.locale).append(':')
+        append(metadata.timezone)
     }.toByteArray(Charsets.UTF_8)
 }
 

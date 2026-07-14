@@ -304,14 +304,24 @@ fun TextReference.resolveReference(resources: Resources): String {
 @Composable
 fun TextReference.resolveAnnotatedReference(): AnnotatedString {
     return when (this) {
-        is TextReference.Res -> {
+        is TextReference.Res -> if (formatArgs.hasAnnotatedArgs()) {
+            resolveWithAnnotatedArgs(formatArgs = formatArgs, shouldDecapitalize = shouldDecapitalize) { args ->
+                stringResourceSafe(id = id, *args)
+            }
+        } else {
             val args = formatArgs.map { if (it is TextReference) it.resolveReference() else it }.toTypedArray()
 
             formatAnnotated(stringResourceSafe(id = id, *args))
         }
-        is TextReference.PluralRes -> formatAnnotated(
-            pluralStringResourceSafe(id, count, *formatArgs.toTypedArray()),
-        )
+        is TextReference.PluralRes -> if (formatArgs.hasAnnotatedArgs()) {
+            resolveWithAnnotatedArgs(formatArgs = formatArgs) { args ->
+                pluralStringResourceSafe(id, count, *args)
+            }
+        } else {
+            formatAnnotated(
+                pluralStringResourceSafe(id, count, *formatArgs.toTypedArray()),
+            )
+        }
         is TextReference.Str -> formatAnnotated(value)
         is TextReference.Annotated -> value
         is TextReference.Combined -> buildAnnotatedString {
@@ -360,6 +370,60 @@ inline fun TextReference?.isNullOrEmpty(): Boolean {
 
     return this == null || this == TextReference.EMPTY
 }
+
+private fun WrappedList<Any>.hasAnnotatedArgs(): Boolean {
+    return any { it is AnnotatedString || it is TextReference.Annotated }
+}
+
+/**
+ * Resolves a formatted resource whose [formatArgs] may carry annotations (span styles, inline content).
+ *
+ * Annotated args are substituted with sentinel tokens for the locale-aware formatting pass performed by
+ * [formatTemplate] (so `%d`, positional `%1$s` reordering and `%%` escapes still work) and then spliced back
+ * with their annotations preserved. Literal template text is appended verbatim — markdown is not parsed on
+ * this path.
+ */
+@Composable
+private fun resolveWithAnnotatedArgs(
+    formatArgs: WrappedList<Any>,
+    shouldDecapitalize: Boolean = false,
+    formatTemplate: @Composable (args: Array<Any>) -> String,
+): AnnotatedString {
+    val annotatedArgs = mutableMapOf<Int, AnnotatedString>()
+    val plainArgs = formatArgs.mapIndexed { index, arg ->
+        val annotated = when (arg) {
+            is AnnotatedString -> arg
+            is TextReference.Annotated -> arg.value
+            else -> null
+        }
+        when {
+            annotated != null -> {
+                annotatedArgs[index] = annotated
+                "$ANNOTATED_ARG_SENTINEL$index$ANNOTATED_ARG_SENTINEL"
+            }
+            arg is TextReference -> arg.resolveReference()
+            else -> arg
+        }
+    }.toTypedArray()
+
+    val formatted = formatTemplate(plainArgs).let { resolved ->
+        if (shouldDecapitalize) resolved.replaceFirstChar { char -> char.lowercase() } else resolved
+    }
+
+    return buildAnnotatedString {
+        var literalStart = 0
+        annotatedArgSentinelRegex.findAll(formatted).forEach { match ->
+            append(formatted.substring(literalStart, match.range.first))
+            annotatedArgs[match.groupValues[1].toInt()]?.let(::append)
+            literalStart = match.range.last + 1
+        }
+        append(formatted.substring(literalStart))
+    }
+}
+
+// OBJECT REPLACEMENT CHARACTER — never occurs in resource strings, so it can't clash with formatted output
+private const val ANNOTATED_ARG_SENTINEL = '￼'
+private val annotatedArgSentinelRegex = Regex("￼(\\d+)￼")
 
 @Composable
 private fun formatAnnotated(rawString: String): AnnotatedString {
