@@ -44,6 +44,7 @@ internal class OnrampOffersStateFactory(
                                 category = category,
                                 advantages = advantages,
                                 paymentMethod = currentQuote.paymentMethod,
+                                providerId = currentQuote.provider.id,
                                 providerName = currentQuote.provider.info.name,
                                 rate = currentQuote.toAmount.value.format {
                                     crypto(
