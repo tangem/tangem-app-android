@@ -10,15 +10,16 @@ android {
 }
 
 dependencies {
+    /* Kotlin */
+    api(deps.kotlin.serialization.core)
+
     /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.manageTokens.models)
+    api(projects.domain.models)
 
     /* Project - Core */
-    implementation(projects.core.ui)
-    implementation(projects.core.decompose)
-    implementation(projects.core.analytics.models)
+    api(projects.core.analytics.models)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Compose */
     implementation(deps.compose.runtime)
