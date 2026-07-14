@@ -3,7 +3,7 @@ package com.tangem.features.addressbook.block.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
+import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookContactsBlockComponent
@@ -28,7 +28,7 @@ internal class ContactsBlockModel @Inject constructor(
     private val stateController: ContactsBlockStateController,
     private val analyticsSender: AddressBookAnalyticsSender,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
-    getContactsUseCase: GetContactsUseCase,
+    getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
@@ -41,7 +41,8 @@ internal class ContactsBlockModel @Inject constructor(
 
         combine(
             params.queryFlow.flatMapLatest { query ->
-                getContactsUseCase(query = query, userWalletId = null)
+                getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
+                    .map { verified -> verified.map { it.contact } }
             },
             getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true),
         ) { contacts, wallets -> contacts to wallets.values.toList() }
