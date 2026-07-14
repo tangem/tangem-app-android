@@ -2,6 +2,8 @@ package com.tangem.domain.pay.model
 
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -30,6 +32,7 @@ data class CustomerInfo(
     val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
     val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
     val availableForWithdrawal: BigDecimal,
+    val tariffPlan: TangemPayCustomerTariffPlan?,
 ) {
 
     /** Transitional single-card accessor — returns the first product instance, or null if none. */
@@ -37,6 +40,10 @@ data class CustomerInfo(
 
     /** Transitional single-card accessor — returns the first card, or null if none. */
     val cardInfo: CardInfo? get() = cards.firstOrNull()
+
+    /** Card-level product instances only (excludes the VA ACCOUNT instance). */
+    val cardProductInstances: List<ProductInstance>
+        get() = productInstances.filter { it.specificationDataType == ProductInstance.SpecificationDataType.CARD }
 
     enum class State {
         NEW,
@@ -67,6 +74,7 @@ data class CustomerInfo(
         val actualCardLimit: TangemPayCardLimit?,
         val adminCardLimit: TangemPayCardLimit?,
         val status: Status,
+        val specificationDataType: SpecificationDataType,
     ) {
         enum class Status {
             NEW,
@@ -82,6 +90,12 @@ data class CustomerInfo(
             CANCELED,
             UNKNOWN,
         }
+
+        /** `ACCOUNT` marks a Virtual Account instance (vs. a `CARD`); used by VA MVP0 (TWI-1638). */
+        enum class SpecificationDataType {
+            ACCOUNT,
+            CARD,
+        }
     }
 
     data class CardInfo(
@@ -90,5 +104,6 @@ data class CustomerInfo(
         val cardStatus: TangemPayCard.Status,
         val lastFourDigits: String,
         val isPinSet: Boolean,
+        val images: List<TangemPayTariffPlan.Image>,
     )
 }

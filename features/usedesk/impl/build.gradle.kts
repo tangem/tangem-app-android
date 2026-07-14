@@ -11,14 +11,19 @@ android {
 }
 
 dependencies {
-
     /** Core */
-    implementation(projects.core.ui)
-    implementation(projects.core.decompose)
-    implementation(projects.core.utils)
-    implementation(projects.core.navigation)
-    implementation(projects.common.routing)
-    implementation(projects.features.usedesk.api)
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+
+    /** Features api */
+    api(projects.features.usedesk.api)
+
+    /** Domain */
+    api(projects.domain.feedback)
+    api(projects.domain.settings)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -28,9 +33,18 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
 
+    /** AndroidX */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.core)
+    implementation(deps.androidx.fragment)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
+
+    /** Other */
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
+
     /** Usedesk */
-    implementation(deps.usedesk.chat.sdk)
-    implementation(deps.usedesk.chat.gui)
-
-
+    implementation(tangemDeps.usedesk.chat.sdk)
+    implementation(tangemDeps.usedesk.chat.gui)
 }

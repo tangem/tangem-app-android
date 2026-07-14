@@ -13,6 +13,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
@@ -119,6 +120,24 @@ internal class DefaultNetworksStatusesStore(
                 }
 
                 this[userWalletId.stringValue] = updatedValues.toSet()
+            }
+        }
+    }
+
+    override suspend fun remove(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        val keys = userWalletIds.mapTo(hashSetOf()) { it.stringValue }
+
+        // Best-effort: attempt both runtime and persistence removal even if one fails.
+        coroutineScope {
+            launch {
+                runSuspendCatching { runtimeStore.update(default = emptyMap()) { stored -> stored - keys } }
+                    .onFailure { TangemLogger.e("Failed to remove network statuses from runtime", it) }
+            }
+            launch {
+                runSuspendCatching { persistenceDataStore.updateData { stored -> stored - keys } }
+                    .onFailure { TangemLogger.e("Failed to remove network statuses from persistence", it) }
             }
         }
     }

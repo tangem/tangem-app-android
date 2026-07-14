@@ -831,6 +831,7 @@
   <string name="markets_portfolio_block_add_token_title">**Ajouter à votre portfolio** pour acheter, échanger ou recevoir cet asset</string>
   <string name="markets_portfolio_block_subtitle">Dans votre portfolio</string>
   <string name="markets_portfolio_block_title">Votre portfolio</string>
+  <string name="markets_portfolio_block_token_unsupported">**Token non pris en charge**. Ce token n\'est actuellement pas pris en charge dans le portefeuille</string>
   <string name="markets_pulse_common_title">Rythme du marché</string>
   <string name="markets_quick_actions">Actions rapides</string>
   <string name="markets_search_header_title">Rechercher sur le marché</string>

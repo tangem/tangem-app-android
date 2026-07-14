@@ -86,9 +86,9 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             step("Click on 'Add' button in 'Markets' bottom sheet") {
                 onMarketsScreen { addButton.clickWithAssertion() }
             }
-            step("Click on 'Add' button in 'Add token' bottom sheet") {
+            step("Click on 'Confirm' button in 'Add token' bottom sheet") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onAddTokenBottomSheet { addButton.performClick() }
+                    onAddTokenBottomSheet { confirmButton.performClick() }
                 }
             }
             step("Press 'Back' button") {
