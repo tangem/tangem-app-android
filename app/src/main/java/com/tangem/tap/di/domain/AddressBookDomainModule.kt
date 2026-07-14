@@ -92,14 +92,26 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetContactByIdUseCase(repository: AddressBookRepository): GetContactByIdUseCase {
-        return GetContactByIdUseCase(repository = repository)
+    fun provideGetContactByIdUseCase(
+        repository: AddressBookRepository,
+        contactSignatureVerifier: ContactSignatureVerifier,
+    ): GetContactByIdUseCase {
+        return GetContactByIdUseCase(
+            repository = repository,
+            contactSignatureVerifier = contactSignatureVerifier,
+        )
     }
 
     @Provides
     @Singleton
-    fun provideCheckAddressDuplicateUseCase(repository: AddressBookRepository): CheckAddressDuplicateUseCase {
-        return CheckAddressDuplicateUseCase(repository = repository)
+    fun provideCheckAddressDuplicateUseCase(
+        repository: AddressBookRepository,
+        contactSignatureVerifier: ContactSignatureVerifier,
+    ): CheckAddressDuplicateUseCase {
+        return CheckAddressDuplicateUseCase(
+            repository = repository,
+            contactSignatureVerifier = contactSignatureVerifier,
+        )
     }
 
     @Provides
