@@ -40,6 +40,7 @@ import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBar
@@ -359,39 +360,7 @@ private fun BalanceBlock(
                     fadeOut(animationSpec = tween(durationMillis = 90))
             },
         ) { animatedState ->
-            when (animatedState) {
-                is TangemPayDetailsBalanceBlockState.Loading -> TangemShimmer(
-                    style = TangemTheme.typography3.heading.medium,
-                )
-                is TangemPayDetailsBalanceBlockState.Content -> {
-                    val balanceColor = when {
-                        animatedState.isMuted -> TangemTheme.colors3.text.secondary
-                        animatedState.isNegative -> TangemTheme.colors3.text.status.error
-                        else -> TangemTheme.colors3.text.primary
-                    }
-                    Text(
-                        modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
-                        text = animatedState.fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                        style = TangemTheme.typography3.display.medium.applyBladeBrush(
-                            isEnabled = animatedState.isBalanceFlickering,
-                            textColor = balanceColor,
-                        ),
-                        color = balanceColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = TangemTheme.typography3.heading.medium.fontSize,
-                            maxFontSize = TangemTheme.typography3.display.medium.fontSize,
-                        ),
-                    )
-                }
-                is TangemPayDetailsBalanceBlockState.Error -> Text(
-                    modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
-                    text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
-                    style = TangemTheme.typography3.display.medium,
-                    color = TangemTheme.colors3.text.primary,
-                )
-            }
+            BalanceValue(animatedState, isBalanceHidden)
         }
 
         Text(
@@ -399,6 +368,58 @@ private fun BalanceBlock(
             text = stringResourceSafe(R.string.token_details_balance_total),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,
+        )
+
+        when (state) {
+            is TangemPayDetailsBalanceBlockState.Loading -> Unit
+            is TangemPayDetailsBalanceBlockState.Content -> {
+                TangemBadge(
+                    modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
+                    text = resourceReference(R.string.tangempay_status_inactive),
+                    variant = TangemBadge.Variant.Outline,
+                    status = TangemBadge.Status.Warning,
+                    size = TangemBadge.Size.X6,
+                    iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
+                )
+            }
+            is TangemPayDetailsBalanceBlockState.Error -> Unit
+        }
+    }
+}
+
+@Composable
+private fun BalanceValue(state: TangemPayDetailsBalanceBlockState, isBalanceHidden: Boolean) {
+    when (state) {
+        is TangemPayDetailsBalanceBlockState.Loading -> TangemShimmer(
+            style = TangemTheme.typography3.heading.medium,
+        )
+        is TangemPayDetailsBalanceBlockState.Content -> {
+            val balanceColor = when {
+                state.isMuted -> TangemTheme.colors3.text.secondary
+                state.isNegative -> TangemTheme.colors3.text.status.error
+                else -> TangemTheme.colors3.text.primary
+            }
+            Text(
+                modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
+                text = state.fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                style = TangemTheme.typography3.display.medium.applyBladeBrush(
+                    isEnabled = state.isBalanceFlickering,
+                    textColor = balanceColor,
+                ),
+                color = balanceColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = TangemTheme.typography3.heading.medium.fontSize,
+                    maxFontSize = TangemTheme.typography3.display.medium.fontSize,
+                ),
+            )
+        }
+        is TangemPayDetailsBalanceBlockState.Error -> Text(
+            modifier = Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
+            text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
+            style = TangemTheme.typography3.display.medium,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }
