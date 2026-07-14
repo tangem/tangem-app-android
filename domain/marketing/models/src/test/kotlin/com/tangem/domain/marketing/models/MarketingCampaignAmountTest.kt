@@ -21,16 +21,24 @@ internal class MarketingCampaignAmountTest {
     )
 
     @Test
-    fun `GIVEN non swap-onramp type WHEN matchesUsdAmount THEN always true`() {
-        val c = campaign(MarketingScreenType.TOKEN_DETAILS, minAmount = BigDecimal(50), maxAmount = BigDecimal(300))
+    fun `GIVEN no min max bounds WHEN matchesUsdAmount THEN always true`() {
+        val c = campaign(MarketingScreenType.TOKEN_DETAILS, minAmount = null, maxAmount = null)
         assertThat(c.matchesUsdAmount(BigDecimal(10))).isTrue()
         assertThat(c.matchesUsdAmount(null)).isTrue()
     }
 
     @Test
-    fun `GIVEN swap with null amount WHEN matchesUsdAmount THEN true`() {
+    fun `GIVEN bounded campaign of any type WHEN amount out of range THEN false`() {
+        // Bounds apply regardless of screen type (iOS parity): type no longer exempts a bounded campaign.
+        val c = campaign(MarketingScreenType.TOKEN_DETAILS, minAmount = BigDecimal(50), maxAmount = BigDecimal(300))
+        assertThat(c.matchesUsdAmount(BigDecimal(10))).isFalse()
+        assertThat(c.matchesUsdAmount(BigDecimal(100))).isTrue()
+    }
+
+    @Test
+    fun `GIVEN bounded campaign with null amount WHEN matchesUsdAmount THEN false`() {
         val c = campaign(MarketingScreenType.SWAP, minAmount = BigDecimal(50))
-        assertThat(c.matchesUsdAmount(null)).isTrue()
+        assertThat(c.matchesUsdAmount(null)).isFalse()
     }
 
     @Test
