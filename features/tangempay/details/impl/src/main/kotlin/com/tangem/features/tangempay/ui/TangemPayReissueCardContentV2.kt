@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_32
 import com.tangem.core.ui.res.generated.icons.ic_error_28
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayReissueCardError
 import com.tangem.features.tangempay.entity.TangemPayReissueCardUM
@@ -155,6 +157,7 @@ private fun FeeBlock(
             titleRes = R.string.tangempay_reissue_card_fee_label,
             value = state.feeAmount,
             showDivider = appearance.shouldShowBalanceRow,
+            valueTestTag = TangemPayTestTags.REISSUE_SHEET_FEE_VALUE,
         )
         if (appearance.shouldShowBalanceRow) {
             FeeInfoRow(
@@ -166,7 +169,7 @@ private fun FeeBlock(
 }
 
 @Composable
-private fun FeeInfoRow(titleRes: Int, value: String, showDivider: Boolean = false) {
+private fun FeeInfoRow(titleRes: Int, value: String, showDivider: Boolean = false, valueTestTag: String? = null) {
     TangemRow(
         divider = showDivider,
         contentLead = TangemRowContentLead.Start,
@@ -185,6 +188,7 @@ private fun FeeInfoRow(titleRes: Int, value: String, showDivider: Boolean = fals
                 )
             } else {
                 TangemRowText(
+                    modifier = if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier,
                     text = value,
                     role = TangemRowTextRole.Value,
                 )
@@ -213,7 +217,9 @@ private fun BottomButtonsBlock(
             text = resourceReference(R.string.common_cancel),
         )
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.REISSUE_SHEET_CONFIRM_BUTTON),
             size = TangemButton.Size.X12,
             onClick = appearance.primaryAction(state),
             isEnabled = !state.isFeeLoading && !state.isReissuingInProgress,
