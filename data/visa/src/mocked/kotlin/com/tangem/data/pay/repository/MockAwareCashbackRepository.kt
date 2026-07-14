@@ -8,6 +8,7 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
+import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
@@ -47,6 +48,14 @@ internal class MockAwareCashbackRepository @Inject constructor(
     ): Either<VisaApiError, List<CashbackDocument>> {
         if (isMockMode) return MOCK_DOCS.right()
         return real.getCashbackAccrualDocs(userWalletId)
+    }
+
+    override suspend fun getCashbackHistory(
+        userWalletId: UserWalletId,
+        months: Int,
+    ): Either<VisaApiError, CashbackHistory> {
+        if (isMockMode) return MOCK_HISTORY.copy(months = MOCK_HISTORY.months.takeLast(months)).right()
+        return real.getCashbackHistory(userWalletId, months)
     }
 
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean =
@@ -102,6 +111,17 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 id = "terms",
                 title = "Full terms of cashback program",
                 url = "https://tangem.com/docs/en/tangem-pay-cashback-terms.pdf",
+            ),
+        )
+
+        val MOCK_HISTORY = CashbackHistory(
+            currency = "USD",
+            months = listOf(
+                CashbackHistory.MonthlyCashback(year = 2026, month = 2, confirmedAmount = BigDecimal("12.02")),
+                CashbackHistory.MonthlyCashback(year = 2026, month = 3, confirmedAmount = BigDecimal("44.22")),
+                CashbackHistory.MonthlyCashback(year = 2026, month = 4, confirmedAmount = BigDecimal("38.52")),
+                CashbackHistory.MonthlyCashback(year = 2026, month = 5, confirmedAmount = BigDecimal("26.10")),
+                CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
             ),
         )
     }
