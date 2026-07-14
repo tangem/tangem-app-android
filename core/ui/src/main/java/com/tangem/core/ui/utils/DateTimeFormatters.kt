@@ -116,6 +116,13 @@ object DateTimeFormatters {
     }
 
     /**
+     * Example: "Jun"
+     */
+    val dateMMM: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("MMM")
+    }
+
+    /**
      * Example: "June 1"
      */
     val dateMMMMd: DateTimeFormatter by lazy {

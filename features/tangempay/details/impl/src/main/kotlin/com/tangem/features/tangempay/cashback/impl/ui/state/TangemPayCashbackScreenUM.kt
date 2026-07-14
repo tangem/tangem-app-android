@@ -6,4 +6,5 @@ import androidx.compose.runtime.Immutable
 internal data class TangemPayCashbackScreenUM(
     val cashback: TangemPayCashbackUM,
     val infoTiles: TangemPayCashbackInfoTilesUM?,
+    val histogram: TangemPayCashbackHistogramUM?,
 )
