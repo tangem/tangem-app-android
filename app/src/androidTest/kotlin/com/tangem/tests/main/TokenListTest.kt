@@ -57,12 +57,11 @@ class TokenListTest : BaseTestCase() {
     @DisplayName("Main: token list differs after switching to a second wallet")
     @Test
     fun tokenListChangedAfterSwitchingWalletTest() {
-        val userTokensScenario = "user_tokens_api"
         val userTokensState = "ReducedTokens"
 
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
             step("Open 'Main Screen'") {
@@ -74,8 +73,8 @@ class TokenListTest : BaseTestCase() {
 
             val firstWalletTokens = getMainScreenTokensOrder()
 
-            step("Set WireMock scenario: '$userTokensScenario' to state: '$userTokensState'") {
-                setWireMockScenarioState(userTokensScenario, userTokensState)
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, userTokensState)
             }
             step("Add a second card wallet") {
                 addNewCardWalletWithoutSync(Wallet2MockContent)
