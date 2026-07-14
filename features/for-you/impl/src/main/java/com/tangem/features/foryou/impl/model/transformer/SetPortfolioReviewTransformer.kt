@@ -7,6 +7,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
@@ -36,6 +37,7 @@ internal class SetPortfolioReviewTransformer(
     private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val onPeriodClick: (TangemSegmentUM) -> Unit,
+    private val onTokenClick: (CryptoCurrency) -> Unit,
 ) : Transformer<ForYouUM> {
 
     override fun transform(prevState: ForYouUM): ForYouUM {
@@ -67,6 +69,7 @@ internal class SetPortfolioReviewTransformer(
             expandedAssetIds = expandedAssetIds,
             expandClick = expandClick,
             otherAssets = otherAssets,
+            onTokenClick = onTokenClick,
         ).convert(topCurrencies)
 
         val marketChartUM = ForYouMarketChartConverter(
