@@ -153,6 +153,7 @@ internal class CashbackBlockTransformerTest {
             fiatBalance = TextReference.EMPTY,
             isBalanceFlickering = false,
             isNegative = false,
+            isInactive = false,
         ),
         addToWalletBlockState = null,
         isBalanceHidden = false,
