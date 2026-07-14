@@ -19,6 +19,7 @@ import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.navigation.EditReturnTracker
 import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
@@ -53,6 +54,8 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
 
     private val model: NFTSendModel = getOrCreateModel(params = params, router = innerRouter)
 
+    private val editReturnTracker = EditReturnTracker<CommonSendRoute> { it.isEditMode }
+
     private val childStack = childStack(
         key = "NFTSendInnerStack",
         source = stackNavigation,
@@ -75,6 +78,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             lifecycle = lifecycle,
             mode = ObserveLifecycleMode.CREATE_DESTROY,
         ) { stack ->
+            val isReturnedFromEdit = editReturnTracker.onRouteActivated(stack.active.configuration)
             when (val activeComponent = stack.active.instance) {
                 is NFTSendConfirmComponent -> {
                     val fromCurrency = model.cryptoCurrency
@@ -90,9 +94,9 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                             toDerivationIndex = null,
                         ),
                     )
-                    // Push current state into a reused Confirm on (re)entry. Confirm.isEditMode is `true`
-                    if (stack.active.configuration.isEditMode) {
-                        activeComponent.updateState(model.uiState.value)
+                    // A reused Confirm gets no constructor state — re-push the edited fields on edit-return
+                    if (isReturnedFromEdit) {
+                        activeComponent.updateEditedState(model.uiState.value)
                     }
                 }
                 is SendDestinationComponent -> {
