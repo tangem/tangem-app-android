@@ -11,5 +11,7 @@ internal interface PromoBannersRepository {
         languageISOCode: String,
     ): List<PromoBannerDisplay>
 
+    suspend fun getCachedBanners(walletId: String, placeholder: Placeholder): List<PromoBannerDisplay>?
+
     suspend fun dismissBanner(walletId: String, displayId: Int)
 }

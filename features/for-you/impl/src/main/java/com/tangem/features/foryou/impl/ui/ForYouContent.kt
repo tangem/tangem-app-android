@@ -24,8 +24,8 @@ import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.entity.ForYouUM
+import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.collections.immutable.persistentListOf
@@ -55,6 +55,7 @@ internal fun ForYouContent(
     ) {
         promoBannersBlockComponent.ContentWithPadding(
             modifier = Modifier.padding(top = 12.dp),
+            walletId = null,
             horizontalItemPadding = 16.dp,
         )
 
@@ -94,7 +95,7 @@ private fun ForYouContent_Preview(@PreviewParameter(ForYouContentPreviewProvider
             bottomSheetState = remember { mutableStateOf(BottomSheetState.EXPANDED) },
             promoBannersBlockComponent = object : PromoBannersBlockComponent {
                 @Composable
-                override fun ContentWithPadding(horizontalItemPadding: Dp, modifier: Modifier) {
+                override fun ContentWithPadding(horizontalItemPadding: Dp, walletId: String?, modifier: Modifier) {
                 }
 
                 override fun setVisibleOnScreen(isVisible: Boolean) {}
