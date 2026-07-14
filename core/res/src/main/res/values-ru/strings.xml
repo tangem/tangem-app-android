@@ -766,6 +766,8 @@
   <string name="hardware_wallet_key_feature_title">Генерация ключа</string>
   <string name="hardware_wallet_security_feature_description">Операции с криптографией выполняются внутри защищённого чипа, устойчивого к клонированию и физическому взлому.</string>
   <string name="hardware_wallet_security_feature_title">Аппаратная безопасность</string>
+  <string name="high_fee_warning_description">Высокая активность в сети. Вы можете продолжить сейчас или попробовать позже, когда комиссии будут ниже.</string>
+  <string name="high_fee_warning_title">Комиссия сети выше, чем обычно</string>
   <string name="home_button_add_existing_wallet">Добавить существующий кошелек</string>
   <string name="home_button_create_new_wallet">Создать новый кошелек</string>
   <string name="home_button_order">Купить</string>
@@ -923,6 +925,7 @@
   <string name="markets_portfolio_block_add_token_title">**Добавьте в свой портфель**, чтобы покупать, обменивать или получать этот актив.</string>
   <string name="markets_portfolio_block_subtitle">В вашем портфеле</string>
   <string name="markets_portfolio_block_title">Ваш портфель</string>
+  <string name="markets_portfolio_block_token_unsupported">**Токен не поддерживается**. В настоящее время этот токен не поддерживается в кошельке</string>
   <string name="markets_pulse_common_title">Пульс рынка</string>
   <string name="markets_quick_actions">Быстрые действия</string>
   <string name="markets_search_clear_all_hints">Очистить всё</string>
