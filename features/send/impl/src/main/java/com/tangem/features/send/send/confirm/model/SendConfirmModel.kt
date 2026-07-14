@@ -166,8 +166,13 @@ internal class SendConfirmModel @Inject constructor(
         subscribeOnTapHelpUpdates()
     }
 
-    fun updateState(state: SendUM) {
-        _uiState.value = state
+    /**
+     * Applies the fields editable outside Confirm (amount, destination) from the parent's [state].
+     * Confirm-local fields (confirmUM, feeSelectorUM) must be kept — the parent's copies of them
+     * stay stale until a successful send.
+     */
+    fun updateEditedState(state: SendUM) {
+        _uiState.update { it.copy(amountUM = state.amountUM, destinationUM = state.destinationUM) }
         onFeeReload()
         updateConfirmNotifications()
     }

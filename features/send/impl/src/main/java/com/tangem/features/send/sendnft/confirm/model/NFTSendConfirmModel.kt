@@ -127,8 +127,13 @@ internal class NFTSendConfirmModel @Inject constructor(
         initialState()
     }
 
-    fun updateState(nftSendUM: NFTSendUM) {
-        _uiState.value = nftSendUM
+    /**
+     * Applies the field editable outside Confirm (destination) from the parent's [nftSendUM].
+     * Confirm-local fields (confirmUM, feeSelectorUM) must be kept — the parent's copies of them
+     * stay stale until a successful send.
+     */
+    fun updateEditedState(nftSendUM: NFTSendUM) {
+        _uiState.update { it.copy(destinationUM = nftSendUM.destinationUM) }
         updateConfirmNotifications()
     }
 
