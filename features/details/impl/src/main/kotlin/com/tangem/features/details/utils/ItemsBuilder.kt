@@ -16,6 +16,7 @@ import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
 private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
+private const val VIRTUAL_ACCOUNT_ITEM_ID = "get_virtual_account"
 
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
@@ -27,15 +28,13 @@ internal class ItemsBuilder @Inject constructor(
     fun buildAll(
         isWalletConnectAvailable: Boolean,
         isAddressBookAvailable: Boolean,
-        isSupportChatAvailable: Boolean,
         hasAnyMobileWallet: Boolean,
         userWalletId: UserWalletId,
-        onSupportEmailClick: () -> Unit,
-        onSupportChatClick: () -> Unit,
+        onSupportClick: () -> Unit,
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
         if (isAddressBookAvailable) {
-            buildWalletConnectAddressBookBlock(isWalletConnectAvailable, userWalletId)
+            buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
         } else {
             buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         }
@@ -50,11 +49,7 @@ internal class ItemsBuilder @Inject constructor(
 
         buildShopBlock(onBuyClick).let(::add)
         buildSettingsBlock().let(::add)
-        buildSupportBlock(
-            onSupportEmailClick = onSupportEmailClick,
-            onSupportChatClick = onSupportChatClick,
-            isSupportChatAvailable = isSupportChatAvailable,
-        ).let(::add)
+        buildSupportBlock(onSupportClick = onSupportClick).let(::add)
     }.toImmutableList()
 
     fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
@@ -81,6 +76,30 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList()
     }
 
+    fun addVirtualAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block.id == "shop" && block is DetailsItemUM.Basic) {
+                val newItems = block
+                    .items
+                    .toMutableList()
+                    .apply { add(getVirtualAccountItem(onClick = onClick)) }
+                block.copy(items = newItems.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
+    fun removeVirtualAccountItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == VIRTUAL_ACCOUNT_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != VIRTUAL_ACCOUNT_ITEM_ID }.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
     private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
             DetailsItemUM.WalletConnect(
@@ -91,29 +110,29 @@ internal class ItemsBuilder @Inject constructor(
         }
     }
 
-    private fun MutableList<DetailsItemUM>.buildWalletConnectAddressBookBlock(
+    private fun MutableList<DetailsItemUM>.buildWalletActionBlock(
         isWalletConnectAvailable: Boolean,
         userWalletId: UserWalletId,
     ) {
-        val walletConnectAddressBookItems = buildList {
+        val walletActionItems = buildList {
             if (isWalletConnectAvailable) add(buildWalletConnectButton(userWalletId))
             add(buildAddressBookButton())
-        }
-        if (walletConnectAddressBookItems.isNotEmpty()) {
-            add(DetailsItemUM.WalletConnectAddressBookBlock(walletConnectAddressBookItems))
+        }.toImmutableList()
+        if (walletActionItems.isNotEmpty()) {
+            add(DetailsItemUM.WalletActionBlock(walletActionItems))
         }
     }
 
     private fun buildWalletConnectButton(
         userWalletId: UserWalletId,
-    ): DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect {
-        return DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect(
+    ): DetailsItemUM.WalletActionBlock.Item.WalletConnect {
+        return DetailsItemUM.WalletActionBlock.Item.WalletConnect(
             onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
         )
     }
 
-    private fun buildAddressBookButton(): DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook {
-        return DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook(
+    private fun buildAddressBookButton(): DetailsItemUM.WalletActionBlock.Item.AddressBook {
+        return DetailsItemUM.WalletActionBlock.Item.AddressBook(
             onClick = { router.push(AppRoute.AddressBook()) },
         )
     }
@@ -148,32 +167,17 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList(),
     )
 
-    private fun buildSupportBlock(
-        onSupportEmailClick: () -> Unit,
-        onSupportChatClick: () -> Unit,
-        isSupportChatAvailable: Boolean,
-    ): DetailsItemUM = DetailsItemUM.Basic(
+    private fun buildSupportBlock(onSupportClick: () -> Unit): DetailsItemUM = DetailsItemUM.Basic(
         id = "support",
         items = buildList {
             DetailsItemUM.Basic.Item(
-                id = "support_email",
+                id = "contact_support",
                 block = BlockUM(
                     text = resourceReference(R.string.common_contact_support),
                     iconRes = R.drawable.ic_comment_24,
-                    onClick = onSupportEmailClick,
+                    onClick = onSupportClick,
                 ),
             ).let(::add)
-
-            if (isSupportChatAvailable) {
-                DetailsItemUM.Basic.Item(
-                    id = "support_chat",
-                    block = BlockUM(
-                        text = resourceReference(R.string.details_row_title_contact_to_support_chat),
-                        iconRes = R.drawable.ic_chat_24,
-                        onClick = onSupportChatClick,
-                    ),
-                ).let(::add)
-            }
 
             DetailsItemUM.Basic.Item(
                 id = "disclaimer",
@@ -190,6 +194,15 @@ internal class ItemsBuilder @Inject constructor(
         id = TANGEM_PAY_ITEM_ID,
         block = BlockUM(
             text = resourceReference(R.string.tangempay_get_tangem_pay),
+            iconRes = R.drawable.ic_tangem_pay_24,
+            onClick = onClick,
+        ),
+    )
+
+    private fun getVirtualAccountItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = VIRTUAL_ACCOUNT_ITEM_ID,
+        block = BlockUM(
+            text = resourceReference(R.string.virtual_account_title),
             iconRes = R.drawable.ic_tangem_pay_24,
             onClick = onClick,
         ),

@@ -3,10 +3,23 @@ plugins {
     id("configuration")
 }
 dependencies {
-    /** Domain modules */
-    api(projects.domain.core)
-    api(projects.domain.models)
 
-    /** Test libraries */
-    testImplementation(projects.test.core)
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Core modules
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
+
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }
