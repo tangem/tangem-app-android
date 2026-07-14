@@ -1,6 +1,7 @@
 package com.tangem.tests.main
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -27,16 +28,15 @@ class OrganizeTokensTest : BaseTestCase() {
     @DisplayName("Organize tokens: Correct tokens list displaying for current wallet")
     @Test
     fun organizeTokensCorrectTokensListDisplaying() {
-        val userTokensScenario = "user_tokens_api"
         val userTokensState = "Wallet2MockTokensList"
 
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
-            step("Set WireMock scenario: '$userTokensScenario' to state: '$userTokensState'") {
-                setWireMockScenarioState(userTokensScenario, userTokensState)
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, userTokensState)
             }
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -83,6 +83,9 @@ class OrganizeTokensTest : BaseTestCase() {
                     val sourceIndex = 2
                     val destinationIndex = 1
                     val before = getDisplayedTokenTitles()
+                    require(before.size > sourceIndex && before.size > destinationIndex) {
+                        "Expected at least ${maxOf(sourceIndex, destinationIndex) + 1} tokens to reorder, but got ${before.size}: $before"
+                    }
                     dragToken(source = before[sourceIndex], destination = before[destinationIndex])
                     val expected = before.toMutableList().apply {
                         add(destinationIndex, removeAt(sourceIndex))
