@@ -3,6 +3,7 @@ package com.tangem.common.ui.markets.action
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 
@@ -32,9 +33,23 @@ object QuickActionsConverter {
                     )
                 }
             },
-            disabledActions = states.filterNot { it.isEnabled }.map { it.action }.toImmutableSet(),
+            disabledActions = if (context.shouldShowUnavailableActionsAsEnabled) {
+                persistentSetOf()
+            } else {
+                states.filterNot { it.isEnabled }.map { it.action }.toImmutableSet()
+            },
         )
     }
+
+    /**
+     * Unavailability reason for [action] as produced by the domain [actions] list, or
+     * [ScenarioUnavailabilityReason.None] when the action is available or has no domain counterpart.
+     */
+    fun unavailabilityReason(
+        action: TokenActionsBSContentUM.Action,
+        actions: List<TokenActionsState.ActionState>,
+    ): ScenarioUnavailabilityReason = actions.firstOrNull { it.toBsAction() == action }?.unavailabilityReason
+        ?: ScenarioUnavailabilityReason.None
 
     private fun QuickActionUM.toHandledAction(): TokenActionsBSContentUM.Action = when (this) {
         QuickActionUM.V1.Buy, QuickActionUM.V2.Buy -> TokenActionsBSContentUM.Action.Buy
