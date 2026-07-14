@@ -28,6 +28,14 @@ internal enum class SwapMarketCategory(
         title = resourceReference(R.string.markets_sort_by_top_losers_title),
         order = TokenMarketListConfig.Order.TopLosers,
     ),
+    ExperiencedBuyers(
+        title = resourceReference(R.string.markets_sort_by_experienced_buyers_title),
+        order = TokenMarketListConfig.Order.Buyers,
+    ),
+    Trending(
+        title = resourceReference(R.string.markets_sort_by_trending_title),
+        order = TokenMarketListConfig.Order.Trending,
+    ),
 }
 
 /**
