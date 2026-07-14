@@ -30,7 +30,10 @@ internal object CashbackSummaryConverter : Converter<CashbackSummaryResponse, Ca
             displayMode = CashbackDisplayMode.fromString(value.cashbackDisplayMode),
             cashback = TangemPayCashback(
                 confirmedAmount = value.confirmedAmount ?: BigDecimal.ZERO,
+                pendingAmount = value.pendingAmount ?: BigDecimal.ZERO,
                 currency = value.currency.orEmpty(),
+                payoutCurrency = value.payoutCurrency.orEmpty(),
+                payoutNetwork = value.payoutNetwork.orEmpty(),
                 period = TangemPayCashback.Period(
                     year = period.year,
                     month = period.month,
@@ -38,7 +41,6 @@ internal object CashbackSummaryConverter : Converter<CashbackSummaryResponse, Ca
                     payoutEnd = payoutEnd,
                 ),
             ),
-            pendingAmount = value.pendingAmount ?: BigDecimal.ZERO,
         )
     }
 }
