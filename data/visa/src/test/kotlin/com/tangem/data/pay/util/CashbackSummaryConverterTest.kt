@@ -32,7 +32,6 @@ internal class CashbackSummaryConverterTest {
             expected = CashbackSummary.Enabled(
                 displayMode = CashbackDisplayMode.FULL,
                 cashback = expectedCashback(),
-                pendingAmount = BigDecimal("13.65"),
             ),
         ),
         ConvertModel(
@@ -41,7 +40,6 @@ internal class CashbackSummaryConverterTest {
             expected = CashbackSummary.Enabled(
                 displayMode = CashbackDisplayMode.ALT_BLOCK,
                 cashback = expectedCashback(),
-                pendingAmount = BigDecimal("13.65"),
             ),
         ),
         ConvertModel(
@@ -50,7 +48,6 @@ internal class CashbackSummaryConverterTest {
             expected = CashbackSummary.Enabled(
                 displayMode = CashbackDisplayMode.FULL,
                 cashback = expectedCashback(),
-                pendingAmount = BigDecimal("13.65"),
             ),
         ),
         ConvertModel(
@@ -63,8 +60,7 @@ internal class CashbackSummaryConverterTest {
             ),
             expected = CashbackSummary.Enabled(
                 displayMode = CashbackDisplayMode.FULL,
-                cashback = expectedCashback(confirmedAmount = BigDecimal.ZERO),
-                pendingAmount = BigDecimal.ZERO,
+                cashback = expectedCashback(confirmedAmount = BigDecimal.ZERO, pendingAmount = BigDecimal.ZERO),
             ),
         ),
         ConvertModel(
@@ -116,6 +112,8 @@ internal class CashbackSummaryConverterTest {
             confirmedAmount: BigDecimal? = BigDecimal("22.54"),
             pendingAmount: BigDecimal? = BigDecimal("13.65"),
             currency: String? = "USD",
+            payoutCurrency: String? = "USDC",
+            payoutNetwork: String? = "Polygon",
         ) = CashbackSummaryResponse(
             cashbackProgramStatus = status,
             cashbackDisplayMode = displayMode,
@@ -123,11 +121,19 @@ internal class CashbackSummaryConverterTest {
             confirmedAmount = confirmedAmount,
             pendingAmount = pendingAmount,
             currency = currency,
+            payoutCurrency = payoutCurrency,
+            payoutNetwork = payoutNetwork,
         )
 
-        fun expectedCashback(confirmedAmount: BigDecimal = BigDecimal("22.54")) = TangemPayCashback(
+        fun expectedCashback(
+            confirmedAmount: BigDecimal = BigDecimal("22.54"),
+            pendingAmount: BigDecimal = BigDecimal("13.65"),
+        ) = TangemPayCashback(
             confirmedAmount = confirmedAmount,
+            pendingAmount = pendingAmount,
             currency = "USD",
+            payoutCurrency = "USDC",
+            payoutNetwork = "Polygon",
             period = TangemPayCashback.Period(
                 year = 2026,
                 month = 6,
