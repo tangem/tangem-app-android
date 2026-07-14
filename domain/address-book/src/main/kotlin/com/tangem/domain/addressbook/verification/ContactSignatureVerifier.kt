@@ -19,14 +19,18 @@ class ContactSignatureVerifier(
 
     suspend fun verifyContacts(contacts: List<Contact>): List<VerifiedContact> {
         val walletsById = userWalletsListRepository.userWalletsSync().associateBy { it.walletId }
-        return contacts.mapNotNull { contact ->
-            val userWallet = walletsById[contact.walletId] ?: return@mapNotNull null
-            val verification = verify(userWallet, contact).getOrNull() ?: return@mapNotNull null
-            VerifiedContact(
-                contact = contact.copy(addresses = verification.valid),
-                invalidEntries = verification.invalid,
-            )
-        }
+        return contacts
+            .mapNotNull { contact ->
+                val userWallet = walletsById[contact.walletId] ?: return@mapNotNull null
+                val verification = verify(userWallet, contact).getOrNull() ?: return@mapNotNull null
+                VerifiedContact(
+                    contact = contact.copy(addresses = verification.valid),
+                    invalidEntries = verification.invalid,
+                )
+            }
+            .filter { verifiedContact ->
+                verifiedContact.contact.addresses.isNotEmpty()
+            }
     }
 
     suspend fun isNameVerified(contact: Contact): Boolean {
