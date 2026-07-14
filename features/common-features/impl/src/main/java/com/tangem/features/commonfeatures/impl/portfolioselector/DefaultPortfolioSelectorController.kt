@@ -18,38 +18,38 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
 ) : PortfolioSelectorController {
 
-    private val _selectedAccount: MutableSharedFlow<AccountId?> = MutableSharedFlow(
+    private val _selectedAccount: MutableSharedFlow<Set<AccountId>> = MutableSharedFlow(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     override val isAccountMode: Flow<Boolean> by lazy { isAccountsModeEnabledUseCase() }
     // without StateFlow and distinctUntilChanged to allow reselect and correct navigation
-    override val selectedAccount: Flow<AccountId?> get() = _selectedAccount
-    override val selectedAccountSync: AccountId? get() = _selectedAccount.replayCache.firstOrNull()
+    override val selectedAccounts: Flow<Set<AccountId>> get() = _selectedAccount
+    override val selectedAccountsSync: Set<AccountId> get() = _selectedAccount.replayCache.firstOrNull().orEmpty()
 
     override val isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean> = MutableStateFlow { _, _ -> true }
 
     override suspend fun isAccountModeSync(): Boolean = isAccountsModeEnabledUseCase.invokeSync()
 
-    override fun selectAccount(accountId: AccountId?) {
-        _selectedAccount.tryEmit(accountId)
+    override fun selectAccount(accountIds: Set<AccountId>) {
+        _selectedAccount.tryEmit(accountIds)
     }
 
-    override fun selectedAccountWithData(
+    override fun selectedAccountsWithData(
         portfolioFetcher: PortfolioFetcher,
-    ): Flow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?> = combine(
+    ): Flow<Set<Pair<UserWallet, AccountStatus.CryptoPortfolio>>> = combine(
         flow = _selectedAccount,
         flow2 = portfolioFetcher.data,
-        transform = { accountId, data ->
-            accountId ?: return@combine null
-            var result: Pair<UserWallet, AccountStatus.CryptoPortfolio>? = null
+        transform = { accountIds, data ->
+            val result = mutableSetOf<Pair<UserWallet, AccountStatus.CryptoPortfolio>>()
 
-            data.balances.forEach { wallet, balance ->
-                val accountStatuses = balance.accountsBalance.accountStatuses
+            data.balances.forEach { (_, balance) ->
+                val accounts = balance.accountsBalance.accountStatuses
                     .filterCryptoPortfolio()
-                    .find { accountId == it.account.accountId }
-                if (accountStatuses != null) result = balance.userWallet to accountStatuses
+                    .filterTo(mutableSetOf()) { it.account.accountId in accountIds }
+                    .map { balance.userWallet to it }
+                result.addAll(accounts)
             }
 
             return@combine result
