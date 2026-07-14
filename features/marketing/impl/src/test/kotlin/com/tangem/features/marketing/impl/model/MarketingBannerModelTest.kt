@@ -177,7 +177,7 @@ internal class MarketingBannerModelTest {
     }
 
     @Test
-    fun `GIVEN linked campaigns WHEN provider matches THEN only matching LINKED banner shown`() = runTest {
+    fun `GIVEN linked campaigns WHEN request emitted THEN all LINKED banners shown with providerIds`() = runTest {
         // Arrange
         coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
             campaign(1, MarketingBanner.UiType.LINKED_TO_PROVIDER, providerIds = listOf("mercuryo")),
@@ -185,16 +185,20 @@ internal class MarketingBannerModelTest {
             campaign(3, MarketingBanner.UiType.STANDALONE),
         ).right()
         val model = createModel(
-            MarketingBannerComponent.Params.LinkedToProvider(
-                flowOf(LinkedBannerRequest(onrampScreen, amountUsd = null, currentProviderId = "mercuryo")),
+            MarketingBannerComponent.Params.Linked(
+                flowOf(LinkedBannerRequest(onrampScreen, amountUsd = null)),
             ),
         )
 
         // Act + Assert
+        // Model no longer filters by provider: it emits all LINKED banners (not STANDALONE), carrying their
+        // providerIds; per-offer provider matching happens at render time in LinkedContent(providerId).
         model.uiState.test {
             advanceUntilIdle()
             val content = expectMostRecentItem() as MarketingBannerListUM.Content
-            assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+            assertThat(content.banners.map { it.campaignId }).containsExactly(1, 2)
+            assertThat(content.banners.first { it.campaignId == 1 }.providerIds).containsExactly("mercuryo")
+            assertThat(content.banners.first { it.campaignId == 2 }.providerIds).containsExactly("moonpay")
         }
     }
 
