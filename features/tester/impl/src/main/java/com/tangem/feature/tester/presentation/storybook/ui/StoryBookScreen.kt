@@ -42,10 +42,14 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.TangemCheckboxV2Story
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.TangemCheckmarkStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.TangemFadeStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.TangemGlowRingStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.TangemRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.TangemSearchStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.TangemShimmerStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.TextStyleStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.TangemTokenIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.TangemTopNavigationStory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.TangemHeaderRowStory
 import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessageStory
@@ -96,11 +100,15 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
             is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
             is TangemCheckboxV2Story -> TangemCheckboxV2Story(state = storyState)
             is TangemCheckmarkStory -> TangemCheckmarkStory(state = storyState)
+            is TangemTokenIconStory -> TangemTokenIconStory(state = storyState)
+            is TangemGlowRingStory -> TangemGlowRingStory(state = storyState)
             is TangemRowStory -> TangemRowStory(state = storyState)
             is TangemSearchStory -> TangemSearchStory(state = storyState)
             is TangemShimmerStory -> TangemShimmerStory(state = storyState)
             is TangemFadeStory -> TangemFadeStory(state = storyState)
             is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
+            is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
+            is TextStyleStory -> TextStyleStory(state = storyState)
         }
     }
 }
