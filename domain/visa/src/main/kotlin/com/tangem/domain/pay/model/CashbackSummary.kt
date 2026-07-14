@@ -1,7 +1,5 @@
 package com.tangem.domain.pay.model
 
-import java.math.BigDecimal
-
 /**
  * Customer cashback summary from `GET /v1/customer/cashback/summary`.
  *
@@ -13,7 +11,6 @@ sealed interface CashbackSummary {
     data class Enabled(
         val displayMode: CashbackDisplayMode,
         val cashback: TangemPayCashback,
-        val pendingAmount: BigDecimal,
     ) : CashbackSummary
 
     /** Customer blocked due to fraud; client shows the "Cashback deactivated" banner. */
