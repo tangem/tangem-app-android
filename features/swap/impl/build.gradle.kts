@@ -50,6 +50,9 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.stories)
+    implementation(projects.domain.marketing.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
@@ -71,6 +74,7 @@ dependencies {
     implementation(projects.features.send.api)
     implementation(projects.features.send.impl)
     implementation(projects.features.feed.api)
+    implementation(projects.features.marketing.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
