@@ -140,18 +140,72 @@ class ContactSignatureVerifierTest {
             }
 
         @Test
-        fun `GIVEN contact with no entries WHEN verifyContacts THEN keeps contact without verifying`() = runTest {
+        fun `GIVEN contact with no entries WHEN verifyContacts THEN contact is dropped without verifying`() = runTest {
             // Arrange
             val contact = contact()
 
             // Act
-            val result = verifier.verifyContacts(listOf(contact)).single()
+            val result = verifier.verifyContacts(listOf(contact))
 
             // Assert
-            assertThat(result.contact.addresses).isEmpty()
-            assertThat(result.invalidEntries).isEmpty()
+            assertThat(result).isEmpty()
             verify(exactly = 0) { verifyMessages(any(), any(), any()) }
         }
+
+        @Test
+        fun `GIVEN all entries invalid WHEN verifyContacts THEN contact is dropped`() = runTest {
+            // Arrange
+            val contact = contact(
+                entry(id = "addr-1", address = "0xabc", memo = null, signature = "AABB"),
+                entry(id = "addr-2", address = "0xdef", memo = null, signature = "CCDD"),
+            )
+            every { verifyMessages(any(), any(), any()) } returns listOf(false, false).right()
+
+            // Act
+            val result = verifier.verifyContacts(listOf(contact))
+
+            // Assert
+            assertThat(result).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN entry with malformed signature only WHEN verifyContacts THEN contact is dropped`() = runTest {
+            // Arrange
+            val malformed = entry(id = "addr-1", address = "0xabc", memo = null, signature = "not-hex")
+            val contact = contact(malformed)
+            every { verifyMessages(any(), any(), any()) } returns emptyList<Boolean>().right()
+
+            // Act
+            val result = verifier.verifyContacts(listOf(contact))
+
+            // Assert
+            assertThat(result).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN one contact fully invalid AND another valid WHEN verifyContacts THEN only the valid one is kept`() =
+            runTest {
+                // Arrange
+                val invalidEntry = entry(id = "addr-1", address = "0xabc", memo = null, signature = "AABB")
+                val validEntry = entry(id = "addr-2", address = "0xdef", memo = null, signature = "CCDD")
+                val droppedContact = contact(invalidEntry).copy(id = ContactId("contact-dropped"))
+                val keptContact = contact(validEntry).copy(id = ContactId("contact-kept"))
+                every { verifyMessages(any(), any(), any()) } returnsMany listOf(
+                    listOf(false).right(),
+                    listOf(true).right(),
+                )
+
+                // Act
+                val result = verifier.verifyContacts(listOf(droppedContact, keptContact))
+
+                // Assert
+                assertThat(result).containsExactly(
+                    VerifiedContact(
+                        contact = keptContact.copy(addresses = listOf(validEntry)),
+                        invalidEntries = emptyList(),
+                    ),
+                )
+            }
 
         @Test
         fun `GIVEN wallet cannot be resolved WHEN verifyContacts THEN contact is dropped`() = runTest {
