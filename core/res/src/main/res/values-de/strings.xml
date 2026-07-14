@@ -2055,6 +2055,7 @@
   <string name="tangempay_set_pin_header">Neue PIN einrichten</string>
   <string name="tangempay_set_pin_title">PIN einstellen</string>
   <string name="tangempay_status_deactivated">Konto geschlossen</string>
+  <string name="tangempay_status_inactive">Inaktiv</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
   <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
   <string name="tangempay_sync_needed_body">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>

@@ -67,7 +67,6 @@ internal class WalletTokensListUMConverterTest {
         isAccountsModeEnabled = false,
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
-        isAddAndManageTokensEnabled = true,
         shouldShowMainPromo = false,
     )
 
