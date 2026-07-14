@@ -10,6 +10,7 @@ internal data class MarketingBannerUM(
     val iconAlign: IconAlign,
     val isDismissible: Boolean,
     val deeplink: String?,
+    val providerIds: Set<String> = emptySet(),
 ) {
     enum class IconAlign { LEFT, RIGHT }
 }
