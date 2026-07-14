@@ -1,3 +1,5 @@
 package com.tangem.features.send.api
 
-interface SendFeatureToggles
+interface SendFeatureToggles {
+    val isHighFeeWarningEnabled: Boolean
+}

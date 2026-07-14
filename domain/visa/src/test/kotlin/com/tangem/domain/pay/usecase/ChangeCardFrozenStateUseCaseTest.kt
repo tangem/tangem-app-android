@@ -38,7 +38,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
                 cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
                 cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Unfrozen)
             }
-            coVerify(exactly = 0) { startPollingUseCase(any(), any()) }
+            coVerify(exactly = 0) { startPollingUseCase(any(), any(), any()) }
         }
 
     @Test
@@ -56,7 +56,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
                 cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
                 cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Frozen)
             }
-            coVerify(exactly = 0) { startPollingUseCase(any(), any()) }
+            coVerify(exactly = 0) { startPollingUseCase(any(), any(), any()) }
         }
 
     @Test
@@ -65,7 +65,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
             val useCase = createUseCase()
             val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
             coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
-            coEvery { startPollingUseCase(order, USER_WALLET_ID) } returns true
+            coEvery { startPollingUseCase(order, USER_WALLET_ID, any()) } returns true
 
             val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
 
@@ -82,7 +82,7 @@ internal class ChangeCardFrozenStateUseCaseTest {
             val useCase = createUseCase()
             val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
             coEvery { cardDetailsRepository.unfreezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
-            coEvery { startPollingUseCase(order, USER_WALLET_ID) } returns true
+            coEvery { startPollingUseCase(order, USER_WALLET_ID, any()) } returns true
 
             val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = false)
 

@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  * @property status                 transaction status
  * @property type                   transaction type
  * @property amount                 transaction amount
+ * @property fee                    transaction fee
  */
 @Serializable
 data class TxInfo(
@@ -27,6 +28,7 @@ data class TxInfo(
     val status: TransactionStatus,
     val type: TransactionType,
     val amount: SerializedBigDecimal,
+    val fee: SdkAmount? = null,
 ) {
 
     /** Destination type*/
