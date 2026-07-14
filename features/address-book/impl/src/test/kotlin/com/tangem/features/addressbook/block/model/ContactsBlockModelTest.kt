@@ -2,8 +2,8 @@ package com.tangem.features.addressbook.block.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.*
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.Network
@@ -36,7 +36,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ContactsBlockModelTest {
 
-    private val getContactsUseCase: GetContactsUseCase = mockk()
+    private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
@@ -46,7 +46,7 @@ internal class ContactsBlockModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getContactsUseCase, getWalletsUseCase, analyticsSender)
+        clearMocks(getVerifiedContactsInteractor, getWalletsUseCase, analyticsSender)
         every { getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true) } returns
             flowOf(linkedMapOf<UserWalletId, UserWallet>())
     }
@@ -60,8 +60,8 @@ internal class ContactsBlockModelTest {
     @Test
     fun `GIVEN matching contacts WHEN block populated THEN SendFlowWidgetShown sent once`() = runTest {
         // Arrange
-        every { getContactsUseCase(query = any(), userWalletId = null) } returns
-            flowOf(listOf(contact(id = "1"), contact(id = "2")))
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = any(), userWalletId = null) } returns
+            flowOf(listOf(verified(id = "1"), verified(id = "2")))
 
         // Act
         createModel(testScope = this)
@@ -74,7 +74,8 @@ internal class ContactsBlockModelTest {
     @Test
     fun `GIVEN no matching contacts WHEN block empty THEN SendFlowWidgetShown not sent`() = runTest {
         // Arrange
-        every { getContactsUseCase(query = any(), userWalletId = null) } returns flowOf(emptyList())
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = any(), userWalletId = null) } returns
+            flowOf(emptyList())
 
         // Act
         val model = createModel(testScope = this)
@@ -89,7 +90,8 @@ internal class ContactsBlockModelTest {
     fun `GIVEN populated block WHEN contact tapped THEN ContactSelectedInSend sent AND click propagated`() = runTest {
         // Arrange
         var clicked: MatchedContact? = null
-        every { getContactsUseCase(query = any(), userWalletId = null) } returns flowOf(listOf(contact(id = "42")))
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = any(), userWalletId = null) } returns
+            flowOf(listOf(verified(id = "42")))
         val model = createModel(testScope = this, onContactClick = { clicked = it })
         advanceUntilIdle()
 
@@ -100,6 +102,9 @@ internal class ContactsBlockModelTest {
         verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
         assertThat(clicked?.contactId).isEqualTo("42")
     }
+
+    private fun verified(id: String): VerifiedContact =
+        VerifiedContact(contact = contact(id = id), invalidEntries = emptyList())
 
     private fun contact(id: String): Contact = Contact(
         id = ContactId(id),
@@ -137,7 +142,7 @@ internal class ContactsBlockModelTest {
             stateController = ContactsBlockStateController(),
             analyticsSender = analyticsSender,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
-            getContactsUseCase = getContactsUseCase,
+            getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             getWalletsUseCase = getWalletsUseCase,
         ).also { model = it }
     }
