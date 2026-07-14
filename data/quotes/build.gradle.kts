@@ -9,22 +9,20 @@ android {
     namespace = "com.tangem.data.quotes"
 }
 dependencies {
-    // region Project - Core
-    implementation(projects.core.datasource)
-    api(projects.core.utils)
+
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
     // endregion
 
-    // region Project - Data
-    implementation(projects.data.common)
+    // region Other libraries
+    api(deps.moshi)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.datastore)
+    implementation(deps.arrow.core)
     // endregion
 
-    // region Project - Domain
-    api(projects.domain.models)
-    api(projects.domain.quotes)
-    // endregion
-
-    // region Project - Libs
-    implementation(projects.libs.blockchainSdk)
+    // region Tangem SDKs
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region DI
@@ -32,13 +30,23 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Tangem SDKs
-    implementation(tangemDeps.blockchain)
+    // region Project - Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
     // endregion
 
-    // region Other libraries
-    implementation(deps.androidx.datastore)
-    implementation(deps.moshi.kotlin)
+    // region Project - Data
+    api(projects.data.common)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.core)
+    api(projects.domain.quotes)
+    implementation(projects.domain.models)
+    // endregion
+
+    // region Project - Libs
+    implementation(projects.libs.blockchainSdk)
     // endregion
 
     // region Tests

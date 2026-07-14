@@ -10,8 +10,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
-import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
@@ -27,13 +25,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @ModelScoped
 internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val createHotWalletUseCase: CreateHotWalletUseCase,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
@@ -61,7 +57,6 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
             uiMessageSender.send(
                 Dialogs.hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
             )
-            modelScope.launch { clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) }
             router.replaceCurrent(AppRoute.Home())
             return
         }
@@ -75,8 +70,6 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
                 ).getOrElse { throw it }
 
                 TangemLogger.i("[TangemPay][HWO]Hot wallet created")
-                clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
-
                 router.replaceAll(
                     AppRoute.CreateWalletBackup(
                         userWalletId = userWallet.walletId,

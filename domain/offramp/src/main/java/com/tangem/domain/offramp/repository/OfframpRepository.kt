@@ -45,4 +45,13 @@ interface OfframpRepository {
         userWalletId: UserWalletId,
         currencyId: String,
     ): PendingOfframp?
+
+    /**
+     * Returns every stored app-initiated sell — **including expired ones** that have not been pruned yet (read-only;
+     * does not mutate the store). Use [PendingOfframp.isExpired] to tell them apart.
+     *
+     * Intended for QA/tester tooling that needs to reproduce a returning `redirect_sell` deeplink from a real,
+     * app-registered sell and to inspect stale records.
+     */
+    suspend fun getAllStoredOfframps(): List<PendingOfframp>
 }
