@@ -156,13 +156,13 @@ internal class DefaultOfframpRepositoryTest {
     }
 
     @Test
-    fun `GIVEN registered pending offramp WHEN consume with matching wallet and currency THEN returns record`() =
+    fun `GIVEN registered pending offramp WHEN resolve with matching wallet and currency THEN returns record`() =
         runTest {
             // Arrange
             val storedRequestId = repository.registerPendingOfframp(userWalletId, currencyId)
 
             // Act
-            val pending = repository.consumePendingOfframp(storedRequestId, userWalletId, currencyId)
+            val pending = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId)
 
             // Assert
             assertThat(pending).isNotNull()
@@ -172,35 +172,36 @@ internal class DefaultOfframpRepositoryTest {
         }
 
     @Test
-    fun `GIVEN unknown request id WHEN consume THEN returns null`() = runTest {
+    fun `GIVEN unknown request id WHEN resolve THEN returns null`() = runTest {
         repository.registerPendingOfframp(userWalletId, currencyId)
 
-        assertThat(repository.consumePendingOfframp("unknown", userWalletId, currencyId)).isNull()
+        assertThat(repository.resolvePendingOfframp("unknown", userWalletId, currencyId)).isNull()
     }
 
     @Test
-    fun `GIVEN already consumed pending offramp WHEN consume again THEN returns null`() = runTest {
+    fun `GIVEN already resolved pending offramp WHEN resolve again THEN still returns record`() = runTest {
         // Arrange
         val storedRequestId = repository.registerPendingOfframp(userWalletId, currencyId)
 
-        // Act
-        val first = repository.consumePendingOfframp(storedRequestId, userWalletId, currencyId)
-        val second = repository.consumePendingOfframp(storedRequestId, userWalletId, currencyId)
+        // Act — resolving does NOT consume the record; the same redirect may be followed again until it expires
+        val first = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId)
+        val second = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId)
 
         // Assert
         assertThat(first).isNotNull()
-        assertThat(second).isNull()
+        assertThat(second).isNotNull()
+        assertThat(second?.requestId).isEqualTo(storedRequestId)
     }
 
     @Test
-    fun `GIVEN mismatched currency WHEN consume THEN returns null and does NOT burn the pending sell`() = runTest {
+    fun `GIVEN mismatched currency WHEN resolve THEN returns null and leaves the pending sell resolvable`() = runTest {
         // Arrange
         val storedRequestId = repository.registerPendingOfframp(userWalletId, currencyId)
 
-        // Act — a tampered redirect with the right request_id but a wrong currency must not consume the token
-        val mismatched = repository.consumePendingOfframp(storedRequestId, userWalletId, currencyId = "ethereum")
-        // ...so the legitimate redirect can still succeed afterwards
-        val legitimate = repository.consumePendingOfframp(storedRequestId, userWalletId, currencyId)
+        // Act — a tampered redirect with the right request_id but a wrong currency must not match
+        val mismatched = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId = "ethereum")
+        // ...and the legitimate redirect must still resolve afterwards
+        val legitimate = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId)
 
         // Assert
         assertThat(mismatched).isNull()
@@ -209,16 +210,16 @@ internal class DefaultOfframpRepositoryTest {
     }
 
     @Test
-    fun `GIVEN mismatched wallet WHEN consume THEN returns null`() = runTest {
+    fun `GIVEN mismatched wallet WHEN resolve THEN returns null`() = runTest {
         val storedRequestId = repository.registerPendingOfframp(userWalletId, currencyId)
 
-        val result = repository.consumePendingOfframp(storedRequestId, UserWalletId("ffeeddccbbaa9988"), currencyId)
+        val result = repository.resolvePendingOfframp(storedRequestId, UserWalletId("ffeeddccbbaa9988"), currencyId)
 
         assertThat(result).isNull()
     }
 
     @Test
-    fun `GIVEN expired pending offramp WHEN consume THEN returns null`() = runTest {
+    fun `GIVEN expired pending offramp WHEN resolve THEN returns null`() = runTest {
         // Arrange — seed a record created 2 hours ago (past the 1h expiry)
         val expiredId = "expired-id"
         pendingStoreState.value = listOf(
@@ -231,7 +232,7 @@ internal class DefaultOfframpRepositoryTest {
         )
 
         // Act
-        val pending = repository.consumePendingOfframp(expiredId, userWalletId, currencyId)
+        val pending = repository.resolvePendingOfframp(expiredId, userWalletId, currencyId)
 
         // Assert
         assertThat(pending).isNull()
@@ -245,7 +246,7 @@ internal class DefaultOfframpRepositoryTest {
         // Act
         val stored = repository.getAllStoredOfframps()
         // ...the record must survive the read so it can still be consumed afterwards
-        val consumed = repository.consumePendingOfframp(storedRequestId, userWalletId, currencyId)
+        val consumed = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId)
 
         // Assert
         assertThat(stored).hasSize(1)
