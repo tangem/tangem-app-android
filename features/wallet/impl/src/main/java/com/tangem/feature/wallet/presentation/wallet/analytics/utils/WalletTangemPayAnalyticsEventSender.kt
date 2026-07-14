@@ -27,6 +27,7 @@ internal class WalletTangemPayAnalyticsEventSender @Inject constructor(
             PaymentAccountStatusValue.NotCreated,
             is PaymentAccountStatusValue.UnderReview,
             is PaymentAccountStatusValue.AwaitingPlanSelection,
+            is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Deactivated,
             -> return
         }
