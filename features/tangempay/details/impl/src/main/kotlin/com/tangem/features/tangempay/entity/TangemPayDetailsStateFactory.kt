@@ -20,6 +20,7 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.models.pay.thumbnailUrl
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.model.transformers.DetailsBalanceTransformer
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.hasWithdrawableAmount
 import com.tangem.features.tangempay.utils.isFresh
@@ -28,7 +29,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
@@ -155,6 +156,51 @@ internal class TangemPayDetailsStateFactory(
             addToWalletBlockState = null,
             errorNotificationConfig = null,
             accountDeactivatedNotificationConfig = accountDeactivatedNotification,
+            cashbackBlockState = null,
+        )
+    }
+
+    fun getInactiveState(status: PaymentAccountStatusValue.Inactive): TangemPayDetailsUM {
+        val notification = notificationFactory.createAwaitingDepositConfig(status.tariffPlan)
+        return TangemPayDetailsUM(
+            topBarConfig = TangemPayDetailsTopBarConfig(
+                onBackClick = onBack,
+                onOpenMenu = onOpenMenu,
+                items = getTopBarMenuItems(),
+                itemsV2 = getTopBarMenuItemsV2(tariffPlan = null),
+            ),
+            pullToRefreshConfig = PullToRefreshConfig(
+                isRefreshing = false,
+                onRefresh = intents::onRefreshSwipe,
+            ),
+            balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
+                actionButtons = getActionButtonsConfig(
+                    isAddFundsEnabled = true,
+                    isWithdrawEnabled = false,
+                ),
+                cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
+                    cards = persistentListOf(
+                        TangemPayDetailsBalanceBlockState.Card(
+                            lastDigits = "",
+                            imageUrl = null,
+                            onClick = {},
+                            isEnabled = false,
+                            isFrozen = false,
+                            state = TangemPayCardUiState.InProgress,
+                        ),
+                    ),
+                    onAddCardClick = intents::onAddCardClick,
+                    isAddCardEnabled = false,
+                ),
+                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(status.fiatBalance),
+                isInactive = true,
+                isNegative = false,
+                isBalanceFlickering = false,
+            ),
+            isBalanceHidden = false,
+            addToWalletBlockState = null,
+            errorNotificationConfig = notification,
+            accountDeactivatedNotificationConfig = null,
             cashbackBlockState = null,
         )
     }

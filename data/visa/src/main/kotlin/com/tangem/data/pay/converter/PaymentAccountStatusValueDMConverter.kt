@@ -76,6 +76,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.AwaitingPlanSelection,
+            is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Error.ExposedDevice,
             is PaymentAccountStatusValue.Error.Unavailable,
             is PaymentAccountStatusValue.Error.NotSynced,

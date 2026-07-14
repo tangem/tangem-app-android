@@ -5,12 +5,10 @@ import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
 import com.tangem.core.ui.res.generated.icons.ic_sun_20
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
@@ -147,26 +145,6 @@ internal object TangemPayMessagesFactory {
                     onGotItClick()
                     closeBs()
                 }
-            }
-        }
-    }
-
-    fun createMaximumCardsIssued(maxCards: Int): BottomSheetMessage {
-        return bottomSheetMessage {
-            infoBlock {
-                vector(Icons.ic_error_28) {
-                    type = MessageBottomSheetUM.Vector.Type.Attention
-                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
-                }
-                title = resourceReference(R.string.tangempay_maximum_cards_issued_title)
-                body = resourceReference(
-                    id = R.string.tangempay_maximum_cards_issued_description,
-                    formatArgs = wrappedList(maxCards),
-                )
-            }
-            primaryButton {
-                text = resourceReference(R.string.common_got_it)
-                onClick { closeBs() }
             }
         }
     }
