@@ -9,6 +9,12 @@ import kotlinx.collections.immutable.ImmutableList
 data class PortfolioSelectorUM(
     val title: TextReference,
     val items: ImmutableList<PortfolioSelectorItemUM>,
+    val button: PortfolioSelectorButtonUM?,
+)
+
+data class PortfolioSelectorButtonUM(
+    val text: TextReference,
+    val onClick: () -> Unit,
 )
 
 @Immutable
@@ -19,6 +25,8 @@ sealed interface PortfolioSelectorItemUM {
         override val id: String,
         val name: TextReference,
         val deviceIcon: DeviceIconUM,
+        val isSelected: Boolean,
+        val onClick: () -> Unit,
     ) : PortfolioSelectorItemUM
 
     data class Portfolio(

@@ -37,6 +37,7 @@ import com.tangem.core.ui.res.LocalCanScrollBackward
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorButtonUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 import kotlinx.collections.immutable.toImmutableList
@@ -168,12 +169,19 @@ internal object PortfolioSelectorPreviewData {
     private val lockedWalletItem: UserWalletItemUM
         get() = walletItem.copy(isEnabled = false)
 
+    val button = PortfolioSelectorButtonUM(
+        text = resourceReference(R.string.common_apply),
+        onClick = { },
+    )
+
     val firstList
         get() = listOf(
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem 2.0"),
                 deviceIcon = DeviceIconUM.Stub(cardsCount = 2),
+                isSelected = false,
+                onClick = {},
             ),
             PortfolioSelectorItemUM.Portfolio(accountItem, false),
             PortfolioSelectorItemUM.Portfolio(lockedAccountItem, false),
@@ -181,6 +189,8 @@ internal object PortfolioSelectorPreviewData {
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem White"),
                 deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+                isSelected = false,
+                onClick = {},
             ),
             PortfolioSelectorItemUM.Portfolio(accountItem, true),
         )
@@ -191,6 +201,8 @@ internal object PortfolioSelectorPreviewData {
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
                 deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+                isSelected = false,
+                onClick = {},
             ),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
@@ -209,6 +221,8 @@ internal object PortfolioSelectorPreviewData {
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
                 deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+                isSelected = false,
+                onClick = {},
             ),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
@@ -220,18 +234,22 @@ internal class PortfolioSelectorPreviewStateProvider : CollectionPreviewParamete
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
             items = PortfolioSelectorPreviewData.firstList.toImmutableList(),
+            button = null,
         ),
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
             items = PortfolioSelectorPreviewData.secondList.toImmutableList(),
+            button = PortfolioSelectorPreviewData.button,
         ),
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_wallet),
             items = PortfolioSelectorPreviewData.walletList.toImmutableList(),
+            button = null,
         ),
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_wallet),
             items = PortfolioSelectorPreviewData.lockedWalletList.toImmutableList(),
+            button = PortfolioSelectorPreviewData.button,
         ),
     ),
 )
