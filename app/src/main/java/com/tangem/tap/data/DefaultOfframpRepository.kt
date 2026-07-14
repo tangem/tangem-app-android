@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.model.PendingOfframp
+import com.tangem.domain.offramp.model.PendingOfframp.Companion.EXPIRY_MS
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.data.converter.PendingOfframpEntryConverter
@@ -59,7 +60,7 @@ internal class DefaultOfframpRepository(
             requestId
         }
 
-    override suspend fun consumePendingOfframp(
+    override suspend fun resolvePendingOfframp(
         requestId: String,
         userWalletId: UserWalletId,
         currencyId: String,
@@ -73,9 +74,9 @@ internal class DefaultOfframpRepository(
                     entry.currencyId == currencyId &&
                     !entry.isExpired(now)
             }
-            // Remove only the fully-matched record (single-use); always prune expired ones. A request_id that
-            // matches but with a mismatched wallet/currency is left intact so a tampered redirect cannot burn it.
-            stored.filter { it != matched }.filterNotExpired(now)
+            // Keep the matched record so the same redirect can be followed again until it expires; only prune the
+            // expired ones. The record is dropped naturally once it ages past EXPIRY_MS.
+            stored.filterNotExpired(now)
         }
         matched?.let(converter::convert)
     }
@@ -84,8 +85,10 @@ internal class DefaultOfframpRepository(
         pendingOfframpStore.data.first().map(converter::convert)
     }
 
+    // Returns the same instance when nothing is expired, so DataStore.updateData sees an unchanged value and skips
+    // both the extra allocation and the write.
     private fun List<PendingOfframpEntry>.filterNotExpired(now: Long): List<PendingOfframpEntry> =
-        filterNot { it.isExpired(now) }
+        if (none { now - it.createdAt >= EXPIRY_MS }) this else filter { now - it.createdAt < EXPIRY_MS }
 
     private fun PendingOfframpEntry.isExpired(now: Long): Boolean = converter.convert(this).isExpired(now)
 }

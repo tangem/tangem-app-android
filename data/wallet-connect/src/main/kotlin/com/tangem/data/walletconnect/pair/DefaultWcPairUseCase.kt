@@ -73,7 +73,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 return@flow
             }
 
-            val dAppUri = URI(sdkSessionProposal.url)
+            val dAppUri = URI(sdkVerifyContext.getDappOriginUrl())
             if (dAppUri.host.isNullOrEmpty()) {
                 emit(WcPairState.Error(WcPairError.InvalidDomainURL))
                 return@flow

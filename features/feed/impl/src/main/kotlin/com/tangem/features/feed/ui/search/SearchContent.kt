@@ -141,12 +141,15 @@ private fun LazyListScope.searchHistoryItems(
     onHintClick: (String) -> Unit,
     onHistoryTokenClick: (MarketsListItemUM) -> Unit,
 ) {
-    if (!history.textHints.isEmpty() || !history.recentTokens.isEmpty()) {
-        item(key = "recents") {
+    if (!history.textHints.isEmpty()) {
+        item(key = "recent searches") {
             SectionHeader(
                 title = stringResourceSafe(R.string.markets_search_hint_header),
                 onClearAllClick = onClearAllClick,
             )
+        }
+        item {
+            SpacerH(12.dp)
         }
     }
     itemsIndexed(
@@ -162,7 +165,15 @@ private fun LazyListScope.searchHistoryItems(
         }
     }
     item {
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(24.dp)
+    }
+    if (!history.recentTokens.isEmpty()) {
+        item(key = "recent tokens") {
+            SectionHeader(title = stringResourceSafe(R.string.markets_search_recent_tokens_header))
+        }
+        item {
+            SpacerH(12.dp)
+        }
     }
     items(
         items = history.recentTokens,
