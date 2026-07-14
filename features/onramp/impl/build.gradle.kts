@@ -21,6 +21,8 @@ dependencies {
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
     implementation(projects.features.feed.api)
+    implementation(projects.features.marketing.api)
+
 
     /** Project - Core */
     implementation(projects.core.analytics)
@@ -57,6 +59,8 @@ dependencies {
     implementation(projects.domain.appTheme.models)
     implementation(projects.data.common)
     implementation(projects.domain.markets)
+    implementation(projects.domain.marketing.models)
+    implementation(projects.domain.quotes)
 
     /** DI */
     implementation(deps.hilt.android)

@@ -31,6 +31,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
@@ -38,9 +39,14 @@ import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
+import com.tangem.features.marketing.api.MarketingBannerComponent
 
 @Composable
-internal fun SwapScreen(stateHolder: SwapStateHolder, feeSelectorBlockComponent: SwapFeeSelectorBlockComponent?) {
+internal fun SwapScreen(
+    stateHolder: SwapStateHolder,
+    feeSelectorBlockComponent: SwapFeeSelectorBlockComponent?,
+    marketingBannerComponent: MarketingBannerComponent? = null,
+) {
     BackHandler(onBack = stateHolder.onBackClicked)
 
     Scaffold(
@@ -59,6 +65,15 @@ internal fun SwapScreen(stateHolder: SwapStateHolder, feeSelectorBlockComponent:
                             .clip(TangemTheme.shapes.roundedCornersXMedium)
                             .background(TangemTheme.colors.background.action),
                     )
+                }
+            } else {
+                null
+            },
+            marketingBanner = if (marketingBannerComponent != null) {
+                @Composable { modifier: Modifier ->
+                    TangemThemeRedesign {
+                        marketingBannerComponent.Content(modifier)
+                    }
                 }
             } else {
                 null

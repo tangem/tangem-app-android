@@ -28,7 +28,9 @@ class GetMarketingBannerUseCase(
             campaigns.asSequence()
                 .filterNot { it.id in dismissed }
                 .filter { matchesTarget(it, screen) }
-                .filter { it.matchesUsdAmount(amountUsd) }
+                // Amount gating runs reactively in the consumer (with the live amount). Skip it here when
+                // no amount is provided, so bounded swap/onramp campaigns aren't dropped on the pre-fetch.
+                .filter { amountUsd == null || it.matchesUsdAmount(amountUsd) }
                 .sortedBy { it.priority }
                 .toList()
         }
