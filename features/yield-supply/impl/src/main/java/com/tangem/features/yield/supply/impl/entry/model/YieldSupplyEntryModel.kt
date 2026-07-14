@@ -14,7 +14,6 @@ import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
@@ -31,7 +30,6 @@ internal class YieldSupplyEntryModel @Inject constructor(
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<YieldSupplyEntryComponent.Params>()
@@ -96,8 +94,7 @@ internal class YieldSupplyEntryModel @Inject constructor(
         return if (isActiveYield) {
             YieldSupplyEntryRoute.Active(cryptoCurrency = token)
         } else {
-            val isPromoEnabled = yieldSupplyFeatureToggles.isYieldPromoEnabled &&
-                isYieldBoostPromoEnabledForTokenUseCase(userWalletId, token).getOrElse { false }
+            val isPromoEnabled = isYieldBoostPromoEnabledForTokenUseCase(userWalletId, token).getOrElse { false }
             YieldSupplyEntryRoute.Promo(
                 cryptoCurrency = token,
                 apy = params.apy,

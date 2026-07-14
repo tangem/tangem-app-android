@@ -13,43 +13,35 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.account.api)
-    implementation(projects.features.wallet.api)
+    api(projects.features.account.api)
 
     /** Core modules */
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    api(projects.core.decompose)
+    api(projects.core.error)
+    api(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.error)
     implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
 
     /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.account)
-    implementation(projects.domain.account.status)
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.models)
+    api(projects.domain.wallets)
     implementation(projects.domain.core)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-
-    /** Tangem libraries */
-    implementation(tangemDeps.card.core)
+    runtimeOnly(projects.domain.appCurrency)
+    runtimeOnly(projects.domain.balanceHiding)
+    runtimeOnly(projects.domain.tokens)
 
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
 
     /** AndroidX libraries */
-    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
@@ -58,14 +50,13 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
 
     /** Other libraries */
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.kotlin.serialization)
     implementation(deps.firebase.crashlytics)
 
     /** DI */

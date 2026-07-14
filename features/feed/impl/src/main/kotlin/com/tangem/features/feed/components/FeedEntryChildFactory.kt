@@ -7,6 +7,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
@@ -20,6 +22,8 @@ import com.tangem.features.feed.components.news.details.DefaultNewsDetailsCompon
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.foryou.ForYouComponent
+import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
@@ -33,6 +37,8 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val forYouComponentFactory: ForYouComponent.Factory,
+    private val tokenSummaryComponentFactory: TokenSummaryComponent.Factory,
 ) {
 
     @Serializable
@@ -66,6 +72,17 @@ internal class FeedEntryChildFactory @Inject constructor(
         @Serializable
         @Immutable
         data class Search(val source: String) : Child
+
+        @Serializable
+        @Immutable
+        data object ForYou : Child
+
+        @Serializable
+        @Immutable
+        data class TokenSummary(
+            val userWalletId: UserWalletId,
+            val token: TokenSummaryComponent.Token,
+        ) : Child
     }
 
     @Suppress("LongMethod")
@@ -145,6 +162,29 @@ internal class FeedEntryChildFactory @Inject constructor(
                     },
                     sourceParams = child.source,
                     onSeeAllMarketsClick = { feedEntryClickIntents.onMarketOpenClick(SortByTypeUM.Rating) },
+                ),
+            )
+            Child.ForYou -> forYouComponentFactory.create(
+                context = appComponentContext,
+                params = ForYouComponent.Params(
+                    callbacks = object : ForYouComponent.ForYouModelCallbacks {
+                        override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) {
+                            feedEntryClickIntents.openTokenSummary(
+                                userWalletId = userWalletId,
+                                token = TokenSummaryComponent.Token.Portfolio(currency),
+                            )
+                        }
+                    },
+                ),
+            )
+            is Child.TokenSummary -> tokenSummaryComponentFactory.create(
+                context = appComponentContext,
+                params = TokenSummaryComponent.Params(
+                    userWalletId = child.userWalletId,
+                    token = child.token,
+                    callbacks = object : TokenSummaryComponent.TokenSummaryModelCallbacks {
+                        override fun onDismiss() = onBackClicked()
+                    },
                 ),
             )
         }

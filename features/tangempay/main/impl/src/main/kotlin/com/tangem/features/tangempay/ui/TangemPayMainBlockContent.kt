@@ -50,6 +50,11 @@ internal fun TangemPayMainBlockContent(
     when (state) {
         is TangemPayMainUM.Empty -> Unit
         is TangemPayMainUM.Loading -> TangemPayMainLoading(modifier)
+        is TangemPayMainUM.SelectPlan -> TangemPayStateRow(
+            subtitle = resourceReference(R.string.tangempay_main_select_plan),
+            modifier = modifier,
+            onClick = state.onClick,
+        )
         is TangemPayMainUM.UnderReview -> TangemPayStateRow(
             subtitle = state.subtitle,
             modifier = modifier,
@@ -144,7 +149,8 @@ private fun TangemPayStateRow(
         modifier = modifier
             .clip(RoundedCornerShape(size = 18.dp))
             .background(TangemTheme.colors2.surface.level3)
-            .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) },
+            .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) }
+            .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
     ) {
         Image(
             painter = getVisaIconPainter(),
@@ -303,6 +309,7 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
         TangemPayMainUM.ExposedDevice,
         TangemPayMainUM.FailedToIssue(onClick = {}),
         TangemPayMainUM.UnderReview(subtitle = resourceReference(R.string.tangempay_kyc_in_progress), onClick = {}),
+        TangemPayMainUM.SelectPlan(onClick = {}),
         TangemPayMainUM.IssuingCard(onClick = {}),
         TangemPayMainUM.Content(
             subtitle = TextReference.Str("*1234"),
