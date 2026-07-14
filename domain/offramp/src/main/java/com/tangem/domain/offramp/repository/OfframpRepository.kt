@@ -15,8 +15,8 @@ interface OfframpRepository {
      * @param cryptoCurrency    crypto currency to sell
      * @param fiatCurrencyCode  fiat currency code (e.g., "USD", "EUR")
      * @param walletAddress     wallet address for the refund
-     * @param requestId         single-use nonce embedded into the provider redirect URL to authenticate the
-     *                          returning `redirect_sell` deeplink
+     * @param requestId         nonce embedded into the provider redirect URL to authenticate the returning
+     *                          `redirect_sell` deeplink
      * @return URL for offramp service or null if not available
      */
     fun getOfframpUrl(
@@ -28,16 +28,19 @@ interface OfframpRepository {
 
     /**
      * Registers a new app-initiated sell for [userWalletId] / [currencyId], prunes expired records, and returns a
-     * fresh single-use `request_id` to embed in the provider redirect URL.
+     * fresh `request_id` to embed in the provider redirect URL. The record stays valid until it expires.
      */
     suspend fun registerPendingOfframp(userWalletId: UserWalletId, currencyId: String): String
 
     /**
-     * Returns and removes (single-use) the pending sell matching [requestId] only when it is not expired and was
-     * registered for the same [userWalletId] and [currencyId]. Returns `null` otherwise, leaving a non-matching
-     * record untouched so a tampered redirect cannot burn a legitimate pending sell.
+     * Returns the pending sell matching [requestId] when it is not expired and was registered for the same
+     * [userWalletId] and [currencyId]; returns `null` otherwise.
+     *
+     * The matching record is **not** removed — it remains valid until it expires, so the same `redirect_sell`
+     * deeplink can be followed repeatedly within that window (e.g. the user re-opens it). Expired records are pruned
+     * as a side effect.
      */
-    suspend fun consumePendingOfframp(
+    suspend fun resolvePendingOfframp(
         requestId: String,
         userWalletId: UserWalletId,
         currencyId: String,
