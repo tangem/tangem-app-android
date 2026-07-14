@@ -61,6 +61,7 @@ import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 private const val DISABLED_ALPHA = 0.5f
 
@@ -283,7 +284,7 @@ private fun TangemPayDetailsBalanceBlock(
         if (state.actionButtons.isNotEmpty()) {
             HorizontalActionChips(
                 modifier = Modifier.padding(top = 12.dp),
-                buttons = state.actionButtons,
+                buttons = state.actionButtons.map { it.config }.toImmutableList(),
                 containerColor = TangemTheme.colors.background.primary,
                 contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
             )
@@ -468,10 +469,13 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
                 actionButtons = persistentListOf(
-                    ActionButtonConfig(
-                        text = resourceReference(id = R.string.common_receive),
-                        iconResId = R.drawable.ic_arrow_down_24,
-                        onClick = {},
+                    TangemPayActionButtonUM(
+                        action = TangemPayAction.AddFunds,
+                        config = ActionButtonConfig(
+                            text = resourceReference(id = R.string.common_receive),
+                            iconResId = R.drawable.ic_arrow_down_24,
+                            onClick = {},
+                        ),
                     ),
                 ),
                 fiatBalance = combinedReference(
@@ -487,6 +491,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
+                            imageUrl = null,
                             onClick = {},
                             isEnabled = false,
                             isFrozen = false,
@@ -494,6 +499,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         ),
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
+                            imageUrl = null,
                             onClick = {},
                             isEnabled = true,
                             isFrozen = false,
@@ -503,6 +509,8 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     onAddCardClick = {},
                     isAddCardEnabled = true,
                 ),
+                isNegative = false,
+                isInactive = false,
             ),
             isBalanceHidden = false,
             addToWalletBlockState = AddToWalletBlockState(
@@ -526,6 +534,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
+                            imageUrl = null,
                             onClick = {},
                             isFrozen = false,
                             isEnabled = true,
