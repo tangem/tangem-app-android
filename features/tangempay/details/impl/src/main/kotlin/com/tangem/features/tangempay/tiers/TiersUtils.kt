@@ -9,6 +9,9 @@ import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import org.joda.time.format.DateTimeFormatter
 
+val TangemPayTariffPlan.feeCurrency: String?
+    get() = fees.firstOrNull()?.currency
+
 fun TangemPayTariffPlan.formatRecurringFeeOrNull(): String? {
     val fee = fees.find { it.type == TangemPayTariffPlan.Fee.Type.RECURRING } ?: return null
     val currency = getJavaCurrencyByCode(fee.currency)

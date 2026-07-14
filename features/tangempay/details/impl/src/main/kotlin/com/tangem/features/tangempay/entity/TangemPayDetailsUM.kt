@@ -110,6 +110,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
         val isNegative: Boolean,
+        val isInactive: Boolean,
         val isMuted: Boolean = false,
     ) : TangemPayDetailsBalanceBlockState()
 
