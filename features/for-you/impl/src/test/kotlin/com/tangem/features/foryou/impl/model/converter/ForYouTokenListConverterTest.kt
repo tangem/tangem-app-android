@@ -220,6 +220,7 @@ internal class ForYouTokenListConverterTest {
         expandedAssetIds = expandedAssetIds,
         expandClick = {},
         otherAssets = otherAssets,
+        onTokenClick = {},
     )
 
     /**
