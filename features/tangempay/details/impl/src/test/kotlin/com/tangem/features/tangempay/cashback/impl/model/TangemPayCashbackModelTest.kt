@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
+import android.text.format.DateFormat
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -9,18 +10,25 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
+import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,6 +48,8 @@ internal class TangemPayCashbackModelTest {
     @BeforeEach
     fun setup() {
         Locale.setDefault(Locale.US)
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         clearMocks(cashbackRepository, onboardingRepository)
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns CashbackSummary.Disabled.right()
         coEvery { cashbackRepository.getCashbackPromotions(any()) } returns promotions().right()
@@ -50,6 +60,7 @@ internal class TangemPayCashbackModelTest {
 
     @AfterEach
     fun tearDown() {
+        unmockkStatic(DateFormat::class)
         Locale.setDefault(defaultLocale)
     }
 
@@ -129,6 +140,30 @@ internal class TangemPayCashbackModelTest {
         assertThat(model.accrualsSheet.value.infoRows).isNotEmpty()
     }
 
+    @Test
+    fun `GIVEN enabled summary and history WHEN model created THEN histogram populated`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary().right()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns history().right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.histogram).isNotNull()
+        assertThat(model.uiState.value.histogram?.bars).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN disabled summary WHEN model created THEN history not requested and histogram null`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.histogram).isNull()
+        coVerify(exactly = 0) { cashbackRepository.getCashbackHistory(any(), any()) }
+    }
+
     private fun createModel() = TangemPayCashbackModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(TangemPayCashbackComponent.Params(userWalletId = userWalletId)),
@@ -160,6 +195,31 @@ internal class TangemPayCashbackModelTest {
     private fun docs() = listOf(
         CashbackDocument(id = "excluded", title = "All categories without cashback", url = "https://x/excluded.pdf"),
         CashbackDocument(id = "terms", title = "Full terms of cashback program", url = "https://x/terms.pdf"),
+    )
+
+    private fun enabledSummary() = CashbackSummary.Enabled(
+        displayMode = CashbackDisplayMode.FULL,
+        cashback = TangemPayCashback(
+            confirmedAmount = BigDecimal("32.15"),
+            pendingAmount = BigDecimal.ZERO,
+            currency = "USD",
+            payoutCurrency = "USDC",
+            payoutNetwork = "Polygon",
+            period = TangemPayCashback.Period(
+                year = 2026,
+                month = 6,
+                payoutStart = DateTime.parse("2026-07-02"),
+                payoutEnd = DateTime.parse("2026-07-05"),
+            ),
+        ),
+    )
+
+    private fun history() = CashbackHistory(
+        currency = "USD",
+        months = listOf(
+            CashbackHistory.MonthlyCashback(year = 2026, month = 5, confirmedAmount = BigDecimal("26.10")),
+            CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("32.15")),
+        ),
     )
 
     private fun customerInfo(tierId: String, planName: String): CustomerInfo {
