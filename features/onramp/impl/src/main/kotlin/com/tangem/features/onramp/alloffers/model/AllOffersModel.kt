@@ -76,6 +76,7 @@ internal class AllOffersModel @Inject constructor(
             analyticsEventHandler.send(
                 event = OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = method.methodConfig.method.name),
             )
+            analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened())
         }
     }
 
