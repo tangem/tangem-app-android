@@ -98,15 +98,8 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
         }
     }
 
-    /**
-     * Reads displayed token titles from the 'Organize tokens' screen in visual order
-     * (top-to-bottom, then left-to-right). Mirrors [MainScreenPageObject.getDisplayedTokenTitles]
-     * so the two lists can be compared directly.
-     *
-     * Titles are read from the [TokenElementsTestTags.TOKEN_TITLE] nodes rather than the outer
-     * TOKEN_LIST_ITEM: the item container here does not merge its descendants, so the title Text
-     * (nested inside the title Row) never surfaces on the item node's semantics.
-     */
+    // Read TOKEN_TITLE nodes, not the outer TOKEN_LIST_ITEM: the item container here doesn't merge its
+    // descendants, so the nested title Text never surfaces on the item node's semantics.
     fun getDisplayedTokenTitles(): List<String> =
         semanticsProvider.onAllNodes(
             withTestTag(TokenElementsTestTags.TOKEN_TITLE) and
@@ -130,18 +123,9 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
         }
     }
 
-    /**
-     * Drag-and-drops the [source] token onto the [destination] token's slot to reorder the list,
-     * the Android analog of iOS `press(forDuration:thenDragTo:)`.
-     *
-     * The list is a reorderable LazyColumn (sh.calvin.reorderable) driven from each row's drag
-     * handle ([OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE]). We synthesize the gesture manually:
-     * press down on the source handle, hold briefly, then move in small steps to the destination
-     * row's centre and lift — a single `swipe` won't engage the reorder detector.
-     *
-     * NOTE: reordering is only permitted **within the same network group** (`isValidDropTarget`),
-     * so both tokens must belong to the same group for the drop to take effect.
-     */
+    // Reorder by synthesizing a drag on the source row's handle: down, hold, step to the destination
+    // centre, lift — a single `swipe` won't engage the reorder detector. Only valid within one network
+    // group (isValidDropTarget), so source and destination must share a group.
     fun dragToken(source: String, destination: String) {
         val sourceHandle = semanticsProvider.onNode(dragHandleMatcher(source), useUnmergedTree = true)
         val sourceNode = sourceHandle.fetchSemanticsNode()
