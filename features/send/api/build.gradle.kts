@@ -8,42 +8,44 @@ android {
     namespace = "com.tangem.features.send.api"
 }
 dependencies {
+    /** Kotlin */
+    api(deps.kotlin.coroutines)
+
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.analytics.models)
+    api(projects.core.analytics.models)
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Common */
-    implementation(projects.common.ui)
+    api(projects.common.ui)
 
     /** Domain */
-    implementation(projects.domain.transaction)
+    api(projects.domain.transaction)
 
     /** Domain models */
+    api(projects.domain.appCurrency.models)
     api(projects.domain.models)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.nft.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.wallets.models)
+    api(projects.domain.nft.models)
+    api(projects.domain.transaction.models)
+    api(projects.domain.wallets.models)
 
     /** Compose */
+    api(deps.compose.foundation)
     implementation(deps.compose.runtime)
-    implementation(deps.compose.foundation)
 
     /** Tangem */
-    implementation(tangemDeps.blockchain)
+    api(tangemDeps.blockchain)
 
     /** Other */
+    api(deps.kotlin.immutable.collections)
+    implementation(deps.androidx.annotation)
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.immutable.collections)
 
     // region Tests
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
-    testImplementation(projects.domain.staking.models)
     // endregion
 }

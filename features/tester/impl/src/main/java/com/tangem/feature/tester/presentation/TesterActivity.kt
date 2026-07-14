@@ -23,6 +23,8 @@ import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.addresses.ui.AddressesInfoScreen
 import com.tangem.feature.tester.presentation.addresses.viewmodels.AddressesInfoViewModel
+import com.tangem.feature.tester.presentation.backendauth.ui.BackendAuthStatusScreen
+import com.tangem.feature.tester.presentation.backendauth.viewmodels.BackendAuthStatusViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
 import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
 import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsScreen
@@ -36,6 +38,8 @@ import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
 import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersScreen
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
+import com.tangem.feature.tester.presentation.sellredirect.ui.SellRedirectGeneratorScreen
+import com.tangem.feature.tester.presentation.sellredirect.viewmodels.SellRedirectGeneratorViewModel
 import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
@@ -99,6 +103,8 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.ADDRESSES_INFO,
                             ButtonUM.STORY_BOOK,
                             ButtonUM.SURVEY_SPARROW,
+                            ButtonUM.BACKEND_AUTH_STATUS,
+                            ButtonUM.SELL_REDIRECT_GENERATOR,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -112,6 +118,8 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
                                 ButtonUM.STORY_BOOK -> TesterScreen.STORY_BOOK
                                 ButtonUM.SURVEY_SPARROW -> TesterScreen.SURVEY_SPARROW
+                                ButtonUM.BACKEND_AUTH_STATUS -> TesterScreen.BACKEND_AUTH_STATUS
+                                ButtonUM.SELL_REDIRECT_GENERATOR -> TesterScreen.SELL_REDIRECT_GENERATOR
                             }
 
                             innerTesterRouter.open(route)
@@ -211,6 +219,24 @@ internal class TesterActivity : ComposeActivity() {
                         innerTesterRouter.back()
                     }
                 }
+            }
+
+            composable(route = TesterScreen.BACKEND_AUTH_STATUS.name) {
+                val viewModel = hiltViewModel<BackendAuthStatusViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                BackendAuthStatusScreen(state)
+            }
+
+            composable(route = TesterScreen.SELL_REDIRECT_GENERATOR.name) {
+                val viewModel = hiltViewModel<SellRedirectGeneratorViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                SellRedirectGeneratorScreen(state)
             }
         }
     }
