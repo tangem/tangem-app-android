@@ -7,6 +7,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.backStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -64,6 +65,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
                 callbacks = model,
                 data = model.tokenActionsData,
                 bottomAction = flowOf(BottomAction.GoToToken),
+                context = TokenActionsContext.AddFunds,
             ),
         )
     }
