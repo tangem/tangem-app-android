@@ -271,6 +271,63 @@ class DefaultWalletRegistrarTest {
         assertThat(registeredIds()).doesNotContain(WALLET_ID)
     }
 
+    @Test
+    fun `prepare returns null when walletId already registered`() = runTest {
+        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+
+        val result = registrar.prepare(WALLET_ID, mobileSigner)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isNull()
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+    }
+
+    @Test
+    fun `prepare builds the request without posting or persisting anything`() = runTest {
+        stubHappyPath()
+
+        val result = registrar.prepare(WALLET_ID, mobileSigner)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isNotNull()
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+        coVerify(exactly = 0) { store.save(any()) }
+        assertThat(registeredIds()).doesNotContain(WALLET_ID)
+    }
+
+    @Test
+    fun `submit posts the prepared request, persists tokens and marks registered`() = runTest {
+        stubHappyPath()
+        coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
+        val prepared = registrar.prepare(WALLET_ID, mobileSigner).getOrNull()!!
+
+        val result = registrar.submit(prepared)
+
+        assertThat(result.isRight()).isTrue()
+        coVerify { store.save(any()) }
+        assertThat(registeredIds()).contains(WALLET_ID)
+    }
+
+    @Test
+    fun `submit treats 409 Conflict as success and marks registered without persisting tokens`() = runTest {
+        stubHappyPath()
+        val prepared = registrar.prepare(WALLET_ID, mobileSigner).getOrNull()!!
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.registerWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.CONFLICT,
+                message = "wallet already registered",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.submit(prepared)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(registeredIds()).contains(WALLET_ID)
+        coVerify(exactly = 0) { store.save(any()) }
+    }
+
     private fun stubHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestWalletNonce(any()) } returns nonceSuccess()
