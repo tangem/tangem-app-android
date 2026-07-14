@@ -766,6 +766,8 @@
   <string name="hardware_wallet_key_feature_title">Генерація ключа</string>
   <string name="hardware_wallet_security_feature_description">Операції з криптографією відбуваються всередині захищеного чіпу, стійкого до клонування та фізичному взлому.</string>
   <string name="hardware_wallet_security_feature_title">Безпека на апаратному рівні</string>
+  <string name="high_fee_warning_description">Висока активність у мережі. Ви можете продовжити зараз або спробувати пізніше, коли комісії будуть нижчими.</string>
+  <string name="high_fee_warning_title">Комісія мережі вища, ніж зазвичай</string>
   <string name="home_button_add_existing_wallet">Додати існуючий гаманець</string>
   <string name="home_button_create_new_wallet">Створити новий гаманець</string>
   <string name="home_button_order">Купити</string>
@@ -923,6 +925,7 @@
   <string name="markets_portfolio_block_add_token_title">**Додайте до свого портфеля**, щоб купувати, обмінювати або отримувати цей актив</string>
   <string name="markets_portfolio_block_subtitle">У вашому портфелі</string>
   <string name="markets_portfolio_block_title">Ваш портфель</string>
+  <string name="markets_portfolio_block_token_unsupported">**Токен не підтримується**. Наразі цей токен не підтримується в гаманці</string>
   <string name="markets_pulse_common_title">Пульс ринку</string>
   <string name="markets_quick_actions">Швидкі дії</string>
   <string name="markets_search_clear_all_hints">Очистити все</string>

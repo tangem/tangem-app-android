@@ -80,7 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Ajouter des jetons</string>
   <string name="action_buttons_you_want_to_receive">Sélectionnez le jeton que vous souhaitez recevoir</string>
   <string name="action_buttons_you_want_to_swap">Sélectionnez le jeton que vous souhaitez échanger</string>
-  <string name="actionbutton_addfunds_title">Ajouter des fonds</string>
+  <string name="actionbutton_addfunds_title">Ajouter fonds</string>
   <string name="actionbutton_swap_title">Échanger</string>
   <string name="actionbutton_transfer_title">Transférer</string>
   <string name="add_and_manage_sheet_manage_subtitle">Ajouter à votre portfolio</string>
@@ -831,6 +831,7 @@
   <string name="markets_portfolio_block_add_token_title">**Ajouter à votre portfolio** pour acheter, échanger ou recevoir cet asset</string>
   <string name="markets_portfolio_block_subtitle">Dans votre portfolio</string>
   <string name="markets_portfolio_block_title">Votre portfolio</string>
+  <string name="markets_portfolio_block_token_unsupported">**Token non pris en charge**. Ce token n\'est actuellement pas pris en charge dans le portefeuille</string>
   <string name="markets_pulse_common_title">Rythme du marché</string>
   <string name="markets_quick_actions">Actions rapides</string>
   <string name="markets_search_header_title">Rechercher sur le marché</string>
