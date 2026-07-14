@@ -2,6 +2,7 @@ package com.tangem.domain.addressbook.usecase
 
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.repository.AddressBookRepository
+import com.tangem.domain.addressbook.verification.ContactSignatureVerifier
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -13,11 +14,12 @@ import com.tangem.domain.models.wallet.UserWalletId
  * contact currently being edited. Address comparison is exact (matching the in-editor dedup in
  * `AddValidatedAddressTransformer`), so case-sensitive chains are not falsely flagged.
  *
- * Reads the local snapshot ([AddressBookRepository.getContactsSync]) rather than the syncing flow, so validating on
- * every keystroke/selection change never triggers a backend sync.
+ * Only verified addresses count as duplicates: contacts are run through [ContactSignatureVerifier] first, so
+ * an unverified/invalid entry never blocks the pair and the user is free to overwrite it.
  */
 class CheckAddressDuplicateUseCase(
     private val repository: AddressBookRepository,
+    private val contactSignatureVerifier: ContactSignatureVerifier,
 ) {
 
     suspend operator fun invoke(
@@ -27,7 +29,8 @@ class CheckAddressDuplicateUseCase(
         excludeContactId: ContactId? = null,
     ): String? {
         val contacts = repository.getContactsSync(userWalletId)
-        return contacts
+        return contactSignatureVerifier.verifyContacts(contacts)
+            .map { it.contact }
             .firstOrNull { contact ->
                 contact.id != excludeContactId && contact.addresses.any { entry ->
                     entry.networkId.value == networkId && entry.address == address
