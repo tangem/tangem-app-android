@@ -215,6 +215,34 @@ class UpdateStakingNotificationTransformerTest {
         assertThat((combined.refs.data.last() as TextReference.Str).value).isNotEqualTo(THREE_STARS)
     }
 
+    @Test
+    fun `GIVEN auto-compound rewards AND rate known WHEN transform THEN subtitle shows rate only`() {
+        // Arrange
+        val status = buildStatus(
+            networkRawId = "solana",
+            symbol = "SOL",
+            isCoin = true,
+            stakingBalance = stakeKitBalance(staked = BigDecimal("100"), rewards = BigDecimal("5")),
+        )
+        val transformer = createTransformer(
+            availability = availableOption(BigDecimal("4.2")),
+            entryInfo = StakingEntryInfo(tokenSymbol = "SOL"),
+            status = status,
+            isBalanceHidden = false,
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.earnBlockState as EarnBlockUM.Content
+        val subtitle = content.subtitleUM as EarnBlockUM.SubtitleUM.Text
+        val rateLabel = subtitle.text as TextReference.Combined
+        val apyLabel = rateLabel.refs.data.filterIsInstance<TextReference.Res>().first()
+        assertThat(apyLabel.id).isEqualTo(CoreResR.string.staking_details_apy)
+        assertThat(subtitle.tone).isEqualTo(EarnBlockUM.SubtitleUM.Tone.Accent)
+    }
+
     private fun rewardFormatArg(text: TextReference): Any? = when (text) {
         is TextReference.Res -> text.formatArgs.data.firstOrNull()
         is TextReference.Combined -> (text.refs.data.last() as? TextReference.Str)?.value
