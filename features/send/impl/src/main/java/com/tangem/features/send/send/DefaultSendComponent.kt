@@ -50,7 +50,6 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.launch
 
 @Suppress("LargeClass")
 internal class DefaultSendComponent @AssistedInject constructor(
@@ -91,49 +90,47 @@ internal class DefaultSendComponent @AssistedInject constructor(
             lifecycle = lifecycle,
             mode = ObserveLifecycleMode.CREATE_DESTROY,
         ) { stack ->
-            componentScope.launch {
-                when (val activeComponent = stack.active.instance) {
-                    is SendConfirmComponent -> {
-                        val fromCurrency = params.currency
-                        val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
-                            .takeIf { model.isAccountModeFlow.value }
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.ConfirmationScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                                sendBlockchain = fromCurrency.network.name,
-                                sendToken = fromCurrency.symbol,
-                                fromDerivationIndex = fromDerivationIndex,
-                                toDerivationIndex = null,
-                                type = model.consumeEntryType(),
-                            ),
-                        )
-                        if (model.currentRoute.value.isEditMode) {
-                            activeComponent.updateState(model.uiState.value)
-                        }
-                    }
-                    is SendAmountComponent -> {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AmountScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                                type = model.consumeEntryType(),
-                            ),
-                        )
-                        activeComponent.updateState(model.uiState.value.amountUM)
-                    }
-                    is DefaultSendDestinationComponent -> {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AddressScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                            ),
-                        )
-                        activeComponent.updateState(model.uiState.value.destinationUM)
+            when (val activeComponent = stack.active.instance) {
+                is SendConfirmComponent -> {
+                    val fromCurrency = params.currency
+                    val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
+                        .takeIf { model.isAccountModeFlow.value }
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.ConfirmationScreenOpened(
+                            categoryName = model.analyticCategoryName,
+                            source = model.analyticsSendSource,
+                            sendBlockchain = fromCurrency.network.name,
+                            sendToken = fromCurrency.symbol,
+                            fromDerivationIndex = fromDerivationIndex,
+                            toDerivationIndex = null,
+                            type = model.consumeEntryType(),
+                        ),
+                    )
+                    if (model.currentRoute.value.isEditMode) {
+                        activeComponent.updateState(model.uiState.value)
                     }
                 }
-                model.currentRoute.emit(stack.active.configuration)
+                is SendAmountComponent -> {
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.AmountScreenOpened(
+                            categoryName = model.analyticCategoryName,
+                            source = model.analyticsSendSource,
+                            type = model.consumeEntryType(),
+                        ),
+                    )
+                    activeComponent.updateState(model.uiState.value.amountUM)
+                }
+                is DefaultSendDestinationComponent -> {
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.AddressScreenOpened(
+                            categoryName = model.analyticCategoryName,
+                            source = model.analyticsSendSource,
+                        ),
+                    )
+                    activeComponent.updateState(model.uiState.value.destinationUM)
+                }
             }
+            model.currentRoute.value = stack.active.configuration
         }
     }
 
