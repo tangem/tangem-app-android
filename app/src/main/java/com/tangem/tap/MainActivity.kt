@@ -216,6 +216,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         if (BuildConfig.TESTER_MENU_ENABLED) {
             lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
+            testerMenuLauncher.registerTesterMenuShortcut()
         }
 
         if (intent != null) {
