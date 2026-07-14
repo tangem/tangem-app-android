@@ -16,8 +16,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
@@ -38,11 +38,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.addressbook.AddressBookFeatureToggles
-import com.tangem.features.addressbook.AddressBookSendAnalytics
-import com.tangem.features.addressbook.ContactSelectionListener
-import com.tangem.features.addressbook.MatchedContact
-import com.tangem.features.addressbook.SelectedContact
+import com.tangem.features.addressbook.*
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -92,7 +88,7 @@ internal class SendDestinationModel @Inject constructor(
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     private val addressBookFeatureToggles: AddressBookFeatureToggles,
-    getContactsUseCase: GetContactsUseCase,
+    getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
@@ -104,8 +100,11 @@ internal class SendDestinationModel @Inject constructor(
     private val cryptoCurrency = params.cryptoCurrency
     private val userWalletId = params.userWalletId
 
-    private val contacts: StateFlow<List<Contact>> = getContactsUseCase(query = "", userWalletId = null)
-        .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
+    private val contacts: StateFlow<List<Contact>> =
+        getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null)
+            .map { verified -> verified.map { it.contact } }
+            .flowOn(dispatchers.default)
+            .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
 
     val addressSelectorNavigation = SlotNavigation<MatchedContact>()
     val addressQuery: StateFlow<String> = uiState
