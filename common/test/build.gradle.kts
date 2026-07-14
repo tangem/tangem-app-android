@@ -9,30 +9,36 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
 
-    implementation(projects.data.common)
-    implementation(projects.data.staking)
-
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.staking.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-
-    implementation(projects.libs.blockchainSdk)
-
-    implementation(deps.androidx.datastore)
+    // region Other libraries
     implementation(deps.jodatime)
-    implementation(deps.test.coroutine)
+    // endregion
 
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
+    // region Tangem SDK
+    api(tangemDeps.blockchain)
+    api(tangemDeps.card.core)
+    // endregion
 
-    implementation(deps.test.junit5)
-    implementation(deps.test.truth)
+    // region Core
+    api(projects.core.datasource)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Data
+    implementation(projects.data.common)
+    // endregion
+
+    // region Domain
+    api(projects.domain.card)
+    api(projects.domain.models)
+    implementation(projects.domain.wallets)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.staking.models)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    // endregion
 }

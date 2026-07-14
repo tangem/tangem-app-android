@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     id("configuration")
@@ -12,29 +13,44 @@ android {
 
 dependencies {
     /** Project - API */
-    implementation(projects.features.promoBanners.api)
+    api(projects.features.promoBanners.api)
+    implementation(projects.features.commonFeatures.api)
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain */
-    implementation(projects.domain.common)
+    api(projects.domain.common)
     implementation(projects.domain.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
+
+    /** Data */
+    implementation(projects.data.common)
 
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.ui)
-    implementation(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-    implementation(projects.core.datasource)
+    implementation(projects.core.ui)
 
     /** Compose */
-    implementation(deps.compose.foundation)
+    api(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
     /** Other */
-    implementation(deps.arrow.core)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */
@@ -42,6 +58,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.truth)
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
 }

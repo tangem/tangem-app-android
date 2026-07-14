@@ -23,7 +23,7 @@ import kotlinx.coroutines.delay
 private const val STORIES_ANIMATION_SPEED_ZERO_DURATION = 3000L
 
 @Composable
-fun StoriesProgressBar(
+internal fun StoriesProgressBar(
     steps: Int,
     currentStep: Int,
     paused: Boolean = false,
@@ -82,11 +82,11 @@ fun StoriesProgressBar(
                         .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
                         .background(TangemColorPalette.White)
                         .fillMaxHeight()
-                        .let {
+                        .let { progressModifier ->
                             when (index) {
-                                currentStep -> it.fillMaxWidth(progress.value)
-                                in 0 until currentStep -> it.fillMaxWidth(fraction = 1f)
-                                else -> it
+                                currentStep -> progressModifier.fillMaxWidth(progress.value)
+                                in 0 until currentStep -> progressModifier.fillMaxWidth(fraction = 1f)
+                                else -> progressModifier
                             }
                         },
                 )

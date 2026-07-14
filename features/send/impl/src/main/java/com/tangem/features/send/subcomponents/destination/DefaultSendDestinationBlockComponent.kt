@@ -39,12 +39,15 @@ internal class DefaultSendDestinationBlockComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val isClickEnabled by params.blockClickEnableFlow.collectAsStateWithLifecycle()
+        val isAddContactVisible by model.showAddContact.collectAsStateWithLifecycle()
 
         DestinationBlock(
             destinationUM = state,
             isClickDisabled = !isClickEnabled,
             isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
             onClick = onClick,
+            showAddContact = isAddContactVisible,
+            onAddContactClick = model::onAddContactClick,
         )
     }
 
