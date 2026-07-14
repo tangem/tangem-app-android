@@ -56,6 +56,7 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.feeCurrency
 import com.tangem.features.tangempay.utils.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
@@ -170,6 +171,9 @@ internal class TangemPayDetailsModel @Inject constructor(
                             isMuted = !state.isFresh,
                         )
                         uiState.update { balanceTransformer.transform(stateFactory.getLoadedState(state)) }
+                    }
+                    is PaymentAccountStatusValue.Inactive -> uiState.update {
+                        stateFactory.getInactiveState(state)
                     }
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
@@ -484,11 +488,6 @@ internal class TangemPayDetailsModel @Inject constructor(
             )
             return
         }
-        val activeCardsCount = currentStatus.value.ifLoadedOrNull { loaded -> loaded.cards.count() } ?: 0
-        if (activeCardsCount >= ALLOWED_MAX_CARDS_COUNT) {
-            uiMessageSender.send(TangemPayMessagesFactory.createMaximumCardsIssued(maxCards = ALLOWED_MAX_CARDS_COUNT))
-            return
-        }
         modelScope.launch {
             val offer = getCustomerOffers.additionalCardOffer(userWalletId).getOrNull()
             if (offer == null) {
@@ -568,9 +567,5 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
         uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(errorType = type))
-    }
-
-    private companion object {
-        const val ALLOWED_MAX_CARDS_COUNT = 3
     }
 }

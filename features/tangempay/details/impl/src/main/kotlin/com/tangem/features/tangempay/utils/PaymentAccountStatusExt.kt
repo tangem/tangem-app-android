@@ -12,6 +12,8 @@ internal val AccountStatus.Payment.cryptoCurrency: CryptoCurrency.Token
     get() = when (val v = value) {
         is PaymentAccountStatusValue.Loaded -> v.cryptoCurrency
         is PaymentAccountStatusValue.Deactivated -> v.cryptoCurrency
+        is PaymentAccountStatusValue.Inactive -> v.cryptoCurrency
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> v.cryptoCurrency
         else -> error("TangemPayDetails opened with unsupported status: $v")
     }
 
