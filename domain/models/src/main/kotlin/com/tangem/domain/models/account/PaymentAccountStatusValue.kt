@@ -28,6 +28,7 @@ sealed class PaymentAccountStatusValue {
             is Error,
             is IssuingCard,
             is AwaitingPlanSelection,
+            is Inactive,
             is Empty,
             is NotCreated,
             is UnderReview,
@@ -56,6 +57,7 @@ sealed class PaymentAccountStatusValue {
             is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
             is AwaitingPlanSelection,
+            is Inactive,
             is Empty,
             is NotCreated,
             is Error,
@@ -107,13 +109,30 @@ sealed class PaymentAccountStatusValue {
      * Represents a state where KYC is approved but no tariff plan has been selected yet
      *
      * @property source The source of the status information.
-     * @property tariffPlan Current tariff plan (fallback Basic) if the backend already returns one
-     *                      Transient: not persisted in the local cache.
+     * @property cryptoCurrency The crypto currency held by the account.
+     * @property tariffPlan Current tariff plan
      */
     @Serializable
     data class AwaitingPlanSelection(
         override val source: StatusSource,
-        val tariffPlan: TangemPayCustomerTariffPlan?,
+        val cryptoCurrency: CryptoCurrency.Token,
+        val tariffPlan: TangemPayCustomerTariffPlan,
+    ) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where a tariff plan has been selected and the card is being issued
+     *
+     * @property source The source of the status information.
+     * @property fiatBalance The fiat balance of state.
+     * @property cryptoCurrency The crypto currency held by the account.
+     * @property tariffPlan Current tariff plan
+     */
+    @Serializable
+    data class Inactive(
+        override val source: StatusSource,
+        val fiatBalance: FiatBalance,
+        val cryptoCurrency: CryptoCurrency.Token,
+        val tariffPlan: TangemPayTariffPlanState,
     ) : PaymentAccountStatusValue()
 
     /**

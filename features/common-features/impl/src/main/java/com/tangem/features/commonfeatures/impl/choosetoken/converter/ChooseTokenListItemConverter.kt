@@ -183,6 +183,7 @@ internal class ChooseTokenListItemConverter(
             is PaymentAccountStatusValue.Error,
             is PaymentAccountStatusValue.IssuingCard,
             is PaymentAccountStatusValue.AwaitingPlanSelection,
+            is PaymentAccountStatusValue.Inactive,
             PaymentAccountStatusValue.NotCreated,
             is PaymentAccountStatusValue.UnderReview,
             PaymentAccountStatusValue.Loading,
