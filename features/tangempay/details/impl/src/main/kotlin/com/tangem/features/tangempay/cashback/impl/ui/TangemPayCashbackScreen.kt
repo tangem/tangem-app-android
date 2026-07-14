@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,10 +37,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
+import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackInfoTilesUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import dev.chrisbanes.haze.HazeStyle
+import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
 
 private const val GLOW_RADIUS_FACTOR = 0.585f
@@ -62,20 +67,33 @@ internal fun TangemPayCashbackScreen(state: TangemPayCashbackScreenUM, modifier:
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onClose = state.cashback.onCloseClick,
             )
-            HeroBlock(state = state.cashback)
-            state.cashback.banner?.let { banner ->
-                CashbackBanner(
-                    banner = banner,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
-            }
-            state.infoTiles?.let { infoTiles ->
-                TangemPayCashbackInfoTiles(
-                    state = infoTiles,
-                    modifier = Modifier.padding(top = 24.dp),
-                )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                HeroBlock(state = state.cashback)
+                state.cashback.banner?.let { banner ->
+                    CashbackBanner(
+                        banner = banner,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    )
+                }
+                state.infoTiles?.let { infoTiles ->
+                    TangemPayCashbackInfoTiles(
+                        state = infoTiles,
+                        modifier = Modifier.padding(top = 24.dp),
+                    )
+                }
+                state.histogram?.let { histogram ->
+                    TangemPayCashbackHistogram(
+                        state = histogram,
+                        modifier = Modifier.padding(top = 24.dp),
+                    )
+                }
             }
         }
     }
@@ -193,6 +211,7 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
                 onCloseClick = {},
             ),
             infoTiles = previewInfoTiles(),
+            histogram = previewHistogram(),
         ),
         TangemPayCashbackScreenUM(
             cashback = TangemPayCashbackUM(
@@ -208,6 +227,7 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
                 onCloseClick = {},
             ),
             infoTiles = null,
+            histogram = null,
         ),
         TangemPayCashbackScreenUM(
             cashback = TangemPayCashbackUM(
@@ -218,6 +238,7 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
                 onCloseClick = {},
             ),
             infoTiles = null,
+            histogram = null,
         ),
     ),
 )
@@ -236,3 +257,23 @@ private fun previewInfoTiles() = TangemPayCashbackInfoTilesUM(
         onClick = {},
     ),
 )
+
+@Suppress("MagicNumber")
+private fun previewHistogram(): TangemPayCashbackHistogramUM {
+    fun bar(month: String, amount: String, value: Float, style: Style) = TangemPayCashbackHistogramUM.Bar(
+        month = stringReference(month),
+        amount = stringReference(amount),
+        amountValue = value,
+        style = style,
+    )
+    return TangemPayCashbackHistogramUM(
+        title = stringReference("$132.15 earned in total"),
+        bars = persistentListOf(
+            bar(month = "Feb", amount = "$12.02", value = 12.02f, style = Style.Regular),
+            bar(month = "Mar", amount = "$44.22", value = 44.22f, style = Style.Regular),
+            bar(month = "Apr", amount = "$38.52", value = 38.52f, style = Style.Regular),
+            bar(month = "May", amount = "$26.10", value = 26.10f, style = Style.Regular),
+            bar(month = "Jun", amount = "$32.15", value = 32.15f, style = Style.Highlighted),
+        ),
+    )
+}
