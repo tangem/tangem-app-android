@@ -41,8 +41,9 @@ internal fun segmentTooltipPositionProvider(
     val centerX = chartSize.width / 2f
     val centerY = chartSize.height / 2f
     val innerRadius = diameter / 2f - strokePx / 2
-    // End angle of the selected slice (before its round cap) — same layout as DonutChart's drawing pass.
-    val sweeps = segments.map { it.weight.toFloat().coerceIn(0f, 1f) * 360f }
+    // End angle of the selected slice (before its round cap) — same *visual* layout as DonutChart's
+    // drawing pass, so the anchor lands on the (floored) slice end rather than its true-weight end.
+    val sweeps = visualSweepAngles(segments.map { it.weight.toFloat() })
     val endAngleDeg = startAngle + sweeps.take(selectedIndex + 1).sum()
     val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
     val anchorLocal = Offset(

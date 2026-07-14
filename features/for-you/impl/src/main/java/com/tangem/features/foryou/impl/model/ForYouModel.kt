@@ -4,12 +4,16 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
@@ -25,11 +29,14 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class ForYouModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     userWalletsListRepository: UserWalletsListRepository,
     multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
+
+    private val params = paramsContainer.require<ForYouComponent.Params>()
 
     private val expandedAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
@@ -65,13 +72,15 @@ internal class ForYouModel @Inject constructor(
             flow3 = expandedAssetIds,
         ) { globalSelectedWallet, accountStatusList, expanded ->
             // TODO For You add choose portfolio flow
+            val selectedWalletId = globalSelectedWallet?.walletId
             uiState.update(
                 SetPortfolioReviewTransformer(
-                    accountStatusList = accountStatusList[globalSelectedWallet?.walletId],
+                    accountStatusList = accountStatusList[selectedWalletId],
                     appCurrency = selectedAppCurrencyFlow.value,
                     expandedAssetIds = expanded,
                     expandClick = ::onExpandClick,
                     onPeriodClick = ::onPeriodClick,
+                    onTokenClick = { currency -> onTokenClick(selectedWalletId, currency) },
                 ),
             )
         }
@@ -87,6 +96,11 @@ internal class ForYouModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = AppCurrency.Default,
         )
+    }
+
+    private fun onTokenClick(selectedWalletId: UserWalletId?, currency: CryptoCurrency) {
+        val walletId = selectedWalletId ?: return
+        params.callbacks.onTokenClick(walletId, currency)
     }
 
     private fun onExpandClick(assetId: String) {
