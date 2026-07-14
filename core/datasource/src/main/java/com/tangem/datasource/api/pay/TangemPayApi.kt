@@ -190,4 +190,16 @@ interface TangemPayApi {
 
     @GET("v1/customer/cashback/summary")
     suspend fun getCashbackSummary(@Header("Authorization") authHeader: String): ApiResponse<CashbackSummaryResponse>
+
+    @GET("v1/customer/cashback/promotions")
+    suspend fun getCashbackPromotions(
+        @Header("Authorization") authHeader: String,
+        @Header("Accept-Language") language: String,
+    ): ApiResponse<CashbackPromotionsResponse>
+
+    @GET("v1/customer/cashback/accruals/docs")
+    suspend fun getCashbackAccrualDocs(
+        @Header("Authorization") authHeader: String,
+        @Header("Accept-Language") language: String,
+    ): ApiResponse<CashbackAccrualDocsResponse>
 }
