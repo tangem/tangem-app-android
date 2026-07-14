@@ -3,11 +3,13 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.util.CashbackAccrualDocsConverter
+import com.tangem.data.pay.util.CashbackHistoryConverter
 import com.tangem.data.pay.util.CashbackPromotionsConverter
 import com.tangem.data.pay.util.CashbackSummaryConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDocument
+import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
@@ -45,6 +47,15 @@ internal class DefaultCashbackRepository @Inject constructor(
                 language = SupportedLanguages.getCurrentSupportedLanguageCode(),
             )
         }.map(CashbackAccrualDocsConverter::convert)
+    }
+
+    override suspend fun getCashbackHistory(
+        userWalletId: UserWalletId,
+        months: Int,
+    ): Either<VisaApiError, CashbackHistory> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getCashbackHistory(authHeader = authHeader, months = months)
+        }.map(CashbackHistoryConverter::convert)
     }
 
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean {
