@@ -80,7 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Añada tokens</string>
   <string name="action_buttons_you_want_to_receive">Seleccione el token que desea recibir</string>
   <string name="action_buttons_you_want_to_swap">Seleccione el token que desea intercambiar</string>
-  <string name="actionbutton_addfunds_title">Agregar fondos</string>
+  <string name="actionbutton_addfunds_title">Depositar</string>
   <string name="actionbutton_swap_title">Intercambiar</string>
   <string name="actionbutton_transfer_title">Transferir</string>
   <string name="add_and_manage_sheet_manage_subtitle">Añadir a su portafolio</string>
@@ -726,6 +726,8 @@
   <string name="hardware_wallet_key_feature_title">Generación de claves</string>
   <string name="hardware_wallet_security_feature_description">Todas las operaciones criptográficas ocurren dentro del chip seguro, certificado contra la clonación y la manipulación física.</string>
   <string name="hardware_wallet_security_feature_title">Seguridad a nivel de hardware</string>
+  <string name="high_fee_warning_description">La actividad en la red es alta. Puede continuar ahora o intentarlo de nuevo más tarde, cuando las tarifas sean más bajas.</string>
+  <string name="high_fee_warning_title">La tarifa de red es más alta de lo habitual.</string>
   <string name="home_button_add_existing_wallet">Agregar Billetera Existente</string>
   <string name="home_button_create_new_wallet">Crear Nueva Billetera</string>
   <string name="home_button_order">Pedir Tangem</string>
@@ -881,6 +883,7 @@
   <string name="markets_portfolio_block_add_token_title">**Añadir a su portafolio** para empezar a comprar, intercambiar o recibir este activo</string>
   <string name="markets_portfolio_block_subtitle">En su portafolio</string>
   <string name="markets_portfolio_block_title">Su portafolio</string>
+  <string name="markets_portfolio_block_token_unsupported">**Token no soportado**. Este token no está soportado actualmente en la billetera.</string>
   <string name="markets_pulse_common_title">Análisis del Mercado</string>
   <string name="markets_quick_actions">Acciones rápidas</string>
   <string name="markets_search_clear_all_hints">Borrar todo</string>
