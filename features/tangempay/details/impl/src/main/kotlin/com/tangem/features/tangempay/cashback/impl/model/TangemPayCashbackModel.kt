@@ -10,6 +10,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.pay.model.CashbackDocument
+import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
@@ -25,6 +26,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val CASHBACK_HISTORY_MONTHS = 5
 
 @Stable
 @ModelScoped
@@ -43,6 +46,7 @@ internal class TangemPayCashbackModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayCashbackNavigation> = SlotNavigation()
 
     private val cashbackConverter = TangemPayCashbackUmConverter(onCloseClick = router::pop)
+    private val histogramConverter = TangemPayCashbackHistogramConverter()
     private val tiersConverter = TangemPayCashbackTiersConverter()
     private val infoTilesConverter = TangemPayCashbackInfoTilesConverter(
         onRateClick = { bottomSheetNavigation.activate(TangemPayCashbackNavigation.Details) },
@@ -62,6 +66,7 @@ internal class TangemPayCashbackModel @Inject constructor(
             TangemPayCashbackScreenUM(
                 cashback = cashbackConverter.convert(value = null),
                 infoTiles = null,
+                histogram = null,
             ),
         )
 
@@ -77,6 +82,7 @@ internal class TangemPayCashbackModel @Inject constructor(
             val planDeferred = async { loadPlan() }
 
             val summary = summaryDeferred.await()
+            val history = if (summary is CashbackSummary.Enabled) loadHistory() else null
             val promotions = promotionsDeferred.await()
             val plan = planDeferred.await()
             val tiers = promotions?.let(tiersConverter::convert).orEmpty()
@@ -89,6 +95,7 @@ internal class TangemPayCashbackModel @Inject constructor(
                         currentPlan = plan,
                     )
                 },
+                histogram = history?.takeIf { it.months.isNotEmpty() }?.let(histogramConverter::convert),
             )
             detailsSheet.value = detailsConverter.convert(tiers)
             accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())
@@ -97,6 +104,10 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     private suspend fun loadSummary(): CashbackSummary? =
         runSuspendCatching { cashbackRepository.getCashbackSummary(userWalletId).getOrNull() }.getOrNull()
+
+    private suspend fun loadHistory(): CashbackHistory? = runSuspendCatching {
+        cashbackRepository.getCashbackHistory(userWalletId, CASHBACK_HISTORY_MONTHS).getOrNull()
+    }.getOrNull()
 
     private suspend fun loadPromotions(): CashbackPromotions? =
         runSuspendCatching { cashbackRepository.getCashbackPromotions(userWalletId).getOrNull() }.getOrNull()
