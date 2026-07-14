@@ -3,6 +3,7 @@ package com.tangem.common.ui.markets.action
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.markets.R
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -21,6 +22,7 @@ import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
@@ -57,6 +59,7 @@ class TokenActionsHandler @AssistedInject constructor(
         context: TokenActionsContext = TokenActionsContext.Markets,
     ) {
         if (isTopUpBlockedByBackupError(action, cryptoCurrencyData.userWallet)) return
+        if (handleUnavailabilityReason(action, cryptoCurrencyData)) return
 
         onHandleQuickAction(
             HandledQuickAction(
@@ -101,6 +104,17 @@ class TokenActionsHandler @AssistedInject constructor(
             TokenActionsBSContentUM.Action.Stake -> onStakeClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.YieldMode -> onYieldModeClick(cryptoCurrencyData)
         }
+    }
+
+    private fun handleUnavailabilityReason(
+        action: TokenActionsBSContentUM.Action,
+        cryptoCurrencyData: CryptoCurrencyData,
+    ): Boolean {
+        val reason = QuickActionsConverter.unavailabilityReason(action, cryptoCurrencyData.actions)
+        if (reason == ScenarioUnavailabilityReason.None) return false
+
+        uiMessageSender.send(DialogMessage(message = reason.getUnavailabilityReasonText()))
+        return true
     }
 
     private fun isTopUpBlockedByBackupError(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
