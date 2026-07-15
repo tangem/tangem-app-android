@@ -28,6 +28,7 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isRedesignEnabled: Boolean,
     private val isMultipleCardsEnabled: Boolean,
+    private val isPolymarketEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -165,6 +166,7 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
+            isPolymarketEnabled = isPolymarketEnabled,
         ).convert(value = params.accountList)
     }
 }
