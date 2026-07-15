@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import android.text.format.DateFormat
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -19,7 +20,9 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
+import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -70,8 +73,8 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.infoTiles).isNotNull()
-        assertThat(model.uiState.value.infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 1%"))
+        assertThat(model.content().infoTiles).isNotNull()
+        assertThat(model.content().infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 1%"))
         assertThat(model.detailsSheet.value.rows).hasSize(2)
         assertThat(model.accrualsSheet.value.docRows).hasSize(2)
     }
@@ -86,7 +89,7 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 2%"))
+        assertThat(model.content().infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 2%"))
     }
 
     @Test
@@ -98,7 +101,7 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.infoTiles).isNull()
+        assertThat(model.content().infoTiles).isNull()
         assertThat(model.detailsSheet.value.rows).isEmpty()
     }
 
@@ -111,8 +114,51 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.infoTiles).isNotNull()
+        assertThat(model.content().infoTiles).isNotNull()
         assertThat(model.detailsSheet.value.rows).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN summary and promotions both fail WHEN model created THEN error state`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } throws RuntimeException("boom")
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } throws RuntimeException("boom")
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN summary and promotions both return error WHEN model created THEN error state`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns VisaApiError.Unspecified.left()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN error state WHEN reload succeeds THEN content shown`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } throws RuntimeException("boom")
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } throws RuntimeException("boom")
+        val model = createModel()
+        val error = model.uiState.value as TangemPayCashbackScreenUM.Error
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns CashbackSummary.Disabled.right()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns promotions().right()
+
+        // Act
+        error.onReloadClick()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Content::class.java)
     }
 
     @Test
@@ -124,7 +170,7 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 1%"))
+        assertThat(model.content().infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 1%"))
     }
 
     @Test
@@ -141,6 +187,28 @@ internal class TangemPayCashbackModelTest {
     }
 
     @Test
+    fun `GIVEN additional cashback WHEN model created THEN additional cashback section populated`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns
+            promotions(additional = listOf(additionalPromo())).right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.content().additionalCashback?.items).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN no additional cashback WHEN model created THEN additional cashback section hidden`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.content().additionalCashback).isNull()
+    }
+
+    @Test
     fun `GIVEN enabled summary and history WHEN model created THEN histogram populated`() {
         // Arrange
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary().right()
@@ -150,8 +218,8 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.histogram).isNotNull()
-        assertThat(model.uiState.value.histogram?.bars).hasSize(2)
+        assertThat(model.content().histogram).isNotNull()
+        assertThat(model.content().histogram?.bars).hasSize(2)
     }
 
     @Test
@@ -160,7 +228,7 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.histogram).isNull()
+        assertThat(model.content().histogram).isNull()
         coVerify(exactly = 0) { cashbackRepository.getCashbackHistory(any(), any()) }
     }
 
@@ -173,7 +241,12 @@ internal class TangemPayCashbackModelTest {
         onboardingRepository = onboardingRepository,
     )
 
-    private fun promotions() = CashbackPromotions(
+    private fun TangemPayCashbackModel.content(): TangemPayCashbackScreenUM.Content =
+        uiState.value as TangemPayCashbackScreenUM.Content
+
+    private fun promotions(
+        additional: List<CashbackPromotions.AdditionalCashback> = emptyList(),
+    ) = CashbackPromotions(
         cardTiers = listOf(
             CashbackPromotions.CardTier(
                 tier = "basic",
@@ -190,6 +263,15 @@ internal class TangemPayCashbackModelTest {
                 monthlyCapAmount = BigDecimal("300"),
             ),
         ),
+        additionalCashback = additional,
+    )
+
+    private fun additionalPromo() = CashbackPromotions.AdditionalCashback(
+        id = "promo-1",
+        name = "Groceries increase",
+        description = "+1% cashback for groceries stores",
+        isPermanent = true,
+        endDate = null,
     )
 
     private fun docs() = listOf(
