@@ -19,6 +19,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.SendScreenTestTags
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
@@ -35,7 +36,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.withIndex
 
 @Composable
-internal fun StakingScreen(uiState: StakingUiState) {
+internal fun StakingScreen(uiState: StakingUiState, marketingBannerComponent: MarketingBannerComponent) {
     val confirmationState = uiState.confirmationState as? StakingStates.ConfirmationState.Data
 
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
@@ -53,6 +54,7 @@ internal fun StakingScreen(uiState: StakingUiState) {
         )
         StakingScreenContent(
             uiState = uiState,
+            marketingBannerComponent = marketingBannerComponent,
             modifier = Modifier.weight(1f),
         )
         NavigationButtonsBlock(
@@ -104,7 +106,11 @@ private fun StakingAppBar(uiState: StakingUiState) {
 
 @Suppress("LongMethod")
 @Composable
-private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = Modifier) {
+private fun StakingScreenContent(
+    uiState: StakingUiState,
+    marketingBannerComponent: MarketingBannerComponent,
+    modifier: Modifier = Modifier,
+) {
     val currentScreen = uiState.currentStep
     var currentStateProxy by remember { mutableStateOf(currentScreen) }
     var isTransitionAnimationRunning by remember { mutableStateOf(false) }
@@ -149,6 +155,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     buttonState = uiState.buttonsState,
                     clickIntents = uiState.clickIntents,
                     isBalanceHidden = uiState.isBalanceHidden,
+                    marketingBannerComponent = marketingBannerComponent,
                 )
                 StakingStep.RewardsValidators -> {
                     StakingClaimRewardsValidatorContent(
