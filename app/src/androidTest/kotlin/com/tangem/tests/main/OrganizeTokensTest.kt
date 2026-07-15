@@ -1,10 +1,7 @@
 package com.tangem.tests.main
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.addNewCardWalletWithoutSync
 import com.tangem.scenarios.assertOrganizeTokensMatch
 import com.tangem.scenarios.getMainScreenTokensOrder
