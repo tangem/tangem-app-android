@@ -19,6 +19,11 @@ class TokenReceiveWarningBottomSheetPageObject(semanticsProvider: SemanticsNodeI
     val gotItButton: KNode = child {
         hasText(getResourceString(R.string.common_got_it))
     }
+
+    fun networkName(name: String): KNode = child {
+        hasText(text = name, substring = true)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTokenReceiveWarningBottomSheet(function: TokenReceiveWarningBottomSheetPageObject.() -> Unit) =

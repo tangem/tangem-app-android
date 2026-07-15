@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -40,6 +41,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
 
@@ -83,7 +85,9 @@ internal fun TangemPayTxHistoryDetailsContentV2(state: TangemPayTxHistoryDetails
                     modifier = Modifier.padding(top = TangemTheme.dimens2.x12),
                 )
                 Text(
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x6),
+                    modifier = Modifier
+                        .padding(top = TangemTheme.dimens2.x6)
+                        .testTag(TangemPayTestTags.TRANSACTION_DETAILS_AMOUNT),
                     text = state.transactionAmount.orMaskWithStars(state.isBalanceHidden),
                     style = TangemTheme.typography3.display.medium,
                     color = TangemTheme.colors3.text.primary,

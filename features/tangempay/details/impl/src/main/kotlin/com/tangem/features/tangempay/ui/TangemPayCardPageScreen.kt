@@ -34,6 +34,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.details.impl.R
@@ -355,6 +356,7 @@ private fun CardPageTopBar(
             endContent = {
                 Box {
                     TangemButton(
+                        modifier = Modifier.testTag(TangemPayTestTags.CARD_PAGE_MORE_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
                         onClick = { isDropdownMenuShown = true },
                         size = TangemButton.Size.X11,
