@@ -39,6 +39,8 @@ dependencies {
     api(projects.domain.appCurrency)
     api(projects.domain.common)
     api(projects.domain.wallets)
+    api(projects.domain.earn)
+    api(projects.domain.yieldSupply)
     implementation(projects.domain.account)
     implementation(projects.domain.models)
 
