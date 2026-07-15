@@ -94,6 +94,7 @@ dependencies {
     // region Project - Features
     api(projects.features.swap.domain)
     api(projects.features.virtualAccounts.details.api)
+    api(projects.features.tangempay.details.api)
     // endregion
 
     // region Project - Libs
