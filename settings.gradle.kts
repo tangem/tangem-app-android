@@ -367,6 +367,9 @@ include(":features:token-recieve:impl")
 include(":features:yield-supply:api")
 include(":features:yield-supply:impl")
 
+include(":features:polymarket:api")
+include(":features:polymarket:impl")
+
 include(":features:approval:api")
 include(":features:approval:impl")
 

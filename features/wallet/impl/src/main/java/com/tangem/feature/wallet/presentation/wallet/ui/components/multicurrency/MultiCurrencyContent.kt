@@ -123,6 +123,12 @@ internal fun LazyListScope.tokensListItems2(
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
+                    is TokensListItemUM2.Prediction -> predictionItem(
+                        listItem = listItem,
+                        index = index,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = modifier,
+                    )
                     is TokensListItemUM2.Portfolio -> portfolioItem(
                         listItem = listItem,
                         index = index,
@@ -180,6 +186,41 @@ private fun LazyListScope.tokenItem(
                 modifier = itemModifier,
             )
         }
+    }
+}
+
+private fun LazyListScope.predictionItem(
+    listItem: TokensListItemUM2.Prediction,
+    index: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    item(
+        key = listItem.tokenRowUM.id,
+        contentType = listItem.tokenRowUM::class.java,
+    ) {
+        val tokenRowUM = listItem.tokenRowUM
+        val itemModifier = modifier
+            .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            .semantics { lazyListItemPosition = index }
+            .padding(top = if (index == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x2)
+            // Standalone fully-rounded card, matching the account rows above/below it.
+            .roundedShapeItemDecoration(
+                radius = TangemTheme.dimens2.x5,
+                currentIndex = 0,
+                addDefaultPadding = false,
+                lastIndex = 0,
+                backgroundColor = TangemTheme.colors2.surface.level3,
+            )
+            .combinedClickable(
+                enabled = tokenRowUM.onItemClick != null,
+                onClick = tokenRowUM.onItemClick ?: {},
+            )
+        TangemTokenRow(
+            tokenRowUM = tokenRowUM,
+            isBalanceHidden = isBalanceHidden,
+            modifier = itemModifier,
+        )
     }
 }
 
