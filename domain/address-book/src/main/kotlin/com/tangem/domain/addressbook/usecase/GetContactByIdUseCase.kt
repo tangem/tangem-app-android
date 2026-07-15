@@ -20,9 +20,7 @@ class GetContactByIdUseCase(
     operator fun invoke(id: ContactId): Flow<Contact?> {
         return repository.getAllContacts().map { contacts ->
             val contact = contacts.find { it.id == id } ?: return@map null
-            contactSignatureVerifier.verifyContacts(listOf(contact))
-                .firstOrNull()
-                ?.contact
+            contactSignatureVerifier.verifyContacts(listOf(contact)).firstOrNull()
         }
     }
 }
