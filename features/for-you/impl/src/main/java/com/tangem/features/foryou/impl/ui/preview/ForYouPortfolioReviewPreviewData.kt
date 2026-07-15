@@ -7,8 +7,6 @@ import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.foryou.impl.components.state.DonutChartUM
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
@@ -23,17 +21,6 @@ import java.math.BigDecimal
 internal object ForYouPortfolioReviewPreviewData {
 
     val reviewContent = PortfolioReviewUM.Content(
-        periodPickerUM = TangemSegmentedPickerUM(
-            items = persistentListOf(
-                TangemSegmentUM(id = "0", title = stringReference("Day")),
-                TangemSegmentUM(id = "1", title = stringReference("Week")),
-                TangemSegmentUM(id = "2", title = stringReference("Month")),
-            ),
-            initialSelectedItem = TangemSegmentUM(id = "0", title = stringReference("Day")),
-            isFixed = true,
-            isAltSurface = true,
-        ),
-        onPeriodClick = {},
         marketChartUM = MarketChartUM.Loaded(
             donutChart = DonutChartUM.Loaded(
                 totalAmount = "10000$",
