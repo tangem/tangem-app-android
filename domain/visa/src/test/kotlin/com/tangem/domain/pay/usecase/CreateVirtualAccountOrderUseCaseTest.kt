@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -16,7 +17,11 @@ internal class CreateVirtualAccountOrderUseCaseTest {
 
     private val onboardingRepository: OnboardingRepository = mockk(relaxUnitFun = true)
     private val pollingUseCase: StartTangemPayOrderPollingUseCase = mockk(relaxed = true)
-    private val useCase = CreateVirtualAccountOrderUseCase(onboardingRepository, pollingUseCase)
+    private val useCase = CreateVirtualAccountOrderUseCase(
+        onboardingRepository = onboardingRepository,
+        pollingUseCase = pollingUseCase,
+        appCoroutineScope = TestAppCoroutineScope(),
+    )
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val paymentAccountAddress = "0xcollateral"
