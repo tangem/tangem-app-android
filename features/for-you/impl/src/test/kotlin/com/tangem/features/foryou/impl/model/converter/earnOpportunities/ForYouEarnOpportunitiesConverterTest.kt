@@ -15,12 +15,14 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.test.mock.MockAccounts
 import io.mockk.every
@@ -291,6 +293,55 @@ internal class ForYouEarnOpportunitiesConverterTest {
     }
 
     @Nested
+    inner class TypeResolution {
+
+        @Test
+        fun `GIVEN yield-eligible token row clicked WHEN convert THEN yield type carries the raw percent apy`() {
+            // Arrange — the backend rate (10.00%) must reach the click callback unscaled
+            val token = createEarnTokenCurrency()
+            val status = createStatus(token, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            var clickedType: ForYouEarnOpportunitiesType? = null
+            val converter = createConverter(
+                yieldSupplyAvailability = mapOf(token.yieldSupplyKey() to BigDecimal("10.00")),
+                onTokenClick = { _, _, type -> clickedType = type },
+            )
+
+            // Act
+            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            result.clickFirstRow()
+
+            // Assert
+            assertThat(clickedType).isEqualTo(ForYouEarnOpportunitiesType.YieldSupply(apy = "10.00"))
+        }
+
+        @Test
+        fun `GIVEN staking-eligible token row clicked WHEN convert THEN staking type carries the integration id`() {
+            // Arrange
+            val currency = createEarnCurrency()
+            val status = createStatus(currency, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            val availability = stakingAvailable(apy = BigDecimal("0.05"))
+            var clickedType: ForYouEarnOpportunitiesType? = null
+            val converter = createConverter(
+                yieldStakingAvailability = mapOf(currency to availability),
+                onTokenClick = { _, _, type -> clickedType = type },
+            )
+
+            // Act
+            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            result.clickFirstRow()
+
+            // Assert — the id comes from the resolved staking option
+            val option = (availability as StakingAvailability.Available).option
+            assertThat(clickedType).isEqualTo(ForYouEarnOpportunitiesType.Staking(integrationID = option.integrationId))
+        }
+
+        private fun EarnOpportunitiesUM.clickFirstRow() {
+            val row = tokenList.first().tokenRowUM as TangemTokenRowUM.Content
+            row.onItemClick?.invoke()
+        }
+    }
+
+    @Nested
     inner class AccountOrdering {
 
         @Test
@@ -328,6 +379,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
         yieldStakingAvailability: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         topEarnTokens: EarnTopToken? = null,
         isAccountsModeEnabled: Boolean = false,
+        onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
     ) = ForYouEarnOpportunitiesConverter(
         appCurrency = appCurrency,
         isAccountsModeEnabled = isAccountsModeEnabled,
@@ -336,19 +388,23 @@ internal class ForYouEarnOpportunitiesConverterTest {
         yieldSupplyAvailability = yieldSupplyAvailability,
         yieldStakingAvailability = yieldStakingAvailability,
         topEarnTokens = topEarnTokens,
+        onTokenClick = onTokenClick,
+        onAllEarnTokensClick = {},
     )
 
+    // Real StakingIntegrationID values are used below: mocking the sealed interface makes mockk try to
+    // retransform its enum implementations, which the JVM rejects ("cannot change the class modifiers").
     private fun stakingOption(apy: BigDecimal): StakingOption.P2PEthPool = mockk {
         every { this@mockk.apy } returns apy
+        every { integrationId } returns StakingIntegrationID.P2PEthPool
     }
 
     private fun stakingAvailable(apy: BigDecimal): StakingAvailability =
         StakingAvailability.Available(option = stakingOption(apy))
 
     private fun stakeKitAvailable(vararg validatorList: Yield.Validator): StakingAvailability {
-        // A real StakeKit option with a real integration id: stubbing `integrationId` on a mock would
-        // make mockk instrument StakingIntegrationID.StakeKit, whose implementations are enums that the
-        // JVM refuses to retransform ("cannot change the class modifiers").
+        // A real StakeKit option: stubbing `integrationId` on a mock would make mockk instrument
+        // StakingIntegrationID.StakeKit, hitting the same enum-retransformation limitation.
         val yieldModel: Yield = mockk {
             every { validators } returns validatorList.toList()
             every { apy } returns BigDecimal("0.10")
