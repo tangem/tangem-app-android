@@ -133,8 +133,8 @@ internal class UpdateAddressBookListContentTransformerTest {
     }
 
     private fun transform(
-        allContacts: List<VerifiedContact>,
-        matchedContacts: List<VerifiedContact>,
+        allContacts: List<Contact>,
+        matchedContacts: List<Contact>,
         selectedWalletId: String? = null,
         query: String = "",
     ): AddressBookListUM = UpdateAddressBookListContentTransformer(
@@ -156,25 +156,22 @@ internal class UpdateAddressBookListContentTransformerTest {
     private fun wallet(id: String, name: String): UserWallet =
         MockUserWalletFactory.create().copy(walletId = UserWalletId(stringValue = id), name = name)
 
-    private fun verified(walletId: String, name: String): VerifiedContact = VerifiedContact(
-        contact = Contact(
-            id = ContactId(name + walletId),
-            walletId = UserWalletId(stringValue = walletId),
-            name = requireNotNull(ContactName(name).getOrNull()) { "invalid test name" },
-            icon = "",
-            iconColor = "Azure",
-            createdAt = "2026-06-10T14:30:00.000Z",
-            updatedAt = "2026-06-10T14:30:00.000Z",
-            addresses = listOf(
-                AddressEntry(
-                    id = AddressEntryId(name),
-                    address = "addr-$name",
-                    networkId = Network.RawID("ethereum"),
-                    memo = null,
-                    signature = "sig",
-                ),
+    private fun verified(walletId: String, name: String): Contact = Contact(
+        id = ContactId(name + walletId),
+        walletId = UserWalletId(stringValue = walletId),
+        name = requireNotNull(ContactName(name).getOrNull()) { "invalid test name" },
+        icon = "",
+        iconColor = "Azure",
+        createdAt = "2026-06-10T14:30:00.000Z",
+        updatedAt = "2026-06-10T14:30:00.000Z",
+        addresses = listOf(
+            AddressEntry(
+                id = AddressEntryId(name),
+                address = "addr-$name",
+                networkId = Network.RawID("ethereum"),
+                memo = null,
+                signature = "sig",
             ),
         ),
-        invalidEntries = emptyList(),
     )
 }
