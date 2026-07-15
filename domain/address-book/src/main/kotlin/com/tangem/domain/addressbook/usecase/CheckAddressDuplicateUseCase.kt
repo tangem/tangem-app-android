@@ -30,7 +30,6 @@ class CheckAddressDuplicateUseCase(
     ): String? {
         val contacts = repository.getContactsSync(userWalletId)
         return contactSignatureVerifier.verifyContacts(contacts)
-            .map { it.contact }
             .firstOrNull { contact ->
                 contact.id != excludeContactId && contact.addresses.any { entry ->
                     entry.networkId.value == networkId && entry.address == address

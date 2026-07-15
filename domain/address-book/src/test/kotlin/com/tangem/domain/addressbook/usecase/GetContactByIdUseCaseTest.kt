@@ -6,7 +6,6 @@ import com.tangem.domain.addressbook.model.AddressEntryId
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
-import com.tangem.domain.addressbook.model.VerifiedContact
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.verification.ContactSignatureVerifier
 import com.tangem.domain.models.network.Network
@@ -43,8 +42,7 @@ class GetContactByIdUseCaseTest {
         val stored = contact("id-2", "Bob", valid, invalid)
         val verified = stored.copy(addresses = listOf(valid))
         every { repository.getAllContacts() } returns flowOf(listOf(contact("id-1", "Alice"), stored))
-        coEvery { contactSignatureVerifier.verifyContacts(listOf(stored)) } returns
-            listOf(VerifiedContact(contact = verified, invalidEntries = listOf(invalid)))
+        coEvery { contactSignatureVerifier.verifyContacts(listOf(stored)) } returns listOf(verified)
 
         // Act
         val result = useCase(ContactId("id-2")).first()
