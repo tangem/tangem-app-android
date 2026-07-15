@@ -64,6 +64,7 @@ internal fun MarketsTokenDetailsContent(
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     portfolioFloatingBlock: @Composable ((Modifier) -> Unit)?,
+    marketingBanner: @Composable (Modifier) -> Unit,
 ) {
     Content(
         contentPadding = contentPadding,
@@ -72,6 +73,7 @@ internal fun MarketsTokenDetailsContent(
         state = state,
         portfolioBlock = portfolioBlock,
         portfolioFloatingBlock = portfolioFloatingBlock,
+        marketingBanner = marketingBanner,
     )
 
     when (state.bottomSheetConfig.content) {
@@ -90,6 +92,7 @@ private fun Content(
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     portfolioFloatingBlock: @Composable ((Modifier) -> Unit)?,
+    marketingBanner: @Composable (Modifier) -> Unit,
 ) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     val density = LocalDensity.current
@@ -148,14 +151,13 @@ private fun Content(
                     )
                 }
                 item { SpacerH16() }
-
                 tokenMarketDetailsBody(
                     state = state.body,
                     portfolioBlock = portfolioBlock,
                     relatedNews = state.relatedNews,
                     isRedesignEnabled = isRedesignEnabled,
+                    marketingBanner = marketingBanner,
                 )
-
                 item { SpacerH(bottomSpacing) }
             }
         }
@@ -493,6 +495,7 @@ private fun MarketsTokenDetailsContent_Preview(
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
             portfolioFloatingBlock = null,
+            marketingBanner = {},
             contentPadding = PaddingValues(),
         )
     }
