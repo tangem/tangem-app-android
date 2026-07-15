@@ -7,6 +7,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -89,7 +90,10 @@ internal class TangemPayDetailsModelTest {
                 every { userWalletId } returns this@TangemPayDetailsModelTest.userWalletId
             }
         }
-        val params = TangemPayDetailsContainerComponent.Params(initialStatus = paymentStatus)
+        val params = TangemPayDetailsContainerComponent.Params(
+            initialStatus = paymentStatus,
+            initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        )
 
         every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(paymentStatus)
         every { cardDetailsRepository.cardFrozenState(any()) } returns flowOf(frozenState)
