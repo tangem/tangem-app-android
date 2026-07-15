@@ -15,7 +15,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
     fun `GIVEN top tokens contain active portfolio assets WHEN convert THEN active ones are excluded`() {
         // Arrange
         val activePortfolio = createEarnOpportunities(
-            earnCurrencues = mapOf(
+            earnCurrencies = mapOf(
                 createStatus(createEarnCurrency(tokenId = "ethereum", networkRawId = "ETH")) to createEarnApyInfo(),
             ),
         )
@@ -37,7 +37,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
     fun `GIVEN more suggestions than the cap WHEN convert THEN filtering happens before the top-5 cut`() {
         // Arrange — two of the first candidates are active; the cap must still be filled from the tail
         val activePortfolio = createEarnOpportunities(
-            earnCurrencues = listOf("token-0", "token-1").associate { tokenId ->
+            earnCurrencies = listOf("token-0", "token-1").associate { tokenId ->
                 createStatus(createEarnCurrency(tokenId = tokenId, networkRawId = "NET")) to createEarnApyInfo()
             },
         )
@@ -60,7 +60,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
     fun `GIVEN asset active on another network WHEN convert THEN suggestion on a new network is kept`() {
         // Arrange — matching is per asset AND network, not per asset
         val activePortfolio = createEarnOpportunities(
-            earnCurrencues = mapOf(
+            earnCurrencies = mapOf(
                 createStatus(createEarnCurrency(tokenId = "usd-coin", networkRawId = "ETH")) to createEarnApyInfo(),
             ),
         )
@@ -81,7 +81,9 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
     @Test
     fun `GIVEN no top tokens loaded WHEN convert THEN content with empty suggestions`() {
         // Arrange
-        val converter = ForYouEarnOpportunitiesTokensActiveConverter(topEarnTokens = null)
+        val converter = ForYouEarnOpportunitiesTokensActiveConverter(
+            topEarnTokens = null,
+        )
 
         // Act
         val result = converter.convert(listOf(createEarnOpportunities()))

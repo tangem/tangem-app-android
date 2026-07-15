@@ -54,7 +54,9 @@ internal class ForYouEarnOpportunitiesNoTokensConverterTest {
     @Test
     fun `GIVEN no top tokens loaded WHEN convert THEN suggestions are empty and reward type is absent`() {
         // Arrange
-        val converter = ForYouEarnOpportunitiesNoTokensConverter(topEarnTokens = null)
+        val converter = ForYouEarnOpportunitiesNoTokensConverter(
+            topEarnTokens = null,
+        )
 
         // Act
         val result = converter.convert(emptyList()) as EarnOpportunitiesUM.Content
