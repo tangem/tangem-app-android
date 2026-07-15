@@ -153,14 +153,18 @@ internal class GetTangemPayTariffPlanStateUseCaseTest {
 
         val CURRENT_PLAN = TangemPayTariffPlan(
             id = "plan-basic",
-            type = TangemPayTariffPlan.Type.BASIC,
+            tierId = "BASIC",
+            isBasicTier = true,
             name = "Basic",
+            programName = "program-basic",
             descriptionItems = emptyList(),
         )
         val TARGET_PLAN = TangemPayTariffPlan(
             id = TARGET_PLAN_ID,
-            type = TangemPayTariffPlan.Type.PLUS,
+            tierId = "PLUS",
+            isBasicTier = false,
             name = "Plus",
+            programName = "program-plus",
             descriptionItems = emptyList(),
         )
         val CUSTOMER_TARIFF = TangemPayCustomerTariffPlan(
