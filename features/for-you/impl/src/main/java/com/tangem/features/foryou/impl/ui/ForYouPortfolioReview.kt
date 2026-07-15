@@ -14,7 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
+import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.stringReference
@@ -34,7 +36,12 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 @Composable
-internal fun ForYouPortfolioReview(portfolioReviewUM: PortfolioReviewUM, modifier: Modifier = Modifier) {
+internal fun ForYouPortfolioReview(
+    periodPickerUM: TangemSegmentedPickerUM,
+    onPeriodClick: (TangemSegmentUM) -> Unit,
+    portfolioReviewUM: PortfolioReviewUM,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -64,8 +71,8 @@ internal fun ForYouPortfolioReview(portfolioReviewUM: PortfolioReviewUM, modifie
         when (portfolioReviewUM) {
             is PortfolioReviewUM.Content -> {
                 TangemSegmentedPicker(
-                    tangemSegmentedPickerUM = portfolioReviewUM.periodPickerUM,
-                    onClick = portfolioReviewUM.onPeriodClick,
+                    tangemSegmentedPickerUM = periodPickerUM,
+                    onClick = onPeriodClick,
                 )
             }
             is PortfolioReviewUM.Loading -> TangemShimmer(
@@ -91,6 +98,17 @@ private fun ForYouPortfolioReview_Review(
         ForYouPortfolioReview(
             portfolioReviewUM = params,
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+            periodPickerUM = TangemSegmentedPickerUM(
+                items = persistentListOf(
+                    TangemSegmentUM(id = "0", title = stringReference("Day")),
+                    TangemSegmentUM(id = "1", title = stringReference("Week")),
+                    TangemSegmentUM(id = "2", title = stringReference("Month")),
+                ),
+                initialSelectedItem = TangemSegmentUM(id = "0", title = stringReference("Day")),
+                isFixed = true,
+                isAltSurface = true,
+            ),
+            onPeriodClick = {},
         )
     }
 }
