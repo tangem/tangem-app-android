@@ -23,7 +23,7 @@ internal class UpdateAddressBookListContentTransformerTest {
     @Test
     fun `GIVEN contacts in one wallet WHEN blank query THEN no chips`() {
         // Arrange
-        val all = listOf(verified(wallet1, "Alice"), verified(wallet1, "Bob"))
+        val all = listOf(contact(wallet1, "Alice"), contact(wallet1, "Bob"))
 
         // Act
         val result = transform(allContacts = all, matchedContacts = all)
@@ -40,7 +40,7 @@ internal class UpdateAddressBookListContentTransformerTest {
     @Test
     fun `GIVEN contacts in two wallets WHEN blank query THEN All plus per-wallet chips with All selected`() {
         // Arrange
-        val all = listOf(verified(wallet1, "Alice"), verified(wallet2, "Bob"))
+        val all = listOf(contact(wallet1, "Alice"), contact(wallet2, "Bob"))
 
         // Act
         val result = transform(allContacts = all, matchedContacts = all)
@@ -58,7 +58,7 @@ internal class UpdateAddressBookListContentTransformerTest {
     @Test
     fun `GIVEN two wallets WHEN a wallet chip selected THEN list filtered but chips unchanged`() {
         // Arrange
-        val all = listOf(verified(wallet1, "Alice"), verified(wallet2, "Bob"))
+        val all = listOf(contact(wallet1, "Alice"), contact(wallet2, "Bob"))
 
         // Act
         val result = transform(allContacts = all, matchedContacts = all, selectedWalletId = wallet2)
@@ -75,8 +75,8 @@ internal class UpdateAddressBookListContentTransformerTest {
     @Test
     fun `GIVEN two wallets WHEN query narrows to one wallet THEN chips kept as All plus that wallet`() {
         // Arrange — the book spans two wallets, but the query matched only wallet1 in the domain
-        val all = listOf(verified(wallet1, "Antonio"), verified(wallet2, "Bob"))
-        val matched = listOf(verified(wallet1, "Antonio"))
+        val all = listOf(contact(wallet1, "Antonio"), contact(wallet2, "Bob"))
+        val matched = listOf(contact(wallet1, "Antonio"))
 
         // Act
         val result = transform(allContacts = all, matchedContacts = matched, query = "Anto")
@@ -91,8 +91,8 @@ internal class UpdateAddressBookListContentTransformerTest {
     @Test
     fun `GIVEN selected wallet no longer matches query THEN falls back to All`() {
         // Arrange
-        val all = listOf(verified(wallet1, "Antonio"), verified(wallet2, "Bob"))
-        val matched = listOf(verified(wallet1, "Antonio"))
+        val all = listOf(contact(wallet1, "Antonio"), contact(wallet2, "Bob"))
+        val matched = listOf(contact(wallet1, "Antonio"))
 
         // Act — selected wallet2, but query matched only wallet1
         val result = transform(
@@ -120,7 +120,7 @@ internal class UpdateAddressBookListContentTransformerTest {
     @Test
     fun `GIVEN query matches nothing WHEN non-blank query THEN nothing found and chips hidden`() {
         // Arrange
-        val all = listOf(verified(wallet1, "Alice"), verified(wallet2, "Bob"))
+        val all = listOf(contact(wallet1, "Alice"), contact(wallet2, "Bob"))
 
         // Act
         val result = transform(allContacts = all, matchedContacts = emptyList(), query = "Zzz")
@@ -133,8 +133,8 @@ internal class UpdateAddressBookListContentTransformerTest {
     }
 
     private fun transform(
-        allContacts: List<VerifiedContact>,
-        matchedContacts: List<VerifiedContact>,
+        allContacts: List<Contact>,
+        matchedContacts: List<Contact>,
         selectedWalletId: String? = null,
         query: String = "",
     ): AddressBookListUM = UpdateAddressBookListContentTransformer(
@@ -156,25 +156,22 @@ internal class UpdateAddressBookListContentTransformerTest {
     private fun wallet(id: String, name: String): UserWallet =
         MockUserWalletFactory.create().copy(walletId = UserWalletId(stringValue = id), name = name)
 
-    private fun verified(walletId: String, name: String): VerifiedContact = VerifiedContact(
-        contact = Contact(
-            id = ContactId(name + walletId),
-            walletId = UserWalletId(stringValue = walletId),
-            name = requireNotNull(ContactName(name).getOrNull()) { "invalid test name" },
-            icon = "",
-            iconColor = "Azure",
-            createdAt = "2026-06-10T14:30:00.000Z",
-            updatedAt = "2026-06-10T14:30:00.000Z",
-            addresses = listOf(
-                AddressEntry(
-                    id = AddressEntryId(name),
-                    address = "addr-$name",
-                    networkId = Network.RawID("ethereum"),
-                    memo = null,
-                    signature = "sig",
-                ),
+    private fun contact(walletId: String, name: String): Contact = Contact(
+        id = ContactId(name + walletId),
+        walletId = UserWalletId(stringValue = walletId),
+        name = requireNotNull(ContactName(name).getOrNull()) { "invalid test name" },
+        icon = "",
+        iconColor = "Azure",
+        createdAt = "2026-06-10T14:30:00.000Z",
+        updatedAt = "2026-06-10T14:30:00.000Z",
+        addresses = listOf(
+            AddressEntry(
+                id = AddressEntryId(name),
+                address = "addr-$name",
+                networkId = Network.RawID("ethereum"),
+                memo = null,
+                signature = "sig",
             ),
         ),
-        invalidEntries = emptyList(),
     )
 }
