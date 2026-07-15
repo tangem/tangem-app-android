@@ -14,7 +14,10 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -31,6 +34,8 @@ import java.math.BigDecimal
  */
 internal class ForYouEarnOpportunitiesTokenRowConverter(
     private val appCurrency: AppCurrency,
+    private val userWalletId: UserWalletId?,
+    private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
 ) : Converter<Pair<CryptoCurrencyStatus, EarnApyInfo>, TangemTokenRowUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -55,7 +60,13 @@ internal class ForYouEarnOpportunitiesTokenRowConverter(
             ),
             topEndContentUM = toRowTopEnd(cryptoCurrencyStatus, possibleEarnAmount),
             bottomEndContentUM = toRowBottomEnd(cryptoCurrencyStatus, earnApyInfo.apy.orZero()),
-            onItemClick = null,
+            onItemClick = {
+                onTokenClick(
+                    userWalletId,
+                    cryptoCurrencyStatus.currency,
+                    earnApyInfo.type,
+                )
+            },
             onItemLongClick = null,
         )
     }
