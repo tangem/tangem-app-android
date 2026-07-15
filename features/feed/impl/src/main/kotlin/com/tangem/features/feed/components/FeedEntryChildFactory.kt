@@ -24,6 +24,7 @@ import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.TokenSummaryComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
@@ -39,6 +40,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val designFeatureToggles: DesignFeatureToggles,
     private val forYouComponentFactory: ForYouComponent.Factory,
     private val tokenSummaryComponentFactory: TokenSummaryComponent.Factory,
+    private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) {
 
     @Serializable
@@ -103,6 +105,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     designFeatureToggles = designFeatureToggles,
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     manageFundsComponentFactory = manageFundsComponentFactory,
+                    marketingBannerComponentFactory = marketingBannerComponentFactory,
                 )
             }
             is Child.TokenList -> {
