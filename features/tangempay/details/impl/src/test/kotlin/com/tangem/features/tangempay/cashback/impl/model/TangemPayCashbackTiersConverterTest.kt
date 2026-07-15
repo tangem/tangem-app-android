@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.pay.model.CashbackPromotions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -38,7 +37,7 @@ internal class TangemPayCashbackTiersConverterTest {
         // Assert
         assertThat(result).containsExactly(
             CashbackTier(
-                planType = TangemPayTariffPlan.Type.BASIC,
+                tierId = "basic",
                 rate = 1,
                 label = "Basic cards",
                 scope = "All purchases",
@@ -46,7 +45,7 @@ internal class TangemPayCashbackTiersConverterTest {
                 monthlyCap = "$100",
             ),
             CashbackTier(
-                planType = TangemPayTariffPlan.Type.PLUS,
+                tierId = "plus",
                 rate = 2,
                 label = "Plus cards",
                 scope = "Everywhere",
@@ -57,7 +56,7 @@ internal class TangemPayCashbackTiersConverterTest {
     }
 
     @Test
-    fun `GIVEN unknown tier WHEN convert THEN rate null and plan type UNKNOWN`() {
+    fun `GIVEN unknown tier WHEN convert THEN rate is null and tier id kept`() {
         // Arrange
         val promotions = promotions(tier(id = "gold", label = "Gold", scope = "All", min = null, cap = null))
 
@@ -67,7 +66,7 @@ internal class TangemPayCashbackTiersConverterTest {
         // Assert
         assertThat(result).containsExactly(
             CashbackTier(
-                planType = TangemPayTariffPlan.Type.UNKNOWN,
+                tierId = "gold",
                 rate = null,
                 label = "Gold",
                 scope = "All",

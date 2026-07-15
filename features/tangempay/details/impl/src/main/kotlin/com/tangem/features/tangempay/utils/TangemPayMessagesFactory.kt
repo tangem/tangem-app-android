@@ -4,7 +4,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.bottomSheetMessage
@@ -149,7 +149,6 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     fun createStayOnPlanMessage(
         planName: String,
         targetPlanName: String,
@@ -161,15 +160,18 @@ internal object TangemPayMessagesFactory {
                     type = MessageBottomSheetUM.Icon.Type.Informative
                     backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
                 }
-                title = stringReference("Do you want to stay on $planName?")
-                body = stringReference("Your transition on $targetPlanName will be canceled")
+                title = resourceReference(R.string.tangempay_current_plan_stay_sheet_title, wrappedList(planName))
+                body = resourceReference(
+                    R.string.tangempay_current_plan_stay_sheet_body,
+                    wrappedList(targetPlanName),
+                )
             }
             secondaryButton {
                 text = resourceReference(R.string.common_cancel)
                 onClick { closeBs() }
             }
             primaryButton {
-                text = stringReference("Stay on $planName")
+                text = resourceReference(R.string.tangempay_current_plan_stay_button, wrappedList(planName))
                 onClick {
                     onStayClick()
                     closeBs()

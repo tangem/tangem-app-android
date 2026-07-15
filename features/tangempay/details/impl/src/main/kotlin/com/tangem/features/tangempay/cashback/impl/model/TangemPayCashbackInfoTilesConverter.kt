@@ -12,17 +12,13 @@ internal class TangemPayCashbackInfoTilesConverter(
 ) {
 
     // TODO([REDACTED_TASK_KEY]): move hardcoded strings to string resources
-    fun convert(
-        tiers: List<CashbackTier>,
-        currentPlanType: TangemPayTariffPlan.Type,
-        currentPlanName: String?,
-    ): TangemPayCashbackInfoTilesUM {
-        val rate = tiers.selectTier(currentPlanType)?.rate
+    fun convert(tiers: List<CashbackTier>, currentPlan: TangemPayTariffPlan?): TangemPayCashbackInfoTilesUM {
+        val rate = tiers.selectTier(currentPlan?.tierId)?.rate
         return TangemPayCashbackInfoTilesUM(
             rate = TangemPayCashbackInfoTilesUM.Tile(
                 iconRes = R.drawable.ic_percent_24,
                 title = stringReference(if (rate != null) "Cashback $rate%" else "Cashback"),
-                subtitle = currentPlanName?.let { stringReference("With your $it plan") } ?: TextReference.EMPTY,
+                subtitle = currentPlan?.name?.let { stringReference("With your $it plan") } ?: TextReference.EMPTY,
                 onClick = onRateClick,
             ),
             accruals = TangemPayCashbackInfoTilesUM.Tile(
@@ -34,9 +30,7 @@ internal class TangemPayCashbackInfoTilesConverter(
         )
     }
 
-    private fun List<CashbackTier>.selectTier(planType: TangemPayTariffPlan.Type): CashbackTier? {
-        return firstOrNull {
-            planType != TangemPayTariffPlan.Type.UNKNOWN && it.planType == planType
-        } ?: firstOrNull()
+    private fun List<CashbackTier>.selectTier(tierId: String?): CashbackTier? {
+        return firstOrNull { it.tierId == tierId } ?: firstOrNull()
     }
 }
