@@ -38,6 +38,7 @@ data class CustomerMeResponse(
         @Json(name = "id") val id: String?,
         @Json(name = "type") val type: String?,
         @Json(name = "name") val name: String?,
+        @Json(name = "program_name") val programName: String?,
         @Json(name = "description_items") val descriptionItems: List<DescriptionItem>?,
         @Json(name = "images") val images: List<Image>? = null,
         @Json(name = "fees") val fees: List<Fee>? = null,
