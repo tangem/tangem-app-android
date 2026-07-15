@@ -69,7 +69,14 @@ internal class DefaultForYouComponent @AssistedInject constructor(
         childFactory = { config, componentContext ->
             when (config) {
                 ForYouBottomSheetConfig.AddToPortfolio -> portfolioSelectorChild(componentContext)
-                is ForYouBottomSheetConfig.ManageFunds -> manageFundsChild(config, componentContext)
+                is ForYouBottomSheetConfig.ManageFunds -> manageFundsChild(
+                    componentContext = componentContext,
+                    launchMode = ManageFundsComponent.LaunchMode.FilteredByRawId(config.rawCurrencyId),
+                )
+                is ForYouBottomSheetConfig.AddFunds -> manageFundsChild(
+                    componentContext = componentContext,
+                    launchMode = ManageFundsComponent.LaunchMode.ChooseToken(config.userWalletId),
+                )
             }
         },
     )
@@ -129,12 +136,12 @@ internal class DefaultForYouComponent @AssistedInject constructor(
         )
 
     private fun manageFundsChild(
-        config: ForYouBottomSheetConfig.ManageFunds,
+        launchMode: ManageFundsComponent.LaunchMode,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = manageFundsComponentFactory.create(
         context = childByContext(componentContext),
         params = ManageFundsComponent.Params(
-            launchMode = ManageFundsComponent.LaunchMode.FilteredByRawId(config.rawCurrencyId),
+            launchMode = launchMode,
             onDismiss = { model.bottomSheetNavigation.dismiss() },
         ),
     )
