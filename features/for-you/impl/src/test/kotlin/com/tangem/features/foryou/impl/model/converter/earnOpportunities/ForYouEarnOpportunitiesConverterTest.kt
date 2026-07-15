@@ -2,17 +2,27 @@ package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.R
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -194,6 +204,74 @@ internal class ForYouEarnOpportunitiesConverterTest {
         }
 
         @Test
+        fun `GIVEN active StakeKit stake WHEN convert THEN the staked validator's rate wins over best preferred`() {
+            // Arrange — the user stakes with v2 (4%), while the best preferred validator offers 10%
+            val staked = createEarnCurrency(tokenId = "ethereum", currencyId = "coin-staked")
+            val stakedStatus = createStatus(
+                staked,
+                createEarnStatusValue(fiatAmount = BigDecimal("100"), stakingBalance = stakeKitBalance("v2")),
+            )
+            val fresh = createEarnCurrency(tokenId = "solana", currencyId = "coin-fresh")
+            val freshStatus = createStatus(fresh, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            val converter = createConverter(
+                yieldStakingAvailability = mapOf(
+                    staked to stakeKitAvailable(
+                        validator(address = "v1", preferred = true, rate = BigDecimal("0.10")),
+                        validator(address = "v2", preferred = false, rate = BigDecimal("0.04")),
+                    ),
+                    fresh to stakingAvailable(apy = BigDecimal("0.05")),
+                ),
+            )
+
+            // Act
+            val result = converter.convert(
+                createAccountStatusList(createPortfolioStatus(listOf(stakedStatus, freshStatus))),
+            )
+
+            // Assert — the staked token's row shows the 4% of the validator actually staked with
+            assertThat((result as EarnOpportunitiesUM.Content).rateOfRow("coin-staked"))
+                .isEqualTo(BigDecimal("0.04").format { percent() })
+        }
+
+        @Test
+        fun `GIVEN stake with unknown validator WHEN convert THEN falls back to best preferred validator rate`() {
+            // Arrange — the staked validator is not among the option's validators
+            val staked = createEarnCurrency(tokenId = "ethereum", currencyId = "coin-staked")
+            val stakedStatus = createStatus(
+                staked,
+                createEarnStatusValue(fiatAmount = BigDecimal("100"), stakingBalance = stakeKitBalance("unknown")),
+            )
+            val fresh = createEarnCurrency(tokenId = "solana", currencyId = "coin-fresh")
+            val freshStatus = createStatus(fresh, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            val converter = createConverter(
+                yieldStakingAvailability = mapOf(
+                    staked to stakeKitAvailable(
+                        validator(address = "v1", preferred = true, rate = BigDecimal("0.10")),
+                        validator(address = "v2", preferred = true, rate = BigDecimal("0.12")),
+                        validator(address = "v3", preferred = false, rate = BigDecimal("0.50")),
+                    ),
+                    fresh to stakingAvailable(apy = BigDecimal("0.05")),
+                ),
+            )
+
+            // Act
+            val result = converter.convert(
+                createAccountStatusList(createPortfolioStatus(listOf(stakedStatus, freshStatus))),
+            )
+
+            // Assert — the best *preferred* rate (12%) is used; the non-preferred 50% is ignored
+            assertThat((result as EarnOpportunitiesUM.Content).rateOfRow("coin-staked"))
+                .isEqualTo(BigDecimal("0.12").format { percent() })
+        }
+
+        /** Extracts the rendered rate (the styled bottom-end text) of the row with the given [id]. */
+        private fun EarnOpportunitiesUM.Content.rateOfRow(id: String): String {
+            val row = tokenList.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
+            val bottomEnd = row.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            return (bottomEnd.text as TextReference.StyledStr).value
+        }
+
+        @Test
         fun `GIVEN staking-only token WHEN convert THEN staking rate is used for the reward`() {
             // Arrange
             val currency = createEarnCurrency()
@@ -209,6 +287,39 @@ internal class ForYouEarnOpportunitiesConverterTest {
             val expectedTotal = BigDecimal("200").multiply(BigDecimal("0.04"))
             assertThat((result as EarnOpportunitiesUM.Content).potentialReward)
                 .isEqualTo(expectedTotal.expectedPerYearText())
+        }
+    }
+
+    @Nested
+    inner class AccountOrdering {
+
+        @Test
+        fun `GIVEN several accounts WHEN convert THEN accounts ordered by potential reward descending`() {
+            // Arrange — same 5% rate; the second account holds more fiat (200 vs 100), so it earns more
+            val smallHolding = createEarnCurrency(tokenId = "ethereum", currencyId = "coin-eth")
+            val largeHolding = createEarnCurrency(tokenId = "solana", currencyId = "coin-sol")
+            val smallAccount = createPortfolioStatus(
+                currencies = listOf(createStatus(smallHolding, createEarnStatusValue(fiatAmount = BigDecimal("100")))),
+                account = MockAccounts.createAccount(derivationIndex = 1),
+            )
+            val largeAccount = createPortfolioStatus(
+                currencies = listOf(createStatus(largeHolding, createEarnStatusValue(fiatAmount = BigDecimal("200")))),
+                account = MockAccounts.createAccount(derivationIndex = 2),
+            )
+            val converter = createConverter(
+                yieldStakingAvailability = mapOf(
+                    smallHolding to stakingAvailable(apy = BigDecimal("0.05")),
+                    largeHolding to stakingAvailable(apy = BigDecimal("0.05")),
+                ),
+            )
+
+            // Act
+            val result = converter.convert(createAccountStatusList(smallAccount, largeAccount))
+
+            // Assert — the higher-earning account's token leads the flat list
+            assertThat((result as EarnOpportunitiesUM.Content).tokenList.map { it.tokenRowUM.id })
+                .containsExactly("coin-sol", "coin-eth")
+                .inOrder()
         }
     }
 
@@ -233,6 +344,39 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
     private fun stakingAvailable(apy: BigDecimal): StakingAvailability =
         StakingAvailability.Available(option = stakingOption(apy))
+
+    private fun stakeKitAvailable(vararg validatorList: Yield.Validator): StakingAvailability {
+        // A real StakeKit option with a real integration id: stubbing `integrationId` on a mock would
+        // make mockk instrument StakingIntegrationID.StakeKit, whose implementations are enums that the
+        // JVM refuses to retransform ("cannot change the class modifiers").
+        val yieldModel: Yield = mockk {
+            every { validators } returns validatorList.toList()
+            every { apy } returns BigDecimal("0.10")
+            every { token } returns mockk()
+            every { isAvailable } returns true
+        }
+        return StakingAvailability.Available(
+            option = StakingOption.StakeKit(
+                integrationId = StakingIntegrationID.StakeKit.Coin.Ton,
+                yield = yieldModel,
+            ),
+        )
+    }
+
+    private fun validator(address: String, preferred: Boolean, rate: BigDecimal): Yield.Validator = mockk {
+        every { this@mockk.address } returns address
+        every { this@mockk.preferred } returns preferred
+        every { rewardInfo } returns RewardInfo(rate = rate, type = RewardType.APY)
+    }
+
+    /** An active StakeKit balance whose items point at the given validator addresses. */
+    private fun stakeKitBalance(vararg validatorAddresses: String?): StakingBalance.Data.StakeKit = mockk {
+        every { balance } returns mockk {
+            every { items } returns validatorAddresses.map { address ->
+                mockk<BalanceItem> { every { validatorAddress } returns address }
+            }
+        }
+    }
 
     /** Mirrors the production reward computation: `fiat * (yieldPercent / 100)`, rendered per year. */
     private fun expectedPerYearReward(fiat: BigDecimal, yieldPercent: BigDecimal) =
