@@ -25,6 +25,7 @@ dependencies {
     api(projects.features.wallet.api)
     api(projects.features.account.api)
     api(projects.features.commonFeatures.api)
+    api(projects.features.marketing.api)
     implementation(projects.features.promoBanners.api)
 
     /* Data */
@@ -54,6 +55,7 @@ dependencies {
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.news)
+    implementation(projects.domain.marketing.models)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.earn)
