@@ -19,8 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds.tabs.TangemSegmentUM
+import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -78,6 +81,15 @@ internal fun ForYouContent(
 
         ForYouPortfolioReview(
             portfolioReviewUM = forYouUM.portfolioReviewUM,
+            periodPickerUM = forYouUM.periodPickerUM,
+            onPeriodClick = forYouUM.onPeriodClick,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+
+        SpacerH(48.dp)
+
+        ForYouEarnOpportunities(
+            earnOpportunitiesUM = forYouUM.earnOpportunities,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 
@@ -114,6 +126,17 @@ private class ForYouContentPreviewProvider : PreviewParameterProvider<ForYouUM> 
                 notifications = persistentListOf(ForYouNotification.UsedOutdatedData),
                 earnOpportunities = ForYouEarnOpportunitiesPreviewData.tokensRewards,
                 portfolioReviewUM = ForYouPortfolioReviewPreviewData.reviewContent,
+                periodPickerUM = TangemSegmentedPickerUM(
+                    items = persistentListOf(
+                        TangemSegmentUM(id = "0", title = stringReference("Day")),
+                        TangemSegmentUM(id = "1", title = stringReference("Week")),
+                        TangemSegmentUM(id = "2", title = stringReference("Month")),
+                    ),
+                    initialSelectedItem = TangemSegmentUM(id = "0", title = stringReference("Day")),
+                    isFixed = true,
+                    isAltSurface = true,
+                ),
+                onPeriodClick = {},
             ),
         )
 }

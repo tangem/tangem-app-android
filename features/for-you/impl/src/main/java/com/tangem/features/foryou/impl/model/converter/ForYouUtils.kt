@@ -15,7 +15,11 @@ import java.math.RoundingMode
 /** Number of suggested top-earn tokens shown in the earn-opportunities block. */
 internal const val FOR_YOU_TOP_EARN_TOKENS_COUNT = 5
 
-/** Batch size for getting top earn tokens in single and only page */
+/**
+ * Batch size for the top-earn-tokens request. Only the first batch is ever fetched (the section shows
+ * at most [FOR_YOU_TOP_EARN_TOKENS_COUNT] rows), but it is requested larger so that filtering out
+ * already-active tokens still leaves enough candidates to fill the list.
+ */
 internal const val TOP_EARN_TOKENS_BATCH_SIZE = 30
 
 /** Divisor converting backend percent values (5.5) to fractions (0.055). */
@@ -68,11 +72,11 @@ internal data class EarnApyInfo(
 /**
  * Earn-eligible currencies of one account with their resolved rates.
  *
- * @property accountPotentialReward sum of [EarnApyInfo.potentialRewards] over [earnCurrencues];
+ * @property accountPotentialReward sum of [EarnApyInfo.potentialRewards] over [earnCurrencies];
  * accounts are ordered by it, descending
  */
 internal data class EarnOpportunities(
     val account: Account.CryptoPortfolio,
-    val earnCurrencues: Map<CryptoCurrencyStatus, EarnApyInfo>,
+    val earnCurrencies: Map<CryptoCurrencyStatus, EarnApyInfo>,
     val accountPotentialReward: BigDecimal,
 )
