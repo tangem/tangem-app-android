@@ -205,26 +205,23 @@ internal class AddressBookListModelTest {
         verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
     }
 
-    private fun verifiedContact(id: String, name: String): VerifiedContact = VerifiedContact(
-        contact = Contact(
-            id = ContactId(id),
-            walletId = UserWalletId("a"),
-            name = ContactName(name).getOrNull()!!,
-            icon = "",
-            iconColor = CryptoPortfolioIcon.Color.Azure.name,
-            createdAt = TIMESTAMP,
-            updatedAt = TIMESTAMP,
-            addresses = listOf(
-                AddressEntry(
-                    id = AddressEntryId("e-$id"),
-                    address = "0xABC",
-                    networkId = Network.RawID("ethereum"),
-                    memo = null,
-                    signature = "sig",
-                ),
+    private fun verifiedContact(id: String, name: String): Contact = Contact(
+        id = ContactId(id),
+        walletId = UserWalletId("a"),
+        name = ContactName(name).getOrNull()!!,
+        icon = "",
+        iconColor = CryptoPortfolioIcon.Color.Azure.name,
+        createdAt = TIMESTAMP,
+        updatedAt = TIMESTAMP,
+        addresses = listOf(
+            AddressEntry(
+                id = AddressEntryId("e-$id"),
+                address = "0xABC",
+                networkId = Network.RawID("ethereum"),
+                memo = null,
+                signature = "sig",
             ),
         ),
-        invalidEntries = emptyList(),
     )
 
     private fun createModel(
