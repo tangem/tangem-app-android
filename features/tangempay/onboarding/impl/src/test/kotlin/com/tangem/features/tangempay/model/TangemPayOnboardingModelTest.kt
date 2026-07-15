@@ -9,17 +9,23 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,6 +39,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayOnboardingModelTest {
@@ -43,12 +50,14 @@ internal class TangemPayOnboardingModelTest {
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val deeplink = "tangem://onboard-visa"
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(router, repository, eligibilityManager, analytics, produceInitialDataUseCase, urlOpener)
+        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
     }
 
     @ParameterizedTest
@@ -166,6 +175,61 @@ internal class TangemPayOnboardingModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN tiers off and KYC not approved WHEN onboarding starts THEN order created before KYC`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
+        coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
+        coEvery { repository.getCustomerInfo(userWalletId) } returns
+            buildCustomerInfo(kycStatus = KycStatus.PENDING).right()
+        coEvery { repository.createOrder(userWalletId) } returns "order_1".right()
+
+        // Act
+        val model = createModel(TangemPayOnboardingComponent.Params.HotWalletOnboarding(userWalletId))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { repository.createOrder(userWalletId) }
+        verify(exactly = 1) {
+            router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId), onComplete = any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN tiers on and KYC not approved WHEN onboarding starts THEN order not created before KYC`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+        coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
+        coEvery { repository.getCustomerInfo(userWalletId) } returns
+            buildCustomerInfo(kycStatus = KycStatus.PENDING).right()
+
+        // Act
+        val model = createModel(TangemPayOnboardingComponent.Params.HotWalletOnboarding(userWalletId))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { repository.createOrder(any()) }
+        verify(exactly = 1) {
+            router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId), onComplete = any())
+        }
+        model.onDestroy()
+    }
+
+    private fun buildCustomerInfo(kycStatus: KycStatus) = CustomerInfo(
+        customerId = "cust_1",
+        productInstances = emptyList(),
+        cards = emptyList(),
+        kycStatus = kycStatus,
+        state = CustomerInfo.State.NEW,
+        fiatBalance = null,
+        cryptoBalance = null,
+        availableForWithdrawal = BigDecimal.ZERO,
+        tariffPlan = null,
+    )
+
     private fun TestScope.createModel(params: TangemPayOnboardingComponent.Params): TangemPayOnboardingModel {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         return TangemPayOnboardingModel(
@@ -183,6 +247,7 @@ internal class TangemPayOnboardingModelTest {
             produceInitialDataUseCase = produceInitialDataUseCase,
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
     }
 
