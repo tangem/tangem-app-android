@@ -7,6 +7,8 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.utils.coroutines.AppCoroutineScope
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 /**
@@ -20,6 +22,7 @@ import java.util.UUID
 class CreateVirtualAccountOrderUseCase(
     private val onboardingRepository: OnboardingRepository,
     private val pollingUseCase: StartTangemPayOrderPollingUseCase,
+    private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
@@ -33,10 +36,12 @@ class CreateVirtualAccountOrderUseCase(
                     idempotencyKey = UUID.randomUUID().toString(),
                 ).bind()
                 onboardingRepository.storeVirtualAccountOrderId(userWalletId = userWalletId, vaOrderId = vaOrderId)
-                pollingUseCase.invoke(
-                    order = TangemPayOrderInfo(orderId = vaOrderId, orderStatus = OrderStatus.NEW),
-                    userWalletId = userWalletId,
-                )
+                appCoroutineScope.launch {
+                    pollingUseCase.invoke(
+                        order = TangemPayOrderInfo(orderId = vaOrderId, orderStatus = OrderStatus.NEW),
+                        userWalletId = userWalletId,
+                    )
+                }
             }
     }
 }
