@@ -32,8 +32,10 @@ data class CashbackPromotionsResponse(
 
     @JsonClass(generateAdapter = true)
     data class AdditionalCashback(
-        @Json(name = "promotion_id") val promotionId: String?,
-        @Json(name = "label") val label: String?,
-        @Json(name = "scope") val scope: String?,
+        @Json(name = "id") val id: String?,
+        @Json(name = "name") val name: String?,
+        @Json(name = "description") val description: String?,
+        @Json(name = "is_permanent") val isPermanent: Boolean?,
+        @Json(name = "end_date") val endDate: String?,
     )
 }
