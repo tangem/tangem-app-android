@@ -24,6 +24,8 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
                 createTopEarnToken(tokenId = "ethereum", networkRawId = "ETH"),
                 createTopEarnToken(tokenId = "solana", networkRawId = "SOL"),
             ).right(),
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act
@@ -45,6 +47,8 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
             topEarnTokens = List(8) { index ->
                 createTopEarnToken(tokenId = "token-$index", networkRawId = "NET")
             }.right(),
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act
@@ -69,6 +73,8 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
                 createTopEarnToken(tokenId = "usd-coin", networkRawId = "ETH"),
                 createTopEarnToken(tokenId = "usd-coin", networkRawId = "SOL"),
             ).right(),
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act
@@ -80,9 +86,12 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
 
     @Test
     fun `GIVEN no top tokens loaded WHEN convert THEN content with empty suggestions`() {
-        // Arrange
+        // Arrange — the callback instance is shared with `expected` so the whole-object equality holds
+        val onAllEarnTokensClick: () -> Unit = {}
         val converter = ForYouEarnOpportunitiesTokensActiveConverter(
             topEarnTokens = null,
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = onAllEarnTokensClick,
         )
 
         // Act
@@ -94,6 +103,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
             subtitleRes = R.string.for_you_earn_opportunities_all_tokens_active,
             potentialReward = null,
             potentialRewardType = null,
+            onAllEarnTokensClick = onAllEarnTokensClick,
         )
         assertThat(result).isEqualTo(expected)
     }
@@ -103,6 +113,8 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
         // Arrange
         val converter = ForYouEarnOpportunitiesTokensActiveConverter(
             topEarnTokens = EarnError.NotHttpError().left(),
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act
