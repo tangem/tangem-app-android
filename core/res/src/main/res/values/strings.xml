@@ -869,6 +869,8 @@
   <string name="main_add_funds_promo_description">Buy or receive crypto to start using your wallet.</string>
   <string name="main_add_funds_promo_title">Get your first crypto</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
+  <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
+  <string name="prediction_account_title">Prediction account</string>
   <string name="main_manage_tokens">Manage tokens</string>
   <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
