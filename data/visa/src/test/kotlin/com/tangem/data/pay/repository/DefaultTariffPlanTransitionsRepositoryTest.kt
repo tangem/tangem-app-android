@@ -91,8 +91,10 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
                 type = TangemPayTariffPlanTransition.Type.UPGRADE,
                 plan = TangemPayTariffPlan(
                     id = PLAN_ID,
-                    type = TangemPayTariffPlan.Type.PLUS,
+                    tierId = "PLUS",
+                    isBasicTier = false,
                     name = PLAN_NAME,
+                    programName = PROGRAM_NAME,
                     descriptionItems = emptyList(),
                     images = emptyList(),
                     fees = emptyList(),
@@ -187,6 +189,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         id = id,
         type = "PLUS",
         name = PLAN_NAME,
+        programName = PROGRAM_NAME,
         descriptionItems = null,
         images = null,
         fees = null,
@@ -197,6 +200,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         const val AUTH_HEADER = "auth-header"
         const val PLAN_ID = "plan-plus"
         const val PLAN_NAME = "Plus"
+        const val PROGRAM_NAME = "program-plus"
         const val PENDING_PLAN_ID = "plan-basic"
     }
 }

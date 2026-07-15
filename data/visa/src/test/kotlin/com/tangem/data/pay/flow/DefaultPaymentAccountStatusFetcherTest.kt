@@ -120,8 +120,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     private val basicPlan = TangemPayTariffPlan(
         id = "plan_basic",
-        type = TangemPayTariffPlan.Type.BASIC,
+        tierId = "BASIC",
+        isBasicTier = true,
         name = "Basic",
+        programName = "program_basic",
         descriptionItems = emptyList(),
         images = emptyList(),
         fees = emptyList(),
