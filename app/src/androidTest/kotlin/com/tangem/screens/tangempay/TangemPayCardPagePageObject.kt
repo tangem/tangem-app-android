@@ -89,6 +89,16 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         hasTestTag(TangemPayTestTags.CARD_DETAILS_COPY_CVC)
         useUnmergedTree = true
     }
+
+    val dailyLimitChangeButton: KNode = child {
+        hasTestTag(TangemPayTestTags.DAILY_LIMIT_CHANGE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val dailyLimitValue: KNode = child {
+        hasTestTag(TangemPayTestTags.DAILY_LIMIT_CURRENT_VALUE)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTangemPayCardPageScreen(function: TangemPayCardPagePageObject.() -> Unit) =
