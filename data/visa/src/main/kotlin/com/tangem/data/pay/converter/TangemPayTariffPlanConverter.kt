@@ -2,16 +2,29 @@ package com.tangem.data.pay.converter
 
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import java.util.Locale
 
 internal object TangemPayTariffPlanConverter {
 
     fun convert(value: CustomerMeResponse.TariffPlan?): TangemPayTariffPlan? {
         val id = value?.id ?: return null
         val name = value.name ?: return null
+        val programName = value.programName ?: return null
+
+        // We cannot base our logic on knowledge what exact tier type is it.
+        // Use it only as identifier to get data from other responses
+        val tierId = value.type ?: return null
+
+        // Basic tier is a default tier. We can base some features on it.
+        // Other tiers are adjusted from admin panel. It is not guaranteed to have it in future
+        val isBasicTier = tierId.uppercase(Locale.US) == "BASIC"
+
         return TangemPayTariffPlan(
             id = id,
-            type = TangemPayTariffPlan.Type.fromString(value.type),
+            tierId = tierId,
+            isBasicTier = isBasicTier,
             name = name,
+            programName = programName,
             descriptionItems = value.descriptionItems.orEmpty().mapNotNull(::convertDescriptionItem),
             images = value.images.orEmpty().mapNotNull(::convertImage),
             fees = value.fees.orEmpty().mapNotNull(::convertFee),
