@@ -1914,6 +1914,7 @@
   <string name="token_details_staking_block_title">Service de Staking</string>
   <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% %2$s le réseau</string>
   <string name="token_details_token_type_subtitle_no_standard">Jeton dans le %%image%% %1$s réseau</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s dans %%image%% %2$s</string>
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
   <string name="token_receive_show_qr_code_title">Afficher le code QR</string>
