@@ -62,6 +62,7 @@ internal sealed interface EarnOpportunitiesUM {
         @param:StringRes val subtitleRes: Int,
         val potentialReward: TextReference?,
         val potentialRewardType: TextReference?,
+        val onAllEarnTokensClick: () -> Unit,
     ) : EarnOpportunitiesUM
 }
 
