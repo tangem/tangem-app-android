@@ -8,7 +8,6 @@ import com.tangem.domain.addressbook.model.AddressEntryId
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
-import com.tangem.domain.addressbook.model.VerifiedContact
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -53,7 +52,7 @@ class ContactSignatureVerifierTest {
     inner class VerifyContacts {
 
         @Test
-        fun `GIVEN mixed entries WHEN verifyContacts THEN displays only valid AND keeps invalid for analytics`() =
+        fun `GIVEN mixed entries WHEN verifyContacts THEN keeps only the valid ones`() =
             runTest {
                 // Arrange
                 val valid = entry(id = "valid", address = "0xvalid", memo = null, signature = "AABB")
@@ -65,12 +64,7 @@ class ContactSignatureVerifierTest {
                 val result = verifier.verifyContacts(listOf(contact))
 
                 // Assert
-                assertThat(result).containsExactly(
-                    VerifiedContact(
-                        contact = contact.copy(addresses = listOf(valid)),
-                        invalidEntries = listOf(invalid),
-                    ),
-                )
+                assertThat(result).containsExactly(contact.copy(addresses = listOf(valid)))
             }
 
         @Test
@@ -101,7 +95,7 @@ class ContactSignatureVerifierTest {
             }
 
         @Test
-        fun `GIVEN some entries fail verification WHEN verifyContacts THEN partitions them preserving order`() =
+        fun `GIVEN some entries fail verification WHEN verifyContacts THEN keeps valid ones preserving order`() =
             runTest {
                 // Arrange
                 val valid1 = entry(id = "addr-1", address = "0xabc", memo = null, signature = "AABB")
@@ -114,8 +108,7 @@ class ContactSignatureVerifierTest {
                 val result = verifier.verifyContacts(listOf(contact)).single()
 
                 // Assert
-                assertThat(result.contact.addresses).containsExactly(valid1, valid2).inOrder()
-                assertThat(result.invalidEntries).containsExactly(invalid)
+                assertThat(result.addresses).containsExactly(valid1, valid2).inOrder()
             }
 
         @Test
@@ -135,8 +128,7 @@ class ContactSignatureVerifierTest {
 
                 // Assert
                 assertThat(signaturesSlot.captured.map { it.toHexString() }).containsExactly("AABB")
-                assertThat(result.contact.addresses).containsExactly(signed)
-                assertThat(result.invalidEntries).containsExactly(malformed)
+                assertThat(result.addresses).containsExactly(signed)
             }
 
         @Test
@@ -199,12 +191,7 @@ class ContactSignatureVerifierTest {
                 val result = verifier.verifyContacts(listOf(droppedContact, keptContact))
 
                 // Assert
-                assertThat(result).containsExactly(
-                    VerifiedContact(
-                        contact = keptContact.copy(addresses = listOf(validEntry)),
-                        invalidEntries = emptyList(),
-                    ),
-                )
+                assertThat(result).containsExactly(keptContact.copy(addresses = listOf(validEntry)))
             }
 
         @Test

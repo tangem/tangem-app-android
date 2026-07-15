@@ -4,7 +4,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.addressbook.model.VerifiedContact
+import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.addressbook.MatchedContact
@@ -23,8 +23,8 @@ import kotlinx.collections.immutable.toImmutableList
 @Suppress("LongParameterList")
 internal class UpdateAddressBookListContentTransformer(
     wallets: Map<UserWalletId, UserWallet>,
-    private val allContacts: List<VerifiedContact>,
-    private val matchedContacts: List<VerifiedContact>,
+    private val allContacts: List<Contact>,
+    private val matchedContacts: List<Contact>,
     private val mode: AddressBookRoute.ListMode,
     private val selectedWalletId: String?,
     private val query: String,
@@ -73,14 +73,14 @@ internal class UpdateAddressBookListContentTransformer(
             DefaultContactConverter(onContactClick).convertList(matchedContacts)
         is AddressBookRoute.ListMode.Selector ->
             SelectorContactConverter(onPickContact)
-                .convertList(ContactMatcher.match(matchedContacts.map { it.contact }, mode.networkId))
+                .convertList(ContactMatcher.match(matchedContacts, mode.networkId))
     }
 
     /** Wallets that own at least one contact (respecting the network filter in selector mode) — drives chip visibility. */
     private fun totalWalletIds(): Set<String> = when (val mode = mode) {
-        AddressBookRoute.ListMode.Default -> allContacts.mapTo(mutableSetOf()) { it.contact.walletId.stringValue }
+        AddressBookRoute.ListMode.Default -> allContacts.mapTo(mutableSetOf()) { it.walletId.stringValue }
         is AddressBookRoute.ListMode.Selector ->
-            ContactMatcher.match(allContacts.map { it.contact }, mode.networkId).mapTo(mutableSetOf()) { it.walletId }
+            ContactMatcher.match(allContacts, mode.networkId).mapTo(mutableSetOf()) { it.walletId }
     }
 
     private fun contentMode(): ContentMode = when (mode) {
