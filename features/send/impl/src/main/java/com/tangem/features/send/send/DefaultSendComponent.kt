@@ -22,6 +22,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.navigation.EditReturnTracker
 import com.tangem.features.send.api.subcomponents.amount.AmountRoute
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.api.subcomponents.amount.SendAmountComponentParams
@@ -61,6 +62,8 @@ internal class DefaultSendComponent @AssistedInject constructor(
 
     private val model: SendModel = getOrCreateModel(params = params, router = innerRouter)
 
+    private val editReturnTracker = EditReturnTracker<CommonSendRoute> { it.isEditMode }
+
     private val childStack = childStack(
         key = "sendInnerStack",
         source = stackNavigation,
@@ -83,6 +86,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
             lifecycle = lifecycle,
             mode = ObserveLifecycleMode.CREATE_DESTROY,
         ) { stack ->
+            val isReturnedFromEdit = editReturnTracker.onRouteActivated(stack.active.configuration)
             when (val activeComponent = stack.active.instance) {
                 is SendConfirmComponent -> {
                     val fromCurrency = params.currency
@@ -99,8 +103,9 @@ internal class DefaultSendComponent @AssistedInject constructor(
                             type = model.consumeEntryType(),
                         ),
                     )
-                    if (childStack.value.active.configuration.isEditMode) {
-                        activeComponent.updateState(model.uiState.value)
+                    // A reused Confirm gets no constructor state — re-push the edited fields on edit-return
+                    if (isReturnedFromEdit) {
+                        activeComponent.updateEditedState(model.uiState.value)
                     }
                 }
                 is SendAmountComponent -> {
