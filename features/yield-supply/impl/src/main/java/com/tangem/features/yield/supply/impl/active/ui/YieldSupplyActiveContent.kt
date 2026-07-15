@@ -40,6 +40,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import kotlinx.collections.immutable.persistentListOf
@@ -51,6 +52,7 @@ internal fun YieldSupplyActiveContent(
     isBalanceHidden: Boolean,
     onReadMoreClick: () -> Unit,
     chartComponent: ComposableContentComponent,
+    marketingBannerComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -86,6 +88,10 @@ internal fun YieldSupplyActiveContent(
                     }
                 }
             }
+        }
+
+        TangemThemeRedesign {
+            marketingBannerComponent.Content(Modifier.fillMaxWidth())
         }
 
         AnimatedVisibility(state.notifications.isNotEmpty()) {
@@ -418,6 +424,7 @@ private fun YieldSupplyActiveBottomSheet_Preview(
             state = params,
             isBalanceHidden = true,
             chartComponent = ComposableContentComponent.EMPTY,
+            marketingBannerComponent = ComposableContentComponent.EMPTY,
             onReadMoreClick = {},
         )
     }
