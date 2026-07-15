@@ -2,7 +2,6 @@ package com.tangem.data.promo
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.promo.converter.PromoCampaignConverter
-import com.tangem.data.promo.store.PromoEnrollmentStore
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
@@ -12,6 +11,7 @@ import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.EnrollResult
+import com.tangem.domain.promo.models.EnrolledTokenReward
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.models.TokenReward
@@ -21,7 +21,6 @@ import kotlinx.coroutines.withContext
 internal class DefaultPromoRepository(
     private val promotionsSupplier: PromotionsSupplier,
     private val tangemApi: TangemTechApi,
-    private val enrollmentStore: PromoEnrollmentStore,
     private val moshi: Moshi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PromoRepository {
@@ -31,9 +30,6 @@ internal class DefaultPromoRepository(
         userWalletId: UserWalletId,
         forceRefresh: Boolean,
     ): PromoCampaignState = withContext(dispatchers.io) {
-        enrollmentStore.getSyncOrNull(campaign)?.let {
-            return@withContext PromoCampaignState.Enrolled(campaign, it)
-        }
         val all = promotionsSupplier.getPromotions(userWalletId, forceRefresh)
             .promotions.firstOrNull { it.name == campaign.slug }?.all
         when {
@@ -56,7 +52,6 @@ internal class DefaultPromoRepository(
         when (val response = tangemApi.createPromotionRegistration(body)) {
             is ApiResponse.Success -> {
                 val saved = response.data.data.tokenReward.toDomain()
-                enrollmentStore.store(campaign, saved)
                 EnrollResult.Success(saved)
             }
             is ApiResponse.Error -> {
@@ -64,8 +59,10 @@ internal class DefaultPromoRepository(
                 val conflict = (cause as? ApiResponseError.HttpException)
                     ?.takeIf { it.code == ApiResponseError.HttpException.Code.CONFLICT }
                 if (conflict != null) {
-                    val existing = parseConflict(conflict.errorBody)?.data?.tokenReward?.toDomain() ?: tokenReward
-                    enrollmentStore.store(campaign, existing)
+                    val existing = parseConflict(conflict.errorBody)?.data
+                        ?.tokenReward
+                        ?.toDomain()
+                        ?: tokenReward.toEnrolledTokenReward()
                     EnrollResult.AlreadyEnrolled(existing)
                 } else {
                     throw cause
@@ -84,11 +81,20 @@ internal class DefaultPromoRepository(
     private fun TokenReward.toDto() = CreatePromotionRegistrationBody.TokenRewardDto(
         tokenAddress = tokenAddress,
         networkId = networkId,
+        userAddress = userAddress,
+        tokenId = tokenId,
     )
 
-    private fun CreatePromotionRegistrationBody.TokenRewardDto.toDomain() = TokenReward(
+    private fun TokenReward.toEnrolledTokenReward() = EnrolledTokenReward(
         tokenAddress = tokenAddress,
         networkId = networkId,
+        tokenId = tokenId,
+    )
+
+    private fun PromotionRegistrationResponse.RegisteredTokenRewardDto.toDomain() = EnrolledTokenReward(
+        tokenAddress = tokenAddress,
+        networkId = networkId,
+        tokenId = tokenId,
     )
 
     private companion object {
