@@ -9,13 +9,16 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnType
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class ForYouEarnOpportunitiesTopTokenRowConverterTest {
 
-    private val converter = ForYouEarnOpportunitiesTopTokenRowConverter()
+    private val converter = ForYouEarnOpportunitiesTopTokenRowConverter(onTokenClick = { _, _, _ -> })
 
     @Test
     fun `GIVEN top-earn token WHEN convert THEN row carries currency identity and network subtitle`() {
@@ -74,6 +77,25 @@ internal class ForYouEarnOpportunitiesTopTokenRowConverterTest {
         val row = result.tokenRowUM as TangemTokenRowUM.Content
         assertThat(row.bottomEndContentUM).isEqualTo(
             TangemTokenRowUM.EndContentUM.Content(text = resourceReference(R.string.common_yield_mode)),
+        )
+    }
+
+    @Test
+    fun `GIVEN yield token row clicked WHEN convert THEN callback gets null wallet and yield type with raw apy`() {
+        // Arrange — suggestions are tokens the user doesn't hold, so no wallet id is forwarded
+        val topToken = createTopEarnToken(type = EarnType.YIELD, apy = "7.25")
+        var clicked: Triple<UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType>? = null
+        val converter = ForYouEarnOpportunitiesTopTokenRowConverter(
+            onTokenClick = { id, currency, type -> clicked = Triple(id, currency, type) },
+        )
+
+        // Act
+        val result = converter.convert(topToken)
+        (result.tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
+
+        // Assert
+        assertThat(clicked).isEqualTo(
+            Triple(null, topToken.cryptoCurrency, ForYouEarnOpportunitiesType.YieldSupply(apy = "7.25")),
         )
     }
 
