@@ -14,11 +14,13 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.WalletSelectorListener
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
@@ -46,6 +48,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(), WalletSelectorListener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -118,7 +121,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 .onRight { customerInfo ->
                     when {
                         customerInfo.kycStatus != KycStatus.APPROVED -> {
-                            if (customerInfo.productInstance == null) {
+                            if (shouldCreateOrderBeforeKyc(customerInfo)) {
                                 repository.createOrder(userWalletId)
                                     .onLeft { error ->
                                         TangemLogger.e("Error creating order before KYC: $error")
@@ -209,7 +212,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         if (customerInfo.kycStatus == KycStatus.APPROVED) {
                             back()
                         } else {
-                            if (customerInfo.productInstance == null) {
+                            if (shouldCreateOrderBeforeKyc(customerInfo)) {
                                 repository.createOrder(userWalletId)
                                     .onLeft { error ->
                                         TangemLogger.e("Error creating order before KYC: $error")
@@ -221,6 +224,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 )
         }
     }
+
+    private fun shouldCreateOrderBeforeKyc(customerInfo: CustomerInfo): Boolean =
+        !tangemPayFeatureToggles.isTiersPlusPlanEnabled && customerInfo.productInstance == null
 
     private fun openKyc(userWalletId: UserWalletId) {
         router.replaceAll(

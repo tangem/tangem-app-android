@@ -15,6 +15,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -159,7 +160,11 @@ internal class DefaultWalletRouter @Inject constructor(
     }
 
     override fun openTangemPaySelectPlan(status: AccountStatus.Payment) {
-        // TODO v_rodionov: [REDACTED_TASK_KEY] Tiers Onboarding - part 2
+        val route = AppRoute.TangemPayDetails(
+            status = status,
+            initialRoute = TangemPayDetailsInitialRoute.SELECT_PLAN,
+        )
+        router.push(route)
     }
 
     override fun openYieldSupplyBottomSheet(
