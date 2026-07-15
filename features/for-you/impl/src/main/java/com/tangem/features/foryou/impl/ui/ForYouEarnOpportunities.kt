@@ -3,6 +3,7 @@ package com.tangem.features.foryou.impl.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
@@ -19,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -84,6 +86,20 @@ internal fun ForYouEarnOpportunities(earnOpportunitiesUM: EarnOpportunitiesUM, m
             tokenList = earnOpportunitiesUM.tokenList,
             modifier = Modifier.padding(top = 8.dp),
         )
+
+        if (earnOpportunitiesUM is EarnOpportunitiesUM.Content) {
+            TangemButton(
+                text = stringReference("Explore all tokens"), // todo FOR YOU lokalize
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X9,
+                isEnabled = true,
+                contentDescription = "Explore all tokens", // todo FOR YOU lokalize
+                onClick = earnOpportunitiesUM.onAllEarnTokensClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+            )
+        }
     }
 }
 
