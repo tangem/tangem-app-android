@@ -82,6 +82,12 @@ internal class DefaultSendComponent @AssistedInject constructor(
     )
 
     init {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.SendScreenOpened(
+                categoryName = model.analyticCategoryName,
+                source = model.analyticsSendSource,
+            ),
+        )
         childStack.subscribe(
             lifecycle = lifecycle,
             mode = ObserveLifecycleMode.CREATE_DESTROY,
