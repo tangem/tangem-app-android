@@ -104,6 +104,7 @@
     <item quantity="other">%d件のアドレス</item>
   </plurals>
   <string name="address_book_choose_address">アドレスを選択</string>
+  <string name="address_book_clear_all_networks">すべてクリア</string>
   <string name="address_book_contact">連絡先</string>
   <string name="address_book_contact_name">連絡先名</string>
   <string name="address_book_copy_address">アドレスをコピー</string>
@@ -129,10 +130,12 @@
   <string name="address_book_no_contacts">連絡先はまだありません</string>
   <string name="address_book_no_contacts_description">追加した連絡先はここに表示されます。</string>
   <string name="address_book_remove_address">アドレスを削除</string>
+  <string name="address_book_save_address">アドレスを保存</string>
   <string name="address_book_save_contact">連絡先を保存</string>
   <string name="address_book_save_to_wallet_title">ウォレットに保存</string>
   <string name="address_book_save_wallet_to_description">この連絡先は、このウォレットのアドレス帳に紐付けられます。</string>
   <string name="address_book_search_no_results">結果が見つかりませんでした。\n別の名前を試してください。</string>
+  <string name="address_book_select_all_networks">すべて選択</string>
   <string name="address_book_select_network">ネットワークを選択</string>
   <string name="address_book_title">連絡先</string>
   <string name="address_book_unsaved_changes">保存されていない変更</string>
