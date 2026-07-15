@@ -17,7 +17,7 @@ class TangemPayAddFundsSheetPageObject(semanticsProvider: SemanticsNodeInteracti
     }
 
     val receiveOption: KNode = child {
-        hasText(getResourceString(CoreResR.string.common_receive))
+        hasText(getResourceString(CoreResR.string.tangempay_topup_receive_title))
         useUnmergedTree = true
     }
 
