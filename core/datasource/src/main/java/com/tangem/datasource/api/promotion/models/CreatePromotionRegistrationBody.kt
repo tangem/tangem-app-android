@@ -14,5 +14,7 @@ data class CreatePromotionRegistrationBody(
     data class TokenRewardDto(
         @Json(name = "tokenAddress") val tokenAddress: String,
         @Json(name = "networkId") val networkId: String,
+        @Json(name = "userAddress") val userAddress: String,
+        @Json(name = "tokenId") val tokenId: String,
     )
 }

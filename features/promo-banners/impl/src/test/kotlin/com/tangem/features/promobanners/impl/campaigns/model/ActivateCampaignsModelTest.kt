@@ -14,13 +14,16 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.EnrollResult
+import com.tangem.domain.promo.models.EnrolledTokenReward
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.TokenReward
 import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
@@ -56,6 +59,7 @@ internal class ActivateCampaignsModelTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase = mockk()
+    private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val predefinedTokenResolver: PredefinedTokenResolver = mockk(relaxed = true)
     private val modelCallbacks: ActivateCampaignBottomSheetComponent.ActivateCampaignModelCallbacks =
         mockk(relaxed = true)
@@ -70,6 +74,7 @@ internal class ActivateCampaignsModelTest {
             getSelectedAppCurrencyUseCase,
             isAccountsModeEnabledUseCase,
             enrollPromoCampaignUseCase,
+            getWalletsUseCase,
             messageSender,
             analyticsEventHandler,
             modelCallbacks,
@@ -128,7 +133,7 @@ internal class ActivateCampaignsModelTest {
             val token = token()
             val campaignType = CampaignType.WhaleSwapCashback(campaignId = "1")
             coEvery { enrollPromoCampaignUseCase.invoke(any(), any(), any()) } returns
-                Either.Right(EnrollResult.Success(TokenReward(tokenAddress = "a", networkId = "b")))
+                Either.Right(EnrollResult.Success(EnrolledTokenReward(tokenAddress = "a", networkId = "b", tokenId = "d")))
             val model = createModel(campaignType)
             advanceUntilIdle()
 
@@ -152,8 +157,13 @@ internal class ActivateCampaignsModelTest {
             coVerify(exactly = 1) {
                 enrollPromoCampaignUseCase.invoke(
                     campaign = PromoCampaignId.WhaleSwapCashback,
-                    tokenReward = TokenReward(tokenAddress = token.contractAddress, networkId = token.network.rawId),
-                    walletIds = listOf(userWalletId),
+                    tokenReward = TokenReward(
+                        tokenAddress = token.contractAddress,
+                        networkId = token.network.rawId,
+                        userAddress = userAddress,
+                        tokenId = token.id.rawCurrencyId?.value.orEmpty(),
+                    ),
+                    walletIds = allWalletIds,
                 )
             }
             verify(exactly = 1) { modelCallbacks.onActivated(campaignType) }
@@ -161,11 +171,31 @@ internal class ActivateCampaignsModelTest {
         }
 
     @Test
+    fun `GIVEN enroll in progress WHEN enroll clicked again THEN use case invoked once`() = runTest {
+        // Arrange
+        coEvery { enrollPromoCampaignUseCase.invoke(any(), any(), any()) } returns
+            Either.Right(EnrollResult.Success(EnrolledTokenReward(tokenAddress = "a", networkId = "b", tokenId = "d")))
+        val model = createModel(CampaignType.WhaleSwapCashback(campaignId = "1"))
+        advanceUntilIdle()
+        onCurrencyChosen.send(chooseTokenResult(currency = token()))
+        advanceUntilIdle()
+
+        // Act — click twice before the in-flight enroll coroutine gets a chance to run
+        model.uiState.value.footerUM.onPrimaryButtonClick()
+        model.uiState.value.footerUM.onPrimaryButtonClick()
+        advanceUntilIdle()
+
+        // Assert — the re-entrant click is ignored: enroll is triggered only once
+        coVerify(exactly = 1) { enrollPromoCampaignUseCase.invoke(any(), any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN enroll returns AlreadyEnrolled WHEN enroll clicked THEN onAlreadyActivated called`() = runTest {
         // Arrange
         val campaignType = CampaignType.WhaleSwapCashback(campaignId = "1")
         coEvery { enrollPromoCampaignUseCase.invoke(any(), any(), any()) } returns
-            Either.Right(EnrollResult.AlreadyEnrolled(TokenReward(tokenAddress = "a", networkId = "b")))
+            Either.Right(EnrollResult.AlreadyEnrolled(EnrolledTokenReward(tokenAddress = "a", networkId = "b", tokenId = "d")))
         val model = createModel(campaignType)
         advanceUntilIdle()
 
@@ -205,7 +235,14 @@ internal class ActivateCampaignsModelTest {
     private fun chooseTokenResult(currency: CryptoCurrency): ChooseTokenResult {
         val status = CryptoCurrencyStatus(
             currency = currency,
-            value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+            // Must carry a networkAddress: the model resolves userAddress from it and otherwise drops the token.
+            value = CryptoCurrencyStatus.Unreachable(
+                priceChange = null,
+                fiatRate = null,
+                networkAddress = NetworkAddress.Single(
+                    NetworkAddress.Address(value = userAddress, type = NetworkAddress.Address.Type.Primary),
+                ),
+            ),
         )
         val wallet: UserWallet = mockk {
             every { walletId } returns userWalletId
@@ -223,6 +260,9 @@ internal class ActivateCampaignsModelTest {
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { getPromoCampaignStateUseCase(any(), any(), any()) } returns Either.Left(Throwable())
+        every { getWalletsUseCase.invokeSync() } returns allWalletIds.map { walletId ->
+            mockk<UserWallet> { every { this@mockk.walletId } returns walletId }
+        }
         return ActivateCampaignsModel(
             paramsContainer = MutableParamsContainer(
                 ActivateCampaignBottomSheetComponent.Params(
@@ -241,6 +281,7 @@ internal class ActivateCampaignsModelTest {
             analyticsEventHandler = analyticsEventHandler,
             getPromoCampaignStateUseCase = getPromoCampaignStateUseCase,
             predefinedTokenResolver = predefinedTokenResolver,
+            getWalletsUseCase = getWalletsUseCase,
         )
     }
 
@@ -269,5 +310,15 @@ internal class ActivateCampaignsModelTest {
 
     private companion object {
         val userWalletId = UserWalletId("0011223344556677")
+
+        // The user's payout address the model resolves from the chosen token's networkAddress.
+        const val userAddress = "0xUserPayoutAddress"
+
+        // Enrollment must target ALL user wallets ([REDACTED_TASK_KEY]), not only the currently selected one.
+        val allWalletIds = listOf(
+            userWalletId,
+            UserWalletId("8899aabbccddeeff"),
+            UserWalletId("a1b2c3d4e5f60718"),
+        )
     }
 }
