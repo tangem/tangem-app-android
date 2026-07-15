@@ -6,6 +6,7 @@ import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -233,6 +234,59 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 1) { sendConfirmAlertFactory.getGenericErrorState(any(), any()) }
             coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
         }
+    }
+
+    @Nested
+    inner class UpdateEditedState {
+
+        @Test
+        fun `GIVEN stale parent state WHEN updateEditedState THEN amount and destination applied`() = runTest {
+            // Arrange
+            val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
+            advanceUntilIdle()
+            val editedAmount = mockk<AmountState.Data>(relaxed = true)
+            val editedDestination = mockk<DestinationUM.Content>(relaxed = true)
+
+            // Act
+            sut.updateEditedState(staleParentState(editedAmount, editedDestination))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sut.uiState.value.amountUM).isEqualTo(editedAmount)
+            assertThat(sut.uiState.value.destinationUM).isEqualTo(editedDestination)
+            coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate() }
+        }
+
+        @Test
+        fun `GIVEN stale parent state WHEN updateEditedState THEN confirm-local state preserved`() = runTest {
+            // Arrange: the parent's confirmUM/feeSelectorUM stay Empty/Loading until a successful send —
+            // they must not leak into the confirm model (blocks turn unclickable on ConfirmUM.Empty)
+            val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
+            advanceUntilIdle()
+            val feeSelectorUMBefore = sut.uiState.value.feeSelectorUM
+
+            // Act
+            sut.updateEditedState(
+                staleParentState(
+                    amountUM = mockk<AmountState.Data>(relaxed = true),
+                    destinationUM = mockk<DestinationUM.Content>(relaxed = true),
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert: confirmUM may be recomputed (notifications), but must stay Content — never the
+            // parent's Empty, which would disable the confirm blocks; the fee state must survive as is
+            assertThat(sut.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Content::class.java)
+            assertThat(sut.uiState.value.feeSelectorUM).isEqualTo(feeSelectorUMBefore)
+        }
+
+        private fun staleParentState(amountUM: AmountState, destinationUM: DestinationUM) = SendUM(
+            amountUM = amountUM,
+            destinationUM = destinationUM,
+            feeSelectorUM = FeeSelectorUM.Loading,
+            confirmUM = ConfirmUM.Empty,
+            confirmData = null,
+        )
     }
 
     // region fixtures
