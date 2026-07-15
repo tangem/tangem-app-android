@@ -169,6 +169,7 @@ class TangemPayDailyLimitTest : BaseTestCase() {
     @Test
     fun errorIsShownWhenLimitChangeFailsTest() {
         val newLimit = "5000"
+        val errorTitle = getResourceString(CoreResR.string.common_something_went_wrong)
 
         setupHooks(
             additionalBeforeSection = {
@@ -191,7 +192,7 @@ class TangemPayDailyLimitTest : BaseTestCase() {
             step("Assert limit change error dialog is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onDialog {
-                        title.assertTextContainsSafe(getResourceString(CoreResR.string.common_something_went_wrong))
+                        title.assertTextContainsSafe(errorTitle)
                     }
                 }
             }
