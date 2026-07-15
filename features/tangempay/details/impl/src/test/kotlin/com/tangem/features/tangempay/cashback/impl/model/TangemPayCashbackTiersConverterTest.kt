@@ -79,13 +79,14 @@ internal class TangemPayCashbackTiersConverterTest {
     @Test
     fun `GIVEN no tiers WHEN convert THEN empty list`() {
         // Act
-        val result = converter.convert(CashbackPromotions(cardTiers = emptyList()))
+        val result = converter.convert(CashbackPromotions(cardTiers = emptyList(), additionalCashback = emptyList()))
 
         // Assert
         assertThat(result).isEmpty()
     }
 
-    private fun promotions(vararg tiers: CashbackPromotions.CardTier) = CashbackPromotions(cardTiers = tiers.toList())
+    private fun promotions(vararg tiers: CashbackPromotions.CardTier) =
+        CashbackPromotions(cardTiers = tiers.toList(), additionalCashback = emptyList())
 
     private fun tier(
         id: String = "basic",
