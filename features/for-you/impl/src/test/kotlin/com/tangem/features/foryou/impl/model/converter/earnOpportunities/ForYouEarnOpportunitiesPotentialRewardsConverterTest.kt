@@ -21,7 +21,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
     fun `GIVEN accounts mode off WHEN convert THEN one flat row per earn currency`() {
         // Arrange
         val earnData = createEarnOpportunities(
-            earnCurrencues = listOf("token-a", "token-b").associate { currencyId ->
+            earnCurrencies = listOf("token-a", "token-b").associate { currencyId ->
                 createStatus(
                     createEarnCurrency(tokenId = currencyId, currencyId = currencyId),
                     createRowLoadedValue(),
@@ -45,7 +45,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         val account = MockAccounts.createAccount(derivationIndex = 1, name = "Earn account")
         val earnData = createEarnOpportunities(
             account = account,
-            earnCurrencues = listOf("token-a", "token-b").associate { currencyId ->
+            earnCurrencies = listOf("token-a", "token-b").associate { currencyId ->
                 createStatus(
                     createEarnCurrency(tokenId = currencyId, currencyId = currencyId),
                     createRowLoadedValue(),
@@ -71,7 +71,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         val account = MockAccounts.createAccount(derivationIndex = 1)
         val earnData = createEarnOpportunities(
             account = account,
-            earnCurrencues = mapOf(
+            earnCurrencies = mapOf(
                 createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
             ),
         )
@@ -93,7 +93,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         val account = MockAccounts.createAccount(derivationIndex = 1)
         val earnData = createEarnOpportunities(
             account = account,
-            earnCurrencues = mapOf(
+            earnCurrencies = mapOf(
                 createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
             ),
         )
