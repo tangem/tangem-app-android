@@ -448,7 +448,8 @@ private fun ConstraintLayoutScope.CardNumberBlock(
                     start.linkTo(parent.start)
                     bottom.linkTo(parent.bottom)
                 }
-                .padding(bottom = 8.dp),
+                .padding(bottom = 8.dp)
+                .testTag(TangemPayTestTags.CARD_NUMBER_SHORT),
         )
     } else {
         Text(
