@@ -20,13 +20,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.promo.models.EnrollResult
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.models.TokenReward
 import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
@@ -42,6 +43,7 @@ import com.tangem.features.promobanners.impl.campaigns.entity.TermsUM
 import com.tangem.features.promobanners.impl.campaigns.entity.toPromoCampaignId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -65,6 +67,7 @@ internal class ActivateCampaignsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase,
     private val predefinedTokenResolver: PredefinedTokenResolver,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<ActivateCampaignBottomSheetComponent.Params>()
@@ -75,6 +78,8 @@ internal class ActivateCampaignsModel @Inject constructor(
     private val campaignContent = CampaignTypeToContentConverter().convert(campaignType)
 
     private val predefinedTokensFlow = MutableStateFlow<List<PredefinedTokenToAdd>>(emptyList())
+
+    private var enrollJob: Job? = null
 
     val uiState: StateFlow<ActivateCampaignUM>
         field = MutableStateFlow(buildInitialModel())
@@ -144,7 +149,9 @@ internal class ActivateCampaignsModel @Inject constructor(
         uiState.update { it.copy(isChoosingToken = false) }
     }
 
-    private fun onEnrollClick(selectedWalletId: UserWalletId, selectedToken: CryptoCurrency.Token) {
+    private fun onEnrollClick(selectedToken: CryptoCurrency.Token, networkAddress: NetworkAddress) {
+        if (enrollJob?.isActive == true) return
+
         analyticsEventHandler.send(
             PromoCampaignsAnalyticsEvent.EnrollButtonClicked(
                 campaignType = campaignType,
@@ -153,14 +160,16 @@ internal class ActivateCampaignsModel @Inject constructor(
             ),
         )
 
-        modelScope.launch {
+        enrollJob = modelScope.launch {
             enrollPromoCampaignUseCase.invoke(
                 campaign = campaignId,
                 tokenReward = TokenReward(
                     tokenAddress = selectedToken.contractAddress,
                     networkId = selectedToken.network.rawId,
+                    tokenId = selectedToken.id.rawCurrencyId?.value.orEmpty(),
+                    userAddress = networkAddress.defaultAddress.value,
                 ),
-                walletIds = listOf(selectedWalletId),
+                walletIds = getAllUserWalletIds(),
             ).onLeft { error ->
                 TangemLogger.e("Error enrolling campaign ${campaignType.campaignId}", error)
                 messageSender.send(ToastMessage(message = resourceReference(R.string.common_unknown_error)))
@@ -169,6 +178,10 @@ internal class ActivateCampaignsModel @Inject constructor(
             }
         }
     }
+
+    private fun getAllUserWalletIds() = getWalletsUseCase
+        .invokeSync()
+        .map { it.walletId }
 
     private fun handleEnrollResponse(enrollResult: EnrollResult) {
         when (enrollResult) {
@@ -187,6 +200,7 @@ internal class ActivateCampaignsModel @Inject constructor(
 
     private fun onTokenChosen(result: ChooseTokenResult) {
         val selectedToken = result.currency.currency as? CryptoCurrency.Token ?: return
+        val networkAddress = result.currency.value.networkAddress ?: return
 
         modelScope.launch {
             val selectedAccountUM = if (isAccountsModeEnabledUseCase.invokeSync()) {
@@ -216,8 +230,8 @@ internal class ActivateCampaignsModel @Inject constructor(
                         label = resourceReference(R.string.promo_campaign_enroll),
                         onPrimaryButtonClick = {
                             onEnrollClick(
-                                selectedWalletId = result.walletId,
                                 selectedToken = selectedToken,
+                                networkAddress = networkAddress,
                             )
                         },
                         terms = TermsUM(
