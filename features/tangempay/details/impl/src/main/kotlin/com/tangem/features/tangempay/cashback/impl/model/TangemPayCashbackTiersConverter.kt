@@ -4,7 +4,6 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -14,7 +13,7 @@ internal class TangemPayCashbackTiersConverter : Converter<CashbackPromotions, L
     override fun convert(value: CashbackPromotions): List<CashbackTier> {
         return value.cardTiers.map { tier ->
             CashbackTier(
-                planType = TangemPayTariffPlan.Type.fromString(tier.tier),
+                tierId = tier.tier,
                 rate = CashbackRates.forTier(tier.tier),
                 label = tier.label,
                 scope = tier.scope,
