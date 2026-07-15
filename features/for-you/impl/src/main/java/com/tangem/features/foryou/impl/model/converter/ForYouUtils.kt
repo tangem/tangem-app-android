@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -62,11 +63,14 @@ internal fun forYouPlaceholderBadge(): TangemBadgeUM = TangemBadgeUM(
  * @property isActive whether the user already earns on the token (active yield supply or stake)
  * @property apy rate as a fraction (0.05 = 5%)
  * @property potentialRewards projected yearly reward in fiat (`fiatAmount * apy`), `null` when unknown
+ * @property type which earn product the rate belongs to; passed to the click callback so the model
+ * can open the matching earn screen
  */
 internal data class EarnApyInfo(
     val isActive: Boolean,
     val apy: BigDecimal?,
     val potentialRewards: BigDecimal?,
+    val type: ForYouEarnOpportunitiesType,
 )
 
 /**

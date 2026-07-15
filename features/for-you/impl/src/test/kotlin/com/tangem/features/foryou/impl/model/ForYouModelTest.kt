@@ -2,6 +2,8 @@ package com.tangem.features.foryou.impl.model
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
@@ -21,15 +23,16 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.earn.EarnError
-import com.tangem.domain.models.earn.EarnRewardType
-import com.tangem.domain.models.earn.EarnToken
-import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.domain.models.earn.EarnType
+import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
@@ -41,12 +44,7 @@ import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.CapturingSlot
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -72,6 +70,8 @@ internal class ForYouModelTest {
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase = mockk()
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
     private val earnErrorResolver: EarnErrorResolver = mockk()
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk()
+    private val router: AppRouter = mockk(relaxUnitFun = true)
 
     private var model: ForYouModel? = null
 
@@ -286,8 +286,66 @@ internal class ForYouModelTest {
             }
     }
 
+    @Nested
+    inner class EarnNavigation {
+
+        @Test
+        fun `GIVEN held yield-eligible token WHEN earn row clicked THEN yield-supply entry route is pushed`() =
+            runTest {
+                // Arrange — the token's backend rate is 5.5%
+                val token = createYieldToken()
+                every { yieldSupplyApyFlowUseCase() } returns flowOf(mapOf(token.yieldSupplyKey() to BigDecimal("5.5")))
+                stubSelectedWallet(currencies = listOf(createStatus(token, loadedValue(BigDecimal("100")))))
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.clickFirstEarnRow()
+
+                // Assert — the raw percent string travels into the route
+                val expected = AppRoute.YieldSupplyEntry(
+                    userWalletId = WALLET_ID,
+                    cryptoCurrency = token,
+                    apy = "5.5",
+                )
+                verify { router.push(route = expected, onComplete = any()) }
+            }
+
+        @Test
+        fun `GIVEN held stakeable token WHEN earn row clicked THEN staking route is pushed`() = runTest {
+            // Arrange
+            val currency = createCoin(rawCurrencyId = "eth", symbol = "ETH")
+            val option: StakingOption.P2PEthPool = mockk {
+                every { apy } returns BigDecimal("0.05")
+                every { integrationId } returns StakingIntegrationID.P2PEthPool
+            }
+            coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns
+                mapOf(currency to StakingAvailability.Available(option))
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.clickFirstEarnRow()
+
+            // Assert
+            val expected = AppRoute.Staking(
+                userWalletId = WALLET_ID,
+                cryptoCurrency = currency,
+                integrationId = StakingIntegrationID.P2PEthPool,
+            )
+            verify { router.push(route = expected, onComplete = any()) }
+        }
+    }
+
     private fun PortfolioReviewUM.Content.assetRow(): TangemTokenRowUM.Content =
         tokenList.single().tokenRowUM as TangemTokenRowUM.Content
+
+    private fun ForYouModel.clickFirstEarnRow() {
+        val earn = uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
+        val row = earn.tokenList.first().tokenRowUM as TangemTokenRowUM.Content
+        row.onItemClick?.invoke()
+    }
 
     /** Wires the repository + supplier so the model derives Content from a single selected wallet. */
     private fun stubSelectedWallet(
@@ -343,18 +401,21 @@ internal class ForYouModelTest {
                 ForYouComponent.Params(
                     callbacks = object : ForYouComponent.ForYouModelCallbacks {
                         override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) = Unit
+                        override fun onAllEarnTokensClick() = Unit
                     },
                 ),
             ),
             userWalletsListRepository = userWalletsListRepository,
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
+            router = router,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getEarnTokensBatchFlowUseCase = getEarnTokensBatchFlowUseCase,
             stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             earnErrorResolver = earnErrorResolver,
+            addToPortfolioManagerFactory = addToPortfolioManagerFactory,
         ).also { model = it }
     }
 
@@ -421,6 +482,25 @@ internal class ForYouModelTest {
             every { this@mockk.decimals } returns decimals
             every { isCustom } returns false
             every { iconUrl } returns null
+        }
+    }
+
+    /** A token whose `yieldSupplyKey()` resolves to `"ethereum_0xabc"`. */
+    private fun createYieldToken(): CryptoCurrency.Token {
+        val network = createNetwork(networkRawId = "ethereum")
+        val currencyId: CryptoCurrency.ID = mockk {
+            every { value } returns "token-usdc"
+            every { rawCurrencyId } returns CryptoCurrency.RawID("usd-coin")
+        }
+        return mockk {
+            every { id } returns currencyId
+            every { symbol } returns "USDC"
+            every { name } returns "USD Coin"
+            every { this@mockk.network } returns network
+            every { decimals } returns 6
+            every { isCustom } returns false
+            every { iconUrl } returns null
+            every { contractAddress } returns "0xabc"
         }
     }
 
