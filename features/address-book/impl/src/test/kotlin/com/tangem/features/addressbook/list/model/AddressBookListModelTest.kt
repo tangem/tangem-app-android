@@ -88,7 +88,7 @@ internal class AddressBookListModelTest {
         val syncGate = CompletableDeferred<Unit>()
         coEvery { syncAddressBooksUseCase() } coAnswers { syncGate.await(); Unit.right() }
         every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
-            flowOf(listOf(verifiedContact(id = "1", name = "Alice")))
+            flowOf(listOf(contact(id = "1", name = "Alice")))
 
         // Act
         val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
@@ -109,7 +109,7 @@ internal class AddressBookListModelTest {
     fun `GIVEN default mode AND verified contacts WHEN created THEN content shown`() = runTest {
         // Arrange
         every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
-            flowOf(listOf(verifiedContact(id = "1", name = "Alice"), verifiedContact(id = "2", name = "Bob")))
+            flowOf(listOf(contact(id = "1", name = "Alice"), contact(id = "2", name = "Bob")))
 
         // Act
         val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
@@ -139,7 +139,7 @@ internal class AddressBookListModelTest {
         // Arrange
         var clickedId: String? = null
         every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
-            flowOf(listOf(verifiedContact(id = "42", name = "Alice")))
+            flowOf(listOf(contact(id = "42", name = "Alice")))
         val model = createModel(
             testScope = this,
             mode = AddressBookRoute.ListMode.Default,
@@ -159,7 +159,7 @@ internal class AddressBookListModelTest {
         runTest {
             // Arrange
             every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
-                flowOf(listOf(verifiedContact(id = "1", name = "Alice"), verifiedContact(id = "2", name = "Bob")))
+                flowOf(listOf(contact(id = "1", name = "Alice"), contact(id = "2", name = "Bob")))
 
             // Act
             createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
@@ -190,7 +190,7 @@ internal class AddressBookListModelTest {
     fun `GIVEN selector mode WHEN contact picked THEN ContactSelectedInSend sent`() = runTest {
         // Arrange — a contact with a single ethereum address matches the selection network.
         every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
-            flowOf(listOf(verifiedContact(id = "42", name = "Alice")))
+            flowOf(listOf(contact(id = "42", name = "Alice")))
         val model = createModel(
             testScope = this,
             mode = AddressBookRoute.ListMode.Selector(networkId = "ethereum"),
@@ -205,7 +205,7 @@ internal class AddressBookListModelTest {
         verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
     }
 
-    private fun verifiedContact(id: String, name: String): Contact = Contact(
+    private fun contact(id: String, name: String): Contact = Contact(
         id = ContactId(id),
         walletId = UserWalletId("a"),
         name = ContactName(name).getOrNull()!!,
