@@ -3,6 +3,7 @@ package com.tangem.features.foryou.impl.model.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -52,6 +53,62 @@ internal class ForYouPortfolioFormattersTest {
             currency = currency,
             value = CryptoCurrencyStatus.Loading,
         )
+    }
+
+    @Nested
+    inner class ForYouEarnAssetKey {
+
+        @Test
+        fun `GIVEN currency with raw id WHEN forYouEarnAssetKey THEN key is raw id to network raw id`() {
+            // Arrange
+            val currency = createCurrency(rawCurrencyId = "usd-coin", currencyId = "token-usdc", networkRawId = "ETH")
+
+            // Act
+            val result = currency.forYouEarnAssetKey()
+
+            // Assert
+            assertThat(result).isEqualTo("usd-coin" to "ETH")
+        }
+
+        @Test
+        fun `GIVEN custom token with no raw id WHEN forYouEarnAssetKey THEN falls back to currency id value`() {
+            // Arrange
+            val currency = createCurrency(rawCurrencyId = null, currencyId = "custom-token-id", networkRawId = "ETH")
+
+            // Act
+            val result = currency.forYouEarnAssetKey()
+
+            // Assert
+            assertThat(result).isEqualTo("custom-token-id" to "ETH")
+        }
+
+        @Test
+        fun `GIVEN same asset on different networks WHEN forYouEarnAssetKey THEN keys differ`() {
+            // Arrange
+            val onEthereum = createCurrency(rawCurrencyId = "usd-coin", currencyId = "usdc-eth", networkRawId = "ETH")
+            val onSolana = createCurrency(rawCurrencyId = "usd-coin", currencyId = "usdc-sol", networkRawId = "SOL")
+
+            // Act & Assert
+            assertThat(onEthereum.forYouEarnAssetKey()).isNotEqualTo(onSolana.forYouEarnAssetKey())
+        }
+
+        private fun createCurrency(
+            rawCurrencyId: String?,
+            currencyId: String,
+            networkRawId: String,
+        ): CryptoCurrency {
+            val id: CryptoCurrency.ID = mockk {
+                every { this@mockk.rawCurrencyId } returns rawCurrencyId?.let { CryptoCurrency.RawID(it) }
+                every { value } returns currencyId
+            }
+            val network: Network = mockk {
+                every { rawId } returns networkRawId
+            }
+            return mockk {
+                every { this@mockk.id } returns id
+                every { this@mockk.network } returns network
+            }
+        }
     }
 
     @Nested
