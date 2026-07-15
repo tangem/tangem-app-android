@@ -56,7 +56,6 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
-import com.tangem.features.tangempay.tiers.feeCurrency
 import com.tangem.features.tangempay.utils.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
