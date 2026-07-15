@@ -45,7 +45,7 @@ internal class TangemPayCashbackModelTest {
         coEvery { cashbackRepository.getCashbackPromotions(any()) } returns promotions().right()
         coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns docs().right()
         coEvery { onboardingRepository.getCustomerInfo(any()) } returns
-            customerInfo(TangemPayTariffPlan.Type.BASIC).right()
+            customerInfo(tierId = "basic", planName = "Basic").right()
     }
 
     @AfterEach
@@ -69,7 +69,7 @@ internal class TangemPayCashbackModelTest {
     fun `GIVEN PLUS plan WHEN model created THEN rate tile shows the Plus tier rate`() {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(any()) } returns
-            customerInfo(TangemPayTariffPlan.Type.PLUS).right()
+            customerInfo(tierId = "plus", planName = "Plus").right()
 
         // Act
         val model = createModel()
@@ -162,12 +162,16 @@ internal class TangemPayCashbackModelTest {
         CashbackDocument(id = "terms", title = "Full terms of cashback program", url = "https://x/terms.pdf"),
     )
 
-    private fun customerInfo(planType: TangemPayTariffPlan.Type): CustomerInfo {
-        val tariffPlanMock = mockk<TangemPayTariffPlan> {
-            every { type } returns planType
-            every { name } returns planType.name
-        }
-        val customerTariffPlanMock = mockk<TangemPayCustomerTariffPlan> { every { plan } returns tariffPlanMock }
+    private fun customerInfo(tierId: String, planName: String): CustomerInfo {
+        val currentPlan = TangemPayTariffPlan(
+            id = "plan-$tierId",
+            tierId = tierId,
+            isBasicTier = tierId == "basic",
+            name = planName,
+            programName = "program",
+            descriptionItems = emptyList(),
+        )
+        val customerTariffPlanMock = mockk<TangemPayCustomerTariffPlan> { every { plan } returns currentPlan }
         return mockk { every { tariffPlan } returns customerTariffPlanMock }
     }
 }
