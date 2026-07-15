@@ -27,6 +27,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
@@ -54,6 +55,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     private val ratingComponentFactory: RatingComponent.Factory,
+    marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -136,6 +138,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         ),
     )
 
+    private val marketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("tokenDetailsMarketingBanner"),
+        params = MarketingBannerComponent.Params.Standalone(
+            requestFlow = model.marketingRequest,
+            onDeeplinkClick = model::onMarketingBannerDeeplink,
+        ),
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
@@ -153,6 +163,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 txHistoryComponent = txHistoryComponent,
                 expressTransactionsComponent = expressTransactionsComponent,
                 ratingComponent = ratingSlotState.child?.instance,
+                marketingBannerComponent = marketingBannerComponent,
                 modifier = modifier,
             )
         } else {
@@ -164,6 +175,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 yieldSupplyComponent = yieldSupplyComponent,
                 expressTransactionsComponent = expressTransactionsComponent,
                 ratingComponent = ratingSlotState.child?.instance,
+                marketingBannerComponent = marketingBannerComponent,
             )
         }
 
