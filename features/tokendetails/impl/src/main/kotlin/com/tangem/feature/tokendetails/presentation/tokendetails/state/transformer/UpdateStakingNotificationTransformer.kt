@@ -215,7 +215,7 @@ internal class UpdateStakingNotificationTransformer(
         )
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun getRewardSubtitle(
         status: CryptoCurrencyStatus,
         stakingRewardAmount: BigDecimal?,
@@ -245,7 +245,7 @@ internal class UpdateStakingNotificationTransformer(
             RewardBlockType.CardanoNoRewards -> resourceReference(R.string.staking_cardano_details_rewards_info_text)
             RewardBlockType.RewardUnavailable.DefaultRewardUnavailable,
             RewardBlockType.RewardUnavailable.SolanaRewardUnavailable,
-            -> return null
+            -> rewardRateReference() ?: return null
             RewardBlockType.EthereumEarnedRewards -> {
                 val cryptoRewardAmount = (stakingBalance as? StakingBalance.Data.P2PEthPool)?.totalRewards
                 return EarnBlockUM.SubtitleUM.AccentedText(
@@ -286,7 +286,8 @@ internal class UpdateStakingNotificationTransformer(
         }
 
         val isAccent = rewardBlockType == RewardBlockType.Rewards ||
-            rewardBlockType == RewardBlockType.RewardsRequirementsError
+            rewardBlockType == RewardBlockType.RewardsRequirementsError ||
+            rewardBlockType is RewardBlockType.RewardUnavailable
 
         return EarnBlockUM.SubtitleUM.Text(
             text = text,
