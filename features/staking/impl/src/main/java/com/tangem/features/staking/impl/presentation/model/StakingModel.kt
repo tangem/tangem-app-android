@@ -10,6 +10,8 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
+import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
@@ -42,6 +44,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -67,6 +70,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -153,7 +157,7 @@ internal class StakingModel @Inject constructor(
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
     private val stakingFeatureToggles: StakingFeatureToggles,
-    appRouter: AppRouter,
+    private val appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
@@ -162,6 +166,15 @@ internal class StakingModel @Inject constructor(
     val approvalSlotNavigation = SlotNavigation<Unit>()
 
     private val params = paramsContainer.require<StakingComponent.Params>()
+
+    val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
+        MarketingBannerRequest(
+            screen = MarketingScreen.Staking(
+                networkId = params.cryptoCurrency.network.rawId,
+                contractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
+            ),
+        ),
+    )
 
     private val stakingStateRouter: StakingStateRouter = StakingStateRouter(
         appRouter = appRouter,
@@ -315,6 +328,16 @@ internal class StakingModel @Inject constructor(
     init {
         subscribeOnCurrencyStatusUpdates()
         stateController.initializeWithUserWallet(userWallet)
+    }
+
+    fun onMarketingBannerDeeplink(deeplink: String): Boolean {
+        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+            userWalletId = params.userWalletId,
+            currency = params.cryptoCurrency,
+            screenSource = AnalyticsParam.ScreensSources.Staking,
+        ) ?: return false
+        appRouter.push(route)
+        return true
     }
 
     override fun onDestroy() {
