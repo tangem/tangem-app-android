@@ -14,6 +14,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.findCardWithId
@@ -201,6 +202,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         val label = preset.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         TangemPayCardLimitSetupUM.LimitPresetUM(
             label = label,
+            testTag = TangemPayTestTags.dailyLimitPresetChip(preset.stripTrailingZeros().toPlainString()),
             onClick = { onPresetClick(preset) },
         )
     }.toPersistentList()
