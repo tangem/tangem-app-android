@@ -8,12 +8,15 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.features.foryou.impl.model.converter.PERCENT_BASE
@@ -45,6 +48,8 @@ internal class ForYouEarnOpportunitiesConverter(
     private val yieldSupplyAvailability: Map<String, BigDecimal>,
     private val yieldStakingAvailability: Map<CryptoCurrency, StakingAvailability>,
     private val topEarnTokens: EarnTopToken?,
+    private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
+    private val onAllEarnTokensClick: () -> Unit,
 ) : Converter<AccountStatusList?, EarnOpportunitiesUM> {
 
     override fun convert(value: AccountStatusList?): EarnOpportunitiesUM {
@@ -86,19 +91,26 @@ internal class ForYouEarnOpportunitiesConverter(
             data.isEmpty() -> {
                 ForYouEarnOpportunitiesNoTokensConverter(
                     topEarnTokens = topEarnTokens,
+                    onTokenClick = onTokenClick,
+                    onAllEarnTokensClick = onAllEarnTokensClick,
                 ).convert(data)
             }
             data.all { earn -> earn.earnCurrencies.all { entry -> entry.value.isActive } } -> {
                 ForYouEarnOpportunitiesTokensActiveConverter(
                     topEarnTokens = topEarnTokens,
+                    onTokenClick = onTokenClick,
+                    onAllEarnTokensClick = onAllEarnTokensClick,
                 ).convert(data)
             }
             else -> {
                 ForYouEarnOpportunitiesPotentialRewardsConverter(
                     appCurrency = appCurrency,
+                    userWalletId = value?.userWalletId,
                     isAccountsModeEnabled = isAccountsModeEnabled,
                     expandedAssetIds = expandedAssetIds,
                     expandClick = expandClick,
+                    onTokenClick = onTokenClick,
+                    onAllEarnTokensClick = onAllEarnTokensClick,
                 ).convert(data)
             }
         }
@@ -129,6 +141,7 @@ internal class ForYouEarnOpportunitiesConverter(
                     isActive = isActive,
                     potentialRewards = cryptoCurrencyStatus.value.fiatAmount?.multiply(apy),
                     apy = apy,
+                    type = ForYouEarnOpportunitiesType.YieldSupply(yieldSupplyApy.toPlainString()),
                 )
             }
         }
@@ -143,6 +156,7 @@ internal class ForYouEarnOpportunitiesConverter(
                     isActive = stakingInfo.isActive,
                     apy = stakingInfo.rate,
                     potentialRewards = cryptoCurrencyStatus.value.fiatAmount?.multiply(stakingInfo.rate),
+                    type = ForYouEarnOpportunitiesType.Staking(integrationID = stakingInfo.integrationId),
                 )
             }
         }
@@ -205,6 +219,7 @@ internal class ForYouEarnOpportunitiesConverter(
             rate = rateInfo.rate,
             isActive = isActive,
             rewardType = rateInfo.type,
+            integrationId = option.integrationId,
         )
     }
 
@@ -212,5 +227,6 @@ internal class ForYouEarnOpportunitiesConverter(
         val rate: BigDecimal,
         val isActive: Boolean,
         val rewardType: RewardType,
+        val integrationId: StakingIntegrationID,
     )
 }

@@ -12,12 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
@@ -25,7 +31,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.foryou.ForYouComponent
+import com.tangem.features.foryou.impl.entity.ForYouBottomSheetConfig
 import com.tangem.features.foryou.impl.model.ForYouModel
 import com.tangem.features.foryou.impl.ui.ForYouContent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
@@ -37,6 +46,8 @@ internal class DefaultForYouComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: ForYouComponent.Params,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
 ) : AppComponentContext by context, ForYouComponent {
 
     private val model: ForYouModel = getOrCreateModel(params = params)
@@ -50,6 +61,18 @@ internal class DefaultForYouComponent @AssistedInject constructor(
             ),
         )
     }
+
+    private val bottomSheetSlot = childSlot(
+        source = model.bottomSheetNavigation,
+        serializer = null,
+        handleBackButton = false,
+        childFactory = { config, componentContext ->
+            when (config) {
+                ForYouBottomSheetConfig.AddToPortfolio -> portfolioSelectorChild(componentContext)
+                is ForYouBottomSheetConfig.ManageFunds -> manageFundsChild(config, componentContext)
+            }
+        },
+    )
 
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
@@ -82,6 +105,7 @@ internal class DefaultForYouComponent @AssistedInject constructor(
         modifier: Modifier,
     ) {
         val uiState by model.uiState.collectAsStateWithLifecycle()
+        val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         ForYouContent(
             forYouUM = uiState,
@@ -90,7 +114,30 @@ internal class DefaultForYouComponent @AssistedInject constructor(
             contentPadding = contentPadding,
             modifier = modifier,
         )
+
+        bottomSheet.child?.instance?.BottomSheet()
     }
+
+    private fun portfolioSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
+        addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(
+                addToPortfolioManager = checkNotNull(model.addToPortfolioManager) {
+                    "addToPortfolioManager must be set before activating AddToPortfolio slot"
+                },
+            ),
+        )
+
+    private fun manageFundsChild(
+        config: ForYouBottomSheetConfig.ManageFunds,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent = manageFundsComponentFactory.create(
+        context = childByContext(componentContext),
+        params = ManageFundsComponent.Params(
+            launchMode = ManageFundsComponent.LaunchMode.FilteredByRawId(config.rawCurrencyId),
+            onDismiss = { model.bottomSheetNavigation.dismiss() },
+        ),
+    )
 
     @AssistedFactory
     interface Factory : ForYouComponent.Factory {
