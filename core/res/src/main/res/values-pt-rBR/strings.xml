@@ -2105,12 +2105,12 @@
   <string name="token_details_hide_token">Ocultar token</string>
   <string name="token_details_staking_block_subtitle">O staking permite que você receba %1$s e receba recompensas todos os dias %2$s dias</string>
   <string name="token_details_staking_block_title">Serviço de staking</string>
-  <string name="token_details_token_type_subtitle">%1$s token em %%imagem%% %2$s rede</string>
-  <string name="token_details_token_type_subtitle_no_standard">Token em %%imagem%% %1$s rede</string>
+  <string name="token_details_token_type_subtitle">%1$s token em %%image%% %2$s rede</string>
+  <string name="token_details_token_type_subtitle_no_standard">Token em %%image%% %1$s rede</string>
   <string name="token_details_toolbar_subtitle_network">%s rede</string>
   <string name="token_details_toolbar_subtitle_standard">%1$s em %2$s rede</string>
-  <string name="token_details_toolbar_title_token_in_account">%1$s em %%imagem%% %2$s</string>
-  <string name="token_details_toolbar_title_token_in_wallet">%1$s em %2$s %%imagem%%</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s em %%image%% %2$s</string>
+  <string name="token_details_toolbar_title_token_in_wallet">%1$s em %2$s %%image%%</string>
   <string name="token_details_unable_hide_alert_message">O %1$s (%2$sO token ) é a principal moeda da plataforma. %3$s rede e não pode ser ocultada enquanto você tiver outros tokens dessa rede na lista</string>
   <string name="token_details_unable_hide_alert_title">Não foi possível ocultar %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
