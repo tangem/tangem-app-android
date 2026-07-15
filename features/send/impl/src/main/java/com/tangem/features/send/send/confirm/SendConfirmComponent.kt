@@ -137,11 +137,10 @@ internal class SendConfirmComponent(
         }.launchIn(componentScope)
     }
 
-    fun updateState(state: SendUM) {
+    fun updateEditedState(state: SendUM) {
         destinationBlockComponent.updateState(state.destinationUM)
         amountBlockComponent.updateState(state.amountUM)
-        feeSelectorBlockComponent.updateState(state.feeSelectorUM)
-        model.updateState(state)
+        model.updateEditedState(state)
     }
 
     @Composable
