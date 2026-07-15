@@ -137,7 +137,8 @@ internal class SetPortfolioReviewTransformerTest {
 
     private fun contentPortfolioReview(): PortfolioReviewUM.Content = PortfolioReviewUM.Content(
         tokenList = persistentListOf(),
-        marketChartUM = MarketChartUM.NoData,
+        marketChartUM = noDataChart(),
+        onAddFundsClick = null,
     )
 
     private fun contentEarnOpportunities(): EarnOpportunitiesUM.Content = EarnOpportunitiesUM.Content(
@@ -146,6 +147,11 @@ internal class SetPortfolioReviewTransformerTest {
         potentialReward = null,
         potentialRewardType = null,
         onAllEarnTokensClick = {},
+    )
+
+    private fun noDataChart(): MarketChartUM.NoData = MarketChartUM.NoData(
+        title = stringReference("No data"),
+        donutText = stringReference("No data"),
     )
 
     private fun accountStatusList(totalFiatBalance: TotalFiatBalance): AccountStatusList = mockk {
@@ -158,7 +164,7 @@ internal class SetPortfolioReviewTransformerTest {
     private fun loadingState(): ForYouUM = ForYouUM(
         portfolioReviewUM = PortfolioReviewUM.Loading(
             tokenList = persistentListOf(),
-            marketChartUM = MarketChartUM.NoData,
+            marketChartUM = noDataChart(),
         ),
         earnOpportunities = EarnOpportunitiesUM.Loading(tokenList = persistentListOf()),
         notifications = persistentListOf(),

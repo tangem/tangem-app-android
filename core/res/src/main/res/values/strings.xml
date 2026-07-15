@@ -908,9 +908,11 @@
     <item quantity="one">%d asset</item>
     <item quantity="other">%d assets</item>
   </plurals>
+  <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
+  <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
   <string name="market_chart_top_holding">Top holding %s</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
