@@ -2,9 +2,8 @@ package com.tangem.domain.addressbook.verification
 
 import arrow.core.Either
 import arrow.core.right
-import com.tangem.domain.addressbook.model.AddressEntriesVerification
+import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.VerifiedContact
 import com.tangem.domain.addressbook.usecase.buildAddressEntryPayload
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -17,34 +16,24 @@ class ContactSignatureVerifier(
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
-    suspend fun verifyContacts(contacts: List<Contact>): List<VerifiedContact> {
+    suspend fun verifyContacts(contacts: List<Contact>): List<Contact> {
         val walletsById = userWalletsListRepository.userWalletsSync().associateBy { it.walletId }
-        return contacts
-            .mapNotNull { contact ->
-                val userWallet = walletsById[contact.walletId] ?: return@mapNotNull null
-                val verification = verify(userWallet, contact).getOrNull() ?: return@mapNotNull null
-                VerifiedContact(
-                    contact = contact.copy(addresses = verification.valid),
-                    invalidEntries = verification.invalid,
-                )
-            }
-            .filter { verifiedContact ->
-                verifiedContact.contact.addresses.isNotEmpty()
-            }
+        return contacts.mapNotNull { contact ->
+            val userWallet = walletsById[contact.walletId] ?: return@mapNotNull null
+            val validEntries = verify(userWallet, contact).getOrNull() ?: return@mapNotNull null
+            contact.copy(addresses = validEntries).takeIf { validEntries.isNotEmpty() }
+        }
     }
 
     suspend fun isNameVerified(contact: Contact): Boolean {
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it.walletId == contact.walletId } ?: return false
-        return verify(userWallet, contact).getOrNull()?.valid?.isNotEmpty() == true
+        return verify(userWallet, contact).getOrNull()?.isNotEmpty() == true
     }
 
-    private fun verify(
-        userWallet: UserWallet,
-        contact: Contact,
-    ): Either<VerifyMessagesError, AddressEntriesVerification> {
+    private fun verify(userWallet: UserWallet, contact: Contact): Either<VerifyMessagesError, List<AddressEntry>> {
         val entries = contact.addresses
-        if (entries.isEmpty()) return AddressEntriesVerification(valid = emptyList(), invalid = emptyList()).right()
+        if (entries.isEmpty()) return emptyList<AddressEntry>().right()
 
         // Entries with a malformed (non-hex) signature can't be verified — they are invalid by format.
         val wellFormed = entries.mapNotNull { entry ->
@@ -59,10 +48,7 @@ class ContactSignatureVerifier(
                     .filterIndexed { index, _ -> flags[index] }
                     .mapTo(HashSet()) { (entry, _) -> entry.id }
 
-                AddressEntriesVerification(
-                    valid = entries.filter { it.id in validIds },
-                    invalid = entries.filterNot { it.id in validIds },
-                )
+                entries.filter { it.id in validIds }
             }
     }
 }
