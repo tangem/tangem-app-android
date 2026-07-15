@@ -162,7 +162,7 @@ private fun PresetChip(preset: TangemPayCardLimitSetupUM.LimitPresetUM, modifier
             .clip(RoundedCornerShape(14.dp))
             .background(TangemTheme.colors3.bg.tertiary)
             .clickable(onClick = preset.onClick)
-            .then(preset.testTag?.let { Modifier.testTag(it) } ?: Modifier)
+            .testTag(preset.testTag)
             .padding(horizontal = TangemTheme.dimens2.x5, vertical = TangemTheme.dimens2.x1)
             .wrapContentHeight(),
         horizontalArrangement = Arrangement.Center,
