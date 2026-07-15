@@ -177,6 +177,10 @@ internal class FeedEntryChildFactory @Inject constructor(
                                 token = TokenSummaryComponent.Token.Portfolio(currency),
                             )
                         }
+
+                        override fun onAllEarnTokensClick() {
+                            feedEntryClickIntents.onOpenEarnPage()
+                        }
                     },
                 ),
             )

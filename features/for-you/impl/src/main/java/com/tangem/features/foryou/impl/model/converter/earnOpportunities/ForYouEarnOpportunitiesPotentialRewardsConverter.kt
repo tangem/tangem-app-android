@@ -11,7 +11,10 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.utils.StringsSigns
@@ -29,14 +32,22 @@ import java.math.BigDecimal
  * [ForYouEarnOpportunitiesTokenRowConverter], expansion keyed by account id); with it off, the
  * tokens are rendered as flat non-expandable rows.
  */
+@Suppress("LongParameterList")
 internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
     private val appCurrency: AppCurrency,
+    private val userWalletId: UserWalletId?,
     private val isAccountsModeEnabled: Boolean,
     private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
+    private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
+    private val onAllEarnTokensClick: () -> Unit,
 ) : Converter<List<EarnOpportunities>, EarnOpportunitiesUM> {
 
-    private val rowConverter = ForYouEarnOpportunitiesTokenRowConverter(appCurrency = appCurrency)
+    private val rowConverter = ForYouEarnOpportunitiesTokenRowConverter(
+        appCurrency = appCurrency,
+        userWalletId = userWalletId,
+        onTokenClick = onTokenClick,
+    )
 
     override fun convert(value: List<EarnOpportunities>): EarnOpportunitiesUM {
         val totalPotentialReward = value.sumOf { it.accountPotentialReward }
@@ -82,6 +93,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
             subtitleRes = R.string.for_you_earn_opportunities_tokens_rewards,
             potentialReward = totalPotentialRewardText,
             potentialRewardType = null,
+            onAllEarnTokensClick = onAllEarnTokensClick,
         )
     }
 

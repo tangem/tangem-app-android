@@ -20,6 +20,8 @@ internal class ForYouEarnOpportunitiesNoTokensConverterTest {
             topEarnTokens = List(7) { index ->
                 createTopEarnToken(tokenId = "token-$index", networkRawId = "NET")
             }.right(),
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act
@@ -39,6 +41,8 @@ internal class ForYouEarnOpportunitiesNoTokensConverterTest {
                 createTopEarnToken(apy = "7.25", rewardType = EarnRewardType.APR),
                 createTopEarnToken(tokenId = "solana", apy = "99.9", rewardType = EarnRewardType.APY),
             ).right(),
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act
@@ -56,6 +60,8 @@ internal class ForYouEarnOpportunitiesNoTokensConverterTest {
         // Arrange
         val converter = ForYouEarnOpportunitiesNoTokensConverter(
             topEarnTokens = null,
+            onTokenClick = { _, _, _ -> },
+            onAllEarnTokensClick = {},
         )
 
         // Act

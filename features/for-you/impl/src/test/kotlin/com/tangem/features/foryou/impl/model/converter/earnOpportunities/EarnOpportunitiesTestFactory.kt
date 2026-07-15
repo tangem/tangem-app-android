@@ -13,6 +13,7 @@ import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.test.mock.MockAccounts
@@ -180,7 +181,8 @@ internal fun createEarnApyInfo(
     isActive: Boolean = true,
     apy: BigDecimal? = BigDecimal("0.05"),
     potentialRewards: BigDecimal? = null,
-): EarnApyInfo = EarnApyInfo(isActive = isActive, apy = apy, potentialRewards = potentialRewards)
+    type: ForYouEarnOpportunitiesType = ForYouEarnOpportunitiesType.YieldSupply(apy = "5.5"),
+): EarnApyInfo = EarnApyInfo(isActive = isActive, apy = apy, potentialRewards = potentialRewards, type = type)
 
 internal fun createPortfolioStatus(
     currencies: List<CryptoCurrencyStatus>,
@@ -192,4 +194,5 @@ internal fun createPortfolioStatus(
 
 internal fun createAccountStatusList(vararg statuses: AccountStatus): AccountStatusList = mockk {
     every { accountStatuses } returns statuses.toList()
+    every { userWalletId } returns MockAccounts.userWalletId
 }
