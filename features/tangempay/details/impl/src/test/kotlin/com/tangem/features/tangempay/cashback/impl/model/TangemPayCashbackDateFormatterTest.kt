@@ -67,4 +67,13 @@ internal class TangemPayCashbackDateFormatterTest {
         // Assert
         assertThat(actual).isEqualTo("July 30 – August 2")
     }
+
+    @Test
+    fun `GIVEN date WHEN formatNumericDate THEN numeric day month year`() {
+        // Act
+        val actual = formatter.formatNumericDate(DateTime.parse("2026-09-26"))
+
+        // Assert
+        assertThat(actual).isEqualTo("26.09.2026")
+    }
 }
