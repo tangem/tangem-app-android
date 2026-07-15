@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -32,6 +33,7 @@ import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.foryou.ForYouComponent
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
@@ -106,7 +108,10 @@ internal class ForYouModel @Inject constructor(
                 ),
                 onPeriodClick = ::onPeriodClick,
                 portfolioReviewUM = PortfolioReviewUM.Loading(
-                    marketChartUM = MarketChartUM.NoData,
+                    marketChartUM = MarketChartUM.NoData(
+                        title = resourceReference(R.string.market_chart_can_not_load_data),
+                        donutText = resourceReference(R.string.market_chart_bubble_no_data),
+                    ),
                     tokenList = buildList<ForYouTokenListItemUM> {
                         repeat(4) { index ->
                             add(
@@ -154,6 +159,7 @@ internal class ForYouModel @Inject constructor(
                 expandedAssetIds = expandedPortfolioReview,
                 expandClick = ::onExpandPortfolioReviewClick,
                 onTokenClick = ::onPortfolioReviewTokenClick,
+                onAddFundsClick = ::onAddFundsClick,
             ).convert(accountStatusList)
 
             val earnOpportunitiesUM = ForYouEarnOpportunitiesConverter(
@@ -362,5 +368,9 @@ internal class ForYouModel @Inject constructor(
                 }
             },
         )
+    }
+
+    private fun onAddFundsClick(userWalletId: UserWalletId) {
+        bottomSheetNavigation.activate(ForYouBottomSheetConfig.AddFunds(userWalletId))
     }
 }
