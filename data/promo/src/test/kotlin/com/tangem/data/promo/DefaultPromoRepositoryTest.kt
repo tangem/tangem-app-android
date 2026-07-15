@@ -3,10 +3,8 @@ package com.tangem.data.promo
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.data.promo.store.PromoEnrollmentStore
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse.PromotionDto
@@ -17,13 +15,13 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.EnrollResult
+import com.tangem.domain.promo.models.EnrolledTokenReward
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.models.TokenReward
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -35,20 +33,21 @@ internal class DefaultPromoRepositoryTest {
 
     private val promotionsSupplier: PromotionsSupplier = mockk()
     private val tangemApi: TangemTechApi = mockk()
-    private val enrollmentStore: PromoEnrollmentStore = mockk(relaxed = true)
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
     private val repository = DefaultPromoRepository(
         promotionsSupplier = promotionsSupplier,
         tangemApi = tangemApi,
-        enrollmentStore = enrollmentStore,
         moshi = moshi,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     private val campaign = PromoCampaignId.WhaleSwapCashback
     private val userWalletId = UserWalletId("abcdef012345")
-    private val tokenReward = TokenReward("0xToken", "ethereum")
+    private val tokenReward = TokenReward("0xToken", "ethereum", "0xUser", "tether")
+
+    // The enroll result drops userAddress — this is what the submitted tokenReward collapses to.
+    private val resultTokenReward = EnrolledTokenReward("0xToken", "ethereum", "tether")
 
     private fun activeDto() = PromotionDto(
         name = campaign.slug,
@@ -70,25 +69,11 @@ internal class DefaultPromoRepositoryTest {
     )
 
     @BeforeEach
-    fun setUp() = clearMocks(promotionsSupplier, tangemApi, enrollmentStore)
-
-    @Test
-    fun `GIVEN locally enrolled WHEN getCampaignState THEN Enrolled without api`() = runTest {
-        // Arrange
-        coEvery { enrollmentStore.getSyncOrNull(campaign) } returns tokenReward
-
-        // Act
-        val result = repository.getCampaignState(campaign, userWalletId)
-
-        // Assert
-        assertThat(result).isEqualTo(PromoCampaignState.Enrolled(campaign, tokenReward))
-        coVerify(exactly = 0) { promotionsSupplier.getPromotions(any(), any()) }
-    }
+    fun setUp() = clearMocks(promotionsSupplier, tangemApi)
 
     @Test
     fun `GIVEN active campaign present and not enrolled WHEN getCampaignState THEN Available`() = runTest {
         // Arrange
-        coEvery { enrollmentStore.getSyncOrNull(campaign) } returns null
         coEvery { promotionsSupplier.getPromotions(userWalletId, any()) } returns
             PromotionsResponse(promotions = listOf(activeDto()))
 
@@ -102,7 +87,6 @@ internal class DefaultPromoRepositoryTest {
     @Test
     fun `GIVEN campaign absent WHEN getCampaignState THEN NotActive`() = runTest {
         // Arrange
-        coEvery { enrollmentStore.getSyncOrNull(campaign) } returns null
         coEvery { promotionsSupplier.getPromotions(userWalletId, any()) } returns
             PromotionsResponse(promotions = emptyList())
 
@@ -116,7 +100,6 @@ internal class DefaultPromoRepositoryTest {
     @Test
     fun `GIVEN campaign present but finished WHEN getCampaignState THEN NotActive`() = runTest {
         // Arrange
-        coEvery { enrollmentStore.getSyncOrNull(campaign) } returns null
         val finished = activeDto().copy(all = activeDto().all!!.copy(status = "finished"))
         coEvery { promotionsSupplier.getPromotions(userWalletId, any()) } returns
             PromotionsResponse(promotions = listOf(finished))
@@ -129,12 +112,16 @@ internal class DefaultPromoRepositoryTest {
     }
 
     @Test
-    fun `GIVEN api returns 201 with canonical token WHEN enroll THEN Success and persists backend token`() = runTest {
+    fun `GIVEN api returns 201 with canonical token WHEN enroll THEN Success with backend token`() = runTest {
         // Arrange
         val data = PromotionRegistrationResponse.RegistrationData(
             campaignId = campaign.slug,
             registeredAt = "2026-07-06T09:27:13.363Z",
-            tokenReward = CreatePromotionRegistrationBody.TokenRewardDto("0xCanonical", "ethereum"),
+            tokenReward = PromotionRegistrationResponse.RegisteredTokenRewardDto(
+                tokenAddress = "0xCanonical",
+                networkId = "ethereum",
+                tokenId = "tether",
+            ),
         )
         coEvery { tangemApi.createPromotionRegistration(any()) } returns ApiResponse.Success(
             PromotionRegistrationResponse(status = "saved", message = null, data = data),
@@ -144,9 +131,8 @@ internal class DefaultPromoRepositoryTest {
         val result = repository.enroll(campaign, tokenReward, listOf(userWalletId))
 
         // Assert
-        val backendToken = TokenReward("0xCanonical", "ethereum")
+        val backendToken = EnrolledTokenReward("0xCanonical", "ethereum", "tether")
         assertThat(result).isEqualTo(EnrollResult.Success(backendToken))
-        coVerify(exactly = 1) { enrollmentStore.store(campaign, backendToken) }
     }
 
     @Test
@@ -155,7 +141,7 @@ internal class DefaultPromoRepositoryTest {
         val existing = """
             {"status":"already_exists","message":"exists","data":{"campaignId":"${campaign.slug}",
             "registeredAt":"2026-07-01T10:00:00.000Z","tokenReward":{"tokenAddress":"0xOther",
-            "networkId":"base","userAddress":"0xExisting"}}}
+            "networkId":"base","userAddress":"0xExisting","tokenId":"usd-coin"}}}
         """.trimIndent()
         @Suppress("UNCHECKED_CAST")
         coEvery { tangemApi.createPromotionRegistration(any()) } returns ApiResponse.Error(
@@ -170,9 +156,8 @@ internal class DefaultPromoRepositoryTest {
         val result = repository.enroll(campaign, tokenReward, listOf(userWalletId))
 
         // Assert
-        val expectedToken = TokenReward("0xOther", "base")
+        val expectedToken = EnrolledTokenReward("0xOther", "base", "usd-coin")
         assertThat(result).isEqualTo(EnrollResult.AlreadyEnrolled(expectedToken))
-        coVerify(exactly = 1) { enrollmentStore.store(campaign, expectedToken) }
     }
 
     @Test
@@ -191,8 +176,7 @@ internal class DefaultPromoRepositoryTest {
         val result = repository.enroll(campaign, tokenReward, listOf(userWalletId))
 
         // Assert
-        assertThat(result).isEqualTo(EnrollResult.AlreadyEnrolled(tokenReward))
-        coVerify(exactly = 1) { enrollmentStore.store(campaign, tokenReward) }
+        assertThat(result).isEqualTo(EnrollResult.AlreadyEnrolled(resultTokenReward))
     }
 
     @Test
@@ -212,6 +196,5 @@ internal class DefaultPromoRepositoryTest {
 
         // Assert
         assertThat(error).isNotNull()
-        coVerify(exactly = 0) { enrollmentStore.store(any(), any()) }
     }
 }
