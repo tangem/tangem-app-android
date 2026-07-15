@@ -672,7 +672,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayDetails -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayDetailsContainerComponent.Params(initialStatus = route.status),
+                    params = TangemPayDetailsContainerComponent.Params(
+                        initialStatus = route.status,
+                        initialRoute = route.initialRoute,
+                    ),
                     componentFactory = tangemPayDetailsContainerComponentFactory,
                 )
             }
