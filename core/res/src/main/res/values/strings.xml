@@ -1864,6 +1864,9 @@
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
+  <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use card</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">PIN code</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
@@ -1898,6 +1901,8 @@
   <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Details</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">If it will remain below zero your %1$s cards will be closed on %2$s</string>
+  <string name="tangempay_card_details_system_downgrade_title">Top up your account shortly</string>
   <string name="tangempay_card_details_title">Details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
@@ -1933,9 +1938,14 @@
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
   <string name="tangempay_common_error_loading">Error loading</string>
+  <string name="tangempay_current_plan_active_till_notification">Your %1$s plan is active till %2$s, then we will move you to %3$s. %4$s won\'t be charged.</string>
   <string name="tangempay_current_plan_change">Change plan</string>
+  <string name="tangempay_current_plan_fee_charged_notification">%1$s monthly fee will be charged on %2$s</string>
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
+  <string name="tangempay_current_plan_stay_button">Stay on %1$s</string>
+  <string name="tangempay_current_plan_stay_sheet_body">Your transition on %1$s will be canceled</string>
+  <string name="tangempay_current_plan_stay_sheet_title">Do you want to stay on %1$s?</string>
   <string name="tangempay_current_plan_title">Current plan</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>
   <string name="tangempay_daily_limit_set_button">Set limits</string>
@@ -2047,7 +2057,16 @@
   <string name="tangempay_select_plan_btn_select">Select</string>
   <string name="tangempay_select_plan_btn_upgrade">Upgrade plan</string>
   <string name="tangempay_select_plan_compare">Compare plans</string>
+  <string name="tangempay_select_plan_confirm_downgrade_title">Your %1$s plan and %2$s cards will be active till %3$s</string>
+  <string name="tangempay_select_plan_confirm_point_cancel_till">You can cancel this transition till %1$s</string>
+  <string name="tangempay_select_plan_confirm_point_cards_closed">Your %1$s cards will be closed</string>
+  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s monthly fee will be taken from your account</string>
+  <string name="tangempay_select_plan_confirm_point_move_on_date">On %1$s we will move you to %2$s plan</string>
+  <string name="tangempay_select_plan_confirm_point_no_fee">No fee applied</string>
+  <string name="tangempay_select_plan_confirm_point_virtual_card">You will get your virtual %1$s in minutes</string>
+  <string name="tangempay_select_plan_confirm_switch_title">You are switching to %1$s</string>
   <string name="tangempay_select_plan_confirm_title">Confirm selection</string>
+  <string name="tangempay_select_plan_confirm_upgrade_title">We will issue %1$s for you</string>
   <string name="tangempay_select_plan_title">Select plan</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>

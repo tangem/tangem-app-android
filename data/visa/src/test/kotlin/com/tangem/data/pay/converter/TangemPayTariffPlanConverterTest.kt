@@ -28,6 +28,30 @@ internal class TangemPayTariffPlanConverterTest {
     }
 
     @Test
+    fun `GIVEN missing type WHEN convert THEN returns null`() {
+        val value = tariffPlan(type = null)
+
+        assertThat(TangemPayTariffPlanConverter.convert(value)).isNull()
+    }
+
+    @Test
+    fun `GIVEN missing programName WHEN convert THEN returns null`() {
+        val value = tariffPlan(programName = null)
+
+        assertThat(TangemPayTariffPlanConverter.convert(value)).isNull()
+    }
+
+    @Test
+    fun `GIVEN basic tier in mixed case WHEN convert THEN isBasicTier is true`() {
+        val value = tariffPlan(type = "Basic")
+
+        val result = TangemPayTariffPlanConverter.convert(value)
+
+        assertThat(result?.tierId).isEqualTo("Basic")
+        assertThat(result?.isBasicTier).isTrue()
+    }
+
+    @Test
     fun `GIVEN full valid plan WHEN convert THEN maps all fields`() {
         // GIVEN
         val value = tariffPlan(
@@ -58,8 +82,10 @@ internal class TangemPayTariffPlanConverterTest {
         // THEN
         val expected = TangemPayTariffPlan(
             id = PLAN_ID,
-            type = TangemPayTariffPlan.Type.PLUS,
+            tierId = "PLUS",
+            isBasicTier = false,
             name = PLAN_NAME,
+            programName = PROGRAM_NAME,
             descriptionItems = listOf(
                 TangemPayTariffPlan.DescriptionItem(
                     section = TangemPayTariffPlan.Section.PLAN_RELATED,
@@ -110,8 +136,10 @@ internal class TangemPayTariffPlanConverterTest {
         // THEN
         val expected = TangemPayTariffPlan(
             id = PLAN_ID,
-            type = TangemPayTariffPlan.Type.UNKNOWN,
+            tierId = "SOMETHING_NEW",
+            isBasicTier = false,
             name = PLAN_NAME,
+            programName = PROGRAM_NAME,
             descriptionItems = listOf(
                 TangemPayTariffPlan.DescriptionItem(
                     section = TangemPayTariffPlan.Section.UNKNOWN,
@@ -168,6 +196,7 @@ internal class TangemPayTariffPlanConverterTest {
         id: String? = PLAN_ID,
         type: String? = "BASIC",
         name: String? = PLAN_NAME,
+        programName: String? = PROGRAM_NAME,
         descriptionItems: List<CustomerMeResponse.DescriptionItem>? = null,
         images: List<CustomerMeResponse.Image>? = null,
         fees: List<CustomerMeResponse.Fee>? = null,
@@ -175,6 +204,7 @@ internal class TangemPayTariffPlanConverterTest {
         id = id,
         type = type,
         name = name,
+        programName = programName,
         descriptionItems = descriptionItems,
         images = images,
         fees = fees,
@@ -183,5 +213,6 @@ internal class TangemPayTariffPlanConverterTest {
     private companion object {
         const val PLAN_ID = "plan-1"
         const val PLAN_NAME = "Plus"
+        const val PROGRAM_NAME = "program-1"
     }
 }
