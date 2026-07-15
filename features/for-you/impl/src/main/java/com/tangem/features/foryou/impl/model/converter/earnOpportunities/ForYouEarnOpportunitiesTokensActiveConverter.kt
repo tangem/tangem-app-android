@@ -24,7 +24,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverter(
 
     override fun convert(value: List<EarnOpportunities>): EarnOpportunitiesUM {
         val activeAssetKeys = value
-            .flatMap { opportunities -> opportunities.earnCurrencues.keys }
+            .flatMap { opportunities -> opportunities.earnCurrencies.keys }
             .map { status -> status.currency.forYouEarnAssetKey() }
             .toSet()
 
