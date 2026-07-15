@@ -22,6 +22,13 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
+/**
+ * Maps one earn-eligible portfolio holding to a token row: network subtitle, projected yearly earn
+ * (`fiat balance * rate`) as the top end and the rate itself as the styled bottom end.
+ *
+ * Non-resolved statuses degrade the same way as in the portfolio review: loading → skeleton row,
+ * no-quote / no-address / unreachable → dashes, stale cache → error-sync icon on both ends.
+ */
 internal class ForYouEarnOpportunitiesTokenRowConverter(
     private val appCurrency: AppCurrency,
 ) : Converter<Pair<CryptoCurrencyStatus, EarnApyInfo>, TangemTokenRowUM> {
