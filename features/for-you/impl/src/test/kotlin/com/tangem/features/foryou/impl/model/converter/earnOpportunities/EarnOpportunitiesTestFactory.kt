@@ -148,12 +148,13 @@ internal fun createEarnStatusValue(
     fiatAmount: BigDecimal = BigDecimal("100"),
     yieldSupplyActive: Boolean? = null,
     isStakingActive: Boolean = false,
+    stakingBalance: StakingBalance? = if (isStakingActive) mockk<StakingBalance.Data.P2PEthPool>() else null,
 ): CryptoCurrencyStatus.Loaded = mockk {
     every { this@mockk.fiatAmount } returns fiatAmount
     every { yieldSupplyStatus } returns yieldSupplyActive?.let { active ->
         mockk<YieldSupplyStatus> { every { isActive } returns active }
     }
-    every { stakingBalance } returns if (isStakingActive) mockk<StakingBalance.Data.P2PEthPool>() else null
+    every { this@mockk.stakingBalance } returns stakingBalance
     every { isError } returns false
     every { sources } returns CryptoCurrencyStatus.Sources()
 }
@@ -165,13 +166,13 @@ internal fun createStatus(
 
 internal fun createEarnOpportunities(
     account: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1),
-    earnCurrencues: Map<CryptoCurrencyStatus, EarnApyInfo> = mapOf(
+    earnCurrencies: Map<CryptoCurrencyStatus, EarnApyInfo> = mapOf(
         createStatus(createEarnCurrency()) to createEarnApyInfo(),
     ),
     accountPotentialReward: BigDecimal = BigDecimal.ZERO,
 ): EarnOpportunities = EarnOpportunities(
     account = account,
-    earnCurrencues = earnCurrencues,
+    earnCurrencies = earnCurrencies,
     accountPotentialReward = accountPotentialReward,
 )
 
