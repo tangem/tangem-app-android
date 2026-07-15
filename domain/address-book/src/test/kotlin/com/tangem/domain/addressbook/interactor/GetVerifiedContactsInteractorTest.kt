@@ -6,7 +6,6 @@ import com.tangem.domain.addressbook.model.AddressEntryId
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.model.ContactName
-import com.tangem.domain.addressbook.model.VerifiedContact
 import com.tangem.domain.addressbook.usecase.GetContactsUseCase
 import com.tangem.domain.addressbook.verification.ContactSignatureVerifier
 import com.tangem.domain.models.network.Network
@@ -45,7 +44,7 @@ class GetVerifiedContactsInteractorTest {
     fun `GIVEN contacts WHEN getVerifiedContacts THEN maps them through the verifier`() = runTest {
         // Arrange
         val contact = contact()
-        val verified = VerifiedContact(contact = contact, invalidEntries = emptyList())
+        val verified = contact.copy(addresses = emptyList())
         every { getContacts(query = "query", userWalletId = walletId) } returns flowOf(listOf(contact))
         coEvery { contactSignatureVerifier.verifyContacts(listOf(contact)) } returns listOf(verified)
 
