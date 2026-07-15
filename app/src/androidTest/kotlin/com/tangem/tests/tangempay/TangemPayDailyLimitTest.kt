@@ -43,20 +43,26 @@ class TangemPayDailyLimitTest : BaseTestCase() {
             },
         ).run {
             step("Open daily limit setup screen") { openTangemPayDailyLimitSetup() }
-            step("Assert amount field, hint and 'Set limits' button are displayed") {
-                onTangemPayDailyLimitScreen {
-                    amountField.assertIsDisplayed()
-                    hint.assertIsDisplayed()
-                    setLimitsButton.assertIsDisplayed()
-                }
+            step("Assert amount field is displayed") {
+                onTangemPayDailyLimitScreen { amountField.assertIsDisplayed() }
             }
-            step("Assert quick value presets are displayed") {
-                onTangemPayDailyLimitScreen {
-                    presetChip("1").assertIsDisplayed()
-                    presetChip("5000").assertIsDisplayed()
-                    presetChip("10000").assertIsDisplayed()
-                    presetChip("25000").assertIsDisplayed()
-                }
+            step("Assert hint is displayed") {
+                onTangemPayDailyLimitScreen { hint.assertIsDisplayed() }
+            }
+            step("Assert 'Set limits' button is displayed") {
+                onTangemPayDailyLimitScreen { setLimitsButton.assertIsDisplayed() }
+            }
+            step("Assert quick value preset '1' is displayed") {
+                onTangemPayDailyLimitScreen { presetChip("1").assertIsDisplayed() }
+            }
+            step("Assert quick value preset '5000' is displayed") {
+                onTangemPayDailyLimitScreen { presetChip("5000").assertIsDisplayed() }
+            }
+            step("Assert quick value preset '10000' is displayed") {
+                onTangemPayDailyLimitScreen { presetChip("10000").assertIsDisplayed() }
+            }
+            step("Assert quick value preset '25000' is displayed") {
+                onTangemPayDailyLimitScreen { presetChip("25000").assertIsDisplayed() }
             }
         }
     }
