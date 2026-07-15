@@ -12,8 +12,11 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.MarketingDeeplink
+import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
+import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.rating.RatingComponent
 import com.tangem.feature.swap.domain.SwapFeedbackUseCase
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
@@ -58,6 +61,7 @@ import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -192,6 +196,16 @@ internal class TokenDetailsModel @Inject constructor(
     private val userWalletId: UserWalletId = params.userWalletId
     private val cryptoCurrency: CryptoCurrency = params.currency
 
+    /** Token details context is static (single currency) — no amount filter. */
+    val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
+        MarketingBannerRequest(
+            screen = MarketingScreen.TokenDetails(
+                networkId = cryptoCurrency.network.rawId,
+                contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
+            ),
+        ),
+    )
+
     private val userWallet: UserWallet = getUserWalletUseCase(userWalletId).getOrNull()
         ?: error("UserWallet not found")
 
@@ -208,6 +222,7 @@ internal class TokenDetailsModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
     private var isBalanceLoadedEventSent = false
+    private var latestTokenActions: List<TokenActionsState.ActionState> = emptyList()
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
@@ -346,6 +361,7 @@ internal class TokenDetailsModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach { state ->
+                latestTokenActions = state.states
                 sendButtonsEvents(state.states)
                 uiState.value = stateFactory.getManageButtonsState(actions = state.states)
                 if (designFeatureToggles.isRedesignEnabled) {
@@ -816,6 +832,29 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.ANY, checkYieldSupply = true)
+    }
+
+    /**
+     * Routes a tapped marketing-banner deeplink contextually for the current token. Reuses the regular
+     * swap/buy intents (availability checks, yield-supply warning, analytics). Returns `false` for
+     * external links so the banner falls back to the generic deeplink launcher.
+     */
+    fun onMarketingBannerDeeplink(deeplink: String): Boolean = when (resolveMarketingDeeplink(deeplink)) {
+        MarketingDeeplink.SWAP -> {
+            val reason = latestTokenActions
+                .filterIsInstance<TokenActionsState.ActionState.Swap>()
+                .firstOrNull()?.unavailabilityReason ?: ScenarioUnavailabilityReason.None
+            onSwapClick(reason)
+            true
+        }
+        MarketingDeeplink.BUY -> {
+            val reason = latestTokenActions
+                .filterIsInstance<TokenActionsState.ActionState.Buy>()
+                .firstOrNull()?.unavailabilityReason ?: ScenarioUnavailabilityReason.None
+            onBuyClick(reason)
+            true
+        }
+        MarketingDeeplink.EXTERNAL -> false
     }
 
     override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) {
