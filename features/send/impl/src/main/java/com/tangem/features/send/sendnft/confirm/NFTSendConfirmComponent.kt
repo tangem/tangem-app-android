@@ -134,9 +134,9 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
         }.launchIn(componentScope)
     }
 
-    fun updateState(state: NFTSendUM) {
+    fun updateEditedState(state: NFTSendUM) {
         destinationBlockComponent.updateState(state.destinationUM)
-        model.updateState(state)
+        model.updateEditedState(state)
     }
 
     @Composable
