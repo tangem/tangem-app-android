@@ -106,7 +106,7 @@
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Nom du contact</string>
   <string name="address_book_copy_address">Copier l\'adresse</string>
-  <string name="address_book_create_success_message">Contact sauvegardé</string>
+  <string name="address_book_create_success_message">Contact enregistré</string>
   <string name="address_book_creating_error">Nous n\'avons pas pu créer le contact. Veuillez réessayer plus tard.</string>
   <string name="address_book_delete_contact">Supprimer le contact</string>
   <string name="address_book_delete_contact_description">Ce contact sera supprimé de tous vos carnets d\'adresses</string>
@@ -128,6 +128,7 @@
   <string name="address_book_no_contacts">Aucun contact pour le moment</string>
   <string name="address_book_no_contacts_description">Les contacts que vous ajouterez vont apparaître ici</string>
   <string name="address_book_remove_address">Supprimer l\'adresse</string>
+  <string name="address_book_save_address">Enregistrer l\'adresse</string>
   <string name="address_book_save_contact">Enregistrer le contact</string>
   <string name="address_book_save_to_wallet_title">Enregistrer dans le portefeuille</string>
   <string name="address_book_save_wallet_to_description">Ce contact va être lié au carnet d\'adresses de ce portefeuille.</string>

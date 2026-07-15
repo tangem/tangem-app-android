@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -149,7 +150,9 @@ internal class ForYouTokenListConverterTest {
             val otherRow = result.last().tokenRowUM as TangemTokenRowUM.Content
             assertThat(otherRow.id).isEqualTo("for_you_other_assets")
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.market_chart_assets_android, count = 1))
+            assertThat(subtitle.text).isEqualTo(
+                pluralReference(R.plurals.market_chart_assets_android, count = 1, formatArgs = wrappedList(1)),
+            )
         }
 
         @Test
@@ -172,7 +175,9 @@ internal class ForYouTokenListConverterTest {
             // Assert
             val otherRow = result.last().tokenRowUM as TangemTokenRowUM.Content
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.market_chart_assets_android, count = 3))
+            assertThat(subtitle.text).isEqualTo(
+                pluralReference(R.plurals.market_chart_assets_android, count = 3, formatArgs = wrappedList(3)),
+            )
         }
 
         @Test
