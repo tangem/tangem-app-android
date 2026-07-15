@@ -68,6 +68,7 @@ internal class WalletTokensListUMConverterTest {
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
         shouldShowMainPromo = false,
+        isPolymarketEnabled = false,
     )
 
     private fun mockColdWallet(isSingleCurrency: Boolean, isSingleWalletWithToken: Boolean): UserWallet.Cold {
