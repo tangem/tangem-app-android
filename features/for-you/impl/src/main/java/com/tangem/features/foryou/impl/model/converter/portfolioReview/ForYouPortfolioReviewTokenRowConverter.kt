@@ -1,4 +1,4 @@
-package com.tangem.features.foryou.impl.model.converter
+package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -16,6 +16,9 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.model.converter.forYouPlaceholderBadge
+import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.persistentListOf
@@ -39,10 +42,11 @@ import java.math.BigDecimal
  * classification (they contribute nothing yet). The cache/flicker indicators derive from the most
  * conservative [CryptoCurrencyStatus.Sources.total] across the contributing statuses.
  */
-internal class ForYouTokenRowConverter(
+internal class ForYouPortfolioReviewTokenRowConverter(
     private val appCurrency: AppCurrency,
+    private val userWalletId: UserWalletId?,
     private val totalFiatBalance: BigDecimal,
-    private val onTokenClick: (CryptoCurrency) -> Unit,
+    private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
 ) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -66,7 +70,7 @@ internal class ForYouTokenRowConverter(
             subtitleUM = toRowSubtitle(state, currency, cryptoAmount),
             topEndContentUM = toRowTopEnd(state, fiatAmount),
             bottomEndContentUM = toRowBottomEnd(state, fiatAmount),
-            onItemClick = { onTokenClick(currency) },
+            onItemClick = { if (userWalletId != null) onTokenClick(userWalletId, currency) },
             onItemLongClick = null,
         )
     }
@@ -88,9 +92,9 @@ internal class ForYouTokenRowConverter(
         )
     }
 
-    /** Title: For You always shows the asset symbol with the placeholder price-change badge. */
+    /** Title: For You always shows the asset name with the placeholder price-change badge. */
     private fun toRowTitle(currency: CryptoCurrency): TangemTokenRowUM.TitleUM = TangemTokenRowUM.TitleUM.Content(
-        text = stringReference(currency.symbol),
+        text = stringReference(currency.name),
         badge = forYouPlaceholderBadge(),
     )
 
