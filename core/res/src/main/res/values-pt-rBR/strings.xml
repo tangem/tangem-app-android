@@ -109,7 +109,7 @@
   <string name="address_book_contact">Contato</string>
   <string name="address_book_contact_name">Nome do contato</string>
   <string name="address_book_copy_address">Copiar endereço</string>
-  <string name="address_book_create_success_message">Contato adicionado</string>
+  <string name="address_book_create_success_message">Contato salvo</string>
   <string name="address_book_creating_error">Não foi possível estabelecer contato. Tente novamente mais tarde.</string>
   <string name="address_book_delete_contact">Excluir contato</string>
   <string name="address_book_delete_contact_description">Este contato será excluído de toda a sua agenda de contatos.</string>
@@ -725,6 +725,11 @@
   <string name="feedback_subject_tx_failed">Não foi possível enviar uma transação.</string>
   <string name="feedback_token_description_error">Erro na descrição da moeda</string>
   <string name="for_you_description">Analise seu portfólio e explore oportunidades de ganhos.</string>
+  <string name="for_you_earn_opportunities">Oportunidades de ganhar</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">Todos os seus recursos estão em ação, explore novas oportunidades.</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">Levante-se %1$s anualmente</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">recompensas potenciais máximas %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/ano</string>
   <string name="for_you_portfolio_review_title">Avaliação de portfólio</string>
   <string name="for_you_title">Para você</string>
   <string name="force_update_action">Atualize agora</string>
@@ -1919,6 +1924,10 @@
     <item quantity="one">%d cartão</item>
     <item quantity="other">%d cartões</item>
   </plurals>
+  <string name="tangempay_cashback_deactivated_description">Isso ocorreu devido ao seu comportamento suspeito. Entre em contato com o suporte para saber mais.</string>
+  <string name="tangempay_cashback_deactivated_title">Cashback desativado</string>
+  <string name="tangempay_cashback_deposited_on">Será depositado em %1$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s cashback em %2$s</string>
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
   <string name="tangempay_common_card">Cartão</string>
@@ -2046,6 +2055,7 @@
   <string name="tangempay_set_pin_header">Configurar novo PIN</string>
   <string name="tangempay_set_pin_title">Definir PIN</string>
   <string name="tangempay_status_deactivated">Conta encerrada</string>
+  <string name="tangempay_status_inactive">Inativo</string>
   <string name="tangempay_status_replacing">Substituindo seu cartão</string>
   <string name="tangempay_sync_needed">Use o cartão ou anel para renovar a sessão</string>
   <string name="tangempay_sync_needed_body">Use o cartão ou anel para renovar a sessão</string>
@@ -2061,6 +2071,8 @@
   <string name="tangempay_topup_swap_body">Recarregue sua conta com qualquer token da carteira</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
+  <string name="tangempay_va_banking_details_error_description">Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.</string>
+  <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários.</string>
   <string name="tangempay_visa_benefits">Benefícios do visto</string>
   <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
   <string name="tangempay_withdrawal_note_title">Observe</string>
