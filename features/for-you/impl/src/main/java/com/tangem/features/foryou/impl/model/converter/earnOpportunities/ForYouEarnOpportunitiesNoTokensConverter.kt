@@ -5,7 +5,10 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.features.foryou.impl.model.converter.FOR_YOU_TOP_EARN_TOKENS_COUNT
@@ -20,6 +23,8 @@ import kotlinx.collections.immutable.toPersistentList
  */
 internal class ForYouEarnOpportunitiesNoTokensConverter(
     private val topEarnTokens: EarnTopToken?,
+    private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
+    private val onAllEarnTokensClick: () -> Unit,
 ) : Converter<List<EarnOpportunities>, EarnOpportunitiesUM> {
 
     override fun convert(value: List<EarnOpportunities>): EarnOpportunitiesUM {
@@ -29,7 +34,7 @@ internal class ForYouEarnOpportunitiesNoTokensConverter(
         val topEarnToken = topEarnTokenList?.firstOrNull()?.earnToken
         val topEarnApy = topEarnToken?.apy?.parseBigDecimalOrNull()
 
-        val rowConverter = ForYouEarnOpportunitiesTopTokenRowConverter()
+        val rowConverter = ForYouEarnOpportunitiesTopTokenRowConverter(onTokenClick = onTokenClick)
 
         return EarnOpportunitiesUM.Content(
             tokenList = topEarnTokenList
@@ -39,6 +44,7 @@ internal class ForYouEarnOpportunitiesNoTokensConverter(
             subtitleRes = R.string.for_you_earn_opportunities_no_available_tokens,
             potentialReward = stringReference(topEarnApy.format { percent() }),
             potentialRewardType = topEarnToken?.rewardType?.name?.let(::stringReference),
+            onAllEarnTokensClick = onAllEarnTokensClick,
         )
     }
 }

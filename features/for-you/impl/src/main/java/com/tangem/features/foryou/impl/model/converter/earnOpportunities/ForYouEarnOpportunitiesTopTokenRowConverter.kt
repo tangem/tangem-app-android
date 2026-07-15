@@ -10,8 +10,12 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnType
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
@@ -23,7 +27,9 @@ import java.math.BigDecimal
  * converters that surface suggestions ([ForYouEarnOpportunitiesNoTokensConverter],
  * [ForYouEarnOpportunitiesTokensActiveConverter]).
  */
-internal class ForYouEarnOpportunitiesTopTokenRowConverter : Converter<EarnTokenWithCurrency, ForYouTokenListItemUM> {
+internal class ForYouEarnOpportunitiesTopTokenRowConverter(
+    private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
+) : Converter<EarnTokenWithCurrency, ForYouTokenListItemUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
 
@@ -57,7 +63,22 @@ internal class ForYouEarnOpportunitiesTopTokenRowConverter : Converter<EarnToken
                         },
                     ),
                 ),
-                onItemClick = {},
+                onItemClick = {
+                    val type = when (earnToken.type) {
+                        EarnType.STAKING -> {
+                            val integrationID = StakingIntegrationID.create(currencyId = value.cryptoCurrency.id)
+                                ?: return@Content
+
+                            ForYouEarnOpportunitiesType.Staking(integrationID = integrationID)
+                        }
+                        EarnType.YIELD -> ForYouEarnOpportunitiesType.YieldSupply(apy = earnToken.apy)
+                    }
+                    onTokenClick(
+                        null,
+                        value.cryptoCurrency,
+                        type,
+                    )
+                },
                 onItemLongClick = { _, _ -> },
             ),
             tokenList = persistentListOf(),

@@ -13,6 +13,7 @@ interface ForYouComponent : ComposableModularBottomSheetContentComponent {
 
     interface ForYouModelCallbacks {
         fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency)
+        fun onAllEarnTokensClick()
     }
 
     interface Factory : ComponentFactory<Params, ForYouComponent>
