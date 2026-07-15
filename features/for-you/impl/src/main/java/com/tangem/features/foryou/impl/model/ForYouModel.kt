@@ -4,6 +4,12 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -24,6 +30,7 @@ import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
@@ -38,7 +45,11 @@ import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.job
 import javax.inject.Inject
 
 @Stable
@@ -49,12 +60,14 @@ internal class ForYouModel @Inject constructor(
     userWalletsListRepository: UserWalletsListRepository,
     multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    private val router: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val earnErrorResolver: EarnErrorResolver,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -62,6 +75,13 @@ internal class ForYouModel @Inject constructor(
     private val expandedPortfolioReviewAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val expandedEarnOpportunitiesAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+
+    val bottomSheetNavigation: SlotNavigation<ForYouBottomSheetConfig> = SlotNavigation()
+
+    var addToPortfolioManager: AddToPortfolioManager? = null
+        private set
+
+    private var addToPortfolioManagerScope: CoroutineScope? = null
 
     val uiState: StateFlow<ForYouUM>
         field = MutableStateFlow<ForYouUM>(
@@ -144,6 +164,8 @@ internal class ForYouModel @Inject constructor(
                 topEarnTokens = topEarnTokens,
                 expandedAssetIds = expandedEarnOpportunities,
                 expandClick = ::onExpandEarnOpportunitiesClick,
+                onTokenClick = ::onEarnOpportunitiesTokenClick,
+                onAllEarnTokensClick = params.callbacks::onAllEarnTokensClick,
             ).convert(accountStatusList)
 
             uiState.update(
@@ -207,6 +229,46 @@ internal class ForYouModel @Inject constructor(
         params.callbacks.onTokenClick(walletId, currency)
     }
 
+    private fun onEarnOpportunitiesTokenClick(
+        selectedWalletId: UserWalletId?,
+        currency: CryptoCurrency,
+        type: ForYouEarnOpportunitiesType,
+    ) {
+        when {
+            selectedWalletId != null -> openEarnScreen(
+                userWalletId = selectedWalletId,
+                currency = currency,
+                type = type,
+            )
+            else -> {
+                // TODO For you make logic if not added add token, otherwise manage funds
+                // val token = RawMarketToken(
+                //     id = currency.id.rawCurrencyId ?: return,
+                //     name = currency.name,
+                //     symbol = currency.symbol,
+                // )
+                // val network = TokenMarketInfo.Network(
+                //     networkId = currency.network.rawId,
+                //     isExchangeable = false,
+                //     contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
+                //     decimalCount = currency.decimals,
+                // )
+                // val manager = createAddToPortfolioManager().apply {
+                //     setTokenParams(token)
+                //     setTokenNetworks(listOf(network))
+                // }
+                // addToPortfolioManager = manager
+                // Drop the slot through null so the same-source repeat click still recreates the child.
+                bottomSheetNavigation.dismiss()
+                bottomSheetNavigation.activate(
+                    ForYouBottomSheetConfig.ManageFunds(
+                        currency.id.rawCurrencyId ?: return,
+                    ),
+                )
+            }
+        }
+    }
+
     private fun onExpandPortfolioReviewClick(assetId: String) {
         expandedPortfolioReviewAssetIds.update { ids ->
             if (assetId in ids) ids - assetId else ids + assetId
@@ -227,5 +289,78 @@ internal class ForYouModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    // TODO For you make logic if not added add token, otherwise manage funds
+    @Suppress("UnusedPrivateMember")
+    private fun createAddToPortfolioManager(): AddToPortfolioManager {
+        addToPortfolioManagerScope?.cancel()
+        val managerScope = CoroutineScope(
+            modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext.job),
+        )
+        addToPortfolioManagerScope = managerScope
+
+        val manager = addToPortfolioManagerFactory.create(
+            scope = managerScope,
+            settings = AddToPortfolioManager.Settings.Earn,
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(
+                source = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        ).apply {
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+        }
+
+        manager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(managerScope)
+        manager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach { result ->
+                router.push(
+                    AppRoute.CurrencyDetails(
+                        userWalletId = result.wallet.walletId,
+                        currency = result.addedCurrency.currency,
+                    ),
+                )
+            }
+            .launchIn(managerScope)
+        manager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach { result ->
+                router.push(
+                    AppRoute.CurrencyDetails(
+                        userWalletId = result.wallet.walletId,
+                        currency = result.addedCurrency.currency,
+                    ),
+                )
+            }
+            .launchIn(managerScope)
+
+        return manager
+    }
+
+    private fun openEarnScreen(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        type: ForYouEarnOpportunitiesType,
+    ) {
+        router.push(
+            when (type) {
+                is ForYouEarnOpportunitiesType.Staking -> {
+                    AppRoute.Staking(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = currency,
+                        integrationId = type.integrationID,
+                    )
+                }
+                is ForYouEarnOpportunitiesType.YieldSupply -> {
+                    AppRoute.YieldSupplyEntry(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = currency,
+                        apy = type.apy,
+                    )
+                }
+            },
+        )
     }
 }

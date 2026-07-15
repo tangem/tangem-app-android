@@ -8,6 +8,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
@@ -109,6 +112,32 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
     }
 
     @Test
+    fun `GIVEN token row clicked WHEN convert THEN token callback receives wallet currency and earn type`() {
+        // Arrange
+        val currency = createEarnCurrency()
+        val earnType = ForYouEarnOpportunitiesType.YieldSupply(apy = "7.5")
+        val earnData = createEarnOpportunities(
+            earnCurrencies = mapOf(
+                createStatus(currency, createRowLoadedValue()) to createEarnApyInfo(isActive = false, type = earnType),
+            ),
+        )
+        val walletId = UserWalletId("01")
+        var clicked: Triple<UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType>? = null
+        val converter = createConverter(
+            isAccountsModeEnabled = false,
+            userWalletId = walletId,
+            onTokenClick = { id, clickedCurrency, type -> clicked = Triple(id, clickedCurrency, type) },
+        )
+
+        // Act
+        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
+        (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
+
+        // Assert
+        assertThat(clicked).isEqualTo(Triple(walletId, currency, earnType))
+    }
+
+    @Test
     fun `GIVEN several accounts WHEN convert THEN header reward is the sum across accounts`() {
         // Arrange
         val first = createEarnOpportunities(
@@ -137,10 +166,15 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         isAccountsModeEnabled: Boolean,
         expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
+        userWalletId: UserWalletId? = UserWalletId("01"),
+        onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
     ) = ForYouEarnOpportunitiesPotentialRewardsConverter(
         appCurrency = appCurrency,
+        userWalletId = userWalletId,
         isAccountsModeEnabled = isAccountsModeEnabled,
         expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
+        onTokenClick = onTokenClick,
+        onAllEarnTokensClick = {},
     )
 }

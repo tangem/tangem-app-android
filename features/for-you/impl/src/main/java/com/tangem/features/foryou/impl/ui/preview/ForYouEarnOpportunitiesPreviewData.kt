@@ -36,6 +36,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
                 bottomEnd = "6,2%",
             ),
         ),
+        onAllEarnTokensClick = {},
     )
 
     /** No earnable tokens in the portfolio: top earn tokens teaser. */
@@ -52,6 +53,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
                 bottomEnd = "Staking",
             ),
         ),
+        onAllEarnTokensClick = {},
     )
 
     /** Every earnable token is already earning: plain subtitle, no reward badge, no rows. */
@@ -60,6 +62,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
         potentialReward = null,
         potentialRewardType = null,
         tokenList = persistentListOf(),
+        onAllEarnTokensClick = {},
     )
 
     val loading = EarnOpportunitiesUM.Loading(
