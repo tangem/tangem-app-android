@@ -150,3 +150,7 @@ data class TangemPayTariffPlan(
         }
     }
 }
+
+fun TangemPayTariffPlan.feeCurrencyOrDefault(defaultCurrencyCode: String = "USD"): String {
+    return fees.firstOrNull()?.currency ?: defaultCurrencyCode
+}
