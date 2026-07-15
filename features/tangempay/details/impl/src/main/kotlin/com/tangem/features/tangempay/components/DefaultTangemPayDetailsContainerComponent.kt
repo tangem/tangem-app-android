@@ -15,11 +15,13 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
+import com.tangem.features.tangempay.utils.tariffPlan
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -51,9 +53,21 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         key = "tangemPayDetailsInnerStack",
         source = stackNavigation,
         serializer = TangemPayAccountDetailsInnerRoute.serializer(),
-        initialConfiguration = TangemPayAccountDetailsInnerRoute.AccountDetails,
+        initialConfiguration = resolveInitialConfiguration(),
         childFactory = ::screenChild,
     )
+
+    private fun resolveInitialConfiguration(): TangemPayAccountDetailsInnerRoute {
+        val tariffPlan = params.initialStatus.tariffPlan
+        return when (params.initialRoute) {
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> TangemPayAccountDetailsInnerRoute.AccountDetails
+            TangemPayDetailsInitialRoute.SELECT_PLAN -> if (tariffPlan != null) {
+                TangemPayAccountDetailsInnerRoute.SelectPlan(tariffPlan = tariffPlan)
+            } else {
+                TangemPayAccountDetailsInnerRoute.AccountDetails
+            }
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
