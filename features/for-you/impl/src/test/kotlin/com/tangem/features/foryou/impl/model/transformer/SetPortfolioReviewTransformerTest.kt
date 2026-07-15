@@ -145,6 +145,7 @@ internal class SetPortfolioReviewTransformerTest {
         subtitleRes = 0,
         potentialReward = null,
         potentialRewardType = null,
+        onAllEarnTokensClick = {},
     )
 
     private fun accountStatusList(totalFiatBalance: TotalFiatBalance): AccountStatusList = mockk {

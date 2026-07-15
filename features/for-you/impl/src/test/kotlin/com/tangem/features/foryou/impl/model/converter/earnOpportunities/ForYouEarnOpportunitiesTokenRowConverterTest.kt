@@ -13,7 +13,10 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.utils.StringsSigns
 import io.mockk.every
 import io.mockk.mockk
@@ -23,7 +26,16 @@ import java.math.BigDecimal
 internal class ForYouEarnOpportunitiesTokenRowConverterTest {
 
     private val appCurrency: AppCurrency = AppCurrency.Default
-    private val converter = ForYouEarnOpportunitiesTokenRowConverter(appCurrency = appCurrency)
+    private val converter = createConverter()
+
+    private fun createConverter(
+        userWalletId: UserWalletId? = UserWalletId("01"),
+        onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
+    ) = ForYouEarnOpportunitiesTokenRowConverter(
+        appCurrency = appCurrency,
+        userWalletId = userWalletId,
+        onTokenClick = onTokenClick,
+    )
 
     @Test
     fun `GIVEN loading status WHEN convert THEN row is Loading with currency id`() {
@@ -93,6 +105,27 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
         val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
         assertThat(topEnd.startIcons).hasSize(1)
         assertThat(bottomEnd.startIcons).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN row clicked WHEN convert THEN callback receives wallet currency and resolved earn type`() {
+        // Arrange
+        val currency = createEarnCurrency()
+        val status = createStatus(currency, createRowLoadedValue())
+        val earnType = ForYouEarnOpportunitiesType.YieldSupply(apy = "5.5")
+        val walletId = UserWalletId("01")
+        var clicked: Triple<UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType>? = null
+        val converter = createConverter(
+            userWalletId = walletId,
+            onTokenClick = { id, clickedCurrency, type -> clicked = Triple(id, clickedCurrency, type) },
+        )
+
+        // Act
+        val result = converter.convert(status to createEarnApyInfo(type = earnType)) as TangemTokenRowUM.Content
+        result.onItemClick?.invoke()
+
+        // Assert
+        assertThat(clicked).isEqualTo(Triple(walletId, currency, earnType))
     }
 
     @Test
