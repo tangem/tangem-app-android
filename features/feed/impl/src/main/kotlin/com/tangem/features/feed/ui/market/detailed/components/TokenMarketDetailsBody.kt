@@ -28,11 +28,13 @@ internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     relatedNews: RelatedNews,
+    marketingBanner: @Composable (Modifier) -> Unit,
 ) {
     if (isRedesignEnabled) {
         tokenMarketDetailsBodyV2(
             state = state,
             relatedNews = relatedNews,
+            marketingBanner = marketingBanner,
         )
     } else {
         tokenMarketDetailsBodyV1(
@@ -95,13 +97,28 @@ private fun LazyListScope.tokenMarketDetailsBodyV1(
     }
 }
 
+private fun LazyListScope.marketingBannerItem(marketingBanner: @Composable (Modifier) -> Unit) {
+    item(key = "marketing_banner") {
+        marketingBanner(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 8.dp)
+                .fillMaxWidth(),
+        )
+    }
+}
+
 // Empty item with a key so that deeplink scroll-to-section can target it before the real content is composed
 private fun LazyListScope.sectionStub(key: String) {
     item(key) { }
 }
 
 @Suppress("CanBeNonNullable")
-private fun LazyListScope.tokenMarketDetailsBodyV2(state: MarketsTokenDetailsUM.Body, relatedNews: RelatedNews) {
+private fun LazyListScope.tokenMarketDetailsBodyV2(
+    state: MarketsTokenDetailsUM.Body,
+    relatedNews: RelatedNews,
+    marketingBanner: @Composable (Modifier) -> Unit,
+) {
     when (state) {
         MarketsTokenDetailsUM.Body.Loading -> {
             item("description-loading") {
@@ -114,6 +131,8 @@ private fun LazyListScope.tokenMarketDetailsBodyV2(state: MarketsTokenDetailsUM.
             if (state.description != null) {
                 description(state.description)
             }
+
+            marketingBannerItem(marketingBanner)
 
             infoBlocksListV2(
                 state = state.infoBlocks,
@@ -169,7 +188,7 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
                     modifier = {
                         this
                             .padding(horizontal = TangemTheme.dimens2.x4)
-                            .padding(bottom = TangemTheme.dimens2.x8)
+                            .padding(bottom = 24.dp)
                     },
                     otherModifier = {
                         blockPaddings()
