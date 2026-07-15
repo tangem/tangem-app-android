@@ -17,11 +17,12 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDat
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayEntryPoint
-import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
@@ -64,6 +65,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
 
@@ -174,15 +176,63 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
-                val status = customerInfo.mapToPaymentAccountStatus(account.userWalletId)
-                if (status is PaymentAccountStatusValue.IssuingCard && customerInfo.kycStatus == KycStatus.APPROVED) {
-                    // If order id wasn't saved -> start order creation and get customer info
-                    onboardingRepository.createOrder(account.userWalletId)
-                        .onLeft { TangemLogger.withTag(TAG).e("createOrder failed: $it") }
-                }
-                status
+                resolveFinalStatus(
+                    account = account,
+                    customerInfo = customerInfo,
+                    status = customerInfo.mapToPaymentAccountStatus(account.userWalletId),
+                )
             },
         )
+    }
+
+    private suspend fun resolveFinalStatus(
+        account: Account.Payment,
+        customerInfo: CustomerInfo,
+        status: PaymentAccountStatusValue,
+    ): PaymentAccountStatusValue {
+        val isIssuing = status is PaymentAccountStatusValue.IssuingCard
+        val isApproved = customerInfo.kycStatus == KycStatus.APPROVED
+        val userWalletId = account.userWalletId
+        val tariffPlan = customerInfo.tariffPlan
+
+        if (!tangemPayFeatureToggles.isTiersPlusPlanEnabled) {
+            if (isIssuing && isApproved) {
+                // If order id wasn't saved -> start order creation and get customer info
+                onboardingRepository.createOrder(userWalletId)
+                    .onLeft { logger.e("createOrder failed: $it") }
+            }
+            return status
+        }
+
+        if (!isIssuing || !isApproved) {
+            return status
+        }
+
+        if (tariffPlan == null) {
+            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+        }
+
+        val hasActiveIssueOrder = issueCardRepository.getIssueOrderIds(userWalletId).isNotEmpty()
+        return if (hasActiveIssueOrder) {
+            PaymentAccountStatusValue.Inactive(
+                source = StatusSource.ACTUAL,
+                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                tariffPlan = getTangemPayTariffPlanStateUseCase(
+                    userWalletId = userWalletId,
+                    tariff = tariffPlan,
+                ),
+                fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                    availableBalance = BigDecimal.ZERO,
+                    currency = tariffPlan.plan.feeCurrencyOrDefault(),
+                ),
+            )
+        } else {
+            PaymentAccountStatusValue.AwaitingPlanSelection(
+                source = StatusSource.ACTUAL,
+                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                tariffPlan = tariffPlan,
+            )
+        }
     }
 
     private suspend fun proceedWithOrderId(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
@@ -286,24 +336,26 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             params = SingleQuoteStatusProducer.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID),
         )?.value as? QuoteStatus.Data
 
+        val customerId = customerId
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val fiatBalance = fiatBalance
         val cryptoBalance = cryptoBalance
-
+        val hasCardData = cards.isNotEmpty() && productInstances.isNotEmpty()
+        val isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled
         return when {
-            kycStatus != KycStatus.APPROVED && !customerId.isNullOrEmpty() -> {
-                PaymentAccountStatusValue.UnderReview(
-                    source = StatusSource.ACTUAL,
-                    kycStatus = kycStatus,
-                    customerId = requireNotNull(customerId) { "CustomerId must not be null" },
-                )
-            }
-            fiatBalance != null && cryptoBalance != null && !customerId.isNullOrEmpty() &&
-                (isDeactivated || isFormer) -> {
+            customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
+                source = StatusSource.ACTUAL,
+            )
+            kycStatus != KycStatus.APPROVED -> PaymentAccountStatusValue.UnderReview(
+                source = StatusSource.ACTUAL,
+                kycStatus = kycStatus,
+                customerId = customerId,
+            )
+            fiatBalance != null && cryptoBalance != null && (isDeactivated || isFormer) ->
                 PaymentAccountStatusValue.Deactivated(
                     source = StatusSource.ACTUAL,
-                    customerId = requireNotNull(customerId) { "CustomerId must not be null" },
+                    customerId = customerId,
                     balance = PaymentAccountStatusValue.Balance(
                         fiatBalance = fiatBalance,
                         cryptoBalance = cryptoBalance,
@@ -313,15 +365,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     fiatRate = quotesData?.fiatRate,
                     error = null,
                 )
-            }
-            cards.isNotEmpty() && productInstances.isNotEmpty() &&
-                fiatBalance != null && cryptoBalance != null && !customerId.isNullOrEmpty() -> convertToContentState(
-                userWalletId = userWalletId,
-                fiatBalance = fiatBalance,
-                cryptoBalance = cryptoBalance,
-                fiatRate = quotesData?.fiatRate,
-                customerId = requireNotNull(customerId) { "CustomerId must not be null" },
-            )
+            fiatBalance != null && cryptoBalance != null && (hasCardData || isTiersPlusPlanEnabled) ->
+                convertToContentState(
+                    userWalletId = userWalletId,
+                    fiatBalance = fiatBalance,
+                    cryptoBalance = cryptoBalance,
+                    fiatRate = quotesData?.fiatRate,
+                    customerId = customerId,
+                )
             else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
     }
@@ -365,7 +416,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         }
 
-        if (tangemPayCards.isEmpty()) return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+        if (!tangemPayFeatureToggles.isTiersPlusPlanEnabled && tangemPayCards.isEmpty()) {
+            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+        }
 
         // Additional-card issuance: the backend omits the new card until it is provisioned, so surface a
         // placeholder for every locally tracked in-flight issuance order alongside the real cards.
@@ -376,6 +429,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         // the previously shown order and append newly seen cards at the end.
         val orderedCards = tangemPayCards.stableOrder(previousRealCardOrder(userWalletId))
 
+        val allCards = orderedCards + issuingCards
+
+        if (allCards.isEmpty()) {
+            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+        }
+
         val virtualAccount = resolveVirtualAccountOnramp(userWalletId)
 
         return PaymentAccountStatusValue.Loaded(
@@ -384,7 +443,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             depositAddress = cryptoBalance.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             fiatRate = fiatRate,
-            cards = orderedCards + issuingCards,
+            cards = allCards,
             balance = PaymentAccountStatusValue.Balance(
                 fiatBalance = fiatBalance,
                 cryptoBalance = cryptoBalance,
