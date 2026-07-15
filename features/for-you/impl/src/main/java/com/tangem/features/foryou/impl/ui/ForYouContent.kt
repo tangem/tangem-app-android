@@ -26,6 +26,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
+import com.tangem.features.foryou.impl.ui.preview.ForYouEarnOpportunitiesPreviewData
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.collections.immutable.persistentListOf
@@ -111,6 +112,7 @@ private class ForYouContentPreviewProvider : PreviewParameterProvider<ForYouUM> 
         get() = sequenceOf(
             ForYouUM(
                 notifications = persistentListOf(ForYouNotification.UsedOutdatedData),
+                earnOpportunities = ForYouEarnOpportunitiesPreviewData.tokensRewards,
                 portfolioReviewUM = ForYouPortfolioReviewPreviewData.reviewContent,
             ),
         )
