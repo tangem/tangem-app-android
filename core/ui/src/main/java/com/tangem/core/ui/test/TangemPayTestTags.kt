@@ -51,4 +51,18 @@ object TangemPayTestTags {
     const val PIN_SUCCESS_TITLE = "TANGEM_PAY_PIN_SUCCESS_TITLE"
     const val PIN_SUCCESS_DESCRIPTION = "TANGEM_PAY_PIN_SUCCESS_DESCRIPTION"
     const val PIN_DONE_BUTTON = "TANGEM_PAY_PIN_DONE_BUTTON"
+
+    // Daily limit block (card page)
+    const val DAILY_LIMIT_CHANGE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_CHANGE_BUTTON"
+    const val DAILY_LIMIT_CURRENT_VALUE = "TANGEM_PAY_DAILY_LIMIT_CURRENT_VALUE"
+
+    // Daily limit setup screen (amount field reuses SendScreenTestTags.INPUT_TEXT_FIELD from AmountTextField)
+    const val DAILY_LIMIT_HINT = "TANGEM_PAY_DAILY_LIMIT_HINT"
+    const val DAILY_LIMIT_SET_BUTTON = "TANGEM_PAY_DAILY_LIMIT_SET_BUTTON"
+
+    // Daily limit success screen
+    const val DAILY_LIMIT_SUCCESS_TITLE = "TANGEM_PAY_DAILY_LIMIT_SUCCESS_TITLE"
+    const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
+
+    fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
 }
