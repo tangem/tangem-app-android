@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.EnrollResult
+import com.tangem.domain.promo.models.EnrolledTokenReward
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.TokenReward
 import com.tangem.test.core.assertEitherLeft
@@ -24,7 +25,8 @@ internal class EnrollPromoCampaignUseCaseTest {
 
     private val campaign = PromoCampaignId.WhaleSwapCashback
     private val walletIds = listOf(UserWalletId("abcdef012345"))
-    private val tokenReward = TokenReward("0xToken", "ethereum")
+    private val tokenReward = TokenReward("0xToken", "ethereum", "0xUser", "tether")
+    private val resultTokenReward = EnrolledTokenReward("0xToken", "ethereum", "tether")
 
     @BeforeEach
     fun setUp() = clearMocks(repository)
@@ -32,7 +34,7 @@ internal class EnrollPromoCampaignUseCaseTest {
     @Test
     fun `GIVEN repo returns Success WHEN invoke THEN Right Success`() = runTest {
         // Arrange
-        val expected = EnrollResult.Success(tokenReward)
+        val expected = EnrollResult.Success(resultTokenReward)
         coEvery { repository.enroll(campaign, tokenReward, walletIds) } returns expected
 
         // Act
