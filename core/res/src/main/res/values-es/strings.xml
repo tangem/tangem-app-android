@@ -2037,8 +2037,8 @@
   <string name="token_details_token_type_subtitle_no_standard">Token en la red %%image%% %1$s</string>
   <string name="token_details_toolbar_subtitle_network">%s red</string>
   <string name="token_details_toolbar_subtitle_standard">%1$s en %2$s red</string>
-  <string name="token_details_toolbar_title_token_in_account">%1$s en %%imagen%% %2$s</string>
-  <string name="token_details_toolbar_title_token_in_wallet">%1$s en %2$s %%imagen%%</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s en %%image%% %2$s</string>
+  <string name="token_details_toolbar_title_token_in_wallet">%1$s en %2$s %%image%%</string>
   <string name="token_details_unable_hide_alert_message">El token %1$s (%2$s) es la moneda principal en la red %3$s y no se puede ocultar mientras tengas otros tokens de esta red en la lista</string>
   <string name="token_details_unable_hide_alert_title">No se puede ocultar %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
