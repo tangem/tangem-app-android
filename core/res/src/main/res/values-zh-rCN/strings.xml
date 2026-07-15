@@ -130,6 +130,7 @@
   <string name="address_book_no_contacts">尚无联系人</string>
   <string name="address_book_no_contacts_description">添加的联系人将显示在此处</string>
   <string name="address_book_remove_address">移除地址</string>
+  <string name="address_book_save_address">保存地址</string>
   <string name="address_book_save_contact">保存联系人</string>
   <string name="address_book_save_to_wallet_title">保存到钱包</string>
   <string name="address_book_save_wallet_to_description">该联系人将与该钱包的通讯录关联。</string>
