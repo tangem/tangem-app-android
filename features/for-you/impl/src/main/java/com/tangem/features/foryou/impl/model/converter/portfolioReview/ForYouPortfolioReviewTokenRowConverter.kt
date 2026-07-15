@@ -20,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.model.converter.forYouPlaceholderBadge
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -47,21 +48,20 @@ internal class ForYouPortfolioReviewTokenRowConverter(
     private val userWalletId: UserWalletId?,
     private val totalFiatBalance: BigDecimal,
     private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
-) {
+) : Converter<List<CryptoCurrencyStatus>, TangemTokenRowUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
 
-    /** Builds one row for all [statuses] of a single asset on the same network. */
-    fun convertNetworkGroup(statuses: List<CryptoCurrencyStatus>): TangemTokenRowUM {
-        val representative = statuses.first()
-        if (statuses.all { it.value is CryptoCurrencyStatus.Loading }) {
+    override fun convert(value: List<CryptoCurrencyStatus>): TangemTokenRowUM {
+        val representative = value.first()
+        if (value.all { it.value is CryptoCurrencyStatus.Loading }) {
             return TangemTokenRowUM.Loading(id = representative.currency.id.value)
         }
 
         val currency = representative.currency
-        val cryptoAmount = statuses.sumOf { it.value.amount.orZero() }
-        val fiatAmount = statuses.sumOf { it.value.fiatAmount.orZero() }
-        val state = statuses.classify()
+        val cryptoAmount = value.sumOf { it.value.amount.orZero() }
+        val fiatAmount = value.sumOf { it.value.fiatAmount.orZero() }
+        val state = value.classify()
 
         return TangemTokenRowUM.Content(
             id = currency.id.value,
@@ -78,7 +78,7 @@ internal class ForYouPortfolioReviewTokenRowConverter(
     /**
      * Maps the aggregate status of [statuses] onto a row's top/bottom end content, rendering the given
      * pre-summed [fiatAmount]. Reflects the same cache-flicker / could-not-refresh / no-address /
-     * unreachable treatment as [convertNetworkGroup], so the asset-level row surfaces the combined status
+     * unreachable treatment as [convert], so the asset-level row surfaces the combined status
      * of its holdings — analogous to how `AccountCryptoPortfolioItemStateConverter` reflects a
      * `TotalFiatBalance`'s status on the account row.
      *
@@ -158,7 +158,7 @@ internal class ForYouPortfolioReviewTokenRowConverter(
     /** Bottom-end: percentage share for resolved states, no-address / unreachable treatment otherwise. */
     private fun toRowBottomEnd(state: RowState, fiatAmount: BigDecimal): TangemTokenRowUM.EndContentUM = when (state) {
         is RowState.Normal -> TangemTokenRowUM.EndContentUM.Content(
-            text = stringReference(fiatAmount.toForYouPercent(totalFiatBalance).format { percent() }),
+            text = stringReference(fiatAmount.toForYouPercent(totalFiatBalance).orZero().format { percent() }),
             isFlickering = state.isFlickering,
         )
         RowState.NoAddress -> attentionEndContent(R.string.common_no_address)
