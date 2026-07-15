@@ -20,6 +20,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.navigation.EditReturnTracker
 import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
@@ -57,6 +58,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
 
     private val model: SendWithSwapModel = getOrCreateModel(params = params, router = innerRouter)
 
+    private val editReturnTracker = EditReturnTracker<SendWithSwapRoute> { it.isEditMode }
+
     private val childStack = childStack(
         key = "sendWithSwapInnerStack",
         source = stackNavigation,
@@ -79,6 +82,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             lifecycle = lifecycle,
             mode = ObserveLifecycleMode.CREATE_DESTROY,
         ) { stack ->
+            // Read synchronously: coroutine scheduling must not reorder tracker updates between stack events
+            val isReturnedFromEdit = editReturnTracker.onRouteActivated(stack.active.configuration)
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is SwapAmountComponent -> {
@@ -94,8 +99,9 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendWithSwapConfirmComponent -> {
-                        if (stack.active.configuration.isEditMode) {
-                            activeComponent.updateState(model.uiState.value)
+                        // A reused Confirm gets no constructor state — re-push the edited fields on edit-return
+                        if (isReturnedFromEdit) {
+                            activeComponent.updateEditedState(model.uiState.value)
                         }
                         // Re-sync destination from parent on Confirm entry, bypassing the edit-mode gate ([REDACTED_TASK_KEY]).
                         activeComponent.updateDestinationState(model.uiState.value.destinationUM)
