@@ -7,23 +7,49 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.earn.EarnErrorResolver
+import com.tangem.domain.earn.model.EarnTokensBatchFlow
+import com.tangem.domain.earn.model.EarnTokensBatchingContext
+import com.tangem.domain.earn.model.EarnTokensListConfig
+import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.earn.EarnError
+import com.tangem.domain.models.earn.EarnRewardType
+import com.tangem.domain.models.earn.EarnToken
+import com.tangem.domain.models.earn.EarnTokenWithCurrency
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
+import com.tangem.pagination.Batch
+import com.tangem.pagination.BatchAction
+import com.tangem.pagination.BatchListState
+import com.tangem.pagination.PaginationStatus
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.CapturingSlot
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -41,6 +67,11 @@ internal class ForYouModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase = mockk()
+    private val getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase = mockk()
+    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase = mockk()
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
+    private val earnErrorResolver: EarnErrorResolver = mockk()
 
     private var model: ForYouModel? = null
 
@@ -49,6 +80,10 @@ internal class ForYouModelTest {
         // Default: a real, non-empty emission so the model's `getOrElse { Default }` mapping path is
         // actually exercised in every test, not bypassed by an empty flow.
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
+        every { yieldSupplyApyFlowUseCase() } returns flowOf(emptyMap())
+        coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns emptyMap()
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        stubTopEarnTokens(status = PaginationStatus.None)
     }
 
     @AfterEach
@@ -75,6 +110,21 @@ internal class ForYouModelTest {
             assertThat(loading.tokenList.all { it.tokenRowUM is TangemTokenRowUM.Loading }).isTrue()
             assertThat(loading.marketChartUM).isEqualTo(MarketChartUM.NoData)
         }
+
+        @Test
+        fun `GIVEN model created WHEN not yet advanced THEN earn section is Loading with skeleton rows`() = runTest {
+            // Arrange
+            every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
+            every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+
+            // Act
+            val model = createModel(testScope = this)
+
+            // Assert
+            val loading = model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Loading
+            assertThat(loading.tokenList).hasSize(5)
+            assertThat(loading.tokenList.all { it.tokenRowUM is TangemTokenRowUM.Loading }).isTrue()
+        }
     }
 
     @Nested
@@ -84,10 +134,7 @@ internal class ForYouModelTest {
         fun `GIVEN selected wallet and statuses emitted WHEN advanced THEN uiState becomes Content`() = runTest {
             // Arrange
             val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
-            stubSelectedWallet(
-                currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))),
-                totalFiatBalance = BigDecimal("100"),
-            )
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
 
             // Act
             val model = createModel(testScope = this)
@@ -107,7 +154,6 @@ internal class ForYouModelTest {
                 val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
                 stubSelectedWallet(
                     currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))),
-                    totalFiatBalance = BigDecimal("100"),
                     source = StatusSource.ONLY_CACHE,
                 )
 
@@ -118,6 +164,71 @@ internal class ForYouModelTest {
                 // Assert
                 assertThat(model.uiState.value.notifications).containsExactly(ForYouNotification.UsedOutdatedData)
             }
+
+        @Test
+        fun `GIVEN nothing earn-eligible and loaded suggestions WHEN advanced THEN earn section suggests them`() =
+            runTest {
+                // Arrange — the portfolio coin has no earn option; the top-earn batch has one suggestion
+                val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+                stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+                stubTopEarnTokens(
+                    status = PaginationStatus.EndOfPagination,
+                    suggestions = listOf(createTopEarnSuggestion()),
+                )
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                val earn = model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
+                assertThat(earn.tokenList.map { it.tokenRowUM.id }).containsExactly("coin-solana")
+            }
+
+        @Test
+        fun `GIVEN model created WHEN advanced THEN top-earn tokens requested as one full-config reload`() = runTest {
+            // Arrange
+            val contextSlot: CapturingSlot<EarnTokensBatchingContext> = slot()
+            val batchFlow: EarnTokensBatchFlow = mockk {
+                every { state } returns MutableStateFlow(
+                    BatchListState(data = emptyList(), status = PaginationStatus.None),
+                )
+            }
+            every { getEarnTokensBatchFlowUseCase(capture(contextSlot), any()) } returns batchFlow
+            every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
+            every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+
+            // Act
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert — a single Reload action with the unfiltered config, sized for one batch
+            verify { getEarnTokensBatchFlowUseCase(any(), TOP_EARN_TOKENS_BATCH_SIZE) }
+            val action = contextSlot.captured.actionsFlow.first() as BatchAction.Reload
+            assertThat(action.requestParams).isEqualTo(
+                EarnTokensListConfig(type = null, networks = null, isForEarn = false),
+            )
+        }
+
+        @Test
+        fun `GIVEN top-earn batch fails to load WHEN advanced THEN error resolved and no suggestions shown`() =
+            runTest {
+                // Arrange
+                val failure = RuntimeException("network down")
+                every { earnErrorResolver.resolve(failure) } returns EarnError.NotHttpError()
+                stubTopEarnTokens(status = PaginationStatus.InitialLoadingError(failure))
+                every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
+                every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                verify { earnErrorResolver.resolve(failure) }
+                val earn = model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
+                assertThat(earn.tokenList).isEmpty()
+            }
     }
 
     @Nested
@@ -127,10 +238,7 @@ internal class ForYouModelTest {
         fun `GIVEN asset row clicked WHEN clicked again THEN isExpanded toggles back to false`() = runTest {
             // Arrange
             val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
-            stubSelectedWallet(
-                currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))),
-                totalFiatBalance = BigDecimal("100"),
-            )
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
             val model = createModel(testScope = this)
             advanceUntilIdle()
             val initialContent = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
@@ -162,22 +270,19 @@ internal class ForYouModelTest {
             runTest {
                 // Arrange
                 val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
-                stubSelectedWallet(
-                    currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))),
-                    totalFiatBalance = BigDecimal("100"),
-                )
+                stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
-                val contentBefore = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
-                val weekItem = contentBefore.periodPickerUM.items[1]
+                val stateBefore = model.uiState.value
+                val weekItem = stateBefore.periodPickerUM.items[1]
 
                 // Act
-                contentBefore.onPeriodClick(weekItem)
+                stateBefore.onPeriodClick(weekItem)
 
                 // Assert
-                val contentAfter = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
-                assertThat(contentAfter.periodPickerUM.initialSelectedItem).isEqualTo(weekItem)
-                assertThat(contentAfter.tokenList).isEqualTo(contentBefore.tokenList)
+                val stateAfter = model.uiState.value
+                assertThat(stateAfter.periodPickerUM.initialSelectedItem).isEqualTo(weekItem)
+                assertThat(stateAfter.portfolioReviewUM).isEqualTo(stateBefore.portfolioReviewUM)
             }
     }
 
@@ -187,17 +292,50 @@ internal class ForYouModelTest {
     /** Wires the repository + supplier so the model derives Content from a single selected wallet. */
     private fun stubSelectedWallet(
         currencies: List<CryptoCurrencyStatus>,
-        totalFiatBalance: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
     ) {
-        val wallet = MockUserWalletFactory.create().copy(walletId = UserWalletId("01"))
+        val wallet = MockUserWalletFactory.create().copy(walletId = WALLET_ID)
         every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(wallet)
         every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(
             linkedMapOf(
-                wallet.walletId to createAccountStatusList(currencies, totalFiatBalance, source),
+                wallet.walletId to createAccountStatusList(currencies, source),
             ),
         )
     }
+
+    private fun stubTopEarnTokens(
+        status: PaginationStatus<List<EarnTokenWithCurrency>>,
+        suggestions: List<EarnTokenWithCurrency> = emptyList(),
+    ) {
+        val batches = if (suggestions.isEmpty()) emptyList() else listOf(Batch(key = 0, data = suggestions))
+        val batchFlow: EarnTokensBatchFlow = mockk {
+            every { state } returns MutableStateFlow(BatchListState(data = batches, status = status))
+        }
+        every { getEarnTokensBatchFlowUseCase(any(), any()) } returns batchFlow
+    }
+
+    /** A yield-type suggestion (7.5% on Solana) the user does not hold yet. */
+    private fun createTopEarnSuggestion(): EarnTokenWithCurrency = EarnTokenWithCurrency(
+        networkName = "Solana",
+        earnToken = EarnToken(
+            apy = "7.5",
+            networkId = "solana",
+            rewardType = EarnRewardType.APY,
+            type = EarnType.YIELD,
+            tokenId = "solana",
+            tokenSymbol = "SOL",
+            tokenName = "Solana",
+            tokenAddress = null,
+            decimalCount = null,
+        ),
+        cryptoCurrency = createCoin(
+            rawCurrencyId = "solana",
+            symbol = "SOL",
+            name = "Solana",
+            networkRawId = "solana",
+            decimals = 9,
+        ),
+    )
 
     private fun createModel(testScope: TestScope): ForYouModel {
         return ForYouModel(
@@ -210,8 +348,13 @@ internal class ForYouModelTest {
             ),
             userWalletsListRepository = userWalletsListRepository,
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
+            yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+            getEarnTokensBatchFlowUseCase = getEarnTokensBatchFlowUseCase,
+            stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
+            isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
+            earnErrorResolver = earnErrorResolver,
         ).also { model = it }
     }
 
@@ -228,13 +371,19 @@ internal class ForYouModelTest {
 
     private fun createAccountStatusList(
         currencies: List<CryptoCurrencyStatus>,
-        totalFiatBalance: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
     ): AccountStatusList = mockk {
         every { flattenCurrencies() } returns currencies
         every { this@mockk.totalFiatBalance } returns TotalFiatBalance.Loaded(
-            amount = totalFiatBalance,
+            amount = currencies.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
             source = source,
+        )
+        every { userWalletId } returns WALLET_ID
+        every { accountStatuses } returns listOf(
+            mockk<AccountStatus.CryptoPortfolio> {
+                every { flattenCurrencies() } returns currencies
+                every { account } returns MockAccounts.createAccount(derivationIndex = 1)
+            },
         )
     }
 
@@ -248,14 +397,18 @@ internal class ForYouModelTest {
         every { this@mockk.fiatAmount } returns fiatAmount
         every { isError } returns false
         every { sources } returns CryptoCurrencyStatus.Sources()
+        every { yieldSupplyStatus } returns null
+        every { stakingBalance } returns null
     }
 
-    private fun createCoin(rawCurrencyId: String, symbol: String): CryptoCurrency.Coin {
-        val network: Network = mockk {
-            every { name } returns "Network"
-            every { isTestnet } returns false
-            every { id } returns mockk { every { rawId } returns Network.RawID(rawCurrencyId) }
-        }
+    private fun createCoin(
+        rawCurrencyId: String,
+        symbol: String,
+        name: String = symbol,
+        networkRawId: String = rawCurrencyId,
+        decimals: Int = 8,
+    ): CryptoCurrency.Coin {
+        val network = createNetwork(networkRawId)
         val currencyId: CryptoCurrency.ID = mockk {
             every { value } returns "coin-$rawCurrencyId"
             every { this@mockk.rawCurrencyId } returns CryptoCurrency.RawID(rawCurrencyId)
@@ -263,11 +416,31 @@ internal class ForYouModelTest {
         return mockk<CryptoCurrency.Coin> {
             every { this@mockk.id } returns currencyId
             every { this@mockk.symbol } returns symbol
-            every { this@mockk.name } returns symbol
+            every { this@mockk.name } returns name
             every { this@mockk.network } returns network
-            every { this@mockk.decimals } returns 8
+            every { this@mockk.decimals } returns decimals
             every { isCustom } returns false
             every { iconUrl } returns null
         }
+    }
+
+    private fun createNetwork(networkRawId: String): Network {
+        val networkId: Network.ID = mockk {
+            every { rawId } returns Network.RawID(networkRawId)
+        }
+        val networkStandardType: Network.StandardType = mockk {
+            every { name } returns "ERC20"
+        }
+        return mockk {
+            every { name } returns "Network"
+            every { isTestnet } returns false
+            every { rawId } returns networkRawId
+            every { id } returns networkId
+            every { standardType } returns networkStandardType
+        }
+    }
+
+    private companion object {
+        val WALLET_ID = UserWalletId("01")
     }
 }
