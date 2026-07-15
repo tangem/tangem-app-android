@@ -1,4 +1,4 @@
-package com.tangem.features.foryou.impl.model.converter
+package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
@@ -12,13 +12,15 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-internal class ForYouTokenRowConverterTest {
+internal class ForYouPortfolioReviewTokenRowConverterTest {
 
     private val appCurrency: AppCurrency = AppCurrency.Default
 
@@ -195,6 +197,51 @@ internal class ForYouTokenRowConverterTest {
         }
 
         @Test
+        fun `GIVEN wallet id present WHEN row clicked THEN token callback receives wallet id and currency`() {
+            // Arrange
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal("1"), fiatAmount = BigDecimal("100"))),
+            )
+            val walletId = UserWalletId("01")
+            var clicked: Pair<UserWalletId, CryptoCurrency>? = null
+            val converter = createConverter(
+                totalFiatBalance = BigDecimal("1000"),
+                userWalletId = walletId,
+                onTokenClick = { id, clickedCurrency -> clicked = id to clickedCurrency },
+            )
+
+            // Act
+            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            result.onItemClick?.invoke()
+
+            // Assert
+            assertThat(clicked).isEqualTo(walletId to currency)
+        }
+
+        @Test
+        fun `GIVEN no wallet id WHEN row clicked THEN token callback is not invoked`() {
+            // Arrange — without a selected wallet there is nowhere to navigate, so the click is a no-op
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal("1"), fiatAmount = BigDecimal("100"))),
+            )
+            var clicked = false
+            val converter = createConverter(
+                totalFiatBalance = BigDecimal("1000"),
+                userWalletId = null,
+                onTokenClick = { _, _ -> clicked = true },
+            )
+
+            // Act
+            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            result.onItemClick?.invoke()
+
+            // Assert
+            assertThat(clicked).isFalse()
+        }
+
+        @Test
         fun `GIVEN mixed MissedDerivation and Unreachable WHEN convertNetworkGroup THEN missed-derivation wins`() {
             // Arrange — missed derivation is the most severe terminal state and dominates
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
@@ -213,18 +260,23 @@ internal class ForYouTokenRowConverterTest {
         }
     }
 
-    private fun createConverter(totalFiatBalance: BigDecimal) = ForYouTokenRowConverter(
+    private fun createConverter(
+        totalFiatBalance: BigDecimal,
+        userWalletId: UserWalletId? = UserWalletId("01"),
+        onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
+    ) = ForYouPortfolioReviewTokenRowConverter(
         appCurrency = appCurrency,
+        userWalletId = userWalletId,
         totalFiatBalance = totalFiatBalance,
-        onTokenClick = {},
+        onTokenClick = onTokenClick,
     )
 
-    /** Mirrors the production fiat rendering used by [ForYouTokenRowConverter] for a resolved row. */
+    /** Mirrors the production fiat rendering used by [ForYouPortfolioReviewTokenRowConverter] for a resolved row. */
     private fun BigDecimal.expectedFiatText(): TextReference = stringReference(
         format { fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol) },
     )
 
-    /** Mirrors the production percent-share rendering used by [ForYouTokenRowConverter] for a resolved row. */
+    /** Mirrors the production percent-share rendering of [ForYouPortfolioReviewTokenRowConverter]. */
     private fun BigDecimal.expectedPercentText(total: BigDecimal): TextReference = stringReference(
         toForYouPercent(total).format { percent() },
     )
@@ -278,6 +330,7 @@ internal class ForYouTokenRowConverterTest {
         return mockk<CryptoCurrency.Coin> {
             every { this@mockk.id } returns currencyId
             every { this@mockk.symbol } returns symbol
+            every { this@mockk.name } returns symbol
             every { this@mockk.network } returns network
             every { this@mockk.decimals } returns 8
             every { isCustom } returns false
