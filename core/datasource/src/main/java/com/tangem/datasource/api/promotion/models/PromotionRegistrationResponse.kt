@@ -14,6 +14,13 @@ data class PromotionRegistrationResponse(
     data class RegistrationData(
         @Json(name = "campaignId") val campaignId: String,
         @Json(name = "registeredAt") val registeredAt: String?,
-        @Json(name = "tokenReward") val tokenReward: CreatePromotionRegistrationBody.TokenRewardDto,
+        @Json(name = "tokenReward") val tokenReward: RegisteredTokenRewardDto,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class RegisteredTokenRewardDto(
+        @Json(name = "tokenAddress") val tokenAddress: String,
+        @Json(name = "networkId") val networkId: String,
+        @Json(name = "tokenId") val tokenId: String,
     )
 }
