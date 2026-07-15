@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.entity
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -37,7 +37,6 @@ internal class TangemPayDetailsNotificationFactory(
         },
     )
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     fun createAwaitingDepositConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
         if (!isTiersPlusPlanEnabled) return null
         if (tariffPlan == null) return null
@@ -52,13 +51,15 @@ internal class TangemPayDetailsNotificationFactory(
 
         val feeText = orderStep.toPlan.formatRecurringFeeOrNull() ?: return null
 
-        val title = "Top-up your account on $feeText"
         return NotificationConfig(
-            title = stringReference(title),
-            subtitle = stringReference("To pay monthly fee for plan and start use card"),
+            title = resourceReference(R.string.tangempay_card_details_awaiting_deposit_title, wrappedList(feeText)),
+            subtitle = resourceReference(R.string.tangempay_card_details_awaiting_deposit_subtitle),
             iconResId = R.drawable.ic_alert_circle_24,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = stringReference("Cancel ${orderStep.toPlan.name}, move to ${orderStep.fromPlan.name}"),
+                text = resourceReference(
+                    R.string.tangempay_card_details_awaiting_deposit_cancel_button,
+                    wrappedList(orderStep.toPlan.name, orderStep.fromPlan.name),
+                ),
                 onClick = { intents.onCancelPlusTransition(order.orderId) },
             ),
         )
@@ -81,16 +82,18 @@ internal class TangemPayDetailsNotificationFactory(
         iconResId = if (isRedesignEnabled) R.drawable.ic_alert_circle_24 else R.drawable.img_attention_20,
     )
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     private fun createTariffSystemDownGradePendingConfig(tariffPlan: TangemPayTariffPlanState): NotificationConfig? {
         val date = tariffPlan.tariff.formatNextBillingDateOrNull() ?: return null
         val planName = tariffPlan.tariff.plan.name
         return NotificationConfig(
-            title = stringReference("Top up your account shortly"),
-            subtitle = stringReference("If it will remain below zero your $planName cards will be closed on $date"),
+            title = resourceReference(R.string.tangempay_card_details_system_downgrade_title),
+            subtitle = resourceReference(
+                R.string.tangempay_card_details_system_downgrade_subtitle,
+                wrappedList(planName, date),
+            ),
             iconResId = R.drawable.ic_alert_circle_24,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = stringReference("Add funds"),
+                text = resourceReference(R.string.tangempay_card_details_add_funds),
                 onClick = intents::onClickAddFunds,
             ),
         )
