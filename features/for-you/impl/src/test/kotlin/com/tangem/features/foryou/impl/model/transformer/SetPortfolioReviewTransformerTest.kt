@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
@@ -307,6 +308,7 @@ internal class SetPortfolioReviewTransformerTest {
             tokenList = persistentListOf<ForYouTokenListItemUM>(),
             marketChartUM = MarketChartUM.NoData,
         ),
+        earnOpportunities = EarnOpportunitiesUM.Loading(tokenList = persistentListOf()),
         notifications = persistentListOf(),
     )
 
