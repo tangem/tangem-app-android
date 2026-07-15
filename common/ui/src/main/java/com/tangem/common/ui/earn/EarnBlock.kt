@@ -367,6 +367,7 @@ private fun EarnBlockIcon(type: Type, iconUM: EarnBlockUM.IconUM, modifier: Modi
                     .size(TangemTheme.dimens2.x6)
                     .hazeForegroundEffectTangem(
                         style = HazeStyle(
+                            backgroundColor = Color.Transparent,
                             tint = HazeTint(Color.Transparent),
                             blurRadius = TangemTheme.dimens2.x4,
                         ),
