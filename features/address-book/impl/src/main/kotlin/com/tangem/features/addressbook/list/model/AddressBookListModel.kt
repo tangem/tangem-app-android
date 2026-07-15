@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
-import com.tangem.domain.addressbook.model.VerifiedContact
+import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -63,7 +63,7 @@ internal class AddressBookListModel @Inject constructor(
     private val searchActive = MutableStateFlow(value = false)
     private val selectedWalletId = MutableStateFlow<String?>(value = null)
 
-    private val allContacts: SharedFlow<List<VerifiedContact>> =
+    private val allContacts: SharedFlow<List<Contact>> =
         getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null)
             .shareIn(modelScope, SharingStarted.Lazily, replay = 1)
 
@@ -179,8 +179,8 @@ internal class AddressBookListModel @Inject constructor(
     }
 
     private data class ListInputs(
-        val allContacts: List<VerifiedContact>,
-        val matchedContacts: List<VerifiedContact>,
+        val allContacts: List<Contact>,
+        val matchedContacts: List<Contact>,
         val query: String,
         val selectedWalletId: String?,
         val wallets: Map<UserWalletId, UserWallet>,

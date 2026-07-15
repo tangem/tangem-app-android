@@ -42,7 +42,6 @@ internal class ContactsBlockModel @Inject constructor(
         combine(
             params.queryFlow.flatMapLatest { query ->
                 getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
-                    .map { verified -> verified.map { it.contact } }
             },
             getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true),
         ) { contacts, wallets -> contacts to wallets.values.toList() }
