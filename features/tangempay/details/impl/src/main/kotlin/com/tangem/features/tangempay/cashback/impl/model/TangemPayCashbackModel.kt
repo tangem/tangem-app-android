@@ -21,6 +21,7 @@ import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackDet
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,9 +46,10 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TangemPayCashbackNavigation> = SlotNavigation()
 
-    private val cashbackConverter = TangemPayCashbackUmConverter(onCloseClick = router::pop)
+    private val cashbackConverter = TangemPayCashbackUmConverter()
     private val histogramConverter = TangemPayCashbackHistogramConverter()
     private val tiersConverter = TangemPayCashbackTiersConverter()
+    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter()
     private val infoTilesConverter = TangemPayCashbackInfoTilesConverter(
         onRateClick = { bottomSheetNavigation.activate(TangemPayCashbackNavigation.Details) },
         onAccrualsClick = { bottomSheetNavigation.activate(TangemPayCashbackNavigation.Accruals) },
@@ -62,40 +64,50 @@ internal class TangemPayCashbackModel @Inject constructor(
         field = MutableStateFlow(accrualsConverter.convert(emptyList()))
 
     val uiState: StateFlow<TangemPayCashbackScreenUM>
-        field = MutableStateFlow(
-            TangemPayCashbackScreenUM(
-                cashback = cashbackConverter.convert(value = null),
-                infoTiles = null,
-                histogram = null,
-            ),
+        field = MutableStateFlow<TangemPayCashbackScreenUM>(
+            TangemPayCashbackScreenUM.Loading(onCloseClick = router::pop),
         )
+
+    private var loadJob: Job? = null
 
     init {
         loadCashback()
     }
 
     private fun loadCashback() {
-        modelScope.launch {
+        loadJob?.cancel()
+        uiState.value = TangemPayCashbackScreenUM.Loading(onCloseClick = router::pop)
+        loadJob = modelScope.launch {
             val summaryDeferred = async { loadSummary() }
             val promotionsDeferred = async { loadPromotions() }
             val docsDeferred = async { loadDocs() }
             val planDeferred = async { loadPlan() }
 
             val summary = summaryDeferred.await()
-            val history = if (summary is CashbackSummary.Enabled) loadHistory() else null
             val promotions = promotionsDeferred.await()
+
+            if (summary == null && promotions == null) {
+                uiState.value = TangemPayCashbackScreenUM.Error(
+                    onCloseClick = router::pop,
+                    onReloadClick = ::loadCashback,
+                )
+                return@launch
+            }
+
+            val history = if (summary is CashbackSummary.Enabled) loadHistory() else null
             val plan = planDeferred.await()
             val tiers = promotions?.let(tiersConverter::convert).orEmpty()
 
-            uiState.value = TangemPayCashbackScreenUM(
+            uiState.value = TangemPayCashbackScreenUM.Content(
+                onCloseClick = router::pop,
                 cashback = cashbackConverter.convert((summary as? CashbackSummary.Enabled)?.cashback),
                 infoTiles = promotions?.let {
-                    infoTilesConverter.convert(
-                        tiers = tiers,
-                        currentPlan = plan,
-                    )
+                    infoTilesConverter.convert(tiers = tiers, currentPlan = plan)
                 },
                 histogram = history?.takeIf { it.months.isNotEmpty() }?.let(histogramConverter::convert),
+                additionalCashback = promotions
+                    ?.let { additionalCashbackConverter.convert(it.additionalCashback) }
+                    ?.takeIf { it.items.isNotEmpty() },
             )
             detailsSheet.value = detailsConverter.convert(tiers)
             accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())
