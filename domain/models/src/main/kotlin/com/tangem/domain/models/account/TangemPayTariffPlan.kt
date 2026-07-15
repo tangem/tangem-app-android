@@ -8,8 +8,10 @@ import java.util.Locale
 @Serializable
 data class TangemPayTariffPlan(
     @SerialName("id") val id: String,
-    @SerialName("type") val type: Type,
+    @SerialName("tier_id") val tierId: String,
+    @SerialName("is_basic_tier") val isBasicTier: Boolean,
     @SerialName("name") val name: String,
+    @SerialName("program_name") val programName: String,
     @SerialName("description_items") val descriptionItems: List<DescriptionItem>,
     @SerialName("images") val images: List<Image> = emptyList(),
     @SerialName("fees") val fees: List<Fee> = emptyList(),
@@ -96,31 +98,6 @@ data class TangemPayTariffPlan(
                     "BANNER" -> BANNER
                     else -> UNKNOWN
                 }
-            }
-        }
-    }
-
-    @Serializable
-    enum class Type {
-        @SerialName("BASIC")
-        BASIC,
-
-        @SerialName("PLUS")
-        PLUS,
-
-        @SerialName("PLUS_FF")
-        PLUS_FF,
-
-        @SerialName("UNKNOWN")
-        UNKNOWN,
-        ;
-
-        companion object {
-            fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
-                "BASIC" -> BASIC
-                "PLUS" -> PLUS
-                "PLUS_FF" -> PLUS_FF
-                else -> UNKNOWN
             }
         }
     }

@@ -12,7 +12,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -286,10 +285,7 @@ internal class TangemPayDetailsStateFactory(
                     ),
                 )
             }
-            if (isTiersPlusPlanEnabled &&
-                tariffPlan != null &&
-                tariffPlan.tariff.plan.type != TangemPayTariffPlan.Type.BASIC
-            ) {
+            if (isTiersPlusPlanEnabled && tariffPlan != null && !tariffPlan.tariff.plan.isBasicTier) {
                 add(
                     TangemPayDropDownItemUM(
                         title = resourceReference(R.string.tangempay_visa_benefits),
