@@ -23,6 +23,7 @@ dependencies {
     api(projects.features.forYou.api)
     api(projects.features.promoBanners.api)
     api(projects.features.tokenRecieve.api)
+    api(projects.features.marketing.api)
 
     /* Data */
     implementation(projects.data.common)
@@ -49,6 +50,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.marketing.models)
     implementation(projects.domain.yieldSupply.models)
     runtimeOnly(projects.domain.manageTokens)
     runtimeOnly(projects.domain.offramp)
