@@ -1,8 +1,11 @@
 package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
 import com.tangem.common.ui.R
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.features.foryou.impl.model.converter.FOR_YOU_TOP_EARN_TOKENS_COUNT
 import com.tangem.features.foryou.impl.model.converter.forYouEarnAssetKey
@@ -20,6 +23,8 @@ import kotlinx.collections.immutable.toPersistentList
  */
 internal class ForYouEarnOpportunitiesTokensActiveConverter(
     private val topEarnTokens: EarnTopToken?,
+    private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
+    private val onAllEarnTokensClick: () -> Unit,
 ) : Converter<List<EarnOpportunities>, EarnOpportunitiesUM> {
 
     override fun convert(value: List<EarnOpportunities>): EarnOpportunitiesUM {
@@ -28,7 +33,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverter(
             .map { status -> status.currency.forYouEarnAssetKey() }
             .toSet()
 
-        val rowConverter = ForYouEarnOpportunitiesTopTokenRowConverter()
+        val rowConverter = ForYouEarnOpportunitiesTopTokenRowConverter(onTokenClick)
 
         return EarnOpportunitiesUM.Content(
             tokenList = topEarnTokens?.getOrNull()
@@ -40,6 +45,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverter(
             subtitleRes = R.string.for_you_earn_opportunities_all_tokens_active,
             potentialReward = null,
             potentialRewardType = null,
+            onAllEarnTokensClick = onAllEarnTokensClick,
         )
     }
 }
