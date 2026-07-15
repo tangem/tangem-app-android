@@ -95,6 +95,15 @@ internal sealed interface TokensListItemUM2 {
         override val tokenRowUM: TangemTokenRowUM,
     ) : TokensListItemUM2
 
+    /**
+     * Synthetic, feature-flag-gated entry-point row for the Polymarket prediction account.
+     * Rendered as a standalone rounded card above the real account rows. Not backed by a domain
+     * account yet — will become an [AccountStatus]-backed row once the external contract lands.
+     */
+    data class Prediction(
+        override val tokenRowUM: TangemTokenRowUM,
+    ) : TokensListItemUM2
+
     data class Portfolio(
         override val tokenRowUM: TangemTokenRowUM,
         val onEmptyClick: () -> Unit,
