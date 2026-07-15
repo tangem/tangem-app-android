@@ -10,7 +10,6 @@ import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import com.tangem.utils.converter.Converter
 
 internal class TangemPayCashbackUmConverter(
-    private val onCloseClick: () -> Unit,
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
 ) : Converter<TangemPayCashback?, TangemPayCashbackUM> {
 
@@ -22,7 +21,6 @@ internal class TangemPayCashbackUmConverter(
                 subtitle = stringReference("Collected amount will be shown here"),
                 isEmpty = true,
                 banner = null,
-                onCloseClick = onCloseClick,
             )
         }
         val currency = getJavaCurrencyByCode(value.currency)
@@ -48,7 +46,6 @@ internal class TangemPayCashbackUmConverter(
             subtitle = stringReference("Will be deposited on $payoutWindow"),
             isEmpty = false,
             banner = banner,
-            onCloseClick = onCloseClick,
         )
     }
 }

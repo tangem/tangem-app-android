@@ -23,8 +23,7 @@ internal class TangemPayCashbackUmConverterTest {
 
     private val defaultLocale = Locale.getDefault()
 
-    private val onCloseClick: () -> Unit = {}
-    private val converter = TangemPayCashbackUmConverter(onCloseClick = onCloseClick)
+    private val converter = TangemPayCashbackUmConverter()
 
     @BeforeEach
     fun setup() {
@@ -51,7 +50,6 @@ internal class TangemPayCashbackUmConverterTest {
             subtitle = stringReference("Collected amount will be shown here"),
             isEmpty = true,
             banner = null,
-            onCloseClick = onCloseClick,
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -73,7 +71,6 @@ internal class TangemPayCashbackUmConverterTest {
                 text = stringReference("Cashback $22.54 for June will be deposited till July 5"),
                 type = TangemPayCashbackUM.Banner.Type.Info,
             ),
-            onCloseClick = onCloseClick,
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -97,7 +94,6 @@ internal class TangemPayCashbackUmConverterTest {
                 ),
                 type = TangemPayCashbackUM.Banner.Type.Error,
             ),
-            onCloseClick = onCloseClick,
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -122,7 +118,6 @@ internal class TangemPayCashbackUmConverterTest {
                 text = stringReference("Cashback $22.54 for June will be deposited till August 2"),
                 type = TangemPayCashbackUM.Banner.Type.Info,
             ),
-            onCloseClick = onCloseClick,
         )
         assertThat(actual).isEqualTo(expected)
     }

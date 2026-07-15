@@ -9,7 +9,6 @@ internal data class TangemPayCashbackUM(
     val subtitle: TextReference,
     val isEmpty: Boolean,
     val banner: Banner?,
-    val onCloseClick: () -> Unit,
 ) {
 
     @Immutable
