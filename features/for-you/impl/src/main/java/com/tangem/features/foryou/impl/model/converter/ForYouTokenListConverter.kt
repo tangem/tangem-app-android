@@ -4,10 +4,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -131,7 +128,11 @@ internal class ForYouTokenListConverter(
                 headIconUM = TangemIconUM.Currency(CurrencyIconState.Empty()),
                 titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.common_other)),
                 subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
-                    text = pluralReference(R.plurals.market_chart_assets_android, otherAssets.count()),
+                    text = pluralReference(
+                        id = R.plurals.market_chart_assets_android,
+                        count = otherAssets.count(),
+                        formatArgs = wrappedList(otherAssets.count()),
+                    ),
                 ),
                 topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
                     text = stringReference(
