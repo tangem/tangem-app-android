@@ -19,11 +19,19 @@ data class PromoTimeline(
 data class TokenReward(
     val tokenAddress: String,
     val networkId: String,
+    val userAddress: String,
+    val tokenId: String,
+)
+
+data class EnrolledTokenReward(
+    val tokenAddress: String,
+    val networkId: String,
+    val tokenId: String,
 )
 
 sealed interface EnrollResult {
-    val tokenReward: TokenReward
+    val tokenReward: EnrolledTokenReward
 
-    data class Success(override val tokenReward: TokenReward) : EnrollResult
-    data class AlreadyEnrolled(override val tokenReward: TokenReward) : EnrollResult
+    data class Success(override val tokenReward: EnrolledTokenReward) : EnrollResult
+    data class AlreadyEnrolled(override val tokenReward: EnrolledTokenReward) : EnrollResult
 }
