@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +35,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_32
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 
@@ -159,7 +161,8 @@ private fun CurrentLimitBlockV2(state: TangemPayDailyLimitBlockState, modifier: 
                 TangemButton(
                     modifier = Modifier
                         .padding(start = TangemTheme.dimens2.x3)
-                        .layoutId(TangemRowLayoutId.TAIL),
+                        .layoutId(TangemRowLayoutId.TAIL)
+                        .testTag(TangemPayTestTags.DAILY_LIMIT_CHANGE_BUTTON),
                     variant = TangemButton.Variant.Secondary,
                     text = resourceReference(R.string.tangempay_card_page_daily_limit_change),
                     onClick = state.onChangeClick,
@@ -264,7 +267,7 @@ private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifi
         }
         is TangemPayDailyLimitBlockState.Content -> {
             Text(
-                modifier = modifier,
+                modifier = modifier.testTag(TangemPayTestTags.DAILY_LIMIT_CURRENT_VALUE),
                 text = state.limit,
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,

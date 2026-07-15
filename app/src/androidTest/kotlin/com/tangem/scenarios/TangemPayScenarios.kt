@@ -34,6 +34,19 @@ fun BaseTestCase.openTangemPayCardPage() {
     }
 }
 
+/** Opens the card page and taps 'Change' on the daily limit block to reach the limit setup screen. */
+fun BaseTestCase.openTangemPayDailyLimitSetup() {
+    openTangemPayCardPage()
+    step("Click on 'Change' daily limit button") {
+        awaitSuccess { onTangemPayCardPageScreen { dailyLimitChangeButton.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { dailyLimitChangeButton.performClick() }
+    }
+    step("Assert daily limit setup screen is displayed") {
+        awaitSuccess { onTangemPayDailyLimitScreen { amountField.assertIsDisplayed() } }
+        onTangemPayDailyLimitScreen { setLimitsButton.assertIsDisplayed() }
+    }
+}
+
 /** From the card page, opens the 'Replace card' reissue bottom sheet via the 'More' menu. */
 fun BaseTestCase.openReissueSheet() {
     step("Click on 'More' button") {
