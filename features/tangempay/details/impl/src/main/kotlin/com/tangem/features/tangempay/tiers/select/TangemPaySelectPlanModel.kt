@@ -50,6 +50,9 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val allowedTransitions: List<TangemPayTariffPlanTransition>
         get() = transitions.filter { it.type in ALLOWED_TYPES }
 
+    private val allowedTransitionsForCompare: List<TangemPayTariffPlanTransition>
+        get() = transitions.filter { it.type in ALLOWED_TYPES_FOR_COMPARE }
+
     private var selectedIndex: Int = 0
     private var isConfirm: Boolean = false
     private var isProcessing: Boolean = false
@@ -130,7 +133,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         state.update { buildState() }
         modelScope.launch {
             action().fold(
-                ifRight = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) },
+                ifRight = { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) },
                 ifLeft = {
                     isProcessing = false
                     state.update { buildState() }
@@ -163,7 +166,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     )
 
     private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
-        val plans = listOf(params.tariffPlan.plan) + transitions.map { it.plan }
+        val plans = listOf(params.tariffPlan.plan) + allowedTransitionsForCompare.map { it.plan }
         val orderedTitles = plans
             .flatMap { plan -> plan.descriptionItems.filter { it.section in COMPARE_SECTIONS } }
             .sortedWith(compareBy({ it.section.ordinal }, { it.order }))
@@ -281,6 +284,10 @@ internal class TangemPaySelectPlanModel @Inject constructor(
             TangemPayTariffPlanTransition.Type.UPGRADE,
             TangemPayTariffPlanTransition.Type.DOWNGRADE,
             TangemPayTariffPlanTransition.Type.ACTIVATION,
+        )
+        private val ALLOWED_TYPES_FOR_COMPARE = setOf(
+            TangemPayTariffPlanTransition.Type.UPGRADE,
+            TangemPayTariffPlanTransition.Type.DOWNGRADE,
         )
         private val COMPARE_SECTIONS = setOf(
             TangemPayTariffPlan.Section.CARD_RELATED,
