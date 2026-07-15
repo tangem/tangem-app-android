@@ -13,6 +13,8 @@ internal class TangemPayCashbackDateFormatter {
 
     fun formatMonthDay(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateMMMMd)
 
+    fun formatNumericDate(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateDDMMYYYY)
+
     fun formatWindow(start: DateTime, end: DateTime): String {
         val isSameMonth = start.year == end.year && start.monthOfYear == end.monthOfYear
         return if (isSameMonth) {
