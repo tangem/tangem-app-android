@@ -20,6 +20,15 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+/**
+ * Earn-opportunities state for a portfolio with tokens that could earn but don't yet: renders the
+ * user's earn-eligible holdings with their projected yearly rewards, headed by the total across
+ * accounts ([EarnOpportunitiesUM.Content.potentialReward]).
+ *
+ * With accounts mode on, each account becomes one expandable row (children delegated to
+ * [ForYouEarnOpportunitiesTokenRowConverter], expansion keyed by account id); with it off, the
+ * tokens are rendered as flat non-expandable rows.
+ */
 internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
     private val appCurrency: AppCurrency,
     private val isAccountsModeEnabled: Boolean,
@@ -51,16 +60,16 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                             tokenRowUM = createAssetRow(
                                 account = earnData.account,
                                 potentialReward = earnData.accountPotentialReward,
-                                tokenCount = earnData.earnCurrencues.size,
+                                tokenCount = earnData.earnCurrencies.size,
                             ),
-                            tokenList = rowConverter.convertList(earnData.earnCurrencues.toList())
+                            tokenList = rowConverter.convertList(earnData.earnCurrencies.toList())
                                 .toPersistentList(),
                             isExpanded = earnData.account.accountId.value in expandedAssetIds,
                             isExpandable = true,
                         ),
                     )
                 } else {
-                    earnData.earnCurrencues.map { token ->
+                    earnData.earnCurrencies.map { token ->
                         ForYouTokenListItemUM(
                             tokenRowUM = rowConverter.convert(token.toPair()),
                             tokenList = persistentListOf(),

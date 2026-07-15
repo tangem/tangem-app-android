@@ -75,7 +75,7 @@ internal class ForYouEarnOpportunitiesConverter(
 
                 EarnOpportunities(
                     account = cryptoAccountStatus.account,
-                    earnCurrencues = tokenList.toMap(),
+                    earnCurrencies = tokenList.toMap(),
                     accountPotentialReward = accountPotentialReward,
                 )
             }
@@ -84,10 +84,14 @@ internal class ForYouEarnOpportunitiesConverter(
 
         return when {
             data.isEmpty() -> {
-                ForYouEarnOpportunitiesNoTokensConverter(topEarnTokens).convert(data)
+                ForYouEarnOpportunitiesNoTokensConverter(
+                    topEarnTokens = topEarnTokens,
+                ).convert(data)
             }
-            data.all { earn -> earn.earnCurrencues.all { entry -> entry.value.isActive } } -> {
-                ForYouEarnOpportunitiesTokensActiveConverter(topEarnTokens).convert(data)
+            data.all { earn -> earn.earnCurrencies.all { entry -> entry.value.isActive } } -> {
+                ForYouEarnOpportunitiesTokensActiveConverter(
+                    topEarnTokens = topEarnTokens,
+                ).convert(data)
             }
             else -> {
                 ForYouEarnOpportunitiesPotentialRewardsConverter(
@@ -134,7 +138,7 @@ internal class ForYouEarnOpportunitiesConverter(
                 currencyStatus = cryptoCurrencyStatus,
                 stakingApyMap = stakingApyMap,
             )
-            if (stakingInfo.rate != null) {
+            if (stakingInfo != null) {
                 return EarnApyInfo(
                     isActive = stakingInfo.isActive,
                     apy = stakingInfo.rate,
@@ -154,10 +158,9 @@ internal class ForYouEarnOpportunitiesConverter(
     private fun findStakingRate(
         currencyStatus: CryptoCurrencyStatus,
         stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
-    ): StakingLocalInfo {
+    ): StakingLocalInfo? {
         val availability = stakingApyMap[currencyStatus.currency]
-        val option = availability?.optionOrNull
-            ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
+        val option = availability?.optionOrNull ?: return null
 
         val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
         val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
@@ -166,7 +169,7 @@ internal class ForYouEarnOpportunitiesConverter(
 
         // Full = no free capacity: show the badge only for tokens that already have a stake.
         if (availability is StakingAvailability.Full && !isActive) {
-            return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
+            return null
         }
 
         val rateInfo = when (option) {
@@ -196,18 +199,18 @@ internal class ForYouEarnOpportunitiesConverter(
                     }
                     .maxByOrNull { it.rate }
             }
-        }
+        } ?: return null
 
         return StakingLocalInfo(
-            rate = rateInfo?.rate,
+            rate = rateInfo.rate,
             isActive = isActive,
-            rewardType = rateInfo?.type,
+            rewardType = rateInfo.type,
         )
     }
 
     private data class StakingLocalInfo(
-        val rate: BigDecimal?,
+        val rate: BigDecimal,
         val isActive: Boolean,
-        val rewardType: RewardType?,
+        val rewardType: RewardType,
     )
 }
