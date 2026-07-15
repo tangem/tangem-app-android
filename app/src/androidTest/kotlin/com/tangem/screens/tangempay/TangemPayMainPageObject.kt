@@ -61,6 +61,14 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         hasText(text)
         useUnmergedTree = true
     }
+
+    val reissueInProgressBanner: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTangemPayMainScreen(function: TangemPayMainPageObject.() -> Unit) =

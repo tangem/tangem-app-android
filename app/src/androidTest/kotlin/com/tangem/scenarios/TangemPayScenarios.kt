@@ -23,6 +23,31 @@ fun BaseTestCase.openTangemPay() {
     }
 }
 
+/** Opens Tangem Pay and taps the card to reach the card management page. */
+fun BaseTestCase.openTangemPayCardPage() {
+    openTangemPay()
+    step("Click on 'Card' button") {
+        onTangemPayMainScreen { cardButton.clickWithAssertion() }
+    }
+    step("Assert card page 'More' button is displayed") {
+        awaitSuccess { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
+    }
+}
+
+/** From the card page, opens the 'Replace card' reissue bottom sheet via the 'More' menu. */
+fun BaseTestCase.openReissueSheet() {
+    step("Click on 'More' button") {
+        onTangemPayCardPageScreen { moreButton.clickWithAssertion() }
+    }
+    step("Click on 'Replace card' menu item") {
+        awaitSuccess { onTangemPayCardPageScreen { replaceCardMenuItem.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { replaceCardMenuItem.performClick() }
+    }
+    step("Assert reissue bottom sheet is displayed") {
+        awaitSuccess { onTangemPayReissueSheet { confirmButton.assertIsDisplayed() } }
+    }
+}
+
 // Compose Test gesture — UiAutomator swipe doesn't reach Material3 PullToRefreshBox's NestedScrollConnection.
 fun BaseTestCase.pullToRefreshTangemPay() {
     val balance = composeTestRule.onNode(hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE))

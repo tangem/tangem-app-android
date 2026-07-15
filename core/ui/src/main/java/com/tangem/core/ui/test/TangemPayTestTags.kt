@@ -24,6 +24,19 @@ object TangemPayTestTags {
     const val FREEZE_CARD_ROW = "TANGEM_PAY_FREEZE_CARD_ROW"
     const val CARD_FROZEN_BADGE = "TANGEM_PAY_CARD_FROZEN_BADGE"
 
+    // Card page top bar more-actions menu (redesign)
+    const val CARD_PAGE_MORE_BUTTON = "TANGEM_PAY_CARD_PAGE_MORE_BUTTON"
+
+    // Masked card number shown on the card face (e.g. "*4242")
+    const val CARD_NUMBER_SHORT = "TANGEM_PAY_CARD_NUMBER_SHORT"
+
+    // Replace card (reissue) bottom sheet
+    const val REISSUE_SHEET_CONFIRM_BUTTON = "TANGEM_PAY_REISSUE_SHEET_CONFIRM_BUTTON"
+    const val REISSUE_SHEET_FEE_VALUE = "TANGEM_PAY_REISSUE_SHEET_FEE_VALUE"
+
+    // Transaction details bottom sheet
+    const val TRANSACTION_DETAILS_AMOUNT = "TANGEM_PAY_TRANSACTION_DETAILS_AMOUNT"
+
     // Freeze confirmation bottom sheet
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"
 
