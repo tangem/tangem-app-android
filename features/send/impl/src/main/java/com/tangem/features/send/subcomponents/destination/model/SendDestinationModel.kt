@@ -102,7 +102,6 @@ internal class SendDestinationModel @Inject constructor(
 
     private val contacts: StateFlow<List<Contact>> =
         getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null)
-            .map { verified -> verified.map { it.contact } }
             .flowOn(dispatchers.default)
             .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
 
