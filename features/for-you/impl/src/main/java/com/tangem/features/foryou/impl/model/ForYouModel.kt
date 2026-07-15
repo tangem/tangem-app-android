@@ -15,6 +15,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
@@ -45,6 +46,22 @@ internal class ForYouModel @Inject constructor(
         field = MutableStateFlow<ForYouUM>(
             ForYouUM(
                 notifications = persistentListOf(),
+                earnOpportunities = EarnOpportunitiesUM.Loading(
+                    tokenList = buildList<ForYouTokenListItemUM> {
+                        repeat(4) { index ->
+                            add(
+                                ForYouTokenListItemUM(
+                                    tokenRowUM = TangemTokenRowUM.Loading(
+                                        id = index.toString(),
+                                    ),
+                                    tokenList = persistentListOf(),
+                                    isExpanded = false,
+                                    isExpandable = false,
+                                ),
+                            )
+                        }
+                    }.toPersistentList(),
+                ),
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData,
                     tokenList = buildList<ForYouTokenListItemUM> {
