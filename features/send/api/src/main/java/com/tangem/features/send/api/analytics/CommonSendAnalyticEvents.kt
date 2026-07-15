@@ -17,6 +17,17 @@ sealed class CommonSendAnalyticEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = category, event = event, params = params) {
 
+    data class SendScreenOpened(
+        val categoryName: String,
+        val source: CommonSendSource,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Send Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+        ),
+    )
+
     /** Recipient address screen opened */
     data class AddressScreenOpened(
         val categoryName: String,
