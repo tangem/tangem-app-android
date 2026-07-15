@@ -2109,7 +2109,7 @@
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s Netzwerk</string>
   <string name="token_details_toolbar_subtitle_network">%s Netzwerk</string>
   <string name="token_details_toolbar_subtitle_standard">%1$s In %2$s Netzwerk</string>
-  <string name="token_details_toolbar_title_token_in_account">%1$s in %%Bild%% %2$s</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s in %%image%% %2$s</string>
   <string name="token_details_toolbar_title_token_in_wallet">%1$s in %2$s %%Bild%%</string>
   <string name="token_details_unable_hide_alert_message">Der %1$s (%2$s) Token ist die Hauptwährung im %3$s Netzwerk und kann nicht versteckt werden, solange du andere Token dieses Netzwerks in der Liste aktiv hast.</string>
   <string name="token_details_unable_hide_alert_title">%s kann nicht ausgeblendet werden</string>
