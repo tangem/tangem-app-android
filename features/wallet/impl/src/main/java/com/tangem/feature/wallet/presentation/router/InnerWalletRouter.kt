@@ -125,4 +125,7 @@ internal interface InnerWalletRouter {
 
     /** Open Transfer screen */
     fun openTransfer(userWalletId: UserWalletId)
+
+    /** Open Polymarket (prediction account) entry screen */
+    fun openPolymarket(userWalletId: UserWalletId)
 }
