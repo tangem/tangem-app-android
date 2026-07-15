@@ -28,6 +28,7 @@ internal data class TangemPayCardLimitSetupUM(
     @Immutable
     internal data class LimitPresetUM(
         val label: String,
+        val testTag: String,
         val onClick: () -> Unit,
     )
 
@@ -42,10 +43,10 @@ internal data class TangemPayCardLimitSetupUM(
             subtitle: TextReference = TextReference.Str("Set a limit from $0 to $50,000"),
             currencyCode: String = "$",
             presets: ImmutableList<LimitPresetUM> = persistentListOf(
-                LimitPresetUM(label = "$0", onClick = {}),
-                LimitPresetUM(label = "$5,000", onClick = {}),
-                LimitPresetUM(label = "$10,000", onClick = {}),
-                LimitPresetUM(label = "$25,000", onClick = {}),
+                LimitPresetUM(label = "$0", testTag = "", onClick = {}),
+                LimitPresetUM(label = "$5,000", testTag = "", onClick = {}),
+                LimitPresetUM(label = "$10,000", testTag = "", onClick = {}),
+                LimitPresetUM(label = "$25,000", testTag = "", onClick = {}),
             ),
             submitButtonEnabled: Boolean = true,
             submitButtonLoading: Boolean = false,
