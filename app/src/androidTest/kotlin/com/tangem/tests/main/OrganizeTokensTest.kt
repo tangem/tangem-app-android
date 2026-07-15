@@ -28,16 +28,7 @@ class OrganizeTokensTest : BaseTestCase() {
     @DisplayName("Organize tokens: Correct tokens list displaying for current wallet")
     @Test
     fun organizeTokensCorrectTokensListDisplaying() {
-        val userTokensState = "Wallet2MockTokensList"
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
-            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
-                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, userTokensState)
-            }
+        setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
