@@ -86,8 +86,7 @@ internal class TangemPayCashbackModel @Inject constructor(
                 infoTiles = promotions?.let {
                     infoTilesConverter.convert(
                         tiers = tiers,
-                        currentPlanType = plan?.type ?: TangemPayTariffPlan.Type.UNKNOWN,
-                        currentPlanName = plan?.name,
+                        currentPlan = plan,
                     )
                 },
             )

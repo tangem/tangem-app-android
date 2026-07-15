@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.cashback.impl.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import org.junit.jupiter.api.Test
 
 internal class TangemPayCashbackDetailsConverterTest {
@@ -81,7 +80,7 @@ internal class TangemPayCashbackDetailsConverterTest {
         min: String? = null,
         cap: String? = null,
     ) = CashbackTier(
-        planType = TangemPayTariffPlan.Type.UNKNOWN,
+        tierId = "basic",
         rate = rate,
         label = label,
         scope = scope,
