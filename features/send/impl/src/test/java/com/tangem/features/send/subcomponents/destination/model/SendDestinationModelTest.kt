@@ -390,7 +390,7 @@ internal class SendDestinationModelTest {
                 validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
             } returns AddressValidation.Success.Valid.right()
             every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns
-                flowOf(listOf(verified(buildContact(name = model.savedName, address = model.savedAddress))))
+                flowOf(listOf(buildContact(name = model.savedName, address = model.savedAddress)))
             val sut = buildModel()
             advanceUntilIdle()
 
@@ -476,7 +476,7 @@ internal class SendDestinationModelTest {
                 validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
             } returns AddressValidation.Success.Valid.right()
             every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns
-                flowOf(model.savedAddresses.map { verified(buildContact(address = it)) })
+                flowOf(model.savedAddresses.map { buildContact(address = it) })
             val sut = buildBlockModel(isAddContactAvailable = model.isAddContactAvailable)
             advanceUntilIdle()
 
@@ -607,9 +607,6 @@ internal class SendDestinationModelTest {
             contactSelectionListener = contactSelectionListener,
         )
     }
-
-    private fun verified(contact: Contact): VerifiedContact =
-        VerifiedContact(contact = contact, invalidEntries = emptyList())
 
     private fun buildContact(name: String = "Alice", address: String = "0xAddr"): Contact = Contact(
         id = ContactId("c1"),

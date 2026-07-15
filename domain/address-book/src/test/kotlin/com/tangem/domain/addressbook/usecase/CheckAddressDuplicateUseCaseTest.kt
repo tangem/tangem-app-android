@@ -27,9 +27,7 @@ class CheckAddressDuplicateUseCaseTest {
     fun resetMocks() {
         clearMocks(repository, contactSignatureVerifier)
         // Default: every stored address verifies, so the use case sees the contacts unchanged.
-        coEvery { contactSignatureVerifier.verifyContacts(any()) } answers {
-            firstArg<List<Contact>>().map { VerifiedContact(contact = it, invalidEntries = emptyList()) }
-        }
+        coEvery { contactSignatureVerifier.verifyContacts(any()) } answers { firstArg<List<Contact>>() }
     }
 
     @Test

@@ -7,7 +7,6 @@ import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookContactsBlockComponent
@@ -48,7 +47,7 @@ internal class ContactsBlockModelTest {
     fun resetMocks() {
         clearMocks(getVerifiedContactsInteractor, getWalletsUseCase, analyticsSender)
         every { getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true) } returns
-            flowOf(linkedMapOf<UserWalletId, UserWallet>())
+            flowOf(linkedMapOf())
     }
 
     @AfterEach
@@ -61,7 +60,7 @@ internal class ContactsBlockModelTest {
     fun `GIVEN matching contacts WHEN block populated THEN SendFlowWidgetShown sent once`() = runTest {
         // Arrange
         every { getVerifiedContactsInteractor.getVerifiedContacts(query = any(), userWalletId = null) } returns
-            flowOf(listOf(verified(id = "1"), verified(id = "2")))
+            flowOf(listOf(contact(id = "1"), contact(id = "2")))
 
         // Act
         createModel(testScope = this)
@@ -91,7 +90,7 @@ internal class ContactsBlockModelTest {
         // Arrange
         var clicked: MatchedContact? = null
         every { getVerifiedContactsInteractor.getVerifiedContacts(query = any(), userWalletId = null) } returns
-            flowOf(listOf(verified(id = "42")))
+            flowOf(listOf(contact(id = "42")))
         val model = createModel(testScope = this, onContactClick = { clicked = it })
         advanceUntilIdle()
 
@@ -102,9 +101,6 @@ internal class ContactsBlockModelTest {
         verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
         assertThat(clicked?.contactId).isEqualTo("42")
     }
-
-    private fun verified(id: String): VerifiedContact =
-        VerifiedContact(contact = contact(id = id), invalidEntries = emptyList())
 
     private fun contact(id: String): Contact = Contact(
         id = ContactId(id),
