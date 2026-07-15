@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
@@ -50,7 +51,6 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         onChangePlanClick = { router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(params.tariffPlan)) },
     )
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] fix hardcoded strings
     private fun createNotification(customerPlan: TangemPayCustomerTariffPlan): TangemPayCurrentPlanUM.Notification? {
         val date = customerPlan.formatNextBillingDateOrNull(formatter = DateTimeFormatters.dateMMMd) ?: return null
         val feeText = customerPlan.plan.formatRecurringFeeOrNull() ?: return null
@@ -58,19 +58,25 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
             TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING -> {
                 val targetPlan = customerPlan.pendingPlan ?: return null
                 TangemPayCurrentPlanUM.Notification(
-                    text = stringReference(
-                        "Your ${customerPlan.plan.name} plan is active till $date, then we will move you to " +
-                            "${targetPlan.name}. $feeText won't be charged.",
+                    text = resourceReference(
+                        R.string.tangempay_current_plan_active_till_notification,
+                        wrappedList(customerPlan.plan.name, date, targetPlan.name, feeText),
                     ),
                     button = TangemPayCurrentPlanUM.Notification.Button(
-                        text = stringReference("Stay on ${customerPlan.plan.name}"),
+                        text = resourceReference(
+                            R.string.tangempay_current_plan_stay_button,
+                            wrappedList(customerPlan.plan.name),
+                        ),
                         isProcessing = isProcessing,
                         onClick = ::onStayOnPlanClick,
                     ),
                 )
             }
             TangemPayCustomerTariffPlan.Status.ACTIVE -> TangemPayCurrentPlanUM.Notification(
-                text = stringReference("$feeText monthly fee will be charged on $date"),
+                text = resourceReference(
+                    R.string.tangempay_current_plan_fee_charged_notification,
+                    wrappedList(feeText, date),
+                ),
             )
             else -> null
         }
