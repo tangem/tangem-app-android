@@ -34,6 +34,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlockLegacy
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
@@ -54,6 +55,7 @@ internal fun TokenDetailsScreenLegacy(
     yieldSupplyComponent: YieldSupplyComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
     ratingComponent: RatingComponent?,
+    marketingBannerComponent: MarketingBannerComponent,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
@@ -154,6 +156,12 @@ internal fun TokenDetailsScreenLegacy(
                     yieldSupplyComponent.Content(modifier = itemModifier)
                 }
 
+                item(key = "marketing_banner_block") {
+                    TangemThemeRedesign {
+                        marketingBannerComponent.Content(modifier = itemModifier)
+                    }
+                }
+
                 with(expressTransactionsComponent) {
                     expressTransactionsContentLegacy(
                         state = expressState.transactionsToDisplay,
@@ -215,6 +223,10 @@ private fun TokenDetailsScreenPreview(
             },
             expressTransactionsComponent = PreviewExpressTransactionsComponent,
             ratingComponent = null,
+            marketingBannerComponent = object : MarketingBannerComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+            },
         )
     }
 }
