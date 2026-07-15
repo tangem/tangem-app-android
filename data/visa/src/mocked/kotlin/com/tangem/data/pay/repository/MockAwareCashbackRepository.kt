@@ -99,6 +99,29 @@ internal class MockAwareCashbackRepository @Inject constructor(
                     monthlyCapAmount = BigDecimal("300"),
                 ),
             ),
+            additionalCashback = listOf(
+                CashbackPromotions.AdditionalCashback(
+                    id = "promo-permanent",
+                    name = "Groceries increase",
+                    description = "+1% cashback for groceries stores",
+                    isPermanent = true,
+                    endDate = null,
+                ),
+                CashbackPromotions.AdditionalCashback(
+                    id = "promo-groceries-2026",
+                    name = "Groceries increase",
+                    description = "+1% cashback for groceries stores. Max \$10/month",
+                    isPermanent = false,
+                    endDate = DateTime.parse("2026-09-26"),
+                ),
+                CashbackPromotions.AdditionalCashback(
+                    id = "promo-cashback-2026",
+                    name = "Cashback increase",
+                    description = "+2% cashback for groceries stores. Max \$10/month",
+                    isPermanent = false,
+                    endDate = DateTime.parse("2026-09-26"),
+                ),
+            ),
         )
 
         val MOCK_DOCS = listOf(
