@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-internal class ForYouPortfolioFormattersTest {
+internal class ForYouUtilsTest {
 
     @Nested
     inner class ForYouGroupKey {
