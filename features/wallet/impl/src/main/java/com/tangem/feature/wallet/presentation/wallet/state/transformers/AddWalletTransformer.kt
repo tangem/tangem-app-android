@@ -14,6 +14,7 @@ internal class AddWalletTransformer(
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val isAddFundsStage1Enabled: Boolean,
+    private val isManageFundsEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -22,11 +23,16 @@ internal class AddWalletTransformer(
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
             isAddFundsStage1Enabled = isAddFundsStage1Enabled,
+            isManageFundsEnabled = isManageFundsEnabled,
         )
     }
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
+            // Select the newly added wallet synchronously (it is appended to the end), mirroring
+            // Initialize/Delete transformers. Otherwise selectedWalletIndex stays stale until the
+            // deferred scroll settles, and getSelectedWalletId() returns the previously selected wallet.
+            selectedWalletIndex = prevState.wallets2.size,
             wallets = (prevState.wallets + walletLoadingStateFactory.create(userWallet)).toImmutableList(),
             wallets2 = (prevState.wallets2 + walletLoadingStateFactory.create2(userWallet)).toImmutableList(),
         )

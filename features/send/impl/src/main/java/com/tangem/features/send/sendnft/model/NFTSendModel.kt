@@ -1,0 +1,246 @@
+package com.tangem.features.send.sendnft.model
+
+import androidx.compose.runtime.Stable
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.nft.entity.NFTSendSuccessTrigger
+import com.tangem.features.send.api.NFTSendComponent
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.common.CommonSendRoute
+import com.tangem.features.send.common.SendConfirmAlertFactory
+import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.sendnft.confirm.NFTSendConfirmComponent
+import com.tangem.features.send.sendnft.success.NFTSendSuccessComponent
+import com.tangem.features.send.sendnft.ui.state.NFTSendUM
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.properties.Delegates
+
+internal interface SendNFTComponentCallback :
+    SendDestinationComponent.ModelCallback,
+    NFTSendConfirmComponent.ModelCallback
+
+@Suppress("LongParameterList")
+@Stable
+@ModelScoped
+internal class NFTSendModel @Inject constructor(
+    paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
+    private val router: Router,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val alertFactory: SendConfirmAlertFactory,
+    private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
+
+    val params: NFTSendComponent.Params = paramsContainer.require()
+
+    val initialRoute = CommonSendRoute.Empty
+
+    val currentRouteFlow = MutableStateFlow<CommonSendRoute>(initialRoute)
+
+    private val userWalletId = params.userWalletId
+    private val nftAsset = params.nftAsset
+
+    val uiState: StateFlow<NFTSendUM>
+        field = MutableStateFlow(initialState())
+
+    val isBalanceHiddenFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
+    var cryptoCurrency: CryptoCurrency by Delegates.notNull()
+    var userWallet: UserWallet by Delegates.notNull()
+    var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    var appCurrency: AppCurrency = AppCurrency.Default
+
+    var account: Account.CryptoPortfolio? = null
+    var isAccountsMode: Boolean = false
+
+    init {
+        subscribeOnCurrencyStatusUpdates()
+        initAppCurrency()
+    }
+
+    override fun onNavigationResult(navigationUM: NavigationUM) {
+        uiState.update { it.copy(navigationUM = navigationUM) }
+    }
+
+    override fun onResult(nftSendUM: NFTSendUM) {
+        uiState.value = nftSendUM
+    }
+
+    override fun onDestinationResult(destinationUM: DestinationUM) {
+        uiState.update { it.copy(destinationUM = destinationUM) }
+    }
+
+    override fun onBackClick() {
+        if (currentRouteFlow.value == CommonSendRoute.ConfirmSuccess) {
+            modelScope.launch {
+                nftSendSuccessTrigger.triggerSuccessNFTSend()
+            }
+        }
+        router.pop()
+    }
+
+    override fun onNextClick() {
+        if (currentRouteFlow.value.isEditMode) {
+            onBackClick()
+        } else {
+            when (currentRouteFlow.value) {
+                is CommonSendRoute.Destination -> router.push(CommonSendRoute.Confirm)
+                CommonSendRoute.Confirm -> router.replaceAll(CommonSendRoute.ConfirmSuccess)
+                else -> onBackClick()
+            }
+        }
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+        val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+            ?: error("Invalid owner address")
+        val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
+        val enteredMemo = destinationUM.memoTextField?.value
+        val nftAsset = NFTSdkAssetConverter.convertBack(params.nftAsset).second
+
+        val nftSendTransaction = createNFTTransferTransactionUseCase(
+            ownerAddress = ownerAddress,
+            nftAsset = nftAsset,
+            memo = enteredMemo,
+            destinationAddress = enteredDestinationAddress,
+            userWalletId = userWallet.walletId,
+            network = cryptoCurrency.network,
+        ).getOrElse {
+            return GetFeeError.DataError(it).left()
+        }
+
+        return getFeeUseCase(
+            transactionData = nftSendTransaction,
+            network = cryptoCurrency.network,
+            userWallet = userWallet,
+        )
+    }
+
+    private fun initAppCurrency() {
+        modelScope.launch {
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+        }
+    }
+
+    private fun subscribeOnCurrencyStatusUpdates() {
+        modelScope.launch {
+            getUserWalletUseCase(params.userWalletId).fold(
+                ifRight = { wallet ->
+                    userWallet = wallet
+
+                    cryptoCurrency = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
+                        ?: return@launch
+
+                    getAccountCurrencyStatusUseCase(
+                        userWalletId,
+                        cryptoCurrency,
+                    ).onEach { (maybeAccount, cryptoStatus) ->
+                        account = maybeAccount
+                        isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+
+                        cryptoCurrencyStatus = cryptoStatus
+                        feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                            userWalletId = userWalletId,
+                            cryptoCurrencyStatus = cryptoStatus,
+                        ).getOrNull() ?: cryptoStatus
+
+                        if (uiState.value.destinationUM is DestinationUM.Empty) {
+                            router.replaceAll(CommonSendRoute.Destination(isEditMode = false))
+                        }
+                    }.flowOn(dispatchers.default)
+                        .launchIn(modelScope)
+                },
+                ifLeft = {
+                    alertFactory.getGenericErrorState(::onFailedTxEmailClick)
+                    return@launch
+                },
+            )
+        }
+    }
+
+    fun showAlertError() {
+        alertFactory.getGenericErrorState(
+            onFailedTxEmailClick = ::onFailedTxEmailClick,
+            popBack = router::pop,
+        )
+    }
+
+    private fun onFailedTxEmailClick(errorMessage: String? = null) {
+        saveBlockchainErrorUseCase(
+            error = BlockchainErrorInfo(
+                errorMessage = errorMessage.orEmpty(),
+                networkId = cryptoCurrency.network.id,
+                destinationAddress = "",
+                tokenSymbol = null,
+                amount = "",
+                fee = "",
+            ),
+        )
+
+        modelScope.launch {
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Send))
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
+        }
+    }
+
+    private fun initialState(): NFTSendUM = NFTSendUM(
+        destinationUM = DestinationUM.Empty(),
+        feeSelectorUM = FeeSelectorUM.Loading,
+        confirmUM = ConfirmUM.Empty,
+        navigationUM = NavigationUM.Empty,
+    )
+}

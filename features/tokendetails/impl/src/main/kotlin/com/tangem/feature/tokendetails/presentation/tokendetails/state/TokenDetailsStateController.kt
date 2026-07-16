@@ -13,9 +13,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @ModelScoped
@@ -25,6 +23,10 @@ internal class TokenDetailsStateController @Inject constructor() {
         field = MutableStateFlow(value = getInitialState())
 
     val value: TokenDetailsUM get() = uiState.value
+
+    val isBalanceHidden: Flow<Boolean> = uiState
+        .map { it.isBalanceHidden }
+        .distinctUntilChanged()
 
     fun update(function: (TokenDetailsUM) -> TokenDetailsUM) {
         uiState.update(function = function)
@@ -44,14 +46,14 @@ internal class TokenDetailsStateController @Inject constructor() {
             ),
             balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
                 addFundsButton = TangemButtonUM(
-                    text = resourceReference(R.string.tangempay_card_details_add_funds),
+                    text = resourceReference(R.string.actionbutton_addfunds_title),
                     tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_down_24),
                     onClick = { },
                     isEnabled = true,
                     type = TangemButtonType.Secondary,
                 ),
                 swapButton = TangemButtonUM(
-                    text = resourceReference(R.string.common_swap),
+                    text = resourceReference(R.string.actionbutton_swap_title),
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_exchange_default_24,
                         tintReference = { TangemTheme.colors2.graphic.neutral.quaternary },
@@ -61,7 +63,7 @@ internal class TokenDetailsStateController @Inject constructor() {
                     type = TangemButtonType.Secondary,
                 ),
                 transferButton = TangemButtonUM(
-                    text = resourceReference(R.string.common_transfer),
+                    text = resourceReference(R.string.actionbutton_transfer_title),
                     tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_up_24),
                     onClick = { },
                     isEnabled = true,

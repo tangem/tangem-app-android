@@ -59,6 +59,8 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit,
     ): FetchResult {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
+        val isNotFoundError = error.isNetworkError(code = Code.NOT_FOUND)
+
         if (isResponseUpToDate) {
             TangemLogger.e("ETag is up to date, no need to update accounts for wallet: $userWalletId")
             val response = requireNotNull(savedAccountsResponse) {
@@ -71,13 +73,16 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         val response = savedAccountsResponse ?: createDefaultResponse(userWalletId)
         val (accountDTOs, userTokensResponse) = response.accounts to response.toUserTokensResponse()
 
-        val isNotFoundError = error.isNetworkError(code = Code.NOT_FOUND)
         if (isNotFoundError) {
             val eTag = createWallet(userWalletId)
 
             if (eTag != null) {
                 pushWalletAccounts(accountDTOs, eTag)
                 userTokensSaver.pushWithRetryer(userWalletId, userTokensResponse)
+            } else {
+                TangemLogger.e(
+                    "handle wallet=$userWalletId: account creation skipped, createWallet returned null eTag",
+                )
             }
         }
 
@@ -112,10 +117,17 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
     private suspend fun createWallet(userWalletId: UserWalletId): String? {
         val creationResponse = walletServerBinder.bind(userWalletId)
 
-        return if (creationResponse is ApiResponse.Success && creationResponse.code == Code.CREATED) {
+        val isCreated = creationResponse is ApiResponse.Success && creationResponse.code == Code.CREATED
+        val eTag = if (isCreated) {
             creationResponse.headers[ETAG_HEADER]?.firstOrNull()
         } else {
             null
         }
+
+        if (eTag == null) {
+            TangemLogger.e("ETag is null for wallet: $userWalletId, isCreated: $isCreated")
+        }
+
+        return eTag
     }
 }
