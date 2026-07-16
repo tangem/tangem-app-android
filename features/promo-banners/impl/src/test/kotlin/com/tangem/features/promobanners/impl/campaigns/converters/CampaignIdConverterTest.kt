@@ -22,8 +22,14 @@ internal class CampaignIdConverterTest {
     }
 
     private fun provideConvertModels() = listOf(
-        ConvertModel(id = "1", expected = CampaignType.WhaleSwapCashback(campaignId = "1")),
-        ConvertModel(id = "2", expected = CampaignType.ReactivationCashback(campaignId = "2")),
+        ConvertModel(
+            id = "whale-swap-cashback",
+            expected = CampaignType.WhaleSwapCashback(campaignId = "whale-swap-cashback"),
+        ),
+        ConvertModel(
+            id = "reactivation-cashback",
+            expected = CampaignType.ReactivationCashback(campaignId = "reactivation-cashback"),
+        ),
         ConvertModel(id = "0", expected = null),
         ConvertModel(id = "unknown", expected = null),
         ConvertModel(id = "", expected = null),
