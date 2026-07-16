@@ -7,7 +7,5 @@ package com.tangem.features.wallet.featuretoggles
  */
 interface WalletFeatureToggles {
 
-    val isAddFundsStage1Enabled: Boolean
-
     val isManageFundsEnabled: Boolean
 }

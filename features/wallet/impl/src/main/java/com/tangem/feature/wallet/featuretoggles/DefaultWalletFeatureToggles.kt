@@ -9,9 +9,6 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
     private val featureToggles: FeatureTogglesManager,
 ) : WalletFeatureToggles {
 
-    override val isAddFundsStage1Enabled: Boolean
-        get() = featureToggles.isFeatureEnabled(FeatureToggles.AND_15310_ADD_FUNDS_STAGE1)
-
     override val isManageFundsEnabled: Boolean
         get() = featureToggles.isFeatureEnabled(FeatureToggles.TWI_1377_MANAGE_FUNDS)
 }
