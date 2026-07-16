@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.search.state.transformers.SearchUMTransformer
+import com.tangem.features.feed.ui.feed.state.MarketChartUM
 import com.tangem.features.feed.ui.search.state.SearchContentUM
 import com.tangem.features.feed.ui.search.state.SearchUM
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +39,7 @@ internal class SearchStateController @Inject constructor() {
                 onClearClick = {},
             ),
             content = SearchContentUM.InitialEmpty,
+            topMarkets = MarketChartUM.Loading,
         )
     }
 }

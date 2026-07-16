@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharedFlow
@@ -94,7 +95,14 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
         val wallet: UserWallet,
         val account: AccountStatus.CryptoPortfolio,
         val addedCurrency: CryptoCurrencyStatus,
+        val meta: FinishMeta = FinishMeta.None,
     )
+
+    sealed interface FinishMeta {
+        data object None : FinishMeta
+        data object OnQuickAction : FinishMeta
+        data class OnBottomAction(val action: BottomAction) : FinishMeta
+    }
 }
 
 /**

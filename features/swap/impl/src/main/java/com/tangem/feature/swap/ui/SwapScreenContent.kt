@@ -13,13 +13,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.footers.SendingText
@@ -50,6 +53,9 @@ import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.receiveCard
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.sendCard
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
+
+private const val KEYBOARD_AUTOHIDE_DELAY_MS = 5_000L
 
 @Suppress("LongMethod")
 @Composable
@@ -88,7 +94,12 @@ internal fun SwapScreenContent(
 
             feeBlock?.invoke(Modifier.fillMaxWidth())
 
-            if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
+            if (state.notifications.isNotEmpty()) {
+                SwapNotifications(
+                    notifications = state.notifications,
+                    onTronBannerShown = state.onTronBannerShown,
+                )
+            }
 
             SpacerHMax()
 
@@ -140,7 +151,27 @@ internal fun SwapScreenContent(
                     )
                 }
             }
+
+            AutohideKeyboardEffect(
+                sendCardState = state.sendCardData,
+            )
         }
+    }
+}
+
+@Composable
+private fun AutohideKeyboardEffect(sendCardState: SwapCardState) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val swapCardData = sendCardState as? SwapCardState.SwapCardData
+
+    LaunchedEffect(swapCardData?.amountField?.value) {
+        if (swapCardData == null) return@LaunchedEffect
+
+        delay(KEYBOARD_AUTOHIDE_DELAY_MS)
+
+        focusManager.clearFocus()
+        keyboardController?.hide()
     }
 }
 
@@ -274,7 +305,16 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size48)
-            .shadow(elevation = 2.dp, shape = CircleShape)
+            .dropShadow(
+                shape = CircleShape,
+                shadow = Shadow(
+                    radius = 6.dp,
+                    spread = 0.5.dp,
+                    color = Color.Black.copy(alpha = 0.1f),
+                    offset = DpOffset(1.dp, 1.dp),
+                ),
+            )
+            .clip(CircleShape)
             .background(TangemTheme.colors.background.action)
             .clickable(
                 enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
@@ -316,7 +356,13 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
-private fun SwapNotifications(notifications: List<NotificationUM>) {
+private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerShown: () -> Unit) {
+    // The Tron token-fee banner's show-count is an "impression": tied to actual on-screen visibility.
+    // LaunchedEffect re-arms only when the boolean flips, so it fires once per hidden -> shown appearance.
+    val isTronBannerShown = notifications.any { it is SwapNotificationUM.Info.TronTokenFee }
+    LaunchedEffect(isTronBannerShown) {
+        if (isTronBannerShown) onTronBannerShown()
+    }
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.secondary)
@@ -413,6 +459,7 @@ private fun getButtonTitle(mode: SwapButton.Mode): String {
 // region preview
 
 private val state = SwapStateHolder(
+    titleId = R.string.common_swap,
     sendCardData = sendCard,
     receiveCardData = receiveCard,
     notifications = persistentListOf(

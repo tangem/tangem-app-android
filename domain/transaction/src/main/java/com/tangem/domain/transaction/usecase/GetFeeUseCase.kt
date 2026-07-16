@@ -2,6 +2,7 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -35,7 +36,13 @@ class GetFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
 ) {
-    suspend operator fun invoke(userWallet: UserWallet, network: Network, transactionData: TransactionData) = either {
+    suspend operator fun invoke(
+        userWallet: UserWallet,
+        network: Network,
+        transactionData: TransactionData,
+        spenderAddress: String? = null,
+        isSimulateEstimation: Boolean = false,
+    ) = either {
         catch(
             block = {
                 val transactionSender = if (userWallet is UserWallet.Cold &&
@@ -48,8 +55,17 @@ class GetFeeUseCase(
                         network = network,
                     )
                 }
-                val result = transactionSender?.getFee(transactionData = transactionData)
-                    ?: error("Fee is null")
+                val isEthereumWalletManager = transactionSender is EthereumWalletManager
+                val result = if (isSimulateEstimation && spenderAddress != null && isEthereumWalletManager) {
+                    transactionSender.estimateFeeWithOverride(
+                        transactionData = transactionData,
+                        spenderAddress = spenderAddress,
+                        isSimulate = true,
+                    )
+                } else {
+                    transactionSender?.getFee(transactionData = transactionData)
+                        ?: error("Fee is null")
+                }
 
                 val maybeFee = when (result) {
                     is Result.Success -> result.data

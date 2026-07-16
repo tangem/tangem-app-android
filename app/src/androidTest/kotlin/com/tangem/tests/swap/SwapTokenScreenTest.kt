@@ -18,6 +18,7 @@ import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @HiltAndroidTest
@@ -50,7 +51,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -147,7 +148,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 disableMobileData()
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -201,7 +202,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -304,7 +305,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -510,7 +511,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(polygon).clickWithAssertion() }
             }
             step("Assert 'Swap' button is not dimmed. Swap available") {
-                onTokenDetailsScreen { swapButton().assertIsDimmed(false) }
+                onTokenDetailsScreen { swapButton.assertIsEnabled() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
@@ -519,7 +520,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(bitcoin).clickWithAssertion() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertIsDimmed(true) }
+                onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
@@ -528,7 +529,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(salam).clickWithAssertion() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertIsDimmed(true) }
+                onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
             }
         }
     }
@@ -545,10 +546,10 @@ class SwapTokenScreenTest : BaseTestCase() {
         val inputAmount = "0.99"
         val market = "Market"
         val fast = "Fast"
-        val marketFeeAmount = "$1.12"
-        val fastFeeAmount = "$1.43"
 
         setupHooks().run {
+
+            var marketFee = 0.0
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -575,18 +576,27 @@ class SwapTokenScreenTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
-            step("Select '$market' fee type") {
+            step("Select '$market' fee type and capture its amount") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeType(FeeType.Market, selectedFeeAmount = marketFeeAmount)
+                    marketFee = parseFeeAmount(selectFeeTypeAndReadFee(FeeType.Market))
                 }
             }
-            step("Select '$fast' fee type") {
+            step("Select '$fast' fee type and assert it exceeds the '$market' fee") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeType(FeeType.Fast, selectedFeeAmount = fastFeeAmount)
+                    val fastFee = parseFeeAmount(selectFeeTypeAndReadFee(FeeType.Fast))
+                    assertTrue(
+                        "Expected '$fast' fee ($fastFee) to be greater than '$market' fee ($marketFee)",
+                        fastFee > marketFee,
+                    )
                 }
             }
         }
     }
+
+    private fun parseFeeAmount(raw: String): Double = raw
+        .replace(Regex("[^0-9.]"), "")
+        .toDoubleOrNull()
+        ?: error("Could not parse a numeric fee amount from '$raw'")
 
     @AllureId("8536")
     @DisplayName("Swap: check switch fee type (unable to cover 'Market' and 'Fast' fee)")
@@ -600,17 +610,23 @@ class SwapTokenScreenTest : BaseTestCase() {
         val feeAmount = "$"
         val scenarioName = "eth_network_balance"
         val scenarioState = "LessThanDollar"
+        val pairsScenarioName = "ethereum_from_pairs"
+        val pairsScenarioState = "DexProvider"
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(scenarioName)
+                resetWireMockScenarioState(pairsScenarioName)
             }
         ).run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+            step("Set WireMock scenario: '$pairsScenarioName' to state: $pairsScenarioState") {
+                setWireMockScenarioState(scenarioName = pairsScenarioName, state = pairsScenarioState)
             }
 
             step("Open 'Main Screen'") {
@@ -679,6 +695,8 @@ class SwapTokenScreenTest : BaseTestCase() {
         val marketFeeAmount = "$1."
         val scenarioName = "eth_fee_history"
         val scenarioState = "UnableToCoverFastFee"
+        val pairsScenarioName = "ethereum_from_pairs"
+        val pairsScenarioState = "DexProvider"
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
@@ -686,11 +704,15 @@ class SwapTokenScreenTest : BaseTestCase() {
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(scenarioName)
+                resetWireMockScenarioState(pairsScenarioName)
             }
         ).run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+            step("Set WireMock scenario: '$pairsScenarioName' to state: $pairsScenarioState") {
+                setWireMockScenarioState(scenarioName = pairsScenarioName, state = pairsScenarioState)
             }
 
             step("Open 'Main Screen'") {
@@ -728,7 +750,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Select '$fastFeeType' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeTypeWithGasless(feeType = FeeType.Fast, fastFeeAmount)
+                    selectFeeType(feeType = FeeType.Fast, selectedFeeAmount = fastFeeAmount)
                 }
             }
             step("Assert fee amount is equal to '$fastFeeType' fee:'$fastFeeAmount'") {
@@ -744,7 +766,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Select '$marketFeeType' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    selectFeeTypeWithGasless(feeType = FeeType.Market, marketFeeAmount)
+                    selectFeeType(feeType = FeeType.Market, selectedFeeAmount = marketFeeAmount)
                 }
             }
             step("Assert 'Swap' button is enabled") {
