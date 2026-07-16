@@ -23,7 +23,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
@@ -270,9 +269,7 @@ internal class OnrampTokenListModel @Inject constructor(
                             val isNotUnreachable = status.value !is CryptoCurrencyStatus.Unreachable
 
                             val isAvailable = when (params.filterOperation) {
-                                OnrampOperation.BUY -> {
-                                    isAvailableForBuy
-                                } // unreachable state is available for Buy operation
+                                OnrampOperation.BUY -> true
                                 OnrampOperation.SELL -> isNotUnreachable
                                 OnrampOperation.SWAP -> {
                                     isNotUnreachable && isAvailableForBuy
@@ -295,12 +292,7 @@ internal class OnrampTokenListModel @Inject constructor(
 
     private suspend fun checkAvailabilityByOperation(status: CryptoCurrencyStatus): Boolean {
         return when (params.filterOperation) {
-            OnrampOperation.BUY -> {
-                rampStateManager.availableForBuy(
-                    userWallet = userWallet,
-                    cryptoCurrency = status.currency,
-                ).isAvailable()
-            }
+            OnrampOperation.BUY -> true
             OnrampOperation.SELL -> {
                 rampStateManager.availableForSell(
                     userWalletId = userWallet.walletId,
@@ -317,9 +309,5 @@ internal class OnrampTokenListModel @Inject constructor(
                 isAvailable && status.value !is CryptoCurrencyStatus.NoQuote && !isUnavailableByYieldSupply
             }
         }
-    }
-
-    private fun ScenarioUnavailabilityReason.isAvailable(): Boolean {
-        return this == ScenarioUnavailabilityReason.None
     }
 }

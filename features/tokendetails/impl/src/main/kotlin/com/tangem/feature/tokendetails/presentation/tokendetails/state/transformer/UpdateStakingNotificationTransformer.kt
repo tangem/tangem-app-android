@@ -4,16 +4,8 @@ import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.getRewardStakingBalance
 import com.tangem.common.getTotalStakingBalance
 import com.tangem.common.ui.earn.EarnBlockUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.defaultAmount
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.formatStyled
-import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -24,10 +16,12 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
@@ -39,11 +33,12 @@ internal class UpdateStakingNotificationTransformer(
     private val stakingAvailability: StakingAvailability,
     private val stakingEntryInfo: StakingEntryInfo?,
     private val appCurrency: AppCurrency,
+    private val isBalanceHidden: Boolean,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
     override fun transform(prevState: TokenDetailsUM): TokenDetailsUM {
-        return prevState.copy(earnBlockState = buildEarnBlock(prevState.isBalanceHidden))
+        return prevState.copy(earnBlockState = buildEarnBlock(isBalanceHidden))
     }
 
     private fun buildEarnBlock(isBalanceHidden: Boolean): EarnBlockUM? {
@@ -195,7 +190,7 @@ internal class UpdateStakingNotificationTransformer(
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = getRewardSubtitle(status, rewardFiatAmount),
+            subtitleUM = getRewardSubtitle(status, rewardFiatAmount, isBalanceHidden),
             trailingUM = EarnBlockUM.TrailingUM.Balance(
                 fiatValue = fiatAmount.formatStyled {
                     fiat(
@@ -220,9 +215,11 @@ internal class UpdateStakingNotificationTransformer(
         )
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun getRewardSubtitle(
         status: CryptoCurrencyStatus,
         stakingRewardAmount: BigDecimal?,
+        isBalanceHidden: Boolean,
     ): EarnBlockUM.SubtitleUM? {
         val blockchainId = status.currency.network.rawId
         val isCoin = status.currency.id.isCoin
@@ -248,39 +245,69 @@ internal class UpdateStakingNotificationTransformer(
             RewardBlockType.CardanoNoRewards -> resourceReference(R.string.staking_cardano_details_rewards_info_text)
             RewardBlockType.RewardUnavailable.DefaultRewardUnavailable,
             RewardBlockType.RewardUnavailable.SolanaRewardUnavailable,
-            -> return null
+            -> rewardRateReference() ?: return null
             RewardBlockType.EthereumEarnedRewards -> {
                 val cryptoRewardAmount = (stakingBalance as? StakingBalance.Data.P2PEthPool)?.totalRewards
-                resourceReference(
-                    R.string.staking_details_autocompound_rewards_earned,
-                    wrappedList(
-                        cryptoRewardAmount.format {
-                            crypto(
-                                symbol = status.currency.symbol,
-                                decimals = status.currency.decimals,
-                            )
-                        },
+                return EarnBlockUM.SubtitleUM.AccentedText(
+                    text = resourceReference(R.string.staking_details_autocompound_rewards_compounded),
+                    accent = resourceReference(
+                        R.string.staking_details_autocompound_funds_earned,
+                        wrappedList(
+                            cryptoRewardAmount.format {
+                                crypto(
+                                    symbol = status.currency.symbol,
+                                    decimals = status.currency.decimals,
+                                )
+                            }.orMaskWithStars(isBalanceHidden),
+                        ),
                     ),
+                    style = EarnBlockUM.SubtitleUM.Style.Small,
                 )
             }
             RewardBlockType.RewardsRequirementsError,
             RewardBlockType.Rewards,
-            -> resourceReference(
-                R.string.staking_details_rewards_to_claim,
-                wrappedList(
-                    stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) },
-                ),
-            )
+            -> {
+                val rewardAmount = stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
+                    .orMaskWithStars(isBalanceHidden)
+                val rateReference = rewardRateReference()
+                if (rateReference != null) {
+                    combinedReference(
+                        rateReference,
+                        stringReference(" ${StringsSigns.DOT} "),
+                        stringReference(rewardAmount),
+                    )
+                } else {
+                    resourceReference(
+                        R.string.staking_details_rewards_to_claim,
+                        wrappedList(rewardAmount),
+                    )
+                }
+            }
         }
 
         val isAccent = rewardBlockType == RewardBlockType.Rewards ||
             rewardBlockType == RewardBlockType.RewardsRequirementsError ||
-            rewardBlockType == RewardBlockType.EthereumEarnedRewards
+            rewardBlockType is RewardBlockType.RewardUnavailable
 
         return EarnBlockUM.SubtitleUM.Text(
             text = text,
             style = EarnBlockUM.SubtitleUM.Style.Small,
             tone = if (isAccent) EarnBlockUM.SubtitleUM.Tone.Accent else EarnBlockUM.SubtitleUM.Tone.Disabled,
+        )
+    }
+
+    private fun rewardRateReference(): TextReference? {
+        val rewardInfo = stakingAvailability.optionOrNull?.displayRewardInfo ?: return null
+        val rateTypeResId = when (rewardInfo.type) {
+            RewardType.APR -> CoreResR.string.staking_details_apr
+            RewardType.APY,
+            RewardType.UNKNOWN,
+            -> CoreResR.string.staking_details_apy
+        }
+        return combinedReference(
+            stringReference(rewardInfo.rate.format { percent() }),
+            stringReference(" "),
+            resourceReference(rateTypeResId),
         )
     }
 }

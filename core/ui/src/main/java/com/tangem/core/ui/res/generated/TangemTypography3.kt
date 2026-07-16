@@ -43,7 +43,7 @@ class TangemTypography3 internal constructor(fontFamily: FontFamily) {
             fontFamily = fontFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 28.sp,
-            lineHeight = 33.sp,
+            lineHeight = 34.sp,
             letterSpacing = (-0.37).sp,
             lineHeightStyle = LineHeightStyle(
                 alignment = LineHeightStyle.Alignment.Center,
@@ -86,7 +86,7 @@ class TangemTypography3 internal constructor(fontFamily: FontFamily) {
             fontFamily = fontFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
-            lineHeight = 17.sp,
+            lineHeight = 18.sp,
             letterSpacing = 0.07.sp,
             lineHeightStyle = LineHeightStyle(
                 alignment = LineHeightStyle.Alignment.Center,

@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -25,11 +26,19 @@ internal class DefaultPromoBannersBlockComponent @AssistedInject constructor(
     }
 
     @Composable
-    override fun Content(modifier: Modifier) {
-        val state by model.uiState.collectAsStateWithLifecycle()
+    override fun ContentWithPadding(horizontalItemPadding: Dp, walletId: String?, modifier: Modifier) {
+        val state = if (walletId != null) {
+            val statesByWallet by model.bannerStates.collectAsStateWithLifecycle()
+            statesByWallet[walletId]
+        } else {
+            val selectedState by model.uiState.collectAsStateWithLifecycle()
+            selectedState
+        } ?: return
+
         PromoBannersBlock(
             state = state,
             modifier = modifier,
+            horizontalItemPadding = horizontalItemPadding,
         )
     }
 

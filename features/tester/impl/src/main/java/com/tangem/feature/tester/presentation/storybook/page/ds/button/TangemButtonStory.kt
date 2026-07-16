@@ -50,12 +50,19 @@ internal fun TangemButtonStory(state: TangemButtonStory, modifier: Modifier = Mo
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // Preview stays pinned at the top.
         ComponentPreview(state = state)
-        VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
-        SizeSelector(selected = state.size, onSelect = state.onSizeChange)
-        BackgroundSelector(selected = state.background, onSelect = state.onBackgroundChange)
-        TextScaleSlider(value = state.textScale, onChange = state.onTextScaleChange)
-        Toggles(state = state)
+        // Only the controls scroll.
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
+            SizeSelector(selected = state.size, onSelect = state.onSizeChange)
+            BackgroundSelector(selected = state.background, onSelect = state.onBackgroundChange)
+            TextScaleSlider(value = state.textScale, onChange = state.onTextScaleChange)
+            Toggles(state = state)
+        }
     }
 }
 
@@ -130,7 +137,7 @@ private fun ComponentPreview(state: TangemButtonStory) {
             background = state.background,
             modifier = Modifier
                 .matchParentSize()
-                .hazeSourceTangem(zIndex = 0f),
+                .hazeSourceTangem(zIndex = -1f),
         )
         Box(
             contentAlignment = Alignment.Center,

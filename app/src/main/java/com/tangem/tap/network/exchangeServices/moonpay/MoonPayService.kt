@@ -138,6 +138,7 @@ class MoonPayService(
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
+        requestId: String,
     ): String? {
         val blockchain = cryptoCurrency.network.toBlockchain()
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
@@ -165,7 +166,12 @@ class MoonPayService(
             .appendQueryParameter("apiKey", apiKey)
             .appendQueryParameter("baseCurrencyCode", moonpayCurrency.currencyCode.uppercase())
             .appendQueryParameter("refundWalletAddress", walletAddress)
-            .appendQueryParameter("redirectURL", "tangem://redirect_sell?currency_id=${cryptoCurrency.id.value}")
+            // request_id authenticates the returning redirect_sell deeplink. It must be added to
+            // redirectURL BEFORE createSignature below so it is covered by the MoonPay URL signature.
+            .appendQueryParameter(
+                "redirectURL",
+                "tangem://redirect_sell?currency_id=${cryptoCurrency.id.value}&request_id=$requestId",
+            )
 
         if (isDarkTheme) uri.appendQueryParameter("theme", "dark")
 

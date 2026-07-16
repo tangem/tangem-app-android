@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.visa
 
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import kotlinx.coroutines.flow.Flow
 
 internal class DefaultTangemPayCardFrozenStateStore(

@@ -128,7 +128,19 @@ private fun TangemPayTxHistoryListItem(
 ) {
     when (state) {
         is TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle -> {
-            TxHistoryGroupTitle(config = state.legacyGroupTitle, modifier = modifier)
+            if (state.isLoading) {
+                RectangleShimmer(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(
+                            vertical = TangemTheme.dimens.spacing8,
+                            horizontal = TangemTheme.dimens.spacing12,
+                        )
+                        .height(TangemTheme.dimens.size12),
+                )
+            } else {
+                TxHistoryGroupTitle(config = state.legacyGroupTitle, modifier = modifier)
+            }
         }
         is TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Title -> {
             TangemPayTxHistoryTitle(modifier = modifier)

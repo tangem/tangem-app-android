@@ -43,7 +43,6 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
-import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -69,6 +68,8 @@ import com.tangem.wallet.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -102,7 +103,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val featureTogglesManager: FeatureTogglesManager,
-    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -210,38 +210,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
-        val isHotWalletOnboardingEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
-        )
-        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isHotWalletOnboardingEnabled")
-        if (isHotWalletOnboardingEnabled) {
-            val tangemPayHotWalletOnboardingDeepLink = withTimeoutOrNull(2.seconds) {
-                appsFlyerReferralParamsHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
-            }
-            TangemLogger.i("[TangemPay][HWO] Deep link present=${tangemPayHotWalletOnboardingDeepLink != null}")
-            if (tangemPayHotWalletOnboardingDeepLink != null) {
-                val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-                val route = if (shouldShowTos) "Disclaimer" else "HotWalletOnboarding"
-                TangemLogger.i("[TangemPay][HWO] TOS accepted=${!shouldShowTos}, navigating to $route")
-                return if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false, nextRoute = hotWalletRoute)
-                } else {
-                    hotWalletRoute
-                }
-            }
-        }
-
-        val isHideStoriesForReferralEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
-        )
-        // Referral users skip the Home stories screen and land directly on the
-        // mobile wallet creation flow.
-        val afterEmptyRoute: AppRoute = if (isHideStoriesForReferralEnabled && shouldShowMobileWalletPromoUseCase()) {
-            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
-        } else {
-            AppRoute.Home(launchMode = launchMode)
-        }
+        val afterEmptyRoute = resolveAppsFlyerOnboardingRoute()
+            ?: AppRoute.Home(launchMode = launchMode)
 
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
             ?: return afterEmptyRoute
@@ -258,6 +228,44 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             afterEmptyRoute
+        }
+    }
+
+    private suspend fun resolveAppsFlyerOnboardingRoute(): AppRoute? = coroutineScope {
+        val tangemPayRoute = async { resolveTangemPayHotWalletOnboardingRoute() }
+        val referralRoute = async { resolveReferralRoute() }
+        tangemPayRoute.await() ?: referralRoute.await()
+    }
+
+    private suspend fun resolveTangemPayHotWalletOnboardingRoute(): AppRoute? {
+        val isEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
+        )
+        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isEnabled")
+        if (!isEnabled) return null
+
+        val deepLink = awaitAppsFlyerDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+        TangemLogger.i("[TangemPay][HWO] Deep link present=${deepLink != null}")
+        return if (deepLink != null) AppRoute.TangemPayHotWalletOnboarding else null
+    }
+
+    private suspend fun resolveReferralRoute(): AppRoute? {
+        val isEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
+        )
+        if (!isEnabled) return null
+
+        val referralDeepLink = awaitAppsFlyerDeeplink(AppsFlyerDeeplinkSource.Referral)
+        return if (referralDeepLink != null) {
+            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
+        } else {
+            null
+        }
+    }
+
+    private suspend fun awaitAppsFlyerDeeplink(source: AppsFlyerDeeplinkSource): String? {
+        return withTimeoutOrNull(2.seconds) {
+            appsFlyerReferralParamsHandler.waitForDeeplink(source)
         }
     }
 
@@ -397,7 +405,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         componentScope.launch(dispatchers.main) {
             backupServiceHolder.backupService.get()?.discardSavedBackup()
             val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
-            cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
+            cardRepository.finishCardActivation(cardId = unfinishedBackup.card.cardId, hasBackupError = true)
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
             analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished())
         }
