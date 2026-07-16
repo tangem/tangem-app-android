@@ -200,6 +200,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
+    override suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId) {
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.clearVirtualAccountOrderId(customerWalletAddress)
+        }
+    }
+
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
             ?: error("no userWallet found")

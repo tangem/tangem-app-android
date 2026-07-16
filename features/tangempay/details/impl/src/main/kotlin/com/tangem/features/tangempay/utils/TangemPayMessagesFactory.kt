@@ -177,6 +177,23 @@ internal object TangemPayMessagesFactory {
         )
     }
 
+    fun createVaPreparingMessage(): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_clock_24) {
+                    type = MessageBottomSheetUM.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
+                }
+                title = TextReference.Res(R.string.tangempay_bank_transfer_success_title)
+                body = TextReference.Res(R.string.tangempay_bank_transfer_success_subtitle)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
+    }
+
     fun createFutureFeature(onGotItClick: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
