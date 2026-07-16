@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
@@ -21,7 +20,6 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
@@ -31,29 +29,16 @@ import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 @Composable
 internal fun MarketsTokenDetailsTitle(
     state: MarketsTokenDetailsUM,
-    backgroundColor: Color,
     isBackButtonEnabled: Boolean,
     onBackClick: () -> Unit,
 ) {
-    if (LocalRedesignEnabled.current) {
-        MarketsTokenDetailsRedesignTopBar(
-            isAddToPortfolioButtonVisible = state.isAddToPortfolioButtonVisible,
-            onAddToPortfolioClick = state.onAddToPortfolioClick,
-            onShareClick = state.onShareClick,
-            isBackButtonEnabled = isBackButtonEnabled,
-            onBackClick = onBackClick,
-        )
-    } else {
-        MarketsTokenDetailsTopBar(
-            onBackClick = onBackClick,
-            isBackButtonEnabled = isBackButtonEnabled,
-            shouldShowPriceSubtitle = state.shouldShowPriceSubtitle,
-            tokenName = state.tokenName,
-            tokenPrice = state.priceText,
-            backgroundColor = backgroundColor,
-            onShareClick = state.onShareClick,
-        )
-    }
+    MarketsTokenDetailsRedesignTopBar(
+        isAddToPortfolioButtonVisible = state.isAddToPortfolioButtonVisible,
+        onAddToPortfolioClick = state.onAddToPortfolioClick,
+        onShareClick = state.onShareClick,
+        isBackButtonEnabled = isBackButtonEnabled,
+        onBackClick = onBackClick,
+    )
 }
 
 @Composable

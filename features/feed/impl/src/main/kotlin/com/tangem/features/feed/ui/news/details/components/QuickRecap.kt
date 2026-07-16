@@ -2,7 +2,6 @@ package com.tangem.features.feed.ui.news.details.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -11,66 +10,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
 internal fun QuickRecap(content: String, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        QuickRecapV2(content, modifier)
-    } else {
-        QuickRecapV1(content, modifier)
-    }
-}
-
-@Composable
-private fun QuickRecapV1(content: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.height(IntrinsicSize.Min),
-    ) {
-        VerticalDivider(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(start = 8.dp),
-            thickness = 2.dp,
-            color = TangemTheme.colors.stroke.primary,
-        )
-        Column(modifier = Modifier.padding(start = 20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_quick_recap_16),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.accent,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResourceSafe(R.string.news_quick_recap),
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.accent,
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = content,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-            )
-        }
-    }
+    QuickRecapV2(content, modifier)
 }
 
 @Composable
