@@ -31,6 +31,7 @@ internal sealed interface PortfolioReviewUM {
     data class Content(
         override val tokenList: ImmutableList<ForYouTokenListItemUM>,
         override val marketChartUM: MarketChartUM,
+        val onAddFundsClick: (() -> Unit)?,
     ) : PortfolioReviewUM
 }
 

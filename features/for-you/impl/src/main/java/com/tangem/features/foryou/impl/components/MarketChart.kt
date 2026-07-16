@@ -16,6 +16,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -51,13 +52,16 @@ internal fun MarketChart(marketChart: MarketChartUM, modifier: Modifier = Modifi
         Column(modifier = Modifier.fillMaxWidth()) {
             DonutChartBlock(marketChart.donutChart, cardBoundsInWindow)
             Spacer(modifier = Modifier.height(16.dp))
-            if (marketChart is MarketChartUM.Loaded) {
-                TopHoldingBlock(
-                    assetCount = marketChart.assetCount,
-                    topHoldingPercent = marketChart.topHoldingPercent,
-                )
-            } else {
-                CantLoadDataBlock()
+            when (marketChart) {
+                is MarketChartUM.Loaded -> {
+                    TopHoldingBlock(
+                        assetCount = marketChart.assetCount,
+                        topHoldingPercent = marketChart.topHoldingPercent,
+                    )
+                }
+                is MarketChartUM.NoData -> {
+                    CantLoadDataBlock(text = marketChart.title)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -113,36 +117,40 @@ private fun ColumnScope.DonutChartBlock(donutChartUM: DonutChartUM, cardBoundsIn
             },
             segments = segments,
         ) {
-            if (donutChartUM is DonutChartUM.Loaded) {
-                Text(
-                    text = donutChartUM.totalAmount,
-                    color = TangemTheme.colors3.text.primary,
-                    style = TangemTheme.typography3.body.medium,
-                    maxLines = 1,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = 8.sp,
-                        maxFontSize = TangemTheme.typography3.body.medium.fontSize,
-                    ),
-                )
-                Text(
-                    text = stringResourceSafe(R.string.market_chart_bubble_total_value),
-                    color = TangemTheme.colors3.text.secondary,
-                    style = TangemTheme.typography3.caption.medium,
-                    maxLines = 1,
-                    autoSize = TextAutoSize.StepBased(
-                        maxFontSize = TangemTheme.typography3.caption.medium.fontSize,
-                    ),
-                )
-            } else {
-                Text(
-                    text = stringResourceSafe(R.string.market_chart_bubble_no_data),
-                    color = TangemTheme.colors3.text.secondary,
-                    style = TangemTheme.typography3.body.medium,
-                    maxLines = 1,
-                    autoSize = TextAutoSize.StepBased(
-                        maxFontSize = TangemTheme.typography3.caption.medium.fontSize,
-                    ),
-                )
+            when (donutChartUM) {
+                is DonutChartUM.Loaded -> {
+                    Text(
+                        text = donutChartUM.totalAmount,
+                        color = TangemTheme.colors3.text.primary,
+                        style = TangemTheme.typography3.body.medium,
+                        maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = 8.sp,
+                            maxFontSize = TangemTheme.typography3.body.medium.fontSize,
+                        ),
+                    )
+                    Text(
+                        text = stringResourceSafe(R.string.market_chart_bubble_total_value),
+                        color = TangemTheme.colors3.text.secondary,
+                        style = TangemTheme.typography3.caption.medium,
+                        maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(
+                            maxFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                        ),
+                    )
+                }
+                is DonutChartUM.NoData -> {
+                    Text(
+                        text = donutChartUM.title.resolveReference(),
+                        color = TangemTheme.colors3.text.secondary,
+                        style = TangemTheme.typography3.body.medium,
+                        maxLines = 2,
+                        textAlign = TextAlign.Center,
+                        autoSize = TextAutoSize.StepBased(
+                            maxFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                        ),
+                    )
+                }
             }
         }
 
@@ -233,10 +241,10 @@ private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: Text
 }
 
 @Composable
-private fun ColumnScope.CantLoadDataBlock() {
+private fun ColumnScope.CantLoadDataBlock(text: TextReference) {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = stringResourceSafe(R.string.market_chart_can_not_load_data),
+        text = text.resolveReference(),
         color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography3.heading.small,
     )
@@ -306,7 +314,10 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
             ),
         ),
     )
-    MarketChartPreviewScenario.NO_DATA -> MarketChartUM.NoData
+    MarketChartPreviewScenario.NO_DATA -> MarketChartUM.NoData(
+        title = resourceReference(R.string.market_chart_can_not_load_data),
+        donutText = resourceReference(R.string.market_chart_bubble_no_data),
+    )
 }
 
 @Suppress("MagicNumber")
