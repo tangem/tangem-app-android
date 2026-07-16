@@ -11,7 +11,6 @@ import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attem
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester.AttemptRequest
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -38,9 +37,6 @@ internal class HotAccessCodeRequestModelTest {
     private val canUseBiometryUseCase: CanUseBiometryUseCase = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase = mockk(relaxed = true)
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk {
-        every { isAssetsDiscoveryEnabled } returns false
-    }
 
     private val hotWalletIdA: HotWalletId = mockk()
     private val hotWalletIdB: HotWalletId = mockk()
@@ -152,7 +148,6 @@ internal class HotAccessCodeRequestModelTest {
             canUseBiometryUseCase = canUseBiometryUseCase,
             analyticsEventHandler = analyticsEventHandler,
             startAssetsDiscoveryUseCase = startAssetsDiscoveryUseCase,
-            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 

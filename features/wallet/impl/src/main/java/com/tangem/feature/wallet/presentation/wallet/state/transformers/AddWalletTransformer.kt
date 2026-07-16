@@ -13,7 +13,6 @@ internal class AddWalletTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isAddFundsStage1Enabled: Boolean,
     private val isManageFundsEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
@@ -22,7 +21,6 @@ internal class AddWalletTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
-            isAddFundsStage1Enabled = isAddFundsStage1Enabled,
             isManageFundsEnabled = isManageFundsEnabled,
         )
     }
