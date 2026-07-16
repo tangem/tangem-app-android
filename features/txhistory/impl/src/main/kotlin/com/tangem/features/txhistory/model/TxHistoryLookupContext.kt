@@ -45,10 +45,10 @@ internal sealed interface ResolvedOwner {
  */
 internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: Network.RawID?): ResolvedOwner {
     val account = if (networkRawId != null) {
-        ownAccountByNetwork[networkRawId]?.get(address)
+        ownAccountByNetwork[networkRawId]?.getByAddress(address)
     } else {
         ownAccountByNetwork.values
-            .mapNotNull { it[address] }
+            .mapNotNull { it.getByAddress(address) }
             .distinctBy { it.accountId }
             .singleOrNull()
     }
@@ -60,6 +60,15 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
             ?: ResolvedOwner.External(address)
     }
 }
+
+/**
+
+ * wallet derived it, while a confirmed tx from an indexer may report the same address in a different case (e.g. EIP-55
+ * checksummed vs lowercase EVM). A differing-case variant of another valid address would fail its checksum, so the
+ * case-insensitive fallback cannot mis-attribute an external counterparty.
+ */
+private fun Map<String, Account.CryptoPortfolio>.getByAddress(address: String): Account.CryptoPortfolio? =
+    this[address] ?: entries.firstOrNull { it.key.equals(address, ignoreCase = true) }?.value
 
 /**
  * Flattens every crypto-portfolio account of every wallet into `address -> account` maps keyed by [Network.RawID]
