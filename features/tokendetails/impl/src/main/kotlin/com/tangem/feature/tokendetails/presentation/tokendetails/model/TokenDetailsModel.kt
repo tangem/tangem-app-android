@@ -3,38 +3,30 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import arrow.core.right
-import com.tangem.utils.logging.TangemLogger
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
-import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
-import com.tangem.features.rating.RatingComponent
-import com.tangem.feature.swap.domain.SwapFeedbackUseCase
-import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
-import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
-import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds.image.DeviceIconUM
@@ -50,11 +42,18 @@ import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
+import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
@@ -64,6 +63,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
+import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
@@ -85,39 +85,24 @@ import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
-import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
-import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
+import com.tangem.feature.swap.domain.SwapFeedbackUseCase
+import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateActionButtonsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateAddFundsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTransferTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateZeroBalanceActionsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindAddFundsActionButtonTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindTransferActionButtonTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateStakingNotificationTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateNotificationsTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
+import com.tangem.features.rating.RatingComponent
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -128,11 +113,13 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "PropertyUsedBeforeDeclaration")
@@ -154,6 +141,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
     private val openTrustlineUseCase: OpenTrustlineUseCase,
@@ -193,6 +182,9 @@ internal class TokenDetailsModel @Inject constructor(
     private val redesignStateController: TokenDetailsStateController,
     private val swapFeedbackUseCase: SwapFeedbackUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
+    private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
+    private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -305,6 +297,7 @@ internal class TokenDetailsModel @Inject constructor(
         handleBalanceHiding()
         checkForActionUpdates()
         handleNavigationParam()
+        observeQuickTopUpBlock()
     }
 
     private fun initButtons() {
@@ -376,13 +369,13 @@ internal class TokenDetailsModel @Inject constructor(
                             actions = state.states,
                             networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
+                            analyticsEventHandler = analyticsEventsHandler,
                             onActionDispatched = bottomSheetNavigation::dismiss,
                         ),
                     )
                     redesignStateController.update(
                         UpdateZeroBalanceActionsTransformer(
                             actions = state.states,
-                            networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
                         ),
                     )
@@ -425,6 +418,7 @@ internal class TokenDetailsModel @Inject constructor(
                         UpdateNotificationsTransformer(
                             warnings = warnings,
                             clickIntents = this@TokenDetailsModel,
+                            walletInteractionIcon = walletInterationIcon(userWallet),
                         ),
                     )
                 }
@@ -463,6 +457,7 @@ internal class TokenDetailsModel @Inject constructor(
             yieldSupplyGetRewardsBalanceUseCase(status = status, appCurrency = selectedAppCurrencyFlow.value)
                 .onEach { formatted ->
                     uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(formatted)
+                    redesignStateController.update(SetYieldSupplyBalanceTransformer(formatted))
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -472,6 +467,7 @@ internal class TokenDetailsModel @Inject constructor(
             uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
                 YieldSupplyRewardBalance.empty(),
             )
+            redesignStateController.update(SetYieldSupplyBalanceTransformer(YieldSupplyRewardBalance.empty()))
         }
     }
 
@@ -518,7 +514,7 @@ internal class TokenDetailsModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).getOrElse { false }
 
-            val isSupported = isXPUBSupported()
+            val isSupported = isXpubSupported()
             val isDynamicAddressesAvailable = isSupported &&
                 isDynamicAddressesAvailableUseCase(userWallet, cryptoCurrency)
 
@@ -531,7 +527,7 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    private suspend fun isXPUBSupported(): Boolean {
+    private suspend fun isXpubSupported(): Boolean {
         return isXpubSupportedUseCase(userWalletId = userWalletId, network = cryptoCurrency.network)
     }
 
@@ -552,10 +548,41 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
-        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.AddFunds)
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonAddFunds(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                derivationIndex = getAccountIndexOrNull(),
+            ),
+        )
+        bottomSheetNavigation.activate(
+            TokenDetailsBottomSheetConfig.AddFunds(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ),
+        )
     }
 
     override fun onTransferClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonTransfer(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                derivationIndex = getAccountIndexOrNull(),
+            ),
+        )
+        val amount = cryptoCurrencyStatus?.value?.amount
+        if (amount == null || amount.signum() <= 0) {
+            handleUnavailabilityReason(
+                unavailabilityReason = ScenarioUnavailabilityReason.EmptyBalance(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+                ),
+            )
+            return
+        }
+        analyticsEventsHandler.send(
+            TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
+        )
         bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
     }
 
@@ -572,6 +599,7 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
+        if (isTopUpBlockedByBackupError()) return
 
         val status = cryptoCurrencyStatus ?: return
         modelScope.launch {
@@ -583,6 +611,43 @@ internal class TokenDetailsModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onQuickTopUpClick(amount: BigDecimal, currencyCode: String) {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonQuickTopUp(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                currency = currencyCode,
+                value = amount.toInt().toString(),
+            ),
+        )
+        appRouter.push(
+            AppRoute.Onramp(
+                source = OnrampSource.TOKEN_DETAILS,
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+                initialFiatAmount = amount,
+            ),
+        )
+    }
+
+    private fun onQuickTopUpOtherClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = ScenarioUnavailabilityReason.None.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
+            ),
+        )
+        appRouter.push(
+            AppRoute.Onramp(
+                source = OnrampSource.TOKEN_DETAILS,
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ),
+        )
     }
 
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) {
@@ -657,6 +722,7 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
+        if (isTopUpBlockedByBackupError()) return
 
         modelScope.launch {
             if (needShowYieldSupplyWarning()) {
@@ -729,12 +795,15 @@ internal class TokenDetailsModel @Inject constructor(
         showErrorIfDemoModeOrElse {
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
 
-            getOfframpUrlUseCase(
-                cryptoCurrencyStatus = status,
-                appCurrencyCode = selectedAppCurrencyFlow.value.code,
-            ).onRight { url ->
-                urlOpener.openUrl(url)
-                analyticsEventsHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+            modelScope.launch {
+                getOfframpUrlUseCase(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyStatus = status,
+                    appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                ).onRight { url ->
+                    urlOpener.openUrl(url)
+                    analyticsEventsHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+                }
             }
         }
     }
@@ -745,6 +814,20 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.FROM, checkYieldSupply = true)
+    }
+
+    override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
+            return
+        }
+
+        appRouter.push(
+            AppRoute.SendEntryPoint(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+                shouldStartWithSwap = true,
+            ),
+        )
     }
 
     override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -780,10 +863,10 @@ internal class TokenDetailsModel @Inject constructor(
             } else {
                 appRouter.push(
                     AppRoute.Swap(
-                        cryptoCurrency = cryptoCurrency,
+                        fromCryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
-                        currencyPosition = currencyPosition,
+                        fromCurrencyPosition = currencyPosition,
                     ),
                 )
             }
@@ -1143,6 +1226,19 @@ internal class TokenDetailsModel @Inject constructor(
         return true
     }
 
+    private fun isTopUpBlockedByBackupError(): Boolean {
+        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+
+        dialogFactory.showBackupError(onContactSupport = ::contactBackupSupport)
+        return true
+    }
+
+    private fun contactBackupSupport() {
+        modelScope.launch {
+            sendBackupProblemEmailUseCase(userWallet.walletId)
+        }
+    }
+
     private fun openStaking() {
         modelScope.launch {
             getStakingAvailabilityUseCase.invokeSync(userWalletId, cryptoCurrency)
@@ -1266,7 +1362,7 @@ internal class TokenDetailsModel @Inject constructor(
                 TokenAction.Send -> sendCurrency()
                 TokenAction.Swap -> appRouter.push(
                     AppRoute.Swap(
-                        cryptoCurrency = cryptoCurrency,
+                        fromCryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
                     ),
@@ -1339,15 +1435,17 @@ internal class TokenDetailsModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).getOrElse { false }
 
-            val isSupported = isXPUBSupported()
+            val isXpubSupported = isXpubSupported()
+            val isDynamicAddressesAvailable = isXpubSupported &&
+                isDynamicAddressesAvailableUseCase(userWallet, cryptoCurrency)
 
             redesignStateController.update(
                 UpdateTopBarMenuTransformer(
                     userWallet = userWallet,
                     hasDerivations = hasDerivations,
-                    isXPubSupported = isSupported,
-                    onGenerateExtendedKey = ::onGenerateExtendedKey,
-                    onHideClick = ::onHideClick,
+                    isXpubSupported = isXpubSupported,
+                    isDynamicAddressesAvailable = isDynamicAddressesAvailable,
+                    clickIntents = this@TokenDetailsModel,
                 ),
             )
         }
@@ -1360,6 +1458,44 @@ internal class TokenDetailsModel @Inject constructor(
         updateRedesignTopBarMenu()
         observeRedesignTopBarTitle()
         observeRedesignStakingNotification()
+    }
+
+    private fun observeQuickTopUpBlock() {
+        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .map { it.status }
+            .distinctUntilChanged()
+            .flatMapLatest { status ->
+                flow {
+                    val amount = status.value.amount
+                    if (amount == null || !amount.isZero()) {
+                        emit(null)
+                        return@flow
+                    }
+                    val isHistoryEmpty = getFixedTxHistoryItemsUseCase.getSync(
+                        userWalletId = userWalletId,
+                        currency = cryptoCurrency,
+                    ).fold(
+                        ifLeft = { true },
+                        ifRight = { it.isEmpty() },
+                    )
+                    val availability = checkOnrampAvailabilityUseCase(userWallet)
+                    emit(
+                        quickTopUpBlockFactory.build(
+                            currencyStatus = status,
+                            isHistoryEmpty = isHistoryEmpty,
+                            onrampAvailability = availability,
+                            onPresetClick = ::onQuickTopUpClick,
+                            onOtherClick = ::onQuickTopUpOtherClick,
+                        ),
+                    )
+                }
+            }
+            .onEach { block ->
+                uiState.value = uiState.value.copy(quickTopUpBlock = block)
+                redesignStateController.update { state -> state.copy(quickTopUpBlock = block) }
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun observeRedesignStakingNotification() {
@@ -1389,13 +1525,15 @@ internal class TokenDetailsModel @Inject constructor(
             flow2 = availabilityFlow,
             flow3 = entryInfoFlow,
             flow4 = selectedAppCurrencyFlow,
-        ) { status, availability, entryInfo, appCurrency ->
+            flow5 = redesignStateController.isBalanceHidden,
+        ) { status, availability, entryInfo, appCurrency, isBalanceHidden ->
             redesignStateController.update(
                 UpdateStakingNotificationTransformer(
                     cryptoCurrencyStatus = status,
                     stakingAvailability = availability,
                     stakingEntryInfo = entryInfo,
                     appCurrency = appCurrency,
+                    isBalanceHidden = isBalanceHidden,
                     clickIntents = this,
                 ),
             )

@@ -5,10 +5,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
-import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.test.core.ProvideTestModels
-import arrow.core.right
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,13 +26,9 @@ import org.junit.jupiter.params.ParameterizedTest
 class AppsFlyerReferralParamsHandlerTest {
 
     private val appsFlyerStore: AppsFlyerStore = mockk(relaxUnitFun = true)
-    private val setShouldShowMobileWalletPromoUseCase: SetShouldShowMobileWalletPromoUseCase = mockk {
-        coEvery { this@mockk.invoke(true) } returns Unit.right()
-    }
     private val handler = AppsFlyerReferralParamsHandler(
         appsFlyerStore = appsFlyerStore,
         coroutineScope = TestAppCoroutineScope(),
-        setShouldShowMobileWalletPromoUseCase = setShouldShowMobileWalletPromoUseCase,
     )
 
     @AfterEach
@@ -175,7 +169,6 @@ class AppsFlyerReferralParamsHandlerTest {
         private val localHandler = AppsFlyerReferralParamsHandler(
             appsFlyerStore = localStore,
             coroutineScope = TestAppCoroutineScope(),
-            setShouldShowMobileWalletPromoUseCase = mockk { coEvery { this@mockk.invoke(true) } returns Unit.right() },
         )
 
         @Test
@@ -237,6 +230,93 @@ class AppsFlyerReferralParamsHandlerTest {
 
             // THEN
             assertThat(result).isNull()
+        }
+    }
+
+    @Nested
+    inner class WaitForReferralDeeplink {
+
+        private val localStore: AppsFlyerStore = mockk(relaxUnitFun = true)
+        private val localHandler = AppsFlyerReferralParamsHandler(
+            appsFlyerStore = localStore,
+            coroutineScope = TestAppCoroutineScope(),
+        )
+
+        @Test
+        fun `GIVEN cached referral deeplink WHEN waitForDeeplink THEN returns cached value`() = runTest {
+            // GIVEN
+            coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.Referral) } returns "referral"
+
+            // WHEN
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.Referral)
+
+            // THEN
+            assertThat(result).isEqualTo("referral")
+        }
+
+        @Test
+        fun `GIVEN no cache and referral deeplink WHEN handleDeeplink then waitForDeeplink THEN returns referral value`() =
+            runTest {
+                // GIVEN
+                coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.Referral) } returns null
+                val deepLink = mockk<DeepLink> {
+                    every { deepLinkValue } returns "referral"
+                    every { getStringValue(any()) } returns SUCCESS_REFCODE
+                }
+
+                // WHEN
+                localHandler.handleDeeplink(deepLink)
+                val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.Referral)
+
+                // THEN
+                assertThat(result).isEqualTo("referral")
+                coVerify { localStore.storeDeeplink(AppsFlyerDeeplinkSource.Referral, "referral") }
+            }
+
+        @Test
+        fun `GIVEN no cache and non-referral deeplink WHEN handleDeeplink then waitForDeeplink THEN returns null`() =
+            runTest {
+                // GIVEN
+                coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.Referral) } returns null
+                val deepLink = mockk<DeepLink> {
+                    every { deepLinkValue } returns "tpay_mobileonboard"
+                    every { getStringValue(any()) } returns null
+                }
+
+                // WHEN
+                localHandler.handleDeeplink(deepLink)
+                val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.Referral)
+
+                // THEN
+                assertThat(result).isNull()
+                coVerify(inverse = true) { localStore.storeDeeplink(AppsFlyerDeeplinkSource.Referral, any()) }
+            }
+
+        @Test
+        fun `GIVEN no cache WHEN handleNoDeeplink then waitForDeeplink THEN returns null`() = runTest {
+            // GIVEN
+            coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.Referral) } returns null
+
+            // WHEN
+            localHandler.handleNoDeeplink()
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.Referral)
+
+            // THEN
+            assertThat(result).isNull()
+        }
+
+        @Test
+        fun `GIVEN deeplink stored during wait WHEN waitForDeeplink THEN returns stored value`() = runTest {
+            // GIVEN cache is empty on the initial read but populated (e.g. from conversion-data
+            // handling) by the time we re-check after awaiting the deferred
+            coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.Referral) } returns null andThen "referral"
+
+            // WHEN the deferred resolves without a matching value (UDL reported no deep link)
+            localHandler.handleNoDeeplink()
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.Referral)
+
+            // THEN the value persisted during the wait is preferred
+            assertThat(result).isEqualTo("referral")
         }
     }
 

@@ -21,6 +21,7 @@ internal class EarnTokenWithCurrencyToListItemUMConverter(
 
     override fun convert(value: EarnTokenWithCurrency): EarnListItemUM {
         return EarnListItemUM(
+            id = "${value.cryptoCurrency.id.value}_${value.earnToken.type}",
             network = TextReference.Str(value.networkName),
             symbol = TextReference.Str(value.earnToken.tokenSymbol),
             tokenName = TextReference.Str(value.earnToken.tokenName),

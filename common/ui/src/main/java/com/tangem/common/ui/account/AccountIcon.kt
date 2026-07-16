@@ -66,6 +66,12 @@ fun AccountIcon(
 fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize, modifier: Modifier = Modifier) {
     when (icon) {
         is AccountIconUM.Payment -> PaymentAccountIcon(size = size, modifier = modifier)
+        is AccountIconUM.Virtual -> AccountResIcon(
+            resId = icon.icon.getResId(),
+            color = icon.color.getUiColor(),
+            size = size,
+            modifier = modifier,
+        )
         is AccountIconUM.CryptoPortfolio -> AccountIcon(
             name = name,
             icon = icon,

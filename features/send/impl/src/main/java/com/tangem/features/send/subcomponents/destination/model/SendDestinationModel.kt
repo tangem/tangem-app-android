@@ -1,0 +1,445 @@
+package com.tangem.features.send.subcomponents.destination.model
+
+import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
+import arrow.core.left
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.CryptoCurrencyAddress
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
+import com.tangem.domain.tokens.GetNetworkAddressesUseCase
+import com.tangem.domain.transaction.error.AddressValidation
+import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
+import com.tangem.domain.transaction.usecase.IsSelfSendAvailableUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
+import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.common.CommonSendRoute
+import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
+import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationAddressTransformer
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationMemoTransformer
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationPredefinedStateTransformer
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationRecentListTransformer
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationValidationResultTransformer
+import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationValidationStartedTransformer
+import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
+import com.tangem.features.send.impl.R
+import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.waitForDelay
+import com.tangem.utils.transformer.update
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
+import javax.inject.Inject
+
+@Stable
+@ModelScoped
+@Suppress("LongParameterList", "LargeClass")
+internal class SendDestinationModel @Inject constructor(
+    paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
+    private val router: Router,
+    private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
+    private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    private val isMemoRequiredUseCase: IsMemoRequiredUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
+    private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
+    private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
+    private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase,
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val parseQrCodeUseCase: ParseQrCodeUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
+    private val sendDestinationAlertFactory: SendDestinationAlertFactory,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+) : Model(), SendDestinationClickIntents {
+    private val params: SendDestinationComponentParams = paramsContainer.require()
+
+    private val _uiState = MutableStateFlow(params.state)
+    val uiState = _uiState.asStateFlow()
+
+    private val analyticsCategoryName = params.analyticsCategoryName
+    private val cryptoCurrency = params.cryptoCurrency
+    private val userWalletId = params.userWalletId
+
+    // In "Send with swap" flow, these are addresses in the destination network (not the actual sender addresses).
+    // Self-send validation must be skipped for them, so use only with params.isAllowSelfSend.
+    private val senderAddresses = MutableStateFlow<List<CryptoCurrencyAddress>>(emptyList())
+
+    private val validationJobHolder = JobHolder()
+
+    private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
+
+    init {
+        configDestinationNavigation()
+        subscribeOnQRScannerResult()
+        initialState()
+    }
+
+    private fun initialState() {
+        if ((uiState.value as? DestinationUM.Content)?.isInitialized == false || uiState.value is DestinationUM.Empty) {
+            _uiState.update(
+                SendDestinationInitialStateTransformer(
+                    cryptoCurrency = cryptoCurrency,
+                    isInitialized = true,
+                ),
+            )
+            val params = params as? DestinationBlockParams
+            val predefinedValues = params?.predefinedValues as? PredefinedValues.Content
+            if (predefinedValues?.address != null) {
+                _uiState.update(
+                    SendDestinationPredefinedStateTransformer(
+                        address = predefinedValues.address,
+                        memo = predefinedValues.memo,
+                    ),
+                )
+            }
+        }
+        initSenderAddress()
+    }
+
+    fun updateState(destinationUM: DestinationUM) {
+        if (destinationUM is DestinationUM.Content && destinationUM.isInitialized) {
+            _uiState.value = destinationUM
+        }
+    }
+
+    override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource) {
+        _uiState.update(
+            SendDestinationAddressTransformer(
+                address = value,
+                isPasted = type.isPasted,
+            ),
+        )
+        val memo = (uiState.value as? DestinationUM.Content)?.memoTextField?.value
+        validate(address = value, memo = memo, type)
+    }
+
+    override fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean) {
+        _uiState.update(
+            SendDestinationMemoTransformer(
+                memo = value,
+                isPasted = isValuePasted,
+            ),
+        )
+        val address = (uiState.value as? DestinationUM.Content)?.addressTextField?.value.orEmpty()
+        validate(address = address, memo = value)
+    }
+
+    override fun onQrCodeScanClick() {
+        analyticsEventHandler.send(SendDestinationAnalyticEvents.QrCodeButtonClicked(analyticsCategoryName))
+        router.push(
+            AppRoute.QrScanning(source = AppRoute.QrScanning.Source.Send(cryptoCurrency.network.name)),
+        )
+    }
+
+    private fun saveResult() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        params.callback.onDestinationResult(uiState.value)
+    }
+
+    private fun initSenderAddress() {
+        modelScope.launch {
+            senderAddresses.value = getNetworkAddressesUseCase.invokeSync(
+                userWalletId = userWalletId,
+                networkRawId = cryptoCurrency.network.id.rawId,
+            ).filter { cryptoCurrency.id == it.cryptoCurrency.id }
+        }
+        senderAddresses.onEach {
+            getWalletsAndRecent()
+        }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnQRScannerResult() {
+        listenToQrScanningUseCase(SourceType.SEND)
+            .getOrElse { emptyFlow() }
+            .onEach(::onQrCodeScanned)
+            .launchIn(modelScope)
+    }
+
+    private fun onQrCodeScanned(address: String) {
+        val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull() ?: return
+        _uiState.update(
+            SendDestinationPredefinedStateTransformer(
+                address = parsedQrCode.address,
+                memo = parsedQrCode.memo,
+            ),
+        )
+        validate(
+            address = parsedQrCode.address,
+            memo = parsedQrCode.memo,
+            type = EnterAddressSource.QRCode,
+        )
+    }
+
+    private fun getWalletsAndRecent() {
+        combine(
+            flow = getAddedAddresses(),
+            flow2 = getFixedTxHistoryItemsUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+                pageSize = RECENT_TX_SIZE,
+            ).getOrElse { flowOf(emptyList()) }.map {
+                waitForDelay(RECENT_LOAD_DELAY) { it }
+            }.conflate(),
+            flow3 = isAccountsModeEnabledUseCase().distinctUntilChanged(),
+        ) { destinationWalletList, txHistoryList, isAccountsMode ->
+            val isSelfSendAvailable = isSelfSendAvailableUseCase.invokeSync(
+                userWalletId = userWalletId,
+                network = cryptoCurrency.network,
+            )
+            _uiState.update(
+                SendDestinationRecentListTransformer(
+                    cryptoCurrency = cryptoCurrency,
+                    senderAddress = senderAddresses.value.firstOrNull()?.address,
+                    isSelfSendAvailable = params.isAllowSelfSend || isSelfSendAvailable,
+                    destinationWalletList = destinationWalletList,
+                    txHistoryList = txHistoryList,
+                    isAccountsMode = isAccountsMode,
+                ),
+            )
+        }.flowOn(dispatchers.default).launchIn(modelScope)
+    }
+
+    private fun getAddedAddresses(): Flow<List<DestinationWalletUM>> {
+        return combine(
+            flow = getWalletsUseCase().conflate(),
+            flow2 = multiAccountStatusListSupplier().conflate(),
+        ) { wallets, accountStatusLists ->
+            coroutineScope {
+                accountStatusLists.mapNotNull { accountStatusList ->
+                    val wallet = wallets
+                        .filterNot { it.isLocked }
+                        .firstOrNull { it.walletId == accountStatusList.userWalletId }
+                        ?: return@mapNotNull null
+
+                    async {
+                        accountStatusList.accountStatuses.flatMap { accountStatus ->
+                            when (accountStatus) {
+                                is AccountStatus.CryptoPortfolio -> accountStatus.getDestinationWalletUM(wallet)
+                                is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
+                                is AccountStatus.Virtual -> emptyList()
+                            }
+                        }
+                    }
+                }.awaitAll().flatten()
+            }
+        }.flowOn(dispatchers.default)
+    }
+
+    private fun AccountStatus.CryptoPortfolio.getDestinationWalletUM(wallet: UserWallet): List<DestinationWalletUM> {
+        return this.flattenCurrencies()
+            .filter { it.currency.network.rawId == cryptoCurrency.network.rawId }
+            .mapNotNull { cryptoCurrencyStatus ->
+                val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                    ?: return@mapNotNull null
+                DestinationWalletUM(
+                    name = wallet.name,
+                    address = address,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    userWalletId = wallet.walletId,
+                    account = account,
+                )
+            }
+    }
+
+    private fun AccountStatus.Payment.getDestinationWalletUM(wallet: UserWallet): DestinationWalletUM? {
+        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
+        val (paymentAccountAddress, currency) = when (val status = this.value) {
+            is PaymentAccountStatusValue.Loaded -> status.balance.cryptoBalance.depositAddress to status.cryptoCurrency
+            else -> return null
+        }
+
+        return if (contractAddress.equals(currency.contractAddress, true)) {
+            DestinationWalletUM(
+                name = wallet.name,
+                address = paymentAccountAddress,
+                cryptoCurrency = currency,
+                userWalletId = wallet.walletId,
+                account = account,
+            )
+        } else {
+            null
+        }
+    }
+
+    private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
+        backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
+
+        return getBackupProblematicWalletForAddressUseCase(address)
+            .also { backupProblematicWalletCache.set(address to it) }
+    }
+
+    private fun contactBackupSupport(userWalletId: UserWalletId) {
+        modelScope.launch { sendBackupProblemEmailUseCase(userWalletId) }
+    }
+
+    private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {
+        modelScope.launch {
+            _uiState.update(SendDestinationValidationStartedTransformer)
+
+            var addressValidationResult = validateWalletAddressUseCase(
+                userWalletId = userWalletId,
+                network = cryptoCurrency.network,
+                address = address,
+                senderAddresses = senderAddresses.value,
+                allowSelfSend = params.isAllowSelfSend,
+            )
+
+            if (addressValidationResult.isRight()) {
+                val problematicWalletId = resolveBackupProblematicWallet(address)
+                if (problematicWalletId != null) {
+                    addressValidationResult = AddressValidation.Error.RecipientWalletBackupError.left()
+                    if (type != null) {
+                        sendDestinationAlertFactory.showRecipientBackupErrorAlert(
+                            onContactSupport = { contactBackupSupport(problematicWalletId) },
+                        )
+                    }
+                }
+            }
+
+            val memoValidationResult = validateWalletMemoUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                memo = memo.orEmpty(),
+            )
+            val resolvedAddress =
+                (addressValidationResult.getOrNull() as? AddressValidation.Success.ValidNamedAddress)
+                    ?.blockchainAddress
+                    ?: address
+            // Ripple X-Address already embeds the destination tag, so memo is irrelevant for it
+            val isXAddress = addressValidationResult.getOrNull() == AddressValidation.Success.ValidXAddress
+            val isMemoRequired = memo.isNullOrBlank() &&
+                !isXAddress &&
+                addressValidationResult.isRight() &&
+                (uiState.value as? DestinationUM.Content)?.memoTextField != null &&
+                isMemoRequiredUseCase(
+                    network = cryptoCurrency.network,
+                    destinationAddress = resolvedAddress,
+                )
+
+            if (type != null) {
+                analyticsEventHandler.send(
+                    SendDestinationAnalyticEvents.AddressEntered(
+                        categoryName = analyticsCategoryName,
+                        source = params.analyticsSendSource,
+                        method = type,
+                        isValid = addressValidationResult.isRight(),
+                    ),
+                )
+            }
+            _uiState.update(
+                SendDestinationValidationResultTransformer(
+                    addressValidationResult = addressValidationResult,
+                    memoValidationResult = memoValidationResult,
+                    isMemoRequired = isMemoRequired,
+                ),
+            )
+            if (type != null) {
+                autoNextFromRecipient(
+                    type = type,
+                    isValidAddress = addressValidationResult.isRight(),
+                    isValidMemo = isXAddress || memoValidationResult.isRight() && !isMemoRequired,
+                )
+            }
+        }.saveIn(validationJobHolder)
+    }
+
+    private fun autoNextFromRecipient(type: EnterAddressSource, isValidAddress: Boolean, isValidMemo: Boolean) {
+        if (type.isAutoNext && isValidAddress && isValidMemo) {
+            saveResult()
+            (params as? SendDestinationComponentParams.DestinationParams)?.callback?.onNextClick()
+        }
+    }
+
+    @Suppress("LongMethod")
+    private fun configDestinationNavigation() {
+        val params = params as? SendDestinationComponentParams.DestinationParams ?: return
+        combine(
+            flow = uiState,
+            flow2 = params.currentRoute,
+            transform = { state, route -> state to route },
+        ).onEach { (state, route) ->
+            params.callback.onNavigationResult(
+                NavigationUM.Content(
+                    source = CommonSendRoute.Destination::class.java.simpleName,
+                    title = params.title,
+                    subtitle = null,
+                    backIconRes = if (route.isEditMode) {
+                        R.drawable.ic_back_24
+                    } else {
+                        R.drawable.ic_close_24
+                    },
+                    backIconClick = {
+                        if (!route.isEditMode) {
+                            analyticsEventHandler.send(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = params.analyticsCategoryName,
+                                    source = SendScreenSource.Address,
+                                    isFromSummary = false,
+                                    isValid = state.isPrimaryButtonEnabled,
+                                ),
+                            )
+                            saveResult()
+                        }
+                        params.callback.onBackClick()
+                    },
+                    primaryButton = NavigationButton(
+                        textReference = if (route.isEditMode) {
+                            resourceReference(R.string.common_continue)
+                        } else {
+                            resourceReference(R.string.common_next)
+                        },
+                        isEnabled = state.isPrimaryButtonEnabled,
+                        onClick = {
+                            saveResult()
+                            params.callback.onNextClick()
+                        },
+                    ),
+                    secondaryPairButtonsUM = null,
+                ),
+            )
+        }.launchIn(modelScope)
+    }
+
+    private companion object {
+        const val RECENT_TX_SIZE = 100
+        const val RECENT_LOAD_DELAY = 500L
+    }
+}

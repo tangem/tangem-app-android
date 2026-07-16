@@ -27,6 +27,7 @@ import com.tangem.screens.onSendScreen
 import com.tangem.screens.onStoriesScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onMainScreenTopBar
+import com.tangem.screens.onTransferBottomSheet
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -94,8 +95,11 @@ class FeedbackTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
-            step("Click 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Click on 'Transfer' button") {
+                onTokenDetailsScreen { transferButton.clickWithAssertion() }
+            }
+            step("Click on 'Send' button in bottom sheet") {
+                onTransferBottomSheet { sendButton.clickWithAssertion() }
             }
             step("Type '$sendAmount' in input text field") {
                 onSendScreen {
