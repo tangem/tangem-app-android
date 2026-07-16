@@ -12,14 +12,12 @@ import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.repository.ExpressHistoryPage
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
-import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.PaginationStatus
 import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -152,10 +150,8 @@ internal class TxHistoryListManagerTest {
         dispatchers = repository.dispatchers,
         userWalletId = userWalletId,
         currency = currency,
-        designFeatureToggles = mockk { every { isRedesignEnabled } returns false },
         txHistoryUiActions = mockk(relaxed = true),
         lookupDataFlow = emptyFlow(),
-        legacyTxHistoryItemConverter = mockk<TxHistoryItemToTransactionStateConverter>(relaxed = true),
     )
 
     private fun page(itemCount: Int, isLast: Boolean): Page2Spec = Page2Spec(itemCount = itemCount, isLast = isLast)
