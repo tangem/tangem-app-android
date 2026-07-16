@@ -2,8 +2,15 @@ package com.tangem.data.pay.flow
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
+import com.tangem.data.pay.store.WalletIdWithPaymentStatus
+import com.tangem.data.pay.store.WalletIdWithPaymentStatusDM
+import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -18,11 +25,15 @@ import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderData
+import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -107,27 +118,26 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         isPinSet = true,
     )
 
-    private fun buildCustomerInfo(
-        productInstances: List<CustomerInfo.ProductInstance> = listOf(cardProductInstance),
-    ) = CustomerInfo(
-        customerId = "cust_1",
-        kycStatus = KycStatus.APPROVED,
-        state = CustomerInfo.State.ACTIVE,
-        fiatBalance = PaymentAccountStatusValue.FiatBalance(
-            availableBalance = BigDecimal.TEN,
-            currency = "USD",
-        ),
-        cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-            id = "usdc",
-            chainId = 137L,
-            depositAddress = "0xdeposit",
-            tokenContractAddress = "0xcontract",
-            balance = BigDecimal.TEN,
-        ),
-        availableForWithdrawal = BigDecimal.TEN,
-        cards = listOf(cardInfo),
-        productInstances = productInstances,
-    )
+    private fun buildCustomerInfo(productInstances: List<CustomerInfo.ProductInstance> = listOf(cardProductInstance)) =
+        CustomerInfo(
+            customerId = "cust_1",
+            kycStatus = KycStatus.APPROVED,
+            state = CustomerInfo.State.ACTIVE,
+            fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                availableBalance = BigDecimal.TEN,
+                currency = "USD",
+            ),
+            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                id = "usdc",
+                chainId = 137L,
+                depositAddress = "0xdeposit",
+                tokenContractAddress = "0xcontract",
+                balance = BigDecimal.TEN,
+            ),
+            availableForWithdrawal = BigDecimal.TEN,
+            cards = listOf(cardInfo),
+            productInstances = productInstances,
+        )
 
     @BeforeEach
     fun setUp() {
@@ -187,7 +197,38 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             .map { it.value }
             .filterIsInstance<PaymentAccountStatusValue.Loaded>()
             .lastOrNull()
-        return requireNotNull(loaded) { "Expected at least one Loaded status to be stored; stored: ${map { it.value::class.simpleName }}" }
+        return requireNotNull(
+            loaded,
+        ) { "Expected at least one Loaded status to be stored; stored: ${map { it.value::class.simpleName }}" }
+    }
+
+    /** Builds a [PaymentAccountStatusValue.Loaded] fixture with every field defaulted except [virtualAccount]. */
+    private fun loadedFixture(virtualAccount: VirtualAccountOnramp? = null): PaymentAccountStatusValue.Loaded {
+        val token: CryptoCurrency.Token = mockk(relaxed = true)
+        return PaymentAccountStatusValue.Loaded(
+            source = StatusSource.ACTUAL,
+            customerId = "cust_1",
+            depositAddress = "0xdeposit",
+            balance = PaymentAccountStatusValue.Balance(
+                fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                    availableBalance = BigDecimal.TEN,
+                    currency = "USD",
+                ),
+                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                    id = "usdc",
+                    chainId = 137L,
+                    depositAddress = "0xdeposit",
+                    tokenContractAddress = "0xcontract",
+                    balance = BigDecimal.TEN,
+                ),
+                availableForWithdrawal = BigDecimal.TEN,
+            ),
+            cryptoCurrency = token,
+            cards = emptyList(),
+            fiatRate = null,
+            error = null,
+            virtualAccount = virtualAccount,
+        )
     }
 
     @Nested
@@ -219,6 +260,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 )
                 stubHappyPath(customerInfo)
                 every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
                 coEvery {
                     onboardingRepository.getBankCredentials(userWalletId, "pi_account")
                 } returns Either.Right(bankCredentialsFixture)
@@ -235,6 +277,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                         bankCredentials = bankCredentialsFixture,
                     ),
                 )
+                coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
             }
 
         @Test
@@ -246,6 +289,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 )
                 stubHappyPath(customerInfo)
                 every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
                 coEvery {
                     onboardingRepository.getBankCredentials(userWalletId, "pi_account")
                 } returns VisaApiError.UnknownWithoutCode.left()
@@ -257,6 +301,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.virtualAccount).isEqualTo(VirtualAccountOnramp.BankCredentialsError)
+                coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
             }
 
         @Test
@@ -266,6 +311,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
                 every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
                 coEvery {
                     onboardingRepository.fetchCustomerEligibility(userWalletId)
                 } returns Either.Right(listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT))
@@ -286,6 +332,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
                 every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
                 coEvery {
                     onboardingRepository.fetchCustomerEligibility(userWalletId)
                 } returns VisaApiError.UnknownWithoutCode.left()
@@ -298,5 +345,165 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.virtualAccount).isNull()
             }
+
+        @Test
+        fun `GIVEN no instance and va order PROCESSING WHEN invoke THEN virtualAccount is Processing`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+            stubHappyPath(customerInfo)
+            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+            coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+            coEvery {
+                customerOrderRepository.getOrderData(userWalletId, "va-1")
+            } returns OrderData(customerId = "c1", status = OrderStatus.PROCESSING, withdrawTxHash = null).right()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Processing)
+        }
+
+        @Test
+        fun `GIVEN no instance and va order COMPLETED but instance absent WHEN invoke THEN virtualAccount is Processing`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+                stubHappyPath(customerInfo)
+                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+                coEvery {
+                    customerOrderRepository.getOrderData(userWalletId, "va-1")
+                } returns OrderData(customerId = "c1", status = OrderStatus.COMPLETED, withdrawTxHash = null).right()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Processing)
+            }
+
+        @Test
+        fun `GIVEN no instance and va getOrderData fails WHEN invoke THEN virtualAccount is Processing`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+            stubHappyPath(customerInfo)
+            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+            coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+            coEvery {
+                customerOrderRepository.getOrderData(userWalletId, "va-1")
+            } returns VisaApiError.UnknownWithoutCode.left()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Processing)
+        }
+
+        @Test
+        fun `GIVEN no instance and va order CANCELED WHEN invoke THEN id cleared and falls back to eligibility`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+                stubHappyPath(customerInfo)
+                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+                coEvery {
+                    customerOrderRepository.getOrderData(userWalletId, "va-1")
+                } returns OrderData(customerId = "c1", status = OrderStatus.CANCELED, withdrawTxHash = null).right()
+                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
+                coEvery {
+                    onboardingRepository.fetchCustomerEligibility(userWalletId)
+                } returns Either.Right(listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT))
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
+            }
+    }
+
+    /**
+     * [markVirtualAccountProcessing] now delegates entirely to the atomic
+     * [PaymentAccountStatusesStore.markVirtualAccountProcessing] (read-modify-write happens inside the store's
+     * `runtimeStore.update` lambda, see [REDACTED_TASK_KEY] review). A mocked store can't exercise that internal branching,
+     * so these tests wire the fetcher to a real [PaymentAccountStatusesStore] (real [RuntimeSharedStore] +
+     * in-memory persistence fake) and assert on its resulting state — exercising the delegate wiring and the
+     * store's atomic logic together.
+     */
+    @Nested
+    inner class MarkVirtualAccountProcessing {
+
+        private val runtimeStore = RuntimeSharedStore<WalletIdWithPaymentStatus>()
+        private val persistenceStore = MockStateDataStore<WalletIdWithPaymentStatusDM>(default = emptyMap())
+        private val converter: PaymentAccountStatusValueDMConverter = mockk(relaxed = true)
+
+        private val realStore = PaymentAccountStatusesStore(
+            runtimeStore = runtimeStore,
+            persistenceDataStore = persistenceStore,
+            converter = converter,
+            scope = TestAppCoroutineScope(),
+        )
+
+        private val realFetcher = DefaultPaymentAccountStatusFetcher(
+            paymentAccountStatusesStore = realStore,
+            onboardingRepository = onboardingRepository,
+            customerOrderRepository = customerOrderRepository,
+            deviceSecurity = deviceSecurity,
+            dispatchers = dispatchers,
+            tangemPayCurrencyFactory = tangemPayCurrencyFactory,
+            eligibilityManager = eligibilityManager,
+            reissueCardRepository = reissueCardRepository,
+            singleQuoteSupplier = singleQuoteSupplier,
+            closeCardRepository = closeCardRepository,
+            cardDetailsRepository = cardDetailsRepository,
+            issueCardRepository = issueCardRepository,
+            virtualAccountFeatureToggles = virtualAccountFeatureToggles,
+        )
+
+        private val account = Account.Payment(userWalletId = userWalletId)
+
+        @Test
+        fun `GIVEN cached Loaded with eligible onramp WHEN mark THEN virtualAccount becomes Processing`() = runTest {
+            // Arrange
+            val loaded = loadedFixture(virtualAccount = VirtualAccountOnramp.Eligible)
+            realStore.store(userWalletId, AccountStatus.Payment(account = account, value = loaded))
+
+            // Act
+            realFetcher.markVirtualAccountProcessing(userWalletId)
+
+            // Assert
+            val updated = realStore.getSyncOrNull(userWalletId)?.value
+            assertThat(updated).isEqualTo(loaded.copy(virtualAccount = VirtualAccountOnramp.Processing))
+        }
+
+        @Test
+        fun `GIVEN no cached value WHEN mark THEN store stays empty`() = runTest {
+            // Act
+            realFetcher.markVirtualAccountProcessing(userWalletId)
+
+            // Assert
+            assertThat(realStore.getSyncOrNull(userWalletId)).isNull()
+        }
+
+        @Test
+        fun `GIVEN cached non-Loaded value WHEN mark THEN value stays unchanged`() = runTest {
+            // Arrange
+            val issuingCard = PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+            realStore.store(userWalletId, AccountStatus.Payment(account = account, value = issuingCard))
+
+            // Act
+            realFetcher.markVirtualAccountProcessing(userWalletId)
+
+            // Assert
+            assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(issuingCard)
+        }
     }
 }
