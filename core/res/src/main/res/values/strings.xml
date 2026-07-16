@@ -438,6 +438,7 @@
   <string name="common_rename">Rename</string>
   <string name="common_required">Required</string>
   <string name="common_reset">Reset</string>
+  <string name="common_retry">Retry</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
   <string name="common_search">Search</string>
