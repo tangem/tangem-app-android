@@ -184,6 +184,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED",
+        "version": "6.1"
+    },
+    {
         "name": "AND_16204_POLYMARKET_ENABLED",
         "version": "undefined"
     }
