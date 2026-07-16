@@ -192,31 +192,31 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private fun buildConfirmContent(): TangemPaySelectPlanUM.Content {
         val transition = allowedTransitions.getOrNull(selectedIndex) ?: return buildSelectContent()
-        val targetPlanName = transition.plan.name
-        val programName = transition.plan.programName
+        val targetPlan = transition.plan
         return TangemPaySelectPlanUM.Content.Confirm(
             title = when (transition.type) {
                 TangemPayTariffPlanTransition.Type.UPGRADE -> resourceReference(
                     R.string.tangempay_select_plan_confirm_upgrade_title,
-                    wrappedList(programName),
+                    wrappedList(targetPlan.programName),
                 )
                 TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
                     val nextBillingDate = nextBillingDate()
                     if (nextBillingDate != null) {
+                        val currentPlan = params.tariffPlan.plan
                         resourceReference(
                             R.string.tangempay_select_plan_confirm_downgrade_title,
-                            wrappedList(params.tariffPlan.plan.name, programName, nextBillingDate),
+                            wrappedList(currentPlan.name, currentPlan.programName, nextBillingDate),
                         )
                     } else {
                         resourceReference(
                             R.string.tangempay_select_plan_confirm_switch_title,
-                            wrappedList(targetPlanName),
+                            wrappedList(targetPlan.name),
                         )
                     }
                 }
                 else -> resourceReference(
                     R.string.tangempay_select_plan_confirm_switch_title,
-                    wrappedList(targetPlanName),
+                    wrappedList(targetPlan.name),
                 )
             },
             points = buildConfirmPoints(transition),
