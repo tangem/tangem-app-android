@@ -2,12 +2,15 @@ package com.tangem.features.rating
 
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface RatingComponent : ComposableContentComponent {
 
     class Params(
-        val onLoadRating: suspend () -> Int?,
-        val onSubmitRating: suspend (rating: Int, feedback: String) -> Unit,
+        val txExternalId: String,
+        val providerName: String,
+        val txExternalUrl: String,
+        val userWalletId: UserWalletId,
     )
 
     interface Factory {
