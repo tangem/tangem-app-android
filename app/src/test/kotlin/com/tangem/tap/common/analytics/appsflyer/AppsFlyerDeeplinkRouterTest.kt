@@ -3,7 +3,6 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -33,14 +32,12 @@ internal class AppsFlyerDeeplinkRouterTest {
     private val appsFlyerStore: AppsFlyerStore = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
-    private val featureTogglesManager: FeatureTogglesManager = mockk()
     private val appRouter: AppRouter = mockk(relaxed = true)
 
     private val router = AppsFlyerDeeplinkRouter(
         appsFlyerStore = appsFlyerStore,
         userWalletsListRepository = userWalletsListRepository,
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
-        featureTogglesManager = featureTogglesManager,
         appRouter = appRouter,
     )
 
@@ -50,11 +47,9 @@ internal class AppsFlyerDeeplinkRouterTest {
             appsFlyerStore,
             userWalletsListRepository,
             clearAppsFlyerDeeplinkUseCase,
-            featureTogglesManager,
             appRouter,
         )
-        // Happy baseline: feature on, deep link pending, authorized.
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
+        // Happy baseline: deep link pending, authorized.
         every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
     }
@@ -150,21 +145,6 @@ internal class AppsFlyerDeeplinkRouterTest {
     fun `GIVEN no stored deeplink WHEN observe THEN does not evaluate`() = runTest(UnconfinedTestDispatcher()) {
         // Arrange
         every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf(null)
-        val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
-
-        // Act
-        router.observe(backgroundScope, currentRoute)
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN feature disabled WHEN observe THEN does not navigate`() = runTest(UnconfinedTestDispatcher()) {
-        // Arrange
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
         val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
         // Act
