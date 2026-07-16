@@ -4,7 +4,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 
-object BackupValidator {
+class BackupValidator {
 
     fun isValidFull(cardDTO: CardDTO): Boolean {
         return validateBackupStatus(cardDTO) && validateCurves(cardDTO)

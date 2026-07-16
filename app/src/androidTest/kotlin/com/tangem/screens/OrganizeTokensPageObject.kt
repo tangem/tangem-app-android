@@ -28,23 +28,18 @@ class OrganizeTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
-    private val topBarGroupButton: KNode = child {
-        hasTestTag(OrganizeTokensScreenTestTags.GROUP_BUTTON)
+    val organizeMenuButton: KNode = child {
+        hasTestTag(OrganizeTokensScreenTestTags.MENU_BUTTON)
         useUnmergedTree = true
     }
 
-    val groupButton: KNode = topBarGroupButton.child {
+    val groupButton: KNode = child {
         hasText(getResourceString(R.string.organize_tokens_group))
         useUnmergedTree = true
     }
 
-    val ungroupButton: KNode = topBarGroupButton.child {
-        hasText(getResourceString(R.string.organize_tokens_ungroup))
-        useUnmergedTree = true
-    }
-
     val sortByBalanceButton: KNode = child {
-        hasTestTag(OrganizeTokensScreenTestTags.SORT_BY_BALANCE_BUTTON)
+        hasText(getResourceString(R.string.organize_tokens_sort_by_balance))
         useUnmergedTree = true
     }
     // endregion TopBar
@@ -84,7 +79,7 @@ class OrganizeTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
         return lazyList.child {
             hasTestTag(OrganizeTokensScreenTestTags.GROUP_TITLE_ITEM)
-            hasAnyChild(withText(tokenNetwork))
+            hasAnyDescendant(withText(tokenNetwork))
             useUnmergedTree = true
         }
     }
