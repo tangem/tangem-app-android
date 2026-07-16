@@ -496,10 +496,10 @@ internal class DefaultUserWalletsListRepository(
             is HotWalletPasswordRequester.Result.EnteredPassword -> {
                 val decrypted = block(result.password.value)
                 if (decrypted == null) {
-                    passwordRequester.wrongPassword()
+                    passwordRequester.wrongPassword(attemptRequest)
                     requestPasswordRecursive(hotWalletId, block, biometryFallback)
                 } else {
-                    passwordRequester.successfulAuthentication()
+                    passwordRequester.successfulAuthentication(attemptRequest)
                     passwordRequester.dismiss()
                     decrypted.right()
                 }
@@ -507,7 +507,7 @@ internal class DefaultUserWalletsListRepository(
             HotWalletPasswordRequester.Result.UseBiometry -> {
                 biometryFallback()
                     .onRight {
-                        passwordRequester.successfulAuthentication()
+                        passwordRequester.successfulAuthentication(attemptRequest)
                         passwordRequester.dismiss()
                     }
                     .map { null }
