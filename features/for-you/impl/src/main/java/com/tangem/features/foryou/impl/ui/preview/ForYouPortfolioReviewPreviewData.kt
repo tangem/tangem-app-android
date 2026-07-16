@@ -7,7 +7,9 @@ import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.DonutChartUM
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
@@ -16,6 +18,7 @@ import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.utils.StringsSigns.DOT
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 internal object ForYouPortfolioReviewPreviewData {
@@ -151,5 +154,70 @@ internal object ForYouPortfolioReviewPreviewData {
                 isExpandable = false,
             ),
         ),
+        onAddFundsClick = null,
+    )
+
+    val loadingState = PortfolioReviewUM.Loading(
+        marketChartUM = MarketChartUM.NoData(
+            title = resourceReference(R.string.market_chart_can_not_load_data),
+            donutText = resourceReference(R.string.market_chart_bubble_no_data),
+        ),
+        tokenList = buildList {
+            repeat(5) { index ->
+                add(
+                    ForYouTokenListItemUM(
+                        tokenRowUM = TangemTokenRowUM.Loading(
+                            id = index.toString(),
+                        ),
+                        tokenList = persistentListOf(),
+                        isExpanded = false,
+                        isExpandable = false,
+                    ),
+                )
+            }
+        }.toPersistentList(),
+    )
+
+    val zeroPortfolioState = PortfolioReviewUM.Content(
+        marketChartUM = MarketChartUM.NoData(
+            title = stringReference("You don’t have any tokens with amount"),
+            donutText = stringReference("No amount on tokens"),
+        ),
+        tokenList = buildList {
+            repeat(5) { index ->
+                add(
+                    ForYouTokenListItemUM(
+                        tokenRowUM = TangemTokenRowUM.Content(
+                            id = "token_$index",
+                            headIconUM = TangemIconUM.Currency(CurrencyIconState.Loading),
+                            titleUM = TangemTokenRowUM.TitleUM.Content(
+                                text = stringReference("Token $index"),
+                                badge = TangemBadgeUM(
+                                    text = stringReference("Positive"),
+                                    size = TangemBadgeSize.X4,
+                                    type = TangemBadgeType.Tinted,
+                                    color = TangemBadgeColor.Green,
+                                ),
+                            ),
+                            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
+                                text = stringReference("Some network"),
+                            ),
+                            topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+                                text = stringReference("\$0"),
+                            ),
+                            bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+                                text = stringReference("0.00%"),
+                            ),
+                            onItemClick = {},
+                            onItemLongClick = { _, _ -> },
+                        ),
+                        tokenList = persistentListOf(),
+                        isExpanded = false,
+                        isExpandable = false,
+                    ),
+                )
+            }
+        }.toPersistentList(),
+        onAddFundsClick = { },
     )
 }

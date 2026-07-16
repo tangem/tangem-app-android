@@ -58,7 +58,11 @@ internal fun ForYouContent(
             .drawBehind { drawRect(background.value) },
     ) {
         promoBannersBlockComponent.ContentWithPadding(
-            modifier = Modifier.padding(top = 12.dp),
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .conditional(forYouUM.notifications.isEmpty()) {
+                    padding(bottom = 48.dp)
+                },
             walletId = null,
             horizontalItemPadding = 16.dp,
         )
