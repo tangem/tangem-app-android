@@ -36,4 +36,5 @@ internal data class EarnListItemUM(
     val earnType: EarnType,
     val earnTypeTitle: TextReference,
     val onItemClick: () -> Unit,
+    val id: String = "$tokenName-$symbol-$network-$earnType",
 )

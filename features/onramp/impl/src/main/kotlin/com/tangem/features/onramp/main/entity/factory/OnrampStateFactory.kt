@@ -7,10 +7,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.message.TangemMessageIconPosition
+import com.tangem.core.ui.ds.message.TangemMessageUM
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -21,6 +23,7 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.utils.Provider
 import java.math.BigDecimal
+import com.tangem.core.ui.R as CoreUiR
 
 internal class OnrampStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
@@ -51,7 +54,7 @@ internal class OnrampStateFactory(
         )
     }
 
-    fun getReadyState(currency: OnrampCurrency): OnrampMainComponentUM.Content {
+    fun getReadyState(currency: OnrampCurrency, initialFiatAmount: BigDecimal? = null): OnrampMainComponentUM.Content {
         val state = currentStateProvider()
 
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
@@ -59,7 +62,7 @@ internal class OnrampStateFactory(
             is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
 
-        val initialAmountBlockState = getInitialAmountBlockState(currency)
+        val initialAmountBlockState = getInitialAmountBlockState(currency, initialFiatAmount)
 
         return OnrampMainComponentUM.Content(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
@@ -120,6 +123,42 @@ internal class OnrampStateFactory(
         }
     }
 
+    fun getBuyNotSupportedState(state: OnrampMainComponentUM = currentStateProvider()): OnrampMainComponentUM {
+        val message = buildBuyNotSupportedMessage()
+
+        return when (state) {
+            is OnrampMainComponentUM.Content -> state.copy(
+                buyNotSupportedMessage = message,
+                errorNotification = null,
+                offersBlockState = OnrampOffersBlockUM.Empty,
+                onrampAmountButtonUMState = OnrampAmountButtonUMState.None,
+                amountBlockState = state.amountBlockState.copy(
+                    amountFieldModel = state.amountBlockState.amountFieldModel.copy(isError = true),
+                    secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
+                ),
+            )
+            is OnrampMainComponentUM.InitialLoading -> state.copy(
+                buyNotSupportedMessage = message,
+                errorNotification = null,
+            )
+        }
+    }
+
+    private fun buildBuyNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
+        id = "buy_not_supported",
+        title = resourceReference(
+            id = R.string.onramp_token_is_not_supported_banner_title,
+            formatArgs = wrappedList(cryptoCurrency.name),
+        ),
+        subtitle = resourceReference(R.string.onramp_token_is_not_supported_banner_subtitle),
+        messageEffect = TangemMessageEffect.None,
+        iconUM = TangemIconUM.Icon(
+            iconRes = CoreUiR.drawable.ic_attention_default_24,
+            tintReference = { TangemTheme.colors2.graphic.status.attention },
+        ),
+        iconPosition = TangemMessageIconPosition.Leading,
+    )
+
     private fun getNoPairsErrorState(): OnrampMainComponentUM {
         val state = currentStateProvider()
         val contentState = state as? OnrampMainComponentUM.Content ?: return state
@@ -136,7 +175,10 @@ internal class OnrampStateFactory(
         )
     }
 
-    private fun getInitialAmountBlockState(currency: OnrampCurrency): OnrampAmountBlockUM {
+    private fun getInitialAmountBlockState(
+        currency: OnrampCurrency,
+        initialFiatAmount: BigDecimal? = null,
+    ): OnrampAmountBlockUM {
         return OnrampAmountBlockUM(
             currencyUM = OnrampCurrencyUM(
                 code = currency.code,
@@ -146,8 +188,8 @@ internal class OnrampStateFactory(
                 unit = currency.unit,
             ),
             amountFieldModel = AmountFieldModel(
-                value = "",
-                fiatValue = "",
+                value = initialFiatAmount?.toPlainString().orEmpty(),
+                fiatValue = initialFiatAmount?.toPlainString().orEmpty(),
                 onValueChange = onrampIntents::onAmountValueChanged,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.None,
@@ -156,7 +198,7 @@ internal class OnrampStateFactory(
                 keyboardActions = KeyboardActions(),
                 isFiatValue = true,
                 cryptoAmount = BigDecimal.ZERO.convertToAmount(cryptoCurrency),
-                fiatAmount = BigDecimal.ZERO.convertToFiatAmount(currency),
+                fiatAmount = (initialFiatAmount ?: BigDecimal.ZERO).convertToFiatAmount(currency),
                 isError = false,
                 isWarning = false,
                 error = TextReference.EMPTY,

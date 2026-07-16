@@ -22,12 +22,14 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.conditionalCompose
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.ui.earn.components.*
 import com.tangem.features.feed.ui.earn.state.*
-import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import kotlinx.collections.immutable.persistentListOf
 
 private const val EARN_LOAD_MORE_BUFFER = 3
@@ -115,7 +117,7 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                 ) {
                     itemsIndexed(
                         items = animatedState.items,
-                        key = { _, item -> "${item.tokenName}-${item.network}" },
+                        key = { _, item -> item.id },
                     ) { index, item ->
                         val cardModifier = Modifier.conditional(
                             condition = index == FOURTH_ITEM_INDEX,
@@ -663,10 +665,6 @@ private fun previewEarnUM(
     onNetworkFilterClick = {},
     onTypeFilterClick = {},
     onSliderScroll = {},
-    feedListSearchBar = FeedListSearchBar(
-        placeholderText = TextReference.Str("Search tokens & news"),
-        onBarClick = {},
-    ),
 )
 
 private const val PLACEHOLDER_ITEMS_COUNT = 8

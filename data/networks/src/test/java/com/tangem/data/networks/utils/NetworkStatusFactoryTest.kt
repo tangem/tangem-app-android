@@ -12,21 +12,20 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
-import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
-@RunWith(Parameterized::class)
-internal class NetworkStatusFactoryTest(private val model: Model) {
+internal class NetworkStatusFactoryTest {
 
-    @Test
-    fun test() {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun test(model: Model) {
         val actual = runCatching {
             NetworkStatusFactory.create(
                 network = model.network,
@@ -40,8 +39,9 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                 Truth.assertThat(actual).isEqualTo(model.expected)
             }
             .onFailure {
-                Truth.assertThat(actual.exceptionOrNull()).isInstanceOf(it::class.java)
-                Truth.assertThat(actual.exceptionOrNull()).hasMessageThat().isEqualTo(it.message)
+                val expectedError = model.expected.exceptionOrNull()
+                Truth.assertThat(it).isInstanceOf(expectedError!!::class.java)
+                Truth.assertThat(it).hasMessageThat().isEqualTo(expectedError.message)
             }
     }
 
@@ -56,7 +56,11 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
 
         val selectedAddressThrowable = IllegalArgumentException("Selected address must not be null")
 
-        val currencies = with(MockCryptoCurrencyFactory()) { setOf(ethereum, createToken(Blockchain.Ethereum)) }
+        val currencies = with(MockCryptoCurrencyFactory()) {
+            // token id/contractAddress aligned with the amounts supplied by
+            // MockUpdateWalletManagerResultFactory.createVerifiedWith[Supplied]Token()
+            setOf(ethereum, createToken(Blockchain.Ethereum, id = "token", contractAddress = "0xTokenAddress"))
+        }
 
         val txInfo = TxInfo(
             txHash = "erroribus",
@@ -75,8 +79,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
         val updateWalletManagerResultFactory = MockUpdateWalletManagerResultFactory()
 
         @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Model> = listOf(
+        fun provideTestModels(): Collection<Model> = listOf(
             // region MissedDerivation
             createSuccess(
                 result = UpdateWalletManagerResult.MissedDerivation,
@@ -160,7 +163,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                             type = NetworkAddress.Address.Type.Primary,
                         ),
                     ),
-                    amountToCreateAccount = BigDecimal.ZERO,
+                    amountToCreateAccount = BigDecimal.ONE,
                     errorMessage = "",
                     source = StatusSource.ACTUAL,
                 ),
@@ -223,7 +226,10 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                         currencies.last().id to setOf(),
                     ),
                     source = StatusSource.ACTUAL,
-                    yieldSupplyStatuses = mapOf(),
+                    yieldSupplyStatuses = mapOf(
+                        currencies.first().id to null,
+                        currencies.last().id to null,
+                    ),
                 ),
             ),
             createSuccess(
@@ -237,15 +243,18 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                         ),
                     ),
                     amounts = mapOf(
-                        currencies.first().id to Amount.Loaded(BigDecimal.ONE),
-                        currencies.last().id to Amount.NotFound,
+                        currencies.first().id to Amount.NotFound,
+                        currencies.last().id to Amount.Loaded(BigDecimal.ONE),
                     ),
                     pendingTransactions = mapOf(
                         currencies.first().id to setOf(txInfo),
-                        currencies.last().id to setOf(txInfo),
+                        currencies.last().id to setOf(),
                     ),
                     source = StatusSource.ACTUAL,
-                    yieldSupplyStatuses = mapOf(),
+                    yieldSupplyStatuses = mapOf(
+                        currencies.first().id to null,
+                        currencies.last().id to null,
+                    ),
                 ),
             ),
             createSuccess(
@@ -259,18 +268,19 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                         ),
                     ),
                     amounts = mapOf(
-                        currencies.first().id to Amount.Loaded(BigDecimal.ONE),
-                        currencies.last().id to Amount.NotFound,
+                        currencies.first().id to Amount.NotFound,
+                        currencies.last().id to Amount.Loaded(BigDecimal.ONE),
                     ),
                     pendingTransactions = mapOf(
                         currencies.first().id to setOf(txInfo),
-                        currencies.last().id to setOf(txInfo),
+                        currencies.last().id to setOf(),
                     ),
                     source = StatusSource.ACTUAL,
                     yieldSupplyStatuses = mapOf(
-                        currencies.first().id to YieldSupplyStatus(
-                            isActive = false,
-                            isInitialized = false,
+                        currencies.first().id to null,
+                        currencies.last().id to YieldSupplyStatus(
+                            isActive = true,
+                            isInitialized = true,
                             isAllowedToSpend = false,
                             effectiveProtocolBalance = BigDecimal.ONE,
                         ),

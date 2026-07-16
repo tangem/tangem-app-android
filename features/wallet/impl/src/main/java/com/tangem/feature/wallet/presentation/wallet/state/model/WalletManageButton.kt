@@ -58,7 +58,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
     ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_add_funds),
-            iconResId = R.drawable.ic_plus_24,
+            iconResId = R.drawable.ic_arrow_down_24,
             onClick = onClick,
             isEnabled = enabled,
             shouldDimContent = dimContent,
@@ -138,6 +138,29 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_sell),
             iconResId = R.drawable.ic_currency_24,
+            onClick = onClick,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
+            isInProgress = isInProgress,
+        ),
+    )
+
+    /**
+     * Transfer
+     *
+     * @property enabled button click availability
+     * @property dimContent determines whether the button content will be dimmed
+     * @property onClick lambda be invoked when Transfer button is clicked
+     */
+    data class Transfer(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+        val isInProgress: Boolean = false,
+    ) : WalletManageButton(
+        config = ActionButtonConfig(
+            text = TextReference.Res(id = R.string.common_transfer),
+            iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
             isEnabled = enabled,
             shouldDimContent = dimContent,

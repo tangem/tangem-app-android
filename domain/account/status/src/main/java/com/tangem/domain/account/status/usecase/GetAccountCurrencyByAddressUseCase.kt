@@ -84,7 +84,7 @@ class GetAccountCurrencyByAddressUseCase(
                 params = MultiNetworkStatusProducer.Params(userWalletId = id),
                 timeMillis = 1000L,
             )
-                ?.firstOrNull { it.getAddress() == address }
+                ?.firstOrNull { it.getAddress().equals(address, ignoreCase = true) }
 
             if (networkStatus != null) {
                 pair = id to networkStatus.network.id

@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -75,7 +76,7 @@ private fun InitialLoading(state: OnrampMainComponentUM.InitialLoading, modifier
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         OnrampAmountContentLoading()
-        if (state.errorNotification != null) Notification(config = state.errorNotification.config)
+        OnrampNotifications(state = state)
     }
 }
 
@@ -134,6 +135,16 @@ private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = M
 
         OnrampOffersContent(state = state.offersBlockState)
 
-        if (state.errorNotification != null) Notification(config = state.errorNotification.config)
+        OnrampNotifications(state = state)
+    }
+}
+
+@Composable
+private fun OnrampNotifications(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
+    val buyNotSupportedMessage = state.buyNotSupportedMessage
+    val errorNotification = state.errorNotification
+    when {
+        buyNotSupportedMessage != null -> TangemMessage(messageUM = buyNotSupportedMessage, modifier = modifier)
+        errorNotification != null -> Notification(config = errorNotification.config, modifier = modifier)
     }
 }

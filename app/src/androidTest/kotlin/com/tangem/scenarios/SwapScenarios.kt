@@ -9,13 +9,18 @@ import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertVisibility
+import com.tangem.common.extensions.clickAndWaitFor
+import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.screens.*
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 import com.tangem.common.ui.R as CommonUiR
@@ -43,8 +48,8 @@ fun BaseTestCase.openSwapScreen(
         }
 
         SwapEntryPoint.TokenDetails -> step("Click on 'Swap' button on 'Token details' screen") {
-            onTokenDetailsScreen { swapButton().performClick() }
-        }
+            onTokenDetailsScreen { swapButton.clickWhenEnabled() }
+            }
 
         SwapEntryPoint.MarketsTokenDetails -> step("Click on 'Swap' button on 'Markets' token details screen") {
             onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.performClick() }
@@ -167,7 +172,7 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
     when (feeType) {
         FeeType.Market -> {
             step("Click on 'Market' item") {
-                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.performClick() }
+                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.clickWithAssertion() }
             }
             step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
                 onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
@@ -175,7 +180,7 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
         }
         FeeType.Fast -> {
             step("Click on 'Fast' item") {
-                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.performClick() }
+                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.clickWithAssertion() }
             }
             step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
                 onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
@@ -184,49 +189,23 @@ fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
     }
 }
 
-fun BaseTestCase.selectFeeTypeWithGasless(feeType: FeeType, selectedFeeAmount: String) {
+fun BaseTestCase.selectFeeTypeAndReadFee(feeType: FeeType): String {
     step("Click on 'Select fee' icon") {
         onSwapTokenScreen { selectFeeIcon.performClick() }
     }
-
-    when (feeType) {
-        FeeType.Market -> selectMarketFee(selectedFeeAmount)
-        FeeType.Fast -> selectFastFee(selectedFeeAmount)
-    }
-}
-
-private fun BaseTestCase.selectMarketFee(selectedFeeAmount: String) {
-    step("Deselect current fee and select 'Market'") {
+    step("Click on '$feeType' item") {
         onSwapSelectNetworkFeeBottomSheet {
-            if (fastSelectorItem.isDisplayedSafely()) {
-                fastSelectorItem.performClick()
+            when (feeType) {
+                FeeType.Market -> marketSelectorItem.clickWithAssertion()
+                FeeType.Fast -> fastSelectorItem.clickWithAssertion()
             }
-            marketSelectorItem.performClick()
         }
     }
-    step("Click on 'Apply' button") {
-        onSwapSelectNetworkFeeBottomSheet { applyButton.performClick() }
+    var fee = ""
+    step("Read displayed '$feeType' fee amount") {
+        onSwapTokenScreen { fee = feeAmount.extractText() }
     }
-    step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
-        onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
-    }
-}
-
-private fun BaseTestCase.selectFastFee(selectedFeeAmount: String) {
-    step("Deselect current fee and select 'Fast'") {
-        onSwapSelectNetworkFeeBottomSheet {
-            if (marketSelectorItem.isDisplayedSafely()) {
-                marketSelectorItem.performClick()
-            }
-            fastSelectorItem.performClick()
-        }
-    }
-    step("Click on 'Apply' button") {
-        onSwapSelectNetworkFeeBottomSheet { applyButton.performClick() }
-    }
-    step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
-        onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
-    }
+    return fee
 }
 
 fun BaseTestCase.chackUnableToCoverFeeNotification(networkName: String, currencySymbol: String) {
@@ -284,12 +263,207 @@ fun BaseTestCase.checkSwapWarning(
         }
 }
 
+/** Scans a card wallet and opens Swap for [tokenName] in [fromAccountName] without choosing the receive token yet. */
+fun BaseTestCase.openSwapForTokenInAccount(
+    tokenName: String,
+    fromAccountName: String = "Account 1",
+    mockContent: MockContent? = null,
+) {
+    step("Open 'Main' screen") {
+        openMainScreen(mockContent = mockContent)
+    }
+    step("Synchronize addresses") {
+        synchronizeAddresses(assertBalance = false)
+    }
+    step("Wait for addresses to be generated") {
+        waitForAddressesGenerated()
+    }
+    navigateToSwapForToken(tokenName, fromAccountName)
+}
+
+/** Opens Swap for [tokenName] in [fromAccountName] and picks it again in [toAccountName] to enter Transfer mode; needs a two-accounts-same-token mock. */
+fun BaseTestCase.openSwapInTransferMode(
+    tokenName: String,
+    fromAccountName: String = "Account 1",
+    toAccountName: String = "Account 2",
+    mockContent: MockContent? = null,
+) {
+    openSwapForTokenInAccount(tokenName, fromAccountName, mockContent)
+    step("Choose identical receive token '$tokenName' from '$toAccountName'") {
+        chooseIdenticalReceiveToken(tokenName = tokenName, receiveAccountName = toAccountName)
+    }
+}
+
+/** Like [openSwapInTransferMode] but imports a hot wallet first — required for broadcasting flows (the mock card can't sign). */
+fun BaseTestCase.openSwapInTransferModeWithHotWallet(
+    tokenName: String,
+    seedPhrase: String,
+    fromAccountName: String = "Account 1",
+    toAccountName: String = "Account 2",
+) {
+    step("Open 'Main' screen with existing hot wallet") {
+        openMainScreenWithExistingHotWallet(seedPhrase)
+    }
+    step("Generate missing addresses") {
+        generateMissingHotWalletAddresses()
+    }
+    step("Wait for addresses to be generated") {
+        waitForAddressesGenerated()
+    }
+    navigateToSwapForToken(tokenName, fromAccountName)
+    step("Choose identical receive token '$tokenName' from '$toAccountName'") {
+        chooseIdenticalReceiveToken(tokenName = tokenName, receiveAccountName = toAccountName)
+    }
+}
+
+private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountName: String) {
+    step("Scroll '$fromAccountName' into view (semantics, not touch — avoids the Markets sheet)") {
+        onMainScreen { scrollToAccount(fromAccountName) }
+    }
+    step("Expand account '$fromAccountName' and reveal token '$tokenName'") {
+        onMainScreen {
+            findAccountSectionByName(fromAccountName).clickAndWaitFor(
+                rule = composeTestRule,
+                expectedCondition = {
+                    onMainScreen { findTokenInAnyAccountByName(tokenName).assertIsDisplayed() }
+                },
+            )
+        }
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+    }
+    step("Open 'Swap' screen") {
+        openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+    }
+}
+
+// Hot wallets derive locally, so the second account's missing addresses are generated without a card scan when prompted.
+fun BaseTestCase.generateMissingHotWalletAddresses() {
+    var notificationShown = false
+    onMainScreen { notificationShown = synchronizeAddressesButton.isDisplayedSafely() }
+    if (notificationShown) {
+        onMainScreen { synchronizeAddressesButton.performClick() }
+    }
+}
+
+// The receive selector shows "No address" until the second account's derivation lands; the prompt disappears when it does.
+fun BaseTestCase.waitForAddressesGenerated() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        var generated = false
+        onMainScreen { generated = !synchronizeAddressesButton.isDisplayedSafely() }
+        generated
+    }
+}
+
+/** Picks the identical [tokenName] in [receiveAccountName]; the receive list collapses the other account, so its header is expanded first. */
+fun BaseTestCase.chooseIdenticalReceiveToken(tokenName: String, receiveAccountName: String) {
+    step("Click on 'Choose token' button") {
+        onSwapTokenScreen { chooseTokenButton.performClick() }
+    }
+    step("Expand account '$receiveAccountName' in receive selector") {
+        onSwapSelectTokenScreen { tokenWithName(receiveAccountName).performClick() }
+    }
+    step("Click on token with name '$tokenName'") {
+        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
+}
+
 fun BaseTestCase.chooseReceiveToken(tokenName: String) {
     step("Click on 'Choose token' button") {
         onSwapTokenScreen { chooseTokenButton.performClick() }
     }
     step("Click on token with name '$tokenName'") {
         onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
+}
+
+/** Reopens the receive selector via the receive-card icon and picks [tokenName] directly — the reopened selector keeps the account expanded. */
+fun BaseTestCase.changeReceiveToken(tokenName: String) {
+    step("Open receive token selector") {
+        onSwapTokenScreen { receiveSelectTokenIcon.performClick() }
+    }
+    step("Click on token with name '$tokenName'") {
+        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
+}
+
+/**
+ * From a clean start: open the main screen (cold by default, or an existing hot wallet when
+ * [seedPhrase] is given), open Swap for [fromTokenName], choose [receiveTokenName] to receive and
+ * enter [amount]. Scenario states stay in the test body.
+ */
+fun BaseTestCase.openSwapAmountScreen(
+    fromTokenName: String,
+    receiveTokenName: String,
+    amount: String,
+    seedPhrase: String? = null,
+) {
+    if (seedPhrase == null) {
+        step("Open 'Main' screen") {
+            openMainScreen()
+        }
+        step("Synchronize addresses") {
+            synchronizeAddresses()
+        }
+    } else {
+        step("Open 'Main' screen with existing hot wallet") {
+            openMainScreenWithExistingHotWallet(seedPhrase)
+        }
+    }
+    step("Click on token with name: '$fromTokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
+    }
+    step("Open 'Swap' screen") {
+        openSwapScreen(from = SwapEntryPoint.TokenDetails)
+    }
+    step("Choose receive token '$receiveTokenName'") {
+        chooseReceiveToken(receiveTokenName)
+    }
+    step("Input swap amount '$amount'") {
+        waitForIdle()
+        onSwapTokenScreen {
+            textInput.clickWithAssertion()
+            textInput.performTextReplacement(amount)
+        }
+    }
+    step("Wait for the receive amount to load") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }.isSuccess
+        }
+    }
+}
+
+/**
+ * Opens the swap 'Network fee' bottom sheet, retrying the click until the fee selector shows.
+ * Single action without its own step — wrap the call in a `step(...)`.
+ */
+fun BaseTestCase.openSwapNetworkFeeSelector() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+        runCatching { onSwapTokenScreen { networkFeeBlock.performClick() } }
+        runCatching { onSendFeeSelectorBottomSheet { networkFeeTitle.assertIsDisplayed() } }.isSuccess
+    }
+}
+
+/**
+ * Opens the fee selector and switches the fee-paying token from [currentFeeToken] to [newFeeToken],
+ * then applies. Works both ways — coin -> stablecoin and back.
+ */
+fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: String) {
+    step("Open the 'Network fee' bottom sheet") {
+        openSwapNetworkFeeSelector()
+    }
+    step("Click on '$currentFeeToken' fee token to open 'Choose token'") {
+        onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() }
+    }
+    step("Select '$newFeeToken' as the fee-paying token") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSendFeeSelectorBottomSheet { feeTokenItem(newFeeToken).performClick() } }.isSuccess
+        }
+    }
+    step("Click on 'Apply' button") {
+        waitForIdle()
+        onSendFeeSelectorBottomSheet { applyButton.performClick() }
     }
 }
 
@@ -316,6 +490,15 @@ fun BaseTestCase.confirmSwapByHolding(accessCode: String? = null) {
     }
 }
 
+// Caller asserts the outcome — transfer mode has no in-progress marker to wait on.
+fun BaseTestCase.holdToConfirmTransfer() {
+    composeTestRule.onNode(
+        hasTestTag(BaseButtonTestTags.BUTTON) and
+            hasText(getResourceString(CoreUiR.string.swapping_transfer_action)),
+    ).performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+    waitForIdle()
+}
+
 sealed class SwapEntryPoint {
     object MainScreen : SwapEntryPoint()
     object TokenDetails : SwapEntryPoint()
@@ -326,6 +509,37 @@ sealed class SwapEntryPoint {
 enum class FeeType {
     Market,
     Fast
+}
+
+fun BaseTestCase.inputAmount(amount: String) {
+    // No waitForIdle(): the transfer screen recalculates the fee continuously and never reaches idle.
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onSwapTokenScreen { textInput.assertIsDisplayed() } }.isSuccess
+    }
+    onSwapTokenScreen {
+        textInput.clickWithAssertion()
+        textInput.performTextReplacement(amount)
+    }
+}
+
+// composeTestRule.waitUntil rather than flakySafely — the latter is unavailable in extensions on BaseTestCase.
+fun BaseTestCase.assertTransferReady() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onSwapTokenScreen { transferButton.assertIsDisplayed() } }.isSuccess
+    }
+    onSwapTokenScreen { providersBlock.assertIsNotDisplayed() }
+}
+
+fun BaseTestCase.waitForFeeDisplayed() {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onSwapTokenScreen { feeAmount.assertIsDisplayed() } }.isSuccess
+    }
+}
+
+fun BaseTestCase.swapFeeDiffersFrom(previousFee: String): Boolean {
+    var current = ""
+    onSwapTokenScreen { current = feeAmount.extractText() }
+    return current.isNotEmpty() && current != previousFee
 }
 
 

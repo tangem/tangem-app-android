@@ -21,6 +21,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 @Suppress("LongParameterList")
 internal class TxHistorySubscriberLegacy @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet.Cold,

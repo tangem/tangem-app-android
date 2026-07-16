@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -17,6 +19,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal class WalletNotificationsSubscriber @AssistedInject constructor(
@@ -27,6 +30,7 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
     private val getWalletNotificationsCarouselFactory: GetWalletNotificationsCarouselFactory,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotificationUM>> {
@@ -35,6 +39,15 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
             flow2 = getWalletNotificationsCarouselFactory.create(userWallet, clickIntents).conflate()
                 .distinctUntilChanged(),
         ) { notifications, notificationsCarousel ->
+            if (notificationsCarousel.any { it is WalletNotificationUM.YieldBoostPromo }) {
+                coroutineScope.launch {
+                    getStoryContentUseCase.invokeSync(
+                        id = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
+                        refresh = true,
+                    )
+                }
+            }
+
             val displayedWalletUM = stateHolder.getWalletUM(userWallet.walletId)
 
             // Wait until the wallet appears in the list

@@ -27,13 +27,13 @@ import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
-import com.tangem.domain.stories.GetStoryContentUseCase
-import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingOptionsUseCase
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
@@ -268,8 +268,12 @@ internal class MainViewModel @Inject constructor(
                         onShownBalanceToastAction()
                     }
                 },
+                startIconId = if (settings.isBalanceHidden) {
+                    R.drawable.ic_eye_off_outline_24
+                } else {
+                    R.drawable.ic_eye_outline_24
+                },
             )
-
             messageSender.send(message)
         }
     }

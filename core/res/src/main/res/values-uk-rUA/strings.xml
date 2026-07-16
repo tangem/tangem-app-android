@@ -81,7 +81,7 @@
   <string name="action_buttons_you_want_to_receive">Оберіть токен для отримання</string>
   <string name="action_buttons_you_want_to_swap">Оберіть токен для обміну</string>
   <string name="actionbutton_addfunds_title">Поповнити</string>
-  <string name="actionbutton_swap_title">Обмін</string>
+  <string name="actionbutton_swap_title">Обміняти</string>
   <string name="actionbutton_transfer_title">Переказ</string>
   <string name="add_and_manage_sheet_manage_subtitle">Додати до портфеля</string>
   <string name="add_and_manage_sheet_manage_title">Додати токени</string>
@@ -98,17 +98,24 @@
   <string name="address_book_add_address">Додати адресу</string>
   <string name="address_book_add_address_description">Додати адресу та вибрати мережу</string>
   <string name="address_book_add_contact">Додати контакт</string>
+  <string name="address_book_address_copied">Адресу скопійовано</string>
+  <string name="address_book_address_taken_error">Цю адресу вже збережено як %1$s</string>
   <plurals name="address_book_addresses">
-    <item quantity="one">адреса</item>
-    <item quantity="few">адреси</item>
-    <item quantity="many">адрес</item>
-    <item quantity="other">адрес</item>
+    <item quantity="one">%d адреса</item>
+    <item quantity="few">%d адреси</item>
+    <item quantity="many">%d адрес</item>
+    <item quantity="other">%d адрес</item>
   </plurals>
+  <string name="address_book_choose_address">Оберіть адресу</string>
+  <string name="address_book_clear_all_networks">Очистити все</string>
   <string name="address_book_contact">Контакт</string>
   <string name="address_book_contact_name">Ім\'я контакту</string>
   <string name="address_book_copy_address">Скопіювати адресу</string>
+  <string name="address_book_create_success_message">Контакт збережено</string>
   <string name="address_book_creating_error">Не вдалося створити контакт. Будь ласка, спробуйте пізніше.</string>
+  <string name="address_book_delete_contact">Видалити контакт</string>
   <string name="address_book_delete_contact_description">Цей контакт буде видалено з усіх ваших адресних книг</string>
+  <string name="address_book_delete_last_address">У \"%1$s\" лише одна адреса. Її видалення також призведе до видалення контакту. Продовжити?</string>
   <string name="address_book_deleting_error">Не вдалося видалити контакт. Будь ласка, спробуйте пізніше.</string>
   <string name="address_book_description">Керування контактами та адресами</string>
   <string name="address_book_discard">Скасувати</string>
@@ -116,11 +123,21 @@
   <string name="address_book_enter_address">Ввести адресу</string>
   <string name="address_book_invalid_address_error">Недійсна адреса</string>
   <string name="address_book_keep_editing">Продовжити</string>
+  <string name="address_book_max_networks_alert_description">Ви не можете створити більше 20 адрес. Видаліть одну, щоб додати нову.</string>
+  <string name="address_book_max_networks_alert_title">Неможливо додати нову адресу</string>
+  <string name="address_book_name_empty_error">Ім\'я контакту обов\'язкове</string>
+  <string name="address_book_name_invalid_chars_error">Ім\'я контакту містить недопустимі символи</string>
+  <string name="address_book_name_max_chars_error">Ім\'я контакту повинно містити не більше 50 символів</string>
+  <string name="address_book_name_taken_error">Це ім\'я вже використовується в цьому гаманці</string>
   <string name="address_book_new_contact">Новий контакт</string>
   <string name="address_book_no_contacts">Немає доданих контактів</string>
   <string name="address_book_no_contacts_description">Тут відображатимуться додані вами контакти.</string>
   <string name="address_book_remove_address">Видалити адресу</string>
+  <string name="address_book_save_contact">Зберегти контакт</string>
+  <string name="address_book_save_to_wallet_title">Зберегти в гаманець</string>
   <string name="address_book_save_wallet_to_description">Цей контакт буде прив\'язано до цього гаманця в адресній книзі.</string>
+  <string name="address_book_search_no_results">Нічого не знайдено.\nСпробуйте інше ім\'я</string>
+  <string name="address_book_select_all_networks">Вибрати все</string>
   <string name="address_book_select_network">Вибрати мережу</string>
   <string name="address_book_title">Адресна книга</string>
   <string name="address_book_unsaved_changes">Незбережені зміни</string>
@@ -360,6 +377,7 @@
   <string name="common_from">З</string>
   <string name="common_from_wallet_name">З %s</string>
   <string name="common_generate_addresses">Синхронізувати адреси</string>
+  <string name="common_get">Поповнити</string>
   <string name="common_get_started">Почати</string>
   <string name="common_get_token">Отримати токен</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
@@ -731,6 +749,7 @@
   <string name="generic_error">Виникла помилка</string>
   <string name="generic_error_code">Виникла помилка. Код: %s.</string>
   <string name="generic_requires_memo_error">Вимагається memo</string>
+  <string name="get_token_title">Поповнити %1$s</string>
   <string name="give_permission_current_transaction">Транзакція</string>
   <string name="give_permission_policy_type_footer">Вкажіть ліміт доступу для обраного токена</string>
   <string name="give_permission_rows_amount">Кількість %s</string>
@@ -747,6 +766,8 @@
   <string name="hardware_wallet_key_feature_title">Генерація ключа</string>
   <string name="hardware_wallet_security_feature_description">Операції з криптографією відбуваються всередині захищеного чіпу, стійкого до клонування та фізичному взлому.</string>
   <string name="hardware_wallet_security_feature_title">Безпека на апаратному рівні</string>
+  <string name="high_fee_warning_description">Висока активність у мережі. Ви можете продовжити зараз або спробувати пізніше, коли комісії будуть нижчими.</string>
+  <string name="high_fee_warning_title">Комісія мережі вища, ніж зазвичай</string>
   <string name="home_button_add_existing_wallet">Додати існуючий гаманець</string>
   <string name="home_button_create_new_wallet">Створити новий гаманець</string>
   <string name="home_button_order">Купити</string>
@@ -904,12 +925,14 @@
   <string name="markets_portfolio_block_add_token_title">**Додайте до свого портфеля**, щоб купувати, обмінювати або отримувати цей актив</string>
   <string name="markets_portfolio_block_subtitle">У вашому портфелі</string>
   <string name="markets_portfolio_block_title">Ваш портфель</string>
+  <string name="markets_portfolio_block_token_unsupported">**Токен не підтримується**. Наразі цей токен не підтримується в гаманці</string>
   <string name="markets_pulse_common_title">Пульс ринку</string>
   <string name="markets_quick_actions">Швидкі дії</string>
   <string name="markets_search_clear_all_hints">Очистити все</string>
   <string name="markets_search_header_title">Шукати на маркеті</string>
-  <string name="markets_search_hint_header">Нещодавні</string>
+  <string name="markets_search_hint_header">Нещодавні запити</string>
   <string name="markets_search_portfolio_header">У вашому портфелі</string>
+  <string name="markets_search_recent_tokens_header">Нещодавні токени</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Переглянути токени до 100к USD ринкової капіталізації</string>
   <string name="markets_search_show_tokens">Показати токени</string>
@@ -1251,6 +1274,7 @@
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Загальна сума транзакцій понад %1s може вимагати верифікації особи через %2s</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Загальна сума транзакцій, що перевищує еквівалент %1s, може вимагати верифікації особи через %2s</string>
+  <string name="onramp_native_payment_identity_verification">Для транзакцій через Apple Pay може знадобитися верифікація особи в %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">Натискаючи «Оплатити», ви погоджуєтеся з %1s\'s %2s і %3s.</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_offer_type_fastet">Найшвидший</string>
@@ -1287,6 +1311,8 @@
   <string name="onramp_title_available_from">Доступно з</string>
   <string name="onramp_title_available_up_to">Доступно до</string>
   <string name="onramp_title_you_get">Ви отримаєте</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">Цей токен не підтримується. Будь ласка, виберіть інший токен для купівлі.</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s не підтримується</string>
   <string name="onramp_tos_external_providers">Послуга надається зовнішнім провайдером. \nTangem не несе відповідальності.</string>
   <string name="onramp_transaction_status_footer_text">Ви можете перевірити статус транзакції на сторінці токена</string>
   <string name="onramp_up_to_rate">До</string>
@@ -1299,6 +1325,20 @@
   <string name="organize_tokens_sort_by_balance">За балансом</string>
   <string name="organize_tokens_title">Сортування токенів</string>
   <string name="organize_tokens_ungroup">Список</string>
+  <string name="promo_campaign_already_activated_subtitle">Нарахований кешбек буде надіслано на:</string>
+  <string name="promo_campaign_already_activated_title">Ви вже долучилися до %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Доступні токени</string>
+  <string name="promo_campaign_enroll">Долучитися</string>
+  <string name="promo_campaign_enroll_success_title">Ви успішно долучилися до %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">Ця кампанія більше не існує або термін її дії закінчився</string>
+  <string name="promo_campaign_not_active_title">Кампанія неактивна</string>
+  <string name="promo_campaign_reactivation_summary_description">Отримуйте 0.5% кешбеку за кожний обмін від $500 у будь-якій парі, крім стейблкоїна на стейблкоїн. Максимальна виплата: $50 за обмін.\n\nЗдійсніть п\'ять відповідних умовам обмінів та розблокуйте додатковий бонус у $10.\n\nНагороди виплачуються щотижня в USDT або USDC на обрану адресу.</string>
+  <string name="promo_campaign_select_cashback_account">Оберіть рахунок для кешбеку</string>
+  <string name="promo_campaign_select_token">Оберіть токен</string>
+  <string name="promo_campaign_summary_title">Долучитися до %1$s</string>
+  <string name="promo_campaign_terms_agreement">Я приймаю %1$s</string>
+  <string name="promo_campaign_terms_link">%1$s Умови</string>
+  <string name="promo_campaign_whale_swap_summary_description">Отримуйте кешбек за кожний обмін від $10K до кінця липня.\n\nСтавка зростає разом із сумою: 0.10% від $10K, 0.20% від $20K, 0.50% від $100K.\n\nМаксимальна виплата: $500 за обмін та $10,000 на гаманець для кожного напрямку обмінів, поки триває кампанія. Обміни стейблкоїна на стейблкоїн виключено.\n\nВиплата надходить щотижня на обрану вами адресу USDT або USDC.</string>
   <string name="provider_name_support">Підтримка %s</string>
   <string name="push_notification_settings_banner_description">Push-сповіщення ввімкнені, але не працюватимуть без вашого дозволу</string>
   <string name="push_notification_settings_banner_title">Дозволити сповіщення</string>
@@ -1334,8 +1374,9 @@
   <string name="quick_action_buy_description">Банківська картка або банківський рахунок</string>
   <string name="quick_action_receive_description">Поділіться своєю адресою або QR-кодом</string>
   <string name="quick_action_sell_description">Безпечно продавайте криптовалюту</string>
+  <string name="quick_action_send_and_swap_description">Надіслати з обміном на інший токен</string>
   <string name="quick_action_send_description">Надіслати на інший гаманець</string>
-  <string name="quick_action_swap_description">Між вашими портфелями</string>
+  <string name="quick_action_swap_description">Обміняйте одну криптовалюту на іншу</string>
   <string name="quick_top_up_chip_other">Інші</string>
   <string name="quick_top_up_title">Швидке поповнення</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не вимагається</string>
@@ -1525,7 +1566,7 @@
   <string name="send_validation_invalid_total">Сума, що відправляється, перевищує залишок</string>
   <string name="send_with_swap_change_token_alert_message">Ви впевнені, що хочете змінити токен отримання? Це призведе до скидання раніше введених даних.</string>
   <string name="send_with_swap_change_token_alert_title">Зміна токену</string>
-  <string name="send_with_swap_confirm_title">Обмін та надсилання</string>
+  <string name="send_with_swap_confirm_title">Обміняти та надіслати</string>
   <string name="send_with_swap_convert_token_alert_message">Продовжити обмін? Це очистить ваші попередні дані.</string>
   <string name="send_with_swap_convert_token_alert_title">Підтвердити конвертацію</string>
   <string name="send_with_swap_correct_recipient_network_notification_message">Надсилання будь-якої іншої валюти призведе до її незворотної втрати.</string>
@@ -1630,9 +1671,9 @@
   <string name="staking_notification_ton_account_initialization_message">Щоб розпочати стейкінг, спочатку активуйте свій TON-акаунт.</string>
   <string name="staking_notification_ton_account_initialization_title">Активація акаунту</string>
   <string name="staking_notification_ton_activate_account">Щоб почати стейкінг в TON, спочатку здійсніть вихідну транзакцію на будь-яку суму — це активує ваш гаманець.</string>
-  <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON може знадобитися додатково мережевої комісії для завершення транзакції. Невикористана частина буде повернута.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потребується додатково 0.2 TON, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Потрібен резерв TON</string>
+  <string name="staking_notification_ton_extra_reserve_info">До 0.2 GRAM може знадобитися додатково мережевої комісії для завершення транзакції. Невикористана частина буде повернута.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потребується додатково 0.2 GRAM, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
+  <string name="staking_notification_ton_extra_reserve_title">Потрібен резерв GRAM</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Ця дія закриє інші позиції або переведе їх у статус виведення, відповідно до правил мережі.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Статус позицій</string>
   <string name="staking_notification_unlock_text">Розблокуйте свої кошти, щоб вивести їх зі стейкінгу. Розблокування займе %s.</string>
@@ -1991,6 +2032,7 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Поповніть платіжний рахунок в USDC, щоб покрити комісію за випуск</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Неможливо покрити комісію</string>
   <string name="tangempay_reissue_card_title">Перевипустити картку?</string>
+  <string name="tangempay_remove_account">Видалити аккаунт</string>
   <string name="tangempay_service_unavailable_description">Ми усуваємо технічну проблему. Будь ласка, спробуйте пізніше.</string>
   <string name="tangempay_service_unavailable_title">Сервіс тимчасово недоступний</string>
   <string name="tangempay_service_unreachable_try_later">Не можемо показати дані картки, але оплати продовжують працювати.</string>
@@ -2306,6 +2348,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">Цей токен повинен бути асоційований з вашим обліковим записом Hedera, перш ніж ви зможете його прийняти</string>
   <string name="warning_hedera_missing_token_association_title">Асоціюйте свій токен</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Недостатньо %s. Поповніть ваш обліковий запис Hedera для асоціації цього токена</string>
+  <string name="warning_incomplete_backup_notification_message">Ми виявили, що процес активації картки не завершено належним чином через проблеми з NFC-модулем пристрою або неправильне прикладання карток до телефону. Будь ласка, зверніться до служби підтримки для уточнення деталей.</string>
+  <string name="warning_incomplete_backup_notification_title">Потрібна дія. Не використовуйте гаманець!</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Ви впевнені, що хочете скасувати цю транзакцію? Ви не зможете відправити її ще раз</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакція %1$s %2$s не була завершена. Ви можете спробувати відправити її ще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас є незавершена транзакція</string>
@@ -2335,8 +2379,8 @@
   <string name="warning_no_backup_title">Резервна копія відсутня</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Ця картка вже використовувалася для здійснення транзакцій. Якщо вона отримана з ненадійного джерела, подумайте про те, щоб зняти всі кошти. Якщо це ваша картка, ніяких додаткових дій не потрібно.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Картка вже підписувала транзакції</string>
-  <string name="warning_outdated_data_message">Буде оновлено якнайшвидше.</string>
-  <string name="warning_outdated_data_title">Відсутня частина балансу токенів.</string>
+  <string name="warning_outdated_data_message">Деякі баланси токенів не вдалося оновити</string>
+  <string name="warning_outdated_data_title">Баланси можуть бути неактуальними</string>
   <string name="warning_rate_app_message">Ваш відгук мотивує нас робити гаманець Tangem Wallet ще кращим</string>
   <string name="warning_rate_app_title">Подобається Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необхідно провести асоціацію токена, щоб мати можливість приймати його</string>
@@ -2513,7 +2557,7 @@
   <string name="yield_module_approve_sheet_fee_note">Комісія буде знята, а ваші активи знову почнуть приносити дохід.</string>
   <string name="yield_module_approve_sheet_subtitle">Щоб продовжити заробляти, потрібне схвалення.</string>
   <string name="yield_module_approve_sheet_title">Підтвердити дозвіл</string>
-  <string name="yield_module_average_apy">Середній APY %1$s%%</string>
+  <string name="yield_module_average_apy">Поточний APY %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Наразі ваші кошти розміщені у протоколі Aave, але ви можете керувати ними в будь-який час.</string>
   <string name="yield_module_balance_info_sheet_title">Ваш %s внесений у Aave</string>
   <string name="yield_module_chart_loading_error">Неможливо завантажити графік</string>

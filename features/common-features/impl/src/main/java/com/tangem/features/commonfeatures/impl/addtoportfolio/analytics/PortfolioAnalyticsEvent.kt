@@ -92,13 +92,5 @@ internal class PortfolioAnalyticsEvent(
                 if (source != null) put("Source", source)
             },
         )
-
-        fun getTokenLater() = PortfolioAnalyticsEvent(
-            event = "Popup Get token - Button Later",
-            category = category,
-            params = buildMap {
-                if (source != null) put("Source", source)
-            },
-        )
     }
 }
