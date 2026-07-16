@@ -26,7 +26,6 @@ internal class SetTokenListTransformer(
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
-    private val isRedesignEnabled: Boolean,
     private val isMultipleCardsEnabled: Boolean,
     private val isPolymarketEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
@@ -34,15 +33,12 @@ internal class SetTokenListTransformer(
     private val tangemPayConverter by lazy {
         TangemPayMainBlockConverter(
             tangemPayClickIntents = clickIntents,
-            isRedesignEnabled = isRedesignEnabled,
             isMultipleCardsEnabled = isMultipleCardsEnabled,
         )
     }
 
     private val virtualAccountConverter by lazy {
-        VirtualAccountMainBlockConverter(
-            isRedesignEnabled = isRedesignEnabled,
-        )
+        VirtualAccountMainBlockConverter()
     }
 
     override fun transform(prevState: WalletState): WalletState {
