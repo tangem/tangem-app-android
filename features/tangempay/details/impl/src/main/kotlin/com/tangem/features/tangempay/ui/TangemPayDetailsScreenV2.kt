@@ -373,14 +373,16 @@ private fun BalanceBlock(
         when (state) {
             is TangemPayDetailsBalanceBlockState.Loading -> Unit
             is TangemPayDetailsBalanceBlockState.Content -> {
-                TangemBadge(
-                    modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
-                    text = resourceReference(R.string.tangempay_status_inactive),
-                    variant = TangemBadge.Variant.Outline,
-                    status = TangemBadge.Status.Warning,
-                    size = TangemBadge.Size.X6,
-                    iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
-                )
+                if (state.isInactive) {
+                    TangemBadge(
+                        modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
+                        text = resourceReference(R.string.tangempay_status_inactive),
+                        variant = TangemBadge.Variant.Outline,
+                        status = TangemBadge.Status.Warning,
+                        size = TangemBadge.Size.X6,
+                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
+                    )
+                }
             }
             is TangemPayDetailsBalanceBlockState.Error -> Unit
         }
