@@ -21,44 +21,28 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.e
 @Composable
 internal fun ExpressStatusBottomSheet(
     config: TangemBottomSheetConfig,
-    isExpressShareButtonEnabled: Boolean,
     extraContent: (@Composable () -> Unit)? = null,
 ) {
     TangemBottomSheet(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
     ) { content: ExpressStatusBottomSheetConfig ->
-        if (isExpressShareButtonEnabled) {
-            Box {
-                when (val state = content.value) {
-                    is ExpressTransactionStateUM.OnrampUM -> OnrampStatusBottomSheetContent(
-                        state = state,
-                        isExpressShareButtonEnabled = true,
-                    )
-                    is ExchangeUM -> ExchangeStatusBottomSheetContent(
-                        state = state,
-                        extraContent = extraContent,
-                        isExpressShareButtonEnabled = true,
-                    )
-                }
-                BottomFade(
-                    backgroundColor = TangemTheme.colors.background.tertiary,
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                )
-                ExpressShareContent(state = content.value)
-            }
-        } else {
+        Box {
             when (val state = content.value) {
                 is ExpressTransactionStateUM.OnrampUM -> OnrampStatusBottomSheetContent(
                     state = state,
-                    isExpressShareButtonEnabled = false,
+                    isExpressShareButtonEnabled = true,
                 )
                 is ExchangeUM -> ExchangeStatusBottomSheetContent(
                     state = state,
                     extraContent = extraContent,
-                    isExpressShareButtonEnabled = false,
                 )
             }
+            BottomFade(
+                backgroundColor = TangemTheme.colors.background.tertiary,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+            ExpressShareContent(state = content.value)
         }
     }
 }
@@ -76,7 +60,6 @@ private fun PreviewExpressStatusBottomSheet(
                 onDismissRequest = {},
                 content = param,
             ),
-            isExpressShareButtonEnabled = false,
         )
     }
 }
