@@ -342,6 +342,8 @@ dependencies {
     implementation(projects.features.tokenRecieve.impl)
     implementation(projects.features.yieldSupply.api)
     implementation(projects.features.yieldSupply.impl)
+    implementation(projects.features.polymarket.api)
+    implementation(projects.features.polymarket.impl)
     implementation(projects.features.approval.api)
     implementation(projects.features.approval.impl)
     implementation(projects.features.forYou.api)

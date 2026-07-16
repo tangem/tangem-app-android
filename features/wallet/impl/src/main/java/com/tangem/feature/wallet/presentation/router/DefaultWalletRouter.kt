@@ -132,6 +132,10 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
+    override fun openPolymarket(userWalletId: UserWalletId) {
+        router.push(AppRoute.Polymarket(userWalletId = userWalletId))
+    }
+
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
