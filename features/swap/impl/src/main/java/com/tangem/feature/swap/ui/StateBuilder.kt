@@ -1220,7 +1220,6 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         needApplyFCARestrictions: Boolean,
-        isSwapBestDexRateEnabled: Boolean,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val successStates = providersStates.getLastLoadedSuccessStates()
@@ -1231,7 +1230,6 @@ internal class StateBuilder(
                     provider = entry.key,
                     needApplyFCARestrictions = needApplyFCARestrictions,
                     state = entry.value,
-                    isSwapBestDexRateEnabled = isSwapBestDexRateEnabled,
                 )
                 entry.convertToProviderBottomSheetState(
                     pricesLowerBest = pricesLowerBest,

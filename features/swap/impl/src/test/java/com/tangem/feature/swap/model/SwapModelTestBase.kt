@@ -130,7 +130,6 @@ internal abstract class SwapModelTestBase {
         coEvery { shouldShowStoriesUseCase.invokeSync(any()) } returns false
         coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any()) } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
-        every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
     }
 
     protected fun createParams(): SwapComponent.Params = SwapComponent.Params(

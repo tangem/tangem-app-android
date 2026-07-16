@@ -198,20 +198,9 @@ abstract class BaseTestCase : TestCase(
                 // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
                 // build even when the app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < x.xx would
                 // disable them). On the releases/6.0 branch every toggle with version <= 6.0 ships enabled.
-                // 5.40
-                "TWI_1377_MANAGE_FUNDS" to true,
                 // 6.0
                 "APP_REDESIGN_ENABLED" to true,
                 "TWI_1326_YIELD_MODE_SWAP_ENABLED" to true,
-                "AND_15207_SWAP_SWITCH_TO_TRANSFER_ENABLED" to true,
-                "AND_15120_SWAP_INTEGRATED_APPROVE" to true,
-                "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED" to true,
-                "AND_15258_QUICK_TOP_UP_ENABLED" to true,
-                "AND_15368_VISA_PAY_REDESIGN" to true,
-                "AND_15364_VISA_PAY_CARD_CLOSE" to true,
-                "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED" to true,
-                "AND_15235_VISA_MULTIPLE_CARDS" to true,
-                "AND_15715_SWAP_BEST_DEX_RATE_ENABLED" to true,
                 // 6.1
                 "TWI_1638_VA_MVP0_ENABLED" to true,
             )

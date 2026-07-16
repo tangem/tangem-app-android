@@ -111,15 +111,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     val cryptoCurrency
         get() = currentStatus.value.cryptoCurrency
 
-    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isMultipleCardsEnabled
-
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
         isRedesignEnabled = isRedesignEnabled(),
         isRemoveAccountEnabled = tangemPayFeatureToggles.isRemoveAccountEnabled,
-        isMultipleCardsEnabled = isMultipleCardsEnabled,
         isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
 
@@ -476,17 +473,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onAddCardClick() {
         analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
-        if (!isMultipleCardsEnabled) {
-            analytics.send(TangemPayAnalyticsEvents.FakeDoorPopupDisplayed())
-            uiMessageSender.send(
-                TangemPayMessagesFactory.createFutureFeature(
-                    onGotItClick = {
-                        analytics.send(TangemPayAnalyticsEvents.FakeDoorGotitClicked())
-                    },
-                ),
-            )
-            return
-        }
         modelScope.launch {
             val offer = getCustomerOffers.additionalCardOffer(userWalletId).getOrNull()
             if (offer == null) {

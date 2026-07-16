@@ -49,32 +49,6 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `isSolanaUnstakeValidationEnabled returns true when toggle enabled`() {
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
-        } returns true
-
-        assertThat(toggles.isSolanaUnstakeValidationEnabled()).isTrue()
-
-        verify(exactly = 1) {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
-        }
-    }
-
-    @Test
-    fun `isSolanaUnstakeValidationEnabled returns false when toggle disabled`() {
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
-        } returns false
-
-        assertThat(toggles.isSolanaUnstakeValidationEnabled()).isFalse()
-
-        verify(exactly = 1) {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
-        }
-    }
-
-    @Test
     fun `GIVEN toggle enabled WHEN isRegionUnavailableHandlingEnabled THEN returns true`() {
         // Arrange
         every {
