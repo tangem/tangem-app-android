@@ -7,9 +7,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
@@ -18,8 +15,6 @@ import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.rating.RatingComponent
-import com.tangem.feature.swap.domain.SwapFeedbackUseCase
-import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -184,7 +179,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val walletIconUMConverter: WalletIconUMConverter,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val redesignStateController: TokenDetailsStateController,
-    private val swapFeedbackUseCase: SwapFeedbackUseCase,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
@@ -1221,24 +1215,10 @@ internal class TokenDetailsModel @Inject constructor(
     ) {
         ratingSlotNavigation.activate(
             RatingComponent.Params(
-                onLoadRating = {
-                    swapFeedbackUseCase.getExistingRating(txExternalId)
-                        .fold(ifLeft = { null }, ifRight = { it?.rating })
-                },
-                onSubmitRating = { rating, feedback ->
-                    swapFeedbackUseCase.submit(
-                        SwapFeedbackParams(
-                            userWalletIdHash = userWalletIdStringValue.hexToBytes()
-                                .calculateSha256()
-                                .toHexString(),
-                            providerName = providerName,
-                            txUrl = txExternalUrl,
-                            txExternalId = txExternalId,
-                            rating = rating,
-                            feedback = feedback,
-                        ),
-                    ).onLeft { TangemLogger.e("Failed to submit swap feedback: $it") }
-                },
+                txExternalId = txExternalId,
+                providerName = providerName,
+                txExternalUrl = txExternalUrl,
+                userWalletId = UserWalletId(userWalletIdStringValue),
             ),
         )
     }
