@@ -12,9 +12,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.SpacerH16
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.api.SendNotificationsComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent

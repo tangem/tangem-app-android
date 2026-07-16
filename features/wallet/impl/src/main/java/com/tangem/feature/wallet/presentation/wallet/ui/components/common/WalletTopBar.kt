@@ -28,14 +28,13 @@ import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedS
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.LocalRootBackgroundColor
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
+import com.tangem.utils.annotations.RemoveWithToggle
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
@@ -57,6 +56,7 @@ internal fun WalletTopBar(
     isBalanceHidden: Boolean,
     behavior: TangemCollapsingAppBarBehavior,
 ) {
+    val hapticManager = LocalHapticManager.current
     Surface(
         color = Color.Unspecified,
         contentColor = Color.Unspecified,
@@ -93,7 +93,17 @@ internal fun WalletTopBar(
                         ),
                 ) {
                     topBarConfig.endActions.forEach { action ->
-                        TangemTopBarActionContent(action)
+                        TangemTopBarActionContent(
+                            action.copy(
+                                onClick = action.onClick?.let { onClick ->
+                                    {
+                                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                                        onClick()
+                                    }
+                                },
+                            ),
+                            modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
+                        )
                     }
                 }
             },
@@ -111,6 +121,7 @@ internal fun WalletTopBar(
  */
 @Suppress("MagicNumber")
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+@RemoveWithToggle("APP_REDESIGN_ENABLED")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletTopBar(config: WalletTopBarConfig) {

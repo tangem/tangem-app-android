@@ -22,11 +22,9 @@ import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
-import com.tangem.features.tangempay.utils.firstCard
-import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -47,11 +45,12 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     private val setTangemPayCardLimitUseCase: SetTangemPayCardLimitUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
+    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
-    private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
-    private val cardId: String = params.initialStatus.firstCard().id
-    private val userWalletId = params.initialStatus.userWalletId
+    private val params: TangemPayCardLimitSetupComponent.Params = paramsContainer.require()
+    private val cardId: String = params.card.id
+    private val userWalletId = params.userWalletId
     private var currentAdminLimit: BigDecimal? = null
 
     val uiState: StateFlow<TangemPayCardLimitSetupUM>
@@ -78,6 +77,8 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         observeCardState()
     }
 
+    fun inRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
+
     private fun observeCardState() {
         paymentAccountStatusSupplier.invoke(userWalletId)
             .map { it.value }
@@ -97,7 +98,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                     ?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     ?.amount
 
-                val currency = getJavaCurrencyByCode(status.currencyCode)
+                val currency = getJavaCurrencyByCode(status.balance.fiatBalance.currency)
                 uiState.update { state ->
                     val amount = if (index == 0) {
                         currentLimit?.stripTrailingZeros()?.toPlainString().orEmpty()
