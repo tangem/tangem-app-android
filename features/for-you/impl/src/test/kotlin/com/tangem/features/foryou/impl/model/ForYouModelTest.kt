@@ -108,7 +108,7 @@ internal class ForYouModelTest {
             val loading = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Loading
             assertThat(loading.tokenList).hasSize(4)
             assertThat(loading.tokenList.all { it.tokenRowUM is TangemTokenRowUM.Loading }).isTrue()
-            assertThat(loading.marketChartUM).isEqualTo(MarketChartUM.NoData)
+            assertThat(loading.marketChartUM).isInstanceOf(MarketChartUM.NoData::class.java)
         }
 
         @Test

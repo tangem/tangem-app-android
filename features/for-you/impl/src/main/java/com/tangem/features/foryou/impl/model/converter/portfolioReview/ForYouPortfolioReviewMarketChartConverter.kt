@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -7,6 +8,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
 import com.tangem.features.foryou.impl.components.state.DonutChartUM
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
@@ -54,7 +56,10 @@ internal class ForYouPortfolioReviewMarketChartConverter(
             TotalFiatBalance.Loading,
             TotalFiatBalance.Failed,
             null,
-            -> MarketChartUM.NoData
+            -> MarketChartUM.NoData(
+                title = resourceReference(R.string.market_chart_can_not_load_data),
+                donutText = resourceReference(R.string.market_chart_bubble_no_data),
+            )
         }
     }
 }
