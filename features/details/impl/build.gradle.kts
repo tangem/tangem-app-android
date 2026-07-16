@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.addressBook.api)
+    implementation(projects.features.virtualAccounts.details.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
