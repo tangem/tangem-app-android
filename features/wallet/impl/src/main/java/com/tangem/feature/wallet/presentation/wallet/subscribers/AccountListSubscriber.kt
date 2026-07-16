@@ -13,7 +13,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.combine7
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -39,7 +38,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val designFeatureToggles: DesignFeatureToggles,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
@@ -94,7 +92,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     yieldSupplyApyMap = yieldSupplyApyMap,
                     stakingAvailabilityMap = stakingAvailabilityMap,
                     shouldShowMainPromo = shouldShowMainPromo,
-                    isMultipleCardsEnabled = tangemPayFeatureToggles.isMultipleCardsEnabled,
+                    isMultipleCardsEnabled = true,
                     isPolymarketEnabled = polymarketFeatureToggles.isPolymarketEnabled,
                 )
             } else {
