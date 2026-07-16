@@ -128,11 +128,14 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Add funds' button") {
                 onTokenDetailsScreen { addFundsButton.clickWithAssertion() }
             }
+            step("Assert 'Get $tokenTitle' bottom-sheet is displayed") {
+                onAddFundsBottomSheet { titleWithTokenName(tokenTitle).assertIsDisplayed() }
+            }
             step("Assert 'Buy' button in bottom sheet is enabled") {
                 onAddFundsBottomSheet { buyButton.assertIsEnabled() }
             }
-            step("Assert 'Swap' button in bottom sheet is not displayed") {
-                onAddFundsBottomSheet { swapButton.assertIsNotDisplayed() }
+            step("Assert 'Swap' button in bottom sheet is not enabled") {
+                onAddFundsBottomSheet { swapButton.assertIsNotEnabled() }
             }
             step("Assert 'Receive' button in bottom sheet is enabled") {
                 onAddFundsBottomSheet { receiveButton.assertIsEnabled() }
