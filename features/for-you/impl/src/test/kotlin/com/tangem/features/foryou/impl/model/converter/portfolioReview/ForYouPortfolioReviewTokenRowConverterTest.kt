@@ -25,24 +25,24 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
     private val appCurrency: AppCurrency = AppCurrency.Default
 
     @Nested
-    inner class ConvertNetworkGroup {
+    inner class Convert {
 
         @Test
-        fun `GIVEN all statuses Loading WHEN convertNetworkGroup THEN row is Loading with representative id`() {
+        fun `GIVEN all statuses Loading WHEN convert THEN row is Loading with representative id`() {
             // Arrange
             val currency = createCurrency(id = "coin-eth", symbol = "ETH")
             val statuses = listOf(createStatus(currency, CryptoCurrencyStatus.Loading))
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses)
+            val result = converter.convert(statuses)
 
             // Assert
             assertThat(result).isEqualTo(TangemTokenRowUM.Loading(id = "coin-eth"))
         }
 
         @Test
-        fun `GIVEN single loaded status WHEN convertNetworkGroup THEN row is Content with its amounts`() {
+        fun `GIVEN single loaded status WHEN convert THEN row is Content with its amounts`() {
             // Arrange
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(
@@ -51,7 +51,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert
             assertThat(result.id).isEqualTo("coin-eth")
@@ -62,7 +62,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN several statuses of the same asset on one network WHEN convertNetworkGroup THEN amounts are summed`() {
+        fun `GIVEN several statuses of the same asset on one network WHEN convert THEN amounts are summed`() {
             // Arrange — same asset held in two accounts on the same network aggregates into one row
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(
@@ -72,7 +72,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
@@ -80,7 +80,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN mixed Loading and Loaded statuses WHEN convertNetworkGroup THEN row is Content`() {
+        fun `GIVEN mixed Loading and Loaded statuses WHEN convert THEN row is Content`() {
             // Arrange — not *all* statuses are Loading, so it should not collapse to a Loading row
             val currency = createCurrency(id = "coin-eth", symbol = "ETH")
             val statuses = listOf(
@@ -90,14 +90,14 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses)
+            val result = converter.convert(statuses)
 
             // Assert
             assertThat(result).isInstanceOf(TangemTokenRowUM.Content::class.java)
         }
 
         @Test
-        fun `GIVEN loaded status from cache WHEN convertNetworkGroup THEN content flickers`() {
+        fun `GIVEN loaded status from cache WHEN convert THEN content flickers`() {
             // Arrange
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(
@@ -109,7 +109,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
@@ -120,7 +120,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN loaded status only-cache WHEN convertNetworkGroup THEN error-sync start icon shown`() {
+        fun `GIVEN loaded status only-cache WHEN convert THEN error-sync start icon shown`() {
             // Arrange
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(
@@ -136,7 +136,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
@@ -145,14 +145,14 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN missed derivation status WHEN convertNetworkGroup THEN no-address treatment`() {
+        fun `GIVEN missed derivation status WHEN convert THEN no-address treatment`() {
             // Arrange
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(createStatus(currency, missedDerivationValue()))
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert — top-end is a dash, bottom-end carries the attention "no address" icon
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
@@ -162,14 +162,14 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN unreachable status WHEN convertNetworkGroup THEN dash on top and attention icon on bottom`() {
+        fun `GIVEN unreachable status WHEN convert THEN dash on top and attention icon on bottom`() {
             // Arrange
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(createStatus(currency, unreachableValue()))
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert — top-end is a bare dash, the attention "unreachable" icon lives on the bottom end
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
@@ -179,7 +179,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN mixed Loaded and Unreachable WHEN convertNetworkGroup THEN collapses to unreachable`() {
+        fun `GIVEN mixed Loaded and Unreachable WHEN convert THEN collapses to unreachable`() {
             // Arrange — one account resolved, another unreachable: the row must surface the error state
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(
@@ -189,7 +189,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert — the unreachable treatment (attention icon on the bottom end) wins over the loaded amount
             val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
@@ -212,7 +212,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             )
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
             result.onItemClick?.invoke()
 
             // Assert
@@ -234,7 +234,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             )
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
             result.onItemClick?.invoke()
 
             // Assert
@@ -242,7 +242,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
 
         @Test
-        fun `GIVEN mixed MissedDerivation and Unreachable WHEN convertNetworkGroup THEN missed-derivation wins`() {
+        fun `GIVEN mixed MissedDerivation and Unreachable WHEN convert THEN missed-derivation wins`() {
             // Arrange — missed derivation is the most severe terminal state and dominates
             val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
             val statuses = listOf(
@@ -252,7 +252,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
 
             // Act
-            val result = converter.convertNetworkGroup(statuses) as TangemTokenRowUM.Content
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
 
             // Assert — top-end is a dash (no-address treatment), not an unreachable label
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
