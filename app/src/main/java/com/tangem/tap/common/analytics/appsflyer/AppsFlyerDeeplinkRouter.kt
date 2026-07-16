@@ -2,8 +2,6 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
@@ -29,7 +27,6 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
-    private val featureTogglesManager: FeatureTogglesManager,
     private val appRouter: AppRouter,
 ) {
 
@@ -54,11 +51,6 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun routeTangemPayOnboarding(currentRoute: AppRoute) {
-        val isEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
-        )
-        if (!isEnabled) return
-
         // Not on an idle entry screen yet: keep the deep link pending, re-evaluate on next route change.
         if (!isIdleEntryPoint(currentRoute)) return
 
@@ -76,11 +68,6 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun routeReferral(currentRoute: AppRoute) {
-        val isEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
-        )
-        if (!isEnabled) return
-
         // Referral targets fresh installs: from an idle entry screen, go straight to hot wallet creation
         // (skips stories). The deep link is NOT cleared here — it stays as referral attribution (read by
         // IsReferralInstallUseCase, cleared on wallet creation); replaceAll keeps it off the back stack.
