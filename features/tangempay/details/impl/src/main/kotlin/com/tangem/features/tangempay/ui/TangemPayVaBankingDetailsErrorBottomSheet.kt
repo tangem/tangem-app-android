@@ -88,7 +88,7 @@ private fun Content(state: TangemPayVaBankingDetailsErrorUM, modifier: Modifier 
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = TangemTheme.dimens2.x2),
-            text = resourceReference(R.string.alert_button_try_again),
+            text = resourceReference(R.string.common_retry),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             isLoading = state.isRetryLoading,

@@ -528,8 +528,15 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
-        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-        openVirtualAccountDeposit(onramp, loaded)
+        when (onramp) {
+            // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
+            // instead of the intro deposit sheet that would need another "Show details" tap.
+            is VirtualAccountOnramp.Available -> onShowVirtualAccountRequisites(onramp)
+            else -> {
+                val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+                openVirtualAccountDeposit(onramp, loaded)
+            }
+        }
     }
 
     fun onContactSupportClicked() {
