@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -37,7 +36,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
@@ -83,29 +81,17 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     "promo=$shouldShowMainPromo, " +
                     "stakingMap=${stakingAvailabilityMap.size}",
             )
-            if (designFeatureToggles.isRedesignEnabled) {
-                updateState2(
-                    accountList = accountList,
-                    appCurrency = appCurrency,
-                    expandedAccounts = expandedAccounts,
-                    isAccountMode = isAccountMode,
-                    yieldSupplyApyMap = yieldSupplyApyMap,
-                    stakingAvailabilityMap = stakingAvailabilityMap,
-                    shouldShowMainPromo = shouldShowMainPromo,
-                    isMultipleCardsEnabled = true,
-                    isPolymarketEnabled = polymarketFeatureToggles.isPolymarketEnabled,
-                )
-            } else {
-                updateState(
-                    accountList = accountList,
-                    appCurrency = appCurrency,
-                    expandedAccounts = expandedAccounts,
-                    isAccountMode = isAccountMode,
-                    yieldSupplyApyMap = yieldSupplyApyMap,
-                    stakingAvailabilityMap = stakingAvailabilityMap,
-                    shouldShowMainPromo = shouldShowMainPromo,
-                )
-            }
+            updateState2(
+                accountList = accountList,
+                appCurrency = appCurrency,
+                expandedAccounts = expandedAccounts,
+                isAccountMode = isAccountMode,
+                yieldSupplyApyMap = yieldSupplyApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
+                shouldShowMainPromo = shouldShowMainPromo,
+                isMultipleCardsEnabled = true,
+                isPolymarketEnabled = polymarketFeatureToggles.isPolymarketEnabled,
+            )
         }
     }
 
