@@ -60,7 +60,6 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
@@ -156,7 +155,6 @@ internal class StakingModel @Inject constructor(
     private val coroutineScope: AppCoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     private val appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
@@ -399,8 +397,6 @@ internal class StakingModel @Inject constructor(
                                 minimumTransactionAmount = minimumTransactionAmount,
                                 actionType = uiState.value.actionType,
                                 integration = integration,
-                                isSolanaUnstakeValidationEnabled = stakingFeatureToggles
-                                    .isSolanaUnstakeValidationEnabled(),
                             )
 
                             addAll(
@@ -663,7 +659,6 @@ internal class StakingModel @Inject constructor(
                 minimumTransactionAmount = minimumTransactionAmount,
                 value = value,
                 integration = integration,
-                isSolanaUnstakeValidationEnabled = stakingFeatureToggles.isSolanaUnstakeValidationEnabled(),
             ),
         )
         checkSumLimitExceeded()
@@ -705,7 +700,6 @@ internal class StakingModel @Inject constructor(
                 minimumTransactionAmount = minimumTransactionAmount,
                 actionType = uiState.value.actionType,
                 integration = integration,
-                isSolanaUnstakeValidationEnabled = stakingFeatureToggles.isSolanaUnstakeValidationEnabled(),
             ),
         )
         checkSumLimitExceeded()
@@ -1388,7 +1382,6 @@ internal class StakingModel @Inject constructor(
                 value = amountValue,
                 minimumTransactionAmount = minimumTransactionAmount,
                 integration = integration,
-                isSolanaUnstakeValidationEnabled = stakingFeatureToggles.isSolanaUnstakeValidationEnabled(),
             ),
         )
     }
