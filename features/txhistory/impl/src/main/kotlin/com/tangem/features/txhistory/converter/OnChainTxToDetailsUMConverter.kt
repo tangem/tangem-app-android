@@ -1,5 +1,8 @@
 package com.tangem.features.txhistory.converter
 
+import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -21,6 +24,9 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.ResolvedOwner
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.toBriefAddressFormat
@@ -43,8 +49,8 @@ internal class OnChainTxToDetailsUMConverter(
     /** Staking validators of the viewed currency keyed by on-chain address; resolves the validator row's name/link. */
     private val validatorsByAddress: Map<String, Yield.Validator>,
     private val onOpenValidator: (String) -> Unit,
-    /** Own deposit addresses on the viewed currency's network — drives the on-chain own-vs-external transfer title. */
-    private val ownAddresses: Set<String>,
+    /** Resolves a transfer counterparty to one of the user's own accounts/wallets — the same lookup the list uses. */
+    private val lookup: TxHistoryLookupContext,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -124,10 +130,20 @@ internal class OnChainTxToDetailsUMConverter(
         menu = menu,
     )
 
-    /** A transfer whose counterparty is one of the viewed currency's own deposit addresses reads "Transfer". */
-    private fun TxInfo.isOwnTransfer(): Boolean {
-        val counterpartyAddress = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
-        return counterpartyAddress != null && counterpartyAddress in ownAddresses
+    /** A transfer whose counterparty resolves to one of the user's own accounts/wallets reads "Transfer". */
+    private fun TxInfo.isOwnTransfer(): Boolean = when (resolvedCounterparty()) {
+        is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnWallet -> true
+        is ResolvedOwner.External, null -> false
+    }
+
+    /**
+     * The `User` interaction address resolved against the user's portfolios on the viewed currency's network — the
+     * same resolution the history list applies to its row subtitle, so the title and the counterparty card never
+     * disagree with the list. `null` when the counterparty is not a plain `User` address.
+     */
+    private fun TxInfo.resolvedCounterparty(): ResolvedOwner? {
+        val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
+        return lookup.resolveOwner(address = address, networkRawId = currency.network.id.rawId)
     }
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
@@ -163,13 +179,12 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Counterparty card ("Recipient" / "From"). Only the external-address avatar is produced — built from the `User`
-     * interaction address (the same source the history list uses for its external-address subtitle); a counterparty that
-     * is not a plain external `User` address yields no card (`null`).
+     * Counterparty card ("Recipient" / "From"), built from the `User` interaction address (the same source the history
+     * list uses for its subtitle); a counterparty that is not a plain `User` address yields no card (`null`).
      *
-     * The lookup needed to resolve an own-account / own-wallet avatar here is already available (it drives the
-     * swap/onramp leg owners), but applying it to the single-asset counterparty card is intentionally out of scope for
-     * now — a follow-up.
+     * The address is resolved through the shared [lookup]: an own account / own wallet renders its name and avatar
+     * (no copy — the title is a display name, not an address), anything else renders the external brief address with
+     * an identicon and the copy action.
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
         // Contract interactions (yield-supply / staking / approve) talk to a protocol/validator, not a real recipient —
@@ -178,13 +193,30 @@ internal class OnChainTxToDetailsUMConverter(
             type is TransactionType.Staking ||
             type is TransactionType.Approve
         if (isContractInteraction) return null
-        val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
-        return TxHistoryDetailsUM.CounterpartyUM(
-            label = counterpartyLabel(),
-            title = stringReference(address.toBriefAddressFormat()),
-            avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = address),
-            onCopyClick = { onCopyAddress(address) },
-        )
+        return when (val owner = resolvedCounterparty()) {
+            is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
+                label = counterpartyLabel(),
+                title = owner.account.accountName.toUM().value,
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                    iconResId = owner.account.icon.value.getResId(),
+                    backgroundColor = owner.account.icon.color.getUiColor(),
+                ),
+                onCopyClick = null,
+            )
+            is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyUM(
+                label = counterpartyLabel(),
+                title = stringReference(owner.walletInfo.name),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(deviceIconUM = owner.walletInfo.deviceIconUM),
+                onCopyClick = null,
+            )
+            is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(
+                label = counterpartyLabel(),
+                title = stringReference(owner.address.toBriefAddressFormat()),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = owner.address),
+                onCopyClick = { onCopyAddress(owner.address) },
+            )
+            null -> null
+        }
     }
 
     /** Section label above the counterparty: "Recipient" for outgoing transfers, "From" for incoming. */
