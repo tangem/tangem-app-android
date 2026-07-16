@@ -27,7 +27,6 @@ import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
@@ -36,7 +35,6 @@ import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.list.MarketsList
-import com.tangem.features.feed.ui.market.list.TopBarWithSearch
 import kotlinx.serialization.Serializable
 
 internal class DefaultMarketsTokenListComponent(
@@ -55,41 +53,31 @@ internal class DefaultMarketsTokenListComponent(
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by model.state.collectAsStateWithLifecycle()
-        val bsState by bottomSheetState
 
-        if (LocalRedesignEnabled.current) {
-            val bottomSheetColor = LocalMainBottomSheetColor.current.value
-            FeedSearchBar(
-                isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
-                feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier.conditional(bottomSheetColor.isSpecified) {
-                    background(bottomSheetColor.copy(alpha = .95f))
-                },
-                startContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .clip(CircleShape)
-                            .hazeEffectTangem { blurRadius = 8.dp }
-                            .clickableSingle(
-                                onClick = clickIntents.onBackClicked,
-                                enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                            )
-                            .padding(TangemTheme.dimens2.x2),
-                    )
-                },
-            )
-        } else {
-            TopBarWithSearch(
-                onBackClick = clickIntents.onBackClicked,
-                onSearchClick = state.onSearchClicked,
-                marketsSearchBar = state.marketsSearchBar,
-                bottomSheetState = bsState,
-            )
-        }
+        val bottomSheetColor = LocalMainBottomSheetColor.current.value
+        FeedSearchBar(
+            isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
+            feedListSearchBar = state.feedListSearchBar,
+            modifier = Modifier.conditional(bottomSheetColor.isSpecified) {
+                background(bottomSheetColor.copy(alpha = .95f))
+            },
+            startContent = {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
+                    contentDescription = null,
+                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    modifier = Modifier
+                        .size(TangemTheme.dimens2.x11)
+                        .clip(CircleShape)
+                        .hazeEffectTangem { blurRadius = 8.dp }
+                        .clickableSingle(
+                            onClick = clickIntents.onBackClicked,
+                            enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+                        )
+                        .padding(TangemTheme.dimens2.x2),
+                )
+            },
+        )
     }
 
     @Composable
