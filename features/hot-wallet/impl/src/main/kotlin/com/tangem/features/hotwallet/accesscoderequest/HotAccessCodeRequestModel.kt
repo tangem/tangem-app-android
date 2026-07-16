@@ -67,7 +67,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
 
         currentRequest.value = attemptRequest
         result.value = null // Reset the result when showing the dialog
-        subscribeToAttempts(id = attemptRequest.attemptId)
+        subscribeToAttempts(attemptRequest)
         uiState.update {
             it.copy(
                 isShown = true,
@@ -88,30 +88,36 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         dismissState()
     }
 
-    suspend fun wrongAccessCode() {
-        val currentRequest = currentRequest.value ?: return
-        hotAccessCodeAttemptsRepository.incrementAttempts(currentRequest.attemptId)
-        uiState.update {
-            it.copy(
-                accessCodeColor = PinTextColor.WrongCode,
-                onAccessCodeChange = {},
-                useBiometricVisible = currentRequest.isBiometryButtonVisible(),
-            )
+    suspend fun wrongAccessCode(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        hotAccessCodeAttemptsRepository.incrementAttempts(attemptRequest.attemptId)
+        // Reflect the wrong-code UI only if this request still owns the visible dialog.
+        if (isCurrentRequest(attemptRequest)) {
+            uiState.update { state ->
+                state.copy(
+                    accessCodeColor = PinTextColor.WrongCode,
+                    onAccessCodeChange = {},
+                    useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
+                )
+            }
         }
         delay(timeMillis = 500) // Delay to show the wrong access code state
     }
 
-    suspend fun successfulAuthentication() {
-        val currentRequest = currentRequest.value ?: return
-        hotAccessCodeAttemptsRepository.resetAttempts(currentRequest.hotWalletId)
-        uiState.update {
-            it.copy(
-                accessCodeColor = PinTextColor.Success,
-                onAccessCodeChange = {},
-            )
+    suspend fun successfulAuthentication(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        hotAccessCodeAttemptsRepository.resetAttempts(attemptRequest.hotWalletId)
+        if (isCurrentRequest(attemptRequest)) {
+            uiState.update {
+                it.copy(
+                    accessCodeColor = PinTextColor.Success,
+                    onAccessCodeChange = {},
+                )
+            }
         }
         delay(timeMillis = 200) // Delay to show the success state
     }
+
+    private fun isCurrentRequest(attemptRequest: HotWalletPasswordRequester.AttemptRequest): Boolean =
+        currentRequest.value?.requestId == attemptRequest.requestId
 
     private fun getInitialState() = HotAccessCodeRequestUM(
         onDismiss = ::dismiss,
@@ -146,7 +152,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         }
     }
 
-    private fun subscribeToAttempts(id: HotWalletAccessCodeAttemptsRepository.AttemptId) {
+    private fun subscribeToAttempts(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        val id = attemptRequest.attemptId
         fun remainingSecondsToText(remainingSeconds: Int): TextReference? {
             return if (remainingSeconds > 0) {
                 resourceReference(
@@ -202,7 +209,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
                         )
                     }
                 }
-                Attempts.Deletion -> deleteUserWallet()
+                Attempts.Deletion -> deleteUserWallet(attemptRequest)
             }
         }
 
@@ -217,8 +224,10 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             .any { it is UserWallet.Hot && it.hotWalletId == id }
     }
 
-    private suspend fun deleteUserWallet() {
+    private suspend fun deleteUserWallet(expectedRequest: HotWalletPasswordRequester.AttemptRequest) {
         val currentRequest = currentRequest.value ?: return
+        // Only delete if the request whose threshold was crossed is still the one owning the dialog.
+        if (currentRequest.requestId != expectedRequest.requestId) return
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it is UserWallet.Hot && it.hotWalletId == currentRequest.hotWalletId } ?: return
 
