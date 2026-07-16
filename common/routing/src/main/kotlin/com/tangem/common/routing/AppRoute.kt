@@ -60,15 +60,11 @@ sealed class AppRoute(val path: String) : Route {
     data object Wallet : AppRoute(path = "/wallet")
 
     @Serializable
-    data class AddFunds(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/add_funds/${userWalletId.stringValue}")
-
-    @Serializable
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val navigationAction: NavigationAction? = null,
+        val shouldShowMarketBlock: Boolean = true,
     ) : AppRoute(path = "/currency_details/${userWalletId.stringValue}/${currency.id.value}")
 
     @Serializable
@@ -178,6 +174,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletConnectSessions(val userWalletId: UserWalletId) : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
+    data class AddressBook(
+        val predefinedAddress: String? = null,
+    ) : AppRoute(path = "/address_book/predefinedAddress/$predefinedAddress")
+
+    @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
 
         @Serializable
@@ -205,13 +206,14 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Swap(
         val userWalletId: UserWalletId,
-        val cryptoCurrency: CryptoCurrency? = null,
+        val fromCryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
-        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
+        val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
+        val toCryptoCurrency: CryptoCurrency? = null,
     ) : AppRoute(
         path = "/swap" +
-            "/${cryptoCurrency?.id?.value}" +
+            "/${fromCryptoCurrency?.id?.value}" +
             "/${userWalletId.stringValue}",
     ) {
         @Serializable
@@ -257,6 +259,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
 
     @Serializable
+    data class PushNotificationSettings(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/push_notification_settings/${userWalletId.stringValue}")
+
+    @Serializable
     data class WalletBackup(
         val userWalletId: UserWalletId,
         val isColdWalletOptionShown: Boolean,
@@ -296,6 +303,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val initialFiatAmount: SerializedBigDecimal? = null,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
@@ -380,7 +388,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    object CreateHardwareWallet : AppRoute(path = "/create_hardware_wallet")
+    data class CreateHardwareWallet(
+        val source: AnalyticsParam.ScreensSources,
+    ) : AppRoute(path = "/create_hardware_wallet")
 
     @Serializable
     data class CreateMobileWallet(
@@ -433,6 +443,7 @@ sealed class AppRoute(val path: String) : Route {
     data class SendEntryPoint(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val shouldStartWithSwap: Boolean = false,
     ) : AppRoute(
         path = "/send_entry_point/${userWalletId.stringValue}/${currency.id.value}?",
     )
@@ -497,6 +508,9 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
 
     @Serializable
     data class YieldSupplyEntry(

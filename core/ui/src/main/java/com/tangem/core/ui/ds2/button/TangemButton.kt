@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -108,7 +108,7 @@ fun TangemButton(
         enabled = isEnabled,
         color = backgroundColor,
         border = resolveBorder(isFocused = isFocused, colorTokens = colorTokens, contentAlpha = contentAlpha),
-        shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.full),
+        shape = CircleShape,
         interactionSource = interactionSource,
         isMaterial = variant == TangemButton.Variant.Material,
     ) {
@@ -129,12 +129,12 @@ fun TangemButton(
 @Composable
 private fun resolveBorder(isFocused: Boolean, colorTokens: ColorTokens, contentAlpha: Float): BorderStroke? = when {
     isFocused -> BorderStroke(
-        width = TangemTheme.dimens3.borderWidth.md,
+        width = 2.dp,
         // Focus ring is intentionally NOT scaled by contentAlpha — see TangemButton above.
         color = colorTokens.focusRingColor,
     )
     colorTokens.defaultBorderColor != null -> BorderStroke(
-        width = TangemTheme.dimens3.borderWidth.sm,
+        width = 1.dp,
         color = colorTokens.defaultBorderColor.scaleAlpha(contentAlpha),
     )
     else -> null
