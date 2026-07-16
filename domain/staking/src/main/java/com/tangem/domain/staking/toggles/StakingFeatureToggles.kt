@@ -7,4 +7,6 @@ interface StakingFeatureToggles {
     fun isIntegrationEnabled(integrationId: StakingIntegrationID): Boolean
 
     fun isSolanaUnstakeValidationEnabled(): Boolean
+
+    fun isRegionUnavailableHandlingEnabled(): Boolean
 }
