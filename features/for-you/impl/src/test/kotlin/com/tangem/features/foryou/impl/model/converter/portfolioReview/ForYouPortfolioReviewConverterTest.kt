@@ -341,7 +341,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = createConverter().convert(statusList) as PortfolioReviewUM.Content
 
             // Assert
-            assertThat(result.marketChartUM).isEqualTo(MarketChartUM.NoData)
+            assertThat(result.marketChartUM).isInstanceOf(MarketChartUM.NoData::class.java)
         }
 
         @Test
@@ -350,7 +350,155 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = createConverter().convert(null) as PortfolioReviewUM.Content
 
             // Assert
-            assertThat(result.marketChartUM).isEqualTo(MarketChartUM.NoData)
+            assertThat(result.marketChartUM).isInstanceOf(MarketChartUM.NoData::class.java)
+        }
+    }
+
+    @Nested
+    inner class ZeroBalancePortfolio {
+
+        @Test
+        fun `GIVEN all currencies have zero fiat WHEN convert THEN market chart is the no-amount NoData`() {
+            // Arrange
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                    loadedValue(BigDecimal.ZERO, BigDecimal.ZERO),
+                ),
+                createStatus(
+                    createCoin(rawCurrencyId = "eth", symbol = "ETH", networkId = "ethereum"),
+                    loadedValue(BigDecimal.ZERO, BigDecimal.ZERO),
+                ),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal.ZERO)
+
+            // Assert — the zero-balance treatment, not the generic can-not-load-data chart
+            assertThat(result.marketChartUM).isEqualTo(
+                MarketChartUM.NoData(
+                    title = resourceReference(R.string.market_chart_no_amount),
+                    donutText = resourceReference(R.string.market_chart_bubble_no_amount),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN all currencies have zero fiat WHEN add funds clicked THEN callback receives the wallet id`() {
+            // Arrange
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                    loadedValue(BigDecimal.ZERO, BigDecimal.ZERO),
+                ),
+            )
+            var addFundsWalletId: UserWalletId? = null
+            val converter = createConverter(onAddFundsClick = { addFundsWalletId = it })
+
+            // Act
+            val result = converter.convert(
+                accountStatusList(statuses, BigDecimal.ZERO),
+            ) as PortfolioReviewUM.Content
+            result.onAddFundsClick?.invoke()
+
+            // Assert
+            assertThat(result.onAddFundsClick).isNotNull()
+            assertThat(addFundsWalletId).isEqualTo(UserWalletId("01"))
+        }
+
+        @Test
+        fun `GIVEN a non-zero balance WHEN convert THEN add funds action is absent`() {
+            // Arrange
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                    loadedValue(BigDecimal.ONE, BigDecimal("100")),
+                ),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal("100"))
+
+            // Assert
+            assertThat(result.onAddFundsClick).isNull()
+        }
+
+        @Test
+        fun `GIVEN null account status list WHEN add funds clicked THEN callback is not invoked`() {
+            // Arrange — without a wallet there is nowhere to add funds, so the click must be a no-op
+            var clicked = false
+            val converter = createConverter(onAddFundsClick = { clicked = true })
+
+            // Act
+            val result = converter.convert(null) as PortfolioReviewUM.Content
+            result.onAddFundsClick?.invoke()
+
+            // Assert
+            assertThat(clicked).isFalse()
+        }
+
+        @Test
+        fun `GIVEN more than five zero-fiat currencies WHEN convert THEN list is capped with no Other row`() {
+            // Arrange — 7 distinct zero-balance assets; the zero-balance branch shows the first 5
+            // as-is instead of ranking and collapsing the excess into an "Other" row
+            val statuses = (1..7).map { index ->
+                createStatus(
+                    createCoin(rawCurrencyId = "asset-$index", symbol = "A$index", networkId = "net-$index"),
+                    loadedValue(BigDecimal.ZERO, BigDecimal.ZERO),
+                )
+            }
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal.ZERO)
+
+            // Assert
+            assertThat(result.tokenList.map { it.tokenRowUM.id })
+                .containsExactly("asset-1", "asset-2", "asset-3", "asset-4", "asset-5")
+                .inOrder()
+        }
+
+        @Test
+        fun `GIVEN zero-fiat asset on several networks WHEN convert THEN grouped into one expandable item`() {
+            // Arrange — the same asset (shared rawCurrencyId) with zero balances on two networks
+            val onEth = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
+            val onSol = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "solana")
+            val statuses = listOf(
+                createStatus(onEth, loadedValue(BigDecimal.ZERO, BigDecimal.ZERO)),
+                createStatus(onSol, loadedValue(BigDecimal.ZERO, BigDecimal.ZERO)),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal.ZERO)
+
+            // Assert
+            val item = result.tokenList.single()
+            assertThat(item.tokenRowUM.id).isEqualTo("usdc")
+            assertThat(item.tokenList).hasSize(2)
+            assertThat(item.isExpandable).isTrue()
+        }
+
+        @Test
+        fun `GIVEN zero and null fiat currencies mixed WHEN convert THEN zero-balance treatment is not applied`() {
+            // Arrange — an unreachable holding has an *unknown* balance, not a resolved zero, so the
+            // portfolio must not collapse into the add-funds empty state
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "eth", symbol = "ETH", networkId = "ethereum"),
+                    loadedValue(BigDecimal.ZERO, BigDecimal.ZERO),
+                ),
+                createStatus(
+                    createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                    unreachableValue(),
+                ),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal.ZERO)
+
+            // Assert — falls through to the ranked branch: no add-funds action, the resolved zero is
+            // dropped, the unknown-balance holding stays visible
+            assertThat(result.onAddFundsClick).isNull()
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
         }
     }
 
@@ -364,11 +512,13 @@ internal class ForYouPortfolioReviewConverterTest {
         expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
         onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
+        onAddFundsClick: (UserWalletId) -> Unit = {},
     ): ForYouPortfolioReviewConverter = ForYouPortfolioReviewConverter(
         appCurrency = appCurrency,
         expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
         onTokenClick = onTokenClick,
+        onAddFundsClick = onAddFundsClick,
     )
 
     private fun accountStatusList(
