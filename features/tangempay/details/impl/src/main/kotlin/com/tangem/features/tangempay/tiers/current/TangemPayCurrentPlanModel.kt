@@ -48,7 +48,10 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         notification = createNotification(customerPlan),
         sections = buildSections(customerPlan.plan),
         onBackClick = router::pop,
-        onChangePlanClick = { router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(params.tariffPlan)) },
+        onChangePlanClick = { router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(params.tariffPlan)) }
+            .takeIf {
+                customerPlan.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING
+            },
     )
 
     private fun createNotification(customerPlan: TangemPayCustomerTariffPlan): TangemPayCurrentPlanUM.Notification? {
