@@ -53,6 +53,7 @@ internal class TokenDetailsStakingInfoConverter(
         )
         return when (stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> StakingBlockUM.TemporaryUnavailable
+            StakingAvailability.RegionUnavailable -> StakingBlockUM.TemporaryUnavailable
             StakingAvailability.Unavailable -> null
             is StakingAvailability.Full -> getStakedBlockOrNull(status)
             is StakingAvailability.Available -> getStakingInfoBlock(
