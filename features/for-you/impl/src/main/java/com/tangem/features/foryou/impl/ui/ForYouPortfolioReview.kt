@@ -13,12 +13,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -27,13 +28,10 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_16
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.MarketChart
-import com.tangem.features.foryou.impl.components.state.MarketChartUM
-import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.ui.components.ForYouPortfolioTokenList
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 internal fun ForYouPortfolioReview(
@@ -84,6 +82,18 @@ internal fun ForYouPortfolioReview(
         }
 
         ForYouPortfolioTokenList(tokenList = portfolioReviewUM.tokenList)
+
+        if (portfolioReviewUM is PortfolioReviewUM.Content && portfolioReviewUM.onAddFundsClick != null) {
+            TangemButton(
+                text = resourceReference(R.string.common_add_funds),
+                onClick = portfolioReviewUM.onAddFundsClick,
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X9,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+            )
+        }
     }
 }
 
@@ -117,23 +127,8 @@ private class ForYouPortfolioReviewPreviewProvider : PreviewParameterProvider<Po
     override val values: Sequence<PortfolioReviewUM>
         get() = sequenceOf(
             ForYouPortfolioReviewPreviewData.reviewContent,
-            PortfolioReviewUM.Loading(
-                marketChartUM = MarketChartUM.NoData,
-                tokenList = buildList {
-                    repeat(4) { index ->
-                        add(
-                            ForYouTokenListItemUM(
-                                tokenRowUM = TangemTokenRowUM.Loading(
-                                    id = index.toString(),
-                                ),
-                                tokenList = persistentListOf(),
-                                isExpanded = false,
-                                isExpandable = false,
-                            ),
-                        )
-                    }
-                }.toPersistentList(),
-            ),
+            ForYouPortfolioReviewPreviewData.loadingState,
+            ForYouPortfolioReviewPreviewData.zeroPortfolioState,
         )
 }
 // endregion
