@@ -11,6 +11,7 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
@@ -94,7 +95,7 @@ internal class CexSwapFeeCalculatorTest {
     @Test
     fun `GIVEN null selectedFeeToken WHEN calculate THEN delegates to estimateFeeForGaslessTxUseCase`() = runTest {
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val expected = mockk<TransactionFeeExtended>(relaxed = true)
+        val expected = tokenPaidExtendedFee(fromStatus)
         coEvery {
             estimateFeeForGaslessTxUseCase(any(), any(), any())
         } returns expected.right()
@@ -128,6 +129,142 @@ internal class CexSwapFeeCalculatorTest {
                 sendingTokenCurrencyStatus = any(),
                 amount = any(),
             )
+        }
+    }
+
+    @Test
+    fun `GIVEN gasless resolves to native Legacy fee WHEN calculate THEN 5 percent bump applied`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+        val rawExtended = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(
+                normal = Fee.Ethereum.Legacy(
+                    amount = Amount(currencySymbol = "ETH", value = BigDecimal("0.000002"), decimals = 18),
+                    gasLimit = BigInteger.valueOf(100_000),
+                    gasPrice = BigInteger.valueOf(20_000_000_000),
+                ),
+            ),
+            feeTokenId = fromStatus.status.currency.id,
+        )
+        coEvery {
+            estimateFeeForGaslessTxUseCase(any(), any(), any())
+        } returns rawExtended.right()
+
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("1.5"),
+            selectedFeeToken = null,
+            isGasless = true,
+        )
+
+        assertThat(result.isRight()).isTrue()
+        result.onRight { cexResult ->
+            val loaded = cexResult.transactionFee as TransactionFeeResult.LoadedExtended
+            val patched = (loaded.fee.transactionFee as TransactionFee.Single).normal as Fee.Ethereum.Legacy
+            // 100_000 * 105 / 100 = 105_000
+            assertThat(patched.gasLimit).isEqualTo(BigInteger.valueOf(105_000))
+            // 105_000 * 20_000_000_000 / 1e18 = 0.0000021
+            assertThat(patched.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.0000021"))
+            // Extended-fee metadata is preserved.
+            assertThat(loaded.fee.feeTokenId).isEqualTo(rawExtended.feeTokenId)
+            assertThat(loaded.fee.gaslessFeePlan).isNull()
+            assertThat(loaded.fee.mainTransactionGasLimit).isNull()
+            assertThat(loaded.fee.withdrawGasLimit).isNull()
+        }
+    }
+
+    @Test
+    fun `GIVEN gasless resolves to native Choosable EIP1559 fee WHEN calculate THEN bump applied to all three legs`() =
+        runTest {
+            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val maxFeePerGas = BigInteger.valueOf(10_000_000_000)
+            val priorityFee = BigInteger.valueOf(1_000_000_000)
+            fun eip1559(gasLimit: Long, amount: String) = Fee.Ethereum.EIP1559(
+                amount = Amount(currencySymbol = "ETH", value = BigDecimal(amount), decimals = 18),
+                gasLimit = BigInteger.valueOf(gasLimit),
+                maxFeePerGas = maxFeePerGas,
+                priorityFee = priorityFee,
+            )
+            val rawExtended = TransactionFeeExtended(
+                transactionFee = TransactionFee.Choosable(
+                    minimum = eip1559(gasLimit = 50_000, amount = "0.0000005"),
+                    normal = eip1559(gasLimit = 100_000, amount = "0.000001"),
+                    priority = eip1559(gasLimit = 150_000, amount = "0.0000015"),
+                ),
+                feeTokenId = fromStatus.status.currency.id,
+            )
+            coEvery {
+                estimateFeeForGaslessTxUseCase(any(), any(), any())
+            } returns rawExtended.right()
+
+            val result = sut.calculate(
+                userWallet = fromStatus.userWallet,
+                fromSwapCurrencyStatus = fromStatus,
+                amount = BigDecimal("1.0"),
+                selectedFeeToken = null,
+                isGasless = true,
+            )
+
+            result.onRight { cexResult ->
+                val loaded = cexResult.transactionFee as TransactionFeeResult.LoadedExtended
+                val patched = loaded.fee.transactionFee as TransactionFee.Choosable
+                assertThat((patched.minimum as Fee.Ethereum.EIP1559).gasLimit)
+                    .isEqualTo(BigInteger.valueOf(52_500))
+                assertThat((patched.normal as Fee.Ethereum.EIP1559).gasLimit)
+                    .isEqualTo(BigInteger.valueOf(105_000))
+                assertThat((patched.priority as Fee.Ethereum.EIP1559).gasLimit)
+                    .isEqualTo(BigInteger.valueOf(157_500))
+            }
+        }
+
+    @Test
+    fun `GIVEN gasless resolves to token-paid fee WHEN calculate THEN fee returned without bump`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+        val expected = tokenPaidExtendedFee(fromStatus)
+        coEvery {
+            estimateFeeForGaslessTxUseCase(any(), any(), any())
+        } returns expected.right()
+
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("1.0"),
+            selectedFeeToken = null,
+            isGasless = true,
+        )
+
+        result.onRight { cexResult ->
+            val loaded = cexResult.transactionFee as TransactionFeeResult.LoadedExtended
+            assertThat(loaded.fee).isSameInstanceAs(expected)
+        }
+    }
+
+    @Test
+    fun `GIVEN gasless resolves to non-Ethereum fee WHEN calculate THEN fee returned without bump`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+        val expected = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(
+                normal = Fee.Common(
+                    amount = Amount(currencySymbol = "BTC", value = BigDecimal("0.0001"), decimals = 8),
+                ),
+            ),
+            feeTokenId = fromStatus.status.currency.id,
+        )
+        coEvery {
+            estimateFeeForGaslessTxUseCase(any(), any(), any())
+        } returns expected.right()
+
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("1.0"),
+            selectedFeeToken = null,
+            isGasless = true,
+        )
+
+        result.onRight { cexResult ->
+            val loaded = cexResult.transactionFee as TransactionFeeResult.LoadedExtended
+            assertThat(loaded.fee).isSameInstanceAs(expected)
         }
     }
 
@@ -372,7 +509,7 @@ internal class CexSwapFeeCalculatorTest {
         runTest {
             val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
             val customWallet = mockk<UserWallet>(relaxed = true)
-            val expected = mockk<TransactionFeeExtended>(relaxed = true)
+            val expected = tokenPaidExtendedFee(fromStatus)
             coEvery {
                 estimateFeeForGaslessTxUseCase(any(), any(), any())
             } returns expected.right()
@@ -393,4 +530,19 @@ internal class CexSwapFeeCalculatorTest {
                 )
             }
         }
+
+    private fun tokenPaidExtendedFee(fromStatus: SwapCurrencyStatus): TransactionFeeExtended {
+        return TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(
+                normal = Fee.Ethereum.TokenCurrency(
+                    amount = Amount(currencySymbol = "USDT", value = BigDecimal("1.2"), decimals = 6),
+                    gasLimit = BigInteger.valueOf(100_000),
+                    coinPriceInToken = BigInteger.ONE,
+                    feeTransferGasLimit = BigInteger.valueOf(50_000),
+                    baseGas = BigInteger.valueOf(21_000),
+                ),
+            ),
+            feeTokenId = fromStatus.status.currency.id,
+        )
+    }
 }
