@@ -31,7 +31,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
@@ -83,10 +86,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 }
             }
 
-            // Refresh the portfolio before searching so a token just added on the backend is present locally.
-            refreshAccountsIfNeeded(userWallet)
-
-            val cryptoCurrency = findCryptoCurrency(userWallet = userWallet, networkId = networkId, tokenId = tokenId)
+            val cryptoCurrency = resolveCryptoCurrency(userWallet, networkId, tokenId)
 
             if (cryptoCurrency == null) {
                 TangemLogger.e(
@@ -131,18 +131,45 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     }
 
     /**
+     * Resolves the target currency for the deeplink: refreshes the portfolio when needed and searches for the token.
+     *
+     * A multi-currency link needs both [networkId] and [tokenId] to match a token; a malformed link can never match,
+     * so we skip the refresh/await entirely to avoid wasted backend work and return immediately for the redirect.
+     */
+    private suspend fun resolveCryptoCurrency(
+        userWallet: UserWallet,
+        networkId: String?,
+        tokenId: String?,
+    ): CryptoCurrency? {
+        if (userWallet.isMultiCurrency && (networkId.isNullOrBlank() || tokenId.isNullOrBlank())) return null
+
+        val wasRefreshed = refreshAccountsIfNeeded(userWallet)
+        return findCryptoCurrency(
+            userWallet = userWallet,
+            networkId = networkId,
+            tokenId = tokenId,
+            awaitOnMiss = wasRefreshed,
+        )
+    }
+
+    /**
      * Refreshes wallet accounts so a token just added on the backend appears in the local portfolio.
      *
      * Only when the app was open on push tap ([isFromOnNewIntent]) and the wallet is multi-currency:
      * on cold start the fresh list is already loaded by the regular auth flow, and single-currency
      * wallets have a fixed token. The fetch is best-effort — on failure we fall through and try the
      * current cache, so existing tokens (e.g. swap/onramp pushes) still open without regression.
+     *
+     * @return `true` only when a refresh was actually performed and succeeded. Waiting for the refreshed
+     * list (see [awaitCryptoCurrency]) makes sense only in that case; otherwise there is nothing to wait for.
      */
-    private suspend fun refreshAccountsIfNeeded(userWallet: UserWallet) {
+    private suspend fun refreshAccountsIfNeeded(userWallet: UserWallet): Boolean {
         if (isFromOnNewIntent && userWallet.isMultiCurrency) {
-            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId = userWallet.walletId))
+            return singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId = userWallet.walletId))
                 .onLeft { TangemLogger.e("Error on refreshing wallet accounts", it) }
+                .isRight()
         }
+        return false
     }
 
     private suspend fun fetchCurrency(userWallet: UserWallet, cryptoCurrency: CryptoCurrency) {
@@ -158,26 +185,42 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         }
     }
 
-    private suspend fun findCryptoCurrency(userWallet: UserWallet, networkId: String?, tokenId: String?) =
-        if (userWallet.isMultiCurrency) {
-            val derivationPath = queryParams[DERIVATION_PATH_KEY]
-
-            getCryptoCurrencies(userWalletId = userWallet.walletId)?.firstOrNull { currency ->
-                val isNetwork = currency.network.rawId.equals(networkId, ignoreCase = true)
-                val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
-
-                val isDefaultDerivation = currency.network.derivationPath is Network.DerivationPath.Card
-                val isCustomDerivation = derivationPath?.equals(currency.network.derivationPath.value) == true
-                val isCorrectDerivation = isDefaultDerivation || isCustomDerivation
-                isNetwork && isCurrency && isCorrectDerivation
-            }
-        } else {
-            singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+    private suspend fun findCryptoCurrency(
+        userWallet: UserWallet,
+        networkId: String?,
+        tokenId: String?,
+        awaitOnMiss: Boolean,
+    ): CryptoCurrency? {
+        if (!userWallet.isMultiCurrency) {
+            return singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
                 ?.mainAccount?.cryptoCurrencies?.first()
         }
 
-    private suspend fun getCryptoCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>? {
-        return singleAccountListSupplier.getSyncOrNull(userWalletId)?.flattenCurrencies()
+        val derivationPath = queryParams[DERIVATION_PATH_KEY]
+        val matches = { currency: CryptoCurrency -> currency.matches(networkId, tokenId, derivationPath) }
+
+        return singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.flattenCurrencies()?.firstOrNull(matches)
+            // getSyncOrNull returns the stale SharedFlow replay just after a fetch; wait for the refreshed list.
+            // Only when a refresh actually ran and succeeded — otherwise a missing token would block for the full
+            // timeout before the fall-through redirect.
+            ?: if (awaitOnMiss) awaitCryptoCurrency(userWallet.walletId, matches) else null
+    }
+
+    private suspend fun awaitCryptoCurrency(
+        userWalletId: UserWalletId,
+        matches: (CryptoCurrency) -> Boolean,
+    ): CryptoCurrency? = withTimeoutOrNull(TOKEN_APPEARANCE_TIMEOUT_MILLIS) {
+        singleAccountListSupplier(userWalletId)
+            .mapNotNull { accountList -> accountList.flattenCurrencies().firstOrNull(matches) }
+            .firstOrNull()
+    }
+
+    private fun CryptoCurrency.matches(networkId: String?, tokenId: String?, derivationPath: String?): Boolean {
+        val isNetwork = network.rawId.equals(networkId, ignoreCase = true)
+        val isCurrency = id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+        val isDefaultDerivation = network.derivationPath is Network.DerivationPath.Card
+        val isCustomDerivation = derivationPath?.equals(network.derivationPath.value) == true
+        return isNetwork && isCurrency && (isDefaultDerivation || isCustomDerivation)
     }
 
     @AssistedFactory
@@ -187,5 +230,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             queryParams: Map<String, String>,
             isFromOnNewIntent: Boolean,
         ): DefaultTokenDetailsDeepLinkHandler
+    }
+
+    private companion object {
+        const val TOKEN_APPEARANCE_TIMEOUT_MILLIS = 3_000L
     }
 }
