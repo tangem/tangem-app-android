@@ -6,7 +6,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
@@ -27,7 +26,6 @@ import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
-import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
@@ -56,7 +54,6 @@ internal class TxHistoryModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val txHistoryUpdateListener: TxHistoryUpdateListener,
     private val stateController: TxHistoryStateController,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val historyTxListManagerFactory: HistoryTxListManager.Factory,
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
@@ -67,17 +64,9 @@ internal class TxHistoryModel @Inject constructor(
 
     private val params: TxHistoryComponent.Params = paramsContainer.require()
 
-    private val lookupDataFlow: Flow<TxHistoryLookupContext> = if (designFeatureToggles.isRedesignEnabled) {
-        ownerLookupProducer()
-            .flowOn(dispatchers.default)
-            .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
-    } else {
-        emptyFlow()
-    }
-
-    @RemoveWithToggle("APP_REDESIGN_ENABLED")
-    private val legacyTxHistoryItemConverter =
-        TxHistoryItemToTransactionStateConverter(currency = params.currency, txHistoryUiActions = this)
+    private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer()
+        .flowOn(dispatchers.default)
+        .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
     private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
@@ -86,10 +75,8 @@ internal class TxHistoryModel @Inject constructor(
             dispatchers = dispatchers,
             userWalletId = params.userWalletId,
             currency = params.currency,
-            designFeatureToggles = designFeatureToggles,
             txHistoryUiActions = this,
             lookupDataFlow = lookupDataFlow,
-            legacyTxHistoryItemConverter = legacyTxHistoryItemConverter,
         )
     } else {
         null
@@ -297,11 +284,7 @@ internal class TxHistoryModel @Inject constructor(
             .distinctUntilChanged()
 
         val combined: Flow<Pair<Option<CryptoCurrencyStatus>, TxHistoryLookupContext?>> =
-            if (designFeatureToggles.isRedesignEnabled) {
-                combine(statusFlow, lookupDataFlow) { status, lookup -> status to lookup }
-            } else {
-                statusFlow.map { it to null }
-            }
+            combine(statusFlow, lookupDataFlow) { status, lookup -> status to lookup }
 
         combined
             .onEach { (status, lookup) -> handlePendingTxsChanges(status, lookup) }
@@ -324,7 +307,6 @@ internal class TxHistoryModel @Inject constructor(
                     )
                     pending.map(converter::convert).toPersistentList()
                 },
-                legacyPendingTxs = { pending.map(legacyTxHistoryItemConverter::convert).toPersistentList() },
             )
         }
     }
