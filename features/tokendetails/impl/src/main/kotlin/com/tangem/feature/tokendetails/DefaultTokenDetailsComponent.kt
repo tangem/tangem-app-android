@@ -25,6 +25,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetails
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.StakingRegionUnavailableBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
@@ -235,6 +236,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
         is TokenDetailsBottomSheetConfig.Transfer -> TransferBottomSheetComponent(
             stateFlow = model.transferUiState,
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.RegionUnavailable -> StakingRegionUnavailableBottomSheetComponent(
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
     }
