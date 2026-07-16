@@ -24,7 +24,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
-import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleWalletWithToken
+import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleCurrency
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -171,7 +171,7 @@ internal class WalletTokensListUMConverter(
         } else {
             R.drawable.ic_filter_24
         }
-        return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
+        return if (accountList.flattenCurrencies().isNotEmpty() && !selectedWallet.isSingleCurrency()) {
             TangemButtonUM(
                 text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,

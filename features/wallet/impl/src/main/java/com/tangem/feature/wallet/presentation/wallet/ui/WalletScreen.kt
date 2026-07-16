@@ -59,7 +59,6 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -83,18 +82,23 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -109,6 +113,7 @@ internal fun WalletScreen(
     WalletContent(
         state = state,
         tangemPayComponent = tangemPayComponent,
+        virtualAccountComponent = virtualAccountComponent,
         walletsListState = walletsListState,
         snackbarHostState = snackbarHostState,
         isAutoScroll = isAutoScroll,
@@ -132,11 +137,12 @@ internal fun WalletScreen(
 private fun WalletContent(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
     onAutoScrollReset: () -> Unit,
-    promoBannersBlockComponent: ComposableContentComponent? = null,
+    promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -220,7 +226,11 @@ private fun WalletContent(
 
                 promoBannersBlockComponent?.let { component ->
                     item(key = "PromoBannersBlock") {
-                        component.Content(modifier = itemModifier)
+                        component.ContentWithPadding(
+                            horizontalItemPadding = 12.dp,
+                            modifier = itemModifier,
+                            walletId = null,
+                        )
                     }
                 }
 
@@ -229,6 +239,13 @@ private fun WalletContent(
                     state = selectedWallet,
                     isHidingMode = state.isHidingMode,
                     tangemPayComponent = tangemPayComponent,
+                )
+
+                virtualAccountItem(
+                    modifier = itemModifier,
+                    state = selectedWallet,
+                    isHidingMode = state.isHidingMode,
+                    virtualAccountComponent = virtualAccountComponent,
                 )
 
                 (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
@@ -758,6 +775,23 @@ internal fun LazyListScope.tangemPayItem(
     }
 }
 
+internal fun LazyListScope.virtualAccountItem(
+    state: WalletState,
+    isHidingMode: Boolean,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    modifier: Modifier = Modifier,
+) {
+    if (state !is WalletState.MultiCurrency) return
+
+    with(virtualAccountComponent) {
+        virtualAccountMainContent(
+            modifier = modifier,
+            state = state.virtualAccountMainUM,
+            isBalanceHidden = isHidingMode,
+        )
+    }
+}
+
 @Composable
 private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     if (bottomSheetConfig != null) {
@@ -779,6 +813,14 @@ private fun WalletScreen_Preview(@PreviewParameter(WalletScreenPreviewProvider::
             tangemPayComponent = object : TangemPayMainBlockComponent {
                 override fun LazyListScope.tangemPayMainContent(
                     state: TangemPayMainUM,
+                    isBalanceHidden: Boolean,
+                    modifier: Modifier,
+                ) {
+                }
+            },
+            virtualAccountComponent = object : VirtualAccountMainBlockComponent {
+                override fun LazyListScope.virtualAccountMainContent(
+                    state: VirtualAccountMainUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {

@@ -25,6 +25,7 @@ internal class ShowTonInitializeBottomSheetTransformer(
                     isButtonEnabled = false,
                     feeState = FeeState.Loading,
                     isButtonLoading = false,
+                    isColdWalletInteractionIconVisible = prevState.isColdWalletInteractionIconVisible,
                 ),
             ),
         )

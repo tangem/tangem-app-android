@@ -20,6 +20,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
+import com.tangem.common.ui.userwallet.CardImage
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.ds.row.TangemRowContainer
@@ -111,6 +113,18 @@ fun PortfolioSelectRowV2(
                     size = AccountIconSize.RedesignedDefault,
                 )
             }
+        } else if (state.imageState != null) {
+            Box(
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.HEAD)
+                    .padding(end = TangemTheme.dimens2.x3),
+                contentAlignment = Alignment.Center,
+            ) {
+                CardImage(
+                    modifier = Modifier.size(TangemTheme.dimens2.x10),
+                    imageState = state.imageState,
+                )
+            }
         }
 
         Row(
@@ -156,6 +170,7 @@ data class PortfolioSelectUM(
     val isAccountMode: Boolean,
     val isMultiChoice: Boolean,
     val onClick: () -> Unit,
+    val imageState: UserWalletItemUM.ImageState? = null,
 )
 
 @Preview(widthDp = 360, showBackground = true)

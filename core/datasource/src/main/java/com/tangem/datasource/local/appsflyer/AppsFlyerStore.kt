@@ -23,9 +23,11 @@ interface AppsFlyerStore {
 
 enum class AppsFlyerDeeplinkSource {
     TangemPayHotWalletOnboarding,
+    Referral,
     ;
 
     fun toStoreKey() = when (this) {
         TangemPayHotWalletOnboarding -> "tangem_pay_hot_wallet_onboarding"
+        Referral -> "referral"
     }
 }
