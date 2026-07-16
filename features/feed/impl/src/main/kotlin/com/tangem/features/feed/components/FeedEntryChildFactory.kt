@@ -5,7 +5,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,7 +14,6 @@ import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
-import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
@@ -32,12 +30,10 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val forYouComponentFactory: ForYouComponent.Factory,
     private val tokenSummaryComponentFactory: TokenSummaryComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
@@ -100,9 +96,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     appComponentContext = appComponentContext,
                     params = child.params,
                     analyticsEventHandler = analyticsEventHandler,
-                    portfolioComponentFactory = portfolioComponentFactory,
                     portfolioBlockComponentFactory = portfolioBlockComponentFactory,
-                    designFeatureToggles = designFeatureToggles,
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     manageFundsComponentFactory = manageFundsComponentFactory,
                     marketingBannerComponentFactory = marketingBannerComponentFactory,
