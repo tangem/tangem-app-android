@@ -25,7 +25,7 @@ internal fun BankCredentials.toRequisitesRows(): List<RequisitesRow> = listOf(
     RequisitesRow(
         title = resourceReference(R.string.virtual_account_requisites_beneficiary_address),
         titleForShare = "Beneficiary address",
-        value = beneficiaryBankAddress,
+        value = beneficiaryAddress,
     ),
     RequisitesRow(
         title = resourceReference(R.string.virtual_account_requisites_bank_name),
