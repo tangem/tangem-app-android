@@ -164,6 +164,16 @@ fun BaseTestCase.checkStoriesChanges() {
     }
 }
 
+fun BaseTestCase.skipSwapStories() {
+    step("Skip 'Swap stories' screen if displayed") {
+        onSwapStoriesScreen {
+            if (closeButton.isDisplayedSafely()) {
+                closeButton.performClick()
+            }
+        }
+    }
+}
+
 fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
     step("Click on 'Select fee' icon") {
         onSwapTokenScreen { selectFeeIcon.performClick() }
