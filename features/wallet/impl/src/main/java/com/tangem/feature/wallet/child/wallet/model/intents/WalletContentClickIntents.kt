@@ -333,11 +333,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onNFTClick(userWallet: UserWallet) {
-        val nftState = if (stateHolder.value.isRedesignEnabled) {
-            stateHolder.getSelectedWalletUM().nftState
-        } else {
-            (stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content)?.nftState
-        }
+        val nftState = stateHolder.getSelectedWalletUM().nftState
         when (nftState) {
             is WalletNFTItemUM.Content -> {
                 analyticsEventHandler.send(
