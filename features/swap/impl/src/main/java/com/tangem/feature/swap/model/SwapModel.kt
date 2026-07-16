@@ -281,7 +281,6 @@ internal class SwapModel @Inject constructor(
         get() {
             val permissionState = dataState.getCurrentLoadedSwapState()?.permissionState
             return permissionState == PermissionDataState.Empty ||
-                swapFeatureToggles.isSwapIntegratedApproveEnabled &&
                 permissionState is PermissionDataState.PermissionSettings
         }
 
@@ -1175,7 +1174,6 @@ internal class SwapModel @Inject constructor(
             needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
             states = loadedStates,
             state = state,
-            isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
         )
         val swapFee = getSelectedSwapFee()
         uiState = stateBuilder.createQuotesLoadedState(
@@ -1272,7 +1270,6 @@ internal class SwapModel @Inject constructor(
             needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
             states = loadedStates,
             state = state,
-            isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
         )
         uiState = stateBuilder.createQuotesErrorState(
             uiStateHolder = uiState,
@@ -1327,10 +1324,7 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = SwapProviderResolver.findBest(
-                states = successLoadedData,
-                isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
-            )
+            val bestQuotesProvider = SwapProviderResolver.findBest(states = successLoadedData)
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
@@ -2111,7 +2105,6 @@ internal class SwapModel @Inject constructor(
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
-                    isSwapBestDexRateEnabled = swapFeatureToggles.isSwapBestDexRateEnabled,
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
@@ -2663,8 +2656,7 @@ internal class SwapModel @Inject constructor(
             val swapDataForCall = resolveDexSwapDataForFee(quoteState)
                 .getOrElse { return Either.Left(it) }
 
-            val integratedSettings = (quoteState.permissionState as? PermissionDataState.PermissionSettings)
-                ?.takeIf { swapFeatureToggles.isSwapIntegratedApproveEnabled }
+            val integratedSettings = quoteState.permissionState as? PermissionDataState.PermissionSettings
 
             return swapInteractor.loadSwapFee(
                 quotesLoadedState = quoteState,
@@ -2833,8 +2825,7 @@ internal class SwapModel @Inject constructor(
 
         private fun isPermissionNotificationShown(): Boolean {
             val permissionState = dataState.getCurrentLoadedSwapState()?.permissionState
-            val isApprovalIntegrated = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
-                permissionState is PermissionDataState.PermissionSettings
+            val isApprovalIntegrated = permissionState is PermissionDataState.PermissionSettings
             return permissionState != null && permissionState !is PermissionDataState.Empty && !isApprovalIntegrated
         }
 

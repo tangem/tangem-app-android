@@ -101,9 +101,6 @@ internal object BlockchainSDKFactoryModule {
                 isYieldModeSwapEnabled = featureTogglesManager.isFeatureEnabled(
                     FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED,
                 ),
-                isStateOverrideGasEstimateEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.AND_15120_SWAP_INTEGRATED_APPROVE,
-                ),
             ),
         )
     }
