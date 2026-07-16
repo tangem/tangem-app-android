@@ -14,8 +14,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -31,8 +31,6 @@ internal class RatingModel @Inject constructor(
 
     private val params: RatingComponent.Params = paramsContainer.require()
 
-    private val isLoadFinished = MutableStateFlow(value = false)
-
     val state: StateFlow<RatingUM>
         field = MutableStateFlow(
             RatingUM(
@@ -45,9 +43,8 @@ internal class RatingModel @Inject constructor(
     init {
         modelScope.launch {
             swapFeedbackUseCase.ensureLoaded(params.txExternalId)
-            isLoadFinished.value = true
+            subscribeOnRatingUpdates()
         }
-        subscribeOnRatingUpdates()
     }
 
     fun onRatingSelected(rating: Int) {
@@ -55,36 +52,31 @@ internal class RatingModel @Inject constructor(
             val ratingState = current.state as? RatingUM.RatingState.Unrated ?: return@update current
             current.copy(
                 state = ratingState.copy(selectedRating = rating),
-                feedbackBottomSheet = buildFeedbackBottomSheet(),
+                feedbackBottomSheet = buildFeedbackBottomSheet(rating),
             )
         }
     }
 
     private fun subscribeOnRatingUpdates() {
-        combine(
-            swapFeedbackUseCase.observeRating(params.txExternalId),
-            isLoadFinished,
-            ::toRatingState,
-        )
+        swapFeedbackUseCase.observeRating(params.txExternalId)
+            .map(::toRatingState)
             .onEach(::applyRatingState)
             .launchIn(modelScope)
     }
 
-    /** Null means the rating is still loading and the current state must be kept */
-    private fun toRatingState(entry: SwapRating?, isLoadFinished: Boolean): RatingUM.RatingState? {
+    // Subscription starts after ensureLoaded completes, so a null here means the load finished with
+    // nothing cached (a failed load is not cached) → fall back to Unrated
+    private fun toRatingState(entry: SwapRating?): RatingUM.RatingState {
         return when (entry) {
             is SwapRating.Rated -> RatingUM.RatingState.AlreadyRated(entry.rating)
             is SwapRating.NotRated -> RatingUM.RatingState.Unrated(selectedRating = null)
-            // A failed load is not cached: once it finishes with nothing, fall back to Unrated
-            null -> if (isLoadFinished) RatingUM.RatingState.Unrated(selectedRating = null) else null
+            null -> RatingUM.RatingState.Unrated(selectedRating = null)
         }
     }
 
-    private fun applyRatingState(newState: RatingUM.RatingState?) {
+    private fun applyRatingState(newState: RatingUM.RatingState) {
         state.update { current ->
-            if (newState == null) {
-                current
-            } else if (newState is RatingUM.RatingState.Unrated && current.state is RatingUM.RatingState.Unrated) {
+            if (newState is RatingUM.RatingState.Unrated && current.state is RatingUM.RatingState.Unrated) {
                 current // keep the user's selection
             } else if (newState is RatingUM.RatingState.AlreadyRated) {
                 current.copy(
@@ -135,11 +127,12 @@ internal class RatingModel @Inject constructor(
         // AlreadyRated arrives via the rating observation, which also hides the bottom sheet
     }
 
-    private fun buildFeedbackBottomSheet(): TangemBottomSheetConfig {
+    private fun buildFeedbackBottomSheet(rating: Int): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = ::onDismissFeedbackBottomSheet,
             content = RatingFeedbackBS(
+                selectedRating = rating,
                 feedbackText = "",
                 isSubmitting = false,
                 onFeedbackChanged = ::onFeedbackChanged,

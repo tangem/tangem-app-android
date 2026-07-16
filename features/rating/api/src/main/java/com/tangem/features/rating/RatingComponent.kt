@@ -11,6 +11,7 @@ interface RatingComponent : ComposableContentComponent {
         val providerName: String,
         val txExternalUrl: String,
         val userWalletId: UserWalletId,
+        val isRedesign: Boolean = false,
     )
 
     interface Factory {
