@@ -16,6 +16,7 @@ import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.common.StakingAmountRequirement
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.isNullOrZero
@@ -28,6 +29,7 @@ internal class AmountRequirementStateTransformer(
     private val maxAmount: EnterAmountBoundary,
     private val integration: StakingIntegration,
     private val actionType: StakingActionCommonType,
+    private val isSolanaUnstakeValidationEnabled: Boolean = false,
 ) : Transformer<AmountState> {
     override fun transform(prevState: AmountState): AmountState {
         return if (prevState is AmountState.Data) {
@@ -103,11 +105,17 @@ internal class AmountRequirementStateTransformer(
                 )
             }
             is StakingActionCommonType.Exit -> {
-                integration.exitArgs?.amountRequirement?.getError(
-                    amount = amountDecimal,
-                    minErrorRes = R.string.staking_unstake_amount_requirement_error,
-                    maxErrorRes = R.string.staking_max_amount_requirement_error,
-                )
+                if (isSolanaUnstakeValidationEnabled &&
+                    isSolana(cryptoCurrencyStatus.currency.network.rawId)
+                ) {
+                    getSolanaUnstakeError(amount = amountDecimal, staked = maxAmount.amount)
+                } else {
+                    integration.exitArgs?.amountRequirement?.getError(
+                        amount = amountDecimal,
+                        minErrorRes = R.string.staking_unstake_amount_requirement_error,
+                        maxErrorRes = R.string.staking_max_amount_requirement_error,
+                    )
+                }
             }
             else -> null
         }
@@ -122,6 +130,29 @@ internal class AmountRequirementStateTransformer(
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
 
         return isEnterOrExit && isTron && !isIntegerOnly
+    }
+
+    private fun getSolanaUnstakeError(amount: BigDecimal, staked: BigDecimal?): TextReference? {
+        val minimum = integration.exitMinimumAmount?.takeIf { it.isPositive() }
+            ?: integration.enterMinimumAmount
+        if (minimum == null || staked == null) return null
+
+        // Full unstake is always allowed regardless of minimum delegation.
+        if (amount.compareTo(staked) == 0) return null
+
+        if (amount < minimum) {
+            val formatted = minimum.format { crypto(cryptoCurrencyStatus.currency) }
+            return resourceReference(
+                R.string.staking_unstake_amount_requirement_error,
+                wrappedList(formatted),
+            )
+        }
+
+        if (staked - amount < minimum) {
+            return resourceReference(R.string.staking_notification_low_staked_balance_text)
+        }
+
+        return null
     }
 
     private fun StakingAmountRequirement.getError(

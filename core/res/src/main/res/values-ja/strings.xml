@@ -98,14 +98,21 @@
   <string name="address_book_add_address">アドレスを追加</string>
   <string name="address_book_add_address_description">アドレスを追加し、ネットワークを選択してください。</string>
   <string name="address_book_add_contact">連絡先を追加</string>
+  <string name="address_book_address_copied">アドレスをコピーしました</string>
+  <string name="address_book_address_taken_error">このアドレスはすでに%1$sとして保存されています</string>
   <plurals name="address_book_addresses">
     <item quantity="other">%d件のアドレス</item>
   </plurals>
+  <string name="address_book_choose_address">アドレスを選択</string>
+  <string name="address_book_clear_all_networks">すべてクリア</string>
   <string name="address_book_contact">連絡先</string>
   <string name="address_book_contact_name">連絡先名</string>
   <string name="address_book_copy_address">アドレスをコピー</string>
+  <string name="address_book_create_success_message">連絡先を保存しました</string>
   <string name="address_book_creating_error">連絡先を作成できませんでした。しばらくしてからもう一度お試しください。</string>
+  <string name="address_book_delete_contact">連絡先を削除</string>
   <string name="address_book_delete_contact_description">この連絡先は、すべてのアドレス帳から削除されます。</string>
+  <string name="address_book_delete_last_address">「%1$s」には1つのアドレスしかありません。削除すると、連絡先も削除されます。続行しますか？</string>
   <string name="address_book_deleting_error">連絡先を削除できませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="address_book_description">連絡先とアドレスを管理</string>
   <string name="address_book_discard">破棄</string>
@@ -113,11 +120,22 @@
   <string name="address_book_enter_address">アドレスを入力</string>
   <string name="address_book_invalid_address_error">無効なアドレス</string>
   <string name="address_book_keep_editing">編集を続ける</string>
+  <string name="address_book_max_networks_alert_description">20件を超えるアドレスは作成できません。新しく追加するには、既存のアドレスを1件削除してください。</string>
+  <string name="address_book_max_networks_alert_title">新しいアドレスを追加できません</string>
+  <string name="address_book_name_empty_error">連絡先名を入力してください</string>
+  <string name="address_book_name_invalid_chars_error">連絡先名に使用できない文字が含まれています</string>
+  <string name="address_book_name_max_chars_error">連絡先名は50文字以内で入力してください</string>
+  <string name="address_book_name_taken_error">その名前はこのウォレットですでに使用されています</string>
   <string name="address_book_new_contact">新しい連絡先</string>
   <string name="address_book_no_contacts">連絡先はまだありません</string>
   <string name="address_book_no_contacts_description">追加した連絡先はここに表示されます。</string>
   <string name="address_book_remove_address">アドレスを削除</string>
+  <string name="address_book_save_address">アドレスを保存</string>
+  <string name="address_book_save_contact">連絡先を保存</string>
+  <string name="address_book_save_to_wallet_title">ウォレットに保存</string>
   <string name="address_book_save_wallet_to_description">この連絡先は、このウォレットのアドレス帳に紐付けられます。</string>
+  <string name="address_book_search_no_results">結果が見つかりませんでした。\n別の名前を試してください。</string>
+  <string name="address_book_select_all_networks">すべて選択</string>
   <string name="address_book_select_network">ネットワークを選択</string>
   <string name="address_book_title">連絡先</string>
   <string name="address_book_unsaved_changes">保存されていない変更</string>
@@ -340,6 +358,7 @@
   <string name="common_from">送信元</string>
   <string name="common_from_wallet_name">%sから</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
+  <string name="common_get">入手</string>
   <string name="common_get_started">はじめる</string>
   <string name="common_get_token">トークンを取得</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
@@ -701,6 +720,7 @@
   <string name="generic_error">エラーが発生しました</string>
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
+  <string name="get_token_title">%1$sを入手</string>
   <string name="give_permission_current_transaction">取引</string>
   <string name="give_permission_policy_type_footer">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="give_permission_rows_amount">金額%s</string>
@@ -717,6 +737,8 @@
   <string name="hardware_wallet_key_feature_title">鍵生成</string>
   <string name="hardware_wallet_security_feature_description">すべての暗号処理は、複製や物理的な改ざんに対する認証を受けたセキュアチップ内で行われます。</string>
   <string name="hardware_wallet_security_feature_title">ハードウェアレベルのセキュリティ</string>
+  <string name="high_fee_warning_description">ネットワークが混雑しています。今すぐ続けることもできますが、後でお試しいただくと、手数料が安くなる場合があります。</string>
+  <string name="high_fee_warning_title">ネットワーク手数料が通常より高くなっています</string>
   <string name="home_button_add_existing_wallet">既存のウォレットを追加</string>
   <string name="home_button_create_new_wallet">新しいウォレットを作成する</string>
   <string name="home_button_order">Tangemを注文</string>
@@ -871,12 +893,14 @@
   <string name="markets_portfolio_block_add_token_title">**ポートフォリオに追加して**、この資産の買付・交換・受け取りを始めましょう</string>
   <string name="markets_portfolio_block_subtitle">ポートフォリオ内</string>
   <string name="markets_portfolio_block_title">ポートフォリオ</string>
+  <string name="markets_portfolio_block_token_unsupported">**トークンはサポートされていません**。このトークンは現在、このウォレットではサポートされていません</string>
   <string name="markets_pulse_common_title">マーケット動向</string>
   <string name="markets_quick_actions">クイックアクション</string>
   <string name="markets_search_clear_all_hints">すべてクリア</string>
   <string name="markets_search_header_title">トークンを探す</string>
   <string name="markets_search_hint_header">最近の検索</string>
   <string name="markets_search_portfolio_header">ポートフォリオ内</string>
+  <string name="markets_search_recent_tokens_header">最近表示したトークン</string>
   <string name="markets_search_result_title">結果</string>
   <string name="markets_search_see_tokens_under_100k">時価総額10万ドル以下のトークンを見る</string>
   <string name="markets_search_show_tokens">トークンを表示</string>
@@ -1191,6 +1215,7 @@
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">累計取引額が%1sを超えると、%2sでの本人確認が必要になる場合があります。</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">累計取引額が%1s相当額を超えると、%2sでの本人確認が必要になる場合があります。</string>
+  <string name="onramp_native_payment_identity_verification">Apple Payの取引では、%1sによる本人確認が必要になる場合があります</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">「支払う」をタップすると、%1sの%2sおよび%3sに同意したものとみなされます。</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
   <string name="onramp_offer_type_fastet">最短で処理</string>
@@ -1221,6 +1246,8 @@
   <string name="onramp_title_available_from">利用可能：</string>
   <string name="onramp_title_available_up_to">利用可能金額</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">このトークンはサポートされていません。別のトークンを選択して購入してください。</string>
+  <string name="onramp_token_is_not_supported_banner_title">%sはサポートされていません</string>
   <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
   <string name="onramp_up_to_rate">最大</string>
@@ -1233,6 +1260,20 @@
   <string name="organize_tokens_sort_by_balance">残高順</string>
   <string name="organize_tokens_title">トークンを整理する</string>
   <string name="organize_tokens_ungroup">グループ解除</string>
+  <string name="promo_campaign_already_activated_subtitle">対象のキャッシュバックは次のアドレスに配布されます：</string>
+  <string name="promo_campaign_already_activated_title">すでに%1$sに参加しています</string>
+  <string name="promo_campaign_eligible_tokens">対象トークン</string>
+  <string name="promo_campaign_enroll">参加する</string>
+  <string name="promo_campaign_enroll_success_title">%1$sへの参加が完了しました</string>
+  <string name="promo_campaign_not_active_subtitle">このキャンペーンは終了したか、無効です</string>
+  <string name="promo_campaign_not_active_title">キャンペーンは実施されていません</string>
+  <string name="promo_campaign_reactivation_summary_description">500ドルを超えるスワップごとに0.5%のキャッシュバックを獲得できます。ステーブルコイン同士を除く、すべてのペアが対象です。キャッシュバックは1回のスワップあたり最大50ドルです。\n\n対象のスワップを5回完了すると、さらに10ドルのボーナスを獲得できます。\n\n報酬は毎週、ご指定のUSDTまたはUSDCアドレスにお支払いします。</string>
+  <string name="promo_campaign_select_cashback_account">キャッシュバックの受取口座を選択</string>
+  <string name="promo_campaign_select_token">トークンを選択</string>
+  <string name="promo_campaign_summary_title">%1$sに参加</string>
+  <string name="promo_campaign_terms_agreement">%1$sに同意します</string>
+  <string name="promo_campaign_terms_link">%1$s 利用規約</string>
+  <string name="promo_campaign_whale_swap_summary_description">7月末まで、累計1万ドル以上のスワップでキャッシュバックを獲得できます。\n\n累計スワップ額に応じて還元率がアップします。1万ドル以上で0.10%、2万ドル以上で0.20%、10万ドル以上で0.50%。\n\nキャッシュバックは、1回のスワップあたり最大500ドル、ウォレットごと・スワップ方向ごとにキャンペーン期間中、合計最大1万ドルです。ステーブルコイン同士のスワップは対象外です。\n\nキャッシュバックは毎週、ご指定のUSDTまたはUSDCアドレスにお支払いします。</string>
   <string name="provider_name_support">%sサポート</string>
   <string name="push_notification_settings_banner_description">プッシュ通知は有効ですが、許可するまで動作しません</string>
   <string name="push_notification_settings_banner_title">通知を許可する</string>
@@ -1268,8 +1309,9 @@
   <string name="quick_action_buy_description">クレジットカードまたは銀行口座</string>
   <string name="quick_action_receive_description">アドレスまたはQRコードを共有してください</string>
   <string name="quick_action_sell_description">暗号資産を安全に売却</string>
+  <string name="quick_action_send_and_swap_description">別のトークンにスワップして送る</string>
   <string name="quick_action_send_description">別のウォレットに送信</string>
-  <string name="quick_action_swap_description">ポートフォリオ間で</string>
+  <string name="quick_action_swap_description">暗号資産を別の暗号資産に交換</string>
   <string name="quick_top_up_chip_other">その他</string>
   <string name="quick_top_up_title">クイック入金</string>
   <string name="receive_bottom_sheet_no_memo_required_message">メモ不要</string>
@@ -1557,9 +1599,9 @@
   <string name="staking_notification_ton_account_initialization_message">ステーキングを開始するには、まずTONアカウントを有効化してください。</string>
   <string name="staking_notification_ton_account_initialization_title">アカウントの有効化</string>
   <string name="staking_notification_ton_activate_account">TONのステーキングを開始するには、まず自分のアドレスに少額の取引を送信します。これによりウォレットが有効になります。</string>
-  <string name="staking_notification_ton_extra_reserve_info">取引を完了するには、ネットワーク手数料に加えて最大0.2TONが必要になる場合があります。未使用分は返金されます。</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">この操作を続行するには、ネットワーク手数料に加えて0.2 TONが必要です。残高を補充してください。</string>
-  <string name="staking_notification_ton_extra_reserve_title">TONの準備金が必要です</string>
+  <string name="staking_notification_ton_extra_reserve_info">取引を完了するには、ネットワーク手数料に加えて最大0.2GRAMが必要になる場合があります。未使用分は返金されます。</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">この操作を続行するには、ネットワーク手数料に加えて0.2 GRAMが必要です。残高を補充してください。</string>
+  <string name="staking_notification_ton_extra_reserve_title">GRAMの準備金が必要です</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">このアクションは、ネットワークのルールに従って、他のポジションをクローズするか、引き出しステータスに切り替えます。</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">ポジション状況</string>
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
@@ -2274,6 +2316,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">このトークンを受け取るには、Hederaアカウントに関連付ける必要があります。</string>
   <string name="warning_hedera_missing_token_association_title">トークンを関連付ける</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%sが不足しています。このトークンを関連付けるには、Hederaアカウントに資金を追加してください。</string>
+  <string name="warning_incomplete_backup_notification_message">カードの有効化が正常に完了していないことが判明しました。原因として、お使いの端末のNFC機能の不具合、またはカードをスマートフォンに正しくかざせていない可能性があります。詳しくはサポートまでお問い合わせください。</string>
+  <string name="warning_incomplete_backup_notification_title">対応が必要です。ウォレットは使用しないでください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">取引をキャンセルしてもよろしいですか? 取引を再試行することはできません</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
@@ -2297,8 +2341,8 @@
   <string name="warning_no_backup_title">バックアップがありません</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">このカードは以前取引に使用されたことがあります。信頼できない出所から受け取った場合は、全資金を引き出すことを検討してください。あなたのカードであれば、何もする必要はありません。</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">カードはすでに取引に署名済みです</string>
-  <string name="warning_outdated_data_message">順次更新されます。</string>
-  <string name="warning_outdated_data_title">一部トークンの残高が表示されていません。</string>
+  <string name="warning_outdated_data_message">一部のトークン残高を更新できませんでした</string>
+  <string name="warning_outdated_data_title">残高が最新でない可能性があります</string>
   <string name="warning_rate_app_message">あなたのレビューは、Tangemウォレットをさらに良くするためのモチベーションになります</string>
   <string name="warning_rate_app_title">Tangemを楽しんでいますか?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">トークンを受け取る前に、トークンを関連付ける必要があります。</string>
@@ -2477,7 +2521,7 @@
   <string name="yield_module_approve_sheet_fee_note">手数料が差し引かれ、暗号資産が補充されます。</string>
   <string name="yield_module_approve_sheet_subtitle">利息を継続的に生み出すには承認が必要です。</string>
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
-  <string name="yield_module_average_apy">平均APY %1$s%%</string>
+  <string name="yield_module_average_apy">現在のAPY %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">あなたの資金は現在Aaveプロトコルに預けられていますが、いつでも自由に管理できます。</string>
   <string name="yield_module_balance_info_sheet_title">%sはAaveに供給されています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>

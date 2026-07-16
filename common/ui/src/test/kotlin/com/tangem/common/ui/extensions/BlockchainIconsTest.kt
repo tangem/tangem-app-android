@@ -75,6 +75,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Filecoin -> R.drawable.img_filecoin_22
                 Blockchain.Flare, Blockchain.FlareTestnet -> R.drawable.img_flare_22
                 Blockchain.Gnosis -> R.drawable.img_gnosis_22
+                Blockchain.Gonka -> R.drawable.img_gonka_22
                 Blockchain.Hedera, Blockchain.HederaTestnet -> R.drawable.img_hedera_22
                 Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> R.drawable.img_hyperliquid_22
                 Blockchain.InternetComputer -> R.drawable.img_icp_22
@@ -198,6 +199,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Filecoin -> R.drawable.ic_filecoin_22
                 Blockchain.Flare, Blockchain.FlareTestnet -> R.drawable.ic_flare_22
                 Blockchain.Gnosis -> R.drawable.ic_gnosis_22
+                Blockchain.Gonka -> R.drawable.ic_gonka_22
                 Blockchain.Hedera, Blockchain.HederaTestnet -> R.drawable.ic_hedera_22
                 Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> R.drawable.ic_hyperliquid_22
                 Blockchain.InternetComputer -> R.drawable.ic_icp_22

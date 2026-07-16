@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.model
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.commonfeatures.impl.R
 
 internal data class AddToPortfolioRouteUiSpec(
@@ -42,9 +43,9 @@ internal fun AddToPortfolioRoutes.uiSpec(): AddToPortfolioRouteUiSpec = when (th
         shouldApplyHorizontalPadding = false,
         footer = AddToPortfolioFooterKind.UserPortfolioAdd,
     )
-    AddToPortfolioRoutes.TokenActions -> AddToPortfolioRouteUiSpec(
-        title = resourceReference(R.string.common_get_token),
-        isScrollable = true,
+    is AddToPortfolioRoutes.TokenActions -> AddToPortfolioRouteUiSpec(
+        title = resourceReference(R.string.get_token_title, wrappedList(currencyName)),
+        isScrollable = false,
         shouldApplyHorizontalPadding = true,
         footer = AddToPortfolioFooterKind.None,
     )
