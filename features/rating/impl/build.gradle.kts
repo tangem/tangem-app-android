@@ -21,6 +21,7 @@ dependencies {
     api(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
 
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)
