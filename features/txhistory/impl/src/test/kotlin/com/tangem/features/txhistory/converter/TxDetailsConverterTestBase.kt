@@ -192,6 +192,7 @@ internal open class TxDetailsConverterTestBase {
                 cryptoCurrency = bitcoin,
             ),
             externalTxUrl = externalTxUrl,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,
