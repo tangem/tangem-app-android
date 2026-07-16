@@ -125,7 +125,18 @@ internal class AddAddressModel @Inject constructor(
         val prefillAddress = params.prefillAddress ?: return
         onAddressChange(prefillAddress)
         selectedNetworkIds.value = params.prefillNetworkIds.toSet().ifEmpty { null }
-        params.prefillMemo?.let(::onMemoChange)
+        prefillMemoOnceVisible(params.prefillMemo)
+    }
+
+    private fun prefillMemoOnceVisible(memo: String?) {
+        if (memo.isNullOrEmpty()) return
+        state
+            .map { it.memoField.isVisible }
+            .distinctUntilChanged()
+            .filter { isVisible -> isVisible }
+            .take(1)
+            .onEach { onMemoChange(memo) }
+            .launchIn(modelScope)
     }
 
     private fun updateInitialState() {
