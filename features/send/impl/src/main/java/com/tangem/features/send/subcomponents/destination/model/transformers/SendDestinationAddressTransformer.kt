@@ -12,7 +12,16 @@ internal class SendDestinationAddressTransformer(
         val state = prevState as? DestinationUM.Content ?: return prevState
 
         return state.copy(
-            addressTextField = state.addressTextField.copy(value = address, isValuePasted = isPasted),
+            addressTextField = state.addressTextField.copy(
+                value = address,
+                isValuePasted = isPasted,
+                // Editing the recipient invalidates any previously resolved/recognized data. It is
+                // recomputed by the following validation; keeping it would let a stale canonical
+                // address (blockchainAddress) leak into the transaction for the new, not-yet-validated value.
+                blockchainAddress = null,
+                contactName = null,
+                contactIcon = null,
+            ),
         )
     }
 }
