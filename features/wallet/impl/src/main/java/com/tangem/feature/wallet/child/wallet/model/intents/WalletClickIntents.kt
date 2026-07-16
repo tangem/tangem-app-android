@@ -134,6 +134,11 @@ internal class WalletClickIntents @Inject constructor(
         router.openAddFunds(userWalletId)
     }
 
+    fun onPredictionAccountClick(userWalletId: UserWalletId) {
+        // TODO([REDACTED_TASK_KEY]): add analytics for prediction account entry point
+        router.openPolymarket(userWalletId)
+    }
+
     private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
