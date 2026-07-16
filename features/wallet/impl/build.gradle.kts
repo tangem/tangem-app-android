@@ -31,6 +31,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.paging)
     implementation(deps.compose.reorderable)
+    implementation(deps.compose.reorderableV2)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -145,7 +146,7 @@ dependencies {
     implementation(projects.features.walletSettings.api)
     implementation(projects.features.biometry.api)
     implementation(projects.features.nft.api)
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.kyc.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
@@ -153,6 +154,7 @@ dependencies {
     implementation(projects.features.promoBanners.api)
     implementation(projects.features.tangempay.main.api)
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.virtualAccounts.main.api)
 
     /** Common modules */
     implementation(projects.common)
@@ -160,7 +162,7 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Test libraries */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)

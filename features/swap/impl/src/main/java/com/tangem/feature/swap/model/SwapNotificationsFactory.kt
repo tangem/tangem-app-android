@@ -20,10 +20,12 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
+import com.tangem.feature.swap.domain.models.domain.ExpressTxType
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
@@ -76,6 +78,19 @@ internal class SwapNotificationsFactory(
         return persistentListOf(
             SwapNotificationUM.Warning.SwapNotSupported,
         )
+    }
+
+    fun getDestinationRequirementNotifications(
+        requirement: AssetRequirementsCondition,
+        onAssociateClick: () -> Unit,
+    ): ImmutableList<NotificationUM> {
+        val notification = when (requirement) {
+            is AssetRequirementsCondition.RequiredTrustline ->
+                SwapNotificationUM.Warning.TokenTrustlineRequired(onAssociateClick)
+            else ->
+                SwapNotificationUM.Warning.TokenAssociationRequired(onAssociateClick)
+        }
+        return persistentListOf(notification)
     }
 
     fun getQuotesErrorStateNotifications(
@@ -208,6 +223,7 @@ internal class SwapNotificationsFactory(
             cryptoCurrency = swapCurrencyStatus.currency,
             feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
             isAccountFunded = true, // consider the account is funded on the provider side
+            hasRequiredTrustline = false,
         )
         addReduceAmountNotification(
             cryptoCurrencyStatus = swapCurrencyStatus.status,
@@ -249,7 +265,7 @@ internal class SwapNotificationsFactory(
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    onApproveClick = actions.openPermissionBottomSheet,
+                    onApproveClick = actions.onApproveClick,
                     onLearnMoreClick = { actions.onLinkClick(TangemSiteUrlBuilder.HELP_CENTER_SWAP_URL) },
                 ),
             )
@@ -303,11 +319,16 @@ internal class SwapNotificationsFactory(
         val shouldShowCoverWarning = quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeCryptoCurrencyStatus.currency != fromCurrency
 
-        val isCEXProvider = quoteModel.swapProvider.type == ExchangeProviderType.CEX
+        // A DEX-typed provider whose quote returned txType=SEND executes as a CEX-style transfer,
+        // so it must follow the same gasless suppression rule as a real CEX provider.
+        val isCexLikeFlow = quoteModel.swapProvider.type == ExchangeProviderType.CEX ||
+            quoteModel.txType == ExpressTxType.SEND
 
-        val isNotEnoughFee = insufficientFee != null && !isCEXProvider
+        val isNotEnoughFee = insufficientFee != null
 
-        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCEXProvider
+        // Suppress only when the user can actually switch the fee to a token via the gasless
+        // selector; on networks without gasless support the warning must show for CEX too.
+        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
         if (shouldShowCoverWarning && !isGaslessAvailable && isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
@@ -346,6 +367,15 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
+                add(
+                    getWarningForError(
+                        expressDataError = ExpressDataError.TooLargeSolanaTransactionError(),
+                        fromToken = quoteModel.fromTokenInfo.swapCurrencyStatus.currency,
+                        onRetryClick = actions.onRetryClick,
+                    ),
+                )
+            }
             is GetFeeError.DataError -> {
                 val error = feeError.cause
                 if (error is ExpressDataError) {

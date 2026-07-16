@@ -10,7 +10,6 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -190,7 +189,6 @@ fun PrimaryButtonIconStart(
     enabled: Boolean = true,
     tint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
-    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -205,7 +203,6 @@ fun PrimaryButtonIconStart(
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
         size = size,
-        shape = shape,
     )
 }
 // endregion PrimaryButton
@@ -219,7 +216,6 @@ fun SecondaryButton(
     showProgress: Boolean = false,
     enabled: Boolean = true,
     size: TangemButtonSize = TangemButtonSize.Default,
-    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -230,7 +226,6 @@ fun SecondaryButton(
         enabled = enabled,
         showProgress = showProgress,
         size = size,
-        shape = shape,
         textStyle = TangemTheme.typography.subtitle1,
     )
 }
@@ -248,7 +243,6 @@ fun SecondaryButtonIconEnd(
     enabled: Boolean = true,
     tint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
-    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -263,7 +257,6 @@ fun SecondaryButtonIconEnd(
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
         size = size,
-        shape = shape,
     )
 }
 
@@ -280,7 +273,6 @@ fun SecondaryButtonIconStart(
     enabled: Boolean = true,
     iconTint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
-    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -295,7 +287,6 @@ fun SecondaryButtonIconStart(
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
         size = size,
-        shape = shape,
     )
 }
 // endregion SecondaryButton

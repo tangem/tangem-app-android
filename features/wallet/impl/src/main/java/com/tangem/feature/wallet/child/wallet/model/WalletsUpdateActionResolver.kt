@@ -7,12 +7,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletType
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
@@ -271,7 +266,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private fun WalletScreenState.incompleteActivationWalletIds(): List<UserWalletId> {
         return wallets.mapNotNull { wallet ->
             if (wallet.warnings.any { it is WalletNotification.FinishWalletActivation } ||
-                wallet.walletCardState is WalletState.MultiCurrency &&
+                wallet is WalletState.MultiCurrency &&
                 wallet.walletCardState.additionalInfo?.isHotBackedUp == false
             ) {
                 wallet.walletCardState.id
