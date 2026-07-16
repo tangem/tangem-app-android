@@ -52,12 +52,14 @@ import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -540,6 +542,68 @@ internal class SendDestinationModelTest {
 
             // Assert
             coVerify(exactly = 0) { syncAddressBooksUseCase() }
+        }
+    }
+
+    @Nested
+    inner class EditAfterResolve {
+
+        @Test
+        fun `GIVEN resolved address WHEN edited mid-validation THEN no stale address and button disabled`() =
+            runTest {
+                // Arrange — R1 resolves to canonical A1; R2 validation stays pending (never completes)
+                coEvery {
+                    validateWalletAddressUseCase(any(), any(), eq("r1.eth"), any<List<CryptoCurrencyAddress>>(), any())
+                } returns AddressValidation.Success.ValidNamedAddress("0xCanonicalA1").right()
+                coEvery {
+                    validateWalletAddressUseCase(any(), any(), eq("r2.eth"), any<List<CryptoCurrencyAddress>>(), any())
+                } coAnswers { awaitCancellation() }
+                val sut = buildModel()
+                advanceUntilIdle()
+
+                // R1 resolved: canonical address stored, primary button enabled
+                sut.onRecipientAddressValueChange("r1.eth", EnterAddressSource.InputField)
+                advanceUntilIdle()
+                assertThat(content(sut).addressTextField.blockchainAddress).isEqualTo("0xCanonicalA1")
+                assertThat(content(sut).isPrimaryButtonEnabled).isTrue()
+
+                // Act — replace with R2 while its validation is still in flight
+                sut.onRecipientAddressValueChange("r2.eth", EnterAddressSource.InputField)
+                runCurrent()
+
+                // Assert — no stale A1 leaks: actualAddress is the raw R2 and the button is disabled while pending
+                val field = content(sut).addressTextField
+                assertThat(field.value).isEqualTo("r2.eth")
+                assertThat(field.blockchainAddress).isNull()
+                assertThat(field.actualAddress).isEqualTo("r2.eth")
+                assertThat(content(sut).isValidating).isTrue()
+                assertThat(content(sut).isPrimaryButtonEnabled).isFalse()
+            }
+
+        @Test
+        fun `GIVEN edited recipient WHEN new value resolves valid THEN button re-enabled with new address`() = runTest {
+            // Arrange — both names resolve, to different canonical addresses
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), eq("r1.eth"), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Success.ValidNamedAddress("0xCanonicalA1").right()
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), eq("r2.eth"), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Success.ValidNamedAddress("0xCanonicalA2").right()
+            val sut = buildModel()
+            advanceUntilIdle()
+            sut.onRecipientAddressValueChange("r1.eth", EnterAddressSource.InputField)
+            advanceUntilIdle()
+
+            // Act — edit to R2 and let its validation complete
+            sut.onRecipientAddressValueChange("r2.eth", EnterAddressSource.InputField)
+            advanceUntilIdle()
+
+            // Assert — the new canonical address replaces the old one and the button is enabled again
+            val field = content(sut).addressTextField
+            assertThat(field.value).isEqualTo("r2.eth")
+            assertThat(field.blockchainAddress).isEqualTo("0xCanonicalA2")
+            assertThat(field.actualAddress).isEqualTo("0xCanonicalA2")
+            assertThat(content(sut).isPrimaryButtonEnabled).isTrue()
         }
     }
 
