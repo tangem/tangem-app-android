@@ -21,13 +21,13 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.AddFundsBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
-import com.tangem.features.rating.RatingComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -47,6 +47,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     private val ratingComponentFactory: RatingComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
@@ -87,12 +88,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         },
     )
 
-    private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
-        tokenMarketBlockComponentFactory.create(
-            appComponentContext = child("tokenMarketBlockComponent"),
-            params = tokenMarketParams,
-        )
-    }
+    private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()
+        ?.takeIf { params.shouldShowMarketBlock }
+        ?.let { tokenMarketParams ->
+            tokenMarketBlockComponentFactory.create(
+                appComponentContext = child("tokenMarketBlockComponent"),
+                params = tokenMarketParams,
+            )
+        }
 
     private val yieldSupplyComponent = yieldSupplyComponentFactory.create(
         context = child("tokenYieldSupplyComponent"),
@@ -177,9 +180,15 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             dynamicAddressesDelegate = model.dynamicAddressesDelegate,
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
-        is TokenDetailsBottomSheetConfig.AddFunds -> AddFundsBottomSheetComponent(
-            stateFlow = model.addFundsUiState,
-            onDismiss = model.bottomSheetNavigation::dismiss,
+        is TokenDetailsBottomSheetConfig.AddFunds -> manageFundsComponentFactory.create(
+            context = childByContext(componentContext),
+            params = ManageFundsComponent.Params(
+                launchMode = ManageFundsComponent.LaunchMode.TokenActionsOnly(
+                    userWalletId = route.userWalletId,
+                    currency = route.currency,
+                ),
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
         )
         is TokenDetailsBottomSheetConfig.Transfer -> TransferBottomSheetComponent(
             stateFlow = model.transferUiState,
