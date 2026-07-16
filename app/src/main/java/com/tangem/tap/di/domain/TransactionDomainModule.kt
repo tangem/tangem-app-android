@@ -8,7 +8,6 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
@@ -287,7 +286,6 @@ internal object TransactionDomainModule {
         getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
         getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
         dynamicAddressesRepository: DynamicAddressesRepository,
-        dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
         userWalletsListRepository: UserWalletsListRepository,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
@@ -295,7 +293,6 @@ internal object TransactionDomainModule {
             getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
             getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,
-            dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
             userWalletsListRepository = userWalletsListRepository,
         )
     }
