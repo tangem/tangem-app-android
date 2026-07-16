@@ -6,7 +6,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.earn.usecase.FetchTopEarnTokensUseCase
@@ -49,7 +48,6 @@ internal class FeedComponentModelTest {
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase = mockk(relaxed = true)
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase = mockk()
     private val appRouter: AppRouter = mockk(relaxed = true)
-    private val designFeatureToggles: DesignFeatureToggles = mockk()
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk(relaxed = true)
     private val getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
@@ -89,7 +87,6 @@ internal class FeedComponentModelTest {
         every { getSelectedAppCurrencyUseCase() } returns flowOf(Either.Right(AppCurrency.Default))
         every { manageTrendingNewsUseCase.observeTrendingNews() } returns emptyFlow()
         every { getTopEarnTokensUseCase() } returns emptyFlow()
-        every { designFeatureToggles.isRedesignEnabled } returns false
 
         val paramsContainer = MutableParamsContainer(FeedParams(feedClickIntents = feedClickIntents))
 
@@ -102,7 +99,6 @@ internal class FeedComponentModelTest {
             fetchTopEarnTokensUseCase = fetchTopEarnTokensUseCase,
             getTopEarnTokensUseCase = getTopEarnTokensUseCase,
             appRouter = appRouter,
-            designFeatureToggles = designFeatureToggles,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
             forYouFeatureToggles = forYouFeatureToggles,
             getTopFiveMarketTokenUseCase = getTopFiveMarketTokenUseCase,
