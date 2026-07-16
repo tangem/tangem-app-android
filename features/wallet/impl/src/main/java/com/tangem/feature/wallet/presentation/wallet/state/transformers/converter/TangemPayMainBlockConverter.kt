@@ -4,7 +4,6 @@ import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
@@ -20,7 +19,6 @@ import java.util.Currency
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
-    private val isRedesignEnabled: Boolean,
     private val isMultipleCardsEnabled: Boolean,
 ) : Converter<AccountStatus.Payment, TangemPayMainUM> {
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -99,21 +97,12 @@ internal class TangemPayMainBlockConverter(
 
     private fun getBalanceText(currencyCode: String, balance: BigDecimal): TextReference {
         val currency = Currency.getInstance(currencyCode)
-        val formattedBalance = if (isRedesignEnabled) {
-            balance.formatStyled {
-                fiat(
-                    fiatCurrencyCode = currency.currencyCode,
-                    fiatCurrencySymbol = currency.symbol,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
-                )
-            }
-        } else {
-            stringReference(
-                balance.format {
-                    fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
-                },
+        return balance.formatStyled {
+            fiat(
+                fiatCurrencyCode = currency.currencyCode,
+                fiatCurrencySymbol = currency.symbol,
+                spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
             )
         }
-        return formattedBalance
     }
 }
