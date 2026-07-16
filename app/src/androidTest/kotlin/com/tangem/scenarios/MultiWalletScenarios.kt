@@ -45,6 +45,21 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     }
 }
 
+fun BaseTestCase.addNewCardWalletWithoutSync(mockContent: MockContent) {
+    step("Click 'More' button on TopBar") {
+        onMainScreenTopBar { moreButton.clickWithAssertion() }
+    }
+    MockProvider.setMocks(mockContent)
+    step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
+        onDetailsScreen { addWalletButton.clickWithAssertion() }
+    }
+    step("Assert 'Main' screen is displayed with the new wallet") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+            runCatching { onMainScreenTopBar { moreButton.assertIsDisplayed() } }.isSuccess
+        }
+    }
+}
+
 fun BaseTestCase.clickDisplayedTokenOnMain(tokenName: String) {
     step("Click on token '$tokenName' on the visible wallet") {
         onMainScreen { clickDisplayedToken(tokenName) }
