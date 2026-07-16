@@ -25,7 +25,6 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.notifications.CurrencyNotification
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -38,11 +37,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.E
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun ExchangeStatusBottomSheetContent(
-    state: ExchangeUM,
-    isExpressShareButtonEnabled: Boolean,
-    extraContent: (@Composable () -> Unit)? = null,
-) {
+internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (@Composable () -> Unit)? = null) {
     Column(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -97,11 +92,7 @@ internal fun ExchangeStatusBottomSheetContent(
             isAutoDisposable = state.activeStatus?.isAutoDisposable == true,
             onClick = state.info.onDisposeExpressStatus,
         )
-        if (isExpressShareButtonEnabled) {
-            SpacerH(80.dp)
-        } else {
-            SpacerH24()
-        }
+        SpacerH(80.dp)
     }
 }
 
