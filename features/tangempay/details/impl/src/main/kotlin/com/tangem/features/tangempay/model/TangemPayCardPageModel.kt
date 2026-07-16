@@ -110,7 +110,6 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val cryptoCurrency
         get() = currentStatus.value.cryptoCurrency
-    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isMultipleCardsEnabled
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -185,7 +184,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         val status = state.value
         if (status !is PaymentAccountStatusValue.Loaded || status.source != StatusSource.ACTUAL) return
 
-        val cards = status.cards.let { if (isMultipleCardsEnabled) it else it.take(1) }
+        val cards = status.cards
         val newIds = cards.mapTo(mutableSetOf()) { it.id }
 
         cardControllers.keys.filterNot { it in newIds }.toList().forEach { removedId ->
@@ -334,30 +333,28 @@ internal class TangemPayCardPageModel @Inject constructor(
                     ),
                 ),
             )
-            if (tangemPayFeatureToggles.isCloseCardEnabled) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
-                        onClick = ::onClickCloseCard,
-                        icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_trash_24,
-                            tintReference = {
-                                if (isLastCard) {
-                                    TangemTheme.colors3.icon.tertiary
-                                } else {
-                                    TangemTheme.colors3.icon.primary
-                                }
-                            },
-                        ),
-                        subtitle = if (isLastCard) {
-                            TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
-                        } else {
-                            null
+            add(
+                TangemPayDropDownItemUM(
+                    title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
+                    onClick = ::onClickCloseCard,
+                    icon = TangemIconUM.Icon(
+                        iconRes = CoreUiR.drawable.ic_trash_24,
+                        tintReference = {
+                            if (isLastCard) {
+                                TangemTheme.colors3.icon.tertiary
+                            } else {
+                                TangemTheme.colors3.icon.primary
+                            }
                         },
-                        isEnabled = !isLastCard,
                     ),
-                )
-            }
+                    subtitle = if (isLastCard) {
+                        TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
+                    } else {
+                        null
+                    },
+                    isEnabled = !isLastCard,
+                ),
+            )
         }.toImmutableList()
     }
 
