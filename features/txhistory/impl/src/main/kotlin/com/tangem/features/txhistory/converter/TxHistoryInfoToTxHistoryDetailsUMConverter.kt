@@ -42,8 +42,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         menu = menu,
         validatorsByAddress = validatorsByAddress,
         onOpenValidator = onOpenValidator,
-        // Own deposit addresses on the viewed currency's network — drives the on-chain own-vs-external transfer title.
-        ownAddresses = lookup.ownAccountByNetwork[currency.network.id.rawId]?.keys.orEmpty(),
+        lookup = lookup,
     )
 
     private val expressConverter = ExpressTxToDetailsUMConverter(
