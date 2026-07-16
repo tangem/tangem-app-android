@@ -44,10 +44,26 @@ internal data class TangemPayCardLimitSetupUM(
             subtitle: TextReference = TextReference.Str("Set a limit from $0 to $50,000"),
             currencyCode: String = "$",
             presets: ImmutableList<LimitPresetUM> = persistentListOf(
-                LimitPresetUM(label = "$0", testTag = TangemPayTestTags.dailyLimitPresetChip("0"), onClick = {}),
-                LimitPresetUM(label = "$5,000", testTag = TangemPayTestTags.dailyLimitPresetChip("5000"), onClick = {}),
-                LimitPresetUM(label = "$10,000", testTag = TangemPayTestTags.dailyLimitPresetChip("10000"), onClick = {}),
-                LimitPresetUM(label = "$25,000", testTag = TangemPayTestTags.dailyLimitPresetChip("25000"), onClick = {}),
+                LimitPresetUM(
+                    label = "$0",
+                    testTag = TangemPayTestTags.dailyLimitPresetChip("0"),
+                    onClick = {},
+                ),
+                LimitPresetUM(
+                    label = "$5,000",
+                    testTag = TangemPayTestTags.dailyLimitPresetChip("5000"),
+                    onClick = {},
+                ),
+                LimitPresetUM(
+                    label = "$10,000",
+                    testTag = TangemPayTestTags.dailyLimitPresetChip("10000"),
+                    onClick = {},
+                ),
+                LimitPresetUM(
+                    label = "$25,000",
+                    testTag = TangemPayTestTags.dailyLimitPresetChip("25000"),
+                    onClick = {},
+                ),
             ),
             submitButtonEnabled: Boolean = true,
             submitButtonLoading: Boolean = false,
