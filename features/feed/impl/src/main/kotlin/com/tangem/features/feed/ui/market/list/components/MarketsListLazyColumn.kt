@@ -23,10 +23,8 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.event.EventEffect
-import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -46,7 +44,6 @@ internal fun MarketsListLazyColumn(
     modifier: Modifier = Modifier,
     topContentPadding: Dp = 0.dp,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -105,16 +102,11 @@ internal fun MarketsListLazyColumn(
                         key = { _, item -> item.getComposeKey() },
                     ) { index, item ->
                         MarketsListItem(
-                            modifier = Modifier.conditionalCompose(
-                                condition = isRedesignEnabled,
-                                modifier = {
-                                    roundedShapeItemDecoration(
-                                        currentIndex = index,
-                                        lastIndex = state.items.lastIndex,
-                                        backgroundColor = TangemTheme.colors2.surface.level3,
-                                        radius = TangemTheme.dimens2.x5,
-                                    )
-                                },
+                            modifier = Modifier.roundedShapeItemDecoration(
+                                currentIndex = index,
+                                lastIndex = state.items.lastIndex,
+                                backgroundColor = TangemTheme.colors2.surface.level3,
+                                radius = TangemTheme.dimens2.x5,
                             ),
                             model = item,
                             onClick = { state.onItemClick(item) },
