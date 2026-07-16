@@ -2,18 +2,21 @@ package com.tangem.features.tangempay.entity
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.model.CardDataType
 import com.tangem.utils.StringsSigns
 
+@Suppress("LongParameterList")
 internal class TangemPayCardDetailsBlockStateFactory(
     private val cardNumberEnd: String,
     private val displayName: CardDisplayName?,
     private val isEditingNameEnabled: Boolean,
+    private val cardState: TangemPayCardState,
     private val onEditNameClick: () -> Unit,
     private val onReveal: () -> Unit,
     private val onCopy: (String, CardDataType) -> Unit,
+    private val shouldShowCardDetailsButtonOnCard: Boolean,
 ) {
 
     fun getInitialState(): TangemPayCardDetailsUM {
@@ -26,7 +29,7 @@ internal class TangemPayCardDetailsBlockStateFactory(
             onClick = onReveal,
             onCopy = onCopy,
             isHidden = true,
-            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+            cardFrozenState = TangemPayCardFrozenState.Pending,
             displayNameState = if (displayName != null) {
                 DisplayNameState.Display(
                     displayName = displayName.value,
@@ -36,6 +39,8 @@ internal class TangemPayCardDetailsBlockStateFactory(
             } else {
                 null
             },
+            shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
+            cardState = cardState,
         )
     }
 }

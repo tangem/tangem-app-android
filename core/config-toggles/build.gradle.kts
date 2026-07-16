@@ -62,11 +62,6 @@ tasks.named("preBuild") {
 tasks.withType<Detekt>().configureEach {
     exclude { it.file.absolutePath.contains("/build/generated/") }
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** DI */
     implementation(deps.hilt.android)
@@ -85,5 +80,4 @@ dependencies {
     implementation(projects.core.utils)
 
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

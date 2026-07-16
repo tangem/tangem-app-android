@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.toImmutableList
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class ReinitializeNewWalletTransformer(
     private val prevWalletId: UserWalletId,
     private val newUserWallet: UserWallet,
@@ -25,6 +26,7 @@ internal class ReinitializeNewWalletTransformer(
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val isAddFundsStage1Enabled: Boolean,
+    private val isManageFundsEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -33,6 +35,7 @@ internal class ReinitializeNewWalletTransformer(
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
             isAddFundsStage1Enabled = isAddFundsStage1Enabled,
+            isManageFundsEnabled = isManageFundsEnabled,
         )
     }
 
