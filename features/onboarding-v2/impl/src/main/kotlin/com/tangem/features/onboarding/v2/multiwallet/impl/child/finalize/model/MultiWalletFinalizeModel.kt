@@ -286,7 +286,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private fun Card.updateScanResponseForV8() {
         // derivation for V8+ cards only on final backup step so we need to update scan response with derived keys here
         if (this.firmwareVersion >= FirmwareVersion.v8) {
-            val currentScanResponse = multiWalletState.value.currentScanResponse
+            val currentScanResponse = params.multiWalletState.value.currentScanResponse
             val updatedDerivedKeys = currentScanResponse.derivedKeys.toMutableMap()
             this.wallets.forEach { wallet ->
                 val publicKey = wallet.publicKey ?: return@forEach
@@ -294,7 +294,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 updatedDerivedKeys[ByteArrayKey(publicKey)] = derivedKeysMap
             }
             // update scan response with derived keys and wallets because V8+ cards only after backup have publicKey
-            multiWalletState.update {
+            params.multiWalletState.update {
                 it.copy(
                     currentScanResponse = currentScanResponse.copy(
                         derivedKeys = updatedDerivedKeys,
