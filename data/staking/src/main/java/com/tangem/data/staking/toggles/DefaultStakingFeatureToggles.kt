@@ -14,12 +14,6 @@ internal class DefaultStakingFeatureToggles(
         return featureTogglesManager.isFeatureEnabled(toggle)
     }
 
-    override fun isSolanaUnstakeValidationEnabled(): Boolean {
-        return featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED,
-        )
-    }
-
     override fun isRegionUnavailableHandlingEnabled(): Boolean {
         return featureTogglesManager.isFeatureEnabled(
             FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED,
