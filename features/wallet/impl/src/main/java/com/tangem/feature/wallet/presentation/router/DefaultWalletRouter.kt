@@ -8,7 +8,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
@@ -37,7 +36,6 @@ import javax.inject.Inject
 internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
-    private val designFeatureToggles: DesignFeatureToggles,
 ) : InnerWalletRouter {
 
     override val dialogNavigation: SlotNavigation<WalletDialogConfig> = SlotNavigation()
@@ -51,13 +49,9 @@ internal class DefaultWalletRouter @Inject constructor(
         get() = OrganizeCallbacks()
 
     override fun openOrganizeTokensScreen(userWalletId: UserWalletId) {
-        if (designFeatureToggles.isRedesignEnabled) {
-            dialogNavigation.activate(
-                configuration = WalletDialogConfig.OrganizeTokens(userWalletId),
-            )
-        } else {
-            navigateToFlow.tryEmit(WalletRoute.OrganizeTokens(userWalletId))
-        }
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.OrganizeTokens(userWalletId),
+        )
     }
 
     override fun openDetailsScreen(selectedWalletId: UserWalletId) {
