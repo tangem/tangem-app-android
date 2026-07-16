@@ -173,6 +173,8 @@ private fun PlanInfoRow(item: TangemPayCurrentPlanUM.InfoItem, modifier: Modifie
 
 @Composable
 private fun ChangePlanFooter(state: TangemPayCurrentPlanUM, modifier: Modifier = Modifier) {
+    if (state.onChangePlanClick == null) return
+
     Column(
         modifier = modifier
             .fillMaxWidth()
