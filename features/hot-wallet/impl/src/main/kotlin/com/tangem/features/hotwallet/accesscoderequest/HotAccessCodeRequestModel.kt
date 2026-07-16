@@ -17,7 +17,6 @@ import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attem
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
 import com.tangem.features.hotwallet.impl.R
@@ -42,7 +41,6 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val result = MutableStateFlow<HotWalletPasswordRequester.Result?>(null)
@@ -231,9 +229,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it is UserWallet.Hot && it.hotWalletId == currentRequest.hotWalletId } ?: return
 
-        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
-            startAssetsDiscoveryUseCase.cancel(userWallet.walletId)
-        }
+        startAssetsDiscoveryUseCase.cancel(userWallet.walletId)
 
         deleteWalletUseCase(userWallet.walletId)
         dismiss()
