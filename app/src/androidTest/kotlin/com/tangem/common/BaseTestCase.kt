@@ -194,21 +194,10 @@ abstract class BaseTestCase : TestCase(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
-                "ASSETS_DISCOVERY_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
                 // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
                 // build even when the app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < x.xx would
                 // disable them). On the releases/6.0 branch every toggle with version <= 6.0 ships enabled.
-                // 5.37
-                "HEDERA_ERC20_ENABLED" to true,
-                // 5.39
-                "DYNAMIC_ADDRESSES_ENABLED" to true,
-                "SOLANA_TX_HISTORY_ENABLED" to true,
-                "SOLANA_SCALED_UI_AMOUNT_ENABLED" to true,
-                "AND_15310_ADD_FUNDS_STAGE1" to true,
-                "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
-                "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED" to true,
-                "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED" to true,
                 // 5.40
                 "TWI_1377_MANAGE_FUNDS" to true,
                 // 6.0
