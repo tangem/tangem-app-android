@@ -583,6 +583,32 @@ internal class AddAddressModelTest {
             assertThat(confirmed?.networkIds)
                 .containsExactly(Blockchain.Ethereum.toNetworkId(), Blockchain.BSC.toNetworkId())
         }
+
+        // Regression: the debounced validation used to wipe the memo before the field became visible.
+        @Test
+        fun `GIVEN prefilled memo on extras network WHEN created THEN memo restored AND confirmed`() = runTest {
+            // Arrange — XRP supports a destination tag, and the address+network are prefilled (edit-address flow).
+            var confirmed: ValidatedAddress? = null
+            every { supportedNetworksMatcher.match(ADDRESS) } returns listOf(Blockchain.XRP)
+            val model = createModel(
+                testScope = this,
+                params = params(
+                    prefillAddress = ADDRESS,
+                    prefillNetworkIds = listOf(Blockchain.XRP.toNetworkId()),
+                    prefillMemo = "123456",
+                    onConfirm = { address, _ -> confirmed = address },
+                ),
+            )
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert — the memo survives into the visible field and is confirmed.
+            assertThat(model.state.value.memoField.isVisible).isTrue()
+            assertThat(model.state.value.memoField.value).isEqualTo("123456")
+            model.state.value.buttonUM.onClick()
+            assertThat(confirmed?.memo).isEqualTo("123456")
+        }
     }
 
     @Nested
