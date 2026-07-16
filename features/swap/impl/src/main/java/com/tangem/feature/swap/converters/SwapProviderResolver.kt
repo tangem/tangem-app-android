@@ -28,18 +28,11 @@ internal object SwapProviderResolver {
     /**
      * Picks the best provider among [states].
      *
-     * When [isSwapBestDexRateEnabled] is on and at least one DEX/DEX_BRIDGE provider is present, the
-     * best-rated DEX provider wins; otherwise the overall best-rated provider is returned (the best
-     * CEX when no DEX is available). "Best rated" = lowest from/to fiat ratio (most output per unit
-     * of input). Returns null when [states] is empty.
-     *
-     * @param isSwapBestDexRateEnabled whether the Best DEX Rate feature toggle is on.
+     * When at least one DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins; otherwise
+     * the overall best-rated provider is returned (the best CEX when no DEX is available). "Best rated" =
+     * lowest from/to fiat ratio (most output per unit of input). Returns null when [states] is empty.
      */
-    fun findBest(
-        states: Map<SwapProvider, SwapState.QuotesLoadedState>,
-        isSwapBestDexRateEnabled: Boolean,
-    ): SwapProvider? {
-        if (!isSwapBestDexRateEnabled) return findBestRated(states)
+    fun findBest(states: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
         val dexStates = states.filterKeys { it.type.isDex() }
         return if (dexStates.isNotEmpty()) {
             findBestRated(dexStates)
@@ -54,7 +47,7 @@ internal object SwapProviderResolver {
      * Priority: FCA restriction → permission required → recommended → best rate → none. A best-rate
      * badge is shown only when more than one provider is considered, FCA restrictions are not applied,
      * and this row's quote carries no price-impact warning. Which best-rate badge it is depends on the
-     * provider mix (only relevant when [isSwapBestDexRateEnabled] is on):
+     * provider mix:
      *  - [AdditionalBadge.BestTrade] ("Best rate") — always on the overall best-rated provider,
      *    regardless of its type.
      *  - [AdditionalBadge.BestDexRate] ("Best DEX rate") — only when both CEX and DEX providers are
@@ -62,22 +55,17 @@ internal object SwapProviderResolver {
      *    shown on the best-rated DEX. When a DEX already is the overall best, or the set is CEX-only /
      *    DEX-only, no separate "Best DEX rate" badge is shown.
      *
-     * When [isSwapBestDexRateEnabled] is off, only the overall best provider gets [AdditionalBadge.BestTrade]
-     * (legacy behaviour) and [AdditionalBadge.BestDexRate] is never produced.
-     *
      * @param states all loaded quotes — used to find the best providers and to count considered providers.
      * @param provider the provider this row represents.
      * @param needApplyFCARestrictions whether FCA restrictions apply to the current user.
      * @param state this provider's [SwapState]; price-impact and permission are read from it when it
      * is a [SwapState.QuotesLoadedState]. Null for error rows (which only resolve to FCA / recommended / none).
-     * @param isSwapBestDexRateEnabled whether the Best DEX Rate feature toggle is on.
      */
     fun resolveBadge(
         states: Map<SwapProvider, SwapState.QuotesLoadedState>,
         provider: SwapProvider,
         needApplyFCARestrictions: Boolean,
         state: SwapState? = null,
-        isSwapBestDexRateEnabled: Boolean,
     ): AdditionalBadge {
         val priceImpact = (state as? SwapState.QuotesLoadedState)?.priceImpact
         val permissionState = (state as? SwapState.QuotesLoadedState)?.permissionState
@@ -90,7 +78,7 @@ internal object SwapProviderResolver {
             needApplyFCARestrictions && provider.isFCARestricted() -> AdditionalBadge.FCAWarningList
             permissionState is PermissionDataState.PermissionRequired -> AdditionalBadge.PermissionRequired
             provider.isRecommended -> AdditionalBadge.Recommended
-            isBestRateBadgeAllowed -> resolveBestRateBadge(states, provider, isSwapBestDexRateEnabled)
+            isBestRateBadgeAllowed -> resolveBestRateBadge(states, provider)
             else -> AdditionalBadge.Empty
         }
     }
@@ -102,15 +90,9 @@ internal object SwapProviderResolver {
     private fun resolveBestRateBadge(
         states: Map<SwapProvider, SwapState.QuotesLoadedState>,
         provider: SwapProvider,
-        isSwapBestDexRateEnabled: Boolean,
     ): AdditionalBadge {
         val overallBest = findBestRated(states)
         val isOverallBest = provider.providerId == overallBest?.providerId
-
-        // Toggle off → legacy behaviour: only the overall best provider gets the "Best rate" badge.
-        if (!isSwapBestDexRateEnabled) {
-            return if (isOverallBest) AdditionalBadge.BestTrade else AdditionalBadge.Empty
-        }
 
         val dexStates = states.filterKeys { it.type.isDex() }
         val hasDex = dexStates.isNotEmpty()

@@ -29,7 +29,6 @@ import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -114,9 +113,6 @@ internal abstract class StakingModelTestBase {
     private val coroutineScope: AppCoroutineScope = mockk()
     protected val innerRouter: InnerStakingRouter = mockk()
     protected val messageSender: UiMessageSender = mockk()
-    protected val stakingFeatureToggles: StakingFeatureToggles = mockk {
-        every { isSolanaUnstakeValidationEnabled() } returns false
-    }
 
     @BeforeEach
     fun setUp() {
@@ -208,7 +204,6 @@ internal abstract class StakingModelTestBase {
             coroutineScope = coroutineScope,
             innerRouter = innerRouter,
             messageSender = messageSender,
-            stakingFeatureToggles = stakingFeatureToggles,
             appRouter = appRouter,
         )
     }

@@ -28,7 +28,6 @@ internal class InitializeWalletsTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isManageFundsEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -36,7 +35,6 @@ internal class InitializeWalletsTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
-            isManageFundsEnabled = isManageFundsEnabled,
         )
     }
 
@@ -156,11 +154,7 @@ internal class InitializeWalletsTransformer(
             onClick = {},
         )
 
-        val lastButton = if (isManageFundsEnabled) {
-            WalletManageButton.Transfer(enabled = false, dimContent = false, onClick = {})
-        } else {
-            WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {})
-        }
+        val lastButton = WalletManageButton.Transfer(enabled = false, dimContent = false, onClick = {})
 
         return persistentListOf(
             firstButton,
@@ -193,21 +187,12 @@ internal class InitializeWalletsTransformer(
                     onClick = {},
                 ).buttonUM,
             )
-            if (isManageFundsEnabled) {
-                add(
-                    WalletActionButtons.Transfer(
-                        isEnabled = false,
-                        onClick = {},
-                    ).buttonUM,
-                )
-            } else {
-                add(
-                    WalletActionButtons.Sell(
-                        isEnabled = false,
-                        onClick = {},
-                    ).buttonUM,
-                )
-            }
+            add(
+                WalletActionButtons.Transfer(
+                    isEnabled = false,
+                    onClick = {},
+                ).buttonUM,
+            )
         }.toPersistentList()
     }
 }
