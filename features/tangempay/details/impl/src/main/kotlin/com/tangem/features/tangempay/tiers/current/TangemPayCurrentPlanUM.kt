@@ -10,7 +10,7 @@ internal data class TangemPayCurrentPlanUM(
     val notification: Notification?,
     val sections: ImmutableList<Section>,
     val onBackClick: () -> Unit,
-    val onChangePlanClick: () -> Unit,
+    val onChangePlanClick: (() -> Unit)?,
 ) {
     @Immutable
     data class Notification(
