@@ -12,6 +12,7 @@ import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
 import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
+import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetSalePriceConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
@@ -181,29 +182,27 @@ internal class DefaultNFTRepository @Inject constructor(
                     }
                 }
 
-                getNFTPersistenceStore(userWalletId, network)
-                    .getCollectionsSync()
-                    ?.map { collection ->
-                        if (collection.identifier == sdkCollectionId) {
-                            collection.copy(assets = assets)
-                        } else {
-                            collection
-                        }
-                    }
-                    ?.let { collections ->
-                        saveCollectionsInRuntime(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = collections,
-                        )
-                        saveCollectionsInPersistence(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = collections,
-                        )
-                    }
+                saveAssetsInRuntime(
+                    userWalletId = userWalletId,
+                    network = network,
+                    collectionId = collectionId,
+                    assets = assets,
+                )
+
+                // local cache failures must not affect the runtime state which is already up to date
+                runSuspendCatching {
+                    updateAssetsInPersistence(
+                        userWalletId = userWalletId,
+                        network = network,
+                        sdkCollectionId = sdkCollectionId,
+                        assets = assets,
+                    )
+                }.onFailure { error ->
+                    TangemLogger.e("Failed to persist NFT assets for $network", error)
+                }
             }.onLeft { throwable ->
                 if (throwable !is UnsupportedOperationException) {
+                    TangemLogger.e("Failed to refresh NFT assets for $network", throwable)
                     saveFailedStateInRuntime(
                         userWalletId = userWalletId,
                         network = network,
@@ -269,18 +268,29 @@ internal class DefaultNFTRepository @Inject constructor(
                         expireCollections(userWalletId, network)
 
                         val collections = walletManagersFacade.getNFTCollections(userWalletId, network)
-                        val mergedCollections = collections.mergeWithStoredAssets(userWalletId, network)
+
+                        // local cache failures must not affect successfully fetched collections
+                        val mergedCollections = runSuspendCatching {
+                            collections.mergeWithStoredAssets(userWalletId, network)
+                        }.getOrElse { error ->
+                            TangemLogger.e("Failed to merge NFT collections with stored assets for $network", error)
+                            collections
+                        }
 
                         saveCollectionsInRuntime(
                             userWalletId = userWalletId,
                             network = network,
                             collections = mergedCollections,
                         )
-                        saveCollectionsInPersistence(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = mergedCollections,
-                        )
+                        runSuspendCatching {
+                            saveCollectionsInPersistence(
+                                userWalletId = userWalletId,
+                                network = network,
+                                collections = mergedCollections,
+                            )
+                        }.onFailure { error ->
+                            TangemLogger.e("Failed to persist NFT collections for $network", error)
+                        }
 
                         if (refreshAssets) {
                             mergedCollections.forEach { collection ->
@@ -292,6 +302,7 @@ internal class DefaultNFTRepository @Inject constructor(
                             }
                         }
                     }.onLeft { throwable ->
+                        TangemLogger.e("Failed to refresh NFT collections for $network", throwable)
                         saveFailedStateInRuntime(
                             userWalletId = userWalletId,
                             network = network,
@@ -391,12 +402,72 @@ internal class DefaultNFTRepository @Inject constructor(
         }
     }
 
+    private suspend fun saveAssetsInRuntime(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionId: NFTCollection.Identifier,
+        assets: List<SdkNFTAsset>,
+    ) {
+        val store = getNFTRuntimeStore(userWalletId, network)
+        val storedCollections = store.getCollectionsSync()
+        val content = storedCollections.content as? NFTCollections.Content.Collections ?: return
+
+        val convertedAssets = assets
+            .map { asset -> NFTSdkAssetConverter.convert(network to asset) }
+            .filter { it.id !is NFTAsset.Identifier.Unknown }
+
+        val updatedCollections = content.collections
+            ?.map { collection ->
+                if (collection.id == collectionId) {
+                    collection.copy(
+                        assets = NFTCollection.Assets.Value(
+                            items = convertedAssets,
+                            source = StatusSource.ACTUAL,
+                        ),
+                    )
+                } else {
+                    collection
+                }
+            }
+
+        store.saveCollections(
+            storedCollections.copy(content = content.copy(collections = updatedCollections)),
+        )
+    }
+
+    private suspend fun updateAssetsInPersistence(
+        userWalletId: UserWalletId,
+        network: Network,
+        sdkCollectionId: SdkNFTCollection.Identifier,
+        assets: List<SdkNFTAsset>,
+    ) {
+        val storedCollections = getNFTPersistenceStore(userWalletId, network).getCollectionsSync() ?: return
+        val updatedCollections = storedCollections.map { collection ->
+            if (collection.identifier == sdkCollectionId) {
+                collection.copy(assets = assets)
+            } else {
+                collection
+            }
+        }
+        saveCollectionsInPersistence(userWalletId, network, updatedCollections)
+    }
+
     private suspend fun saveCollectionsInPersistence(
         userWalletId: UserWalletId,
         network: Network,
         collections: List<SdkNFTCollection>,
     ) {
-        getNFTPersistenceStore(userWalletId, network).saveCollections(collections)
+        val serializableCollections = collections
+            .filter { it.identifier !is SdkNFTCollection.Identifier.Unknown }
+            .map { collection ->
+                collection.copy(
+                    assets = collection.assets.filter { asset ->
+                        asset.identifier !is SdkNFTAsset.Identifier.Unknown &&
+                            asset.collectionIdentifier !is SdkNFTCollection.Identifier.Unknown
+                    },
+                )
+            }
+        getNFTPersistenceStore(userWalletId, network).saveCollections(serializableCollections)
     }
 
     private suspend fun saveSalePriceInRuntime(userWalletId: UserWalletId, network: Network, salePrice: NFTSalePrice) {

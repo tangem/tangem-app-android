@@ -18,6 +18,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.R
@@ -69,7 +70,7 @@ internal fun AddToPortfolioBottomSheet(
                     AddToPortfolioRoutes.AddToken,
                     AddToPortfolioRoutes.Empty,
                     is AddToPortfolioRoutes.NetworkSelector,
-                    AddToPortfolioRoutes.TokenActions,
+                    is AddToPortfolioRoutes.TokenActions,
                     -> true
                 }
                 if (isScrollableContent) {
@@ -92,11 +93,12 @@ private fun AddToPortfolioBottomSheetTitle(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val title: TextReference = when (stack.active.configuration) {
+    val title: TextReference = when (val config = stack.active.configuration) {
         AddToPortfolioRoutes.AddToken -> resourceReference(R.string.common_add_token)
         AddToPortfolioRoutes.Empty -> TextReference.EMPTY
         is AddToPortfolioRoutes.NetworkSelector -> resourceReference(R.string.common_choose_network)
-        AddToPortfolioRoutes.TokenActions -> resourceReference(R.string.common_get_token)
+        is AddToPortfolioRoutes.TokenActions ->
+            resourceReference(R.string.get_token_title, wrappedList(config.currencyName))
         AddToPortfolioRoutes.UserPortfolio -> resourceReference(R.string.markets_portfolio_block_title)
         AddToPortfolioRoutes.PortfolioSelector -> (stack.active.instance as PortfolioSelectorComponent)
             .title.collectAsStateWithLifecycle().value

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 internal data class TangemPayReissueCardUM(
+    val cardBalance: String,
     val feeAmount: String,
     val isFeeLoading: Boolean,
     val isReissuingInProgress: Boolean,
@@ -16,11 +17,13 @@ internal data class TangemPayReissueCardUM(
     companion object {
         fun stub(
             feeAmount: String = "$4.25",
+            cardBalance: String = "$0.05",
             isFeeLoading: Boolean = false,
-            error: TangemPayReissueCardError = TangemPayReissueCardError.InitialDataLoading,
+            error: TangemPayReissueCardError? = null,
             isReissuingInProgress: Boolean = false,
         ) = TangemPayReissueCardUM(
             feeAmount = feeAmount,
+            cardBalance = cardBalance,
             isFeeLoading = isFeeLoading,
             error = error,
             isReissuingInProgress = isReissuingInProgress,

@@ -23,5 +23,10 @@ internal fun resolveBoostBlockState(qualificationEndDate: Instant?, now: Instant
     qualificationEndDate == null -> BoostBlockState.Hidden
     now >= qualificationEndDate + AWAITING_PAYOUT_WINDOW -> BoostBlockState.Hidden
     now >= qualificationEndDate -> BoostBlockState.AwaitingPayout
-    else -> BoostBlockState.DaysLeft(days = (qualificationEndDate - now).inWholeDays.toInt())
+    else -> {
+        val remaining = qualificationEndDate - now
+        val fullDays = remaining.inWholeDays
+        val daysLeft = if (remaining > fullDays.days) fullDays + 1 else fullDays
+        BoostBlockState.DaysLeft(days = daysLeft.toInt())
+    }
 }

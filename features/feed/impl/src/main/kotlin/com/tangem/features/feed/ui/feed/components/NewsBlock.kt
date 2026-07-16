@@ -2,11 +2,7 @@ package com.tangem.features.feed.ui.feed.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -148,6 +144,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
             onSeeAllClick = { feedListCallbacks.onOpenAllNews(false) },
             isLoading = news.newsUMState == NewsUMState.LOADING,
             shouldShowSeeAll = news.newsUMState == NewsUMState.CONTENT,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
         SpacerH(12.dp)
 
@@ -200,6 +197,7 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
             onSeeAllClick = {},
             shouldShowSeeAll = false,
             isLoading = false,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
         SpacerH(12.dp)
         BlockCard(
