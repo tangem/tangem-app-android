@@ -12,4 +12,5 @@ internal data class TonInitializeAccountBottomSheetConfig(
     val isButtonEnabled: Boolean,
     val isButtonLoading: Boolean,
     val feeState: FeeState,
+    val isColdWalletInteractionIconVisible: Boolean,
 ) : TangemBottomSheetConfigContent

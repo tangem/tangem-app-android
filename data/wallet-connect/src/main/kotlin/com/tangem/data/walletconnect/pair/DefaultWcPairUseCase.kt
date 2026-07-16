@@ -73,7 +73,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 return@flow
             }
 
-            val dAppUri = URI(sdkSessionProposal.url)
+            val dAppUri = URI(sdkVerifyContext.getDappOriginUrl())
             if (dAppUri.host.isNullOrEmpty()) {
                 emit(WcPairState.Error(WcPairError.InvalidDomainURL))
                 return@flow
@@ -200,25 +200,24 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         verifyContext: Wallet.Model.VerifyContext,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
         val proposalAccountNetwork = associateNetworksDelegate.associateAccounts(sessionProposal)
-        // Display URL: shown to the user and logged to analytics. Reown's verified origin when
-        // present, otherwise its `verify.walletconnect.org` fallback. NOT trustworthy for
-        // security checks: when validation is INVALID, getDappOriginUrl returns the dApp-claimed
-        // origin (so the UI can show what was claimed), which a scam dApp can spoof.
+        // Display URL: shown to the user and logged to analytics. getDappOriginUrl() returns the
+        // Verify-attested origin (verifyContext.origin), or the verify.walletconnect.org fallback
+        // when origin is empty. Display only — the security verdict is decided below (see
+        // isDomainConfirmed), where sessionProposal.url is used solely for a host-equality check.
         val displayUrl = verifyContext.getDappOriginUrl()
         val verificationInfo = when {
-            verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
             verifyContext.isScam == true -> CheckDAppResult.UNSAFE
-            // BlockAid is scanned only against the Reown-verified origin (validation == VALID
-            // guarantees Reown confirmed origin matches the dApp's registered domain).
-            // For UNKNOWN we have no trustworthy URL: passing a dApp-claimed URL would let an
-            // impersonator (e.g. a scam claiming metadata.url=dydx.trade) inherit its target's
-            // BlockAid verdict.
-            verifyContext.validation == Wallet.Model.Validation.VALID -> {
+            // BlockAid scans only the Verify-attested origin (verifyContext.origin), reached for
+            // VALID or for a false-positive INVALID whose metadata host matches that origin (see
+            // isDomainConfirmed). For UNKNOWN there is no trustworthy origin, so BlockAid is
+            // skipped to avoid letting an impersonator inherit its target's verdict.
+            isDomainConfirmed(verifyContext, sessionProposal.url) -> {
                 blockAidVerifier.verifyDApp(DAppData(verifyContext.origin)).getOrElse { error ->
                     TangemLogger.withTag(WC_TAG).e("Failed to verify DApp ${sessionProposal.name}", error)
                     CheckDAppResult.FAILED_TO_VERIFY
                 }
             }
+            verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
             else -> CheckDAppResult.FAILED_TO_VERIFY
         }
         val requestedNetworks = proposalAccountNetwork
@@ -254,8 +253,31 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         },
     )
 
+    private fun isDomainConfirmed(verifyContext: Wallet.Model.VerifyContext, metadataUrl: String): Boolean {
+        return when (verifyContext.validation) {
+            Wallet.Model.Validation.VALID -> true
+            Wallet.Model.Validation.INVALID -> hostsMatchWithScheme(metadataUrl, verifyContext.origin)
+            else -> false
+        }
+    }
+
+    private fun hostsMatchWithScheme(metadataUrl: String, origin: String): Boolean = runCatching {
+        val metadataHost = URI(metadataUrl.ensureScheme()).host?.lowercase()
+        val originHost = URI(origin.ensureScheme()).host?.lowercase()
+        !metadataHost.isNullOrEmpty() && metadataHost == originHost
+    }.getOrDefault(false)
+
+    private fun String.ensureScheme(): String =
+        if (startsWith(HTTP_SCHEME, ignoreCase = true) || startsWith(HTTPS_SCHEME, ignoreCase = true)) {
+            this
+        } else {
+            HTTPS_SCHEME + this
+        }
+
     private companion object {
         const val PENDING_SESSION_EXPIRED_DURATION_MIN = 15L
+        const val HTTP_SCHEME = "http://"
+        const val HTTPS_SCHEME = "https://"
     }
 
     private sealed interface TerminalAction {

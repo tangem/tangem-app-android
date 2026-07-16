@@ -80,9 +80,10 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Ajouter des jetons</string>
   <string name="action_buttons_you_want_to_receive">Sélectionnez le jeton que vous souhaitez recevoir</string>
   <string name="action_buttons_you_want_to_swap">Sélectionnez le jeton que vous souhaitez échanger</string>
-  <string name="actionbutton_addfunds_title">Ajouter des fonds</string>
+  <string name="actionbutton_addfunds_title">Ajouter fonds</string>
   <string name="actionbutton_swap_title">Échanger</string>
   <string name="actionbutton_transfer_title">Transférer</string>
+  <string name="add_and_manage_sheet_manage_subtitle">Ajouter à votre portfolio</string>
   <string name="add_and_manage_sheet_manage_title">Ajouter des jetons</string>
   <string name="add_custom_token_choose_network">Choisissez le réseau</string>
   <string name="add_custom_token_title">Ajouter un jeton personnalisé</string>
@@ -94,26 +95,45 @@
   <string name="address_book_add_address">Ajouter une adresse</string>
   <string name="address_book_add_address_description">Ajouter une adresse et sélectionner un réseau</string>
   <string name="address_book_add_contact">Ajouter le contact</string>
+  <string name="address_book_address_copied">Adresse copiée</string>
+  <string name="address_book_address_taken_error">Cette adresse est déjà enregistrée sous le nom %1$s</string>
   <plurals name="address_book_addresses">
     <item quantity="one">adresse</item>
     <item quantity="other">adresses</item>
   </plurals>
+  <string name="address_book_choose_address">Choisir une adresse</string>
+  <string name="address_book_clear_all_networks">Tout supprimer</string>
   <string name="address_book_contact">Contact</string>
   <string name="address_book_contact_name">Nom du contact</string>
   <string name="address_book_copy_address">Copier l\'adresse</string>
+  <string name="address_book_create_success_message">Contact enregistré</string>
   <string name="address_book_creating_error">Nous n\'avons pas pu créer le contact. Veuillez réessayer plus tard.</string>
+  <string name="address_book_delete_contact">Supprimer le contact</string>
   <string name="address_book_delete_contact_description">Ce contact sera supprimé de tous vos carnets d\'adresses</string>
+  <string name="address_book_delete_last_address">\"%1$s\" n\'a qu\'une seule adresse. La supprimer va aussi supprimer le contact. Continuer?</string>
   <string name="address_book_deleting_error">Nous n\'avons pas pu supprimer le contact. Veuillez réessayer plus tard.</string>
   <string name="address_book_description">Gérer les contacts &amp; adresses</string>
   <string name="address_book_discard">Oui, annuler</string>
   <string name="address_book_edit_address">Modifier l\'adresse</string>
   <string name="address_book_enter_address">Entrer l\'adresse</string>
+  <string name="address_book_invalid_address_error">Adresse invalide</string>
   <string name="address_book_keep_editing">Non, continuer</string>
+  <string name="address_book_max_networks_alert_description">Vous ne pouvez pas créer plus de 20 adresses. Supprimez-en une pour en ajouter une nouvelle.</string>
+  <string name="address_book_max_networks_alert_title">Impossible d\'ajouter une nouvelle adresse</string>
+  <string name="address_book_name_empty_error">Le nom du contact est requis </string>
+  <string name="address_book_name_invalid_chars_error">Le nom du contact contient des caractères invalides</string>
+  <string name="address_book_name_max_chars_error">Le nom du contact ne doit pas dépasser 50 caractères</string>
+  <string name="address_book_name_taken_error">Ce nom est déjà utilisé dans ce portefeuille</string>
   <string name="address_book_new_contact">Nouveau contact</string>
   <string name="address_book_no_contacts">Aucun contact pour le moment</string>
   <string name="address_book_no_contacts_description">Les contacts que vous ajouterez vont apparaître ici</string>
   <string name="address_book_remove_address">Supprimer l\'adresse</string>
+  <string name="address_book_save_address">Enregistrer l\'adresse</string>
+  <string name="address_book_save_contact">Enregistrer le contact</string>
+  <string name="address_book_save_to_wallet_title">Enregistrer dans le portefeuille</string>
   <string name="address_book_save_wallet_to_description">Ce contact va être lié au carnet d\'adresses de ce portefeuille.</string>
+  <string name="address_book_search_no_results">Aucun résultat.\nEssayez un autre nom</string>
+  <string name="address_book_select_all_networks">Tout sélectionner</string>
   <string name="address_book_select_network">Sélectionner un réseau</string>
   <string name="address_book_title">Carnet d\'adresses</string>
   <string name="address_book_unsaved_changes">Modifications non enregistrées</string>
@@ -250,6 +270,7 @@
   <string name="common_accounts">Comptes</string>
   <string name="common_activate">Activer</string>
   <string name="common_add">Ajouter</string>
+  <string name="common_add_funds">Ajouter fonds</string>
   <string name="common_add_to_portfolio">Ajouter au portfolio</string>
   <string name="common_add_token">Ajouter un jeton</string>
   <string name="common_add_tokens">Ajouter des jetons</string>
@@ -331,6 +352,7 @@
   <string name="common_from">Du</string>
   <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Synchroniser les adresses</string>
+  <string name="common_get">Obtenir du</string>
   <string name="common_get_started">Commencer</string>
   <string name="common_get_token">Obtenir un token</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
@@ -520,6 +542,7 @@
   <string name="domain_receive_assets_onboarding_description">L’envoi d’actifs sur d’autres réseaux entraînera une perte définitive.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s réseau</string>
   <string name="domain_receive_assets_onboarding_title">Envoyez des fonds en utilisant uniquement</string>
+  <string name="dynamic_addresses_receive_badge">Adresse dynamique</string>
   <string name="earn_best_opportunities">Meilleures opportunités</string>
   <string name="earn_clear_filter">Effacer le filtre</string>
   <string name="earn_filter_all_networks">Tous les réseaux</string>
@@ -640,6 +663,7 @@
   <string name="generic_error">Une erreur s\'est produite</string>
   <string name="generic_error_code">Une erreur s\'est produite. Code:%s</string>
   <string name="generic_requires_memo_error">Un mémo est requis</string>
+  <string name="get_token_title">Obtenir des %1$s</string>
   <string name="give_permission_current_transaction">Cette transaction</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
   <string name="give_permission_rows_amount">Montant %s</string>
@@ -655,6 +679,8 @@
   <string name="hardware_wallet_key_feature_title">Génération de clés</string>
   <string name="hardware_wallet_security_feature_description">Toutes les opérations cryptographiques s\'effectuent à l\'intérieur de la puce sécurisée, certifiée contre le clonage et la falsification physique.</string>
   <string name="hardware_wallet_security_feature_title">Sécurité au niveau matériel</string>
+  <string name="high_fee_warning_description">L\'activité du réseau est élevée. Vous pouvez continuer maintenant ou réessayer plus tard, lorsque les frais seront peut-être moins élevés.</string>
+  <string name="high_fee_warning_title">Les frais de réseau sont plus élevés que d\'habitude</string>
   <string name="home_button_add_existing_wallet">Ajouter un Portefeuille existant</string>
   <string name="home_button_create_new_wallet">Créer un nouveau Portefeuille</string>
   <string name="home_button_order">Commandez</string>
@@ -803,12 +829,19 @@
   <string name="markets_insights_info_description_message">Les données de cette section proviennent des réseaux suivants : %s</string>
   <string name="markets_loading_error_title">Impossible de charger les données…</string>
   <string name="markets_loading_no_data_title">Aucune donnée</string>
+  <string name="markets_portfolio_block_add_token_title">**Ajouter à votre portfolio** pour acheter, échanger ou recevoir cet asset</string>
+  <string name="markets_portfolio_block_subtitle">Dans votre portfolio</string>
+  <string name="markets_portfolio_block_title">Votre portfolio</string>
+  <string name="markets_portfolio_block_token_unsupported">**Token non pris en charge**. Ce token n\'est actuellement pas pris en charge dans le portefeuille</string>
   <string name="markets_pulse_common_title">Rythme du marché</string>
   <string name="markets_quick_actions">Actions rapides</string>
   <string name="markets_search_header_title">Rechercher sur le marché</string>
+  <string name="markets_search_hint_header">Recherches récentes</string>
+  <string name="markets_search_recent_tokens_header">Tokens récents</string>
   <string name="markets_search_result_title">Résultat</string>
   <string name="markets_search_see_tokens_under_100k">Voir les jetons de moins de 100 000 $ de capitalisation boursière</string>
   <string name="markets_search_show_tokens">Afficher les jetons</string>
+  <string name="markets_search_title_placeholder">Crypto, actualités et plus</string>
   <string name="markets_search_token_no_result_title">Aucun résultat</string>
   <string name="markets_select_network">Sélectionnez un réseau</string>
   <string name="markets_select_wallet">Sélectionnez un portefeuille</string>
@@ -877,6 +910,7 @@
   <string name="markets_token_details_market_rating_description">Position dans le classement des crypto-monnaies entre toutes les pièces en fonction de la capitalisation boursière</string>
   <string name="markets_token_details_market_rating_full">Évaluation du marché</string>
   <string name="markets_token_details_max_supply">Approvisionnement maximal</string>
+  <string name="markets_token_details_max_supply_and_circulation_full">Offre en circulation et offre maximale</string>
   <string name="markets_token_details_max_supply_description">Le nombre maximal de pièces ou de jetons pouvant exister pour une crypto-monnaie particulière</string>
   <string name="markets_token_details_max_supply_full">Approvisionnement maximal</string>
   <string name="markets_token_details_metrics">Métriques</string>
@@ -892,6 +926,7 @@
   <string name="markets_token_details_trading_volume">Volume des échanges (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">Le montant total d\'une crypto-monnaie qui a été échangé au cours des dernières 24 heures, indiquant le niveau d\'activité et de liquidité du marché</string>
   <string name="markets_token_details_trading_volume_full">Volume des échanges (24h)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s au total</string>
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Tirez vers le haut ou appuyez sur la barre de recherche pour ajouter des jetons directement depuis le marché</string>
   <string name="markets_tooltip_title">Ajouter des jetons</string>
@@ -1112,6 +1147,7 @@
   <string name="onramp_min_amount_restriction">Le montant à acheter doit être au moins %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Si le montant cumulé des transactions dépasse %1s, une vérification d\'identité via %2s pourrait être requise</string>
   <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Si le montant cumulé des transactions dépasse l\'équivalent de %1s, une vérification d\'identité via %2s pourrait être requise</string>
+  <string name="onramp_native_payment_identity_verification">Les transactions Apple Pay peuvent nécessiter une vérification d\'identité avec %1s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">En appuyant sur Acheter, vous acceptez %1s %2s et %3s.</string>
   <string name="onramp_no_available_providers">Aucun fournisseur disponible pour cette devise</string>
   <string name="onramp_offer_type_fastet">Le plus rapide</string>
@@ -1144,6 +1180,8 @@
   <string name="onramp_title_available_from">Disponible auprès de</string>
   <string name="onramp_title_available_up_to">Disponible jusqu\'à</string>
   <string name="onramp_title_you_get">Vous obtenez</string>
+  <string name="onramp_token_is_not_supported_banner_subtitle">Ce token n\'est pas pris en charge. Veuillez choisir un autre token à acheter.</string>
+  <string name="onramp_token_is_not_supported_banner_title">%s n\'est pas pris en charge</string>
   <string name="onramp_tos_external_providers">Le service est fourni par un prestataire externe. Tangem n\'est pas responsable.</string>
   <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_up_to_rate">Jusqu\'à</string>
@@ -1156,6 +1194,21 @@
   <string name="organize_tokens_sort_by_balance">Par solde</string>
   <string name="organize_tokens_title">Organiser les jetons</string>
   <string name="organize_tokens_ungroup">Dégrouper</string>
+  <string name="promo_campaign_already_activated_subtitle">Le cashback éligible sera distribué à :</string>
+  <string name="promo_campaign_already_activated_title">Vous êtes déjà inscrit(e) à %1$s</string>
+  <string name="promo_campaign_eligible_tokens">Tokens éligibles</string>
+  <string name="promo_campaign_enroll">S\'inscrire</string>
+  <string name="promo_campaign_enroll_success_title">Vous êtes bien inscrit(e) à %1$s</string>
+  <string name="promo_campaign_not_active_subtitle">Cette campagne n\'existe plus ou a expiré</string>
+  <string name="promo_campaign_not_active_title">Campagne non active</string>
+  <string name="promo_campaign_reactivation_summary_description">Gagnez 0,5% de cashback sur chaque swap de plus de 500 $, sur toute paire sauf stablecoin vers stablecoin. Gain maximum : 50 $ par swap.\n\nComplétez cinq swaps éligibles et débloquez un bonus supplémentaire de 10 $.\n\nLes récompenses sont versées chaque semaine en USDT ou USDC à l\'adresse sélectionnée.</string>
+  <string name="promo_campaign_select_cashback_account">Sélectionner le compte pour recevoir le cashback</string>
+  <string name="promo_campaign_select_token">Sélectionner le token</string>
+  <string name="promo_campaign_summary_title">S\'inscrire à %1$s</string>
+  <string name="promo_campaign_terms_agreement">J\'accepte les %1$s</string>
+  <string name="promo_campaign_terms_agreement_android">J\'accepte les</string>
+  <string name="promo_campaign_terms_link">Conditions de %1$s</string>
+  <string name="promo_campaign_whale_swap_summary_description">Gagnez du cashback sur chaque swap à partir de 10 000 $ jusqu\'à fin juillet.\n\nLes taux augmentent selon le montant : 0,10% à partir de 10 000 $, 0,20% à partir de 20 000 $, 0,50% à partir de 100 000 $.\n\nGain maximum : 500 $ par swap, et 10 000 $ par wallet et par sens de swap pendant toute la durée de la campagne. Les swaps stablecoin vers stablecoin sont exclus.\n\nLe paiement arrive chaque semaine à l\'adresse USDT ou USDC de votre choix.</string>
   <string name="provider_name_support">Assistance %s</string>
   <string name="push_notification_settings_banner_description">Les notifications push sont activées mais ne fonctionneront pas avant que vous les autorisiez</string>
   <string name="push_notification_settings_banner_title">Autoriser les notifications</string>
@@ -1181,6 +1234,12 @@
   <string name="qr_scanner_error_unsupported_network_title">Aucun jeton pris en charge n\'a été trouvé</string>
   <string name="qr_scanner_warning_unknown_parameters_message">Ce code QR contient des paramètres non reconnus : %s. Si vous continuez, certaines informations de paiement risquent d\'être perdues.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Paramètres inconnus</string>
+  <string name="quick_action_buy_description">Carte ou compte en banque</string>
+  <string name="quick_action_receive_description">Partager votre adresse ou code QR</string>
+  <string name="quick_action_sell_description">Vendre de la crypto en sécurité</string>
+  <string name="quick_action_send_and_swap_description">Envoyer en échangeant vers un autre token</string>
+  <string name="quick_action_send_description">Envoyer vers un autre portefeuille</string>
+  <string name="quick_action_swap_description">Une crypto contre une autre</string>
   <string name="quick_top_up_title">Recharge rapide</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Aucun mémo requis</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sur le réseau %3$s</string>
@@ -1354,7 +1413,7 @@
   <string name="send_validation_invalid_total">Le total dépasse le solde</string>
   <string name="send_with_swap_change_token_alert_message">Êtes-vous sûr de vouloir modifier le token de réception ? Cela réinitialisera les données que vous avez saisies précédemment.</string>
   <string name="send_with_swap_change_token_alert_title">Changement de token</string>
-  <string name="send_with_swap_confirm_title">Échanger et envoyer</string>
+  <string name="send_with_swap_confirm_title">Échanger et Envoyer</string>
   <string name="send_with_swap_convert_token_alert_message">Poursuivre l\'échange ? Cela effacera vos données précédentes.</string>
   <string name="send_with_swap_convert_token_alert_title">Confirmer la conversion</string>
   <string name="send_with_swap_correct_recipient_network_notification_message">L\'envoi de toute autre crypto entraînera sa perte irréversible.</string>
@@ -1458,9 +1517,9 @@
   <string name="staking_notification_ton_account_initialization_message">Pour commencer le staking, vous devez d’abord activer votre compte TON</string>
   <string name="staking_notification_ton_account_initialization_title">Activation du compte</string>
   <string name="staking_notification_ton_activate_account">Pour commencer à staker TON, effectuez d\'abord une transaction sortante de n\'importe quel montant — cela activera votre portefeuille.</string>
-  <string name="staking_notification_ton_extra_reserve_info">Jusqu\'à 0,2 TON peuvent être requis en plus des frais de réseau pour terminer la transaction. Tout montant non utilisé sera remboursé.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">0,2 TON requis pour effectuer cette opération, en plus des frais de réseau. Veuillez recharger votre solde.</string>
-  <string name="staking_notification_ton_extra_reserve_title">Réserve de TON requise</string>
+  <string name="staking_notification_ton_extra_reserve_info">Jusqu\'à 0,2 GRAM peuvent être requis en plus des frais de réseau pour terminer la transaction. Tout montant non utilisé sera remboursé.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">0,2 GRAM requis pour effectuer cette opération, en plus des frais de réseau. Veuillez recharger votre solde.</string>
+  <string name="staking_notification_ton_extra_reserve_title">Réserve de GRAM requise</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Cette action fermera d\'autres positions ou les fera passer au statut de retrait, conformément aux règles du réseau.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Statut des positions</string>
   <string name="staking_notification_unlock_text">Débloquez votre argent pour le retirer du processus de staking. Le déverrouillage prend %s.</string>
@@ -1531,8 +1590,8 @@
   <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
   <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
-  <string name="support_chat_screen_title">Discussion avec le support</string>
-  <string name="support_chat_share_logs_button">Joindre les logs de l\'application</string>
+  <string name="support_chat_screen_title">Support via chat</string>
+  <string name="support_chat_share_logs_button">Joindre les logs de l\'app</string>
   <string name="support_chat_swap_prefilled_message">Données du SWAP :\nDepuis :%1$s%2$s\nVers :%3$s%4$s\nPar :%5$s-%6$s</string>
   <string name="support_selector_view_chat_button">Accéder au chat</string>
   <string name="support_selector_view_email_button">Ouvrir un email</string>
@@ -1594,6 +1653,7 @@
   <string name="tangem_pay_beta_notification_title">Tangem Pay en version bêta</string>
   <string name="tangem_pay_card_frozen">Carte gelée</string>
   <string name="tangem_pay_card_payment">Paiement par carte</string>
+  <string name="tangem_pay_close_card_disabled_last_card">Vous ne pouvez pas clôturer la dernière carte</string>
   <string name="tangem_pay_close_card_popup_description">Il disparaîtra de l’application</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Clôturer la carte</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Retour</string>
@@ -1756,6 +1816,7 @@
   <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier</string>
   <string name="tangempay_kyc_rejected_description_span">votre identité.</string>
   <string name="tangempay_maximum_cards_issued_description">Vous pouvez avoir jusqu\'à 3 cartes. Supprimez une carte pour pouvoir en ajouter une nouvelle.</string>
+  <string name="tangempay_maximum_cards_issued_title">Nombre maximum de cartes émises</string>
   <string name="tangempay_newonboard_Q1_body">Oui — pour utiliser une carte Visa réglementée, la vérification d’identité est obligatoire. Le KYC est géré par Sumsub, partenaire conformité.</string>
   <string name="tangempay_newonboard_Q1_title">Dois-je fournir mes documents ?</string>
   <string name="tangempay_newonboard_Q2_body">Non. Le KYC s’applique uniquement au compte Tangem Pay. Votre Tangem Wallet reste un environnement distinct, en self-custody et sans KYC.</string>
@@ -1800,6 +1861,9 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Déposez des USDC sur le compte de paiement pour couvrir les frais d’émission</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Impossible de couvrir les frais</string>
   <string name="tangempay_reissue_card_title">Réémettre votre carte ?</string>
+  <string name="tangempay_remove_account">Retirer le compte</string>
+  <string name="tangempay_remove_account_alert_description">Tangem Pay sera retiré de l\'écran principal et ne réapparaîtra plus, même après une réinstallation de l\'application.</string>
+  <string name="tangempay_remove_account_alert_title">Retirer le compte?</string>
   <string name="tangempay_service_unavailable_description">Nous réparons un problème technique. Veuillez réessayer plus tard.</string>
   <string name="tangempay_service_unavailable_title">Service temporairement indisponible</string>
   <string name="tangempay_service_unreachable_try_later">Les données ne peuvent pas être affichées pour le moment, mais les paiements par carte fonctionnent toujours.</string>
@@ -1850,6 +1914,7 @@
   <string name="token_details_staking_block_title">Service de Staking</string>
   <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% %2$s le réseau</string>
   <string name="token_details_token_type_subtitle_no_standard">Jeton dans le %%image%% %1$s réseau</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s dans %%image%% %2$s</string>
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
   <string name="token_receive_show_qr_code_title">Afficher le code QR</string>
@@ -2137,6 +2202,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">Ce jeton doit être associé à votre compte Hedera avant que vous puissiez le recevoir</string>
   <string name="warning_hedera_missing_token_association_title">Associez votre jeton</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%s insuffisant. Renflouez votre compte Hedera pour associer ce jeton</string>
+  <string name="warning_incomplete_backup_notification_message">Nous avons constaté que le processus d\'activation de la carte n\'a pas été effectué correctement en raison de problèmes avec le module NFC de votre appareil ou d\'une méthode incorrecte pour maintenir les cartes sur votre téléphone. Veuillez contacter notre équipe d\'assistance pour plus de détails.</string>
+  <string name="warning_incomplete_backup_notification_title">Action requise. N\'utilisez pas votre portefeuille!</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Êtes-vous sûr(e) de vouloir annuler la transaction ? Vous ne pourrez plus réessayer.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Votre transaction d\'un montant de %1$s %2$s n\'a pas été finalisée. Vous pouvez réessayer plus tard pour la finaliser.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Vous avez une transaction inachevée</string>
@@ -2158,8 +2225,8 @@
   <string name="warning_no_backup_title">Sauvegarde manquante</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Cette carte a déjà été utilisée pour des transactions. Si elle provient d\'une source non fiable, envisagez de retirer tous les fonds. S\'il s\'agit de votre carte, aucune action n\'est requise.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">La carte a déjà signé des transactions</string>
-  <string name="warning_outdated_data_message">Sera mis à jour dès que possible</string>
-  <string name="warning_outdated_data_title">Données de soldes incomplètes</string>
+  <string name="warning_outdated_data_message">Certains soldes de jetons n\'ont pas pu être mis à jour</string>
+  <string name="warning_outdated_data_title">Les soldes peuvent ne pas être à jour</string>
   <string name="warning_rate_app_message">Votre avis nous motive à améliorer encore le Portefeuille Tangem</string>
   <string name="warning_rate_app_title">Vous appréciez Tangem ?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Vous devez associer votre jeton avant de recevoir des jetons</string>
@@ -2336,6 +2403,7 @@
   <string name="yield_module_approve_sheet_fee_note">Les frais seront prélevés et vos actifs seront à nouveau prêtés.</string>
   <string name="yield_module_approve_sheet_subtitle">Pour continuer à percevoir des revenus, une autorisation est nécessaire.</string>
   <string name="yield_module_approve_sheet_title">Confirmer l\'approbation</string>
+  <string name="yield_module_average_apy">APY actuel %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Vos fonds sont actuellement affectés au protocole Aave, mais vous pouvez les gérer à tout moment.</string>
   <string name="yield_module_balance_info_sheet_title">Vos %s sont déposés dans Aave.</string>
   <string name="yield_module_chart_loading_error">Impossible de charger le graphique...</string>

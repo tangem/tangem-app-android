@@ -46,7 +46,7 @@ class GetEthSpecificFeeUseCase(
                 val minimalFee = getEthLegacyFee(
                     gasPrice = gasPriceResult,
                     gasLimit = gasLimit,
-                    decimals = cryptoCurrency.decimals,
+                    decimals = blockchain.decimals(),
                     blockchain = blockchain,
                 )
 
@@ -54,7 +54,7 @@ class GetEthSpecificFeeUseCase(
                 val normalFee = getEthLegacyFee(
                     gasPrice = normalGasPrice,
                     gasLimit = gasLimit,
-                    decimals = cryptoCurrency.decimals,
+                    decimals = blockchain.decimals(),
                     blockchain = blockchain,
                 )
 
@@ -64,7 +64,7 @@ class GetEthSpecificFeeUseCase(
                 val priorityFee = getEthLegacyFee(
                     gasPrice = priorityGasPrice,
                     gasLimit = gasLimit,
-                    decimals = cryptoCurrency.decimals,
+                    decimals = blockchain.decimals(),
                     blockchain = blockchain,
                 )
 
