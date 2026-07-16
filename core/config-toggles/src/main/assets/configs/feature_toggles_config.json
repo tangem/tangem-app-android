@@ -24,28 +24,8 @@
         "version": "6.0"
     },
     {
-        "name": "DYNAMIC_ADDRESSES_ENABLED",
-        "version": "5.39"
-    },
-    {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "ASSETS_DISCOVERY_ENABLED",
-        "version": "5.38"
-    },
-    {
-        "name": "SOLANA_TX_HISTORY_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "HEDERA_ERC20_ENABLED",
-        "version": "5.37"
     },
     {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
@@ -76,24 +56,8 @@
         "version": "6.0"
     },
     {
-        "name": "AND_15310_ADD_FUNDS_STAGE1",
-        "version": "5.39"
-    },
-    {
         "name": "TWI_1377_MANAGE_FUNDS",
         "version": "6.0"
-    },
-    {
-        "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED",
-        "version": "5.39"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
