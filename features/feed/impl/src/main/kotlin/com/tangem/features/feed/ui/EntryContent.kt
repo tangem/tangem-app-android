@@ -3,7 +3,6 @@ package com.tangem.features.feed.ui
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,9 +21,7 @@ import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.feed.components.FeedEntryChildFactory
 import com.tangem.features.feed.ui.utils.FadeConstants.BASE_FADE_LEVEL
 import com.tangem.features.feed.ui.utils.contentFeedEntryStackAnimation
@@ -51,82 +48,11 @@ internal fun EntryContent(
     isOpenedInBottomSheet: Boolean,
 ) {
     CompositionLocalProvider(LocalIsOpenedInBottomSheet provides isOpenedInBottomSheet) {
-        if (LocalRedesignEnabled.current) {
-            EntryContentV2(
-                bottomSheetState = bottomSheetState,
-                stackState = stackState,
-                onHeaderSizeChange = onHeaderSizeChange,
-                onExpandSheet = onExpandSheet,
-            )
-        } else {
-            EntryContentV1(
-                bottomSheetState = bottomSheetState,
-                stackState = stackState,
-                onHeaderSizeChange = onHeaderSizeChange,
-                onExpandSheet = onExpandSheet,
-            )
-        }
-    }
-}
-
-@Composable
-private fun EntryContentV1(
-    bottomSheetState: State<BottomSheetState>,
-    stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
-    onHeaderSizeChange: (Dp) -> Unit,
-    onExpandSheet: () -> Unit,
-) {
-    val density = LocalDensity.current
-    val background = LocalMainBottomSheetColor.current.value
-    val stackAnimation = remember { contentFeedEntryStackAnimation() }
-    val isOpenedInBottomSheet = LocalIsOpenedInBottomSheet.current
-
-    Surface(contentColor = background) {
-        Scaffold(
-            containerColor = background,
-            contentWindowInsets = WindowInsetsZero,
-            topBar = {
-                Box(
-                    modifier = Modifier
-                        .then(
-                            if (!isOpenedInBottomSheet) {
-                                Modifier.statusBarsPadding()
-                            } else {
-                                Modifier
-                            },
-                        )
-                        .onGloballyPositioned { coordinates ->
-                            if (coordinates.size.height > 0) {
-                                with(density) {
-                                    onHeaderSizeChange(coordinates.size.height.toDp())
-                                }
-                            }
-                        },
-                ) {
-                    Children(
-                        stack = stackState.value,
-                        animation = stackAnimation,
-                    ) { child ->
-                        child.instance.Title(bottomSheetState)
-                    }
-                    CollapsedTitleClickOverlay(
-                        bottomSheetState = bottomSheetState,
-                        onExpandSheet = onExpandSheet,
-                    )
-                }
-            },
-            content = { contentPadding ->
-                Children(
-                    stack = stackState.value,
-                    animation = stackAnimation,
-                ) { child ->
-                    child.instance.Content(
-                        modifier = Modifier.padding(contentPadding),
-                        bottomSheetState = bottomSheetState,
-                        contentPadding = PaddingValues(),
-                    )
-                }
-            },
+        EntryContentV2(
+            bottomSheetState = bottomSheetState,
+            stackState = stackState,
+            onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
         )
     }
 }
