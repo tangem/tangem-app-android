@@ -404,8 +404,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         }
         val isBalanceWithoutFeeEnough = isBalanceEnough(fromSwapCurrencyStatus, amount, null)
-        val isIntegratedApproveActive = swapFeatureToggles.isSwapIntegratedApproveEnabled &&
-            !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
+        val isIntegratedApproveActive = !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
 
         val isAllowanceSatisfied = if (isIntegratedApproveActive) {
             allowanceInfo !is AllowanceInfo.ResetNeeded
@@ -1973,7 +1972,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
                     fromSwapCurrencyStatus.currency is CryptoCurrency.Token
                 val isIntegratedApprovalNeeded = !isYieldSwap &&
-                    swapFeatureToggles.isSwapIntegratedApproveEnabled &&
                     allowanceInfo is AllowanceInfo.NotEnough &&
                     !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, spenderAddress)
                 swapState.copy(
@@ -2120,7 +2118,6 @@ internal class SwapInteractorImpl @Inject constructor(
         ).getOrNull() ?: return quotesLoadedState.copy(permissionState = PermissionDataState.Empty)
 
         val isIntegratedApprovalNeeded = !isYieldSwap &&
-            swapFeatureToggles.isSwapIntegratedApproveEnabled &&
             allowanceInfo is AllowanceInfo.NotEnough &&
             !hasIntegratedApprovalFallenBack(fromSwapCurrencyStatus, quoteModel.allowanceContract)
         return quotesLoadedState.copy(

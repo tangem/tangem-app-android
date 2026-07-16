@@ -67,7 +67,6 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.logging.TangemLogger
@@ -125,7 +124,6 @@ internal class WalletModel @Inject constructor(
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val addressBookFeatureToggles: AddressBookFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
@@ -577,7 +575,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
@@ -624,7 +621,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
     }
@@ -646,7 +642,6 @@ internal class WalletModel @Inject constructor(
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
-                    isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
                 ),
             )
         }
@@ -663,7 +658,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
@@ -725,7 +719,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
 
