@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -19,7 +18,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +45,6 @@ internal class WalletClickIntents @Inject constructor(
     private val onrampStatusFactory: OnrampStatusFactory,
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
@@ -94,24 +91,9 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onRefreshSwipe(showRefreshState: Boolean) {
-        if (designFeatureToggles.isRedesignEnabled) {
-            when (stateController.getSelectedWalletUM()) {
-                is WalletUM.Content -> refreshMultiCurrencyContent(showRefreshState)
-                is WalletUM.Locked -> Unit
-            }
-        } else {
-            when (stateController.getSelectedWallet()) {
-                is WalletState.MultiCurrency.Content -> {
-                    refreshMultiCurrencyContent(showRefreshState)
-                }
-                is WalletState.SingleCurrency.Content,
-                -> {
-                    refreshSingleCurrencyContent(showRefreshState)
-                }
-                is WalletState.MultiCurrency.Locked,
-                is WalletState.SingleCurrency.Locked,
-                -> Unit
-            }
+        when (stateController.getSelectedWalletUM()) {
+            is WalletUM.Content -> refreshMultiCurrencyContent(showRefreshState)
+            is WalletUM.Locked -> Unit
         }
     }
 
