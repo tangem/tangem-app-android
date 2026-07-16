@@ -40,24 +40,8 @@
         "version": "undefined"
     },
     {
-        "name": "AND_15207_SWAP_SWITCH_TO_TRANSFER_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15120_SWAP_INTEGRATED_APPROVE",
-        "version": "6.0"
-    },
-    {
         "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "TWI_1377_MANAGE_FUNDS",
-        "version": "6.0"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
@@ -66,18 +50,6 @@
     {
         "name": "AND_15482_SURVEYSPARROW_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "AND_15258_QUICK_TOP_UP_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15368_VISA_PAY_REDESIGN",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15364_VISA_PAY_CARD_CLOSE",
-        "version": "6.0"
     },
     {
         "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
@@ -96,28 +68,12 @@
         "version": "undefined"
     },
     {
-        "name": "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15235_VISA_MULTIPLE_CARDS",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15715_SWAP_BEST_DEX_RATE_ENABLED",
-        "version": "6.0"
-    },
-    {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED",
-        "version": "6.0"
     },
     {
         "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
