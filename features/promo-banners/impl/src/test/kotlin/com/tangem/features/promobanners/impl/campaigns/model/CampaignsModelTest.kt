@@ -42,7 +42,6 @@ internal class CampaignsModelTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
-    // Real converter: "1" -> WhaleSwapCashback, "2" -> ReactivationCashback, else null.
     private val campaignIdConverter = CampaignIdConverter()
 
     @BeforeEach
@@ -82,7 +81,9 @@ internal class CampaignsModelTest {
         // Arrange
         coEvery { getPromoCampaignStateUseCase.invoke(any(), any(), any()) } returns
             Either.Left(RuntimeException("network"))
-        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "1", userWalletId = userWalletId)))
+        val model = createModel(
+            campaignFlow = flowOf(CampaignRequest(campaignId = "whale-swap-cashback", userWalletId = userWalletId)),
+        )
 
         // Act
         advanceUntilIdle()
@@ -180,8 +181,8 @@ internal class CampaignsModelTest {
     }
 
     private fun provideKnownCampaignModels() = listOf(
-        KnownCampaignModel(campaignId = "1", expectedPromoId = PromoCampaignId.WhaleSwapCashback),
-        KnownCampaignModel(campaignId = "2", expectedPromoId = PromoCampaignId.ReactivationCashback),
+        KnownCampaignModel(campaignId = "whale-swap-cashback", expectedPromoId = PromoCampaignId.WhaleSwapCashback),
+        KnownCampaignModel(campaignId = "reactivation-cashback", expectedPromoId = PromoCampaignId.ReactivationCashback),
     )
 
     internal data class KnownCampaignModel(
