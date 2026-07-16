@@ -21,8 +21,11 @@ internal sealed class MarketChartUM(
         val assetCount: Int = donutChart.donutSegmentList.size
     }
 
-    data object NoData : MarketChartUM(
-        donutChart = DonutChartUM.NoData,
+    data class NoData(
+        val title: TextReference,
+        private val donutText: TextReference,
+    ) : MarketChartUM(
+        donutChart = DonutChartUM.NoData(title = donutText),
         aiInsight = AiInsightUM.Hide,
     )
 }
@@ -36,7 +39,9 @@ internal sealed class DonutChartUM(
         override val donutSegmentList: ImmutableList<DonutSegmentUM>,
     ) : DonutChartUM(donutSegmentList = donutSegmentList)
 
-    data object NoData : DonutChartUM(donutSegmentList = persistentListOf())
+    data class NoData(
+        val title: TextReference,
+    ) : DonutChartUM(donutSegmentList = persistentListOf())
 }
 
 @Immutable
