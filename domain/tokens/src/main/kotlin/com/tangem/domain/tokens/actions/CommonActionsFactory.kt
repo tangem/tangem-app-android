@@ -50,14 +50,6 @@ internal class CommonActionsFactory(
             null
         }
 
-        val onrampUnavailabilityReasonDeferred = async {
-            getOnrampUnavailabilityReason(
-                userWallet = userWallet,
-                currency = cryptoCurrencyStatus.currency,
-                requirementsDeferred = requirementsDeferred,
-            )
-        }
-
         val sendUnavailabilityReasonDeferred = async {
             getSendUnavailabilityReason(userWalletId = userWallet.walletId, cryptoCurrencyStatus = cryptoCurrencyStatus)
         }
@@ -99,12 +91,17 @@ internal class CommonActionsFactory(
             // endregion
 
             // region Buy
-            addBuyAction(reason = onrampUnavailabilityReasonDeferred.await())
+            addBuyAction(
+                reason = getBuyUnavailabilityReason(
+                    userWallet = userWallet,
+                    currency = cryptoCurrencyStatus.currency,
+                ),
+            )
             // endregion
 
             // region Sell
             val sellUnavailabilityReason = getSellUnavailabilityReason(
-                userWalletId = userWallet.walletId,
+                userWallet = userWallet,
                 status = cryptoCurrencyStatus,
                 sendUnavailabilityReason = sendUnavailabilityReason,
             )

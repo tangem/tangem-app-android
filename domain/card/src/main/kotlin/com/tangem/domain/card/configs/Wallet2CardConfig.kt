@@ -68,6 +68,7 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.BitcoinCashTestnet -> EllipticCurve.Secp256k1
             Blockchain.Cardano -> EllipticCurve.Ed25519
             Blockchain.Cosmos -> EllipticCurve.Secp256k1
+            Blockchain.Gonka -> EllipticCurve.Secp256k1
             Blockchain.CosmosTestnet -> EllipticCurve.Secp256k1
             Blockchain.Dogecoin -> EllipticCurve.Secp256k1
             Blockchain.Ducatus -> EllipticCurve.Secp256k1
