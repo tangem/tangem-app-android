@@ -72,6 +72,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.staking.FetchStakingOptionsUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
@@ -143,6 +144,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
+    private val fetchStakingOptionsUseCase: FetchStakingOptionsUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
@@ -1037,6 +1039,7 @@ internal class TokenDetailsModel @Inject constructor(
                     updateTxHistory()
                     expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
                 },
+                async { fetchStakingOptionsUseCase() },
             ).awaitAll()
             uiState.value = stateFactory.getRefreshedState()
             redesignStateController.update { state ->
@@ -1259,6 +1262,10 @@ internal class TokenDetailsModel @Inject constructor(
                 tokenAction = TokenAction.Info,
             ),
         )
+    }
+
+    override fun onStakingRegionUnavailableClick() {
+        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.RegionUnavailable)
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
