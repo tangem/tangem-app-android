@@ -64,7 +64,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
@@ -126,7 +125,6 @@ internal class WalletModel @Inject constructor(
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val addressBookFeatureToggles: AddressBookFeatureToggles,
@@ -579,7 +577,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                 isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
@@ -627,7 +624,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                 isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
@@ -650,7 +646,6 @@ internal class WalletModel @Inject constructor(
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
-                    isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                     isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
                 ),
             )
@@ -668,7 +663,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                 isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
@@ -731,7 +725,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                 isManageFundsEnabled = walletFeatureToggles.isManageFundsEnabled,
             ),
         )
@@ -888,9 +881,7 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun applyPendingAssetsDiscovery() {
-        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
-            startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
-        }
+        startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
     }
 
     private fun syncAddressBooksIfNeeded() {
