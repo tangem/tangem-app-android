@@ -3,6 +3,7 @@ package com.tangem.common.ui.markets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -73,6 +74,7 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
                 tangemIconUM = TangemIconUM.Url(model.iconUrl, fallbackRes = R.drawable.ic_custom_token_44),
                 modifier = Modifier
                     .size(TangemTheme.dimens2.x10)
+                    .clip(RoundedCornerShape(8.dp))
                     .layoutId(layoutId = TangemRowLayoutId.HEAD),
             )
 

@@ -70,6 +70,11 @@ internal class MarketDetailsAnalyticsEvent(
             event = "Button - Share",
             params = mapOf("Token" to token.symbol),
         )
+
+        fun addFundsClicked() = MarketDetailsAnalyticsEvent(
+            event = "Button - Add Funds",
+            params = mapOf("Token" to token.symbol),
+        )
     }
 
     enum class IntervalType(val source: String) {

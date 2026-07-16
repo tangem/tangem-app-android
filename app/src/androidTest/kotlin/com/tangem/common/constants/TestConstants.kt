@@ -48,6 +48,10 @@ object TestConstants {
     const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
     const val REFERRAL_API_SCENARIO = "referral_api"
     const val QUOTES_API_SCENARIO = "quotes_api"
+    const val CREATE_USER_WALLET_API_SCENARIO = "create_user_wallet_api"
+    const val WALLET_TOKENS_API_SCENARIO = "wallet_tokens_api"
+    const val MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO = "moralis_evm_token_balances_api"
+    const val PROVIDERS_API_SCENARIO = "networks_providers"
 
     const val SEED_PHRASE_12 = "they cram join fantasy unfair observe true theory buffalo bus exchange walk"
     const val SEED_PHRASE_15 = "genuine try deer upset connect sausage diary rule price shallow fit faculty leopard " +
@@ -59,6 +63,9 @@ object TestConstants {
     const val SEED_PHRASE_24 = "force visit fresh brown razor target ill scissors figure cave feel genre cargo category " +
         "bread much nature basic fun iron benefit egg error prosper"
     const val SVS_SEED_PHRASE_12 = "diagram thunder merit soup muscle amused refuse usual ring couch popular wash"
+
+    const val SEED_PHRASE_HAPPY_PATH =
+        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
     const val TANGEM_PAY_ELIGIBILITY_SCENARIO = "tangem_pay_eligibility"
     const val TANGEM_PAY_ACCESS_CODE = "517384"

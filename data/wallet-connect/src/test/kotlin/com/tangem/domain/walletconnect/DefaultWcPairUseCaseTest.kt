@@ -23,12 +23,14 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 internal class DefaultWcPairUseCaseTest {
 
@@ -119,7 +121,7 @@ internal class DefaultWcPairUseCaseTest {
         pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
-    @Before
+    @BeforeEach
     fun setup() {
         coEvery { associateNetworksDelegate.associateAccounts(sdkProposal) } returns mapOf()
         coEvery {
@@ -286,5 +288,73 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(errorResult, awaitItem())
             awaitComplete()
         }
+    }
+
+    @Test
+    fun `pair treats invalid validation with scheme-less metadata url matching origin as verified`() = runTest {
+        val schemelessProposal = sdkProposal.copy(url = "app.eigenlayer.xyz")
+        val invalidVerifyContext = sdkVerifyContext.copy(
+            origin = "https://app.eigenlayer.xyz",
+            validation = Wallet.Model.Validation.INVALID,
+        )
+        coEvery { sdkDelegate.pair(url) } returns (schemelessProposal to invalidVerifyContext).right()
+        coEvery { associateNetworksDelegate.associateAccounts(schemelessProposal) } returns mapOf()
+        coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
+
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
+            assertEquals(loading, awaitItem())
+            coVerifyOrder {
+                sdkDelegate.pair(url)
+                blockAidVerifier.verifyDApp(DAppData(invalidVerifyContext.origin))
+            }
+            val proposal = assertInstanceOf(WcPairState.Proposal::class.java, awaitItem())
+            assertEquals(CheckDAppResult.SAFE, proposal.dAppSession.securityStatus)
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `pair treats invalid validation with case-differing scheme-less metadata url as verified`() = runTest {
+        val schemelessProposal = sdkProposal.copy(url = "APP.EigenLayer.xyz")
+        val invalidVerifyContext = sdkVerifyContext.copy(
+            origin = "HTTPS://app.eigenlayer.xyz",
+            validation = Wallet.Model.Validation.INVALID,
+        )
+        coEvery { sdkDelegate.pair(url) } returns (schemelessProposal to invalidVerifyContext).right()
+        coEvery { associateNetworksDelegate.associateAccounts(schemelessProposal) } returns mapOf()
+        coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
+
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
+            assertEquals(loading, awaitItem())
+            coVerifyOrder {
+                sdkDelegate.pair(url)
+                blockAidVerifier.verifyDApp(DAppData(invalidVerifyContext.origin))
+            }
+            val proposal = assertInstanceOf(WcPairState.Proposal::class.java, awaitItem())
+            assertEquals(CheckDAppResult.SAFE, proposal.dAppSession.securityStatus)
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `pair keeps genuine invalid domain unsafe and skips blockaid`() = runTest {
+        val proposal = sdkProposal.copy(url = "https://legit-dapp.example/")
+        val invalidVerifyContext = sdkVerifyContext.copy(
+            origin = "https://phishing.example/",
+            validation = Wallet.Model.Validation.INVALID,
+        )
+        coEvery { sdkDelegate.pair(url) } returns (proposal to invalidVerifyContext).right()
+        coEvery { associateNetworksDelegate.associateAccounts(proposal) } returns mapOf()
+
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
+            assertEquals(loading, awaitItem())
+            val state = assertInstanceOf(WcPairState.Proposal::class.java, awaitItem())
+            assertEquals(CheckDAppResult.UNSAFE, state.dAppSession.securityStatus)
+            expectNoEvents()
+        }
+        coVerify(exactly = 0) { blockAidVerifier.verifyDApp(any()) }
     }
 }

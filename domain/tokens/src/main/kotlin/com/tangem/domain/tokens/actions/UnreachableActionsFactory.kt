@@ -35,14 +35,6 @@ internal class UnreachableActionsFactory(
                 null
             }
 
-            val onrampUnavailabilityReasonDeferred = async {
-                getOnrampUnavailabilityReason(
-                    userWallet = userWallet,
-                    currency = cryptoCurrencyStatus.currency,
-                    requirementsDeferred = requirementsDeferred,
-                )
-            }
-
             val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
             // endregion
 
@@ -52,7 +44,12 @@ internal class UnreachableActionsFactory(
                 // endregion
 
                 // region Buy
-                addBuyAction(reason = onrampUnavailabilityReasonDeferred.await())
+                addBuyAction(
+                    reason = getBuyUnavailabilityReason(
+                        userWallet = userWallet,
+                        currency = cryptoCurrencyStatus.currency,
+                    ),
+                )
                 // endregion
 
                 // region Receive

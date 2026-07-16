@@ -1,9 +1,9 @@
 package com.tangem.data.staking.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
@@ -13,7 +13,7 @@ import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]
@@ -148,8 +148,10 @@ internal class StakingBalancesStoreUpdateMethodsTest {
 
         store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
+        // storeError keeps the existing (CACHE) balance and downgrades its source to ONLY_CACHE.
+        // toDomain(ONLY_CACHE) can't express this: the converter maps any non-CACHE source to ACTUAL.
         val runtimeExpected = mapOf(
-            userWalletId to setOf(wrapper.toDomain(source = StatusSource.ONLY_CACHE)),
+            userWalletId to setOf(wrapper.toDomain(source = StatusSource.CACHE).copySealed(source = StatusSource.ONLY_CACHE)),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)

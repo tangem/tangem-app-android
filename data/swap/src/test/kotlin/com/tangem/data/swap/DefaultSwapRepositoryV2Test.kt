@@ -24,6 +24,8 @@ import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.models.SwapStatus
 import com.tangem.domain.swap.models.SwapTxType
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -43,6 +45,9 @@ internal class DefaultSwapRepositoryV2Test {
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val moshi: Moshi = Moshi.Builder().build()
+    private val featureTogglesManager: FeatureTogglesManager = mockk {
+        every { isFeatureEnabled(any()) } returns false
+    }
 
     private val repository = DefaultSwapRepositoryV2(
         tangemExpressApi = tangemExpressApi,
@@ -52,6 +57,7 @@ internal class DefaultSwapRepositoryV2Test {
         dataSignatureVerifier = dataSignatureVerifier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+        featureTogglesManager = featureTogglesManager,
         moshi = moshi,
     )
 
@@ -64,7 +70,9 @@ internal class DefaultSwapRepositoryV2Test {
             dataSignatureVerifier,
             singleQuoteStatusSupplier,
             singleQuoteStatusFetcher,
+            featureTogglesManager,
         )
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
     }
 
     // region getPairs(SwapCurrencyStatus, SwapCurrencyStatus)
@@ -441,35 +449,6 @@ internal class DefaultSwapRepositoryV2Test {
 
     // endregion
 
-    // region getExchangeStatus
-
-    @Test
-    fun `getExchangeStatus returns converted status model`() = runTest {
-        // Arrange
-        val statusResponse = ExchangeStatusResponse(
-            providerId = PROVIDER_ID,
-            status = ExchangeStatus.Finished,
-            externalTxId = "ext-tx-1",
-            externalTxUrl = "https://example.com/tx/1",
-            error = null,
-        )
-
-        coEvery {
-            tangemExpressApi.getExchangeStatus(any(), any(), any())
-        } returns ApiResponse.Success(statusResponse)
-
-        // Act
-        val result = repository.getExchangeStatus(userWallet = userWallet, txId = "tx-123")
-
-        // Assert
-        assertThat(result.providerId).isEqualTo(PROVIDER_ID)
-        assertThat(result.status).isEqualTo(SwapStatus.Finished)
-        assertThat(result.txId).isEqualTo("ext-tx-1")
-        assertThat(result.txExternalUrl).isEqualTo("https://example.com/tx/1")
-    }
-
-    // endregion
-
     // region swapTransactionSent
 
     @Test
@@ -511,8 +490,9 @@ internal class DefaultSwapRepositoryV2Test {
     // region filterYieldSupplyProvider
 
     @Test
-    fun `getPairs filters out DEX providers when yield supply is active`() = runTest {
+    fun `getPairs filters out DEX providers when yield supply is active and flag is off`() = runTest {
         // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns false
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(
@@ -556,6 +536,54 @@ internal class DefaultSwapRepositoryV2Test {
         val providers = result.first().providers
         assertThat(providers).hasSize(1)
         assertThat(providers.first().type).isEqualTo(ExpressProviderType.CEX)
+    }
+
+    @Test
+    fun `getPairs keeps DEX providers when yield supply is active and flag is on`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
+        val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
+        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
+        val primarySwapCurrencyStatus = SwapCurrencyStatus(
+            userWallet = userWallet,
+            status = primaryStatus,
+            account = mockk(),
+        )
+        val secondarySwapCurrencyStatus = SwapCurrencyStatus(
+            userWallet = userWallet,
+            status = secondaryStatus,
+            account = mockk(),
+        )
+
+        val swapPair = SwapPair(
+            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
+            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
+            providers = listOf(
+                SwapPairProvider(providerId = PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+            ),
+        )
+
+        coEvery {
+            tangemExpressApi.getPairs(any(), any(), any())
+        } returns ApiResponse.Success(listOf(swapPair))
+
+        coEvery {
+            expressRepository.getProviders(any(), any())
+        } returns listOf(dexProvider, cexProvider)
+
+        // Act
+        val result = repository.getPairs(
+            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
+            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
+            filterProviderTypes = emptyList(),
+            swapTxType = SwapTxType.Swap,
+        )
+
+        // Assert — both providers should remain
+        assertThat(result).hasSize(2)
+        val providers = result.first().providers
+        assertThat(providers).hasSize(2)
     }
 
     // endregion

@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
@@ -36,7 +37,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.ui.search.state.*
+import com.tangem.features.feed.ui.feed.components.MarketBlock
+import com.tangem.features.feed.ui.feed.state.MarketChartUM
+import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
+import com.tangem.features.feed.ui.search.state.SearchCallbacks
+import com.tangem.features.feed.ui.search.state.SearchContentUM
+import com.tangem.features.feed.ui.search.state.TextHintItemUM
 import kotlinx.collections.immutable.ImmutableList
 
 private const val PLACEHOLDER_COUNT = 10
@@ -46,6 +52,7 @@ private const val USER_ASSETS_LIMIT = 3
 @Composable
 internal fun SearchContent(
     content: SearchContentUM,
+    topMarkets: MarketChartUM,
     searchCallbacks: SearchCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -85,12 +92,16 @@ internal fun SearchContent(
     ) {
         when (content) {
             is SearchContentUM.InitialEmpty -> Unit
-            is SearchContentUM.History -> searchHistoryItems(
-                history = content,
-                onClearAllClick = searchCallbacks.onClearHintsClick,
-                onHintClick = searchCallbacks.onTextHintClick,
-                onHistoryTokenClick = searchCallbacks.onHistoryTokenClick,
-            )
+            is SearchContentUM.History -> if (content.textHints.isEmpty() && content.recentTokens.isEmpty()) {
+                topMarketsBlock(topMarkets, searchCallbacks)
+            } else {
+                searchHistoryItems(
+                    history = content,
+                    onClearAllClick = searchCallbacks.onClearHintsClick,
+                    onHintClick = searchCallbacks.onTextHintClick,
+                    onHistoryTokenClick = searchCallbacks.onHistoryTokenClick,
+                )
+            }
             is SearchContentUM.Results -> searchResultsItems(
                 results = content,
                 isUserAssetsExpanded = isUserAssetsExpanded,
@@ -114,18 +125,31 @@ internal fun SearchContent(
     }
 }
 
+private fun LazyListScope.topMarketsBlock(topMarkets: MarketChartUM, searchCallbacks: SearchCallbacks) {
+    item(key = "top_markets") {
+        MarketBlock(
+            marketChart = topMarkets,
+            onSeeAllClick = searchCallbacks.onTopMarketSeeAllClick,
+            onItemClick = searchCallbacks.onTopMarketItemClick,
+        )
+    }
+}
+
 private fun LazyListScope.searchHistoryItems(
     history: SearchContentUM.History,
     onClearAllClick: (() -> Unit),
     onHintClick: (String) -> Unit,
     onHistoryTokenClick: (MarketsListItemUM) -> Unit,
 ) {
-    if (!history.textHints.isEmpty() || !history.recentTokens.isEmpty()) {
-        item(key = "recents") {
+    if (!history.textHints.isEmpty()) {
+        item(key = "recent searches") {
             SectionHeader(
                 title = stringResourceSafe(R.string.markets_search_hint_header),
                 onClearAllClick = onClearAllClick,
             )
+        }
+        item {
+            SpacerH(12.dp)
         }
     }
     itemsIndexed(
@@ -141,7 +165,15 @@ private fun LazyListScope.searchHistoryItems(
         }
     }
     item {
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(24.dp)
+    }
+    if (!history.recentTokens.isEmpty()) {
+        item(key = "recent tokens") {
+            SectionHeader(title = stringResourceSafe(R.string.markets_search_recent_tokens_header))
+        }
+        item {
+            SpacerH(12.dp)
+        }
     }
     items(
         items = history.recentTokens,
@@ -385,6 +417,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
         Text(
             text = stringResourceSafe(R.string.markets_search_see_tokens_under_100k),
             style = TangemTheme.typography2.subheadlineMedium14,
+            textAlign = TextAlign.Center,
             color = TangemTheme.colors2.text.neutral.secondary,
         )
         TangemButton(

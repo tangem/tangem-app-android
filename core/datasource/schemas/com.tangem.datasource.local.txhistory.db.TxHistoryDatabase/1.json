@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "aafa8b51b5a5a32d0ec2b0720cec6c1e",
+    "identityHash": "442ac578743a8b624777711cf49c77e2",
     "entities": [
       {
         "tableName": "express_provider",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `icon_url` TEXT NOT NULL, `provider_url` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `image_large` TEXT NOT NULL, `image_small` TEXT NOT NULL, `terms_of_use` TEXT, `privacy_policy` TEXT, `is_recommended` INTEGER NOT NULL, `slippage` TEXT, `is_exchange_only_within_single_address` INTEGER NOT NULL, `is_extra_id_supported` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -21,15 +21,54 @@
             "notNull": true
           },
           {
-            "fieldPath": "iconUrl",
-            "columnName": "icon_url",
+            "fieldPath": "type",
+            "columnName": "type",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "providerUrl",
-            "columnName": "provider_url",
+            "fieldPath": "imageLarge",
+            "columnName": "image_large",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imageSmall",
+            "columnName": "image_small",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "termsOfUse",
+            "columnName": "terms_of_use",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "privacyPolicy",
+            "columnName": "privacy_policy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isRecommended",
+            "columnName": "is_recommended",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slippage",
+            "columnName": "slippage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isExchangeOnlyWithinSingleAddress",
+            "columnName": "is_exchange_only_within_single_address",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isExtraIdSupported",
+            "columnName": "is_extra_id_supported",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -38,13 +77,11 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       },
       {
         "tableName": "express_exchange",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `status` TEXT NOT NULL, `to_is_actual` INTEGER NOT NULL DEFAULT 0, `payin_hash` TEXT, `payout_hash` TEXT, `external_tx_id` TEXT, `external_tx_url` TEXT, `rate_type` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `from_network` TEXT NOT NULL, `from_token_id` TEXT, `from_raw_amount` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `to_network` TEXT NOT NULL, `to_token_id` TEXT, `to_raw_amount` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `refund_network` TEXT, `refund_token_id` TEXT, `refund_raw_amount` TEXT, `refund_decimals` INTEGER, `refund_hash` TEXT, PRIMARY KEY(`tx_id`), FOREIGN KEY(`provider_id`) REFERENCES `express_provider`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
         "fields": [
           {
             "fieldPath": "txId",
@@ -65,41 +102,36 @@
             "notNull": true
           },
           {
-            "fieldPath": "status",
-            "columnName": "status",
+            "fieldPath": "fromAddress",
+            "columnName": "from_address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payinAddress",
+            "columnName": "payin_address",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "toIsActual",
-            "columnName": "to_is_actual",
-            "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "0"
+            "fieldPath": "payinExtraId",
+            "columnName": "payin_extra_id",
+            "affinity": "TEXT"
           },
           {
-            "fieldPath": "payinHash",
-            "columnName": "payin_hash",
+            "fieldPath": "payoutAddress",
+            "columnName": "payout_address",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
-            "fieldPath": "payoutHash",
-            "columnName": "payout_hash",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "refundAddress",
+            "columnName": "refund_address",
+            "affinity": "TEXT"
           },
           {
-            "fieldPath": "externalTxId",
-            "columnName": "external_tx_id",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "externalTxUrl",
-            "columnName": "external_tx_url",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "refundExtraId",
+            "columnName": "refund_extra_id",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "rateType",
@@ -108,32 +140,72 @@
             "notNull": true
           },
           {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "externalTxId",
+            "columnName": "external_tx_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "externalTxUrl",
+            "columnName": "external_tx_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payinHash",
+            "columnName": "payin_hash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payoutHash",
+            "columnName": "payout_hash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "refundNetwork",
+            "columnName": "refund_network",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "refundContractAddress",
+            "columnName": "refund_contract_address",
+            "affinity": "TEXT"
+          },
+          {
             "fieldPath": "createdAt",
             "columnName": "created_at",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "updatedAt",
             "columnName": "updated_at",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payTill",
+            "columnName": "pay_till",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "averageDuration",
+            "columnName": "average_duration",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "from.contractAddress",
+            "columnName": "from_contract_address",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "from.network",
             "columnName": "from_network",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "from.tokenId",
-            "columnName": "from_token_id",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "from.rawAmount",
-            "columnName": "from_raw_amount",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -144,20 +216,25 @@
             "notNull": true
           },
           {
-            "fieldPath": "to.network",
-            "columnName": "to_network",
+            "fieldPath": "from.amount",
+            "columnName": "from_amount",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "to.tokenId",
-            "columnName": "to_token_id",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "from.actualAmount",
+            "columnName": "from_actual_amount",
+            "affinity": "TEXT"
           },
           {
-            "fieldPath": "to.rawAmount",
-            "columnName": "to_raw_amount",
+            "fieldPath": "to.contractAddress",
+            "columnName": "to_contract_address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.network",
+            "columnName": "to_network",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -168,34 +245,15 @@
             "notNull": true
           },
           {
-            "fieldPath": "refund.network",
-            "columnName": "refund_network",
+            "fieldPath": "to.amount",
+            "columnName": "to_amount",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
-            "fieldPath": "refund.tokenId",
-            "columnName": "refund_token_id",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "refund.rawAmount",
-            "columnName": "refund_raw_amount",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "refund.decimals",
-            "columnName": "refund_decimals",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "refund.hash",
-            "columnName": "refund_hash",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "to.actualAmount",
+            "columnName": "to_actual_amount",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -206,64 +264,33 @@
         },
         "indices": [
           {
-            "name": "index_express_exchange_owner_address_from_network_updated_at",
+            "name": "index_express_exchange_owner_address_from_network_from_contract_address_created_at",
             "unique": false,
             "columnNames": [
               "owner_address",
               "from_network",
-              "updated_at"
+              "from_contract_address",
+              "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_from_network_updated_at` ON `${TABLE_NAME}` (`owner_address`, `from_network`, `updated_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_from_network_from_contract_address_created_at` ON `${TABLE_NAME}` (`owner_address`, `from_network`, `from_contract_address`, `created_at`)"
           },
           {
-            "name": "index_express_exchange_owner_address_payin_hash",
+            "name": "index_express_exchange_to_network_to_contract_address_created_at",
             "unique": false,
             "columnNames": [
-              "owner_address",
-              "payin_hash"
+              "to_network",
+              "to_contract_address",
+              "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_payin_hash` ON `${TABLE_NAME}` (`owner_address`, `payin_hash`)"
-          },
-          {
-            "name": "index_express_exchange_owner_address_payout_hash",
-            "unique": false,
-            "columnNames": [
-              "owner_address",
-              "payout_hash"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_payout_hash` ON `${TABLE_NAME}` (`owner_address`, `payout_hash`)"
-          },
-          {
-            "name": "index_express_exchange_owner_address_refund_hash",
-            "unique": false,
-            "columnNames": [
-              "owner_address",
-              "refund_hash"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_refund_hash` ON `${TABLE_NAME}` (`owner_address`, `refund_hash`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "express_provider",
-            "onDelete": "RESTRICT",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "provider_id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`to_network`, `to_contract_address`, `created_at`)"
           }
         ]
       },
       {
         "tableName": "express_onramp",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `status` TEXT NOT NULL, `from_currency_code` TEXT NOT NULL, `from_amount` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_token_id` TEXT, `to_expected_raw_amount` TEXT NOT NULL, `to_actual_raw_amount` TEXT, `to_decimals` INTEGER NOT NULL, `payout_hash` TEXT, `external_tx_id` TEXT, `external_tx_url` TEXT, `rate_type` TEXT NOT NULL, `fail_reason` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `refund_currency_code` TEXT, `refund_amount` TEXT, PRIMARY KEY(`tx_id`), FOREIGN KEY(`provider_id`) REFERENCES `express_provider`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `payout_address` TEXT NOT NULL, `status` TEXT NOT NULL, `fail_reason` TEXT, `external_tx_id` TEXT, `external_tx_url` TEXT, `payout_hash` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `from_currency_code` TEXT NOT NULL, `from_amount` TEXT NOT NULL, `from_precision` INTEGER NOT NULL, `payment_method` TEXT NOT NULL, `country_code` TEXT NOT NULL, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
         "fields": [
           {
             "fieldPath": "txId",
@@ -284,8 +311,46 @@
             "notNull": true
           },
           {
+            "fieldPath": "payoutAddress",
+            "columnName": "payout_address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "status",
             "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "failReason",
+            "columnName": "fail_reason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "externalTxId",
+            "columnName": "external_tx_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "externalTxUrl",
+            "columnName": "external_tx_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payoutHash",
+            "columnName": "payout_hash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -302,88 +367,50 @@
             "notNull": true
           },
           {
-            "fieldPath": "toNetwork",
+            "fieldPath": "fromPrecision",
+            "columnName": "from_precision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentMethod",
+            "columnName": "payment_method",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "countryCode",
+            "columnName": "country_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.contractAddress",
+            "columnName": "to_contract_address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.network",
             "columnName": "to_network",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "toTokenId",
-            "columnName": "to_token_id",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "toExpectedRawAmount",
-            "columnName": "to_expected_raw_amount",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "toActualRawAmount",
-            "columnName": "to_actual_raw_amount",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "toDecimals",
+            "fieldPath": "to.decimals",
             "columnName": "to_decimals",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "payoutHash",
-            "columnName": "payout_hash",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "to.amount",
+            "columnName": "to_amount",
+            "affinity": "TEXT"
           },
           {
-            "fieldPath": "externalTxId",
-            "columnName": "external_tx_id",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "externalTxUrl",
-            "columnName": "external_tx_url",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "rateType",
-            "columnName": "rate_type",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "failReason",
-            "columnName": "fail_reason",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "createdAt",
-            "columnName": "created_at",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "updatedAt",
-            "columnName": "updated_at",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "refund.currencyCode",
-            "columnName": "refund_currency_code",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "refund.amount",
-            "columnName": "refund_amount",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "to.actualAmount",
+            "columnName": "to_actual_amount",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -394,46 +421,64 @@
         },
         "indices": [
           {
-            "name": "index_express_onramp_owner_address_to_network_updated_at",
+            "name": "index_express_onramp_owner_address_to_network_to_contract_address_created_at",
             "unique": false,
             "columnNames": [
               "owner_address",
               "to_network",
-              "updated_at"
+              "to_contract_address",
+              "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_owner_address_to_network_updated_at` ON `${TABLE_NAME}` (`owner_address`, `to_network`, `updated_at`)"
-          },
-          {
-            "name": "index_express_onramp_owner_address_payout_hash",
-            "unique": false,
-            "columnNames": [
-              "owner_address",
-              "payout_hash"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_owner_address_payout_hash` ON `${TABLE_NAME}` (`owner_address`, `payout_hash`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "express_provider",
-            "onDelete": "RESTRICT",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "provider_id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_owner_address_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`owner_address`, `to_network`, `to_contract_address`, `created_at`)"
           }
         ]
+      },
+      {
+        "tableName": "express_sync_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`type` TEXT NOT NULL, `address` TEXT NOT NULL, `is_initial_completed` INTEGER NOT NULL, `after_cursor` TEXT, `delta_cursor` TEXT, PRIMARY KEY(`type`, `address`))",
+        "fields": [
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isInitialCompleted",
+            "columnName": "is_initial_completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "afterCursor",
+            "columnName": "after_cursor",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deltaCursor",
+            "columnName": "delta_cursor",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "type",
+            "address"
+          ]
+        }
       }
     ],
-    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'aafa8b51b5a5a32d0ec2b0720cec6c1e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '442ac578743a8b624777711cf49c77e2')"
     ]
   }
 }

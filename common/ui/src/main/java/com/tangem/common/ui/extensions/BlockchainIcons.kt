@@ -137,6 +137,8 @@ private fun iconSetOf(blockchain: Blockchain): IconSet? = when (blockchain) {
     -> IconSet(active = R.drawable.img_flare_22, greyedOut = R.drawable.ic_flare_22)
     Blockchain.Gnosis,
     -> IconSet(active = R.drawable.img_gnosis_22, greyedOut = R.drawable.ic_gnosis_22)
+    Blockchain.Gonka,
+    -> IconSet(active = R.drawable.img_gonka_22, greyedOut = R.drawable.ic_gonka_22)
     Blockchain.Hedera,
     Blockchain.HederaTestnet,
     -> IconSet(active = R.drawable.img_hedera_22, greyedOut = R.drawable.ic_hedera_22)

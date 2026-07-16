@@ -12,7 +12,7 @@ internal data class WcGetAddressesUM(
     val networkInfo: WcNetworkInfoUM,
     val addresses: List<AddressInfo>,
     val isLoading: Boolean,
-    @DrawableRes val walletInteractionIcon: Int,
+    @DrawableRes val walletInteractionIcon: Int?,
     val onApprove: () -> Unit,
     val onReject: () -> Unit,
 ) {

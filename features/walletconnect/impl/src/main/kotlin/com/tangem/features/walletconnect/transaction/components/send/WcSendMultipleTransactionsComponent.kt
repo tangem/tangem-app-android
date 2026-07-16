@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.components.send
 
 import androidx.compose.runtime.Composable
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -26,6 +27,7 @@ internal class WcSendMultipleTransactionsComponent(
                 onDismissRequest = { model.popBack() },
                 content = TangemBottomSheetConfigContent.Empty,
             ),
+            walletInteractionIcon = walletInterationIcon(model.userWallet),
             onConfirm = onConfirm,
             onBack = { model.popBack() },
         )

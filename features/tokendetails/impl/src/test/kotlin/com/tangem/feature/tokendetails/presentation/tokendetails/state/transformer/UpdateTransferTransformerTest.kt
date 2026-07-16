@@ -1,6 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test
 class UpdateTransferTransformerTest {
 
     private val clickIntents: TokenDetailsClickIntents = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val onActionDispatched: () -> Unit = mockk(relaxed = true)
 
     @Test
@@ -112,6 +115,7 @@ class UpdateTransferTransformerTest {
 
         // THEN
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSend>())
             onActionDispatched.invoke()
             clickIntents.onSendClick(ScenarioUnavailabilityReason.None)
         }
@@ -130,6 +134,7 @@ class UpdateTransferTransformerTest {
 
         // THEN
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSell>())
             onActionDispatched.invoke()
             clickIntents.onSellClick(ScenarioUnavailabilityReason.None)
         }
@@ -225,6 +230,7 @@ class UpdateTransferTransformerTest {
 
         // THEN
         verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSwap>())
             onActionDispatched.invoke()
             clickIntents.onSwapFromClick(ScenarioUnavailabilityReason.None)
         }
@@ -320,6 +326,80 @@ class UpdateTransferTransformerTest {
     }
 
     @Test
+    fun `GIVEN Swap action available WHEN transform THEN swapAndSend row is not null`() {
+        // Arrange
+        val transformer = createTransformer(
+            actions = listOf(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None, false)),
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.swapAndSend).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN Swap action available WHEN swapAndSend onClick invoked THEN onSwapAndSendClick is called`() {
+        // Arrange
+        val transformer = createTransformer(
+            actions = listOf(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None, false)),
+        )
+
+        // Act
+        val content = transformer.transform(initialState()).transferUM as TransferUM.Content
+        content.swapAndSend!!.onClick()
+
+        // Assert
+        verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSwapAndSend>())
+            onActionDispatched.invoke()
+            clickIntents.onSwapAndSendClick(ScenarioUnavailabilityReason.None)
+        }
+    }
+
+    @Test
+    fun `GIVEN Swap action present but unavailable WHEN transform THEN Swap shown disabled AND swapAndSend is null`() {
+        // Arrange — cards that cannot swap (e.g. S2C single-currency) still expose a Swap action,
+        // but with a non-None reason. Swap stays visible-but-disabled per design, while Send&Swap
+        // must not appear at all (it is meaningful only when swap is available).
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+                TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable, false),
+            ),
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.swap).isNotNull()
+        assertThat(content.swap?.isEnabled).isFalse()
+        assertThat(content.swapAndSend).isNull()
+    }
+
+    @Test
+    fun `GIVEN no Swap action WHEN transform THEN swapAndSend row is null`() {
+        // Arrange
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+                TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None),
+            ),
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.swapAndSend).isNull()
+    }
+
+    @Test
     fun `GIVEN row WHEN not clicked THEN no callbacks fire`() {
         // GIVEN
         val transformer = createTransformer(
@@ -332,6 +412,7 @@ class UpdateTransferTransformerTest {
         // THEN
         verify(exactly = 0) { onActionDispatched.invoke() }
         verify(exactly = 0) { clickIntents.onSendClick(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     private fun createTransformer(
@@ -341,6 +422,7 @@ class UpdateTransferTransformerTest {
         actions = actions,
         networkSource = networkSource,
         clickIntents = clickIntents,
+        analyticsEventHandler = analyticsEventHandler,
         onActionDispatched = onActionDispatched,
     )
 

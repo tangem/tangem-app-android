@@ -50,9 +50,9 @@ sealed class WalletNotification(val config: NotificationConfig) {
         )
 
         data class BackupError(val onSupportClick: () -> Unit) : Critical(
-            title = resourceReference(R.string.warning_backup_errors_title),
-            subtitle = resourceReference(R.string.warning_backup_errors_message),
-            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+            title = resourceReference(R.string.warning_backup_error_attention_title),
+            subtitle = resourceReference(R.string.warning_backup_error_attention_message),
+            buttonsState = ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(id = R.string.common_contact_support),
                 onClick = onSupportClick,
             ),

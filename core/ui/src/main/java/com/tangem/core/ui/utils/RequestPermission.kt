@@ -3,6 +3,7 @@ package com.tangem.core.ui.utils
 import android.os.Build
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalInspectionMode
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -15,6 +16,8 @@ import com.google.accompanist.permissions.rememberPermissionState
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun requestPermission(permission: String, onAllow: () -> Unit, onDeny: () -> Unit): () -> Unit {
+    if (LocalInspectionMode.current) return {}
+
     val permissionState = rememberPermissionState(
         permission = permission,
         onPermissionResult = { isGranted ->

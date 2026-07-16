@@ -1,0 +1,174 @@
+package com.tangem.features.send.sendnft.confirm
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import arrow.core.Either
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.nft.models.NFTAsset
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.nft.component.NFTDetailsBlockComponent
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.params.FeeSelectorParams
+import com.tangem.features.send.api.params.FeeSelectorParams.FeeStateConfiguration
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
+import com.tangem.features.send.common.CommonSendRoute
+import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.sendnft.confirm.model.NFTSendConfirmModel
+import com.tangem.features.send.sendnft.confirm.ui.NFTSendConfirmContent
+import com.tangem.features.send.sendnft.ui.state.NFTSendUM
+import com.tangem.features.send.subcomponents.destination.DefaultSendDestinationBlockComponent
+import com.tangem.features.send.subcomponents.notifications.DefaultSendNotificationsComponent
+import com.tangem.features.send.impl.R
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.*
+import java.math.BigDecimal
+
+internal class NFTSendConfirmComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted params: Params,
+    nftDetailsBlockComponentFactory: NFTDetailsBlockComponent.Factory,
+    feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
+) : ComposableContentComponent, AppComponentContext by appComponentContext {
+
+    private val model: NFTSendConfirmModel = getOrCreateModel(params = params)
+
+    private val blockClickEnableFlow = MutableStateFlow(false)
+
+    private val destinationBlockComponent =
+        DefaultSendDestinationBlockComponent(
+            appComponentContext = child("NFTSendConfirmDestinationBlock"),
+            params = DestinationBlockParams(
+                state = model.uiState.value.destinationUM,
+                analyticsCategoryName = params.analyticsCategoryName,
+                analyticsSendSource = params.analyticsSendSource,
+                userWalletId = params.userWallet.walletId,
+                cryptoCurrency = params.cryptoCurrencyStatus.currency,
+                blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
+                predefinedValues = PredefinedValues.Empty,
+            ),
+            onResult = model::onDestinationResult,
+            onClick = model::showEditDestination,
+        )
+
+    private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
+        context = child("NFTSendConfirmFeeSelectorBlock"),
+        params = FeeSelectorParams.FeeSelectorBlockParams(
+            state = model.uiState.value.feeSelectorUM,
+            onLoadFee = params.onLoadFee,
+            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
+            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
+            feeStateConfiguration = FeeStateConfiguration.None,
+            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
+            analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
+        ),
+        onResult = model::onFeeResult,
+    )
+
+    private val nftDetailsBlockComponent = nftDetailsBlockComponentFactory.create(
+        context = child("NFTDetailsBlock"),
+        params = NFTDetailsBlockComponent.Params(
+            userWalletId = params.userWallet.walletId,
+            nftAsset = params.nftAsset,
+            nftCollectionName = params.nftCollectionName,
+            isSuccessScreen = false,
+            account = params.account,
+            isAccountsMode = params.isAccountsMode,
+            walletTitle = resourceReference(R.string.send_from_wallet_name, wrappedList(params.userWallet.name)),
+        ),
+    )
+
+    private val notificationsComponent = DefaultSendNotificationsComponent(
+        appComponentContext = child("NFTSendConfirmNotifications"),
+        params = SendNotificationsComponent.Params(
+            analyticsCategoryName = params.analyticsCategoryName,
+            userWalletId = params.userWallet.walletId,
+            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
+            appCurrency = params.appCurrency,
+            callback = model,
+            notificationData = SendNotificationsComponent.Params.NotificationData(
+                destinationAddress = model.confirmData.enteredDestination.orEmpty(),
+                memo = model.confirmData.enteredMemo,
+                amountValue = BigDecimal.ZERO,
+                reduceAmountBy = BigDecimal.ZERO,
+                isIgnoreReduce = false,
+                fee = model.confirmData.fee,
+                feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
+            ),
+        ),
+    )
+
+    init {
+        model.uiState.onEach { state ->
+            val confirmUM = state.confirmUM as? ConfirmUM.Content
+            blockClickEnableFlow.value = confirmUM?.isSending == false
+        }.launchIn(componentScope)
+    }
+
+    fun updateState(state: NFTSendUM) {
+        destinationBlockComponent.updateState(state.destinationUM)
+        model.updateState(state)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        val state by model.uiState.collectAsStateWithLifecycle()
+        val notificationState by notificationsComponent.state.collectAsStateWithLifecycle()
+
+        NFTSendConfirmContent(
+            nftSendUM = state,
+            destinationBlockComponent = destinationBlockComponent,
+            feeSelectorBlockComponent = feeSelectorBlockComponent,
+            nftDetailsBlockComponent = nftDetailsBlockComponent,
+            notificationsComponent = notificationsComponent,
+            notificationsUM = notificationState,
+        )
+    }
+
+    data class Params(
+        val state: NFTSendUM,
+        val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        val userWallet: UserWallet,
+        val appCurrency: AppCurrency,
+        val nftAsset: NFTAsset,
+        val nftCollectionName: String,
+        val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+        val account: Account.CryptoPortfolio?,
+        val isAccountsMode: Boolean,
+        val callback: ModelCallback,
+        val currentRoute: Flow<CommonSendRoute.Confirm>,
+        val isBalanceHidingFlow: StateFlow<Boolean>,
+        val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
+        val onSendTransaction: () -> Unit,
+    )
+
+    interface ModelCallback {
+        fun onResult(nftSendUM: NFTSendUM)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(appComponentContext: AppComponentContext, params: Params): NFTSendConfirmComponent
+    }
+}

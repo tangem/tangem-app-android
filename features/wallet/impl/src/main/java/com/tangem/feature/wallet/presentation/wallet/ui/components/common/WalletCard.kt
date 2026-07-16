@@ -337,6 +337,7 @@ private fun AdditionalInfo(
                                 id = R.string.initial_wallet_sync_restore_progress,
                                 formatArgs = wrappedList(animatedContent.progressPercent),
                             ),
+                            testTag = MainScreenTestTags.SYNC_PROGRESS_TEXT,
                         )
                         CircularProgressIndicator(
                             modifier = Modifier.size(TangemTheme.dimens.size16),
@@ -353,14 +354,14 @@ private fun AdditionalInfo(
 }
 
 @Composable
-private fun AdditionalInfoText(text: TextReference) {
+private fun AdditionalInfoText(text: TextReference, testTag: String = MainScreenTestTags.DEVICES_COUNT) {
     Text(
         text = text.resolveReference(),
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.caption2,
-        modifier = Modifier.testTag(MainScreenTestTags.DEVICES_COUNT),
+        modifier = Modifier.testTag(testTag),
     )
 }
 

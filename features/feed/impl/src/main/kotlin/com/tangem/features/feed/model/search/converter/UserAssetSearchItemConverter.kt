@@ -105,7 +105,7 @@ internal class UserAssetSearchItemConverter(
         val entryCurrencyStatus = item.entries.first().currencyStatus
 
         return UserAssetItemUM.Grouped(
-            id = "grouped_${item.tokenName}_${item.tokenSymbol}",
+            id = "grouped_${firstCurrency.id.value}",
             icon = TangemIconUM.Currency(
                 currencyIconState = CurrencyIconState.CoinIcon(
                     url = entryCurrencyStatus.currency.iconUrl,

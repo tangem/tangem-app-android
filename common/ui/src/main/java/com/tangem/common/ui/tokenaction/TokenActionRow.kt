@@ -14,10 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.row.TangemRowContainer
@@ -61,15 +64,14 @@ fun TokenActionRow(
     val accentColor = accentColor(isEnabled)
     TangemRowContainer(
         modifier = modifier
-            .background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
-            )
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+            .background(color = TangemTheme.colors2.surface.level3)
             .clickableWithHaptic(
                 onClick = onClick,
                 onLongClick = onLongClick,
                 hapticManager = hapticManager,
-            ),
+            )
+            .semantics { if (!isEnabled) disabled() },
     ) {
         LeadingIcon(iconRes = iconRes, accentColor = accentColor)
         Text(

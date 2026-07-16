@@ -18,6 +18,7 @@ dependencies {
     /* Project - API */
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.swapV2.api)
+    implementation(projects.features.commonFeatures.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
@@ -39,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.swap.models)
+    implementation(projects.domain.markets.models)
     implementation(projects.domain.notifications)
     implementation(projects.domain.dynamicAddresses)
 

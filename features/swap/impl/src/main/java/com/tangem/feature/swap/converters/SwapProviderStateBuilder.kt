@@ -7,58 +7,39 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
 /**
  * Builds [ProviderState.Content] for the swap provider list / row.
- *
- * Pure: takes everything it needs as parameters. Designed to be unit-tested in isolation.
  */
 internal object SwapProviderStateBuilder {
-
-    private val FCA_RESTRICTED_PROVIDER_IDS = setOf(
-        "changelly",
-        "changenow",
-        "okx-cross-chain",
-        "okx-on-chain",
-        "simpleswap",
-    )
 
     /**
      * Provider row on the main swap screen — shows the exchange rate `1 base ≈ rate quote`
      * (see [SwapRateFormatter]) and allows the user to open the provider picker.
      */
-    @Suppress("LongParameterList")
     fun buildContentClickable(
         provider: SwapProvider,
-        fromTokenInfo: TokenSwapInfo,
-        toTokenInfo: TokenSwapInfo,
-        permissionState: PermissionDataState,
+        state: SwapState.QuotesLoadedState,
         selectionType: ProviderState.SelectionType,
-        isBestRate: Boolean,
-        isNeedBestRateBadge: Boolean,
-        needApplyFCARestrictions: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
         onProviderClick: (String) -> Unit,
     ): ProviderState.Content {
         val rateString = SwapRateFormatter.formatRate(
-            from = fromTokenInfo.swapCurrencyStatus.currency,
-            to = toTokenInfo.swapCurrencyStatus.currency,
-            fromAmount = fromTokenInfo.tokenAmount.value,
-            toAmount = toTokenInfo.tokenAmount.value,
+            from = state.fromTokenInfo.swapCurrencyStatus.currency,
+            to = state.toTokenInfo.swapCurrencyStatus.currency,
+            fromAmount = state.fromTokenInfo.tokenAmount.value,
+            toAmount = state.toTokenInfo.tokenAmount.value,
         )
         return provider.toContent(
             subtitle = stringReference(rateString),
-            additionalBadge = resolveBadge(
-                provider = provider,
-                needApplyFCARestrictions = needApplyFCARestrictions,
-                permissionState = permissionState,
-                isBestRate = isBestRate,
-                isNeedBestRateBadge = isNeedBestRateBadge,
-            ),
+            additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -70,28 +51,26 @@ internal object SwapProviderStateBuilder {
     @Suppress("LongParameterList")
     fun buildContentSelectable(
         provider: SwapProvider,
-        toTokenInfo: TokenSwapInfo,
-        permissionState: PermissionDataState,
+        state: SwapState.QuotesLoadedState,
         pricesLowerBest: Map<String, Float>,
         selectionType: ProviderState.SelectionType,
-        isBestRate: Boolean = false,
-        isNeedBestRateBadge: Boolean = false,
-        needApplyFCARestrictions: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
         onProviderClick: (String) -> Unit,
+        onApprovalSelectClick: (SwapProvider) -> Unit = {},
     ): ProviderState.Content {
         return provider.toContent(
-            subtitle = buildSelectableSubtitle(toTokenInfo),
-            additionalBadge = resolveBadge(
-                provider = provider,
-                needApplyFCARestrictions = needApplyFCARestrictions,
-                permissionState = permissionState,
-                isBestRate = isBestRate,
-                isNeedBestRateBadge = isNeedBestRateBadge,
-            ),
+            subtitle = buildSelectableSubtitle(state.toTokenInfo),
+            additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[provider.providerId]
                 ?.let(PercentDifference::Value)
                 ?: PercentDifference.Value(0f),
+            approvalSettings = when (state.permissionState) {
+                is PermissionDataState.PermissionSettings -> ProviderState.ApprovalSettings.Content(
+                    onApprovalSelectClick = { onApprovalSelectClick(provider) },
+                )
+                else -> ProviderState.ApprovalSettings.Empty
+            },
             onProviderClick = onProviderClick,
         )
     }
@@ -104,17 +83,15 @@ internal object SwapProviderStateBuilder {
         provider: SwapProvider,
         alertText: TextReference,
         selectionType: ProviderState.SelectionType,
-        needApplyFCARestrictions: Boolean,
+        additionalBadge: ProviderState.AdditionalBadge,
         onProviderClick: (String) -> Unit,
     ): ProviderState.Content {
         return provider.toContent(
             subtitle = alertText,
-            additionalBadge = resolveBadge(
-                provider = provider,
-                needApplyFCARestrictions = needApplyFCARestrictions,
-            ),
+            additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -130,32 +107,13 @@ internal object SwapProviderStateBuilder {
         return stringReference(toAmount)
     }
 
-    private fun resolveBadge(
-        provider: SwapProvider,
-        needApplyFCARestrictions: Boolean,
-        permissionState: PermissionDataState? = null,
-        isBestRate: Boolean = false,
-        isNeedBestRateBadge: Boolean = false,
-    ): ProviderState.AdditionalBadge {
-        return when {
-            needApplyFCARestrictions && provider.isFCARestricted() ->
-                ProviderState.AdditionalBadge.FCAWarningList
-            permissionState is PermissionDataState.PermissionRequired ->
-                ProviderState.AdditionalBadge.PermissionRequired
-            provider.isRecommended ->
-                ProviderState.AdditionalBadge.Recommended
-            isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions ->
-                ProviderState.AdditionalBadge.BestTrade
-            else ->
-                ProviderState.AdditionalBadge.Empty
-        }
-    }
-
+    @Suppress("LongParameterList")
     private fun SwapProvider.toContent(
         subtitle: TextReference,
         additionalBadge: ProviderState.AdditionalBadge,
         selectionType: ProviderState.SelectionType,
         percentLowerThenBest: PercentDifference,
+        approvalSettings: ProviderState.ApprovalSettings,
         onProviderClick: (String) -> Unit,
     ): ProviderState.Content {
         return ProviderState.Content(
@@ -169,8 +127,7 @@ internal object SwapProviderStateBuilder {
             percentLowerThenBest = percentLowerThenBest,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
+            approvalSettings = approvalSettings,
         )
     }
-
-    private fun SwapProvider.isFCARestricted(): Boolean = providerId in FCA_RESTRICTED_PROVIDER_IDS
 }

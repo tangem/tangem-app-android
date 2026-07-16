@@ -14,6 +14,12 @@ internal class DefaultStakingFeatureToggles(
         return featureTogglesManager.isFeatureEnabled(toggle)
     }
 
+    override fun isSolanaUnstakeValidationEnabled(): Boolean {
+        return featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED,
+        )
+    }
+
     private fun StakingIntegrationID.getFeatureToggle(): FeatureToggles? = when (this) {
         is StakingIntegrationID.P2PEthPool -> FeatureToggles.STAKING_ETH_ENABLED
         is StakingIntegrationID.StakeKit -> this.getStakeKitFeatureToggle()

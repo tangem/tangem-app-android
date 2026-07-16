@@ -21,3 +21,13 @@ fun DividerWithPadding(start: Dp = 0.dp, end: Dp = 0.dp, top: Dp = 0.dp, bottom:
         color = TangemTheme.colors.stroke.primary,
     )
 }
+
+@Composable
+fun DividerWithPadding(horizontal: Dp = 0.dp, vertical: Dp = 0.dp) {
+    DividerWithPadding(
+        start = horizontal,
+        end = horizontal,
+        top = vertical,
+        bottom = vertical,
+    )
+}

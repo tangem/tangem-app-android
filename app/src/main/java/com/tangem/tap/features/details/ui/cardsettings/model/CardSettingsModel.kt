@@ -105,7 +105,7 @@ internal class CardSettingsModel @Inject constructor(
 
     private fun scanCard() = modelScope.launch {
         scanCardProcessor.scan(
-            analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.Settings,
+            analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.CardSettings,
             shouldCheckIsAlreadyActivated = false,
             allowsRequestAccessCodeFromRepository = true,
         )

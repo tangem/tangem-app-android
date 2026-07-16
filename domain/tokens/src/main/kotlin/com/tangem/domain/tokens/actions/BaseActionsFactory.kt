@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.actions
 
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -54,31 +55,6 @@ internal open class BaseActionsFactory(
     }
 
     /**
-     * Determines the unavailability reason for the BUY action
-     *
-     * @param userWallet the user's cold wallet
-     * @param currency   the cryptocurrency to check
-     * @param requirementsDeferred a deferred object containing the asset requirements condition
-     */
-    protected suspend fun getOnrampUnavailabilityReason(
-        userWallet: UserWallet,
-        currency: CryptoCurrency,
-        requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
-    ): ScenarioUnavailabilityReason {
-        val onrampUnavailabilityReason = rampStateManager.availableForBuy(
-            userWallet = userWallet,
-            cryptoCurrency = currency,
-        )
-        val shouldCheckAssetRequirements =
-            onrampUnavailabilityReason == ScenarioUnavailabilityReason.None && requirementsDeferred != null
-        return if (shouldCheckAssetRequirements) {
-            getReceiveScenario(requirementsDeferred.await())
-        } else {
-            onrampUnavailabilityReason
-        }
-    }
-
-    /**
      * Determines the unavailability reason for the SEND action
      *
      * @param userWalletId         the ID of the user's wallet
@@ -97,17 +73,20 @@ internal open class BaseActionsFactory(
     /**
      * Determines the unavailability reason for the SELL action
      *
-     * @param userWalletId             the ID of the user's wallet
+     * @param userWallet               the user's wallet
      * @param status                   the status of the cryptocurrency
      * @param sendUnavailabilityReason the reason for unavailability of the send action
      */
     protected suspend fun getSellUnavailabilityReason(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         status: CryptoCurrencyStatus,
         sendUnavailabilityReason: ScenarioUnavailabilityReason,
     ): ScenarioUnavailabilityReason {
+        if (userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isStart2Coin()) {
+            return ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)
+        }
         return rampStateManager.availableForSell(
-            userWalletId = userWalletId,
+            userWalletId = userWallet.walletId,
             status = status,
             sendUnavailabilityReason = sendUnavailabilityReason,
         ).fold(
@@ -151,6 +130,23 @@ internal open class BaseActionsFactory(
             } else {
                 action.disabled()
             }
+        }
+    }
+
+    /**
+     * Determines the unavailability reason for the BUY action
+     *
+     * @param userWallet the user's wallet
+     * @param currency   the cryptocurrency to check
+     */
+    protected fun getBuyUnavailabilityReason(
+        userWallet: UserWallet,
+        currency: CryptoCurrency,
+    ): ScenarioUnavailabilityReason {
+        return if (userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isStart2Coin()) {
+            ScenarioUnavailabilityReason.BuyUnavailable(currency.name)
+        } else {
+            ScenarioUnavailabilityReason.None
         }
     }
 

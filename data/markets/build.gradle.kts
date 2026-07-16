@@ -49,4 +49,8 @@ dependencies {
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
+
+    // region Tests dependencies
+    testImplementation(projects.test.core)
+    // endregion
 }

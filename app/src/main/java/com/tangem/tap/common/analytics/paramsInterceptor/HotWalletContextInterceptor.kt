@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 
 class HotWalletContextInterceptor(
     val parent: ParamsInterceptor? = null,
@@ -18,6 +19,7 @@ class HotWalletContextInterceptor(
             is SignIn.ButtonAddWallet,
             is SignIn.ButtonUnlockAllWithBiometric,
             is IntroductionProcess.ButtonScanCard,
+            is TokenScreenAnalyticsEvent.ButtonQuickTopUp,
             -> false
             is SignIn.ErrorBiometricUpdated -> !event.isFromUnlockAll
             else -> true

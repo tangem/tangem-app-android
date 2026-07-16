@@ -10,7 +10,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.domain.visa.model.TangemPayPushNotificationType
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class PayloadToDeeplinkConverterTest {
 

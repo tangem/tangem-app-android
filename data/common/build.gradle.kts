@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.data.common"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /* Core */
     implementation(projects.core.datasource)
@@ -26,6 +21,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.express.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
@@ -49,6 +45,5 @@ dependencies {
     /* Test */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.moshi)
 }

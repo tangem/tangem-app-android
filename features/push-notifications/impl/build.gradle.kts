@@ -21,6 +21,7 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.permission)
+    implementation(deps.lifecycle.compose)
 
     /** Other dependencies */
     implementation(deps.arrow.core)
@@ -34,6 +35,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.utils)
+    implementation(projects.core.abTests)
 
     /** Common modules */
     implementation(projects.common.routing)
@@ -41,6 +43,10 @@ dependencies {
     /** Domain module */
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.pushNotificationPreferences)
+    implementation(projects.domain.common)
+    implementation(projects.domain.account)
+    implementation(projects.domain.models)
 
     /** Feature modules */
     implementation(projects.features.pushNotifications.api)
@@ -49,4 +55,10 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }

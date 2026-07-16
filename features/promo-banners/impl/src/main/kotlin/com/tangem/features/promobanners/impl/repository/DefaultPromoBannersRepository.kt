@@ -52,6 +52,10 @@ internal class DefaultPromoBannersRepository(
         return banners
     }
 
+    override suspend fun getCachedBanners(walletId: String, placeholder: Placeholder): List<PromoBannerDisplay>? {
+        return cache.getSyncOrNull()?.get(BannersCacheKey(walletId, placeholder))
+    }
+
     override suspend fun dismissBanner(walletId: String, displayId: Int) {
         cache.update(default = emptyMap()) { current ->
             current.mapValues { (key, banners) ->

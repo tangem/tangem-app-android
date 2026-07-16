@@ -2,6 +2,7 @@ package com.tangem.core.ui.test
 
 object OrganizeTokensScreenTestTags {
     // region OrganizeTokensTopBar
+    const val MENU_BUTTON = "ORGANIZE_TOKENS_MENU_BUTTON"
     const val GROUP_BUTTON = "ORGANIZE_TOKENS_GROUP_BUTTON"
     const val SORT_BY_BALANCE_BUTTON = "SORT_BY_BALANCE_BUTTON"
     // endregion OrganizeTokensTopBar

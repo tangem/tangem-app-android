@@ -27,7 +27,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.components.ContainerWithDivider
 import com.tangem.features.feed.ui.market.detailed.state.LinksUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -105,7 +104,6 @@ private fun LinksBlockV2(state: LinksUM, modifier: Modifier = Modifier) {
             title = stringResourceSafe(id = R.string.markets_token_details_blockchain_site),
             links = state.blockchainSite,
             onLinkClick = state.onLinkClick,
-            lastBlock = true,
         )
     }
 }
@@ -159,44 +157,38 @@ private fun SubBlockV2(
     links: ImmutableList<LinksUM.Link>,
     onLinkClick: (LinksUM.Link) -> Unit,
     modifier: Modifier = Modifier,
-    lastBlock: Boolean = false,
 ) {
     if (links.isEmpty()) return
 
-    ContainerWithDivider(
-        modifier = modifier,
-        showDivider = !lastBlock,
+    Column(
+        modifier = modifier.padding(vertical = TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
     ) {
-        Column(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x2),
+        Text(
+            modifier = Modifier.padding(start = 10.dp, top = TangemTheme.dimens2.x4),
+            text = title,
+            style = TangemTheme.typography2.headingSemibold20,
+            color = TangemTheme.colors2.text.neutral.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        FlowRow(
+            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x2, horizontal = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
         ) {
-            Text(
-                modifier = Modifier.padding(start = 10.dp, top = TangemTheme.dimens2.x4),
-                text = title,
-                style = TangemTheme.typography2.headingSemibold20,
-                color = TangemTheme.colors2.text.neutral.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            FlowRow(
-                modifier = Modifier.padding(vertical = TangemTheme.dimens2.x2, horizontal = 3.dp),
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-            ) {
-                links.fastForEach { link ->
-                    SecondaryTangemButton(
-                        onClick = { onLinkClick(link) },
-                        text = stringReference(link.title),
-                        iconPosition = TangemButtonIconPosition.Start,
-                        tangemIconUM = TangemIconUM.Icon(
-                            iconRes = link.iconRes,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                        ),
-                        size = TangemButtonSize.X9,
-                        shape = TangemButtonShape.Rounded,
-                    )
-                }
+            links.fastForEach { link ->
+                SecondaryTangemButton(
+                    onClick = { onLinkClick(link) },
+                    text = stringReference(link.title),
+                    iconPosition = TangemButtonIconPosition.Start,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = link.iconRes,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                    ),
+                    size = TangemButtonSize.X9,
+                    shape = TangemButtonShape.Rounded,
+                )
             }
         }
     }
@@ -237,7 +229,7 @@ private fun LinksBlockPlaceholderV2(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         SubBlockPlaceholderV2()
         SubBlockPlaceholderV2()
-        SubBlockPlaceholderV2(lastBlock = true)
+        SubBlockPlaceholderV2()
     }
 }
 
@@ -269,30 +261,25 @@ private fun SubBlockPlaceholderV1(modifier: Modifier = Modifier, lastBlock: Bool
 }
 
 @Composable
-private fun SubBlockPlaceholderV2(modifier: Modifier = Modifier, lastBlock: Boolean = false) {
-    ContainerWithDivider(
-        modifier = modifier,
-        showDivider = !lastBlock,
+private fun SubBlockPlaceholderV2(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.padding(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
     ) {
-        Column(
-            modifier = Modifier.padding(TangemTheme.dimens2.x2),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        TextShimmer(
+            modifier = Modifier.width(56.dp),
+            style = TangemTheme.typography2.bodySemibold16,
+            radius = TangemTheme.dimens2.x25,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
         ) {
-            TextShimmer(
-                modifier = Modifier.width(56.dp),
-                style = TangemTheme.typography2.bodySemibold16,
-                radius = TangemTheme.dimens2.x25,
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-            ) {
-                repeat(times = 3) {
-                    ChipShimmer(
-                        modifier = Modifier
-                            .height(36.dp)
-                            .weight(1f),
-                    )
-                }
+            repeat(times = 3) {
+                ChipShimmer(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .weight(1f),
+                )
             }
         }
     }

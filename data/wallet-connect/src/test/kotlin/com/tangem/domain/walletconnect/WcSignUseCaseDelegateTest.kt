@@ -19,12 +19,12 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 internal class WcSignUseCaseDelegateTest {
 
@@ -107,7 +107,7 @@ internal class WcSignUseCaseDelegateTest {
         middleActionCollector = middleActionCollector,
     )
 
-    @Before
+    @BeforeEach
     fun setup() {
         middleActionCollector = object : MiddleActionCollector<TestMiddleAction, TestSignModel> {}
         finalActionCollector = object : FinalActionCollector<TestSignModel> {}

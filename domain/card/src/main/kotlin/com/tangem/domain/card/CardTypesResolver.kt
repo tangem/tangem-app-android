@@ -31,6 +31,8 @@ interface CardTypesResolver {
 
     fun isSingleWalletWithToken(): Boolean
 
+    fun isSingleCurrency(): Boolean
+
     fun isMultiwalletAllowed(): Boolean
 
     fun getBlockchain(): Blockchain

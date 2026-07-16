@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import coil.compose.SubcomposeAsyncImage
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
@@ -61,6 +63,7 @@ fun Notification(
     titleColor: Color = TangemTheme.colors.text.primary1,
     subtitleColor: Color = TangemTheme.colors.text.tertiary,
     containerColor: Color? = null,
+    borderColor: Color? = null,
     iconTint: Color? = when (config.iconTint) {
         NotificationConfig.IconTint.Unspecified -> null
         NotificationConfig.IconTint.Accent -> TangemTheme.colors.icon.accent
@@ -75,6 +78,7 @@ fun Notification(
         onCloseClick = config.onCloseClick,
         modifier = modifier,
         containerColor = containerColor,
+        borderColor = borderColor,
         isEnabled = isEnabled,
     ) {
         MainContent(
@@ -100,6 +104,7 @@ internal fun NotificationBaseContainer(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     containerColor: Color? = null,
+    borderColor: Color? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tempContainerColor by rememberUpdatedState(
@@ -118,6 +123,7 @@ internal fun NotificationBaseContainer(
         enabled = onClick != null && isEnabled,
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = containerColor ?: tempContainerColor,
+        border = borderColor?.let { BorderStroke(width = 1.dp, color = it) },
     ) {
         Box {
             Column(

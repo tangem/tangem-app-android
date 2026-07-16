@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.ui.send
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 internal fun WcSendMultipleTransactionsModalBottomSheet(
     config: TangemBottomSheetConfig,
+    @DrawableRes walletInteractionIcon: Int?,
     onConfirm: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -50,7 +52,7 @@ internal fun WcSendMultipleTransactionsModalBottomSheet(
                         .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
                         .padding(12.dp),
                     painter = rememberVectorPainter(
-                        ImageVector.vectorResource(com.tangem.core.ui.R.drawable.ic_alert_24),
+                        ImageVector.vectorResource(R.drawable.ic_alert_24),
                     ),
                     tint = TangemTheme.colors.icon.attention,
                     contentDescription = null,
@@ -78,7 +80,7 @@ internal fun WcSendMultipleTransactionsModalBottomSheet(
                 SpacerH8()
                 PrimaryButtonIconEnd(
                     modifier = Modifier.fillMaxWidth(),
-                    iconResId = R.drawable.ic_tangem_24,
+                    iconResId = walletInteractionIcon,
                     text = stringResourceSafe(R.string.common_send),
                     onClick = onConfirm,
                 )
@@ -98,6 +100,7 @@ private fun WcSendTransactionBottomSheetPreview() {
                 onDismissRequest = {},
                 content = TangemBottomSheetConfigContent.Empty,
             ),
+            walletInteractionIcon = R.drawable.ic_tangem_24,
             onConfirm = {},
             onBack = {},
         )

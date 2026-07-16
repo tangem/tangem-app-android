@@ -1,20 +1,17 @@
 package com.tangem.screens
 
-import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
-import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.features.tokendetails.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
-import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
@@ -36,18 +33,8 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
-    val availableStakingBlockTitle: KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.STAKING_SERVICE_TITLE)
-        useUnmergedTree = true
-    }
-
-    val availableStakingBlockText: KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.STAKING_SERVICE_TEXT)
-        useUnmergedTree = true
-    }
-
-    val availableStakingBlockCurrencyIcon: KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.STAKING_CURRENCY_ICON)
+    fun availableStakingBlockText(apy: String): KNode = child {
+        hasText(getResourceString(R.string.token_details_earn_staking_subtitle, apy))
         useUnmergedTree = true
     }
 
@@ -62,69 +49,45 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
-    val stakingDot: KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.STAKING_DOT)
-        useUnmergedTree = true
-    }
-
     val stakingTokenAmount: KNode = child {
         hasTestTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT)
         useUnmergedTree = true
     }
 
-    val stakingChevronIcon: KNode = child {
-        hasTestTag(TokenDetailsScreenTestTags.STAKING_CHEVRON_ICON)
-        useUnmergedTree = true
+    val stakingTitle: KNode = child {
+        hasText(getResourceString(R.string.common_staking))
     }
 
-    val stakingTitle: KNode = child {
-        hasText(getResourceString(R.string.staking_native))
+    val stakingEnabledTitle: KNode = child {
+        hasText(getResourceString(R.string.staking_enabled))
     }
 
     val title: KNode = child {
         hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
     }
 
-    private val horizontalActionChips = KLazyListNode(
-        semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(BaseActionButtonsBlockTestTags.HORIZONTAL_ACTION_CHIPS) },
-        itemTypeBuilder = { itemType(::LazyListItemNode) },
-        positionMatcher = { position ->
-            SemanticsMatcher.expectValue(
-                LazyListItemPositionSemantics,
-                position
-            )
-        }
-    )
-
-    @OptIn(ExperimentalTestApi::class)
-    fun receiveButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
-        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_receive))
+    val fiatBalance: KNode = child {
+        hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT))
+        addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
+        useUnmergedTree = true
     }
 
-    @OptIn(ExperimentalTestApi::class)
-    fun swapButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    val addFundsButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_swap))
+        hasAnyDescendant(withText(getResourceString(R.string.tangempay_card_details_add_funds)))
+        useUnmergedTree = true
     }
 
-    @OptIn(ExperimentalTestApi::class)
-    fun sellButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    val swapButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_sell))
+        hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
+        useUnmergedTree = true
     }
 
-    @OptIn(ExperimentalTestApi::class)
-    fun buyButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    val transferButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_buy))
-    }
-
-    @OptIn(ExperimentalTestApi::class)
-    fun sendButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
-        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_send))
+        hasAnyDescendant(withText(getResourceString(R.string.common_transfer)))
+        useUnmergedTree = true
     }
 
     fun networkFeeNotificationIcon(feeCurrencyName: String): KNode = child {
@@ -204,7 +167,6 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_SWAP_ICON))
         hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_ICON))
         hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_AMOUNT))
-        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_CHEVRON_ICON))
         useUnmergedTree = true
     }
 }

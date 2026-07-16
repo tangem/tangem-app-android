@@ -27,5 +27,5 @@ internal sealed interface AddToPortfolioRoutes : Route {
     data object UserPortfolio : AddToPortfolioRoutes
 
     @Serializable
-    data object TokenActions : AddToPortfolioRoutes
+    data class TokenActions(val currencyName: String) : AddToPortfolioRoutes
 }

@@ -12,11 +12,6 @@ plugins {
 android {
     namespace = "com.tangem.feature.swap.data"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** AndroidX */
@@ -48,6 +43,7 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.express.models)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.txhistory)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
@@ -68,5 +64,4 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

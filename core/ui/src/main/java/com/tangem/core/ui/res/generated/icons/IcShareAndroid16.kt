@@ -1,0 +1,47 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_share_android_16: ImageVector? = null
+
+val Icons.ic_share_android_16: ImageVector
+    get() {
+        if (_ic_share_android_16 != null) return _ic_share_android_16!!
+        _ic_share_android_16 = ImageVector.Builder(
+            name = "ic_share_android_16",
+            defaultWidth = 16.dp,
+            defaultHeight = 16.dp,
+            viewportWidth = 16f,
+            viewportHeight = 16f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M9.82373 2.81989C10.7514 1.89225 12.2552 1.89254 13.1831 2.81989L13.3462 2.99957C14.1073 3.93274 14.053 5.30943 13.1831 6.17926C12.2554 7.10673 10.7516 7.10655 9.82373 6.17926C9.79204 6.14753 9.76244 6.11266 9.73291 6.07965L6.82763 7.5318C6.88943 7.84053 6.88934 8.1586 6.82763 8.46735L9.73388 9.92047C9.76337 9.88753 9.79208 9.85349 9.82373 9.82184C10.7514 8.8942 12.2552 8.8945 13.1831 9.82184L13.3462 10.0015C14.1074 10.9347 14.053 12.3113 13.1831 13.1812C12.2553 14.1088 10.7516 14.1086 9.82373 13.1812C9.24157 12.5988 9.0245 11.7889 9.17334 11.0377L6.26611 9.58356C6.23753 9.61537 6.21077 9.64963 6.18017 9.68024C5.25236 10.6077 3.74858 10.6077 2.8208 9.68024C1.89346 8.75245 1.89332 7.24856 2.8208 6.32086C3.74851 5.39322 5.25228 5.39352 6.18017 6.32086L6.26611 6.41559L9.17334 4.96246C9.02478 4.2113 9.24152 3.40216 9.82373 2.81989ZM12.2144 10.6285C11.7721 10.2679 11.1197 10.2935 10.7075 10.7056C10.6345 10.7786 10.5737 10.8593 10.5249 10.9449C10.5175 10.9642 10.5128 10.9856 10.5034 11.0045C10.4931 11.0251 10.4786 11.0431 10.4663 11.0621C10.2929 11.4715 10.3739 11.9634 10.7075 12.2974C11.1472 12.7367 11.8597 12.7369 12.2993 12.2974C12.7115 11.8852 12.7372 11.2328 12.3765 10.7906L12.2993 10.7056L12.2144 10.6285ZM5.21142 7.1275C4.76918 6.76692 4.11679 6.79249 3.70459 7.20465C3.26528 7.64418 3.26543 8.35682 3.70459 8.79645C4.14422 9.23577 4.85673 9.23572 5.29638 8.79645C5.36974 8.72309 5.43011 8.64126 5.479 8.55524C5.48577 8.5379 5.49104 8.51948 5.49951 8.5025C5.50903 8.48354 5.5226 8.46635 5.53369 8.44879C5.65815 8.16195 5.65653 7.83383 5.53076 7.54742C5.52072 7.53136 5.50815 7.51587 5.49951 7.4986C5.49104 7.48147 5.48583 7.46235 5.479 7.44489C5.44849 7.39125 5.41358 7.33869 5.37353 7.28961L5.29638 7.20465L5.21142 7.1275ZM12.2144 3.62653C11.7721 3.26594 11.1197 3.29151 10.7075 3.70367C10.3735 4.03777 10.2936 4.52933 10.4673 4.93903C10.4793 4.95773 10.4932 4.97634 10.5034 4.99664C10.5126 5.01503 10.5177 5.03544 10.5249 5.05426C10.5737 5.14005 10.6344 5.22227 10.7075 5.29547C11.1472 5.7346 11.8597 5.73478 12.2993 5.29547C12.7115 4.8833 12.7371 4.23083 12.3765 3.78864L12.2993 3.70367L12.2144 3.62653Z"),
+            )
+        }.build()
+        return _ic_share_android_16!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcShareAndroid16Preview() {
+    Icon(
+        imageVector = Icons.ic_share_android_16,
+        contentDescription = null,
+    )
+}

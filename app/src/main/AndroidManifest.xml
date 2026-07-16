@@ -217,6 +217,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
+                    android:host="survey"
+                    android:scheme="tangem" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
                     android:host="markets"
                     android:scheme="tangem" />
             </intent-filter>
@@ -402,6 +413,14 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- SurveySparrow SDK exports this activity (exported="true") in its own manifest. -->
+        <!-- We launch it only via an explicit in-app intent, so force it non-exported to -->
+        <!-- prevent any other installed app from loading arbitrary web content into it. -->
+        <activity
+            android:name="com.surveysparrow.ss_android_sdk.SsSurveyActivity"
+            android:exported="false"
+            tools:replace="android:exported" />
     </application>
     <queries>
         <!-- Needed from Android 11 to open Google Wallet for payment with Visa card -->
