@@ -224,7 +224,6 @@ internal object WalletScreenPreviewData {
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
-        isRedesignEnabled = true,
     )
 
     val defaultAccountState = defaultState.copy(
