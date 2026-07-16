@@ -3,6 +3,7 @@ package com.tangem.domain.pay.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -22,6 +23,7 @@ import java.util.UUID
 class CreateVirtualAccountOrderUseCase(
     private val onboardingRepository: OnboardingRepository,
     private val pollingUseCase: StartTangemPayOrderPollingUseCase,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(
@@ -36,6 +38,9 @@ class CreateVirtualAccountOrderUseCase(
                     idempotencyKey = UUID.randomUUID().toString(),
                 ).bind()
                 onboardingRepository.storeVirtualAccountOrderId(userWalletId = userWalletId, vaOrderId = vaOrderId)
+                // Optimistically flip the cached on-ramp to Processing so the UI shows "Preparing" immediately
+                // (no wait for the poll/refetch to confirm).
+                paymentAccountStatusFetcher.markVirtualAccountProcessing(userWalletId)
                 appCoroutineScope.launch {
                     pollingUseCase.invoke(
                         order = TangemPayOrderInfo(orderId = vaOrderId, orderStatus = OrderStatus.NEW),

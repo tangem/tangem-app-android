@@ -81,9 +81,11 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked())
                 createVirtualAccountOrder()
             }
-            // Error onramp is intercepted before this sheet opens (a dedicated error sheet is shown instead);
-            // the branch only keeps the `when` exhaustive.
-            VirtualAccountOnramp.BankCredentialsError -> onDismiss()
+            // Processing/Error onramps never reach this sheet (a message/error sheet is shown instead);
+            // these branches only keep the `when` exhaustive.
+            VirtualAccountOnramp.Processing,
+            VirtualAccountOnramp.BankCredentialsError,
+            -> onDismiss()
         }
     }
 
