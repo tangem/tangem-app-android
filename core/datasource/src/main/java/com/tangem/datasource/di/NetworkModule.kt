@@ -22,6 +22,7 @@ import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.TangemPayAuthApi
+import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
@@ -36,6 +37,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
@@ -230,6 +232,17 @@ internal object NetworkModule {
     fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.News,
+            applyTimeoutAnnotations = false,
+            sessionAuth = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketApi {
+        // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemTech,
             applyTimeoutAnnotations = false,
             sessionAuth = false,
         )
