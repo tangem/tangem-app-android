@@ -111,7 +111,11 @@ private fun CurrencyNetworkName(text: TextReference, modifier: Modifier = Modifi
 private fun AddToPortfolioButton(state: OnrampAddToPortfolioUM.AddButtonUM, modifier: Modifier = Modifier) {
     TangemButton(
         text = state.text.resolveReference(),
-        icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
+        icon = if (state.isTangemIconVisible) {
+            TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24)
+        } else {
+            TangemButtonIconPosition.None
+        },
         onClick = state.onClick,
         colors = TangemButtonsDefaults.primaryButtonColors,
         showProgress = state.isProgress,

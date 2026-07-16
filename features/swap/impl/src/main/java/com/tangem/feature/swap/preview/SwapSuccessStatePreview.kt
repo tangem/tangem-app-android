@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
+import com.tangem.feature.swap.ui.swapSuccessNavigation
 
 internal data object SwapSuccessStatePreview {
     val state = SwapSuccessStateHolder(
@@ -37,7 +38,7 @@ internal data object SwapSuccessStatePreview {
         fromTokenIconState = CurrencyIconState.Loading,
         toTokenIconState = CurrencyIconState.Loading,
         rate = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
-        onExploreButtonClick = {},
+        navigationUM = swapSuccessNavigation(txUrl = "https://www.google.com/#q=nam", exploreClick = {}),
         onStatusButtonClick = {},
     )
 }

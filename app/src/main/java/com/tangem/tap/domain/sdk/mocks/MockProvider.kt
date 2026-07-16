@@ -36,6 +36,9 @@ object MockProvider {
         MockOption("Backup Wallet") { BackupWalletMockContent },
         MockOption("Dev Wallet") { DevWalletMockContent },
         MockOption("Firmware 4.12") { Firmware412MockContent },
+        MockOption("V3 Multicurrency") { V3MockContent },
+        MockOption("Single Currency") { SingleCurrencyMockContent },
+        MockOption("Start2Coin") { S2CMockContent },
         MockOption("Cobrand") { showCobrandConfigDialog(it) },
     )
 
@@ -99,6 +102,7 @@ object MockProvider {
             ProductType.Note -> NoteMockContent
             ProductType.Ring -> RingMockContent
             ProductType.Twins -> TwinsMockContent
+            ProductType.Start2Coin -> S2CMockContent
             else -> TODO()
         }
     }

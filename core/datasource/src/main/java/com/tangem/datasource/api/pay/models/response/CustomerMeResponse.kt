@@ -19,6 +19,8 @@ data class CustomerMeResponse(
         @Json(name = "deposit_address") val depositAddress: String?,
         @Json(name = "card") val card: Card?,
         @Json(name = "balance") val balance: BalanceResponse?,
+        @Json(name = "product_instances") val productInstances: List<ProductInstance>,
+        @Json(name = "cards") val cards: List<Card>,
     )
 
     @JsonClass(generateAdapter = true)
@@ -99,6 +101,9 @@ data class CustomerMeResponse(
 
     @JsonClass(generateAdapter = true)
     data class Card(
+        // Present in the multi-card `cards[]` array to join a card to its product instance;
+        // absent in the legacy single-card `card` object, where the card joins the single product instance.
+        @Json(name = "card_id") val cardId: String?,
         @Json(name = "token") val token: String,
         @Json(name = "expiration_month") val expirationMonth: String,
         @Json(name = "expiration_year") val expirationYear: String,

@@ -27,6 +27,10 @@ class GetSelectedWalletUseCase(
         }
     }
 
+    fun selectedFlow(): Flow<UserWallet> {
+        return userWalletsListRepository.selectedUserWallet.filterNotNull()
+    }
+
     @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     fun sync(): Either<GetUserWalletError, UserWallet?> {
         return either {
