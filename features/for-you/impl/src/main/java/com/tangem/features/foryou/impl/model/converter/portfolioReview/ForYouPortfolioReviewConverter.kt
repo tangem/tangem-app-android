@@ -15,8 +15,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.model.converter.FOR_YOU_TOP_EARN_TOKENS_COUNT
 import com.tangem.features.foryou.impl.model.converter.forYouGroupKey
 import com.tangem.features.foryou.impl.model.converter.forYouPlaceholderBadge
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
@@ -42,6 +44,7 @@ internal class ForYouPortfolioReviewConverter(
     private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
+    private val onAddFundsClick: (UserWalletId) -> Unit,
 ) : Converter<AccountStatusList?, PortfolioReviewUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -50,6 +53,26 @@ internal class ForYouPortfolioReviewConverter(
         val currencies = value?.flattenCurrencies().orEmpty()
         val loadedBalance = value?.totalFiatBalance as? TotalFiatBalance.Loaded
         val totalFiatBalance = loadedBalance?.amount.orZero()
+
+        if (currencies.all { it.value.fiatAmount?.isZero() == true }) {
+            return PortfolioReviewUM.Content(
+                tokenList = currencies.take(FOR_YOU_TOP_EARN_TOKENS_COUNT)
+                    .groupBy { it.forYouGroupKey() }
+                    .map { (assetId, currencies) ->
+                        createListItem(
+                            userWalletId = value?.userWalletId,
+                            assetId = assetId,
+                            currencies = currencies,
+                            totalFiatBalance = totalFiatBalance,
+                        )
+                    }.toPersistentList(),
+                marketChartUM = MarketChartUM.NoData(
+                    title = resourceReference(R.string.market_chart_no_amount),
+                    donutText = resourceReference(R.string.market_chart_bubble_no_amount),
+                ),
+                onAddFundsClick = { value?.userWalletId?.let(onAddFundsClick) },
+            )
+        }
 
         // Drop only assets we positively know are empty — a resolved, priced zero fiat balance. Currencies
         // whose fiat we couldn't determine (unreachable / no-address / no-quote / still-loading — i.e. any
@@ -95,6 +118,7 @@ internal class ForYouPortfolioReviewConverter(
         return PortfolioReviewUM.Content(
             tokenList = tokenList,
             marketChartUM = marketChartUM,
+            onAddFundsClick = null,
         )
     }
 
@@ -127,7 +151,7 @@ internal class ForYouPortfolioReviewConverter(
                 networkCount = networkGroups.size,
                 totalFiatBalance = totalFiatBalance,
             ),
-            tokenList = networkGroups.map(rowConverter::convertNetworkGroup).toPersistentList(),
+            tokenList = networkGroups.map(rowConverter::convert).toPersistentList(),
             isExpanded = assetId in expandedAssetIds,
             isExpandable = true,
         )
