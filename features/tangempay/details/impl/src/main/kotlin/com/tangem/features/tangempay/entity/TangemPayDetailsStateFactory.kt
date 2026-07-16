@@ -35,7 +35,6 @@ internal class TangemPayDetailsStateFactory(
     private val intents: TangemPayDetailIntents,
     private val isRedesignEnabled: Boolean,
     private val isRemoveAccountEnabled: Boolean,
-    private val isMultipleCardsEnabled: Boolean,
     private val isTiersPlusPlanEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
@@ -100,7 +99,6 @@ internal class TangemPayDetailsStateFactory(
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
-                        .let { if (isMultipleCardsEnabled) it else it.take(1) }
                         .map { cardItem ->
                             TangemPayDetailsBalanceBlockState.Card(
                                 lastDigits = cardItem.lastDigits,
