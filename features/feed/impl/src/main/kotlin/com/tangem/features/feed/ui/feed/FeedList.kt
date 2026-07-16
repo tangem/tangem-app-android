@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.testTag
@@ -106,12 +105,10 @@ private fun FeedListContent(
             .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
             .drawBehind { drawRect(background) },
     ) {
-        if (LocalRedesignEnabled.current) {
-            SpacerH(contentPadding.calculateTopPadding())
-        }
+        SpacerH(contentPadding.calculateTopPadding())
         DateBlock(state.currentDate)
 
-        if (state.forYouBannerUM is ForYouBannerUM.Content && LocalRedesignEnabled.current) {
+        if (state.forYouBannerUM is ForYouBannerUM.Content) {
             SpacerH(16.dp)
             TangemMessageBanner(
                 title = resourceReference(R.string.for_you_title),
@@ -164,17 +161,7 @@ private fun FeedListContent(
 @Preview(showBackground = true, heightDp = 1500)
 @Composable
 private fun FeedListPreview() {
-    TangemThemePreview {
-        FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
-    }
-}
-
-@Preview(showBackground = true, heightDp = 1500)
-@Composable
-private fun FeedListPreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
-        }
+        FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
     }
 }

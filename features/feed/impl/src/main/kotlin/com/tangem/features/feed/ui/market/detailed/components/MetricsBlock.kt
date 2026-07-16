@@ -1,82 +1,21 @@
 package com.tangem.features.feed.ui.market.detailed.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.TextButton
-import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.block.information.GridItems
-import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.PreviewShimmerContainer
-import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.components.MetricsCard
-import com.tangem.features.feed.ui.market.detailed.state.InfoPointUM
 import com.tangem.features.feed.ui.market.detailed.state.InfoPointUMV2
 import com.tangem.features.feed.ui.market.detailed.state.MetricsUM
 import com.tangem.features.feed.ui.market.detailed.state.MetricsV2UM
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-
-const val MAX_METRICS_COUNT = 6
 
 @Composable
 internal fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        state.metricsV2?.let {
-            MetricsBlockV2(it, modifier)
-        }
-    } else {
-        MetricsBlockV1(state, modifier)
+    state.metricsV2?.let {
+        MetricsBlockV2(it, modifier)
     }
-}
-
-@Composable
-private fun MetricsBlockV1(state: MetricsUM, modifier: Modifier = Modifier) {
-    var isExpanded by remember { mutableStateOf(false) }
-
-    InformationBlock(
-        modifier = modifier,
-        title = {
-            Text(
-                text = stringResourceSafe(id = R.string.markets_token_details_metrics),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        action = {
-            if (state.metrics.size > MAX_METRICS_COUNT) {
-                ShowLessMoreButton(expanded = isExpanded, onClick = { isExpanded = !isExpanded })
-            }
-        },
-        content = {
-            val metrics = if (isExpanded) {
-                state.metrics
-            } else {
-                state.metrics.take(MAX_METRICS_COUNT).toImmutableList()
-            }
-
-            GridItems(
-                items = metrics,
-                itemContent = {
-                    InfoPoint(infoPointUM = it)
-                },
-            )
-        },
-    )
 }
 
 @Composable
@@ -123,60 +62,9 @@ private fun MetricCard(item: InfoPointUMV2) {
     }
 }
 
-// TODO make TextButton clickable area smaller and remove paddings for an action in InformationBlock
-@Composable
-private fun ShowLessMoreButton(expanded: Boolean, onClick: () -> Unit) {
-    // FIXME add string resources
-    val text = if (expanded) {
-        "See less"
-    } else {
-        "See more"
-    }
-
-    TextButton(
-        text = text,
-        onClick = onClick,
-        colors = TangemButtonsDefaults.positiveButtonColors,
-        textStyle = TangemTheme.typography.body2,
-    )
-}
-
 @Composable
 internal fun MetricsBlockPlaceholder(modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        MetricsBlockPlaceholderV2(modifier)
-    } else {
-        MetricsBlockPlaceholderV1(modifier)
-    }
-}
-
-@Composable
-private fun MetricsBlockPlaceholderV1(modifier: Modifier = Modifier) {
-    InformationBlock(
-        modifier = modifier,
-        title = {
-            TextShimmer(
-                modifier = Modifier.fillMaxWidth(),
-                radius = TangemTheme.dimens.radius3,
-                style = TangemTheme.typography.subtitle2,
-            )
-        },
-        action = {
-            Box(Modifier)
-        },
-        content = {
-            GridItems(
-                items = List(size = 6) { it }.toImmutableList(),
-                horizontalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-                itemContent = {
-                    InfoPointShimmer(
-                        modifier = Modifier.fillMaxWidth(),
-                        withTooltip = true,
-                    )
-                },
-            )
-        },
-    )
+    MetricsBlockPlaceholderV2(modifier)
 }
 
 @Composable
@@ -279,61 +167,4 @@ private fun CirculatingSupplyCardPlaceholder() {
             )
         },
     )
-}
-
-@Preview
-@Preview("Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun BlockPreview() {
-    TangemThemePreview {
-        MetricsBlock(
-            state = MetricsUM(
-                metrics = persistentListOf(
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_market_capitalization),
-                        value = "1.2T",
-                        onInfoClick = {},
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_market_rating),
-                        value = "A",
-                        onInfoClick = {},
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_trading_volume),
-                        value = "1.2T",
-                        onInfoClick = {},
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
-                        value = "1.2T",
-                        onInfoClick = {},
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_circulating_supply),
-                        value = "1.2T",
-                        onInfoClick = {},
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_total_supply),
-                        value = "1.2T",
-                        onInfoClick = {},
-                    ),
-                ),
-                metricsV2 = null,
-            ),
-        )
-    }
-}
-
-@Preview
-@Preview("Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun PreviewPlaceholder() {
-    TangemThemePreview {
-        PreviewShimmerContainer(
-            actualContent = { BlockPreview() },
-            shimmerContent = { MetricsBlockPlaceholder() },
-        )
-    }
 }
