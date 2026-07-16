@@ -100,6 +100,14 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.storeVirtualAccountOrderId(userWalletId, vaOrderId)
     }
 
+    override suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId) {
+        if (isMockMode) {
+            mockVaOrderIds.remove(userWalletId)
+            return
+        }
+        real.clearVirtualAccountOrderId(userWalletId)
+    }
+
     override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> =
         real.hasTangemPayInWallet(userWalletId)
 

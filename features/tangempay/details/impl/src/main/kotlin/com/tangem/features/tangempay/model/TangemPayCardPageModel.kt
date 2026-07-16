@@ -496,6 +496,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         when (val onramp = loaded.virtualAccount) {
             null -> return
             is VirtualAccountOnramp.BankCredentialsError -> showVaBankingDetailsError()
+            VirtualAccountOnramp.Processing -> showVaPreparing()
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
             -> openVirtualAccountDeposit(onramp, loaded)
@@ -519,6 +520,11 @@ internal class TangemPayCardPageModel @Inject constructor(
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VaBankingDetailsError(userWalletId = userWalletId),
         )
+    }
+
+    private fun showVaPreparing() {
+        bottomSheetNavigation.dismiss()
+        uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }
 
     fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
