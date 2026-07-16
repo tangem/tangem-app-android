@@ -55,15 +55,15 @@ internal sealed class WalletActionButtons(
         override val onClick: () -> Unit,
         override val isEnabled: Boolean,
     ) : WalletActionButtons(
-        text = resourceReference(R.string.common_add_funds),
-        iconRes = R.drawable.ic_plus_default_24,
+        text = resourceReference(R.string.actionbutton_addfunds_title),
+        iconRes = R.drawable.ic_arrow_down_24,
     )
 
     data class Swap(
         override val onClick: () -> Unit,
         override val isEnabled: Boolean,
     ) : WalletActionButtons(
-        text = resourceReference(R.string.common_swap),
+        text = resourceReference(R.string.actionbutton_swap_title),
         iconRes = R.drawable.ic_exchange_default_24,
     )
 
@@ -73,5 +73,13 @@ internal sealed class WalletActionButtons(
     ) : WalletActionButtons(
         text = resourceReference(R.string.common_sell),
         iconRes = R.drawable.ic_dollar_default_24,
+    )
+
+    data class Transfer(
+        override val onClick: () -> Unit,
+        override val isEnabled: Boolean,
+    ) : WalletActionButtons(
+        text = resourceReference(R.string.actionbutton_transfer_title),
+        iconRes = R.drawable.ic_arrow_up_24,
     )
 }

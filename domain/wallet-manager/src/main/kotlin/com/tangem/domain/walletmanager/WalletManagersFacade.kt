@@ -238,6 +238,17 @@ interface WalletManagersFacade {
     ): BigDecimal
 
     /**
+     * Computes the on-chain miner fee embedded in a Bitcoin swap [psbtBase64], in satoshi.
+     *
+     * Swap providers return a "naked" PSBT whose fee is implied by `sum(inputs) - sum(outputs)`
+     * rather than reported separately. Returns `null` if the wallet manager is unavailable, the
+     * network is not a PSBT-capable Bitcoin chain, or the fee cannot be derived from the PSBT.
+     */
+    suspend fun getPsbtFee(userWalletId: UserWalletId, network: Network, psbtBase64: String): BigDecimal?
+
+    suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
+
+    /**
      * Get requirements for asset(currency)
      * @return null if there's no requirement, otherwise [AssetRequirementsCondition].
      */
