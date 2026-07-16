@@ -73,7 +73,6 @@ class SetTokenListTransformerTest {
             clickIntents = mockk<WalletClickIntents>(relaxed = true),
             shouldShowMainPromo = false,
             isAccountsModeEnabled = false,
-            isRedesignEnabled = true,
             isMultipleCardsEnabled = false,
             isPolymarketEnabled = false,
         )
