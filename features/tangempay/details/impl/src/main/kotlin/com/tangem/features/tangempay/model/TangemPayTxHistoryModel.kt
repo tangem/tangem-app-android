@@ -6,7 +6,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryListManager
@@ -26,7 +25,6 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
-    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
@@ -45,8 +43,6 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         subscribeToUiItemChanges()
         subscribeToUpdateListener()
     }
-
-    fun isRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     private fun launchPagination() {
         modelScope.launch { listManager.launchPagination(params.userWalletId) }

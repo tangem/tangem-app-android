@@ -15,7 +15,6 @@ import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayReissueCardComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayReissueCardError
@@ -42,7 +41,6 @@ internal class TangemPayReissueCardModel @Inject constructor(
     private val reissueTangemPayCardUseCase: ReissueTangemPayCardUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
-    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayReissueCardComponent.Params>()
@@ -68,8 +66,6 @@ internal class TangemPayReissueCardModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardConfirmationPopupOpened())
         loadData()
     }
-
-    fun isRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     fun onDismiss() {
         reissueJobHolder.cancel()

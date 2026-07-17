@@ -40,7 +40,6 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.closure.CloseCardListener
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.ReissueCardListener
@@ -81,7 +80,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener {
 
@@ -116,7 +114,6 @@ internal class TangemPayCardPageModel @Inject constructor(
             TangemPayCardPageUM(
                 onBackClick = router::pop,
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
-                settings = persistentListOf(),
                 settingsV2 = persistentListOf(),
                 menuItems = buildMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
@@ -170,8 +167,6 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
-
     /** Reports the card the user swiped to so per-card UI and reveal target it. */
     fun onCardPageSelected(index: Int) {
         cardControllersState.value.getOrNull(index)?.let { selectedCardId.value = it.cardId }
@@ -223,7 +218,6 @@ internal class TangemPayCardPageModel @Inject constructor(
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
-                    settings = buildSettings(card),
                     settingsV2 = buildSettingsV2(card),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
@@ -239,34 +233,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         return (status as? PaymentAccountStatusValue.Loaded)?.findCardWithId(selectedCardId.value)
     }
 
-    private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
-        if (isRedesignEnabled()) return persistentListOf()
-        return persistentListOf(
-            TangemPayCardPageSetting(
-                title = TextReference.Res(R.string.tangempay_card_details_change_pin),
-                onSettingClick = { onClickChangePIN(card.hasPinCode) },
-                testTag = TangemPayTestTags.CHANGE_PIN_ROW,
-            ),
-            TangemPayCardPageSetting(
-                title = TextReference.Res(
-                    if (card.isFrozen) {
-                        R.string.tangempay_card_details_unfreeze_card
-                    } else {
-                        R.string.tangempay_card_details_freeze_card
-                    },
-                ),
-                onSettingClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
-                testTag = TangemPayTestTags.FREEZE_CARD_ROW,
-            ),
-            TangemPayCardPageSetting(
-                title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
-                onSettingClick = ::onClickReissueCard,
-            ),
-        )
-    }
-
     private suspend fun subscribeOnDetailsState() {
-        if (!isRedesignEnabled()) return
         combine(cardDetailsEventListener.event, selectedCardId) { event, selectedId ->
             event is CardDetailsEvent.Show && event.cardId == selectedId
         }.collect { isDetailsShown ->
@@ -287,7 +254,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun buildSettingsV2(card: TangemPayCard): ImmutableList<TangemPayCardPageSettingV2> {
-        if (!isRedesignEnabled()) return persistentListOf()
         return persistentListOf(
             TangemPayCardPageSettingV2(
                 id = TangemPayCardPageSettingV2.Id.Details,
@@ -395,15 +361,9 @@ internal class TangemPayCardPageModel @Inject constructor(
         if (frozenStateJobHolder.isActive) return
 
         val message = if (isFrozen) {
-            TangemPayMessagesFactory.createUnfreezeCardMessage(
-                onUnfreezeClicked = ::unfreezeCard,
-                isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
-            )
+            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard)
         } else {
-            TangemPayMessagesFactory.createFreezeCardMessage(
-                onFreezeClicked = ::freezeCard,
-                isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
-            )
+            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard)
         }
         uiMessageSender.send(message)
     }

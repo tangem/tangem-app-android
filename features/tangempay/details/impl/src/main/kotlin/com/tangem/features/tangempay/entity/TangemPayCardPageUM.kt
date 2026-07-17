@@ -12,7 +12,6 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Immutable
 internal data class TangemPayCardPageUM(
-    val settings: ImmutableList<TangemPayCardPageSetting>,
     val settingsV2: ImmutableList<TangemPayCardPageSettingV2>,
     val onBackClick: () -> Unit,
     val dailyLimitState: TangemPayDailyLimitBlockState,
@@ -26,17 +25,11 @@ internal data class TangemPayCardPageUM(
                 onClick = {},
                 onClickClose = {},
             ),
-            settings: ImmutableList<TangemPayCardPageSetting> = persistentListOf(
-                TangemPayCardPageSetting(TextReference.Str("Pin Code")) {},
-                TangemPayCardPageSetting(TextReference.Str("Freeze Card")) {},
-                TangemPayCardPageSetting(TextReference.Str("Reissue Card")) {},
-            ),
             cardState: TangemPayCardState = TangemPayCardState.Active,
             dailyLimitState: TangemPayDailyLimitBlockState = TangemPayDailyLimitBlockState.Content.stub(),
             settingsV2: ImmutableList<TangemPayCardPageSettingV2> = TangemPayCardPageSettingV2.stubList(),
         ) = TangemPayCardPageUM(
             addToWalletBlockState = addToWalletBlockState,
-            settings = settings,
             settingsV2 = settingsV2,
             onBackClick = {},
             cardState = cardState,
@@ -45,13 +38,6 @@ internal data class TangemPayCardPageUM(
         )
     }
 }
-
-@Immutable
-internal data class TangemPayCardPageSetting(
-    val title: TextReference,
-    val testTag: String? = null,
-    val onSettingClick: () -> Unit,
-)
 
 @Immutable
 internal data class TangemPayCardPageSettingV2(

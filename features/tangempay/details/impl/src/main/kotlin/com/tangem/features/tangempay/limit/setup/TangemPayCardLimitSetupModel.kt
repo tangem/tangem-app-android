@@ -23,7 +23,6 @@ import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -46,7 +45,6 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     private val setTangemPayCardLimitUseCase: SetTangemPayCardLimitUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
-    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: TangemPayCardLimitSetupComponent.Params = paramsContainer.require()
@@ -77,8 +75,6 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.LimitManagementOpened())
         observeCardState()
     }
-
-    fun inRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     private fun observeCardState() {
         paymentAccountStatusSupplier.invoke(userWalletId)
