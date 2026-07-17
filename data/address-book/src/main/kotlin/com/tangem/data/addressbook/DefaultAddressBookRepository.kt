@@ -95,6 +95,23 @@ internal class DefaultAddressBookRepository(
             decryptContacts(blob, userWallet).find { it.name.value == name }
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun isAddressBookCompatible(userWalletId: UserWalletId?): Flow<Boolean> {
+        val source = if (userWalletId != null) {
+            blobStore.getBlob(userWalletId).map { blob -> blob?.isVersionCompatible != false }
+        } else {
+            userWalletsListRepository.userWallets
+                .filterNotNull()
+                .flatMapLatest { wallets ->
+                    val ids = wallets.mapTo(mutableSetOf()) { it.walletId }
+                    // getBlobs returns only wallets that already have a stored book; wallets without one are
+                    // absent here and count as compatible (a fresh book uses the supported version).
+                    blobStore.getBlobs(ids).map { blobs -> blobs.all { it.isVersionCompatible } }
+                }
+        }
+        return source.distinctUntilChanged().flowOn(dispatchers.default)
+    }
+
     override suspend fun saveContact(contact: Contact): Either<AddressBookSyncError, Unit> =
         withContext(dispatchers.default) {
             writeMutex.withLock {
@@ -112,6 +129,7 @@ internal class DefaultAddressBookRepository(
             writeMutex.withLock {
                 userWalletsListRepository.userWalletsSync().forEach { userWallet ->
                     val blob = blobStore.getBlobSync(userWallet.walletId) ?: return@forEach
+                    if (!blob.isVersionCompatible) return@forEach
                     val addressBook = cipher.decrypt(blob, userWallet).getOrNull() ?: return@forEach
                     if (addressBook.contacts.none { it.id == id }) return@forEach
 
@@ -171,6 +189,13 @@ internal class DefaultAddressBookRepository(
     }
 
     private fun decryptContacts(blob: AddressBookBlob, userWallet: UserWallet): List<Contact> {
+        if (!blob.isVersionCompatible) {
+            logger.e(
+                "Skipping address book for wallet ${blob.walletId}: version ${blob.version} is newer than " +
+                    "supported ${AddressBookBlob.CURRENT_VERSION}",
+            )
+            return emptyList()
+        }
         return cipher.decrypt(blob, userWallet).fold(
             ifLeft = { error ->
                 // The cipher already logged the low-level cause; this ties the failure to the read path so QA
@@ -195,6 +220,13 @@ internal class DefaultAddressBookRepository(
         userWallet: UserWallet,
     ): Either<AddressBookSyncError, List<Contact>> {
         val blob = blobStore.getBlobSync(userWalletId) ?: return emptyList<Contact>().right()
+        if (!blob.isVersionCompatible) {
+            logger.e(
+                "Refusing to overwrite address book for wallet $userWalletId: stored version ${blob.version} is " +
+                    "newer than supported ${AddressBookBlob.CURRENT_VERSION} — a write would downgrade it",
+            )
+            return AddressBookSyncError.VersionMismatch.left()
+        }
         return cipher.decrypt(blob, userWallet)
             .map { it.contacts }
             .mapLeft { error ->
