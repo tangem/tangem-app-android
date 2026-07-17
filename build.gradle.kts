@@ -17,6 +17,16 @@ plugins {
 }
 
 buildscript {
+    configurations.classpath {
+        resolutionStrategy {
+            // DAGP 3.16.0 -> kotlin-metadata-jvm:2.2.21 -> kotlin-bom:2.2.21, whose platform
+            // constraints upgrade kotlin-daemon-client to 2.2.21 while kotlin-compiler-runner stays
+            // at the project Kotlin version. The version skew breaks incremental compilation via the
+            // daemon (NoSuchMethodError on IncrementalCompilationOptions.<init>). Pin daemon-client
+            // back to the project Kotlin version from the catalog.
+            force("org.jetbrains.kotlin:kotlin-daemon-client:${deps.gradle.kotlin.get().version}")
+        }
+    }
     dependencies {
         classpath(deps.gradle.android)
         classpath(deps.agconnect.agcp)
