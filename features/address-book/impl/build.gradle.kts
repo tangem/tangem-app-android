@@ -33,6 +33,7 @@ dependencies {
     api(projects.core.decompose)
     api(projects.core.ui)
     api(projects.core.utils)
+    implementation(projects.core.navigation)
 
     /** Compose */
     api(deps.compose.foundation)
