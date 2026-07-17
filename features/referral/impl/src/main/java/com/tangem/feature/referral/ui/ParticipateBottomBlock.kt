@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.common.ui.account.AccountIcon
-import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerW12
@@ -38,7 +37,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -56,7 +54,6 @@ internal fun ParticipateBottomBlock(
     code: String,
     shareLink: String,
     expectedAwards: ExpectedAwards?,
-    snackbarHostState: SnackbarHostState,
     onAgreementClick: () -> Unit,
     onCopyClick: () -> Unit,
     onShareClick: (String) -> Unit,
@@ -75,7 +72,6 @@ internal fun ParticipateBottomBlock(
         AdditionalButtons(
             code = code,
             shareLink = shareLink,
-            snackbarHostState = snackbarHostState,
             onCopyClick = onCopyClick,
             onShareClick = onShareClick,
         )
@@ -350,7 +346,6 @@ private fun AwardAccount(accountAward: ReferralStateHolder.AccountAward) {
 private fun AdditionalButtons(
     code: String,
     shareLink: String,
-    snackbarHostState: SnackbarHostState,
     onCopyClick: () -> Unit,
     onShareClick: (String) -> Unit,
 ) {
@@ -358,8 +353,6 @@ private fun AdditionalButtons(
     val hapticFeedback = LocalHapticFeedback.current
 
     val coroutineScope = rememberCoroutineScope()
-    val resources = LocalContext.current.resources
-    val isRedesignEnabled = LocalRedesignEnabled.current
     val tangemTopSnackbarHostState = LocalTopSnackbarHostState.current
 
     Row(
@@ -375,19 +368,12 @@ private fun AdditionalButtons(
                 clipboardManager.setText(AnnotatedString(code))
 
                 coroutineScope.launch {
-                    if (isRedesignEnabled) {
-                        tangemTopSnackbarHostState.showSnackbar(
-                            SnackbarMessage(
-                                startIconId = R.drawable.ic_check_24,
-                                message = resourceReference(R.string.referral_promo_code_copied),
-                            ),
-                        )
-                    } else {
-                        snackbarHostState.showSnackbar(
-                            message = resources.getStringSafe(R.string.referral_promo_code_copied),
-                            duration = SnackbarDuration.Short,
-                        )
-                    }
+                    tangemTopSnackbarHostState.showSnackbar(
+                        SnackbarMessage(
+                            startIconId = R.drawable.ic_check_24,
+                            message = resourceReference(R.string.referral_promo_code_copied),
+                        ),
+                    )
                 }
             },
             modifier = Modifier.weight(1f),
@@ -435,7 +421,6 @@ private fun ParticipateBottomBlockPreview(
                 code = data.code,
                 shareLink = data.shareLink,
                 expectedAwards = data.expectedAwards,
-                snackbarHostState = SnackbarHostState(),
                 onAgreementClick = data.onAgreementClick,
                 onCopyClick = data.onCopyClick,
                 onShareClick = data.onShareClick,
