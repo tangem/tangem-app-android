@@ -40,12 +40,20 @@ internal class TangemPayVirtualAccountDepositModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase = mockk()
     private val onShowDetails: (VirtualAccountOnramp.Available) -> Unit = mockk(relaxed = true)
+    private val onShowBankingDetailsError: () -> Unit = mockk(relaxed = true)
     private val onOrderCreated: () -> Unit = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(createVirtualAccountOrderUseCase, onShowDetails, onOrderCreated, uiMessageSender, analytics)
+        clearMocks(
+            createVirtualAccountOrderUseCase,
+            onShowDetails,
+            onShowBankingDetailsError,
+            onOrderCreated,
+            uiMessageSender,
+            analytics,
+        )
     }
 
     @Test
@@ -63,6 +71,21 @@ internal class TangemPayVirtualAccountDepositModelTest {
         coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaConditionsPopupShowed>()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShowDetailsClicked>()) }
+    }
+
+    @Test
+    fun `GIVEN bank credentials error WHEN show details THEN shows banking details error sheet`() = runTest {
+        // Arrange
+        val model = createModel(VirtualAccountOnramp.BankCredentialsError)
+
+        // Act
+        model.uiState.value.onShowDetailsClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { onShowBankingDetailsError() }
+        verify(exactly = 0) { onShowDetails(any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
     }
 
     @Test
@@ -130,6 +153,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
                 paymentAccountAddress = paymentAccountAddress,
                 onDismiss = {},
                 onShowDetails = onShowDetails,
+                onShowBankingDetailsError = onShowBankingDetailsError,
                 onOrderCreated = onOrderCreated,
             ),
         ),
