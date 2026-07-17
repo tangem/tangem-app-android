@@ -50,12 +50,13 @@ fun WalletManagerFactory.makeWalletManagerForApp(
             )
         }
         scanResponse.card.settings.isHDWalletAllowed && seedKey != null && derivationParams != null -> {
-            val hdWalletPublicKey = when {
-                scanResponse.card.firmwareVersion >= FirmwareVersion.v8 -> {
-                    wallet.publicKey
-                        ?: throw IllegalStateException("WalletPublicKey is null v8 wallet have no backup")
+            val hdWalletPublicKey = wallet.publicKey ?: run {
+                val message = if (scanResponse.card.firmwareVersion >= FirmwareVersion.v8) {
+                    "WalletPublicKey is null v8 wallet have no backup"
+                } else {
+                    "Wallet public key should not be null for HD wallets"
                 }
-                else -> throw IllegalStateException("Wallet public key should not be null for HD wallets")
+                throw IllegalStateException(message)
             }
 
             val derivedKeys = scanResponse.derivedKeys[hdWalletPublicKey.toMapKey()]
