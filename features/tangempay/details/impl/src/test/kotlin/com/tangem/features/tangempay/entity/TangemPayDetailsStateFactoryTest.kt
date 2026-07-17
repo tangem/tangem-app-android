@@ -113,7 +113,7 @@ internal class TangemPayDetailsStateFactoryTest {
     @Test
     fun `GIVEN deactivated with positive balance WHEN getDeactivatedState THEN withdraw enabled`() {
         // Act
-        val state = factory.getDeactivatedState(hasWithdrawableBalance = true)
+        val state = factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.TEN))
 
         // Assert
         assertThat(state.addFundsButton.isEnabled).isTrue()
@@ -123,7 +123,7 @@ internal class TangemPayDetailsStateFactoryTest {
     @Test
     fun `GIVEN deactivated with zero balance WHEN getDeactivatedState THEN withdraw disabled`() {
         // Act
-        val state = factory.getDeactivatedState(hasWithdrawableBalance = false)
+        val state = factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO))
 
         // Assert
         assertThat(state.addFundsButton.isEnabled).isTrue()
@@ -159,21 +159,29 @@ internal class TangemPayDetailsStateFactoryTest {
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
-        every { balance } returns PaymentAccountStatusValue.Balance(
-            fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                availableBalance = BigDecimal.ZERO,
-                currency = "USD",
-            ),
-            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                id = "id",
-                chainId = 1L,
-                depositAddress = "address",
-                tokenContractAddress = "contract",
-                balance = BigDecimal.ZERO,
-            ),
-            availableForWithdrawal = availableForWithdrawal,
-        )
+        every { balance } returns balance(availableForWithdrawal)
     }
+
+    private fun deactivatedStatus(availableForWithdrawal: BigDecimal): PaymentAccountStatusValue.Deactivated =
+        mockk(relaxed = true) {
+            every { source } returns StatusSource.ACTUAL
+            every { balance } returns balance(availableForWithdrawal)
+        }
+
+    private fun balance(availableForWithdrawal: BigDecimal) = PaymentAccountStatusValue.Balance(
+        fiatBalance = PaymentAccountStatusValue.FiatBalance(
+            availableBalance = BigDecimal.ZERO,
+            currency = "USD",
+        ),
+        cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+            id = "id",
+            chainId = 1L,
+            depositAddress = "address",
+            tokenContractAddress = "contract",
+            balance = BigDecimal.ZERO,
+        ),
+        availableForWithdrawal = availableForWithdrawal,
+    )
 
     internal data class ButtonStateCase(
         val source: StatusSource,

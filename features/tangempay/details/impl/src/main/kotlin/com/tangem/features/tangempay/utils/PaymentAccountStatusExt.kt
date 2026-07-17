@@ -27,9 +27,6 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
         else -> error("TangemPayDetails opened with unsupported status: $v")
     }
 
-internal val AccountStatus.Payment.isDeactivated: Boolean
-    get() = value is PaymentAccountStatusValue.Deactivated
-
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
 
