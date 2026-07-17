@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -93,11 +92,9 @@ private fun PreviewV1() {
 @Composable
 private fun PreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            Column(Modifier.background(TangemTheme.colors2.surface.level3)) {
-                repeat(20) {
-                    MarketsListItemPlaceholder()
-                }
+        Column(Modifier.background(TangemTheme.colors2.surface.level3)) {
+            repeat(20) {
+                MarketsListItemPlaceholder()
             }
         }
     }

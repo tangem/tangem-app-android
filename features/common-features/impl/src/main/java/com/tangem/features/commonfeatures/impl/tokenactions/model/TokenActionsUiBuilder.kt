@@ -85,7 +85,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
             quickActions = quickActions(
                 cryptoData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
-                isRedesignEnabled = true,
                 context = params.context,
             ),
             bottomActionText = bottomActionText(bottomAction),
