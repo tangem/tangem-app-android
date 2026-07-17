@@ -115,7 +115,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        isRedesignEnabled = isRedesignEnabled(),
         isRemoveAccountEnabled = tangemPayFeatureToggles.isRemoveAccountEnabled,
         isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
@@ -197,8 +196,6 @@ internal class TangemPayDetailsModel @Inject constructor(
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
         }
     }
-
-    fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
 
     override fun onClickAddFunds() {
         analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
