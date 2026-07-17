@@ -86,19 +86,20 @@ internal class MockAwareCashbackRepository @Inject constructor(
             cardTiers = listOf(
                 CashbackPromotions.CardTier(
                     tier = "basic",
-                    label = "Basic cards",
+                    label = "Basic",
                     scope = "All purchases",
                     minTransactionAmount = BigDecimal("30"),
                     monthlyCapAmount = BigDecimal("100"),
                 ),
                 CashbackPromotions.CardTier(
                     tier = "plus",
-                    label = "Plus cards",
+                    label = "Plus",
                     scope = "All purchases",
                     minTransactionAmount = BigDecimal("30"),
                     monthlyCapAmount = BigDecimal("300"),
                 ),
             ),
+            monthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"),
             additionalCashback = listOf(
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-permanent",
