@@ -98,15 +98,13 @@ internal fun RootContent(
                     hostState = snackbarHostState,
                 )
 
-                if (LocalRedesignEnabled.current) {
-                    TangemTopSnackbarHost(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .statusBarsPadding()
-                            .padding(all = 16.dp),
-                        hostState = LocalTopSnackbarHostState.current,
-                    )
-                }
+                TangemTopSnackbarHost(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(all = 16.dp),
+                    hostState = LocalTopSnackbarHostState.current,
+                )
             }
         }
         EventMessageEffect()
