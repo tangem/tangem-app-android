@@ -18,7 +18,6 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class TangemPayAddFundsUMConverter(
     val listener: AddFundsListener,
-    val isRedesignEnabled: Boolean,
     val shouldShowBankTransfer: Boolean,
 ) : Converter<TangemPayTopUpData, TangemPayAddFundsUM> {
 
@@ -27,41 +26,23 @@ internal class TangemPayAddFundsUMConverter(
         return TangemPayAddFundsUM(
             items = buildList {
                 TangemPayAddFundsItemUM(
-                    icon = if (isRedesignEnabled) {
-                        TangemIconUM.Icon(
-                            imageVector = Icons.ic_logo_tangem_20,
-                            tintReference = {
-                                TangemTheme.colors3.icon.brand
-                            },
-                        )
-                    } else {
-                        TangemIconUM.Icon(
-                            iconRes = R.drawable.ic_exchange_vertical_24,
-                            tintReference = {
-                                TangemTheme.colors.icon.accent
-                            },
-                        )
-                    },
+                    icon = TangemIconUM.Icon(
+                        imageVector = Icons.ic_logo_tangem_20,
+                        tintReference = {
+                            TangemTheme.colors3.icon.brand
+                        },
+                    ),
                     title = resourceReference(R.string.tangempay_topup_swap_title),
                     description = resourceReference(R.string.tangempay_topup_swap_body),
                     onClick = { listener.onClickSwap(value) },
                 ).let(::add)
                 TangemPayAddFundsItemUM(
-                    icon = if (isRedesignEnabled) {
-                        TangemIconUM.Icon(
-                            imageVector = Icons.ic_card_20,
-                            tintReference = {
-                                TangemTheme.colors3.icon.brand
-                            },
-                        )
-                    } else {
-                        TangemIconUM.Icon(
-                            iconRes = R.drawable.ic_arrow_down_24,
-                            tintReference = {
-                                TangemTheme.colors.icon.accent
-                            },
-                        )
-                    },
+                    icon = TangemIconUM.Icon(
+                        imageVector = Icons.ic_card_20,
+                        tintReference = {
+                            TangemTheme.colors3.icon.brand
+                        },
+                    ),
                     title = resourceReference(R.string.tangempay_topup_receive_title),
                     description = resourceReference(R.string.tangempay_topup_receive_body),
                     onClick = { listener.onClickReceive(value) },
