@@ -34,7 +34,6 @@ import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
-import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -53,10 +52,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindKycRepository(repository: DefaultKycRepository): KycRepository
-
-    @Binds
-    @Singleton
-    fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
 
     @Binds
     @Singleton
