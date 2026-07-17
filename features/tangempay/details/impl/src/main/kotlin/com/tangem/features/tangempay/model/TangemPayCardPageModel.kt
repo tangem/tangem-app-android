@@ -71,7 +71,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
 @ModelScoped
 internal class TangemPayCardPageModel @Inject constructor(
@@ -495,10 +495,12 @@ internal class TangemPayCardPageModel @Inject constructor(
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
         when (val onramp = loaded.virtualAccount) {
             null -> return
-            is VirtualAccountOnramp.BankCredentialsError -> showVaBankingDetailsError()
             VirtualAccountOnramp.Processing -> showVaPreparing()
+            // BankCredentialsError opens the deposit intro first; the retryable error sheet is shown from
+            // its "Show details" action (see onShowDetailsClick).
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
+            is VirtualAccountOnramp.BankCredentialsError,
             -> openVirtualAccountDeposit(onramp, loaded)
         }
     }
@@ -515,7 +517,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    private fun showVaBankingDetailsError() {
+    fun showVaBankingDetailsError() {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VaBankingDetailsError(userWalletId = userWalletId),
