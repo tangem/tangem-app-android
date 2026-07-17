@@ -65,7 +65,6 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
     private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase,
-    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
@@ -219,6 +218,18 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         val scanResponse = params.parentParams.scanResponse
 
         modelScope.launch {
+
+            val isWalletAlreadySaved = isWalletAlreadySavedUseCase
+                .invoke(mnemonic = mnemonic, passphrase = passphrase)
+                .getOrElse { false }
+
+            if (isWalletAlreadySaved) {
+                uiMessageSender.send(
+                    SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
+                )
+                return@launch
+            }
+
             val result = tangemSdkManager.importWallet(
                 scanResponse = scanResponse,
                 mnemonic = mnemonic.mnemonicComponents.joinToString(" "),
@@ -234,35 +245,28 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                         primaryCard = result.data.primaryCard,
                     )
 
-                    val wallet = createUserWallet(updatedScanResponse)
+                    analyticsHandler.send(
+                        OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
+                            creationType = if (generatedSeedPhrase) {
+                                AnalyticsParam.WalletCreationType.NewSeed
+                            } else {
+                                AnalyticsParam.WalletCreationType.SeedImport
+                            },
+                            seedPhraseLength = mnemonic.mnemonicComponents.size,
+                            passPhraseState = if (passphrase.isNullOrBlank()) {
+                                AnalyticsParam.EmptyFull.Empty
+                            } else {
+                                AnalyticsParam.EmptyFull.Full
+                            },
+                            referralId = appsFlyerStore.get()?.refcode,
+                        ),
+                    )
 
-                    val isWalletAlreadySaved = isWalletAlreadySavedUseCase
-                        .invoke(wallet)
-                        .getOrElse { false }
+                    multiWalletState.update {
+                        it.copy(currentScanResponse = updatedScanResponse)
+                    }
 
-                    if (!isWalletAlreadySaved) {
-                        analyticsHandler.send(
-                            OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                                creationType = if (generatedSeedPhrase) {
-                                    AnalyticsParam.WalletCreationType.NewSeed
-                                } else {
-                                    AnalyticsParam.WalletCreationType.SeedImport
-                                },
-                                seedPhraseLength = mnemonic.mnemonicComponents.size,
-                                passPhraseState = if (passphrase.isNullOrBlank()) {
-                                    AnalyticsParam.EmptyFull.Empty
-                                } else {
-                                    AnalyticsParam.EmptyFull.Full
-                                },
-                                referralId = appsFlyerStore.get()?.refcode,
-                            ),
-                        )
-
-                        multiWalletState.update {
-                            it.copy(currentScanResponse = updatedScanResponse)
-                        }
-
-                        cardRepository.startCardActivation(cardId = result.data.card.cardId)
+                    cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
                         walletCardsBackupReporter.report(
                             scanResponse = updatedScanResponse,
@@ -312,13 +316,6 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                 allowsRequestAccessCodeFromRepository = true,
             )
         }
-    }
-
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
-        return requireNotNull(
-            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
-            lazyMessage = { "User wallet not created" },
-        )
     }
 
     fun navigateToSupportScreen() {
