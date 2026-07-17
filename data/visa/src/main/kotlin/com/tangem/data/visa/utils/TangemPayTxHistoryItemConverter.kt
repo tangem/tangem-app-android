@@ -22,7 +22,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
     private val collateralAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Collateral::class.java) }
 
     override fun convert(value: TangemPayTxHistoryResponse.Transaction): TangemPayTxHistoryItem? {
-        return value.spend?.let { convertSpend(id = value.id, spend = it) }
+        return value.spend?.let { convertSpend(id = value.id, spend = it, cashback = value.cashback) }
             ?: value.payment?.let { convertPayment(id = value.id, payment = it) }
             ?: value.fee?.let { convertFee(id = value.id, fee = it) }
             ?: value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
@@ -32,7 +32,11 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             }
     }
 
-    private fun convertSpend(id: String, spend: TangemPayTxHistoryResponse.Spend): TangemPayTxHistoryItem.Spend {
+    private fun convertSpend(
+        id: String,
+        spend: TangemPayTxHistoryResponse.Spend,
+        cashback: TangemPayTxHistoryResponse.Cashback?,
+    ): TangemPayTxHistoryItem.Spend {
         val rawDate = if (spend.amount.signum() < 0) {
             spend.postedAt ?: spend.authorizedAt
         } else {
@@ -57,6 +61,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             declinedReason = spend.declinedReason,
             cardName = spend.cardDisplayName,
             cardNumberLast4 = spend.cardNumberEnd,
+            cashback = PayTransactionCashbackConverter.convert(cashback),
         )
     }
 
