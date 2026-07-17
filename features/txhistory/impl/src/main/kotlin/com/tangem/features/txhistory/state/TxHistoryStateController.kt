@@ -27,7 +27,7 @@ internal class TxHistoryStateController @Inject constructor() {
 
     private val _uiState: MutableStateFlow<TxHistoryItemsUM> =
         MutableStateFlow(TxHistoryItemsUM.Loading(isBalanceHidden = true, onExploreClick = {}))
-    val uiState: StateFlow<TxHistoryItemsUM> = _uiState
+    val uiState: StateFlow<TxHistoryItemsUM> = _uiState.asStateFlow()
 
     val isNotSupported: Boolean
         get() = _uiState.value is TxHistoryItemsUM.NotSupported
