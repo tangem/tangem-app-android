@@ -143,6 +143,7 @@ internal class TangemPayDetailsComponent(
                     paymentAccountAddress = navigation.paymentAccountAddress,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onShowDetails = model::onShowVirtualAccountRequisites,
+                    onShowBankingDetailsError = model::showVaBankingDetailsError,
                     onOrderCreated = model::onVirtualAccountOrderCreated,
                 ),
             )
