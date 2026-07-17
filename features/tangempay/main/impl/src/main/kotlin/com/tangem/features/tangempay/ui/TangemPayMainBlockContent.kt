@@ -31,7 +31,6 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -284,8 +283,7 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
 
 @Composable
 private fun getVisaIconPainter(): Painter {
-    val resource = if (LocalRedesignEnabled.current) R.drawable.ic_visa_in_banner else R.drawable.img_visa_36
-    return painterResource(resource)
+    return painterResource(R.drawable.ic_visa_in_banner)
 }
 
 // region Preview
