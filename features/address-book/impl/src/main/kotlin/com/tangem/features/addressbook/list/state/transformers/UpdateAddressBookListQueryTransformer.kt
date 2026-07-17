@@ -14,6 +14,7 @@ internal class UpdateAddressBookListQueryTransformer(
         )
         is AddressBookListUM.Empty,
         AddressBookListUM.Loading,
+        AddressBookListUM.Incompatible,
         -> prevState
     }
 }
