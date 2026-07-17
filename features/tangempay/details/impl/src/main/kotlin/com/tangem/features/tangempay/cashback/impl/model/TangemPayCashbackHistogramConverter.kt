@@ -1,6 +1,9 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -17,14 +20,13 @@ internal class TangemPayCashbackHistogramConverter(
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
 ) : Converter<CashbackHistory, TangemPayCashbackHistogramUM> {
 
-    // TODO([REDACTED_TASK_KEY]): move hardcoded strings to string resources
     override fun convert(value: CashbackHistory): TangemPayCashbackHistogramUM {
         val currency = getJavaCurrencyByCode(value.currency)
         val total = value.months.fold(BigDecimal.ZERO) { acc, month -> acc + month.confirmedAmount }
         val formattedTotal = total.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         val lastIndex = value.months.lastIndex
         return TangemPayCashbackHistogramUM(
-            title = stringReference("$formattedTotal earned in total"),
+            title = resourceReference(R.string.tangempay_cashback_total_earned, wrappedList(formattedTotal)),
             bars = value.months.mapIndexed { index, month ->
                 TangemPayCashbackHistogramUM.Bar(
                     month = stringReference(dateFormatter.formatShortMonth(month.year, month.month)),
