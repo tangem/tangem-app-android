@@ -16,6 +16,7 @@ import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAdd
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.*
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -94,6 +95,7 @@ internal class SendDestinationModelTest {
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk(relaxed = true)
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
+    private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase = mockk(relaxed = true)
     private val addressBookFeatureToggles: AddressBookFeatureToggles = mockk(relaxed = true)
     private val contactSelectionListener: ContactSelectionListener = mockk(relaxed = true)
     private val addressBookSendAnalytics: AddressBookSendAnalytics = mockk(relaxed = true)
@@ -490,6 +492,25 @@ internal class SendDestinationModelTest {
             assertThat(sut.showAddContact.value).isEqualTo(model.expectedShown)
         }
 
+        @Test
+        fun `GIVEN book newer than supported WHEN fresh address entered THEN add-contact hidden`() = runTest {
+            // Arrange
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), any(), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Success.Valid.right()
+            every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns flowOf(emptyList())
+            every { isAddressBookCompatibleUseCase(testUserWalletId) } returns flowOf(false)
+            val sut = buildBlockModel(isAddContactAvailable = true)
+            advanceUntilIdle()
+
+            // Act
+            sut.onRecipientAddressValueChange("0xFresh", EnterAddressSource.InputField)
+            advanceUntilIdle()
+
+            // Assert — a newer book can't be written, so saving the recipient is never offered.
+            assertThat(sut.showAddContact.value).isFalse()
+        }
+
         private fun provideTestModels() = listOf(
             // not available -> never shown, even for a fresh valid address
             AddContactModel(
@@ -667,6 +688,7 @@ internal class SendDestinationModelTest {
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
             addressBookFeatureToggles = addressBookFeatureToggles,
+            isAddressBookCompatibleUseCase = isAddressBookCompatibleUseCase,
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             contactSelectionListener = contactSelectionListener,
         )

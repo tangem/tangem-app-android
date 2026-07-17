@@ -441,6 +441,7 @@
   <string name="common_rename">Rename</string>
   <string name="common_required">Required</string>
   <string name="common_reset">Reset</string>
+  <string name="common_retry">Retry</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
   <string name="common_search">Search</string>
@@ -741,6 +742,7 @@
   <string name="force_update_button">Update</string>
   <string name="force_update_os_description">Your operating system is out of date. Please update it to continue using the app.</string>
   <string name="force_update_os_title">Update Your OS</string>
+  <string name="force_update_required_action">Update app</string>
   <string name="force_update_warning_message">Please update the app to its latest version to ensure proper functionality.</string>
   <string name="force_update_warning_title">Update required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
@@ -2095,8 +2097,11 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
+  <string name="tangempay_va_account_details">Account details</string>
+  <string name="tangempay_va_available_to_deposit_day">Available to deposit per day:</string>
   <string name="tangempay_va_banking_details_error_description">Please try again or contact support if the issue persists</string>
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
+  <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>

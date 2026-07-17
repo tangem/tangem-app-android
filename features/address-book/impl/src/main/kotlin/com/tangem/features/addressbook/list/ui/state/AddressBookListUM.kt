@@ -15,6 +15,12 @@ internal sealed interface AddressBookListUM {
     /** Initial state while the address books are being (re-)synced on open — rendered as shimmer placeholders. */
     data object Loading : AddressBookListUM
 
+    /**
+     * A stored book uses a contract version newer than this build supports, so it can be neither read nor
+     * safely edited. The screen shows an "update the app" stub instead of the list — no contacts, no add button.
+     */
+    data object Incompatible : AddressBookListUM
+
     data class Empty(val onAddClick: () -> Unit) : AddressBookListUM
 
     /**

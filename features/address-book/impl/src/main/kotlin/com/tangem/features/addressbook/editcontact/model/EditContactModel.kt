@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
 import com.tangem.domain.addressbook.interactor.SaveContactInteractor
@@ -451,10 +452,12 @@ internal class EditContactModel @Inject constructor(
     }
 
     private fun handleSaveError(error: SaveContactError) {
-        when (error) {
-            is SaveContactError.Name -> stateController.update(
+        when {
+            error is SaveContactError.Name -> stateController.update(
                 UpdateNameErrorTransformer(ContactNameErrorConverter().convert(error.error)),
             )
+            error is SaveContactError.Backend && error.error is AddressBookSyncError.VersionMismatch ->
+                showUpdateAppDialog()
             else -> messageSender.send(
                 DialogMessage(
                     title = resourceReference(R.string.common_something_went_wrong),
@@ -469,6 +472,14 @@ internal class EditContactModel @Inject constructor(
             )
         }
     }
+    private fun showUpdateAppDialog() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.force_update_warning_title),
+                message = resourceReference(R.string.force_update_warning_message),
+            ),
+        )
+    }
 
     private fun deleteContact(fromLastAddressRemoval: Boolean) {
         val contactId = params.contactId ?: return
@@ -479,7 +490,9 @@ internal class EditContactModel @Inject constructor(
         }
         modelScope.launch {
             deleteContactUseCase(contactId).fold(
-                ifLeft = { showDeleteError() },
+                ifLeft = { error ->
+                    if (error is AddressBookSyncError.VersionMismatch) showUpdateAppDialog() else showDeleteError()
+                },
                 ifRight = {
                     if (walletId != null) {
                         analyticsSender.sendContactDeleted(walletId = walletId, contactId = contactId.value)

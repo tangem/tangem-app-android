@@ -1,6 +1,7 @@
 package com.tangem.features.addressbook.common
 
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressSelectorComponent
@@ -21,6 +22,7 @@ import javax.inject.Inject
 internal class AddressBookChildFactory @Inject constructor(
     private val addressSelectorFactory: AddressSelectorComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val appStoreOpener: AppStoreOpener,
 ) {
 
     fun createChild(
@@ -36,6 +38,7 @@ internal class AddressBookChildFactory @Inject constructor(
                 onAddContactClick = clickIntents::onAddContactClick,
             ),
             addressSelectorFactory = addressSelectorFactory,
+            appStoreOpener = appStoreOpener,
         )
         is AddressBookRoute.EditContact -> DefaultEditContactComponent(
             appComponentContext = context,
