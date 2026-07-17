@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.*
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.Network
@@ -20,11 +21,7 @@ import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
 import com.tangem.features.addressbook.list.ui.state.ContentMode
 import com.tangem.features.addressbook.route.AddressBookRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -48,6 +45,7 @@ internal class AddressBookListModelTest {
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
+    private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase = mockk()
 
     private var model: AddressBookListModel? = null
 
@@ -59,9 +57,11 @@ internal class AddressBookListModelTest {
             analyticsSender,
             contactSelectionTrigger,
             syncAddressBooksUseCase,
+            isAddressBookCompatibleUseCase,
         )
         every { getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true) } returns
             flowOf(linkedMapOf())
+        every { isAddressBookCompatibleUseCase() } returns flowOf(true)
     }
 
     @AfterEach
@@ -119,6 +119,21 @@ internal class AddressBookListModelTest {
         val state = model.state.value as AddressBookListUM.Content
         assertThat(state.contentMode).isInstanceOf(ContentMode.Default::class.java)
         assertThat(state.contacts.map { it.name }).containsExactly("Alice", "Bob")
+    }
+
+    @Test
+    fun `GIVEN a book newer than supported WHEN created THEN incompatible state shown`() = runTest {
+        // Arrange
+        every { isAddressBookCompatibleUseCase() } returns flowOf(false)
+        every { getVerifiedContactsInteractor.getVerifiedContacts(query = "", userWalletId = null) } returns
+            flowOf(listOf(contact(id = "1", name = "Alice")))
+
+        // Act
+        val model = createModel(testScope = this, mode = AddressBookRoute.ListMode.Default)
+        advanceUntilIdle()
+
+        // Assert — the "update the app" stub replaces the list even though contacts are cached.
+        assertThat(model.state.value).isEqualTo(AddressBookListUM.Incompatible)
     }
 
     @Test
@@ -243,6 +258,7 @@ internal class AddressBookListModelTest {
             contactSelectionTrigger = contactSelectionTrigger,
             analyticsSender = analyticsSender,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
+            isAddressBookCompatibleUseCase = isAddressBookCompatibleUseCase,
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             getWalletsUseCase = getWalletsUseCase,
         ).also { model = it }
