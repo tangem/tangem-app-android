@@ -2009,7 +2009,10 @@
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
   <string name="tangempay_main_select_plan">Select plan</string>
-  <string name="tangempay_maximum_cards_issued_description">You can have up to 3 cards. Delete one to add a new card.</string>
+  <string name="tangempay_maximum_cards_issued_description">Delete one to add a new card</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade plan to have more cards</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_title">Cards limit reached for this plan</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
   <string name="tangempay_newonboard_Q1_title">Do I have to share my docs?</string>
