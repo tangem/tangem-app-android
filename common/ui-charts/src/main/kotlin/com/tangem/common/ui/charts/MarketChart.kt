@@ -48,7 +48,6 @@ import com.tangem.common.ui.charts.state.*
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -317,19 +316,9 @@ private fun rememberMarketChartBottomAxis(
 
 @Composable
 private fun rememberChartAxisGuidelineComponent(color: Color, isWithPadding: Boolean = true): LineComponent {
-    val isRedesign = LocalRedesignEnabled.current
+    val startPadding = TangemTheme.dimens2.x2_5
 
-    val startPadding = if (isRedesign) {
-        TangemTheme.dimens2.x2_5
-    } else {
-        TangemTheme.dimens.spacing4
-    }
-
-    val endPadding = if (isRedesign) {
-        TangemTheme.dimens2.x2
-    } else {
-        TangemTheme.dimens.spacing4
-    }
+    val endPadding = TangemTheme.dimens2.x2
 
     return rememberAxisGuidelineComponent(
         color = color,
