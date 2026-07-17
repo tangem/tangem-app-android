@@ -15,13 +15,11 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
@@ -154,31 +152,18 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         val txHistoryDetails by txHistoryDetailsSlot.subscribeAsState()
         NavigationBar3ButtonsScrim()
 
-        if (LocalRedesignEnabled.current) {
-            val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
+        val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
 
-            TokenDetailsScreen(
-                tokenDetailsUM = tokenDetailsUM,
-                tokenMarketBlockComponent = tokenMarketBlockComponent,
-                yieldSupplyComponent = yieldSupplyComponent,
-                txHistoryComponent = txHistoryComponent,
-                expressTransactionsComponent = expressTransactionsComponent,
-                ratingComponent = ratingSlotState.child?.instance,
-                marketingBannerComponent = marketingBannerComponent,
-                modifier = modifier,
-            )
-        } else {
-            val state by model.uiState.collectAsStateWithLifecycle()
-            TokenDetailsScreenLegacy(
-                state = state,
-                tokenMarketBlockComponent = tokenMarketBlockComponent,
-                txHistoryComponent = txHistoryComponent,
-                yieldSupplyComponent = yieldSupplyComponent,
-                expressTransactionsComponent = expressTransactionsComponent,
-                ratingComponent = ratingSlotState.child?.instance,
-                marketingBannerComponent = marketingBannerComponent,
-            )
-        }
+        TokenDetailsScreen(
+            tokenDetailsUM = tokenDetailsUM,
+            tokenMarketBlockComponent = tokenMarketBlockComponent,
+            yieldSupplyComponent = yieldSupplyComponent,
+            txHistoryComponent = txHistoryComponent,
+            expressTransactionsComponent = expressTransactionsComponent,
+            ratingComponent = ratingSlotState.child?.instance,
+            marketingBannerComponent = marketingBannerComponent,
+            modifier = modifier,
+        )
 
         bottomSheet.child?.instance?.BottomSheet()
         txHistoryDetails.child?.instance?.BottomSheet()
