@@ -17,7 +17,7 @@
     },
     {
         "name": "TWI_485_USEDESK_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -37,7 +37,7 @@
     },
     {
         "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
@@ -45,7 +45,7 @@
     },
     {
         "name": "AND_15482_SURVEYSPARROW_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
@@ -53,11 +53,11 @@
     },
     {
         "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "TWI_83_ADDRESS_BOOK_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
@@ -81,7 +81,7 @@
     },
     {
         "name": "TWI_1367_HIGH_FEE_WARNING_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "TWI_1638_VA_MVP0_ENABLED",
