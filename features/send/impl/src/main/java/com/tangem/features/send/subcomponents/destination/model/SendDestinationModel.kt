@@ -18,6 +18,7 @@ import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAdd
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.account.AccountStatus
@@ -88,6 +89,7 @@ internal class SendDestinationModel @Inject constructor(
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     private val addressBookFeatureToggles: AddressBookFeatureToggles,
+    isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
@@ -105,6 +107,11 @@ internal class SendDestinationModel @Inject constructor(
             .flowOn(dispatchers.default)
             .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
 
+    private val isAddressBookCompatible: StateFlow<Boolean> =
+        isAddressBookCompatibleUseCase(userWalletId)
+            .flowOn(dispatchers.default)
+            .stateIn(modelScope, SharingStarted.Eagerly, initialValue = true)
+
     val addressSelectorNavigation = SlotNavigation<MatchedContact>()
     val addressQuery: StateFlow<String> = uiState
         .map { (it as? DestinationUM.Content)?.addressTextField?.value.orEmpty() }
@@ -118,7 +125,8 @@ internal class SendDestinationModel @Inject constructor(
      */
     val showAddContact: StateFlow<Boolean> =
         if ((params as? DestinationBlockParams)?.isAddContactAvailable == true) {
-            combine(uiState, contacts) { state, contactList ->
+            combine(uiState, contacts, isAddressBookCompatible) { state, contactList, isCompatible ->
+                if (!isCompatible) return@combine false
                 val address = (state as? DestinationUM.Content)?.addressTextField ?: return@combine false
                 if (address.contactName != null) return@combine false // sent via a contact
                 val networkId = cryptoCurrency.network.rawId
