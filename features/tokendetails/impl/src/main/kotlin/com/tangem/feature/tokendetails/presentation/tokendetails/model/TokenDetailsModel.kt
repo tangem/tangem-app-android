@@ -33,7 +33,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
@@ -184,7 +183,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val redesignStateController: TokenDetailsStateController,
     private val swapFeedbackUseCase: SwapFeedbackUseCase,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
@@ -346,10 +344,8 @@ internal class TokenDetailsModel @Inject constructor(
                 uiState.value = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = settings.isBalanceHidden,
                 )
-                if (designFeatureToggles.isRedesignEnabled) {
-                    redesignStateController.update { state ->
-                        state.copy(isBalanceHidden = settings.isBalanceHidden)
-                    }
+                redesignStateController.update { state ->
+                    state.copy(isBalanceHidden = settings.isBalanceHidden)
                 }
             }
             .launchIn(modelScope)
@@ -366,38 +362,36 @@ internal class TokenDetailsModel @Inject constructor(
                 latestTokenActions = state.states
                 sendButtonsEvents(state.states)
                 uiState.value = stateFactory.getManageButtonsState(actions = state.states)
-                if (designFeatureToggles.isRedesignEnabled) {
-                    val networkSource = currencyStatus.value.sources.networkSource
-                    redesignStateController.update(
-                        UpdateActionButtonsTransformer(
-                            actions = state.states,
-                            clickIntents = this@TokenDetailsModel,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateAddFundsTransformer(
-                            actions = state.states,
-                            networkSource = networkSource,
-                            clickIntents = this@TokenDetailsModel,
-                            onActionDispatched = bottomSheetNavigation::dismiss,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateTransferTransformer(
-                            actions = state.states,
-                            networkSource = networkSource,
-                            clickIntents = this@TokenDetailsModel,
-                            analyticsEventHandler = analyticsEventsHandler,
-                            onActionDispatched = bottomSheetNavigation::dismiss,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateZeroBalanceActionsTransformer(
-                            actions = state.states,
-                            clickIntents = this@TokenDetailsModel,
-                        ),
-                    )
-                }
+                val networkSource = currencyStatus.value.sources.networkSource
+                redesignStateController.update(
+                    UpdateActionButtonsTransformer(
+                        actions = state.states,
+                        clickIntents = this@TokenDetailsModel,
+                    ),
+                )
+                redesignStateController.update(
+                    UpdateAddFundsTransformer(
+                        actions = state.states,
+                        networkSource = networkSource,
+                        clickIntents = this@TokenDetailsModel,
+                        onActionDispatched = bottomSheetNavigation::dismiss,
+                    ),
+                )
+                redesignStateController.update(
+                    UpdateTransferTransformer(
+                        actions = state.states,
+                        networkSource = networkSource,
+                        clickIntents = this@TokenDetailsModel,
+                        analyticsEventHandler = analyticsEventsHandler,
+                        onActionDispatched = bottomSheetNavigation::dismiss,
+                    ),
+                )
+                redesignStateController.update(
+                    UpdateZeroBalanceActionsTransformer(
+                        actions = state.states,
+                        clickIntents = this@TokenDetailsModel,
+                    ),
+                )
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
@@ -1502,7 +1496,6 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun initRedesign() {
-        if (!designFeatureToggles.isRedesignEnabled) return
         initRedesignState()
         observeRedesignBalance()
         updateRedesignTopBarMenu()

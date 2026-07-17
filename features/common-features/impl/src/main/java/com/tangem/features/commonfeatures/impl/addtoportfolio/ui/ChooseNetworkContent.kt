@@ -49,17 +49,10 @@ private const val DISABLED_ALPHA = 0.4f
 
 @Composable
 internal fun ChooseNetworkContent(state: ChooseNetworkUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        ChooseNetworkContentV2(
-            state = state,
-            modifier = modifier,
-        )
-    } else {
-        ChooseNetworkContentV1(
-            state = state,
-            modifier = modifier,
-        )
-    }
+    ChooseNetworkContentV2(
+        state = state,
+        modifier = modifier,
+    )
 }
 
 @Composable
