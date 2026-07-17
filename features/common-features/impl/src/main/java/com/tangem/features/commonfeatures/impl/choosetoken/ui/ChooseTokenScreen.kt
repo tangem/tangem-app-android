@@ -77,7 +77,7 @@ import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.TangemSharedTransitionLayout
@@ -851,7 +851,7 @@ private fun LazyListScope.tokensNotFound(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun TokenScreenPreview(@PreviewParameter(ChooseTokenScreenPreviewProvider::class) state: ChooseTokenFullUM) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         ChooseTokenScreen(
             state = state,
             modifier = Modifier,
