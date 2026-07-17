@@ -277,7 +277,7 @@ private fun ErrorMessage(config: NotificationConfig, modifier: Modifier = Modifi
                             null
                         },
                         size = TangemButtonSize.X9,
-                        type = TangemButtonType.Primary,
+                        type = TangemButtonType.PrimaryInverse,
                         shape = TangemButtonShape.Rounded,
                     ),
                     modifier = Modifier.weight(1f),
