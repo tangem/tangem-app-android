@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,13 +17,11 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
-import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreenV2
 import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.utils.requireLoaded
@@ -98,26 +95,15 @@ internal class TangemPayDetailsComponent(
                 horizontalItemPadding = 16.dp,
             )
         }
-        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
-            NavigationBar3ButtonsScrim()
-            if (LocalVisaRedesignEnabled.current) {
-                TangemPayDetailsScreenV2(
-                    state = state,
-                    txHistoryComponent = txHistoryComponent,
-                    expressTransactionsComponent = expressTransactionsComponent,
-                    promoBannersBlockComponent = promoBannersBlock,
-                    modifier = modifier,
-                )
-            } else {
-                TangemPayDetailsScreen(
-                    state = state,
-                    txHistoryComponent = txHistoryComponent,
-                    expressTransactionsComponent = expressTransactionsComponent,
-                    modifier = modifier,
-                )
-            }
-            bottomSheet.child?.instance?.BottomSheet()
-        }
+        NavigationBar3ButtonsScrim()
+        TangemPayDetailsScreenV2(
+            state = state,
+            txHistoryComponent = txHistoryComponent,
+            expressTransactionsComponent = expressTransactionsComponent,
+            promoBannersBlockComponent = promoBannersBlock,
+            modifier = modifier,
+        )
+        bottomSheet.child?.instance?.BottomSheet()
     }
 
     @Suppress("LongMethod")
