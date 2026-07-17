@@ -67,7 +67,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.redesign.detail).isEqualTo(TransactionDetailUM.Loading)
+        assertThat(model.uiState.value.detail).isEqualTo(TransactionDetailUM.Loading)
         model.onDestroy()
     }
 
@@ -85,7 +85,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.redesign.detail)
+        assertThat(model.uiState.value.detail)
             .isEqualTo(
                 TransactionDetailUM.Content(
                     cardNumber = stringReference("*4321"),
@@ -106,7 +106,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.redesign.detail).isNull()
+        assertThat(model.uiState.value.detail).isNull()
         model.onDestroy()
     }
 
@@ -120,7 +120,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.redesign.detail).isInstanceOf(TransactionDetailUM.Error::class.java)
+        assertThat(model.uiState.value.detail).isInstanceOf(TransactionDetailUM.Error::class.java)
         model.onDestroy()
     }
 
@@ -136,7 +136,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         )
         val model = createModel(testScope = this, transaction = spendTransaction())
         advanceUntilIdle()
-        val errorState = model.uiState.value.redesign.detail
+        val errorState = model.uiState.value.detail
         assertThat(errorState).isInstanceOf(TransactionDetailUM.Error::class.java)
 
         // Act — tap refresh
@@ -144,7 +144,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.redesign.detail)
+        assertThat(model.uiState.value.detail)
             .isEqualTo(
                 TransactionDetailUM.Content(
                     cardNumber = stringReference("*4321"),
@@ -164,7 +164,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.redesign.detail).isNull()
+        assertThat(model.uiState.value.detail).isNull()
         coVerify(exactly = 0) { repository.getTransaction(any(), any()) }
         model.onDestroy()
     }

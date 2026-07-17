@@ -6,9 +6,6 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 internal class DefaultTangemPayFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TangemPayFeatureToggles {
-    override val isRedesignEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.APP_REDESIGN_ENABLED)
-
     override val isRemoveAccountEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15741_VISA_PAY_REMOVE_ACCOUNT)
 
