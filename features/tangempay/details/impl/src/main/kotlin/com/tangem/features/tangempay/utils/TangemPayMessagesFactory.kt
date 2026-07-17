@@ -60,29 +60,20 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createFreezeCardMessage(isRedesignEnabled: Boolean, onFreezeClicked: () -> Unit): BottomSheetMessage {
+    fun createFreezeCardMessage(onFreezeClicked: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
-                if (isRedesignEnabled) {
-                    vector(Icons.ic_snowflake_20) {
-                        type = MessageBottomSheetUM.Vector.Type.Informative
-                        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Informative
-                    }
-                } else {
-                    icon(R.drawable.ic_snow_24) {
-                        type = MessageBottomSheetUM.Icon.Type.Accent
-                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
-                    }
+                vector(Icons.ic_snowflake_20) {
+                    type = MessageBottomSheetUM.Vector.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Informative
                 }
                 title = TextReference.Res(R.string.tangem_pay_freeze_card_alert_title)
                 body = TextReference.Res(R.string.tangem_pay_freeze_card_alert_body)
             }
-            if (isRedesignEnabled) {
-                secondaryButton {
-                    text = resourceReference(R.string.common_cancel)
-                    onClick {
-                        closeBs()
-                    }
+            secondaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick {
+                    closeBs()
                 }
             }
             primaryButton {
@@ -95,29 +86,20 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createUnfreezeCardMessage(isRedesignEnabled: Boolean, onUnfreezeClicked: () -> Unit): BottomSheetMessage {
+    fun createUnfreezeCardMessage(onUnfreezeClicked: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
-                if (isRedesignEnabled) {
-                    vector(Icons.ic_sun_20) {
-                        type = MessageBottomSheetUM.Vector.Type.Attention
-                        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
-                    }
-                } else {
-                    icon(R.drawable.ic_snow_24) {
-                        type = MessageBottomSheetUM.Icon.Type.Accent
-                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
-                    }
+                vector(Icons.ic_sun_20) {
+                    type = MessageBottomSheetUM.Vector.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
                 }
                 title = TextReference.Res(R.string.tangem_pay_unfreeze_card_alert_title)
                 body = TextReference.Res(R.string.tangem_pay_unfreeze_card_alert_body)
             }
-            if (isRedesignEnabled) {
-                secondaryButton {
-                    text = resourceReference(R.string.common_cancel)
-                    onClick {
-                        closeBs()
-                    }
+            secondaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick {
+                    closeBs()
                 }
             }
             primaryButton {

@@ -22,17 +22,10 @@ internal class TangemPayCardLimitSetupComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
-        if (model.inRedesignEnabled()) {
-            TangemPayCardLimitSetupScreenV2(
-                state = state,
-                modifier = modifier,
-            )
-        } else {
-            TangemPayCardLimitSetupScreen(
-                state = state,
-                modifier = modifier,
-            )
-        }
+        TangemPayCardLimitSetupScreenV2(
+            state = state,
+            modifier = modifier,
+        )
     }
 
     data class Params(val card: TangemPayCard, val userWalletId: UserWalletId)
