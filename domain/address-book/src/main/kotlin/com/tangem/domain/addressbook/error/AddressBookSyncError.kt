@@ -31,4 +31,11 @@ sealed interface AddressBookSyncError {
 
     /** Any other unexpected failure (encryption, missing data, unmapped HTTP code). */
     data object Unknown : AddressBookSyncError
+
+    /**
+     * The stored book uses a contract version newer than this build supports
+     * ([com.tangem.domain.addressbook.model.AddressBookBlob.isVersionCompatible]). Determined locally (no
+     * network), the write is refused so a book the app cannot fully understand is not downgraded/overwritten.
+     */
+    data object VersionMismatch : AddressBookSyncError
 }
