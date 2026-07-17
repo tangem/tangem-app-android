@@ -9,10 +9,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorBS
-import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContent
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContentV2
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -48,19 +46,11 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
         val listBottomPadding = PaddingValues(bottom = LocalTangemBottomSheetContentBottomInset.current)
-        if (LocalRedesignEnabled.current) {
-            PortfolioSelectorContentV2(
-                state = state,
-                modifier = modifier,
-                contentPadding = listBottomPadding,
-            )
-        } else {
-            PortfolioSelectorContent(
-                state = state,
-                modifier = modifier,
-                contentPadding = listBottomPadding,
-            )
-        }
+        PortfolioSelectorContentV2(
+            state = state,
+            modifier = modifier,
+            contentPadding = listBottomPadding,
+        )
     }
 
     @AssistedFactory
