@@ -45,19 +45,11 @@ internal fun PortfolioSelectorBS(
             )
         },
         content = {
-            if (LocalRedesignEnabled.current) {
-                PortfolioSelectorContentV2(
-                    state = state,
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    modifier = modifier.padding(horizontal = 16.dp),
-                )
-            } else {
-                PortfolioSelectorContent(
-                    state = state,
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    modifier = modifier.padding(horizontal = 16.dp),
-                )
-            }
+            PortfolioSelectorContentV2(
+                state = state,
+                contentPadding = PaddingValues(bottom = 16.dp),
+                modifier = modifier.padding(horizontal = 16.dp),
+            )
         },
     )
 }
