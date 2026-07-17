@@ -441,6 +441,7 @@
   <string name="common_rename">Renomear</string>
   <string name="common_required">Obrigatório</string>
   <string name="common_reset">Reiniciar</string>
+  <string name="common_retry">Tentar novamente</string>
   <string name="common_save">Salvar</string>
   <string name="common_save_changes">Salvar alterações</string>
   <string name="common_search">Procurar</string>
@@ -1732,7 +1733,7 @@
   <string name="support_chat_screen_title">Chat de suporte</string>
   <string name="support_chat_share_logs_button">Anexar logs do aplicativo</string>
   <string name="support_chat_swap_prefilled_message">Dados da operação SWAP:\nDe: %1$s %2$s\nPara: %3$s %4$s\nPor %5$s - %6$s</string>
-  <string name="support_selector_view_chat_button">Abra o e-mail</string>
+  <string name="support_selector_view_chat_button">Abra o chat</string>
   <string name="support_selector_view_email_button">Abra o e-mail</string>
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
   <string name="swap_detailed_mode">Modo detalhado</string>

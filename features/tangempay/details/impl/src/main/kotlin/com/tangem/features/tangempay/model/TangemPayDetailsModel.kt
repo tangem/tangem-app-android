@@ -315,10 +315,12 @@ internal class TangemPayDetailsModel @Inject constructor(
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
         when (val onramp = loaded.virtualAccount) {
             null -> return
-            is VirtualAccountOnramp.BankCredentialsError -> showVaBankingDetailsError()
             VirtualAccountOnramp.Processing -> showVaPreparing()
+            // BankCredentialsError opens the deposit intro first; the retryable error sheet is shown from
+            // its "Show details" action (see onShowDetailsClick).
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
+            is VirtualAccountOnramp.BankCredentialsError,
             -> openVirtualAccountDeposit(onramp, loaded)
         }
     }
@@ -335,7 +337,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
-    private fun showVaBankingDetailsError() {
+    fun showVaBankingDetailsError() {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VaBankingDetailsError(userWalletId = userWalletId),
