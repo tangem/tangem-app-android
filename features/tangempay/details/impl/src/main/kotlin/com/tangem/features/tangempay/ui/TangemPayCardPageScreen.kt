@@ -319,18 +319,14 @@ private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDet
 @Composable
 private fun TangemPayCardPageScreenPreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(
-            LocalRedesignEnabled provides true,
-        ) {
-            TangemPayCardPageScreen(
-                state = TangemPayCardPageUM.stub(),
-                cardSection = {
-                    TangemPayCard(
-                        state = previewCardDetailsState(),
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                },
-            )
-        }
+        TangemPayCardPageScreen(
+            state = TangemPayCardPageUM.stub(),
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
+        )
     }
 }
