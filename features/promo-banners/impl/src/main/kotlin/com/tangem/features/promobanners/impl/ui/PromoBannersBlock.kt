@@ -25,7 +25,6 @@ import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.impl.model.PromoBannerNotificationUM
@@ -242,19 +241,6 @@ private fun previewState(bannerCount: Int) = PromoBannersBlockUM(
     onCarouselScrolled = {},
     onPageChanged = {},
 )
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun Preview_PromoBannersBlock_Legacy() {
-    TangemThemePreview {
-        PromoBannersBlock(
-            state = previewState(bannerCount = 2),
-            horizontalItemPadding = 12.dp,
-            modifier = Modifier.padding(vertical = 16.dp),
-        )
-    }
-}
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)

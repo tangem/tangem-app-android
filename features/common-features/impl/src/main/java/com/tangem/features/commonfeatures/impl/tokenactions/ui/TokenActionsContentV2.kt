@@ -229,17 +229,15 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
 @Composable
 private fun Preview(@PreviewParameter(TokenActionsContentPreviewProviderV2::class) state: TokenActionsUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level2)
-                    .padding(horizontal = 16.dp),
-            ) {
-                TokenActionsContentV2(
-                    state = state,
-                )
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors2.surface.level2)
+                .padding(horizontal = 16.dp),
+        ) {
+            TokenActionsContentV2(
+                state = state,
+            )
         }
     }
 }

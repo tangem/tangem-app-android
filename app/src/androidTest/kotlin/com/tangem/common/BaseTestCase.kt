@@ -199,7 +199,6 @@ abstract class BaseTestCase : TestCase(
                 // build even when the app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < x.xx would
                 // disable them). On the releases/6.0 branch every toggle with version <= 6.0 ships enabled.
                 // 6.0
-                "APP_REDESIGN_ENABLED" to true,
                 "TWI_1326_YIELD_MODE_SWAP_ENABLED" to true,
                 // 6.1
                 "TWI_1638_VA_MVP0_ENABLED" to true,
