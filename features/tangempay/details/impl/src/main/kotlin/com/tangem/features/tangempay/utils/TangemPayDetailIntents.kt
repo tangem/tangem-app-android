@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.utils
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 
 internal interface TangemPayDetailIntents {
     fun onContactSupportClicked()
@@ -15,6 +16,6 @@ internal interface TangemPayDetailIntents {
     fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan)
     fun onCancelPlusTransition(orderId: String)
     fun onCardClick(cardId: String)
-    fun onAddCardClick()
+    fun onAddCardClick(tariffState: TangemPayTariffPlanState?)
     fun onRemoveAccount()
 }
