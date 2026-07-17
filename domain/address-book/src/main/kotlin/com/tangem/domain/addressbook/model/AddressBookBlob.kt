@@ -1,5 +1,6 @@
 package com.tangem.domain.addressbook.model
 
+import com.tangem.domain.addressbook.model.AddressBookBlob.Companion.CURRENT_VERSION
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,7 +27,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AddressBookBlob(
     @SerialName("version")
-    val version: String = CURRENT_VERSION, // TODO Will come from BE in [REDACTED_TASK_KEY]
+    val version: String = CURRENT_VERSION,
     @SerialName("walletId")
     val walletId: String,
     @SerialName("updatedAt")
@@ -39,7 +40,30 @@ data class AddressBookBlob(
     val authTag: String,
 ) {
 
+    /**
+     * Whether this build can safely read and write the blob — i.e. its [version] is not newer than the
+     * contract this app supports ([CURRENT_VERSION]). See [isVersionCompatible].
+     */
+    val isVersionCompatible: Boolean get() = isVersionCompatible(version)
+
     companion object {
         const val CURRENT_VERSION = "1.0"
+
+        /**
+         * A blob is compatible when its contract version is **not higher** than [CURRENT_VERSION]. The version
+         * is treated as a plain number (major/minor are not distinguished — any higher value is incompatible):
+         * - lower (`0.9`) — the app understands a newer contract; reads work and a write upgrades the backend
+         *   copy to [CURRENT_VERSION].
+         * - equal — same contract.
+         * - higher (`1.1`, `2.0`) — the backend contract is newer than this build understands, so the book must
+         *   be treated as read-only-opaque (not read, not written).
+         *
+         * A version that cannot be parsed as a number is treated as incompatible — safer to refuse a blob we
+         * cannot reason about.
+         */
+        fun isVersionCompatible(version: String): Boolean {
+            val parsed = version.trim().toDoubleOrNull() ?: return false
+            return parsed <= CURRENT_VERSION.toDouble()
+        }
     }
 }

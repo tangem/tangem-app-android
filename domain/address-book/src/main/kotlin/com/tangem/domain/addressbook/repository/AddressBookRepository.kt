@@ -20,6 +20,14 @@ interface AddressBookRepository {
 
     suspend fun getContact(userWalletId: UserWalletId, name: String): Contact?
 
+    /**
+     * Whether the stored address book(s) can be used by this build — i.e. their contract version is not newer
+     * than the one this app supports (see [com.tangem.domain.addressbook.model.AddressBookBlob.isVersionCompatible]).
+     * @param userWalletId a specific wallet, or `null` to check every wallet — `null` is compatible only when
+     * **all** currently stored books are compatible.
+     */
+    fun isAddressBookCompatible(userWalletId: UserWalletId? = null): Flow<Boolean>
+
     suspend fun saveContact(contact: Contact): Either<AddressBookSyncError, Unit>
 
     suspend fun deleteContact(id: ContactId): Either<AddressBookSyncError, Unit>
