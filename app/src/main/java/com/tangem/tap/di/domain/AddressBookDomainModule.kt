@@ -6,11 +6,7 @@ import com.tangem.domain.addressbook.interactor.SaveContactInteractor
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.DefaultIsoTimestampProvider
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
-import com.tangem.domain.addressbook.usecase.CheckAddressDuplicateUseCase
-import com.tangem.domain.addressbook.usecase.DeleteContactUseCase
-import com.tangem.domain.addressbook.usecase.GetContactByIdUseCase
-import com.tangem.domain.addressbook.usecase.GetContactsUseCase
-import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
+import com.tangem.domain.addressbook.usecase.*
 import com.tangem.domain.addressbook.validation.ContactNameValidator
 import com.tangem.domain.addressbook.verification.ContactSignatureVerifier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -118,6 +114,12 @@ object AddressBookDomainModule {
     @Singleton
     fun provideSyncAddressBooksUseCase(repository: AddressBookRepository): SyncAddressBooksUseCase {
         return SyncAddressBooksUseCase(repository = repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsAddressBookCompatibleUseCase(repository: AddressBookRepository): IsAddressBookCompatibleUseCase {
+        return IsAddressBookCompatibleUseCase(repository = repository)
     }
 
     @Provides

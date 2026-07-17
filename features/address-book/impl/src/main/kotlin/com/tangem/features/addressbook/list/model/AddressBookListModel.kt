@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -20,6 +21,7 @@ import com.tangem.features.addressbook.analytics.AddressBookEvents.ContactListSc
 import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
 import com.tangem.features.addressbook.list.state.AddressBookListStateController
+import com.tangem.features.addressbook.list.state.transformers.SetAddressBookIncompatibleTransformer
 import com.tangem.features.addressbook.list.state.transformers.UpdateAddressBookListContentTransformer
 import com.tangem.features.addressbook.list.state.transformers.UpdateAddressBookListQueryTransformer
 import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
@@ -48,6 +50,7 @@ internal class AddressBookListModel @Inject constructor(
     private val contactSelectionTrigger: ContactSelectionTrigger,
     private val analyticsSender: AddressBookAnalyticsSender,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
@@ -76,31 +79,39 @@ internal class AddressBookListModel @Inject constructor(
     }
 
     private suspend fun observeContacts() {
-        val matchedContacts = searchQuery.flatMapLatest { query ->
-            if (query.isBlank()) {
-                allContacts
-            } else {
-                getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
+        isAddressBookCompatibleUseCase()
+            .distinctUntilChanged()
+            .collectLatest { isCompatible ->
+                if (isCompatible) {
+                    val matchedContacts = searchQuery.flatMapLatest { query ->
+                        if (query.isBlank()) {
+                            allContacts
+                        } else {
+                            getVerifiedContactsInteractor.getVerifiedContacts(query = query, userWalletId = null)
+                        }
+                    }
+                    combine(
+                        allContacts,
+                        matchedContacts,
+                        searchQuery,
+                        selectedWalletId,
+                        getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true),
+                    ) { all, matched, query, selected, wallets ->
+                        ListInputs(
+                            allContacts = all,
+                            matchedContacts = matched,
+                            query = query,
+                            selectedWalletId = selected,
+                            wallets = wallets,
+                        )
+                    }
+                        .onEach(::updateState)
+                        .flowOn(dispatchers.default)
+                        .collect()
+                } else {
+                    stateController.update(SetAddressBookIncompatibleTransformer())
+                }
             }
-        }
-        combine(
-            allContacts,
-            matchedContacts,
-            searchQuery,
-            selectedWalletId,
-            getWalletsUseCase.invokeAsMap(isOnlyMultiCurrency = false, filterLocked = true),
-        ) { all, matched, query, selected, wallets ->
-            ListInputs(
-                allContacts = all,
-                matchedContacts = matched,
-                query = query,
-                selectedWalletId = selected,
-                wallets = wallets,
-            )
-        }
-            .onEach(::updateState)
-            .flowOn(dispatchers.default)
-            .collect()
     }
 
     fun deliverSelection(contact: SelectedContact) {

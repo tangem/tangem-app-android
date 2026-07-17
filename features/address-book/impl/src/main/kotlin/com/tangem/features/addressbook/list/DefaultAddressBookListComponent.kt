@@ -11,11 +11,13 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.features.addressbook.list.model.AddressBookListModel
 import com.tangem.features.addressbook.list.ui.AddressBookEmptyScreen
+import com.tangem.features.addressbook.list.ui.AddressBookIncompatibleScreen
 import com.tangem.features.addressbook.list.ui.AddressBookListScreen
 import com.tangem.features.addressbook.list.ui.AddressBookListShimmer
 import com.tangem.features.addressbook.list.ui.state.AddressBookListUM
@@ -25,6 +27,7 @@ internal class DefaultAddressBookListComponent(
     appComponentContext: AppComponentContext,
     params: Params,
     addressSelectorFactory: AddressSelectorComponent.Factory,
+    private val appStoreOpener: AppStoreOpener,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: AddressBookListModel = getOrCreateModel(params)
@@ -54,6 +57,11 @@ internal class DefaultAddressBookListComponent(
             is AddressBookListUM.Loading -> AddressBookListShimmer(
                 onBackClick = router::pop,
                 modifier = modifier.background(TangemTheme.colors3.bg.primary),
+            )
+            is AddressBookListUM.Incompatible -> AddressBookIncompatibleScreen(
+                onBackClick = router::pop,
+                modifier = modifier.background(TangemTheme.colors3.bg.primary),
+                onUpdateClick = appStoreOpener::openStorePage,
             )
             is AddressBookListUM.Empty -> AddressBookEmptyScreen(
                 onAddContactClick = addressBookListUM.onAddClick,
