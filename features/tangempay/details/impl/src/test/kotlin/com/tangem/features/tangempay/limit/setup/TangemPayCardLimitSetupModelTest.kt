@@ -13,7 +13,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -36,7 +35,6 @@ internal class TangemPayCardLimitSetupModelTest {
     private val setLimitUseCase: SetTangemPayCardLimitUseCase = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val featureToggles: TangemPayFeatureToggles = mockk()
 
     private val initialCard = TangemPayCard(
         id = cardId,
@@ -98,7 +96,6 @@ internal class TangemPayCardLimitSetupModelTest {
             setTangemPayCardLimitUseCase = setLimitUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
-            featureToggles = featureToggles,
         )
     }
 

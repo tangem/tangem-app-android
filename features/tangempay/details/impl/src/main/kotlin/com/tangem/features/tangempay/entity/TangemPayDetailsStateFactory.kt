@@ -33,7 +33,6 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
-    private val isRedesignEnabled: Boolean,
     private val isRemoveAccountEnabled: Boolean,
     private val isTiersPlusPlanEnabled: Boolean,
 ) {
@@ -41,7 +40,6 @@ internal class TangemPayDetailsStateFactory(
         intents = intents,
         isRemoveAccountEnabled = isRemoveAccountEnabled,
         isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
-        isRedesignEnabled = isRedesignEnabled,
     )
 
     fun getLoadingState(): TangemPayDetailsUM {
@@ -130,7 +128,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getDeactivatedState(hasWithdrawableBalance: Boolean): TangemPayDetailsUM {
-        val accountDeactivatedNotification = notificationFactory.createAccountDeactivatedConfig(isRedesignEnabled)
+        val accountDeactivatedNotification = notificationFactory.createAccountDeactivatedConfig()
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -327,11 +325,7 @@ internal class TangemPayDetailsStateFactory(
                 action = TangemPayAction.AddFunds,
                 config = ActionButtonConfig(
                     text = resourceReference(id = R.string.tangempay_card_details_add_funds),
-                    iconResId = if (isRedesignEnabled) {
-                        R.drawable.ic_arrow_down_24
-                    } else {
-                        R.drawable.ic_plus_24
-                    },
+                    iconResId = R.drawable.ic_arrow_down_24,
                     onClick = intents::onClickAddFunds,
                     isEnabled = isAddFundsEnabled,
                 ),
