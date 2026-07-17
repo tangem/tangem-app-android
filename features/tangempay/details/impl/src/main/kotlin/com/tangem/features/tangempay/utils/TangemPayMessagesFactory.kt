@@ -187,4 +187,50 @@ internal object TangemPayMessagesFactory {
             }
         }
     }
+
+    fun createMaximumCardsIssuedMessage(): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_warning_20) {
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
+                }
+                title = resourceReference(R.string.tangempay_maximum_cards_issued_title)
+                body = resourceReference(R.string.tangempay_maximum_cards_issued_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
+    }
+
+    fun createMaximumCardsForPlanIssuedMessage(onUpgradeClick: (() -> Unit)?): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_warning_20) {
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
+                }
+                title = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_title)
+                body = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_description)
+            }
+            if (onUpgradeClick != null) {
+                secondaryButton {
+                    text = resourceReference(R.string.common_cancel)
+                    onClick { closeBs() }
+                }
+                primaryButton {
+                    text = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_upgrade_btn)
+                    onClick {
+                        onUpgradeClick()
+                        closeBs()
+                    }
+                }
+            } else {
+                primaryButton {
+                    text = resourceReference(R.string.common_got_it)
+                    onClick { closeBs() }
+                }
+            }
+        }
+    }
 }
