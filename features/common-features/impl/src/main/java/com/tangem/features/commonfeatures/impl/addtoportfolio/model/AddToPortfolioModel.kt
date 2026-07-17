@@ -395,7 +395,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 currency = addedToken.currency,
                 accountId = selectedPortfolio.account.account.account.accountId,
             ).onEach { state ->
-                val requestedQuickActions = toQuickActions(state.states, isRedesignEnabled = true)
+                val requestedQuickActions = toQuickActions(state.states)
                 when {
                     requestedQuickActions.isNotEmpty() -> {
                         timerJob.cancel()
