@@ -348,11 +348,6 @@ private val PreviewExpressTransactionsComponent = object : ExpressTransactionsCo
         ),
     )
 
-    override fun LazyListScope.expressTransactionsContentLegacy(
-        state: PersistentList<ExpressTransactionStateUM>,
-        modifier: Modifier,
-    ) = Unit
-
     override fun LazyListScope.expressTransactionsContent(
         state: PersistentList<ExpressTransactionStateUM>,
         modifier: Modifier,
