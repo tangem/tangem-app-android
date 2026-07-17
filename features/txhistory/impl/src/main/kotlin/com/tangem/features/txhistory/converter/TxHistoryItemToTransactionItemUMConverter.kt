@@ -14,7 +14,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
-import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -238,7 +237,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         time = tx.timestampInMillis.toTimeFormat(),
         status = uiStatus,
         direction = tx.extractDirection(),
-        icon = if (uiStatus is TransactionItemUM.Content.Status.Failed) TxIcon.Vector(Icons.ic_cross_20) else icon,
+        icon = icon,
         title = title,
         subtitle = subtitle,
         timestamp = tx.timestampInMillis,
