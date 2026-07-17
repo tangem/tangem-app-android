@@ -23,11 +23,12 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -122,9 +123,11 @@ internal class TangemPayDetailsModel @Inject constructor(
     val uiState: StateFlow<TangemPayDetailsUM>
         field = MutableStateFlow(
             when {
-                params.initialStatus.isDeactivated -> stateFactory.getDeactivatedState(
-                    hasWithdrawableBalance = params.initialStatus.balanceOrNull()?.hasWithdrawableAmount == true,
-                )
+                params.initialStatus.value is PaymentAccountStatusValue.Deactivated -> {
+                    stateFactory.getDeactivatedState(
+                        params.initialStatus.value as PaymentAccountStatusValue.Deactivated,
+                    )
+                }
                 else -> stateFactory.getLoadingState()
             },
         )
@@ -145,27 +148,13 @@ internal class TangemPayDetailsModel @Inject constructor(
             .map { it.value }
             .onEach { state ->
                 when (state) {
-                    is PaymentAccountStatusValue.Deactivated -> {
-                        val balanceTransformer = DetailsBalanceTransformer(
-                            fiatBalance = state.balance.fiatBalance,
-                            isMuted = state.source != StatusSource.ACTUAL,
-                        )
-                        uiState.update {
-                            balanceTransformer.transform(
-                                stateFactory.getDeactivatedState(
-                                    hasWithdrawableBalance = state.balance.hasWithdrawableAmount,
-                                ),
-                            )
-                        }
+                    is PaymentAccountStatusValue.Deactivated -> uiState.update {
+                        stateFactory.getDeactivatedState(state)
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchAddToWalletBanner()
                         fetchCashbackBlock()
-                        val balanceTransformer = DetailsBalanceTransformer(
-                            fiatBalance = state.balance.fiatBalance,
-                            isMuted = !state.isFresh,
-                        )
-                        uiState.update { balanceTransformer.transform(stateFactory.getLoadedState(state)) }
+                        uiState.update { stateFactory.getLoadedState(state) }
                     }
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
@@ -468,12 +457,20 @@ internal class TangemPayDetailsModel @Inject constructor(
         router.push(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = cardId))
     }
 
-    override fun onAddCardClick() {
+    override fun onAddCardClick(tariffState: TangemPayTariffPlanState?) {
         analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
         modelScope.launch {
             val offer = getCustomerOffers.additionalCardOffer(userWalletId).getOrNull()
             if (offer == null) {
-                uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+                val message = if (tariffState != null && tariffState.tariff.plan.isBasicTier) {
+                    TangemPayMessagesFactory.createMaximumCardsForPlanIssuedMessage(
+                        onUpgradeClick = { onClickCurrentPlan(tariffState.tariff) }
+                            .takeIf { !tariffState.isPlanTransitioningState },
+                    )
+                } else {
+                    TangemPayMessagesFactory.createMaximumCardsIssuedMessage()
+                }
+                uiMessageSender.send(message)
                 return@launch
             }
             analytics.send(TangemPayAnalyticsEvents.IssueAdditionalCardPopupShown())
