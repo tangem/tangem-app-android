@@ -40,6 +40,7 @@ import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
@@ -64,8 +65,7 @@ internal fun TangemPayCashbackScreen(state: TangemPayCashbackScreenUM, modifier:
         modifier = modifier,
         topBar = {
             TangemTopNavigation(
-                // TODO([REDACTED_TASK_KEY]): move to string resources
-                title = stringReference("Cashback"),
+                title = resourceReference(CoreUiR.string.tangempay_cashback_title),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onClose = state.onCloseClick,
             )
@@ -147,16 +147,14 @@ private fun CashbackError(onReloadClick: () -> Unit, modifier: Modifier = Modifi
         ) {
             Icon(
                 painter = painterResource(CoreUiR.drawable.ic_refresh_24),
-                // TODO([REDACTED_TASK_KEY]): move to string resources
-                contentDescription = stringReference("Reload").resolveReference(),
+                contentDescription = resourceReference(CoreUiR.string.common_reload).resolveReference(),
                 tint = TangemTheme.colors3.icon.inverse,
                 modifier = Modifier.size(20.dp),
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            // TODO([REDACTED_TASK_KEY]): move to string resources
-            text = stringReference("Failed to load page.\nTap to reload").resolveReference(),
+            text = resourceReference(CoreUiR.string.tangempay_cashback_error_title).resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -268,7 +266,7 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
             onCloseClick = {},
             cashback = TangemPayCashbackUM(
                 title = stringReference("$22.54 earned in June"),
-                subtitle = stringReference("Will be deposited on July 1–5"),
+                subtitle = stringReference("Will be deposited on July 1 – 5"),
                 isEmpty = false,
                 banner = TangemPayCashbackUM.Banner(
                     text = stringReference("Cashback $22.54 for June will be deposited till July 5"),
