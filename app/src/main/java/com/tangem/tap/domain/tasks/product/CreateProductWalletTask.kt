@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.tasks.product
 
-import android.util.Log
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
@@ -178,8 +177,12 @@ private class CreateWalletTangemWallet(
                         return@run
                     }
                     if (card.firmwareVersion >= FirmwareVersion.v8) {
-                        Log.e("wallet3", "createMasterSecret")
-                        createMasterSecret(updatedCard, session, result.data, callback)
+                        createMasterSecret(
+                            card = updatedCard,
+                            session = session,
+                            createWalletsResponse = result.data,
+                            callback = callback,
+                        )
                     } else {
                         checkIfAllWalletsCreated(
                             card = updatedCard,
@@ -244,12 +247,15 @@ private class CreateWalletTangemWallet(
         CreateMasterSecretCommand().run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    Log.e("wallet3", "master secret created")
                     // save the card with derived wallets and a master secret
-                    checkMasterSecret(card, session, createWalletsResponse, callback)
+                    checkMasterSecret(
+                        card = card,
+                        session = session,
+                        createWalletsResponse = createWalletsResponse,
+                        callback = callback,
+                    )
                 }
                 is CompletionResult.Failure -> {
-                    Log.e("wallet3", "master secret create error: ${result.error}")
                     callback(CompletionResult.Failure(result.error))
                 }
             }
@@ -273,7 +279,7 @@ private class CreateWalletTangemWallet(
                         card = card,
                         session = session,
                         createResponse = createWalletsResponse,
-                        callback
+                        callback = callback,
                     )
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
@@ -389,7 +395,7 @@ private class CreateWalletTangemWallet(
         val derivations = defaultDerivationsHelper.getDefaultDerivations(
             derivationStyleProvider = card.derivationStyleProvider,
             cardId = card.cardId,
-            wallets = createWalletResponses.map { it.wallet }
+            wallets = createWalletResponses.map { it.wallet },
         )
         val cardEnv = session.environment.card
         if (cardEnv == null) {
