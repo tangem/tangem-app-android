@@ -1,6 +1,5 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
-import android.util.Log
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
@@ -227,26 +226,24 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
         if (isRing) hasRing = true
 
-        val needDeriveKeys = cardIndex == backupService.addedBackupCardsCount - 1
-        val defaultDerivations = if (needDeriveKeys) {
+        val shouldDeriveKeys = cardIndex == backupService.addedBackupCardsCount - 1
+        val defaultDerivations = if (shouldDeriveKeys) {
             defaultDerivationsHelper.getDefaultDerivationsWithCurves(
-                derivationStyleProvider = params.multiWalletState.value.currentScanResponse.card.derivationStyleProvider,
+                derivationStyleProvider = multiWalletState.value.currentScanResponse.card.derivationStyleProvider,
                 cardId = backupCardBatchId,
                 curves = createdCurves,
             )
         } else {
             emptyMap()
         }
-        Log.e("wallet3", "writeBackupCard defaultDerivations: $defaultDerivations")
         backupService.proceedBackup(
             iconScanRes = iconScanRes,
-            defaultDerivations = defaultDerivations, // we have to add this for V8+ cards because of nullable publicKey before backup
+            defaultDerivations = defaultDerivations, // we have to add this for V8+ cards because
+            // of nullable publicKey before backup
         ) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    Log.e("wallet3", "proceedBackup success")
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
-                        Log.e("wallet3", "isValidBackupStatus false")
                         hasWalletBackupError = true
                     }
 
@@ -270,7 +267,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     }
                 }
                 is CompletionResult.Failure -> {
-                    Log.e("wallet3", "proceedBackup failed")
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
                         // show should reset dialog
                         handleActivationError()
@@ -278,7 +274,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 }
             }
 
-            Log.e("wallet3", "clearProductType")
             tangemSdkManager.clearProductType()
         }
     }
@@ -294,13 +289,13 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 updatedDerivedKeys[ByteArrayKey(publicKey)] = derivedKeysMap
             }
             // update scan response with derived keys and wallets because V8+ cards only after backup have publicKey
-            params.multiWalletState.update {
-                it.copy(
+            params.multiWalletState.update { state ->
+                state.copy(
                     currentScanResponse = currentScanResponse.copy(
                         derivedKeys = updatedDerivedKeys,
                         card = currentScanResponse.card.copy(
                             wallets = this.wallets.map { cardWallet -> CardDTO.Wallet(cardWallet) },
-                        )
+                        ),
                     ),
                 )
             }
@@ -309,13 +304,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun finishBackup() {
-        Log.e("wallet3", "finishBackup")
         modelScope.launch {
             setLoading(true)
             val scanResponse = params.multiWalletState.value.currentScanResponse
-            Log.e("wallet3", "finishBackup scanResponse: $scanResponse")
             val userWalletCreated = createUserWallet(scanResponse)
-            Log.e("wallet3", "userWalletCreated: $userWalletCreated")
             // Validate wallet before saving
             // If something went wrong - start full reset flow
             if (hasWalletBackupError || !backupValidator.isValidFull(scanResponse.card)) {
@@ -327,7 +319,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 return@launch
             }
 
-            Log.e("wallet3", "userWallet")
             val userWallet = when (params.parentParams.mode) {
                 OnboardingMultiWalletComponent.Mode.Onboarding,
                 OnboardingMultiWalletComponent.Mode.ContinueFinalize,
@@ -383,7 +374,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 }
             }.requireColdWallet()
 
-            Log.e("wallet3", "userWallet saved: $userWallet")
             if (hasRing) {
                 walletsRepository.setHasWalletsWithRing(userWallet.walletId)
             }
@@ -394,23 +384,18 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             }
 
             launch(NonCancellable) {
-                Log.e("wallet3", "syncWalletWithRemoteUseCase")
                 syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
             }
 
             // user wallet is fully created and saved, remove scan response from preferences
             // to prevent showing finalize screen dialog on next app start
-            Log.e("wallet3", "clearUnfinishedFinalizeOnboarding")
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
 
-            Log.e("wallet3", "finishCardActivation")
             cardRepository.finishCardActivation(
                 cardId = scanResponse.card.cardId,
                 hasBackupError = hasWalletBackupError,
             )
-            Log.e("wallet3", "discardSavedBackup")
             backupServiceHolder.backupService.get()?.discardSavedBackup()
-            Log.e("wallet3", "ThreeBackupCardsAdded")
             onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded)
         }
     }
