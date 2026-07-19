@@ -14,7 +14,7 @@ import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.common.usersCode.AccessCodeRepository
+import com.tangem.common.services.secure.AccessCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
