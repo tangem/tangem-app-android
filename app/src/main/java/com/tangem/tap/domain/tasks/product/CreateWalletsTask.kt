@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.tasks.product
 
-import android.util.Log
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
@@ -54,7 +53,6 @@ class CreateWalletsTask(
                         return@run
                     }
                     createWallet(curves[createdWalletsResponses.size], session, callback)
-                    Log.e("wallet3", "wallet created: ${curve.curve}")
                 }
 
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))

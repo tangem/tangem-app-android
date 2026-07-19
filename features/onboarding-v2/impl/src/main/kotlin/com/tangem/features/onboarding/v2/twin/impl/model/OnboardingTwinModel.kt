@@ -190,10 +190,10 @@ internal class OnboardingTwinModel @Inject constructor(
                         return@launch
                     }
 
-                    update<OnboardingTwinUM.ScanCard> {
-                        it.copy(
+                    update<OnboardingTwinUM.ScanCard> { um ->
+                        um.copy(
                             isLoading = false,
-                            artworkStep = it.artworkStep.next(),
+                            artworkStep = um.artworkStep.next(),
                             step = OnboardingTwinUM.ScanCard.Step.Second,
                             onScanClick = {
                                 createSecondWallet(firstPublicKey = firstPublicKey.toHexString())
@@ -247,10 +247,10 @@ internal class OnboardingTwinModel @Inject constructor(
                         return@launch
                     }
 
-                    update<OnboardingTwinUM.ScanCard> {
-                        it.copy(
+                    update<OnboardingTwinUM.ScanCard> { um ->
+                        um.copy(
                             isLoading = false,
-                            artworkStep = it.artworkStep.next(),
+                            artworkStep = um.artworkStep.next(),
                             step = OnboardingTwinUM.ScanCard.Step.Third,
                             onScanClick = {
                                 createThirdWallet(
