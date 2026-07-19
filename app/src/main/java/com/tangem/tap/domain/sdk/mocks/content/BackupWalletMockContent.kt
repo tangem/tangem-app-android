@@ -21,6 +21,7 @@ import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import java.util.Date
 
+@Suppress("LargeClass")
 object BackupWalletMockContent : MockContent {
 
     private val primaryCard = PrimaryCard(
@@ -59,7 +60,7 @@ object BackupWalletMockContent : MockContent {
             70,
             108,
             -68,
-            -39
+            -39,
         ),
         linkingKey = byteArrayOf(
             2, 121, 98, 127, -70, 14, 5, -23, -76, 115, -30, -26, 111, 17, 110, 34, -100, -121,
@@ -101,7 +102,7 @@ object BackupWalletMockContent : MockContent {
                 -49,
                 78,
                 -110,
-                -2
+                -2,
             ),
         ),
         manufacturer = Card.Manufacturer(
@@ -156,7 +157,7 @@ object BackupWalletMockContent : MockContent {
             70,
             108,
             -68,
-            -39
+            -39,
         ),
         firmwareVersion = CardDTO.FirmwareVersion(
             major = 4,
@@ -231,7 +232,7 @@ object BackupWalletMockContent : MockContent {
                 51,
                 -27,
                 84,
-                66
+                66,
             ),
         ),
         issuer = CardDTO.Issuer(
@@ -269,7 +270,7 @@ object BackupWalletMockContent : MockContent {
                 -49,
                 78,
                 -110,
-                -2
+                -2,
             ),
         ),
         settings = CardDTO.Settings(
@@ -333,7 +334,7 @@ object BackupWalletMockContent : MockContent {
                     113,
                     120,
                     -90,
-                    -5
+                    -5,
                 ),
                 chainCode = byteArrayOf(
                     80,
@@ -367,7 +368,7 @@ object BackupWalletMockContent : MockContent {
                     38,
                     38,
                     -108,
-                    14
+                    14,
                 ),
                 curve = EllipticCurve.Secp256k1,
                 settings = CardWallet.Settings(isPermanent = false),
@@ -410,7 +411,7 @@ object BackupWalletMockContent : MockContent {
                             -13,
                             28,
                             -125,
-                            -52
+                            -52,
                         ),
                         chainCode = byteArrayOf(
                             93,
@@ -444,7 +445,7 @@ object BackupWalletMockContent : MockContent {
                             -66,
                             18,
                             65,
-                            70
+                            70,
                         ),
                     ),
                     DerivationPath("m/44'/60'/0'/0/0") to ExtendedPublicKey(
@@ -481,7 +482,7 @@ object BackupWalletMockContent : MockContent {
                             -7,
                             -86,
                             -82,
-                            -67
+                            -67,
                         ),
                         chainCode = byteArrayOf(
                             -75,
@@ -515,7 +516,7 @@ object BackupWalletMockContent : MockContent {
                             92,
                             104,
                             -13,
-                            -109
+                            -109,
                         ),
                     ),
                     DerivationPath("m/44'/1'/0'/0/0") to ExtendedPublicKey(
@@ -552,7 +553,7 @@ object BackupWalletMockContent : MockContent {
                             50,
                             -12,
                             -87,
-                            -62
+                            -62,
                         ),
                         chainCode = byteArrayOf(
                             -27,
@@ -586,7 +587,7 @@ object BackupWalletMockContent : MockContent {
                             91,
                             -106,
                             -92,
-                            41
+                            41,
                         ),
                     ),
                     DerivationPath("m/44'/195'/0'/0/0") to ExtendedPublicKey(
@@ -623,7 +624,7 @@ object BackupWalletMockContent : MockContent {
                             50,
                             -12,
                             -87,
-                            -62
+                            -62,
                         ),
                         chainCode = byteArrayOf(
                             -27,
@@ -657,7 +658,7 @@ object BackupWalletMockContent : MockContent {
                             91,
                             -106,
                             -92,
-                            41
+                            41,
                         ),
                     ),
                 ),
@@ -695,7 +696,7 @@ object BackupWalletMockContent : MockContent {
                         113,
                         120,
                         -90,
-                        -5
+                        -5,
                     ),
                     chainCode = byteArrayOf(
                         80,
@@ -729,7 +730,7 @@ object BackupWalletMockContent : MockContent {
                         38,
                         38,
                         -108,
-                        14
+                        14,
                     ),
                 ),
                 isImported = false,
@@ -767,7 +768,7 @@ object BackupWalletMockContent : MockContent {
                     114,
                     -93,
                     -17,
-                    -109
+                    -109,
                 ),
                 chainCode = byteArrayOf(
                     -81,
@@ -801,7 +802,7 @@ object BackupWalletMockContent : MockContent {
                     94,
                     27,
                     84,
-                    -6
+                    -6,
                 ),
                 curve = EllipticCurve.Ed25519,
                 settings = CardWallet.Settings(isPermanent = false),
@@ -843,7 +844,7 @@ object BackupWalletMockContent : MockContent {
                         114,
                         -93,
                         -17,
-                        -109
+                        -109,
                     ),
                     chainCode = byteArrayOf(
                         -81,
@@ -877,7 +878,7 @@ object BackupWalletMockContent : MockContent {
                         94,
                         27,
                         84,
-                        -6
+                        -6,
                     ),
                 ),
                 isImported = false,
@@ -937,7 +938,7 @@ object BackupWalletMockContent : MockContent {
                     113,
                     120,
                     -90,
-                    -5
+                    -5,
                 ),
             )
                 to
@@ -978,7 +979,7 @@ object BackupWalletMockContent : MockContent {
                                 -13,
                                 28,
                                 -125,
-                                -52
+                                -52,
                             ),
                             chainCode = byteArrayOf(
                                 93,
@@ -1012,7 +1013,7 @@ object BackupWalletMockContent : MockContent {
                                 -66,
                                 18,
                                 65,
-                                70
+                                70,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1053,7 +1054,7 @@ object BackupWalletMockContent : MockContent {
                                 -13,
                                 28,
                                 -125,
-                                -52
+                                -52,
                             ),
                             chainCode = byteArrayOf(
                                 93,
@@ -1087,7 +1088,7 @@ object BackupWalletMockContent : MockContent {
                                 -66,
                                 18,
                                 65,
-                                70
+                                70,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1128,7 +1129,7 @@ object BackupWalletMockContent : MockContent {
                                 -7,
                                 -86,
                                 -82,
-                                -67
+                                -67,
                             ),
                             chainCode = byteArrayOf(
                                 -75,
@@ -1162,7 +1163,7 @@ object BackupWalletMockContent : MockContent {
                                 92,
                                 104,
                                 -13,
-                                -109
+                                -109,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1203,7 +1204,7 @@ object BackupWalletMockContent : MockContent {
                                 99,
                                 70,
                                 -104,
-                                -121
+                                -121,
                             ),
                             chainCode = byteArrayOf(
                                 105,
@@ -1237,7 +1238,7 @@ object BackupWalletMockContent : MockContent {
                                 43,
                                 -91,
                                 115,
-                                -29
+                                -29,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1278,7 +1279,7 @@ object BackupWalletMockContent : MockContent {
                                 -9,
                                 -96,
                                 77,
-                                -124
+                                -124,
                             ),
                             chainCode = byteArrayOf(
                                 119,
@@ -1312,7 +1313,7 @@ object BackupWalletMockContent : MockContent {
                                 -35,
                                 10,
                                 -107,
-                                104
+                                104,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1352,7 +1353,7 @@ object BackupWalletMockContent : MockContent {
                                 50,
                                 -12,
                                 -87,
-                                -62
+                                -62,
                             ),
                             chainCode = byteArrayOf(
                                 -27,
@@ -1386,7 +1387,7 @@ object BackupWalletMockContent : MockContent {
                                 91,
                                 -106,
                                 -92,
-                                41
+                                41,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1431,7 +1432,7 @@ object BackupWalletMockContent : MockContent {
             -30,
             -27,
             -110,
-            -110
+            -110,
         ),
         chainCode = byteArrayOf(
             -95,
@@ -1465,7 +1466,7 @@ object BackupWalletMockContent : MockContent {
             115,
             -50,
             -46,
-            -34
+            -34,
         ),
         depth = 0,
         parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1511,7 +1512,7 @@ object BackupWalletMockContent : MockContent {
                     113,
                     120,
                     -90,
-                    -5
+                    -5,
                 ),
             )
                 to
@@ -1552,7 +1553,7 @@ object BackupWalletMockContent : MockContent {
                                 -13,
                                 28,
                                 -125,
-                                -52
+                                -52,
                             ),
                             chainCode = byteArrayOf(
                                 93,
@@ -1586,7 +1587,7 @@ object BackupWalletMockContent : MockContent {
                                 -66,
                                 18,
                                 65,
-                                70
+                                70,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),
@@ -1627,7 +1628,7 @@ object BackupWalletMockContent : MockContent {
                                 -7,
                                 -86,
                                 -82,
-                                -67
+                                -67,
                             ),
                             chainCode = byteArrayOf(
                                 -75,
@@ -1661,7 +1662,7 @@ object BackupWalletMockContent : MockContent {
                                 92,
                                 104,
                                 -13,
-                                -109
+                                -109,
                             ),
                             depth = 0,
                             parentFingerprint = byteArrayOf(0, 0, 0, 0),

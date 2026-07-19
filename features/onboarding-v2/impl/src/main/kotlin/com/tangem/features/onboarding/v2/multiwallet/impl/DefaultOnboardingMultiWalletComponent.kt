@@ -1,6 +1,5 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -212,7 +211,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     }
 
     private fun handleNavigationEvent(nextStep: OnboardingMultiWalletState.Step) {
-        Log.e("wallet3", "handleNavigationEvent nextStep: $nextStep")
         when (nextStep) {
             ChooseBackupOption -> {
                 artworksState.value = WalletArtworksState.Fan
