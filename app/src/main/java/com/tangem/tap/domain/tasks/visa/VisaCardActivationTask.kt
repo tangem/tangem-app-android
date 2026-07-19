@@ -144,7 +144,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
-            VisaActivationError.PublicKeyIsEmpty.tangemError
+            VisaActivationError.PublicKeyIsEmpty.tangemError,
         )
         val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(publicKey)
             .getOrElse { return CompletionResult.Failure(it.tangemError) }
@@ -264,12 +264,11 @@ class VisaCardActivationTask @AssistedInject constructor(
         val card =
             session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        val wallet =
-            card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-                ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
+            ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
-            VisaActivationError.PublicKeyIsEmpty.tangemError
+            VisaActivationError.PublicKeyIsEmpty.tangemError,
         )
 
         val task = SignHashCommand(
@@ -289,9 +288,6 @@ class VisaCardActivationTask @AssistedInject constructor(
 
         return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
-                    VisaActivationError.PublicKeyIsEmpty.tangemError
-                )
                 TangemLogger.i("SignHashCommand success")
                 handleSignedData(
                     dataToSign = dataToSign,
