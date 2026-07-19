@@ -17,6 +17,7 @@ import com.tangem.domain.card.configs.Wallet2CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 
+@Suppress("CyclomaticComplexMethod")
 fun WalletManagerFactory.makeWalletManagerForApp(
     scanResponse: ScanResponse,
     blockchain: Blockchain,
@@ -40,8 +41,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     val seedKey = wallet.extendedPublicKey
     return when {
         scanResponse.cardTypesResolver.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
-            val twinWalletPublicKey = wallet.publicKey
-                ?: throw IllegalStateException("Wallet public key should not be null for twins")
+            val twinWalletPublicKey = wallet.publicKey ?: error("Wallet public key should not be null for twins")
             createTwinWalletManager(
                 walletPublicKey = twinWalletPublicKey,
                 pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
@@ -56,7 +56,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 } else {
                     "Wallet public key should not be null for HD wallets"
                 }
-                throw IllegalStateException(message)
+                error(message)
             }
 
             val derivedKeys = scanResponse.derivedKeys[hdWalletPublicKey.toMapKey()]
@@ -77,8 +77,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
             )
         }
         else -> {
-            val walletPublicKey = wallet.publicKey
-                ?: throw IllegalStateException("Wallet public key should not be null for legacy wallets")
+            val walletPublicKey = wallet.publicKey ?: error("Wallet public key should not be null for legacy wallets")
             createLegacyWalletManager(
                 blockchain = environmentBlockchain,
                 walletPublicKey = walletPublicKey,

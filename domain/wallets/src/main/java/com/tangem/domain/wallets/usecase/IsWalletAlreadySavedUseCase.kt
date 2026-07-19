@@ -13,10 +13,7 @@ class IsWalletAlreadySavedUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
-    suspend operator fun invoke(
-        mnemonic: Mnemonic,
-        passphrase: String?,
-    ): Either<SaveWalletError, Boolean> = either {
+    suspend operator fun invoke(mnemonic: Mnemonic, passphrase: String?): Either<SaveWalletError, Boolean> = either {
         val userWalletId = UserWalletIdBuilder.walletPublicKey(
             publicKey = deriveMasterPublicKey(mnemonic = mnemonic, passphrase = passphrase),
         )
