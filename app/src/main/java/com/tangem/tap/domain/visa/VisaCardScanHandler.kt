@@ -77,7 +77,7 @@ internal class VisaCardScanHandler @Inject constructor(
         }
 
         val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
-            VisaActivationError.PublicKeyIsEmpty.tangemError
+            VisaActivationError.PublicKeyIsEmpty.tangemError,
         )
         val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(publicKey)
             .getOrElse {
