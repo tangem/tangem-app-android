@@ -129,9 +129,9 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
      */
     private fun validateDerivations(scanResponse: ScanResponse, derivations: Derivations) {
         derivations.entries.forEach { derivationForKey ->
-            val wallet = scanResponse.card.wallets.firstOrNull {
-                val publicKey = it.publicKey ?: run {
-                    TangemLogger.e("Wallet with index ${it.index} has no public key")
+            val wallet = scanResponse.card.wallets.firstOrNull { wallet ->
+                val publicKey = wallet.publicKey ?: run {
+                    TangemLogger.e("Wallet with index ${wallet.index} has no public key")
                     return@firstOrNull false
                 }
                 publicKey.toMapKey() == derivationForKey.key

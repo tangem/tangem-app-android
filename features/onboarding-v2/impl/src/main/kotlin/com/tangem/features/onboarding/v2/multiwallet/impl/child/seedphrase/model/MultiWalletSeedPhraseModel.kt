@@ -218,7 +218,6 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         val scanResponse = params.parentParams.scanResponse
 
         modelScope.launch {
-
             val isWalletAlreadySaved = isWalletAlreadySavedUseCase
                 .invoke(mnemonic = mnemonic, passphrase = passphrase)
                 .getOrElse { false }
