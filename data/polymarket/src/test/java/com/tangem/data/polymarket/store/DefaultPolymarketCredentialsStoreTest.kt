@@ -13,6 +13,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -33,6 +34,11 @@ internal class DefaultPolymarketCredentialsStoreTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(secureStorage)
+    }
+
+    @AfterEach
+    fun resetLogWriters() {
+        TangemLogger.setLogWriters(emptyList())
     }
 
     @Test
@@ -95,7 +101,6 @@ internal class DefaultPolymarketCredentialsStoreTest {
 
         // Act
         store.get(ownerAddress = OWNER_ADDRESS)
-        TangemLogger.setLogWriters(emptyList())
 
         // Assert
         assertThat(logs.entries).isNotEmpty()
