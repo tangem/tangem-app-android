@@ -24,11 +24,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlanState
-import com.tangem.domain.models.account.VirtualAccountOnramp
-import com.tangem.domain.models.account.isPlanTransitioningState
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -36,12 +32,7 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
-import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
-import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.pay.usecase.SetCashbackDeactivationDismissedUseCase
+import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
@@ -51,10 +42,7 @@ import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
-import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
-import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
-import com.tangem.features.tangempay.entity.TangemPayDetailsUM
+import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.utils.*
@@ -139,6 +127,8 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
+    private var shownTiersBanner: TangemPayTiersBannerType? = null
+
     init {
         analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
         handleBalanceHiding()
@@ -147,6 +137,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             .onEach { status -> currentStatus.update { status } }
             .map { it.value }
             .onEach { state ->
+                sendTiersAnalytics(state)
                 when (state) {
                     is PaymentAccountStatusValue.Deactivated -> uiState.update {
                         stateFactory.getDeactivatedState(state)
@@ -166,6 +157,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onCancelPlusTransition(orderId: String) {
+        analytics.send(TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked())
         uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
         modelScope.launch {
             cancelTangemPayOrderUseCase(userWalletId = userWalletId, orderId = orderId)
@@ -445,6 +437,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan) {
+        analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
 
@@ -546,5 +539,31 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
         uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(errorType = type))
+    }
+
+    private fun sendTiersAnalytics(state: PaymentAccountStatusValue) {
+        val tariffPlan = when (state) {
+            is PaymentAccountStatusValue.Loaded -> state.tariffPlan
+            is PaymentAccountStatusValue.Inactive -> state.tariffPlan
+            else -> null
+        }
+        val banner = tariffPlan?.let {
+            TangemPayTiersBannerType.fromPlan(tangemPayFeatureToggles.isTiersPlusPlanEnabled, tariffPlan)
+        }
+
+        if (banner == shownTiersBanner) return
+        shownTiersBanner = banner
+
+        val event = when (banner) {
+            TangemPayTiersBannerType.TopUpForTierUpgrade -> {
+                TangemPayAnalyticsEvents.Tiers.TopUpBannerForPlusShowed()
+            }
+            TangemPayTiersBannerType.TierSystemDowngrade -> {
+                TangemPayAnalyticsEvents.Tiers.PlusCardsClosureWarningBannerShowed()
+            }
+            null -> null
+        }
+
+        event?.let { analytics.send(it) }
     }
 }
