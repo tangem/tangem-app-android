@@ -5,9 +5,12 @@ import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
@@ -57,6 +60,10 @@ internal fun forYouPlaceholderBadge(): TangemBadgeUM = TangemBadgeUM(
     color = TangemBadgeColor.Green,
 )
 
+internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
+    .flatMap { statusList -> statusList.accountStatuses.map { it.accountId } }
+    .toSet()
+
 /**
  * Earn rate resolved for a portfolio currency.
  *
@@ -76,10 +83,13 @@ internal data class EarnApyInfo(
 /**
  * Earn-eligible currencies of one account with their resolved rates.
  *
+ * @property userWalletId the wallet that owns [account]; the For You selection can span several wallets,
+ * so it is carried per account to route token clicks to the right wallet
  * @property accountPotentialReward sum of [EarnApyInfo.potentialRewards] over [earnCurrencies];
  * accounts are ordered by it, descending
  */
 internal data class EarnOpportunities(
+    val userWalletId: UserWalletId,
     val account: Account.CryptoPortfolio,
     val earnCurrencies: Map<CryptoCurrencyStatus, EarnApyInfo>,
     val accountPotentialReward: BigDecimal,
