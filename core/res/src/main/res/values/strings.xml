@@ -399,6 +399,20 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="common_month">month</string>
+  <string-array name="common_month_in">
+    <item>January</item>
+    <item>February</item>
+    <item>March</item>
+    <item>April</item>
+    <item>May</item>
+    <item>June</item>
+    <item>July</item>
+    <item>August</item>
+    <item>September</item>
+    <item>October</item>
+    <item>November</item>
+    <item>December</item>
+  </string-array>
   <string name="common_more">More</string>
   <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>

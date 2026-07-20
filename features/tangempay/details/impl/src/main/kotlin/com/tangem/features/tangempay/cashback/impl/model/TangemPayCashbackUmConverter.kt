@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.arrayItemReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -27,6 +28,7 @@ internal class TangemPayCashbackUmConverter(
         val currency = getJavaCurrencyByCode(value.currency)
         val earned = value.confirmedAmount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         val month = dateFormatter.formatMonth(value.period.year, value.period.month)
+        val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val payoutWindow = dateFormatter.formatWindow(value.period.payoutStart, value.period.payoutEnd)
         val payoutEnd = dateFormatter.formatMonthDay(value.period.payoutEnd)
         val banner = if (value.confirmedAmount.signum() < 0) {
@@ -44,7 +46,7 @@ internal class TangemPayCashbackUmConverter(
             )
         }
         return TangemPayCashbackUM(
-            title = resourceReference(R.string.tangempay_cashback_earned_title, wrappedList(earned, month)),
+            title = resourceReference(R.string.tangempay_cashback_earned_title, wrappedList(earned, monthIn)),
             subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(payoutWindow)),
             isEmpty = false,
             banner = banner,
