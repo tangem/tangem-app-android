@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.current
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +14,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
@@ -34,6 +36,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val router: Router,
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayCurrentPlanComponent.Params>()
@@ -48,11 +51,16 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         notification = createNotification(customerPlan),
         sections = buildSections(customerPlan.plan),
         onBackClick = router::pop,
-        onChangePlanClick = { router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(params.tariffPlan)) }
+        onChangePlanClick = ::onChangePlanClick
             .takeIf {
                 customerPlan.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING
             },
     )
+
+    private fun onChangePlanClick() {
+        analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked())
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(params.tariffPlan))
+    }
 
     private fun createNotification(customerPlan: TangemPayCustomerTariffPlan): TangemPayCurrentPlanUM.Notification? {
         val date = customerPlan.formatNextBillingDateOrNull(formatter = DateTimeFormatters.dateMMMd) ?: return null
@@ -89,6 +97,8 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         if (isProcessing) return
         val customerPlan = params.tariffPlan
         val targetPlanName = customerPlan.pendingPlan?.name ?: return
+        analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusConditionsClicked())
+        analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusPopupShowed())
         uiMessageSender.send(
             message = TangemPayMessagesFactory.createStayOnPlanMessage(
                 planName = customerPlan.plan.name,
@@ -100,6 +110,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
 
     private fun confirmStayOnPlan() {
         if (isProcessing) return
+        analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusPopupClicked())
         isProcessing = true
         state.value = createState(params.tariffPlan)
         modelScope.launch {
