@@ -22,7 +22,7 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "collateral") val collateral: Collateral? = null,
         @Json(name = "payment") val payment: Payment? = null,
         @Json(name = "fee") val fee: Fee? = null,
-        @Json(name = "cashback") val cashback: Cashback? = null,
+        @Json(name = "cashback") val cashback: TransactionCashbackResponse? = null,
     )
 
     @JsonClass(generateAdapter = true)
@@ -82,22 +82,5 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "currency") val currency: String,
         @Json(name = "description") val description: String? = null,
         @Json(name = "posted_at") val postedAt: DateTime,
-    )
-
-    /**
-     * Per-transaction cashback on a spend transaction. `null` when cashback is not applicable
-     * (customer on the cashback ignore list — `fraud`/`disabled` — or a non-spend transaction).
-     * Shared contract between the list and single-transaction endpoints.
-     */
-    @JsonClass(generateAdapter = true)
-    data class Cashback(
-        @Json(name = "status") val status: String, // "estimated" | "confirmed" | "excluded" | "awaiting_calculation"
-        // USD, negative for refunds; null when status is "awaiting_calculation"
-        @Json(name = "amount") val amount: BigDecimal? = null,
-        @Json(name = "currency") val currency: String? = null, // null when status is "awaiting_calculation"
-        @Json(name = "cap_trimmed") val isCapTrimmed: Boolean? = null,
-        // "mcc_excluded" | "monthly_cap_reached" | "customer_blocklisted" | "merchant_country_excluded"
-        @Json(name = "exclusion_reason") val exclusionReason: String? = null,
-        @Json(name = "promotion_ids") val promotionIds: List<String>? = null,
     )
 }
