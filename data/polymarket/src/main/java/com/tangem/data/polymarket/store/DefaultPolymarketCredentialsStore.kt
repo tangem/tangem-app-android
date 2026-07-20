@@ -38,7 +38,7 @@ internal class DefaultPolymarketCredentialsStore(
         try {
             adapter.fromJson(payload)
         } catch (e: Exception) {
-            TangemLogger.e("Failed to decode Polymarket API credentials (${e.javaClass.simpleName}); clearing storage")
+            TangemLogger.e("Failed to decode Polymarket API credentials; clearing storage")
             secureStorage.delete(key)
             null
         }
