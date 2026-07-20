@@ -2,7 +2,6 @@ package com.tangem.data.polymarket.store
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -20,7 +19,7 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultPolymarketCredentialsStoreTest {
 
     private val secureStorage: SecureStorage = mockk(relaxed = true)
-    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    private val moshi = Moshi.Builder().build()
     private val adapter = moshi.adapter(PolymarketApiCredentials::class.java)
 
     private val store = DefaultPolymarketCredentialsStore(
