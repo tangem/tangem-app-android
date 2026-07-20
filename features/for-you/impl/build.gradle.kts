@@ -42,6 +42,7 @@ dependencies {
     api(projects.domain.earn)
     api(projects.domain.yieldSupply)
     implementation(projects.domain.account)
+    implementation(projects.domain.markets)
     implementation(projects.domain.models)
 
     /** Project - Domain models */
