@@ -426,6 +426,7 @@
   <string name="common_rename">重命名</string>
   <string name="common_required">必需的</string>
   <string name="common_reset">重置</string>
+  <string name="common_retry">重试</string>
   <string name="common_save">节省</string>
   <string name="common_save_changes">保存更改</string>
   <string name="common_search">搜索</string>
