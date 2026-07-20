@@ -116,16 +116,16 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         // Arrange
         val currency = createEarnCurrency()
         val earnType = ForYouEarnOpportunitiesType.YieldSupply(apy = "7.5")
+        val walletId = UserWalletId("01")
         val earnData = createEarnOpportunities(
+            userWalletId = walletId,
             earnCurrencies = mapOf(
                 createStatus(currency, createRowLoadedValue()) to createEarnApyInfo(isActive = false, type = earnType),
             ),
         )
-        val walletId = UserWalletId("01")
         var clicked: Triple<UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType>? = null
         val converter = createConverter(
             isAccountsModeEnabled = false,
-            userWalletId = walletId,
             onTokenClick = { id, clickedCurrency, type -> clicked = Triple(id, clickedCurrency, type) },
         )
 
@@ -166,11 +166,9 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         isAccountsModeEnabled: Boolean,
         expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
-        userWalletId: UserWalletId? = UserWalletId("01"),
         onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
     ) = ForYouEarnOpportunitiesPotentialRewardsConverter(
         appCurrency = appCurrency,
-        userWalletId = userWalletId,
         isAccountsModeEnabled = isAccountsModeEnabled,
         expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
