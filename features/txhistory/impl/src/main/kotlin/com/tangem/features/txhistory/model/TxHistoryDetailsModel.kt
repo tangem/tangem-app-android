@@ -11,8 +11,6 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.haptic.TangemHapticEffect
-import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
@@ -58,7 +56,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
-    private val vibratorHapticManager: VibratorHapticManager,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -152,7 +149,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     /** Copies a counterparty address to the clipboard — wired into the detail card's copy button via the converter. */
     private fun onCopyAddress(address: String) {
-        vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = address, isSensitive = false)
         uiMessageSender.send(
             SnackbarMessage(
@@ -164,7 +160,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     /** Copies the transaction id to the clipboard — wired into the header menu's "Transaction ID" row. */
     private fun onCopyTxId(id: String) {
-        vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = id, isSensitive = false)
         uiMessageSender.send(
             SnackbarMessage(
