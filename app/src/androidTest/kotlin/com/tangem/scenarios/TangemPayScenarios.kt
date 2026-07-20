@@ -42,8 +42,12 @@ fun BaseTestCase.openTangemPayCardRename() {
         onTangemPayCardPageScreen { cardNameEditButton.performClick() }
     }
     step("Assert card rename screen is displayed") {
-        awaitSuccess { onTangemPayCardRenameScreen { nameField.assertIsDisplayed() } }
-        onTangemPayCardRenameScreen { doneButton.assertIsDisplayed() }
+        awaitSuccess {
+            onTangemPayCardRenameScreen {
+                nameField.assertIsDisplayed()
+                doneButton.assertIsDisplayed()
+            }
+        }
     }
 }
 
