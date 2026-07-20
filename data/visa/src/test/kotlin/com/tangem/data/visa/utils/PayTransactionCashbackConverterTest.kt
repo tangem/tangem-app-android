@@ -1,7 +1,7 @@
 package com.tangem.data.visa.utils
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.datasource.api.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
@@ -25,7 +25,7 @@ internal class PayTransactionCashbackConverterTest {
     }
 
     data class ConvertModel(
-        val dto: TangemPayTxHistoryResponse.Cashback?,
+        val dto: TransactionCashbackResponse?,
         val expected: TangemPayTxHistoryItem.Cashback?,
     )
 
@@ -80,6 +80,10 @@ internal class PayTransactionCashbackConverterTest {
             dto = dto(status = "excluded", exclusionReason = "merchant_country_excluded"),
             expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.MERCHANT_COUNTRY_EXCLUDED),
         ),
+        ConvertModel(
+            dto = dto(status = "excluded", exclusionReason = "below-min"),
+            expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.BELOW_MIN),
+        ),
         // Deprecated / unknown reason maps to UNKNOWN.
         ConvertModel(
             dto = dto(status = "excluded", exclusionReason = "currency_excluded"),
@@ -94,7 +98,7 @@ internal class PayTransactionCashbackConverterTest {
         isCapTrimmed: Boolean? = null,
         exclusionReason: String? = null,
         promotionIds: List<String>? = null,
-    ) = TangemPayTxHistoryResponse.Cashback(
+    ) = TransactionCashbackResponse(
         status = status,
         amount = amount,
         currency = currency,

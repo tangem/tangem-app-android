@@ -108,6 +108,7 @@ sealed class TangemPayTxHistoryItem {
             MONTHLY_CAP_REACHED,
             CUSTOMER_BLOCKLISTED,
             MERCHANT_COUNTRY_EXCLUDED,
+            BELOW_MIN,
             UNKNOWN,
         }
     }

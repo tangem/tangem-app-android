@@ -1,6 +1,6 @@
 package com.tangem.data.visa.utils
 
-import com.tangem.datasource.api.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.datasource.api.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
@@ -11,9 +11,9 @@ import java.util.Currency
  * Maps the per-transaction cashback DTO to its domain model. Returns `null` when the BFF sends no
  * cashback object (feature disabled, program deactivated, or a non-spend transaction).
  */
-internal object PayTransactionCashbackConverter : Converter<TangemPayTxHistoryResponse.Cashback?, Cashback?> {
+internal object PayTransactionCashbackConverter : Converter<TransactionCashbackResponse?, Cashback?> {
 
-    override fun convert(value: TangemPayTxHistoryResponse.Cashback?): Cashback? {
+    override fun convert(value: TransactionCashbackResponse?): Cashback? {
         value ?: return null
         return Cashback(
             status = convertStatus(value.status),
@@ -39,6 +39,7 @@ internal object PayTransactionCashbackConverter : Converter<TangemPayTxHistoryRe
         "monthly_cap_reached" -> ExclusionReason.MONTHLY_CAP_REACHED
         "customer_blocklisted" -> ExclusionReason.CUSTOMER_BLOCKLISTED
         "merchant_country_excluded" -> ExclusionReason.MERCHANT_COUNTRY_EXCLUDED
+        "below-min" -> ExclusionReason.BELOW_MIN
         else -> ExclusionReason.UNKNOWN
     }
 }

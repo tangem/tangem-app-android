@@ -6,6 +6,7 @@ import com.tangem.data.pay.util.CashbackAccrualDocsConverter
 import com.tangem.data.pay.util.CashbackHistoryConverter
 import com.tangem.data.pay.util.CashbackPromotionsConverter
 import com.tangem.data.pay.util.CashbackSummaryConverter
+import com.tangem.data.visa.utils.PayTransactionCashbackConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDocument
@@ -14,6 +15,7 @@ import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.SupportedLanguages
 import javax.inject.Inject
 
@@ -56,6 +58,15 @@ internal class DefaultCashbackRepository @Inject constructor(
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getCashbackHistory(authHeader = authHeader, months = months)
         }.map(CashbackHistoryConverter::convert)
+    }
+
+    override suspend fun getCashbackDetails(
+        userWalletId: UserWalletId,
+        transactionId: String,
+    ): Either<VisaApiError, TangemPayTxHistoryItem.Cashback?> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getCashbackDetails(authHeader = authHeader, transactionId = transactionId)
+        }.map { PayTransactionCashbackConverter.convert(it.cashback) }
     }
 
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean {

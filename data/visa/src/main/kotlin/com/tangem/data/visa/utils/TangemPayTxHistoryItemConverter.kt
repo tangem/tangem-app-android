@@ -2,6 +2,7 @@ package com.tangem.data.visa.utils
 
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.datasource.api.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.pay.utils.TangemPayTxHistoryItemStatusConverter
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
@@ -35,7 +36,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
     private fun convertSpend(
         id: String,
         spend: TangemPayTxHistoryResponse.Spend,
-        cashback: TangemPayTxHistoryResponse.Cashback?,
+        cashback: TransactionCashbackResponse?,
     ): TangemPayTxHistoryItem.Spend {
         val rawDate = if (spend.amount.signum() < 0) {
             spend.postedAt ?: spend.authorizedAt
