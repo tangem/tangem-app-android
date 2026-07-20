@@ -29,7 +29,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.components.fields.AutoSizeTextField
+import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
@@ -348,7 +348,7 @@ private fun ContactSummary(state: EditContactUM) {
 
         SpacerH(4.dp)
 
-        AutoSizeTextField(
+        SimpleTextField(
             value = state.name,
             onValueChange = state.onNameChange,
             centered = true,
