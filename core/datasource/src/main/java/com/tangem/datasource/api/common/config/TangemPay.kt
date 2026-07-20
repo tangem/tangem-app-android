@@ -3,6 +3,7 @@ package com.tangem.datasource.api.common.config
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 
 internal sealed class TangemPay(
@@ -56,6 +57,7 @@ internal sealed class TangemPay(
         "platform" to ProviderSuspend { "Android" },
         "X-API-KEY" to ProviderSuspend { getBffStaticToken(apiEnvironment) },
         "X-Device-Scale" to ProviderSuspend { appInfoProvider.deviceScale.toString() },
+        "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
     )
 
     private fun getBffStaticToken(apiEnvironment: ApiEnvironment): String {
