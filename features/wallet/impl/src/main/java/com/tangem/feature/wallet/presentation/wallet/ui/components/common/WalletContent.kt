@@ -46,8 +46,6 @@ internal fun WalletListContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     walletId: String? = null,
 ) {
-    val containerColor = TangemTheme.colors2.surface.level1
-
     val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
     val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
 
@@ -60,11 +58,9 @@ internal fun WalletListContent(
     ) {
         notifications(
             notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
-            contentColor = containerColor,
             modifier = movableItemModifier,
         )
         notificationsCarousel(
-            containerColor = containerColor,
             modifier = movableItemModifier,
             notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
         )
