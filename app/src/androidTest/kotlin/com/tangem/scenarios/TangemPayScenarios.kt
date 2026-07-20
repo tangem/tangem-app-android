@@ -34,6 +34,19 @@ fun BaseTestCase.openTangemPayCardPage() {
     }
 }
 
+/** Opens the card page and taps the card name to reach the rename screen. */
+fun BaseTestCase.openTangemPayCardRename() {
+    openTangemPayCardPage()
+    step("Click on card name to start renaming") {
+        awaitSuccess { onTangemPayCardPageScreen { cardNameEditButton.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { cardNameEditButton.performClick() }
+    }
+    step("Assert card rename screen is displayed") {
+        awaitSuccess { onTangemPayCardRenameScreen { nameField.assertIsDisplayed() } }
+        onTangemPayCardRenameScreen { doneButton.assertIsDisplayed() }
+    }
+}
+
 /** Opens the card page and taps 'Change' on the daily limit block to reach the limit setup screen. */
 fun BaseTestCase.openTangemPayDailyLimitSetup() {
     openTangemPayCardPage()
