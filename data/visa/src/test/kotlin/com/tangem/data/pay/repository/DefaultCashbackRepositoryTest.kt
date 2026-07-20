@@ -44,7 +44,7 @@ internal class DefaultCashbackRepositoryTest {
     fun `GIVEN promotions response WHEN getCashbackPromotions THEN converter result is returned`() = runTest {
         // Arrange
         val response = CashbackPromotionsResponse(cashbackOnCards = null, additionalCashback = null)
-        coEvery { tangemPayApi.getCashbackPromotions(any(), any()) } returns ApiResponse.Success(response)
+        coEvery { tangemPayApi.getCashbackPromotions(any()) } returns ApiResponse.Success(response)
 
         // Act
         val actual = createRepository().getCashbackPromotions(userWalletId)
@@ -56,7 +56,7 @@ internal class DefaultCashbackRepositoryTest {
     @Test
     fun `GIVEN backend error WHEN getCashbackPromotions THEN error is propagated`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getCashbackPromotions(any(), any()) } returns
+        coEvery { tangemPayApi.getCashbackPromotions(any()) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CashbackPromotionsResponse>
 
         // Act
@@ -72,7 +72,7 @@ internal class DefaultCashbackRepositoryTest {
         val response = CashbackAccrualDocsResponse(
             docs = listOf(CashbackAccrualDocsResponse.Doc(id = "1", title = "Terms", url = "https://a")),
         )
-        coEvery { tangemPayApi.getCashbackAccrualDocs(any(), any()) } returns ApiResponse.Success(response)
+        coEvery { tangemPayApi.getCashbackAccrualDocs(any()) } returns ApiResponse.Success(response)
 
         // Act
         val actual = createRepository().getCashbackAccrualDocs(userWalletId)
@@ -84,7 +84,7 @@ internal class DefaultCashbackRepositoryTest {
     @Test
     fun `GIVEN backend error WHEN getCashbackAccrualDocs THEN error is propagated`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getCashbackAccrualDocs(any(), any()) } returns
+        coEvery { tangemPayApi.getCashbackAccrualDocs(any()) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CashbackAccrualDocsResponse>
 
         // Act
