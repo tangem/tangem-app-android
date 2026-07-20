@@ -5,6 +5,8 @@ import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.logging.Severity
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -82,6 +84,38 @@ internal class DefaultPolymarketCredentialsStoreTest {
         // Assert
         assertThat(actual).isNull()
         verify(exactly = 1) { secureStorage.delete(EXPECTED_KEY) }
+    }
+
+    @Test
+    fun `GIVEN corrupted json WHEN get THEN nothing from the payload reaches the logs`() = runTest {
+        // Arrange
+        val logs = RecordingLogWriter()
+        TangemLogger.setLogWriters(listOf(logs))
+        every { secureStorage.getAsString(EXPECTED_KEY) } returns """{"secret":"${CREDENTIALS.secret}",,,"""
+
+        // Act
+        store.get(ownerAddress = OWNER_ADDRESS)
+        TangemLogger.setLogWriters(emptyList())
+
+        // Assert
+        assertThat(logs.entries).isNotEmpty()
+        assertThat(logs.entries.map { it.second }).containsExactly(null)
+        assertThat(logs.entries.none { it.first.contains(CREDENTIALS.secret) }).isTrue()
+    }
+
+    private class RecordingLogWriter : TangemLogger.LogWriter {
+
+        val entries = mutableListOf<Pair<String, Throwable?>>()
+
+        override fun write(
+            severity: Severity,
+            tag: String,
+            message: String,
+            throwable: Throwable?,
+            shouldSanitize: Boolean,
+        ) {
+            entries += message to throwable
+        }
     }
 
     @Test
