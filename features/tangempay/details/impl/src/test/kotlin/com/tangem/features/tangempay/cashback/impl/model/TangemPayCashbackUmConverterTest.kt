@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.cashback.impl.model
 import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.arrayItemReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -75,7 +76,10 @@ internal class TangemPayCashbackUmConverterTest {
 
         // Assert
         val expected = TangemPayCashbackUM(
-            title = resourceReference(R.string.tangempay_cashback_earned_title, wrappedList("$22.54", "June")),
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("$22.54", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
             subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
             isEmpty = false,
             banner = TangemPayCashbackUM.Banner(
@@ -99,7 +103,10 @@ internal class TangemPayCashbackUmConverterTest {
 
         // Assert
         val expected = TangemPayCashbackUM(
-            title = resourceReference(R.string.tangempay_cashback_earned_title, wrappedList("-$22.54", "June")),
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("-$22.54", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
             subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
             isEmpty = false,
             banner = TangemPayCashbackUM.Banner(
