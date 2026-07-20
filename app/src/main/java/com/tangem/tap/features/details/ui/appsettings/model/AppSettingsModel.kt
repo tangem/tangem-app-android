@@ -298,6 +298,7 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private suspend fun setBiometricLockForAllWallets() {
+        setupPolicyForSelectedWallet()
         val userWallets = userWalletsListRepository.userWalletsSync()
         userWallets.forEach { wallet ->
             userWalletsListRepository.setLock(
@@ -305,6 +306,15 @@ internal class AppSettingsModel @Inject constructor(
                 lockMethod = UserWalletsListRepository.LockMethod.Biometric,
                 changeUnsecured = false,
             )
+        }
+    }
+
+    private suspend fun setupPolicyForSelectedWallet() {
+        val selectedWallet = userWalletsListRepository.selectedUserWallet.value ?: return
+        if (selectedWallet is UserWallet.Cold) {
+            val isBiometricsRequestPolicy = walletsRepository.requireAccessCode() &&
+                selectedWallet.scanResponse.card.isAccessCodeSet
+            cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = isBiometricsRequestPolicy)
         }
     }
 
