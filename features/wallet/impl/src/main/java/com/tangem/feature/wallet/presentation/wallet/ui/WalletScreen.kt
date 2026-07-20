@@ -93,7 +93,7 @@ private const val MARKET_HINT_THRESHOLD = 0.5f
 @OptIn(ExperimentalDecomposeApi::class)
 @Suppress("LongParameterList")
 @Composable
-internal fun WalletScreen2(
+internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
@@ -139,7 +139,7 @@ internal fun WalletScreen2(
 
     val coroutineScope = rememberCoroutineScope()
 
-    WalletContent2(
+    WalletContent(
         state = state,
         walletsPagerState = walletsPagerState,
         tangemPayComponent = tangemPayComponent,
@@ -168,7 +168,7 @@ internal fun WalletScreen2(
 
 @Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 @Composable
-private fun WalletContent2(
+private fun WalletContent(
     state: WalletScreenState,
     walletsPagerState: PagerState,
     tangemPayComponent: TangemPayMainBlockComponent,
@@ -691,7 +691,7 @@ private fun rememberPageAlpha(pagerState: PagerState, currentPageIndex: Int): St
 @Composable
 private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider::class) data: WalletScreenState) {
     TangemThemePreviewRedesign {
-        WalletScreen2(
+        WalletScreen(
             state = data,
             tangemPayComponent = object : TangemPayMainBlockComponent {
                 override fun LazyListScope.tangemPayMainContent(
