@@ -36,7 +36,7 @@ internal class TangemPayDetailsNotificationFactory(
         },
     )
 
-    fun createAwaitingDepositConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
+    fun createTiersConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
         tariffPlan ?: return null
         return when (TangemPayTiersBannerType.fromPlan(isTiersPlusPlanEnabled, tariffPlan)) {
             null -> null
