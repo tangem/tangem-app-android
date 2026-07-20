@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenElementsTestTags
 
 @Composable
 fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier = Modifier) {
@@ -82,7 +84,7 @@ private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Mo
             visible = titleUM.badge != null,
         ) {
             val wrappedBadge = remember(this) { requireNotNull(titleUM.badge) }
-            TangemBadge(wrappedBadge)
+            TangemBadge(wrappedBadge, modifier = Modifier.testTag(TokenElementsTestTags.TOKEN_EARN_APY_BADGE))
         }
     }
 }
