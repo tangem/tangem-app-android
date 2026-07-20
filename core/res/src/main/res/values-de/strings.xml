@@ -290,6 +290,10 @@
   <string name="common_approve">Genehmigen</string>
   <string name="common_approved">Genehmigt</string>
   <string name="common_approving">Genehmigen</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d Vermögenswert</item>
+    <item quantity="other">%d Vermögenswerte</item>
+  </plurals>
   <string name="common_attention">Achtung</string>
   <string name="common_available_networks">Verfügbare Netzwerke</string>
   <string name="common_backup">Sicherungskopie</string>
@@ -1932,9 +1936,27 @@
     <item quantity="one">%d Karte</item>
     <item quantity="other">%d Karten</item>
   </plurals>
+  <string name="tangempay_cashback_accruals_calc_description">Wir bearbeiten Käufe innerhalb von 5 Tagen nach der Transaktion und berücksichtigen nur abgeschlossene Transaktionen.</string>
+  <string name="tangempay_cashback_accruals_calc_title">Wie berechnen wir Cashback?</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Für Einkäufe vor Ort bei Händlern in der EU wird kein Cashback gewährt; dies gilt ebenfalls für Abhebungen, Überweisungen, bargeldähnliche Zahlungen, Mobilfunkrechnungen, behördliche Dienstleistungen und bestimmte andere Kategorien.</string>
+  <string name="tangempay_cashback_accruals_exceptions_title">Ausnahmen</string>
+  <string name="tangempay_cashback_accruals_pay_description">Vom 2. bis zum 5. des nächsten Monats</string>
+  <string name="tangempay_cashback_accruals_pay_title">Wie erfolgt die Auszahlung von Cashback?</string>
+  <string name="tangempay_cashback_accruals_subtitle">Grenzen und Ausnahmen</string>
+  <string name="tangempay_cashback_accruals_title">Abgrenzungen</string>
+  <string name="tangempay_cashback_additional_permanent">Dauerhaft</string>
+  <string name="tangempay_cashback_additional_title">Zusätzliches Cashback</string>
+  <string name="tangempay_cashback_additional_until">Bis %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Dies geschah aufgrund Ihres verdächtigen Verhaltens. Wenden Sie sich an den Support, um mehr zu erfahren.</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deaktiviert</string>
   <string name="tangempay_cashback_deposited_on">Wird eingezahlt am %1$s</string>
+  <string name="tangempay_cashback_details_cap">%1$s maximal pro Monat</string>
+  <string name="tangempay_cashback_details_eu_excluded">Kein Cashback für Einkäufe vor Ort bei Händlern in der EU</string>
+  <string name="tangempay_cashback_details_paid_in">Bezahlt in %1$s</string>
+  <string name="tangempay_cashback_details_tier">%1$s%% Bei allen Einkäufen mit Ihren „ %2$s “-Karten gilt ein Mindestumsatz von %3$s</string>
+  <string name="tangempay_cashback_error_title">Die Seite konnte nicht geladen werden.\nZum Neuladen bitte antippen</string>
+  <string name="tangempay_cashback_refund_banner">Wir haben eine Rückerstattung für einen Kauf erhalten, für den zuvor bereits Cashback gewährt worden war</string>
+  <string name="tangempay_cashback_total_earned">%1$s insgesamt verdient</string>
   <string name="tangempay_cashback_widget_title">%1$s Cashback in %2$s</string>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
