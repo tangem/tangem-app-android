@@ -14,7 +14,6 @@ import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.utils.SupportedLanguages
 import javax.inject.Inject
 
 internal class DefaultCashbackRepository @Inject constructor(
@@ -31,10 +30,7 @@ internal class DefaultCashbackRepository @Inject constructor(
 
     override suspend fun getCashbackPromotions(userWalletId: UserWalletId): Either<VisaApiError, CashbackPromotions> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCashbackPromotions(
-                authHeader = authHeader,
-                language = SupportedLanguages.getCurrentSupportedLanguageCode(),
-            )
+            tangemPayApi.getCashbackPromotions(authHeader = authHeader)
         }.map(CashbackPromotionsConverter::convert)
     }
 
@@ -42,10 +38,7 @@ internal class DefaultCashbackRepository @Inject constructor(
         userWalletId: UserWalletId,
     ): Either<VisaApiError, List<CashbackDocument>> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCashbackAccrualDocs(
-                authHeader = authHeader,
-                language = SupportedLanguages.getCurrentSupportedLanguageCode(),
-            )
+            tangemPayApi.getCashbackAccrualDocs(authHeader = authHeader)
         }.map(CashbackAccrualDocsConverter::convert)
     }
 
