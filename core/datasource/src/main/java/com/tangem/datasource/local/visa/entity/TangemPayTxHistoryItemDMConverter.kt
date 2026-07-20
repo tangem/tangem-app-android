@@ -93,6 +93,7 @@ internal class TangemPayTxHistoryItemToDMConverter @Inject constructor() :
         CashbackDomain.ExclusionReason.CUSTOMER_BLOCKLISTED -> CashbackDM.ExclusionReason.CUSTOMER_BLOCKLISTED
         CashbackDomain.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED ->
             CashbackDM.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED
+        CashbackDomain.ExclusionReason.BELOW_MIN -> CashbackDM.ExclusionReason.BELOW_MIN
         CashbackDomain.ExclusionReason.UNKNOWN -> CashbackDM.ExclusionReason.UNKNOWN
     }
 }
@@ -184,6 +185,7 @@ internal class TangemPayTxHistoryItemToDomainConverter @Inject constructor() :
         CashbackDM.ExclusionReason.CUSTOMER_BLOCKLISTED -> CashbackDomain.ExclusionReason.CUSTOMER_BLOCKLISTED
         CashbackDM.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED ->
             CashbackDomain.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED
+        CashbackDM.ExclusionReason.BELOW_MIN -> CashbackDomain.ExclusionReason.BELOW_MIN
         CashbackDM.ExclusionReason.UNKNOWN -> CashbackDomain.ExclusionReason.UNKNOWN
     }
 }
