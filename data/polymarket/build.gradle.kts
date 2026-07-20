@@ -40,7 +40,6 @@ dependencies {
     // endregion
 
     // region tests
-    testImplementation(deps.moshi.kotlin)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
