@@ -133,6 +133,42 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
                 date = yesterday.minusHours(1),
                 cashback = null,
             ),
+            // Confirmed but trimmed by the monthly cap — detail row shows "+$3.00" + "Monthly cap reached".
+            mockSpend(
+                id = "tx_8",
+                merchantName = "IKEA",
+                category = "Home",
+                amount = BigDecimal("300.00"),
+                date = yesterday.minusHours(3),
+                cashback = mockCashback(Status.CONFIRMED, "3.00"),
+            ),
+            // Excluded, monthly cap fully reached — detail row shows "No cashback" + "Monthly cap reached".
+            mockSpend(
+                id = "tx_9",
+                merchantName = "Best Buy",
+                category = "Electronics",
+                amount = BigDecimal("120.00"),
+                date = yesterday.minusHours(4),
+                cashback = mockCashback(Status.EXCLUDED, "0.00"),
+            ),
+            // Excluded, EU in-person merchant — detail row shows "No cashback" + "excluded region".
+            mockSpend(
+                id = "tx_10",
+                merchantName = "Carrefour",
+                category = "Groceries",
+                amount = BigDecimal("54.30"),
+                date = yesterday.minusHours(5),
+                cashback = mockCashback(Status.EXCLUDED, "0.00"),
+            ),
+            // Excluded, below minimum purchase — detail row shows "No cashback" + "Min trx amount is $30".
+            mockSpend(
+                id = "tx_11",
+                merchantName = "Blue Bottle",
+                category = "Restaurants",
+                amount = BigDecimal("8.52"),
+                date = yesterday.minusHours(6),
+                cashback = mockCashback(Status.EXCLUDED, "0.00"),
+            ),
             // Non-spend transaction — no cashback.
             TangemPayTxHistoryItem.Payment(
                 id = "tx_7",
