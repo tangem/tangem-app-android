@@ -79,7 +79,14 @@ internal class TangemPayDetailsStateFactory(
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val hasWithdrawableBalance = status.balance.hasWithdrawableAmount
         val errorNotification = notificationFactory.createErrorConfig(status.error)
-        val awaitingDepositNotification = notificationFactory.createAwaitingDepositConfig(status.tariffPlan)
+        val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
+        val tiersNotificationType = status.tariffPlan?.let { plan ->
+            TangemPayTiersBannerType.fromPlan(isTiersPlusPlanEnabled, plan)
+        }
+        val issueCardNotificationType = status.cards.resolveProgressBanner().takeIf { type ->
+            tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
+                type != CardsProgressBannerUM.Issuing
+        }
         val fiatBalance = status.balance.fiatBalance
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -117,12 +124,12 @@ internal class TangemPayDetailsStateFactory(
                         .toImmutableList(),
                     onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
                     isAddCardEnabled = isAddCardEnabled,
-                    progressBanner = status.cards.resolveProgressBanner(),
+                    progressBanner = issueCardNotificationType,
                 ),
             ),
             isBalanceHidden = false,
             addToWalletBlockState = null,
-            errorNotificationConfig = errorNotification ?: awaitingDepositNotification,
+            errorNotificationConfig = errorNotification ?: tiersNotification,
             accountDeactivatedNotificationConfig = null,
             cashbackBlockState = null,
         )
@@ -170,7 +177,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getInactiveState(status: PaymentAccountStatusValue.Inactive): TangemPayDetailsUM {
-        val notification = notificationFactory.createAwaitingDepositConfig(status.tariffPlan)
+        val notification = notificationFactory.createTiersConfig(status.tariffPlan)
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
