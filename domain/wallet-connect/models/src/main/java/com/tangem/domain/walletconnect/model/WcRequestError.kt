@@ -15,6 +15,12 @@ sealed class WcRequestError {
 
     data class UnknownError(val ex: Throwable? = null) : WcRequestError()
 
+    /**
+     * The request is no longer valid at the moment of signing: it has expired or its session was
+     * removed. Used to abort the sensitive action before it reaches the network client.
+     */
+    data object RequestExpired : WcRequestError()
+
     companion object {
 
         fun WcRequestError.message(): String = when (this) {
@@ -22,6 +28,7 @@ sealed class WcRequestError {
             is WcRespondError -> message
             is WrappedSendError -> sendTransactionError.message()
             is HandleMethodError -> message
+            RequestExpired -> "WalletConnect request is no longer valid"
         }
 
         fun WcRequestError.code(): String = when (this) {
@@ -29,6 +36,7 @@ sealed class WcRequestError {
             is UnknownError -> "UnknownError"
             is WcRespondError -> this.code.toString()
             is WrappedSendError -> sendTransactionError.code()
+            RequestExpired -> "RequestExpired"
         }
 
         private fun SendTransactionError.code(): String = when (this) {
