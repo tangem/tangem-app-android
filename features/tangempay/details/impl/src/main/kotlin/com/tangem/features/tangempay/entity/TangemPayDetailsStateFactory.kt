@@ -281,17 +281,26 @@ internal class TangemPayDetailsStateFactory(
     private fun getTopBarMenuItemsV2(tariffPlan: TangemPayTariffPlanState?): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
             if (isTiersPlusPlanEnabled && tariffPlan != null) {
+                val isPlanChanging = tariffPlan.order?.step is TangemPayTariffPlanState.OrderStep.AwaitingDeposit ||
+                    tariffPlan.tariff.status == TangemPayCustomerTariffPlan.Status.TRANSITIONING
                 add(
                     TangemPayDropDownItemUM(
                         title = resourceReference(R.string.tangempay_current_plan_title),
                         onClick = { intents.onClickCurrentPlan(tariffPlan.tariff) },
                         icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_information_24,
+                            iconRes = if (isPlanChanging) {
+                                CoreUiR.drawable.ic_arrow_refresh_20
+                            } else {
+                                CoreUiR.drawable.ic_information_24
+                            },
                             tintReference = { TangemTheme.colors3.icon.primary },
                         ),
-                        subtitle = stringReference(tariffPlan.tariff.plan.name),
-                        isEnabled = tariffPlan.order?.step !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit &&
-                            tariffPlan.tariff.status != TangemPayCustomerTariffPlan.Status.TRANSITIONING,
+                        subtitle = if (isPlanChanging) {
+                            resourceReference(R.string.tangempay_changing_plan)
+                        } else {
+                            stringReference(tariffPlan.tariff.plan.name)
+                        },
+                        isEnabled = !isPlanChanging,
                     ),
                 )
             }
