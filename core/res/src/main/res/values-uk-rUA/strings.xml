@@ -133,6 +133,7 @@
   <string name="address_book_no_contacts">Немає доданих контактів</string>
   <string name="address_book_no_contacts_description">Тут відображатимуться додані вами контакти.</string>
   <string name="address_book_remove_address">Видалити адресу</string>
+  <string name="address_book_save_address">Зберегти адресу</string>
   <string name="address_book_save_contact">Зберегти контакт</string>
   <string name="address_book_save_to_wallet_title">Зберегти в гаманець</string>
   <string name="address_book_save_wallet_to_description">Цей контакт буде прив\'язано до цього гаманця в адресній книзі.</string>
@@ -458,6 +459,7 @@
   <string name="common_rename">Перейменувати</string>
   <string name="common_required">Обов\'язково</string>
   <string name="common_reset">Скинути</string>
+  <string name="common_retry">Повторити</string>
   <string name="common_save">Зберегти</string>
   <string name="common_save_changes">Зберегти зміни</string>
   <string name="common_search">Пошук</string>
