@@ -1,19 +1,24 @@
 package com.tangem.features.foryou.impl.model.transformer
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
-import io.mockk.every
-import io.mockk.mockk
+import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
+import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createEarnCurrency
+import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createPortfolioStatus
+import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createSelectedPortfolio
+import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createStatus
+import com.tangem.test.mock.MockAccounts
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -88,7 +93,9 @@ internal class SetPortfolioReviewTransformerTest {
         fun `GIVEN total balance from outdated source WHEN transform THEN outdated-data notification is emitted`() {
             // Arrange
             val transformer = createTransformer(
-                accountStatusList = accountStatusList(loaded(BigDecimal("10"), source = StatusSource.ONLY_CACHE)),
+                selectedPortfolio = createSelectedPortfolio(
+                    totalFiatBalance = loaded(BigDecimal("10"), source = StatusSource.ONLY_CACHE),
+                ),
             )
 
             // Act
@@ -102,7 +109,9 @@ internal class SetPortfolioReviewTransformerTest {
         fun `GIVEN total balance from actual source WHEN transform THEN no notification is emitted`() {
             // Arrange
             val transformer = createTransformer(
-                accountStatusList = accountStatusList(loaded(BigDecimal("10"), source = StatusSource.ACTUAL)),
+                selectedPortfolio = createSelectedPortfolio(
+                    totalFiatBalance = loaded(BigDecimal("10"), source = StatusSource.ACTUAL),
+                ),
             )
 
             // Act
@@ -113,9 +122,11 @@ internal class SetPortfolioReviewTransformerTest {
         }
 
         @Test
-        fun `GIVEN null account status list WHEN transform THEN no notification is emitted`() {
+        fun `GIVEN total balance not yet loaded WHEN transform THEN no notification is emitted`() {
             // Arrange
-            val transformer = createTransformer(accountStatusList = null)
+            val transformer = createTransformer(
+                selectedPortfolio = createSelectedPortfolio(totalFiatBalance = TotalFiatBalance.Failed),
+            )
 
             // Act
             val result = transformer.transform(loadingState())
@@ -125,12 +136,94 @@ internal class SetPortfolioReviewTransformerTest {
         }
     }
 
+    @Nested
+    inner class PortfolioSelectorLabel {
+
+        @Test
+        fun `GIVEN every account selected WHEN transform THEN label is All accounts`() {
+            // Arrange
+            val account1 = MockAccounts.createAccount(derivationIndex = 1)
+            val account2 = MockAccounts.createAccount(derivationIndex = 2)
+            val transformer = createTransformer(
+                selectedPortfolio = createSelectedPortfolio(
+                    accountStatusWithCurrency(account1),
+                    accountStatusWithCurrency(account2),
+                    totalAccountsCount = 2,
+                ),
+            )
+
+            // Act
+            val result = transformer.transform(loadingState())
+
+            // Assert
+            assertThat(result.portfolioSelectorLabel).isEqualTo(stringReference("All accounts"))
+        }
+
+        @Test
+        fun `GIVEN no account selected WHEN transform THEN label is All accounts`() {
+            // Arrange
+            val transformer = createTransformer(
+                selectedPortfolio = createSelectedPortfolio(totalAccountsCount = 1),
+            )
+
+            // Act
+            val result = transformer.transform(loadingState())
+
+            // Assert
+            assertThat(result.portfolioSelectorLabel).isEqualTo(stringReference("All accounts"))
+        }
+
+        @Test
+        fun `GIVEN a single account selected out of many WHEN transform THEN label is the account name`() {
+            // Arrange
+            val account1 = MockAccounts.createAccount(derivationIndex = 1)
+            val transformer = createTransformer(
+                selectedPortfolio = createSelectedPortfolio(
+                    accountStatusWithCurrency(account1),
+                    totalAccountsCount = 2,
+                ),
+            )
+
+            // Act
+            val result = transformer.transform(loadingState())
+
+            // Assert
+            assertThat(result.portfolioSelectorLabel).isEqualTo(account1.accountName.toUM().value)
+        }
+
+        @Test
+        fun `GIVEN a subset of several accounts selected WHEN transform THEN label is the selected count`() {
+            // Arrange
+            val account1 = MockAccounts.createAccount(derivationIndex = 1)
+            val account2 = MockAccounts.createAccount(derivationIndex = 2)
+            val transformer = createTransformer(
+                selectedPortfolio = createSelectedPortfolio(
+                    accountStatusWithCurrency(account1),
+                    accountStatusWithCurrency(account2),
+                    totalAccountsCount = 3,
+                ),
+            )
+
+            // Act
+            val result = transformer.transform(loadingState())
+
+            // Assert
+            assertThat(result.portfolioSelectorLabel).isEqualTo(stringReference("2 accounts"))
+        }
+    }
+
+    /** A selected account carrying a single currency, so it shows up in the portfolio's account statuses. */
+    private fun accountStatusWithCurrency(account: Account.CryptoPortfolio) = createPortfolioStatus(
+        currencies = listOf(createStatus(createEarnCurrency())),
+        account = account,
+    )
+
     private fun createTransformer(
-        accountStatusList: AccountStatusList? = null,
+        selectedPortfolio: ForYouSelectedPortfolio = createSelectedPortfolio(),
         portfolioReviewUM: PortfolioReviewUM = contentPortfolioReview(),
         earnOpportunitiesUM: EarnOpportunitiesUM = contentEarnOpportunities(),
     ) = SetPortfolioReviewTransformer(
-        accountStatusList = accountStatusList,
+        selectedPortfolio = selectedPortfolio,
         portfolioReviewUM = portfolioReviewUM,
         earnOpportunitiesUM = earnOpportunitiesUM,
     )
@@ -154,10 +247,6 @@ internal class SetPortfolioReviewTransformerTest {
         donutText = stringReference("No data"),
     )
 
-    private fun accountStatusList(totalFiatBalance: TotalFiatBalance): AccountStatusList = mockk {
-        every { this@mockk.totalFiatBalance } returns totalFiatBalance
-    }
-
     private fun loaded(amount: BigDecimal, source: StatusSource = StatusSource.ACTUAL): TotalFiatBalance.Loaded =
         TotalFiatBalance.Loaded(amount = amount, source = source)
 
@@ -170,5 +259,7 @@ internal class SetPortfolioReviewTransformerTest {
         notifications = persistentListOf(),
         periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
         onPeriodClick = {},
+        portfolioSelectorLabel = stringReference("All accounts"),
+        onSelectPortfolioClick = {},
     )
 }
