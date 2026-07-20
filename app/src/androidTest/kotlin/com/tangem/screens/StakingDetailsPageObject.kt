@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.*
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -84,6 +85,12 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    val noRewardsToClaimText: KNode = child {
+        hasTestTag(BaseBlockTestTags.BLOCK_TEXT)
+        hasText(getResourceString(CoreResR.string.staking_details_no_rewards_to_claim))
+        useUnmergedTree = true
+    }
+
     val yourStakesTitle: KNode = child {
         hasText(getResourceString(StakingImplR.string.staking_your_stakes))
         useUnmergedTree = true
@@ -91,6 +98,16 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
     val activeStakingBlock: KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val rewardsClaimBlock: KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.REWARDS_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val activeStakingPendingIcon: KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
         useUnmergedTree = true
     }
 
@@ -108,6 +125,30 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     val stakeButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_stake))
+        useUnmergedTree = true
+    }
+
+    val unstakingEntryTitle: KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE)
+        hasText(getResourceString(StakingImplR.string.staking_unstaking))
+        useUnmergedTree = true
+    }
+
+    val unstakingEntryDate: KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE)
+        hasText(getResourceString(R.string.common_today))
+        useUnmergedTree = true
+    }
+
+    val withdrawEntryTitle: KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE)
+        hasText(getResourceString(StakingImplR.string.staking_unstaked))
+        useUnmergedTree = true
+    }
+
+    val withdrawEntrySubtitle: KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE)
+        hasText(getResourceString(StakingImplR.string.staking_tap_to_withdraw))
         useUnmergedTree = true
     }
 
