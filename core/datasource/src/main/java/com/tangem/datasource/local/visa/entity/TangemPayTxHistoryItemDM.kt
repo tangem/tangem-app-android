@@ -142,6 +142,9 @@ internal sealed class TangemPayTxHistoryItemDM {
             @SerialName("merchant_country_excluded")
             MERCHANT_COUNTRY_EXCLUDED,
 
+            @SerialName("below-min")
+            BELOW_MIN,
+
             @SerialName("unknown")
             UNKNOWN,
         }
