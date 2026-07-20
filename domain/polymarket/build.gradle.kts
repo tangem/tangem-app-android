@@ -1,5 +1,6 @@
 plugins {
     alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -11,6 +12,8 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     // endregion
 
     // region Domain
