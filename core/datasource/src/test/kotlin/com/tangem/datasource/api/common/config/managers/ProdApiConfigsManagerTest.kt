@@ -18,6 +18,7 @@ import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -300,6 +301,7 @@ internal class ProdApiConfigsManagerTest {
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
                     "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
+                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
@@ -316,6 +318,7 @@ internal class ProdApiConfigsManagerTest {
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
                     "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
+                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
