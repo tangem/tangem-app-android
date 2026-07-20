@@ -14,6 +14,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.ButtonState
+import com.tangem.features.tangempay.entity.CashbackDetailUM
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
 import com.tangem.features.tangempay.entity.TransactionDetailUM
 import com.tangem.features.tangempay.entity.TransactionLabelUM
@@ -37,6 +38,7 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
             iconState = transaction.extractIcon(),
             transactionTitle = transaction.extractTransactionTitle(),
             detail = value.extractDetail(),
+            cashbackDetail = value.extractCashbackDetail(),
             transactionCategory = transaction.extractTransactionCategory(),
             mcc = transaction.extractMcc(),
             transactionAmount = transaction.extractAmount(),
@@ -311,6 +313,14 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
         )
     }
 
+    private fun Input.extractCashbackDetail(): CashbackDetailUM? = TangemPayCashbackDetailUmConverter.convert(
+        transaction = item,
+        cashback = cashbackDetails,
+        loadState = cashbackLoadState,
+        isCashbackEnabled = isCashbackEnabled,
+        onRefreshClick = onCashbackRefreshClick,
+    )
+
     private fun Input.extractButtonState(): ButtonState {
         return ButtonState(
             text = resourceReference(R.string.tangem_pay_get_help),
@@ -322,9 +332,13 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
         val item: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
         val transactionLoadState: TransactionLoadState,
+        val cashbackDetails: TangemPayTxHistoryItem.Cashback?,
+        val cashbackLoadState: TransactionLoadState,
+        val isCashbackEnabled: Boolean,
         val onExplorerClick: (String?) -> Unit,
         val onDisputeClick: () -> Unit,
         val onCardRefreshClick: () -> Unit,
+        val onCashbackRefreshClick: () -> Unit,
         val onDismiss: () -> Unit,
     )
 }
