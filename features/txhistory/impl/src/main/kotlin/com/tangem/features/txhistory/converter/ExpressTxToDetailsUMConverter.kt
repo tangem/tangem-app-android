@@ -99,7 +99,11 @@ internal class ExpressTxToDetailsUMConverter(
                 isFaded = status is Status.Failed,
             ),
             statusBanner = refundToken?.let(::refundedInBanner) ?: swap.tx.status.toStatusBannerUM(),
-            rows = swap.toInfoRows(onProviderClick = swap.providerClick(), rateRow = swap.tx.swapRateRow()),
+            rows = swap.toInfoRows(
+                onProviderClick = swap.providerClick(),
+                rateRow = swap.tx.swapRateRow(),
+                showProviderType = true,
+            ),
             providerButton = refundToken?.let(::goToRefundedTokenButton)
                 ?: providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel()),
         )
@@ -380,16 +384,17 @@ private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
 private fun ExpressTx.toInfoRows(
     onProviderClick: (() -> Unit)?,
     rateRow: TxHistoryDetailsUM.InfoRowUM?,
+    showProviderType: Boolean = false,
 ): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
-    provider?.let { add(it.providerRow(onProviderClick)) }
+    provider?.let { add(it.providerRow(onProviderClick, showType = showProviderType)) }
     rateRow?.let { add(it) }
     addAll(txInfo.toInfoRows())
 }.toImmutableList()
 
-private fun ExpressProvider.providerRow(onClick: (() -> Unit)?): TxHistoryDetailsUM.InfoRowUM =
+private fun ExpressProvider.providerRow(onClick: (() -> Unit)?, showType: Boolean): TxHistoryDetailsUM.InfoRowUM =
     TxHistoryDetailsUM.InfoRowUM(
         label = resourceReference(R.string.express_provider),
-        value = stringReference(name),
+        value = stringReference(if (showType) "$name ${StringsSigns.DOT} ${type.typeName}" else name),
         // The arrow link affordance is shown only when the row opens the provider page.
         trailingIconRes = onClick?.let { R.drawable.ic_arrow_top_right_24 },
         onClick = onClick,
