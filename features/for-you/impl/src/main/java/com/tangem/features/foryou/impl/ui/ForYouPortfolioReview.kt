@@ -19,6 +19,7 @@ import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -38,6 +39,8 @@ internal fun ForYouPortfolioReview(
     periodPickerUM: TangemSegmentedPickerUM,
     onPeriodClick: (TangemSegmentUM) -> Unit,
     portfolioReviewUM: PortfolioReviewUM,
+    portfolioSelectorLabel: TextReference,
+    onSelectPortfolioClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -52,10 +55,11 @@ internal fun ForYouPortfolioReview(
                 color = TangemTheme.colors3.text.primary,
             )
             TangemBadge(
-                text = stringReference("All accounts"), // TODO For You
+                text = portfolioSelectorLabel,
                 variant = TangemBadge.Variant.Solid,
                 size = TangemBadge.Size.X9,
                 iconEnd = TangemIconUM.Icon(Icons.ic_chevron_down_16),
+                onClick = onSelectPortfolioClick,
             )
         }
         SpacerH(16.dp)
@@ -108,6 +112,8 @@ private fun ForYouPortfolioReview_Review(
         ForYouPortfolioReview(
             portfolioReviewUM = params,
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+            portfolioSelectorLabel = stringReference("All accounts"),
+            onSelectPortfolioClick = {},
             periodPickerUM = TangemSegmentedPickerUM(
                 items = persistentListOf(
                     TangemSegmentUM(id = "0", title = stringReference("Day")),
