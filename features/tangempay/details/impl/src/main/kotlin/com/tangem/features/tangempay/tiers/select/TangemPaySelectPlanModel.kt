@@ -90,10 +90,15 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
         val tierId = transition.plan.tierId
         analytics.send(TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(tierId))
-        analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
 
-        isConfirm = true
-        state.update { buildState() }
+        when (params.source) {
+            TangemPaySelectPlanSource.TIERS_ONBOARDING -> applyTransition(transition)
+            TangemPaySelectPlanSource.CHANGE_PLAN -> {
+                analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
+                isConfirm = true
+                state.update { buildState() }
+            }
+        }
     }
 
     private fun onComparePlansClick() {
@@ -125,9 +130,13 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun onConfirmClick() {
+        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+        applyTransition(transition)
+    }
+
+    private fun applyTransition(transition: TangemPayTariffPlanTransition) {
         if (isProcessing) return
 
-        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
         if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeUpgradeClicked())
         }
@@ -193,6 +202,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     )
 
     private fun buildSelectContent() = TangemPaySelectPlanUM.Content.Select(
+        isProcessing = isProcessing,
         onComparePlansClick = ::onComparePlansClick,
         onSelectClick = ::onSelectClick,
     )
