@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 /**
@@ -34,7 +35,7 @@ internal class DefaultPolymarketCredentialsStore(
 
         try {
             json.decodeFromString(PolymarketApiCredentials.serializer(), payload)
-        } catch (e: Exception) {
+        } catch (e: SerializationException) {
             TangemLogger.e("Failed to decode Polymarket API credentials; clearing storage")
             secureStorage.delete(key)
             null
