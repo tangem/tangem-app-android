@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
@@ -40,6 +41,7 @@ internal fun WalletListContent(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     contentPadding: PaddingValues,
+    onOrganizeButtonBoundsChange: (Rect?) -> Unit,
     modifier: Modifier = Modifier,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     walletId: String? = null,
@@ -99,7 +101,11 @@ internal fun WalletListContent(
 
         nftCollections2(state = currentWallet, itemModifier = itemModifier)
 
-        organizeTokens2(state = currentWallet, itemModifier = itemModifier)
+        organizeTokens2(
+            state = currentWallet,
+            itemModifier = itemModifier,
+            onButtonBoundsChange = onOrganizeButtonBoundsChange,
+        )
     }
 }
 
