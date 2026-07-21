@@ -58,6 +58,33 @@ class SaveContactInteractor(
         signed
     }
 
+    /**
+     * Moves an existing [contact] to [targetWallet]: creates a fresh contact there (new id, name validated for
+     * uniqueness in the target wallet, addresses re-signed with the target wallet's key) and, once that succeeds,
+     * deletes the original from its source wallet.
+     *
+     * Create-then-delete is deliberate: if the target write fails the original is untouched (no data loss); if only
+     * the delete fails the contact ends up duplicated rather than lost.
+     */
+    suspend fun moveContact(
+        targetWallet: UserWallet,
+        contact: Contact,
+        name: String,
+        iconColor: String,
+        addresses: List<AddressEntry>,
+    ): Either<SaveContactError, Contact> = either {
+        val created = createContact(
+            userWallet = targetWallet,
+            name = name,
+            iconColor = iconColor,
+            addresses = addresses,
+        ).bind()
+        repository.deleteContact(contact.id)
+            .mapLeft(SaveContactError::Backend)
+            .bind()
+        created
+    }
+
     suspend fun updateContact(
         userWallet: UserWallet,
         contact: Contact,
