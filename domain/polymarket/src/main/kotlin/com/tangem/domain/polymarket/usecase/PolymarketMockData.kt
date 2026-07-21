@@ -1,4 +1,4 @@
-package com.tangem.data.polymarket.mock
+package com.tangem.domain.polymarket.usecase
 
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -6,7 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import java.math.BigDecimal
 
 /**
- * Static fixtures backing [MockPolymarketRepository] while the feature is built UI-first.
+ * Static fixtures served by [GetPolymarketEventsUseCase] while the BFF Discovery endpoint is not deployed yet.
  *
  * Factory helpers default every field so a call site overrides only what it needs and new model fields don't
  * churn existing fixtures.
