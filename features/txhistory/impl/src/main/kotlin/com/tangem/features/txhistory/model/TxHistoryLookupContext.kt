@@ -30,7 +30,7 @@ internal data class WalletInfo(val name: String, val deviceIconUM: DeviceIconUM)
  */
 internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
-    data class OwnWallet(val walletInfo: WalletInfo) : ResolvedOwner
+    data class OwnWallet(val userWalletId: UserWalletId, val walletInfo: WalletInfo) : ResolvedOwner
     data class External(val address: String) : ResolvedOwner
 }
 
@@ -55,9 +55,12 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
     return when {
         account == null -> ResolvedOwner.External(address)
         isAccountsModeEnabled -> ResolvedOwner.OwnAccount(account)
-        else -> walletInfoById[account.accountId.userWalletId]
-            ?.let { ResolvedOwner.OwnWallet(it) }
-            ?: ResolvedOwner.External(address)
+        else -> {
+            val userWalletId = account.accountId.userWalletId
+            walletInfoById[userWalletId]
+                ?.let { ResolvedOwner.OwnWallet(userWalletId, it) }
+                ?: ResolvedOwner.External(address)
+        }
     }
 }
 
