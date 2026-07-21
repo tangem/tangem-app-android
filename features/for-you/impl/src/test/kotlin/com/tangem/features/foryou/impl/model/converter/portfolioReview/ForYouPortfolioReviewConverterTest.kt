@@ -6,9 +6,10 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -17,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -163,9 +165,11 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN null account status list WHEN convert THEN token list is empty`() {
+        fun `GIVEN empty portfolio WHEN convert THEN token list is empty`() {
             // Act
-            val result = createConverter().convert(null) as PortfolioReviewUM.Content
+            val result = createConverter()
+                .convert(selectedPortfolio(currencies = emptyList(), totalFiatBalance = BigDecimal.ZERO))
+                as PortfolioReviewUM.Content
 
             // Assert
             assertThat(result.tokenList).isEmpty()
@@ -271,7 +275,7 @@ internal class ForYouPortfolioReviewConverterTest {
 
             // Act
             val result = converter.convert(
-                accountStatusList(statuses, BigDecimal("100")),
+                selectedPortfolio(statuses, BigDecimal("100")),
             ) as PortfolioReviewUM.Content
 
             // Assert
@@ -288,7 +292,7 @@ internal class ForYouPortfolioReviewConverterTest {
 
             // Act
             val result = converter.convert(
-                accountStatusList(statuses, BigDecimal("100")),
+                selectedPortfolio(statuses, BigDecimal("100")),
             ) as PortfolioReviewUM.Content
             (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
 
@@ -331,23 +335,21 @@ internal class ForYouPortfolioReviewConverterTest {
                     loadedValue(BigDecimal.ONE, BigDecimal("100")),
                 ),
             )
-            val statusList: AccountStatusList = mockk {
-                every { flattenCurrencies() } returns statuses
-                every { totalFiatBalance } returns TotalFiatBalance.Loading
-                every { userWalletId } returns UserWalletId("01")
-            }
+            val portfolio = selectedPortfolio(currencies = statuses, totalFiatBalance = TotalFiatBalance.Loading)
 
             // Act
-            val result = createConverter().convert(statusList) as PortfolioReviewUM.Content
+            val result = createConverter().convert(portfolio) as PortfolioReviewUM.Content
 
             // Assert
             assertThat(result.marketChartUM).isInstanceOf(MarketChartUM.NoData::class.java)
         }
 
         @Test
-        fun `GIVEN null account status list WHEN convert THEN market chart is NoData`() {
+        fun `GIVEN empty portfolio WHEN convert THEN market chart is NoData`() {
             // Act
-            val result = createConverter().convert(null) as PortfolioReviewUM.Content
+            val result = createConverter()
+                .convert(selectedPortfolio(currencies = emptyList(), totalFiatBalance = BigDecimal.ZERO))
+                as PortfolioReviewUM.Content
 
             // Assert
             assertThat(result.marketChartUM).isInstanceOf(MarketChartUM.NoData::class.java)
@@ -384,8 +386,8 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN all currencies have zero fiat WHEN add funds clicked THEN callback receives the wallet id`() {
-            // Arrange
+        fun `GIVEN all currencies have zero fiat WHEN add funds clicked THEN callback receives the selected wallet id`() {
+            // Arrange — the currencies belong to wallet "01", but add-funds must target the selected wallet
             val statuses = listOf(
                 createStatus(
                     createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
@@ -393,17 +395,20 @@ internal class ForYouPortfolioReviewConverterTest {
                 ),
             )
             var addFundsWalletId: UserWalletId? = null
-            val converter = createConverter(onAddFundsClick = { addFundsWalletId = it })
+            val converter = createConverter(
+                selectedWalletId = UserWalletId("99"),
+                onAddFundsClick = { addFundsWalletId = it },
+            )
 
             // Act
             val result = converter.convert(
-                accountStatusList(statuses, BigDecimal.ZERO),
+                selectedPortfolio(statuses, BigDecimal.ZERO),
             ) as PortfolioReviewUM.Content
             result.onAddFundsClick?.invoke()
 
             // Assert
             assertThat(result.onAddFundsClick).isNotNull()
-            assertThat(addFundsWalletId).isEqualTo(UserWalletId("01"))
+            assertThat(addFundsWalletId).isEqualTo(UserWalletId("99"))
         }
 
         @Test
@@ -424,13 +429,15 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN null account status list WHEN add funds clicked THEN callback is not invoked`() {
-            // Arrange — without a wallet there is nowhere to add funds, so the click must be a no-op
+        fun `GIVEN no selected wallet WHEN add funds clicked THEN callback is not invoked`() {
+            // Arrange — without a selected wallet there is nowhere to add funds, so the click must be a no-op
             var clicked = false
-            val converter = createConverter(onAddFundsClick = { clicked = true })
+            val converter = createConverter(selectedWalletId = null, onAddFundsClick = { clicked = true })
 
             // Act
-            val result = converter.convert(null) as PortfolioReviewUM.Content
+            val result = converter
+                .convert(selectedPortfolio(currencies = emptyList(), totalFiatBalance = BigDecimal.ZERO))
+                as PortfolioReviewUM.Content
             result.onAddFundsClick?.invoke()
 
             // Assert
@@ -506,32 +513,50 @@ internal class ForYouPortfolioReviewConverterTest {
         statuses: List<CryptoCurrencyStatus>,
         totalFiatBalance: BigDecimal,
     ): PortfolioReviewUM.Content =
-        createConverter().convert(accountStatusList(statuses, totalFiatBalance)) as PortfolioReviewUM.Content
+        createConverter().convert(selectedPortfolio(statuses, totalFiatBalance)) as PortfolioReviewUM.Content
 
     private fun createConverter(
         expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
         onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
         onAddFundsClick: (UserWalletId) -> Unit = {},
+        selectedWalletId: UserWalletId? = UserWalletId("01"),
     ): ForYouPortfolioReviewConverter = ForYouPortfolioReviewConverter(
         appCurrency = appCurrency,
         expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
         onTokenClick = onTokenClick,
         onAddFundsClick = onAddFundsClick,
+        selectedWalletId = selectedWalletId,
     )
 
-    private fun accountStatusList(
+    private fun selectedPortfolio(
         currencies: List<CryptoCurrencyStatus>,
         totalFiatBalance: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
-    ): AccountStatusList = mockk {
-        every { flattenCurrencies() } returns currencies
-        every { this@mockk.totalFiatBalance } returns TotalFiatBalance.Loaded(
-            amount = totalFiatBalance,
-            source = source,
-        )
-        every { userWalletId } returns UserWalletId("01")
+    ): ForYouSelectedPortfolio = selectedPortfolio(
+        currencies = currencies,
+        totalFiatBalance = TotalFiatBalance.Loaded(amount = totalFiatBalance, source = source),
+    )
+
+    private fun selectedPortfolio(
+        currencies: List<CryptoCurrencyStatus>,
+        totalFiatBalance: TotalFiatBalance,
+    ): ForYouSelectedPortfolio = ForYouSelectedPortfolio(
+        accountCryptoCurrencyStatuses = currencies.map(::accountCryptoCurrencyStatus),
+        totalAccountsCount = 1,
+        totalFiatBalance = totalFiatBalance,
+    )
+
+    private fun accountCryptoCurrencyStatus(
+        currencyStatus: CryptoCurrencyStatus,
+        walletId: UserWalletId = UserWalletId("01"),
+    ): AccountCryptoCurrencyStatus {
+        val mockAccount = mockk<Account.CryptoPortfolio> { every { userWalletId } returns walletId }
+        return mockk {
+            every { account } returns mockAccount
+            every { status } returns currencyStatus
+        }
     }
 
     private fun createStatus(currency: CryptoCurrency, value: CryptoCurrencyStatus.Value) = CryptoCurrencyStatus(
