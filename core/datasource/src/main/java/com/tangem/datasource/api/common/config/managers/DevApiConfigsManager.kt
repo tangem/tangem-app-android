@@ -76,7 +76,7 @@ internal class DevApiConfigsManager(
     }
 
     override suspend fun changeEnvironment(environment: ApiEnvironment) {
-        val supportedConfigs = apiConfigs
+        val supportedConfigs = apiConfigs.values
             .filter { config ->
                 config.environmentConfigs.any { it.environment == environment }
             }
@@ -124,6 +124,6 @@ internal class DevApiConfigsManager(
     }
 
     private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
-        return apiConfigs.associateWith(ApiConfig::defaultEnvironment)
+        return apiConfigs.values.associateWith(ApiConfig::defaultEnvironment)
     }
 }
