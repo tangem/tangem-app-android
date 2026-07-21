@@ -1,6 +1,8 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.badge.TangemBadgeColor
+import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -8,6 +10,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.TotalFiatBalance
@@ -17,6 +20,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import io.mockk.every
@@ -267,11 +271,12 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN asset id in expandedAssetIds WHEN convert THEN item isExpanded is true`() {
+        fun `GIVEN expandable asset WHEN convert THEN item is built collapsed`() {
+            // Expansion is applied after conversion by ApplyExpandedAssetsTransformer.
             // Arrange
             val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin")
             val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
-            val converter = createConverter(expandedAssetIds = setOf("bitcoin"))
+            val converter = createConverter()
 
             // Act
             val result = converter.convert(
@@ -279,7 +284,8 @@ internal class ForYouPortfolioReviewConverterTest {
             ) as PortfolioReviewUM.Content
 
             // Assert
-            assertThat(result.tokenList.single().isExpanded).isTrue()
+            assertThat(result.tokenList.single().isExpanded).isFalse()
+            assertThat(result.tokenList.single().isExpandable).isTrue()
         }
 
         @Test
@@ -485,6 +491,24 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
+        fun `GIVEN all-zero portfolio with indicators WHEN convert THEN rows still carry sentiment badges`() {
+            // Arrange — the zero-balance branch flows through the same row construction, so badges apply
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ZERO, BigDecimal.ZERO)))
+
+            // Act
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal.ZERO,
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", bullishReading())),
+            )
+
+            // Assert
+            val badge = result.tokenList.single().assetBadge()
+            assertThat(badge?.text).isEqualTo(resourceReference(R.string.common_positive))
+        }
+
+        @Test
         fun `GIVEN zero and null fiat currencies mixed WHEN convert THEN zero-balance treatment is not applied`() {
             // Arrange — an unreachable holding has an *unknown* balance, not a resolved zero, so the
             // portfolio must not collapse into the add-funds empty state
@@ -509,25 +533,202 @@ internal class ForYouPortfolioReviewConverterTest {
         }
     }
 
+    @Nested
+    inner class SentimentBadge {
+
+        @Test
+        fun `GIVEN indicators for held symbol WHEN convert THEN asset row carries the sentiment badge`() {
+            // Arrange
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
+
+            // Act
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal("100"),
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", bullishReading())),
+            )
+
+            // Assert
+            val badge = result.tokenList.single().assetBadge()
+            assertThat(badge?.text).isEqualTo(resourceReference(R.string.common_positive))
+            assertThat(badge?.color).isEqualTo(TangemBadgeColor.Green)
+        }
+
+        @Test
+        fun `GIVEN no indicators entry for symbol WHEN convert THEN asset row has no badge`() {
+            // Arrange
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
+
+            // Act — indicators exist only for another symbol
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal("100"),
+                coinIndicators = mapOf("ETH" to createIndicators("ETH", bullishReading())),
+            )
+
+            // Assert
+            assertThat(result.tokenList.single().assetBadge()).isNull()
+        }
+
+        @Test
+        fun `GIVEN lowercase currency symbol WHEN convert THEN uppercase-keyed indicators still match`() {
+            // Arrange — the lookup must be case-insensitive (map keys are normalized to uppercase)
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "btc", networkId = "bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
+
+            // Act
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal("100"),
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", bullishReading())),
+            )
+
+            // Assert
+            assertThat(result.tokenList.single().assetBadge()).isNotNull()
+        }
+
+        @Test
+        fun `GIVEN WEEK timeframe WHEN convert THEN badge reflects the WEEK reading`() {
+            // Arrange — bullish for DAY, bearish for WEEK
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
+            val indicators = mapOf(
+                "BTC" to createIndicators(
+                    "BTC",
+                    createReading(CoinIndicators.Reading.Signal.BULLISH, CoinIndicators.Reading.Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Signal.BEARISH, CoinIndicators.Reading.Timeframe.WEEK),
+                ),
+            )
+
+            // Act
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal("100"),
+                coinIndicators = indicators,
+                timeframe = CoinIndicators.Reading.Timeframe.WEEK,
+            )
+
+            // Assert
+            val badge = result.tokenList.single().assetBadge()
+            assertThat(badge?.text).isEqualTo(resourceReference(R.string.common_negative))
+            assertThat(badge?.color).isEqualTo(TangemBadgeColor.Red)
+        }
+
+        @Test
+        fun `GIVEN neutral indicators WHEN convert THEN asset row badge is neutral`() {
+            // Arrange — an actionable but zero-scoring reading yields the neutral (blue) badge
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
+            val neutral = createReading(CoinIndicators.Reading.Signal.NEUTRAL, timeframe = null)
+
+            // Act
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal("100"),
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", neutral)),
+            )
+
+            // Assert
+            val badge = result.tokenList.single().assetBadge()
+            assertThat(badge?.text).isEqualTo(resourceReference(R.string.common_neutral))
+            assertThat(badge?.color).isEqualTo(TangemBadgeColor.Blue)
+        }
+
+        @Test
+        fun `GIVEN multi-network asset WHEN convert THEN child rows carry the same badge as the asset row`() {
+            // Arrange
+            val onEth = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
+            val onSol = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "solana")
+            val statuses = listOf(
+                createStatus(onEth, loadedValue(BigDecimal.ONE, BigDecimal("100"))),
+                createStatus(onSol, loadedValue(BigDecimal.ONE, BigDecimal("200"))),
+            )
+
+            // Act
+            val result = convert(
+                statuses = statuses,
+                totalFiatBalance = BigDecimal("300"),
+                coinIndicators = mapOf("USDC" to createIndicators("USDC", bullishReading())),
+            )
+
+            // Assert — the same badge on the asset row and both child rows
+            val item = result.tokenList.single()
+            val assetBadge = item.assetBadge()
+            assertThat(assetBadge).isNotNull()
+            item.tokenList.forEach { childRow ->
+                val childTitle = (childRow as TangemTokenRowUM.Content).titleUM as TangemTokenRowUM.TitleUM.Content
+                assertThat(childTitle.badge).isEqualTo(assetBadge)
+            }
+        }
+
+        @Test
+        fun `GIVEN more than four assets with indicators WHEN convert THEN Other row has no badge`() {
+            // Arrange — 5 assets; indicators exist for every symbol, but the collapsed "Other" row is
+            // an aggregate of several assets and must stay badge-less
+            val statuses = (1..5).map { index ->
+                createStatus(
+                    createCoin(rawCurrencyId = "asset-$index", symbol = "A$index", networkId = "net-$index"),
+                    loadedValue(BigDecimal.ONE, BigDecimal(100 - index)),
+                )
+            }
+            val indicators = (1..5).associate { index ->
+                "A$index" to createIndicators("A$index", bullishReading())
+            }
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal("470"), coinIndicators = indicators)
+
+            // Assert
+            assertThat(result.tokenList.last().assetBadge()).isNull()
+        }
+    }
+
+    private fun ForYouTokenListItemUM.assetBadge(): TangemBadgeUM? =
+        ((tokenRowUM as TangemTokenRowUM.Content).titleUM as TangemTokenRowUM.TitleUM.Content).badge
+
+    private fun createIndicators(symbol: String, vararg readings: CoinIndicators.Reading): CoinIndicators =
+        CoinIndicators(symbol = symbol, readings = readings.toList())
+
+    private fun bullishReading(): CoinIndicators.Reading =
+        createReading(signal = CoinIndicators.Reading.Signal.BULLISH, timeframe = null)
+
+    private fun createReading(
+        signal: CoinIndicators.Reading.Signal,
+        timeframe: CoinIndicators.Reading.Timeframe?,
+    ): CoinIndicators.Reading = CoinIndicators.Reading(
+        type = if (timeframe == null) CoinIndicators.Reading.Type.SENTIMENT else CoinIndicators.Reading.Type.RSI,
+        timeframe = timeframe,
+        value = null,
+        signal = signal,
+        subLabel = null,
+        updatedAt = null,
+    )
+
     private fun convert(
         statuses: List<CryptoCurrencyStatus>,
         totalFiatBalance: BigDecimal,
+        coinIndicators: Map<String, CoinIndicators> = emptyMap(),
+        timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
     ): PortfolioReviewUM.Content =
-        createConverter().convert(selectedPortfolio(statuses, totalFiatBalance)) as PortfolioReviewUM.Content
+        createConverter(coinIndicators = coinIndicators, timeframe = timeframe).convert(selectedPortfolio(statuses, totalFiatBalance)) as PortfolioReviewUM.Content
 
     private fun createConverter(
-        expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
         onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
         onAddFundsClick: (UserWalletId) -> Unit = {},
         selectedWalletId: UserWalletId? = UserWalletId("01"),
+        coinIndicators: Map<String, CoinIndicators> = emptyMap(),
+        timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
     ): ForYouPortfolioReviewConverter = ForYouPortfolioReviewConverter(
         appCurrency = appCurrency,
-        expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
         onTokenClick = onTokenClick,
         onAddFundsClick = onAddFundsClick,
         selectedWalletId = selectedWalletId,
+        coinIndicators = coinIndicators,
+        timeframe = timeframe,
     )
 
     private fun selectedPortfolio(

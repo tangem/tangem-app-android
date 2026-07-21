@@ -383,7 +383,6 @@ internal class ForYouEarnOpportunitiesConverterTest {
     ) = ForYouEarnOpportunitiesConverter(
         appCurrency = appCurrency,
         isAccountsModeEnabled = isAccountsModeEnabled,
-        expandedAssetIds = emptySet(),
         expandClick = {},
         yieldSupplyAvailability = yieldSupplyAvailability,
         yieldStakingAvailability = yieldStakingAvailability,

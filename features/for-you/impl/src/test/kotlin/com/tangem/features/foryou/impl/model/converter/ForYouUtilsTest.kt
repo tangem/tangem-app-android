@@ -311,6 +311,24 @@ internal class ForYouUtilsTest {
         }
     }
 
+    @Nested
+    inner class ForYouPeriodEntries {
+
+        @Test
+        fun `GIVEN ForYouPeriod entries THEN each maps to its segment id title and timeframe`() {
+            // Pins the enum's segment ids (portable to TokenSummaryModel), titles and timeframes.
+            // Act
+            val mapping = ForYouPeriod.entries.map { Triple(it.id, it.title, it.timeframe) }
+
+            // Assert
+            assertThat(mapping).containsExactly(
+                Triple("0", resourceReference(R.string.common_day), CoinIndicators.Reading.Timeframe.DAY),
+                Triple("1", resourceReference(R.string.common_week), CoinIndicators.Reading.Timeframe.WEEK),
+                Triple("2", resourceReference(R.string.common_month), CoinIndicators.Reading.Timeframe.MONTH),
+            ).inOrder()
+        }
+    }
+
     internal data class BadgeModel(
         val coinIndicators: CoinIndicators?,
         val timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
