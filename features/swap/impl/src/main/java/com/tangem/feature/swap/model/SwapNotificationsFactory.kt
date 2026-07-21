@@ -299,7 +299,8 @@ internal class SwapNotificationsFactory(
 
     private fun formatFeeCoverageNotification(swapFee: SwapFee): NotificationUM.Warning.FeeCoverageNotification {
         val feeAmount = swapFee.fee.amount
-        val totalFeeValue = (feeAmount.value ?: BigDecimal.ZERO) + swapFee.otherNativeFee
+        // fee.amount already includes the bridge fee (folded in SwapFeeFactory); no re-add.
+        val totalFeeValue = feeAmount.value ?: BigDecimal.ZERO
         val cryptoAmount = totalFeeValue.format {
             crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
         }
