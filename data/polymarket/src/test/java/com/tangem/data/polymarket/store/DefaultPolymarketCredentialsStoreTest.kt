@@ -158,6 +158,47 @@ internal class DefaultPolymarketCredentialsStoreTest {
     }
 
     @Test
+    fun `GIVEN in-memory storage WHEN store THEN the entry is keyed by address and holds the credentials`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        val storeOverRealStorage = DefaultPolymarketCredentialsStore(
+            secureStorage = storage,
+            json = json,
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+
+        // Act
+        storeOverRealStorage.store(ownerAddress = OWNER_ADDRESS, credentials = CREDENTIALS)
+
+        // Assert
+        assertThat(storage.entries.keys).containsExactly(EXPECTED_KEY)
+        assertThat(storeOverRealStorage.get(ownerAddress = CHECKSUMMED_OWNER_ADDRESS)).isEqualTo(CREDENTIALS)
+    }
+
+    private class InMemorySecureStorage : SecureStorage {
+
+        val entries = mutableMapOf<String, String>()
+
+        override fun store(key: String, value: String) {
+            entries[key] = value
+        }
+
+        override fun store(data: ByteArray, account: String) {
+            entries[account] = data.decodeToString()
+        }
+
+        override fun storeKey(key: ByteArray, account: String) = store(key, account)
+
+        override fun getAsString(key: String): String? = entries[key]
+
+        override fun get(account: String): ByteArray? = entries[account]?.encodeToByteArray()
+
+        override fun delete(account: String) {
+            entries.remove(account)
+        }
+    }
+
+    @Test
     fun `GIVEN address WHEN clear THEN deletes the entry`() = runTest {
         // Act
         store.clear(ownerAddress = CHECKSUMMED_OWNER_ADDRESS)
