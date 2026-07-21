@@ -57,7 +57,8 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     // Delegates to WireMock (via the real repo + synthetic storage tokens) so the customer state — KYC status,
     // ACTIVE/INACTIVE, balances — follows the test scenario instead of a hardcoded "always active" customer.
-    // Only reached when hasTangemPayInWallet is true, i.e. for wallets opted in via TangemPayMockControl.
+    // Note: this may be invoked even when `hasTangemPayInWallet` is false (e.g., onboarding/deeplink flows),
+    // so tests must provide the corresponding WireMock mappings.
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> =
         real.getCustomerInfo(userWalletId)
 
