@@ -36,7 +36,6 @@ import java.math.BigDecimal
 internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
     private val appCurrency: AppCurrency,
     private val isAccountsModeEnabled: Boolean,
-    private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
@@ -75,7 +74,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                             ),
                             tokenList = rowConverter.convertList(earnData.earnCurrencies.toList())
                                 .toPersistentList(),
-                            isExpanded = earnData.account.accountId.value in expandedAssetIds,
+                            isExpanded = false,
                             isExpandable = true,
                         ),
                     )
