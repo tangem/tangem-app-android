@@ -89,7 +89,7 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun createApiConfigs(): ApiConfigs {
-        return listOf(
+        val configs = listOf(
             Express(
                 environmentConfig = environmentConfig,
                 expressAuthProvider = expressAuthProvider,
@@ -126,7 +126,10 @@ internal class ProdApiConfigsManagerTest {
             ),
             SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
-        ).associateBy { it.id.name }
+        )
+
+        return configs.associateBy { it.id.name }
+            .also { check(it.size == configs.size) { "Duplicate ApiConfig id in test setup" } }
     }
 
     private fun provideTestModels() = listOf(
