@@ -100,8 +100,9 @@ internal class EditContactModel @Inject constructor(
             .stateIn(modelScope, SharingStarted.Eagerly, null)
 
     /**
-     * The wallet the contact is saved to. For an existing contact it is fixed to the contact's wallet; for a new
-     * contact it follows the selector pick and falls back to the app's currently selected wallet.
+     * The wallet the contact is saved to. A user pick in the selector always wins (this is how an existing contact
+     * is moved to another wallet). With no pick yet it defaults to the existing contact's own wallet, or — for a new
+     * contact — the app's currently selected wallet.
      */
     private val selectedWallet: StateFlow<UserWallet?> = combine(
         pickedWallet,
@@ -110,8 +111,8 @@ internal class EditContactModel @Inject constructor(
         userWalletsListRepository.userWallets,
     ) { picked, contact, currentSelected, wallets ->
         when {
-            contact != null -> wallets?.firstOrNull { it.walletId == contact.walletId }
             picked != null -> picked
+            contact != null -> wallets?.firstOrNull { it.walletId == contact.walletId }
             else -> currentSelected
         }
     }.stateIn(modelScope, SharingStarted.Eagerly, null)
@@ -304,19 +305,26 @@ internal class EditContactModel @Inject constructor(
         val ui = stateController.uiState.value
         val addresses = ContactAddressEntriesConverter().convert(ui.addresses)
         val existing = loadedContact.value
+        val isWalletChanged = existing != null && existing.walletId != userWallet.walletId
 
         saveJob = modelScope.launch {
-            val result = if (existing != null) {
-                saveContactInteractor.updateContact(
+            val result = when {
+                existing == null -> saveContactInteractor.createContact(
                     userWallet = userWallet,
+                    name = ui.name,
+                    iconColor = ui.colors.selected.name,
+                    addresses = addresses,
+                )
+                isWalletChanged -> saveContactInteractor.moveContact(
+                    targetWallet = userWallet,
                     contact = existing,
                     name = ui.name,
                     iconColor = ui.colors.selected.name,
                     addresses = addresses,
                 )
-            } else {
-                saveContactInteractor.createContact(
+                else -> saveContactInteractor.updateContact(
                     userWallet = userWallet,
+                    contact = existing,
                     name = ui.name,
                     iconColor = ui.colors.selected.name,
                     addresses = addresses,
@@ -426,13 +434,13 @@ internal class EditContactModel @Inject constructor(
     }
 
     private fun isWalletChangeable(wallets: List<UserWallet>?): Boolean {
-        val unlockedWalletsCount = wallets.orEmpty().count { !it.isLocked }
-        return params.contactId == null && unlockedWalletsCount > 1
+        return wallets.orEmpty().count { !it.isLocked } > 1
     }
 
     private suspend fun validateName(name: String, walletId: UserWalletId): ContactNameValidationError? {
         if (name.isBlank()) return null
-        if (name == loadedContact.value?.name?.value) return null
+        val loaded = loadedContact.value
+        if (loaded != null && name == loaded.name.value && walletId == loaded.walletId) return null
         val error = contactNameValidator.validate(walletId, name).leftOrNull() ?: return null
         if (error is ContactNameValidationError.Format && error.error is ContactName.Error.Empty) return null
         return error
@@ -538,8 +546,9 @@ internal class EditContactModel @Inject constructor(
 
     /** Dirty when the current editor differs from its baseline — the loaded contact, or the empty new contact. */
     private fun isDirty(): Boolean {
-        val baseline = loadedContact.value?.toSnapshot() ?: newContactBaseline
-        return currentSnapshot() != baseline
+        val loaded = loadedContact.value ?: return currentSnapshot() != newContactBaseline
+        val isWalletChanged = selectedWallet.value?.walletId?.let { it != loaded.walletId } == true
+        return isWalletChanged || currentSnapshot() != loaded.toSnapshot()
     }
 
     private fun currentSnapshot(): EditSnapshot {
