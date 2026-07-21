@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -18,7 +16,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH12
@@ -29,28 +26,17 @@ import com.tangem.features.promobanners.impl.campaigns.entity.FooterUM
 import com.tangem.features.promobanners.impl.campaigns.entity.TermsUM
 
 @Composable
-internal fun ActivateCampaignFooter(
-    footerUM: FooterUM,
-    onFooterTextHeightReady: (Dp) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun ActivateCampaignFooter(footerUM: FooterUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val terms = footerUM.terms
 
         if (terms != null) {
-            val density = LocalDensity.current
-
             Text(
                 text = termsAnnotatedString(terms),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged {
-                        val termsBlockHeight = with(density) { it.height.toDp() } + 12.dp
-                        onFooterTextHeightReady.invoke(termsBlockHeight)
-                    },
+                modifier = Modifier.fillMaxWidth(),
             )
 
             SpacerH12()
@@ -99,7 +85,6 @@ private fun Preview_ActivateCampaignFooter_WithTerms() {
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
-            onFooterTextHeightReady = {},
         )
     }
 }
@@ -114,7 +99,6 @@ private fun Preview_ActivateCampaignFooter_NoTerms() {
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
-            onFooterTextHeightReady = {},
         )
     }
 }
