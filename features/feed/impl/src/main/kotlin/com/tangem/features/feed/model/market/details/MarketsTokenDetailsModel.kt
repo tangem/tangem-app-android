@@ -842,8 +842,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     ExchangesBottomSheetContent.Error(onRetryClick = { onListedOnClick(exchangesCount) })
                 },
                 ifRight = { list ->
-                    ExchangesBottomSheetContent.ContentV2(
-                        exchangeItemsV2 = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
+                    ExchangesBottomSheetContent.Content(
+                        exchangeItems = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
                     )
                 },
             )
