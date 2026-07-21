@@ -14,7 +14,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.row.TangemRowContainer
@@ -28,22 +30,16 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.InfoBottomSheetContent
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet as TangemBottomSheetV2
-
-@Composable
-internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
-    InfoBottomSheetV2(config)
-}
 
 @Suppress("LongMethod")
 @Composable
-private fun InfoBottomSheetV2(config: TangemBottomSheetConfig) {
+internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
-    TangemBottomSheetV2<InfoBottomSheetContent>(
+    TangemBottomSheet<InfoBottomSheetContent>(
         config = config,
         type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors2.surface.level3,
+        containerColor = TangemTheme.colors3.bg.secondary,
         title = { content ->
             TangemTopBar(
                 title = content.title,
@@ -69,16 +65,16 @@ private fun InfoBottomSheetV2(config: TangemBottomSheetConfig) {
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TangemTheme.dimens2.x4),
+                    .padding(horizontal = 16.dp),
             ) {
                 MarkdownText(
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens2.x3),
+                    modifier = Modifier.padding(bottom = 12.dp),
                     markdown = content.body.resolveReference(),
                     disableLinkMovementMethod = true,
                     linkifyMask = 0,
-                    syntaxHighlightColor = TangemTheme.colors2.text.neutral.secondary,
-                    style = TangemTheme.typography2.bodyRegular16.copy(
-                        TangemTheme.colors2.text.neutral.secondary,
+                    syntaxHighlightColor = TangemTheme.colors3.text.secondary,
+                    style = TangemTheme.typography3.body.medium.copy(
+                        TangemTheme.colors3.text.secondary,
                     ),
                 )
 
@@ -86,29 +82,29 @@ private fun InfoBottomSheetV2(config: TangemBottomSheetConfig) {
                     TangemRowContainer(
                         modifier = Modifier
                             .background(
-                                color = TangemTheme.colors2.surface.level4,
-                                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                                color = TangemTheme.colors3.bg.tertiary,
+                                shape = RoundedCornerShape(20.dp),
                             )
                             .clickableSingle(onClick = content.generatedAINotificationUM.onClick),
-                        contentPadding = PaddingValues(TangemTheme.dimens2.x3),
+                        contentPadding = PaddingValues(12.dp),
                     ) {
                         Icon(
                             modifier = Modifier
-                                .size(TangemTheme.dimens2.x10)
-                                .padding(TangemTheme.dimens2.x1)
+                                .size(40.dp)
+                                .padding(4.dp)
                                 .layoutId(TangemRowLayoutId.HEAD),
-                            tint = TangemTheme.colors2.markers.iconBlue,
+                            tint = TangemTheme.colors3.icon.brand,
                             contentDescription = null,
                             imageVector = ImageVector.vectorResource(R.drawable.ic_magic_28),
                         )
 
                         Text(
                             modifier = Modifier
-                                .padding(start = TangemTheme.dimens2.x1)
+                                .padding(start = 4.dp)
                                 .layoutId(TangemRowLayoutId.START_TOP),
                             text = stringResourceSafe(R.string.information_generated_with_ai),
-                            style = TangemTheme.typography2.captionSemibold12,
-                            color = TangemTheme.colors2.text.neutral.primary,
+                            style = TangemTheme.typography3.caption.medium,
+                            color = TangemTheme.colors3.text.primary,
                         )
                     }
                 }
