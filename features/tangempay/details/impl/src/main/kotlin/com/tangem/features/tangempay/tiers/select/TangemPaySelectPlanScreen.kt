@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import coil.compose.SubcomposeAsyncImage
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.topbar.TangemTopBar
@@ -41,6 +42,11 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.tangem.core.ui.R as CoreUiR
+
+private const val CARD_WIDTH = 266f
+private const val CARD_HEIGHT = 172f
+private const val CARD_SPACING = 12f
+private const val SCREEN_MARGIN = 24f
 
 @Composable
 internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: Modifier = Modifier) {
@@ -110,16 +116,20 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
             .collect(state.onPlanSelected)
     }
 
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp),
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        pageSpacing = 8.dp,
-        beyondViewportPageCount = 1,
-    ) { page ->
-        PlanCard(imageUrl = plans[page].imageUrl)
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val endPadding = (maxWidth - SCREEN_MARGIN.dp - CARD_WIDTH.dp).coerceAtLeast(0.dp)
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            pageSize = PageSize.Fixed(CARD_WIDTH.dp),
+            contentPadding = PaddingValues(start = SCREEN_MARGIN.dp, end = endPadding),
+            pageSpacing = CARD_SPACING.dp,
+            beyondViewportPageCount = 1,
+        ) { page ->
+            PlanCard(imageUrl = plans[page].imageUrl)
+        }
     }
 
     if (plans.size > 1) {
@@ -193,15 +203,10 @@ private fun PlanPoint(point: TangemPaySelectPlanUM.PointUM, modifier: Modifier =
 private fun ColumnScope.ConfirmContent(state: TangemPaySelectPlanUM, content: TangemPaySelectPlanUM.Content.Confirm) {
     val selectedPlan = state.plans.getOrNull(state.selectedIndex) ?: return
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .padding(top = 12.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        PlanCard(imageUrl = selectedPlan.imageUrl)
-    }
+    PlanCard(
+        imageUrl = selectedPlan.imageUrl,
+        modifier = Modifier.padding(start = 24.dp, top = 12.dp),
+    )
     Spacer(modifier = Modifier.weight(1f))
     PlanDetails(
         title = content.title,
@@ -263,13 +268,12 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
     }
 }
 
-@Suppress("MagicNumber")
 @Composable
 private fun PlanCard(imageUrl: String?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(ratio = 266f / 172f),
+            .width(CARD_WIDTH.dp)
+            .aspectRatio(ratio = CARD_WIDTH / CARD_HEIGHT),
     ) {
         Image(
             modifier = Modifier.matchParentSize(),
@@ -277,14 +281,12 @@ private fun PlanCard(imageUrl: String?, modifier: Modifier = Modifier) {
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
         )
-        SubcomposeAsyncImage(
+        AsyncImage(
             modifier = Modifier.matchParentSize(),
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)
                 .crossfade(true)
                 .build(),
-            loading = {},
-            error = {},
             contentScale = ContentScale.FillBounds,
             contentDescription = null,
         )
