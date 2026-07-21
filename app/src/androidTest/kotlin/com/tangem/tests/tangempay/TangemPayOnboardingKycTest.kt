@@ -35,6 +35,8 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val paeraCustomerState = "PaeraCustomer"
 
         setupHooks(
+            // Existing customer: opt into the Tangem Pay mock so the Payment account (tile) appears.
+            additionalBeforeSection = { markExistingTangemPayCustomer() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
             },
@@ -134,6 +136,9 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val viewStatusText = getResourceString(CoreResR.string.tangempay_kyc_in_progress_notification_button)
 
         setupHooks(
+            // Existing customer: the tile must appear so its KYC-status subtitle can be asserted.
+            // The KYC status itself comes from the WireMock TANGEM_PAY_KYC_STATUS_SCENARIO via getCustomerInfo.
+            additionalBeforeSection = { markExistingTangemPayCustomer() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
                 resetWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO)
@@ -187,6 +192,9 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val goToSupportText = getResourceString(CoreResR.string.tangempay_go_to_support)
 
         setupHooks(
+            // Existing customer: the tile must appear so its KYC-status subtitle can be asserted.
+            // The KYC status itself comes from the WireMock TANGEM_PAY_KYC_STATUS_SCENARIO via getCustomerInfo.
+            additionalBeforeSection = { markExistingTangemPayCustomer() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
                 resetWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO)
