@@ -36,18 +36,19 @@ internal class TangemPayDetailsNotificationFactory(
         },
     )
 
-    fun createAwaitingDepositConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
-        if (!isTiersPlusPlanEnabled) return null
-        if (tariffPlan == null) return null
-
-        if (tariffPlan.tariff.status == TangemPayCustomerTariffPlan.Status.SYSTEM_DOWNGRADE_PENDING) {
-            return createTariffSystemDownGradePendingConfig(tariffPlan)
+    fun createTiersConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {
+        tariffPlan ?: return null
+        return when (TangemPayTiersBannerType.fromPlan(isTiersPlusPlanEnabled, tariffPlan)) {
+            null -> null
+            TangemPayTiersBannerType.TierSystemDowngrade -> createTariffSystemDowngradePendingConfig(tariffPlan)
+            TangemPayTiersBannerType.TopUpForTierUpgrade -> createTopUpForTierUpgradeConfig(tariffPlan)
         }
+    }
 
+    private fun createTopUpForTierUpgradeConfig(tariffPlan: TangemPayTariffPlanState): NotificationConfig? {
         val order = tariffPlan.order ?: return null
         val orderStep = order.step
         if (orderStep !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit) return null
-
         val feeText = orderStep.toPlan.formatRecurringFeeOrNull() ?: return null
 
         return NotificationConfig(
@@ -81,7 +82,7 @@ internal class TangemPayDetailsNotificationFactory(
         iconResId = R.drawable.ic_alert_circle_24,
     )
 
-    private fun createTariffSystemDownGradePendingConfig(tariffPlan: TangemPayTariffPlanState): NotificationConfig? {
+    private fun createTariffSystemDowngradePendingConfig(tariffPlan: TangemPayTariffPlanState): NotificationConfig? {
         val date = tariffPlan.tariff.formatNextBillingDateOrNull() ?: return null
         val planName = tariffPlan.tariff.plan.name
         return NotificationConfig(
@@ -96,5 +97,31 @@ internal class TangemPayDetailsNotificationFactory(
                 onClick = intents::onClickAddFunds,
             ),
         )
+    }
+}
+
+internal enum class TangemPayTiersBannerType {
+    TopUpForTierUpgrade,
+    TierSystemDowngrade,
+    ;
+
+    internal companion object {
+        fun fromPlan(
+            isTiersPlusPlanEnabled: Boolean,
+            tariffPlan: TangemPayTariffPlanState,
+        ): TangemPayTiersBannerType? {
+            if (!isTiersPlusPlanEnabled) return null
+
+            if (tariffPlan.tariff.status == TangemPayCustomerTariffPlan.Status.SYSTEM_DOWNGRADE_PENDING) {
+                tariffPlan.tariff.formatNextBillingDateOrNull() ?: return null
+                return TierSystemDowngrade
+            }
+
+            val orderStep = tariffPlan.order?.step
+            if (orderStep !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit) return null
+            orderStep.toPlan.formatRecurringFeeOrNull() ?: return null
+
+            return TopUpForTierUpgrade
+        }
     }
 }
