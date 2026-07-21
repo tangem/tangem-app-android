@@ -40,6 +40,7 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
         feeSelectorUM: FeeSelectorUM?,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         actions: UiActions,
+        isHighNetworkFee: Boolean = false,
     ): ImmutableList<NotificationUM> {
         // The fee selector exposes a single sealed state; narrow it here so call sites pass the raw
         // FeeSelectorUM and this factory owns the Content/Error/Loading discrimination.
@@ -71,7 +72,14 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 feeError = getFeeError,
                 actions = actions,
             )
+            maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {
+        if (isHighNetworkFee) {
+            add(NotificationUM.Warning.HighNetworkFee)
+        }
     }
 
     private fun MutableList<NotificationUM>.maybeAddDomainWarnings(

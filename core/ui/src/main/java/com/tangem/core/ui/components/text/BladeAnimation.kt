@@ -3,7 +3,9 @@ package com.tangem.core.ui.components.text
 import android.content.res.Configuration
 import androidx.compose.animation.core.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
@@ -38,22 +40,14 @@ fun rememberBladeAnimation(): BladeAnimation {
 @Suppress("MagicNumber")
 @Composable
 fun TextStyle.applyBladeBrush(isEnabled: Boolean, textColor: Color): TextStyle {
-    val offsetState = LocalBladeAnimation.current.offsetState
-    val offset = if (isEnabled) offsetState.value else 0f
+    if (!isEnabled) return this.copy(color = textColor)
 
-    val brush = remember(offset, textColor, isEnabled) {
+    val offsetState = LocalBladeAnimation.current.offsetState
+    val offset = offsetState.value
+
+    val brush = remember(offset, textColor) {
         object : ShaderBrush() {
             override fun createShader(size: Size): Shader {
-                if (!isEnabled) {
-                    // Solid color via the same shader path (LinearGradientShader needs >= 2 colors).
-                    return LinearGradientShader(
-                        colors = listOf(textColor, textColor),
-                        from = Offset.Zero,
-                        to = Offset(size.width, size.height),
-                        tileMode = TileMode.Clamp,
-                    )
-                }
-
                 val center = Offset(size.width / 2f, size.height / 2f)
                 val diagonal = sqrt(size.width * size.width + size.height * size.height)
                 // Subtle diagonal angle, similar to iOS shimmer

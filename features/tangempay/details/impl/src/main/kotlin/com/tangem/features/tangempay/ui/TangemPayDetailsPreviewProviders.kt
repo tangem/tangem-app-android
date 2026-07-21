@@ -85,7 +85,15 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 onClickClose = {},
             ),
             accountDeactivatedNotificationConfig = null,
-            errorNotificationConfig = null,
+            errorNotificationConfig = NotificationConfig(
+                title = stringReference("Your account has been closed"),
+                subtitle = stringReference("For questions about account, please contact support"),
+                iconResId = R.drawable.ic_alert_circle_24,
+                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = stringReference("Remove account"),
+                    onClick = {},
+                ),
+            ),
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
