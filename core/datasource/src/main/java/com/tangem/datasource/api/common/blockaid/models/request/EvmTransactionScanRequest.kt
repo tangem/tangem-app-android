@@ -28,7 +28,10 @@ data class EvmTransactionBulkScanRequest(
 data class RpcData(
     @Json(name = "jsonrpc") val jsonrpc: String = "2.0",
     @Json(name = "method") val method: String,
-    @Json(name = "params") val params: List<Map<String, String>>,
+    // Generic JSON-RPC params: for eth_sendTransaction this is a single tx object, but for
+    // eth_signTypedData_v4 / personal_sign / eth_sign it is a mixed array (e.g. [address, typedData]),
+    // so it must not be constrained to a list of string maps.
+    @Json(name = "params") val params: List<Any>,
 )
 
 @JsonClass(generateAdapter = true)
