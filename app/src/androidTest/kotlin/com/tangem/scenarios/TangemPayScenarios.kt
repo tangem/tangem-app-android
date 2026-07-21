@@ -12,6 +12,8 @@ import com.tangem.screens.tangempay.*
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openTangemPay() {
+    // Existing customer: callers set the `tangem_pay_eligibility` scenario to PaeraCustomer (in
+    // additionalBeforeSection, before this runs), which drives the checkCustomerWalletId mock -> Payment account.
     step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
         openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
     }
