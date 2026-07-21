@@ -15,6 +15,8 @@ internal class News(
     private val authProvider: AuthProvider,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.News
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
