@@ -30,7 +30,7 @@ import org.junit.Test
 class SwapTokenScreenWarningsTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("580")
     @DisplayName("Swap: check 'Insufficient funds' warning")
