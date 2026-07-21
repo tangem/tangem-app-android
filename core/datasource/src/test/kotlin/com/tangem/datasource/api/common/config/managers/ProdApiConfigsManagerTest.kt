@@ -89,7 +89,7 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun createApiConfigs(): ApiConfigs {
-        return setOf(
+        return listOf(
             Express(
                 environmentConfig = environmentConfig,
                 expressAuthProvider = expressAuthProvider,
@@ -126,7 +126,7 @@ internal class ProdApiConfigsManagerTest {
             ),
             SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
-        )
+        ).associateBy { it.id.name }
     }
 
     private fun provideTestModels() = listOf(
