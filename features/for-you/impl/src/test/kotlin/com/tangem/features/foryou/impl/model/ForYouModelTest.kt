@@ -19,13 +19,14 @@ import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -33,6 +34,8 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
@@ -62,7 +65,6 @@ import java.math.BigDecimal
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ForYouModelTest {
 
-    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase = mockk()
@@ -71,7 +73,21 @@ internal class ForYouModelTest {
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
     private val earnErrorResolver: EarnErrorResolver = mockk()
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk()
+    private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk(relaxed = true)
     private val router: AppRouter = mockk(relaxUnitFun = true)
+
+    // A working controller fake: selecting accounts pushes them into the flow the model observes.
+    private val selectedAccountsFlow = MutableStateFlow<Set<AccountId>>(emptySet())
+    private val portfolioSelectorController: PortfolioSelectorController = mockk(relaxed = true) {
+        every { selectedAccounts } returns selectedAccountsFlow
+        every { selectedAccountsSync } answers { selectedAccountsFlow.value }
+        every { selectAccount(any<Set<AccountId>>()) } answers { selectedAccountsFlow.value = firstArg() }
+    }
+
+    private val selectedUserWalletFlow = MutableStateFlow<UserWallet?>(null)
+    private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true) {
+        every { selectedUserWallet } returns selectedUserWalletFlow
+    }
 
     private var model: ForYouModel? = null
 
@@ -98,7 +114,6 @@ internal class ForYouModelTest {
         @Test
         fun `GIVEN model created WHEN not yet advanced THEN uiState is Loading with skeleton rows`() = runTest {
             // Arrange
-            every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
             every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
 
             // Act
@@ -114,7 +129,6 @@ internal class ForYouModelTest {
         @Test
         fun `GIVEN model created WHEN not yet advanced THEN earn section is Loading with skeleton rows`() = runTest {
             // Arrange
-            every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
             every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
 
             // Act
@@ -153,8 +167,9 @@ internal class ForYouModelTest {
                 // Arrange
                 val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
                 stubSelectedWallet(
-                    currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))),
-                    source = StatusSource.ONLY_CACHE,
+                    currencies = listOf(
+                        createStatus(currency, loadedValue(BigDecimal("100"), source = StatusSource.ONLY_CACHE)),
+                    ),
                 )
 
                 // Act
@@ -195,7 +210,6 @@ internal class ForYouModelTest {
                 )
             }
             every { getEarnTokensBatchFlowUseCase(capture(contextSlot), any()) } returns batchFlow
-            every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
             every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
 
             // Act
@@ -217,7 +231,6 @@ internal class ForYouModelTest {
                 val failure = RuntimeException("network down")
                 every { earnErrorResolver.resolve(failure) } returns EarnError.NotHttpError()
                 stubTopEarnTokens(status = PaginationStatus.InitialLoadingError(failure))
-                every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
                 every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
 
                 // Act
@@ -347,16 +360,12 @@ internal class ForYouModelTest {
         row.onItemClick?.invoke()
     }
 
-    /** Wires the repository + supplier so the model derives Content from a single selected wallet. */
-    private fun stubSelectedWallet(
-        currencies: List<CryptoCurrencyStatus>,
-        source: StatusSource = StatusSource.ACTUAL,
-    ) {
+    /** Wires the supplier so the model derives Content from a single wallet's accounts (all selected). */
+    private fun stubSelectedWallet(currencies: List<CryptoCurrencyStatus>) {
         val wallet = MockUserWalletFactory.create().copy(walletId = WALLET_ID)
-        every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(wallet)
         every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(
             linkedMapOf(
-                wallet.walletId to createAccountStatusList(currencies, source),
+                wallet.walletId to createAccountStatusList(currencies),
             ),
         )
     }
@@ -405,17 +414,19 @@ internal class ForYouModelTest {
                     },
                 ),
             ),
-            userWalletsListRepository = userWalletsListRepository,
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
             router = router,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+            userWalletsListRepository = userWalletsListRepository,
             getEarnTokensBatchFlowUseCase = getEarnTokensBatchFlowUseCase,
             stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             earnErrorResolver = earnErrorResolver,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+            portfolioFetcherFactory = portfolioFetcherFactory,
+            portfolioSelectorController = portfolioSelectorController,
         ).also { model = it }
     }
 
@@ -430,22 +441,22 @@ internal class ForYouModelTest {
         )
     }
 
-    private fun createAccountStatusList(
-        currencies: List<CryptoCurrencyStatus>,
-        source: StatusSource = StatusSource.ACTUAL,
-    ): AccountStatusList = mockk {
-        every { flattenCurrencies() } returns currencies
-        every { this@mockk.totalFiatBalance } returns TotalFiatBalance.Loaded(
-            amount = currencies.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
-            source = source,
+    private fun createAccountStatusList(currencies: List<CryptoCurrencyStatus>): AccountStatusList {
+        val portfolioAccount = MockAccounts.createAccount(
+            derivationIndex = 1,
+            userWalletId = WALLET_ID,
+            cryptoCurrencies = currencies.map { it.currency },
         )
-        every { userWalletId } returns WALLET_ID
-        every { accountStatuses } returns listOf(
-            mockk<AccountStatus.CryptoPortfolio> {
-                every { flattenCurrencies() } returns currencies
-                every { account } returns MockAccounts.createAccount(derivationIndex = 1)
-            },
-        )
+        val cryptoPortfolioStatus = mockk<AccountStatus.CryptoPortfolio> {
+            every { flattenCurrencies() } returns currencies
+            every { account } returns portfolioAccount
+            every { accountId } returns portfolioAccount.accountId
+        }
+        return mockk {
+            every { flattenCurrencies() } returns currencies
+            every { userWalletId } returns WALLET_ID
+            every { accountStatuses } returns listOf(cryptoPortfolioStatus)
+        }
     }
 
     private fun createStatus(currency: CryptoCurrency, value: CryptoCurrencyStatus.Value) = CryptoCurrencyStatus(
@@ -453,11 +464,18 @@ internal class ForYouModelTest {
         value = value,
     )
 
-    private fun loadedValue(fiatAmount: BigDecimal): CryptoCurrencyStatus.Loaded = mockk {
+    private fun loadedValue(
+        fiatAmount: BigDecimal,
+        source: StatusSource = StatusSource.ACTUAL,
+    ): CryptoCurrencyStatus.Loaded = mockk {
         every { amount } returns BigDecimal.ONE
         every { this@mockk.fiatAmount } returns fiatAmount
         every { isError } returns false
-        every { sources } returns CryptoCurrencyStatus.Sources()
+        every { sources } returns CryptoCurrencyStatus.Sources(
+            networkSource = source,
+            quoteSource = source,
+            stakingBalanceSource = source,
+        )
         every { yieldSupplyStatus } returns null
         every { stakingBalance } returns null
     }
