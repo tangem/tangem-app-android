@@ -27,6 +27,8 @@ import com.tangem.domain.earn.EarnErrorResolver
 import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
+import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
+import com.tangem.domain.markets.GetCoinIndicatorsUpdatesUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.wallet.UserWalletId
@@ -40,26 +42,25 @@ import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
+import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.availableAccountIds
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.ForYouEarnOpportunitiesConverter
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouPortfolioReviewConverter
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouSelectedPortfolioConverter
+import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer
+import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer.Section.EarnOpportunities
+import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer.Section.PortfolioReview
 import com.tangem.features.foryou.impl.model.transformer.SetPortfolioReviewTransformer
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.combine6
+import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
@@ -69,9 +70,11 @@ internal class ForYouModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    getCoinIndicatorsUpdatesUseCase: GetCoinIndicatorsUpdatesUseCase,
     private val router: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase,
     private val getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
@@ -79,7 +82,7 @@ internal class ForYouModel @Inject constructor(
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
     val portfolioSelectorController: PortfolioSelectorController,
-    userWalletsListRepository: UserWalletsListRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -111,6 +114,7 @@ internal class ForYouModel @Inject constructor(
 
     private val expandedPortfolioReviewAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val expandedEarnOpportunitiesAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
+    private val selectedPeriod = MutableStateFlow(value = ForYouPeriod.Day)
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     var addToPortfolioManager: AddToPortfolioManager? = null
@@ -167,22 +171,22 @@ internal class ForYouModel @Inject constructor(
 
     init {
         initDefaultPortfolioSelection()
+        createCoinIndicatorsFetchFlow().launchIn(modelScope)
 
-        combine6(
-            flow1 = selectedPortfolio,
-            flow2 = expandedPortfolioReviewAssetIds,
-            flow3 = expandedEarnOpportunitiesAssetIds,
-            flow4 = yieldSupplyApyFlowUseCase(),
-            flow5 = createTopEarnTokensFlow(),
-            flow6 = userWalletsListRepository.selectedUserWallet,
-        ) {
-                selectedPortfolio,
-                expandedPortfolioReview,
-                expandedEarnOpportunities,
-                yieldAvailability,
-                topEarnTokens,
-                selectedUserWallet,
-            ->
+        // Expand/collapse clicks bypass the conversion pipeline below: they only patch isExpanded on the
+        // affected item in the current state, so unaffected rows keep their instances and skip recomposition.
+        expandedPortfolioReviewAssetIds.updateStateOnEach { ApplyExpandedAssetsTransformer(it, PortfolioReview) }
+        expandedEarnOpportunitiesAssetIds.updateStateOnEach { ApplyExpandedAssetsTransformer(it, EarnOpportunities) }
+
+        combine(
+            flow = selectedPortfolio,
+            flow2 = yieldSupplyApyFlowUseCase(),
+            flow3 = createTopEarnTokensFlow(),
+            flow4 = combine(getCoinIndicatorsUpdatesUseCase(), selectedPeriod) { indicators, period ->
+                indicators to period
+            },
+            flow5 = userWalletsListRepository.selectedUserWallet,
+        ) { selectedPortfolio, yieldAvailability, topEarnTokens, (indicators, period), selectedUserWallet ->
 
             val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
                 .groupBy { it.account.userWalletId }
@@ -196,11 +200,12 @@ internal class ForYouModel @Inject constructor(
 
             val portfolioReviewUM = ForYouPortfolioReviewConverter(
                 appCurrency = selectedAppCurrencyFlow.value,
-                expandedAssetIds = expandedPortfolioReview,
                 expandClick = ::onExpandPortfolioReviewClick,
                 onTokenClick = ::onPortfolioReviewTokenClick,
                 onAddFundsClick = ::onAddFundsClick,
                 selectedWalletId = selectedUserWallet?.walletId,
+                coinIndicators = indicators,
+                timeframe = period.timeframe,
             ).convert(selectedPortfolio)
 
             val earnOpportunitiesUM = ForYouEarnOpportunitiesConverter(
@@ -209,7 +214,6 @@ internal class ForYouModel @Inject constructor(
                 yieldSupplyAvailability = yieldAvailability,
                 yieldStakingAvailability = stakingAvailability,
                 topEarnTokens = topEarnTokens,
-                expandedAssetIds = expandedEarnOpportunities,
                 expandClick = ::onExpandEarnOpportunitiesClick,
                 onTokenClick = ::onEarnOpportunitiesTokenClick,
                 onAllEarnTokensClick = params.callbacks::onAllEarnTokensClick,
@@ -220,6 +224,8 @@ internal class ForYouModel @Inject constructor(
                     selectedPortfolio = selectedPortfolio,
                     portfolioReviewUM = portfolioReviewUM,
                     earnOpportunitiesUM = earnOpportunitiesUM,
+                    expandedPortfolioReviewAssetIds = expandedPortfolioReviewAssetIds::value,
+                    expandedEarnOpportunitiesAssetIds = expandedEarnOpportunitiesAssetIds::value,
                 ),
             )
         }
@@ -241,6 +247,33 @@ internal class ForYouModel @Inject constructor(
 
     private fun onSelectPortfolioClick() {
         bottomSheetNavigation.activate(ForYouBottomSheetConfig.PortfolioSelector)
+    }
+
+    /**
+     * Triggers a coin-indicators fetch for all distinct symbols of the selected wallet's portfolio.
+     * The results land in the session store observed via [GetCoinIndicatorsUpdatesUseCase], so
+     * already-stored readings render instantly while the fetch refreshes them in the background.
+     * The symbol set is normalized (uppercase, distinct, sorted) and deduplicated so balance-driven
+     * reorders don't refetch, while wallet switches and portfolio membership changes do. A failed
+     * fetch keeps whatever readings the session store already holds.
+     */
+    private fun createCoinIndicatorsFetchFlow(): Flow<List<String>> {
+        return combine(
+            userWalletsListRepository.selectedUserWallet,
+            multiAccountStatusListSupplier.invokeAsMap(),
+        ) { globalSelectedWallet, accountList ->
+            accountList[globalSelectedWallet?.walletId]?.flattenCurrencies().orEmpty()
+                .map { it.currency.symbol.uppercase() }
+                .distinct()
+                .sorted()
+        }
+            .distinctUntilChanged()
+            .onEach { symbols ->
+                if (symbols.isNotEmpty()) {
+                    fetchCoinIndicatorsUseCase(symbols = symbols)
+                }
+            }
+            .flowOn(dispatchers.default)
     }
 
     /**
@@ -332,6 +365,10 @@ internal class ForYouModel @Inject constructor(
         }
     }
 
+    private fun <T> StateFlow<T>.updateStateOnEach(transformer: (T) -> Transformer<ForYouUM>) {
+        onEach { uiState.update(transformer(it)) }.launchIn(modelScope)
+    }
+
     private fun onExpandPortfolioReviewClick(assetId: String) {
         expandedPortfolioReviewAssetIds.update { ids ->
             if (assetId in ids) ids - assetId else ids + assetId
@@ -345,6 +382,8 @@ internal class ForYouModel @Inject constructor(
     }
 
     private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
+        if (tangemSegmentUM.id == selectedPeriod.value.id) return
+
         uiState.update { state ->
             state.copy(
                 periodPickerUM = state.periodPickerUM.copy(
@@ -352,6 +391,7 @@ internal class ForYouModel @Inject constructor(
                 ),
             )
         }
+        selectedPeriod.value = ForYouPeriod.fromId(tangemSegmentUM.id)
     }
 
     // TODO For you make logic if not added add token, otherwise manage funds

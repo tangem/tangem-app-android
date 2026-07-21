@@ -40,13 +40,14 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.wallets)
     api(projects.domain.earn)
+    api(projects.domain.markets)
     api(projects.domain.yieldSupply)
     implementation(projects.domain.account)
-    implementation(projects.domain.markets)
     implementation(projects.domain.models)
 
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.markets.models)
 
     /** Compose */
     api(deps.compose.animation)
