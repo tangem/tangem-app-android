@@ -1,13 +1,12 @@
 package com.tangem.data.polymarket.store
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 /**
  * Stores the Polymarket L2 API credentials in [SecureStorage] as JSON, one entry per owner EOA address.
@@ -17,17 +16,15 @@ import kotlinx.coroutines.withContext
  */
 internal class DefaultPolymarketCredentialsStore(
     private val secureStorage: SecureStorage,
-    moshi: Moshi,
+    private val json: Json,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketCredentialsStore {
 
-    private val adapter: JsonAdapter<PolymarketApiCredentials> by lazy {
-        moshi.adapter(PolymarketApiCredentials::class.java)
-    }
-
     override suspend fun store(ownerAddress: String, credentials: PolymarketApiCredentials) {
         withContext(dispatchers.io) {
-            secureStorage.store(createKey(ownerAddress), adapter.toJson(credentials))
+            val payload = json.encodeToString(PolymarketApiCredentials.serializer(), credentials)
+
+            secureStorage.store(createKey(ownerAddress), payload)
         }
     }
 
@@ -36,7 +33,7 @@ internal class DefaultPolymarketCredentialsStore(
         val payload = secureStorage.getAsString(key) ?: return@withContext null
 
         try {
-            adapter.fromJson(payload)
+            json.decodeFromString(PolymarketApiCredentials.serializer(), payload)
         } catch (e: Exception) {
             TangemLogger.e("Failed to decode Polymarket API credentials; clearing storage")
             secureStorage.delete(key)
