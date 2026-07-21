@@ -34,7 +34,7 @@ import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoinBasedPsbtSwap
+import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.logging.TangemLogger
@@ -85,7 +85,7 @@ class DexSwapFeeCalculator(
             ?: BigDecimal.ZERO
 
         when {
-            isBitcoinBasedPsbtSwap(networkRawId) -> calculateBitcoinFee(
+            isPsbtSwapSupported(networkRawId) -> calculatePsbtFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 nativeCoinDecimals = nativeCoinDecimals,
@@ -112,10 +112,10 @@ class DexSwapFeeCalculator(
     }
 
     /**
-     * Bitcoin swaps arrive as a ready-made PSBT whose miner fee is implied by
+     * UTXO PSBT swaps arrive as a ready-made PSBT whose miner fee is implied by
      * sum(inputs) - sum(outputs); a single provider-fixed tier with no gas bump.
      */
-    private suspend fun Raise<GetFeeError>.calculateBitcoinFee(
+    private suspend fun Raise<GetFeeError>.calculatePsbtFee(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transaction: ExpressTransactionModel.DEX,
         nativeCoinDecimals: Int,

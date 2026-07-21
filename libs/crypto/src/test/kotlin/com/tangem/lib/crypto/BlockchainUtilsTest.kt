@@ -3,7 +3,7 @@ package com.tangem.lib.crypto
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoinBasedPsbtSwap
+import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.test.core.ProvideTestModels
@@ -13,9 +13,9 @@ internal class BlockchainUtilsTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun isBitcoinBasedPsbtSwap(model: PsbtSwapModel) {
+    fun isPsbtSwapSupported(model: PsbtSwapModel) {
         // Act
-        val actual = isBitcoinBasedPsbtSwap(model.blockchain.toNetworkId())
+        val actual = isPsbtSwapSupported(model.blockchain.toNetworkId())
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
