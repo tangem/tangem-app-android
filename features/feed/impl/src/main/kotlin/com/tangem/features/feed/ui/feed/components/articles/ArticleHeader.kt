@@ -31,108 +31,89 @@ fun ArticleHeader(
     tags: ImmutableList<LabelUM>,
     modifier: Modifier = Modifier,
 ) {
-    ArticleHeaderV2(
-        isTrending = isTrending,
-        title = title,
-        createdAt = createdAt,
-        score = score,
-        tags = tags,
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun ArticleHeaderV2(
-    isTrending: Boolean,
-    title: String,
-    createdAt: String,
-    score: Float,
-    tags: ImmutableList<LabelUM>,
-    modifier: Modifier = Modifier,
-) {
     Column(modifier = modifier) {
-        ArticleHeaderV2MetaRow(
+        ArticleHeaderMetaRow(
             isTrending = isTrending,
             score = score,
             createdAt = createdAt,
         )
-        ArticleHeaderV2Title(title = title)
-        ArticleHeaderV2Tags(tags = tags)
+        ArticleHeaderTitle(title = title)
+        ArticleHeaderTags(tags = tags)
     }
 }
 
 @Composable
-private fun ArticleHeaderV2MetaRow(isTrending: Boolean, score: Float, createdAt: String) {
+private fun ArticleHeaderMetaRow(isTrending: Boolean, score: Float, createdAt: String) {
     val starTint = if (isTrending) {
-        TangemTheme.colors2.fill.status.attention
+        TangemTheme.colors3.icon.accent.yellow
     } else {
-        TangemTheme.colors2.graphic.neutral.primary
+        TangemTheme.colors3.icon.secondary
     }
     val scoreColor = if (isTrending) {
-        TangemTheme.colors2.text.status.attention
+        TangemTheme.colors3.text.status.warning
     } else {
-        TangemTheme.colors2.text.neutral.tertiary
+        TangemTheme.colors3.text.secondary
     }
 
     Row(
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x1),
+        modifier = Modifier.padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             imageVector = ImageVector.vectorResource(R.drawable.ic_wrapped_circle_star_16),
             tint = starTint,
             contentDescription = null,
         )
         Text(
             text = score.toString(),
-            style = TangemTheme.typography2.bodyMedium16,
+            style = TangemTheme.typography3.body.medium,
             color = scoreColor,
         )
         Text(
             text = StringsSigns.DOT,
-            color = TangemTheme.colors2.text.neutral.tertiary,
-            style = TangemTheme.typography2.bodyMedium16,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.body.medium,
         )
         Icon(
             modifier = Modifier.size(20.dp),
             imageVector = ImageVector.vectorResource(R.drawable.ic_calendar_20),
-            tint = TangemTheme.colors2.graphic.neutral.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         Text(
             text = createdAt,
-            color = TangemTheme.colors2.text.neutral.tertiary,
-            style = TangemTheme.typography2.bodyMedium16,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.body.medium,
         )
     }
 }
 
 @Composable
-private fun ArticleHeaderV2Title(title: String) {
+private fun ArticleHeaderTitle(title: String) {
     Text(
         modifier = Modifier
             .padding(
-                top = TangemTheme.dimens2.x4,
-                bottom = TangemTheme.dimens2.x1_5,
-                start = TangemTheme.dimens2.x1,
+                top = 16.dp,
+                bottom = 6.dp,
+                start = 4.dp,
             ),
         text = title,
-        style = TangemTheme.typography2.headingSemibold28,
-        color = TangemTheme.colors2.text.neutral.primary,
+        style = TangemTheme.typography3.heading.medium,
+        color = TangemTheme.colors3.text.primary,
     )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ArticleHeaderV2Tags(tags: ImmutableList<LabelUM>) {
+private fun ArticleHeaderTags(tags: ImmutableList<LabelUM>) {
     if (tags.isEmpty()) return
 
-    Spacer(modifier = Modifier.height(TangemTheme.dimens2.x6))
+    Spacer(modifier = Modifier.height(24.dp))
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         tags.forEach { tag ->
             ArticleHeaderTagBadge(tag = tag)
