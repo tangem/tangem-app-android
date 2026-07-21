@@ -8,6 +8,8 @@ import com.tangem.datasource.BuildConfig
  */
 internal class Auth : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.Auth
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(

@@ -20,12 +20,15 @@ internal class ProdApiConfigsManager(
     override fun initialize() = Unit
 
     override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {
-        val config = apiConfigs.firstOrNull { it.id == id }
-            ?: error("Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI")
+        val config = apiConfigs[id.name]
+            ?: error(
+                "Api config with id [${id.name}] not found. " +
+                    "Check that ApiConfig with id [${id.name}] was provided into DI",
+            )
 
         return config.environmentConfigs.firstOrNull { it.environment == config.defaultEnvironment }
             ?: error(
-                "Api config with id [$id] doesn't contain environment [${config.defaultEnvironment}]. " +
+                "Api config with id [${id.name}] doesn't contain environment [${config.defaultEnvironment}]. " +
                     "Check ApiConfig's environments is included default environment",
             )
     }

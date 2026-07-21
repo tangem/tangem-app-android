@@ -79,6 +79,9 @@ internal sealed class TangemPay(
         environmentConfig: EnvironmentConfig,
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
+
+        override val id: ApiConfig.ID = ApiConfig.ID.TangemPay
+
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/bff-v2/"
@@ -98,6 +101,9 @@ internal sealed class TangemPay(
         environmentConfig: EnvironmentConfig,
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
+
+        override val id: ApiConfig.ID = ApiConfig.ID.TangemPayAuth
+
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/"
