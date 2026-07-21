@@ -298,7 +298,22 @@ private fun CardRowShimmer(modifier: Modifier = Modifier) {
         divider = true,
         contentLead = TangemRowContentLead.End,
         titleSlot = {
-            TangemShimmer(style = TangemTheme.typography3.body.medium)
+            TangemRowText(
+                text = resourceReference(R.string.tangempay_common_card),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        valueSlot = {
+            TangemShimmer(
+                style = TangemTheme.typography3.body.medium,
+                textAlign = TextAlign.End,
+            )
+        },
+        subvalueSlot = {
+            TangemShimmer(
+                style = TangemTheme.typography3.caption.medium,
+                textAlign = TextAlign.End,
+            )
         },
     )
 }
