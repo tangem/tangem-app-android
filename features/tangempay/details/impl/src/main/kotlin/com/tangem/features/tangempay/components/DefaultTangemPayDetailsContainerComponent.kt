@@ -21,6 +21,7 @@ import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
+import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.utils.tariffPlan
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
@@ -61,8 +62,11 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         val tariffPlan = params.initialStatus.tariffPlan
         return when (params.initialRoute) {
             TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> TangemPayAccountDetailsInnerRoute.AccountDetails
-            TangemPayDetailsInitialRoute.SELECT_PLAN -> if (tariffPlan != null) {
-                TangemPayAccountDetailsInnerRoute.SelectPlan(tariffPlan = tariffPlan)
+            TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> if (tariffPlan != null) {
+                TangemPayAccountDetailsInnerRoute.SelectPlan(
+                    tariffPlan = tariffPlan,
+                    source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+                )
             } else {
                 TangemPayAccountDetailsInnerRoute.AccountDetails
             }
@@ -117,6 +121,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPaySelectPlanComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
                 tariffPlan = config.tariffPlan,
+                source = config.source,
             ),
         )
         TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->
