@@ -60,6 +60,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         uiStateHolder: SwapStateHolder,
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeSelectorUM: FeeSelectorUM?,
+        isHighNetworkFee: Boolean = false,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
@@ -70,6 +71,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             feeSelectorUM = feeSelectorUM,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             actions = actions,
+            isHighNetworkFee = isHighNetworkFee,
         )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
@@ -343,12 +345,14 @@ internal class SwapTransferStateBuilder @Inject constructor(
         fee: Fee?,
         isTangemPayWithdrawal: Boolean,
         feeSelectorUM: FeeSelectorUM?,
+        isHighNetworkFee: Boolean = false,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             feeSelectorUM = feeSelectorUM,
             actions = actions,
+            isHighNetworkFee = isHighNetworkFee,
         )
         return uiStateHolder.copy(
             notifications = notifications,
