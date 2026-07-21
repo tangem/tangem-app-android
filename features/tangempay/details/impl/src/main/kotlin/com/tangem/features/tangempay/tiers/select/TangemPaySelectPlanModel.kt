@@ -108,7 +108,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         state.update { buildState(showPlanCompare = false) }
     }
 
-    private fun onBackClick() {
+    fun onBackClick() {
         if (isProcessing) return
         if (isConfirm) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeCancelClicked())
@@ -117,6 +117,11 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         } else {
             router.pop()
         }
+    }
+
+    private fun onCloseClick() {
+        if (isProcessing) return
+        router.pop()
     }
 
     private fun onConfirmClick() {
@@ -151,7 +156,16 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         state.update { buildState() }
         modelScope.launch {
             action().fold(
-                ifRight = { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) },
+                ifRight = {
+                    when (params.source) {
+                        TangemPaySelectPlanSource.TIERS_ONBOARDING -> {
+                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
+                        }
+                        TangemPaySelectPlanSource.CHANGE_PLAN -> {
+                            router.pop()
+                        }
+                    }
+                },
                 ifLeft = {
                     isProcessing = false
                     state.update { buildState() }
@@ -173,7 +187,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         selectedIndex = selectedIndex,
         onPlanSelected = ::onPlanSelected,
         onBackClick = ::onBackClick,
-        onCloseClick = router::pop,
+        onCloseClick = ::onCloseClick,
         content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
         compare = if (showPlanCompare) buildCompare() else null,
     )
