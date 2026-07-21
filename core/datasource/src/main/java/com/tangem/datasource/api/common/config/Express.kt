@@ -20,6 +20,8 @@ internal class Express(
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.Express
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
