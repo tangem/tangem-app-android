@@ -190,23 +190,12 @@ internal class WalletTokenCurrencyItemConverter(
                 )
             }
             is CryptoCurrencyStatus.Loading -> TangemTokenRowUM.EndContentUM.Loading
-            is CryptoCurrencyStatus.MissedDerivation -> TangemTokenRowUM.EndContentUM.Content(
-                text = stringReference(StringsSigns.DASH_SIGN),
-            )
+            is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> {
                 TangemTokenRowUM.EndContentUM.Content(
-                    text = styledResourceReference(
-                        id = R.string.common_unreachable,
-                        spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.status.attention) },
-                    ),
-                    endIcons = persistentListOf(
-                        TangemIconUM.Icon(
-                            iconRes = R.drawable.ic_attention_default_24,
-                            tintReference = { TangemTheme.colors2.graphic.status.attention },
-                        ),
-                    ),
+                    text = stringReference(StringsSigns.DASH_SIGN),
                 )
             }
         }
