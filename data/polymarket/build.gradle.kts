@@ -14,6 +14,7 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
     implementation(deps.arrow.core)
     // endregion
 

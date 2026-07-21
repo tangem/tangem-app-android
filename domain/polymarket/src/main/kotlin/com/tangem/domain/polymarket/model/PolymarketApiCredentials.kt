@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 /**
  * Polymarket CLOB L2 API credentials, derived once during onboarding from an L1 signature.
@@ -13,9 +12,9 @@ import com.squareup.moshi.JsonClass
  * @property secret     base64 HMAC secret used to sign CLOB requests
  * @property passphrase passphrase sent alongside the HMAC signature
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PolymarketApiCredentials(
-    @Json(name = "apiKey") val apiKey: String,
-    @Json(name = "secret") val secret: String,
-    @Json(name = "passphrase") val passphrase: String,
+    val apiKey: String,
+    val secret: String,
+    val passphrase: String,
 )
