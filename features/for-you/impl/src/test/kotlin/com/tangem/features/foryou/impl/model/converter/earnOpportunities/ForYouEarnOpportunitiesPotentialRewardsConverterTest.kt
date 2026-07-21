@@ -39,6 +39,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         // Assert — flat, non-expandable token rows
         assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("token-a", "token-b").inOrder()
         assertThat(result.tokenList.map { it.isExpandable }).containsExactly(false, false)
+        assertThat(result.tokenList.map { it.isExpanded }).containsExactly(false, false)
         assertThat(result.tokenList.flatMap { it.tokenList }).isEmpty()
     }
 
@@ -66,28 +67,6 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         assertThat(item.isExpandable).isTrue()
         assertThat(item.isExpanded).isFalse()
         assertThat(item.tokenList.map { it.id }).containsExactly("token-a", "token-b")
-    }
-
-    @Test
-    fun `GIVEN account id in expanded set WHEN convert THEN account row is expanded`() {
-        // Arrange
-        val account = MockAccounts.createAccount(derivationIndex = 1)
-        val earnData = createEarnOpportunities(
-            account = account,
-            earnCurrencies = mapOf(
-                createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
-            ),
-        )
-        val converter = createConverter(
-            isAccountsModeEnabled = true,
-            expandedAssetIds = setOf(account.accountId.value),
-        )
-
-        // Act
-        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
-
-        // Assert
-        assertThat(result.tokenList.single().isExpanded).isTrue()
     }
 
     @Test
@@ -164,13 +143,11 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
 
     private fun createConverter(
         isAccountsModeEnabled: Boolean,
-        expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
         onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
     ) = ForYouEarnOpportunitiesPotentialRewardsConverter(
         appCurrency = appCurrency,
         isAccountsModeEnabled = isAccountsModeEnabled,
-        expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
         onTokenClick = onTokenClick,
         onAllEarnTokensClick = {},
