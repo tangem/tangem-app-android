@@ -723,7 +723,10 @@ internal class DexSwapFeeCalculatorTest {
         }
         assertThat(result.isRight()).isTrue()
         result.onRight { dexFeeResult ->
-            assertThat(dexFeeResult.transactionFee).isInstanceOf(TransactionFeeResult.Loaded::class.java)
+            val fee = (dexFeeResult.transactionFee as TransactionFeeResult.Loaded).fee
+            val utxoFee = (fee as TransactionFee.Single).normal as Fee.Common
+            assertThat(utxoFee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.00001329"))
+            assertThat(utxoFee.amount.decimals).isEqualTo(8)
             assertThat(dexFeeResult.gas).isNull()
         }
     }
