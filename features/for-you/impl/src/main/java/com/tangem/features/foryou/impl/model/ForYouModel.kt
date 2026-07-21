@@ -17,6 +17,7 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -32,13 +33,18 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
+import com.tangem.features.foryou.impl.model.converter.availableAccountIds
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.ForYouEarnOpportunitiesConverter
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouPortfolioReviewConverter
+import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouSelectedPortfolioConverter
 import com.tangem.features.foryou.impl.model.transformer.SetPortfolioReviewTransformer
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
@@ -48,19 +54,20 @@ import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class ForYouModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    userWalletsListRepository: UserWalletsListRepository,
-    multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val router: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -70,15 +77,41 @@ internal class ForYouModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val earnErrorResolver: EarnErrorResolver,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val portfolioFetcherFactory: PortfolioFetcher.Factory,
+    val portfolioSelectorController: PortfolioSelectorController,
+    userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
 
+    val bottomSheetNavigation: SlotNavigation<ForYouBottomSheetConfig> = SlotNavigation()
+
+    val portfolioFetcher: PortfolioFetcher by lazy {
+        portfolioFetcherFactory.create(
+            mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = false),
+            scope = modelScope,
+        )
+    }
+
+    val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
+        override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
+        override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val selectedPortfolio: Flow<ForYouSelectedPortfolio> =
+        portfolioSelectorController
+            .selectedAccounts
+            .onEach { bottomSheetNavigation.dismiss() }
+            .distinctUntilChanged()
+            .flatMapLatest { selectedAccounts ->
+                val converter = ForYouSelectedPortfolioConverter(selectedAccounts)
+                multiAccountStatusListSupplier.invokeAsMap().map(converter::convert)
+            }
+
     private val expandedPortfolioReviewAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val expandedEarnOpportunitiesAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-
-    val bottomSheetNavigation: SlotNavigation<ForYouBottomSheetConfig> = SlotNavigation()
 
     var addToPortfolioManager: AddToPortfolioManager? = null
         private set
@@ -107,6 +140,8 @@ internal class ForYouModel @Inject constructor(
                     }.toPersistentList(),
                 ),
                 onPeriodClick = ::onPeriodClick,
+                portfolioSelectorLabel = stringReference("All account"),
+                onSelectPortfolioClick = ::onSelectPortfolioClick,
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData(
                         title = resourceReference(R.string.market_chart_can_not_load_data),
@@ -131,28 +166,33 @@ internal class ForYouModel @Inject constructor(
         )
 
     init {
+        initDefaultPortfolioSelection()
+
         combine6(
-            flow1 = userWalletsListRepository.selectedUserWallet,
-            flow2 = multiAccountStatusListSupplier.invokeAsMap(),
-            flow3 = expandedPortfolioReviewAssetIds,
-            flow4 = expandedEarnOpportunitiesAssetIds,
-            flow5 = yieldSupplyApyFlowUseCase(),
-            flow6 = createTopEarnTokensFlow(),
+            flow1 = selectedPortfolio,
+            flow2 = expandedPortfolioReviewAssetIds,
+            flow3 = expandedEarnOpportunitiesAssetIds,
+            flow4 = yieldSupplyApyFlowUseCase(),
+            flow5 = createTopEarnTokensFlow(),
+            flow6 = userWalletsListRepository.selectedUserWallet,
         ) {
-                globalSelectedWallet, accountList,
-                expandedPortfolioReview, expandedEarnOpportunities,
-                yieldAvailability, topEarnTokens,
+                selectedPortfolio,
+                expandedPortfolioReview,
+                expandedEarnOpportunities,
+                yieldAvailability,
+                topEarnTokens,
+                selectedUserWallet,
             ->
 
-            val stakingAvailability = accountList.flatMap { (userWalletId, accountStatusList) ->
-                stakingAvailabilityListUseCase.invokeSync(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyList = accountStatusList.flattenCurrencies().map { it.currency },
-                ).entries
-            }.associate { it.key to it.value }
-
-            // TODO For You add choose portfolio flow
-            val accountStatusList = accountList[globalSelectedWallet?.walletId]
+            val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
+                .groupBy { it.account.userWalletId }
+                .flatMap { (userWalletId, statuses) ->
+                    stakingAvailabilityListUseCase.invokeSync(
+                        userWalletId = userWalletId,
+                        cryptoCurrencyList = statuses.map { it.status.currency },
+                    ).entries
+                }
+                .associate { it.key to it.value }
 
             val portfolioReviewUM = ForYouPortfolioReviewConverter(
                 appCurrency = selectedAppCurrencyFlow.value,
@@ -160,7 +200,8 @@ internal class ForYouModel @Inject constructor(
                 expandClick = ::onExpandPortfolioReviewClick,
                 onTokenClick = ::onPortfolioReviewTokenClick,
                 onAddFundsClick = ::onAddFundsClick,
-            ).convert(accountStatusList)
+                selectedWalletId = selectedUserWallet?.walletId,
+            ).convert(selectedPortfolio)
 
             val earnOpportunitiesUM = ForYouEarnOpportunitiesConverter(
                 appCurrency = selectedAppCurrencyFlow.value,
@@ -172,11 +213,11 @@ internal class ForYouModel @Inject constructor(
                 expandClick = ::onExpandEarnOpportunitiesClick,
                 onTokenClick = ::onEarnOpportunitiesTokenClick,
                 onAllEarnTokensClick = params.callbacks::onAllEarnTokensClick,
-            ).convert(accountStatusList)
+            ).convert(selectedPortfolio)
 
             uiState.update(
                 SetPortfolioReviewTransformer(
-                    accountStatusList = accountStatusList,
+                    selectedPortfolio = selectedPortfolio,
                     portfolioReviewUM = portfolioReviewUM,
                     earnOpportunitiesUM = earnOpportunitiesUM,
                 ),
@@ -184,6 +225,22 @@ internal class ForYouModel @Inject constructor(
         }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
+    }
+
+    private fun initDefaultPortfolioSelection() {
+        modelScope.launch {
+            val accountList = multiAccountStatusListSupplier.invokeAsMap()
+                .firstOrNull { it.availableAccountIds().isNotEmpty() }
+                ?: return@launch
+
+            if (portfolioSelectorController.selectedAccountsSync.isEmpty()) {
+                portfolioSelectorController.selectAccount(accountList.availableAccountIds())
+            }
+        }
+    }
+
+    private fun onSelectPortfolioClick() {
+        bottomSheetNavigation.activate(ForYouBottomSheetConfig.PortfolioSelector)
     }
 
     /**
