@@ -1,7 +1,6 @@
 package com.tangem.data.polymarket.store
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -13,6 +12,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,12 +23,11 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultPolymarketCredentialsStoreTest {
 
     private val secureStorage: SecureStorage = mockk(relaxed = true)
-    private val moshi = Moshi.Builder().build()
-    private val adapter = moshi.adapter(PolymarketApiCredentials::class.java)
+    private val json = Json { ignoreUnknownKeys = true }
 
     private val store = DefaultPolymarketCredentialsStore(
         secureStorage = secureStorage,
-        moshi = moshi,
+        json = json,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -52,13 +52,27 @@ internal class DefaultPolymarketCredentialsStoreTest {
 
         // Assert
         verify(exactly = 1) { secureStorage.store(EXPECTED_KEY, any()) }
-        assertThat(adapter.fromJson(payload.captured)).isEqualTo(CREDENTIALS)
+        assertThat(decode(payload.captured)).isEqualTo(CREDENTIALS)
+    }
+
+    @Test
+    fun `GIVEN credentials WHEN store THEN payload keeps the persisted field names`() = runTest {
+        // Arrange
+        val payload = slot<String>()
+        every { secureStorage.store(eq(EXPECTED_KEY), capture(payload)) } returns Unit
+
+        // Act
+        store.store(ownerAddress = OWNER_ADDRESS, credentials = CREDENTIALS)
+
+        // Assert
+        assertThat(json.parseToJsonElement(payload.captured).jsonObject.keys)
+            .containsExactly("apiKey", "secret", "passphrase")
     }
 
     @Test
     fun `GIVEN stored json WHEN get THEN returns deserialized credentials`() = runTest {
         // Arrange
-        every { secureStorage.getAsString(EXPECTED_KEY) } returns adapter.toJson(CREDENTIALS)
+        every { secureStorage.getAsString(EXPECTED_KEY) } returns encode(CREDENTIALS)
 
         // Act
         val actual = store.get(ownerAddress = OWNER_ADDRESS)
@@ -108,6 +122,12 @@ internal class DefaultPolymarketCredentialsStoreTest {
         assertThat(logs.entries.none { it.first.contains(CREDENTIALS.secret) }).isTrue()
     }
 
+    private fun encode(credentials: PolymarketApiCredentials): String =
+        json.encodeToString(PolymarketApiCredentials.serializer(), credentials)
+
+    private fun decode(payload: String): PolymarketApiCredentials =
+        json.decodeFromString(PolymarketApiCredentials.serializer(), payload)
+
     private class RecordingLogWriter : TangemLogger.LogWriter {
 
         val entries = mutableListOf<Pair<String, Throwable?>>()
@@ -126,7 +146,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
     @Test
     fun `GIVEN checksummed address WHEN store and get THEN both use the same lowercased slot`() = runTest {
         // Arrange
-        every { secureStorage.getAsString(EXPECTED_KEY) } returns adapter.toJson(CREDENTIALS)
+        every { secureStorage.getAsString(EXPECTED_KEY) } returns encode(CREDENTIALS)
 
         // Act
         store.store(ownerAddress = CHECKSUMMED_OWNER_ADDRESS, credentials = CREDENTIALS)
