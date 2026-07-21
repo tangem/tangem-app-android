@@ -1366,7 +1366,11 @@ internal class SwapModel @Inject constructor(
     private fun onSwapClick() {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createSwapInProgressState(uiState)
-        val provider = requireNotNull(dataState.selectedProvider) { "Selected provider is null" }
+        val provider = dataState.selectedProvider
+        if (provider == null) {
+            TangemLogger.e("Selected provider is null")
+            return
+        }
         val lastLoadedQuotesState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState
         if (lastLoadedQuotesState == null) {
             TangemLogger.e("Last loaded quotes state is null")
