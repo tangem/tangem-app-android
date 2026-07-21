@@ -713,10 +713,21 @@ internal class DexSwapFeeCalculatorTest {
         val result = sut.calculate(fromStatus, transaction)
 
         coVerify(exactly = 0) {
-            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulateEstimation = any(),
+            )
         }
         coVerify(exactly = 0) {
-            getEthSpecificFeeUseCase.invoke(userWallet = any(), cryptoCurrency = any(), gasLimit = any())
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
         }
         coVerify(exactly = 1) {
             walletManagersFacade.getPsbtFee(any(), any(), psbtBase64 = "cHNidP8B-base64-psbt")
