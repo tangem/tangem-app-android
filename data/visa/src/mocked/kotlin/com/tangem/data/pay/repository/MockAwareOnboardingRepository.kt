@@ -30,6 +30,7 @@ import javax.inject.Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
     private val real: DefaultOnboardingRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val cardNameHolder: MockTangemPayCardNameHolder,
 ) : OnboardingRepository {
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
@@ -56,9 +57,15 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
-        if (isMockMode) return MOCK_CUSTOMER_INFO.right()
+        if (isMockMode) return mockCustomerInfo().right()
         return real.getCustomerInfo(userWalletId)
     }
+
+    private fun mockCustomerInfo(): CustomerInfo = MOCK_CUSTOMER_INFO.copy(
+        productInstances = MOCK_CUSTOMER_INFO.productInstances.map {
+            it.copy(displayName = cardNameHolder.displayName)
+        },
+    )
 
     override suspend fun getBankCredentials(
         userWalletId: UserWalletId,
