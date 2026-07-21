@@ -1194,8 +1194,17 @@ internal class SwapModel @Inject constructor(
     private suspend fun isHighNetworkFee(swapFee: SwapFee?): Boolean {
         if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
         swapFee ?: return false
-        val feeAmount = swapFee.fee.amount.value ?: return false
-        return isHighNetworkFeeUseCase(swapFee.selectedFeeToken.currency, feeAmount)
+        val totalFeeAmount = swapFee.fee.amount.value ?: return false
+        // SwapFeeFactory folds otherNativeFee into fee.amount ONLY for native-coin fees. Recover the
+        // gas-only value by subtracting it back in exactly that case; for token-denominated (gasless)
+        // fees the bridge fee is not folded. Mirrors the guard
+        // in SwapFeeFactory.foldNativeFee; relevant once DEX gasless supports non-zero native amounts.
+        val gasFeeAmount = if (swapFee.selectedFeeToken.currency is CryptoCurrency.Coin) {
+            totalFeeAmount - swapFee.otherNativeFee
+        } else {
+            totalFeeAmount
+        }
+        return isHighNetworkFeeUseCase(swapFee.selectedFeeToken.currency, gasFeeAmount)
     }
 
     private fun sendAnalyticsForNotifications(
