@@ -7,25 +7,17 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.domain.addressbook.error.AddressBookSyncError
 import com.tangem.domain.addressbook.error.ContactNameValidationError
 import com.tangem.domain.addressbook.error.SaveContactError
-import com.tangem.domain.addressbook.model.AddressEntry
-import com.tangem.domain.addressbook.model.AddressEntryId
-import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.addressbook.model.ContactId
-import com.tangem.domain.addressbook.model.ContactName
+import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
 import com.tangem.domain.addressbook.validation.ContactNameValidator
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.SignHashesError
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.utils.extensions.toHexString
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -301,6 +293,92 @@ internal class SaveContactInteractorTest {
             assertThat(result.leftOrNull())
                 .isEqualTo(SaveContactError.Name(ContactNameValidationError.Format(ContactName.Error.Empty)))
             coVerify(exactly = 0) { repository.saveContact(any()) }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class MoveContact {
+
+        // A distinct target wallet the contact is moved to.
+        private val targetWallet: UserWallet = MockUserWalletFactory.create()
+            .copy(walletId = UserWalletId("beef"))
+        private val entries = listOf(entry(id = "addr-1", address = "0xabc", memo = "memo"))
+
+        @Test
+        fun `GIVEN valid move WHEN moveContact THEN creates in target AND deletes original`() = runTest {
+            // Arrange
+            val existing = contact(name = "Alice")
+            coEvery { contactNameValidator.validate(targetWallet.walletId, "Alice") } returns
+                requireNotNull(ContactName("Alice").getOrNull()).right()
+            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(targetWallet)) } returns
+                listOf(byteArrayOf(0x01)).right()
+            val saved = slot<Contact>()
+            coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
+            coEvery { repository.deleteContact(existing.id) } returns Unit.right()
+
+            // Act
+            val result = interactor.moveContact(
+                targetWallet = targetWallet,
+                contact = existing,
+                name = "Alice",
+                iconColor = "TestColor",
+                addresses = entries,
+            )
+
+            // Assert — the new contact lives in the target wallet with a fresh id, and the original is removed.
+            val created = result.getOrNull()
+            assertThat(created).isEqualTo(saved.captured)
+            assertThat(created!!.walletId).isEqualTo(targetWallet.walletId)
+            assertThat(created.id).isNotEqualTo(existing.id)
+            coVerify(exactly = 1) { repository.deleteContact(existing.id) }
+        }
+
+        @Test
+        fun `GIVEN target create fails WHEN moveContact THEN original is not deleted`() = runTest {
+            // Arrange
+            val existing = contact(name = "Alice")
+            coEvery { contactNameValidator.validate(targetWallet.walletId, "Alice") } returns
+                ContactNameValidationError.Duplicate.left()
+
+            // Act
+            val result = interactor.moveContact(
+                targetWallet = targetWallet,
+                contact = existing,
+                name = "Alice",
+                iconColor = "TestColor",
+                addresses = entries,
+            )
+
+            // Assert — nothing persisted, original left intact (no data loss).
+            assertThat(result.leftOrNull())
+                .isEqualTo(SaveContactError.Name(ContactNameValidationError.Duplicate))
+            coVerify(exactly = 0) { repository.saveContact(any()) }
+            coVerify(exactly = 0) { repository.deleteContact(any()) }
+        }
+
+        @Test
+        fun `GIVEN delete of original fails WHEN moveContact THEN Backend error propagated`() = runTest {
+            // Arrange
+            val existing = contact(name = "Alice")
+            coEvery { contactNameValidator.validate(targetWallet.walletId, "Alice") } returns
+                requireNotNull(ContactName("Alice").getOrNull()).right()
+            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(targetWallet)) } returns
+                listOf(byteArrayOf(0x01)).right()
+            coEvery { repository.saveContact(any()) } returns Unit.right()
+            coEvery { repository.deleteContact(existing.id) } returns AddressBookSyncError.Network.left()
+
+            // Act
+            val result = interactor.moveContact(
+                targetWallet = targetWallet,
+                contact = existing,
+                name = "Alice",
+                iconColor = "TestColor",
+                addresses = entries,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(SaveContactError.Backend(AddressBookSyncError.Network))
         }
     }
 
