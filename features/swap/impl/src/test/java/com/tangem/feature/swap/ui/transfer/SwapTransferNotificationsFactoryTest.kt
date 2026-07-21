@@ -57,6 +57,42 @@ internal class SwapTransferNotificationsFactoryTest {
     }
 
     @Test
+    fun `GIVEN isHighNetworkFee true WHEN getNotifications THEN HighNetworkFee warning is added`() = runTest {
+        // Arrange
+        val transferState = buildTransferState()
+
+        // Act
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeSelectorUM = null,
+            feeCryptoCurrencyStatus = null,
+            actions = actions,
+            isHighNetworkFee = true,
+        )
+
+        // Assert
+        assertThat(result).contains(NotificationUM.Warning.HighNetworkFee)
+    }
+
+    @Test
+    fun `GIVEN isHighNetworkFee false WHEN getNotifications THEN HighNetworkFee warning is absent`() = runTest {
+        // Arrange
+        val transferState = buildTransferState()
+
+        // Act
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeSelectorUM = null,
+            feeCryptoCurrencyStatus = null,
+            actions = actions,
+            isHighNetworkFee = false,
+        )
+
+        // Assert
+        assertThat(result).doesNotContain(NotificationUM.Warning.HighNetworkFee)
+    }
+
+    @Test
     fun `GIVEN currencyCheck with rentWarning WHEN getNotifications THEN Solana RentInfo is added`() = runTest {
         val rentWarning = CryptoCurrencyWarning.Rent(
             rent = BigDecimal("0.01"),
