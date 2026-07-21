@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -18,6 +18,7 @@ import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.FOR_YOU_TOP_EARN_TOKENS_COUNT
 import com.tangem.features.foryou.impl.model.converter.forYouGroupKey
 import com.tangem.features.foryou.impl.model.converter.forYouPlaceholderBadge
@@ -30,12 +31,15 @@ import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 /**
- * Builds the For You portfolio-review list: groups the given currency statuses by asset across networks
+ * Builds the For You portfolio-review list from the accounts selected in the portfolio selector
+ * ([ForYouSelectedPortfolio]): groups the selected currency statuses by asset across networks
  * (see [forYouGroupKey]) and maps each group to a [ForYouTokenListItemUM] — an aggregate asset row plus,
  * when the asset spans more than one network, its per-network child rows.
  *
  * The child rows are grouped by network (delegated to [ForYouPortfolioReviewTokenRowConverter]) so a network appears
- * once per asset even if the asset is held on it in several accounts;
+ * once per asset even if the asset is held on it in several accounts. Because the selection can span
+ * several wallets, each [AccountCryptoCurrencyStatus] keeps its owning account (which knows its wallet),
+ * so a token click opens the right wallet.
  *
  * Modelled on `TokenListStateConverter` (a list converter delegating to a per-item converter).
  */
@@ -45,32 +49,35 @@ internal class ForYouPortfolioReviewConverter(
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
     private val onAddFundsClick: (UserWalletId) -> Unit,
-) : Converter<AccountStatusList?, PortfolioReviewUM> {
+    private val selectedWalletId: UserWalletId?,
+) : Converter<ForYouSelectedPortfolio, PortfolioReviewUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
 
-    override fun convert(value: AccountStatusList?): PortfolioReviewUM {
-        val currencies = value?.flattenCurrencies().orEmpty()
-        val loadedBalance = value?.totalFiatBalance as? TotalFiatBalance.Loaded
-        val totalFiatBalance = loadedBalance?.amount.orZero()
+    override fun convert(value: ForYouSelectedPortfolio): PortfolioReviewUM {
+        val totalFiatBalance = value.totalFiatBalance
+        val cryptoCurrencyStatus = value.accountCryptoCurrencyStatuses
+        val loadedBalance = totalFiatBalance as? TotalFiatBalance.Loaded
+        val totalFiatBalanceAmount = loadedBalance?.amount.orZero()
 
-        if (currencies.all { it.value.fiatAmount?.isZero() == true }) {
+        if (cryptoCurrencyStatus.all { it.status.value.fiatAmount?.isZero() == true }) {
             return PortfolioReviewUM.Content(
-                tokenList = currencies.take(FOR_YOU_TOP_EARN_TOKENS_COUNT)
-                    .groupBy { it.forYouGroupKey() }
-                    .map { (assetId, currencies) ->
+                tokenList = cryptoCurrencyStatus
+                    .groupBy { it.status.forYouGroupKey() }
+                    .entries
+                    .take(FOR_YOU_TOP_EARN_TOKENS_COUNT)
+                    .map { (assetId, cryptoCurrencyStatus) ->
                         createListItem(
-                            userWalletId = value?.userWalletId,
                             assetId = assetId,
-                            currencies = currencies,
-                            totalFiatBalance = totalFiatBalance,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            totalFiatBalance = totalFiatBalanceAmount,
                         )
                     }.toPersistentList(),
                 marketChartUM = MarketChartUM.NoData(
                     title = resourceReference(R.string.market_chart_no_amount),
                     donutText = resourceReference(R.string.market_chart_bubble_no_amount),
                 ),
-                onAddFundsClick = { value?.userWalletId?.let(onAddFundsClick) },
+                onAddFundsClick = { selectedWalletId?.let(onAddFundsClick) },
             )
         }
 
@@ -80,10 +87,10 @@ internal class ForYouPortfolioReviewConverter(
         // them with the appropriate treatment instead of hiding a token the user actually holds.
         // Then aggregate the rest into assets (the same token across networks shares its forYouGroupKey)
         // and rank assets by their *summed* fiat balance.
-        val rankedAssets = currencies
-            .filterNot { it.value.fiatAmount?.isZero() == true }
-            .groupBy { it.forYouGroupKey() }
-            .map { (_, networks) -> networks to networks.sumOf { it.value.fiatAmount.orZero() } }
+        val rankedAssets = cryptoCurrencyStatus
+            .filterNot { it.status.value.fiatAmount?.isZero() == true }
+            .groupBy { it.status.forYouGroupKey() }
+            .map { (_, networks) -> networks to networks.sumOf { it.status.value.fiatAmount.orZero() } }
             .sortedByDescending { (_, assetBalance) -> assetBalance }
 
         // The top assets are shown individually (each flattened back to its networks so the converter can
@@ -93,27 +100,26 @@ internal class ForYouPortfolioReviewConverter(
         val topCurrencies = topAssets.flatMap { (networks, _) -> networks }
 
         val assetItems = topCurrencies
-            .groupBy { it.forYouGroupKey() }
-            .map { (assetId, currencies) ->
+            .groupBy { it.status.forYouGroupKey() }
+            .map { (assetId, group) ->
                 createListItem(
-                    userWalletId = value?.userWalletId,
                     assetId = assetId,
-                    currencies = currencies,
-                    totalFiatBalance = totalFiatBalance,
+                    cryptoCurrencyStatus = group,
+                    totalFiatBalance = totalFiatBalanceAmount,
                 )
             }
 
         // Assets beyond the top ones are collapsed into a single non-expandable "Other" row at the bottom.
         val tokenList = if (otherAssets.count() > 0) {
-            assetItems + createOtherItem(otherAssets, totalFiatBalance)
+            assetItems + createOtherItem(otherAssets, totalFiatBalanceAmount)
         } else {
             assetItems
         }.toPersistentList()
 
         val marketChartUM = ForYouPortfolioReviewMarketChartConverter(
             appCurrency = appCurrency,
-            topAssets = topAssets,
-        ).convert(value?.totalFiatBalance)
+            topAssets = topAssets.map { (networks, assetBalance) -> networks.map { it.status } to assetBalance },
+        ).convert(totalFiatBalance)
 
         return PortfolioReviewUM.Content(
             tokenList = tokenList,
@@ -123,35 +129,40 @@ internal class ForYouPortfolioReviewConverter(
     }
 
     private fun createListItem(
-        userWalletId: UserWalletId?,
         assetId: String,
-        currencies: List<CryptoCurrencyStatus>,
+        cryptoCurrencyStatus: List<AccountCryptoCurrencyStatus>,
         totalFiatBalance: BigDecimal,
     ): ForYouTokenListItemUM {
         // Group the asset's holdings by blockchain (network.id.rawId, derivation-independent) so each
         // network appears once even when the asset is held across several accounts/derivations on it,
         // summing those balances. Order by balance so the expanded breakdown reads top-down.
-        val networkGroups = currencies
-            .groupBy { it.currency.network.id.rawId }
+        val networkGroups = cryptoCurrencyStatus
+            .groupBy { accountCryptoCurrencyStatus ->
+                accountCryptoCurrencyStatus.status
+                    .currency
+                    .network
+                    .id
+                    .rawId
+            }
             .values
-            .sortedByDescending { group -> group.sumOf { it.value.fiatAmount.orZero() } }
-
-        val rowConverter = ForYouPortfolioReviewTokenRowConverter(
-            userWalletId = userWalletId,
-            appCurrency = appCurrency,
-            totalFiatBalance = totalFiatBalance,
-            onTokenClick = onTokenClick,
-        )
+            .sortedByDescending { group -> group.sumOf { it.status.value.fiatAmount.orZero() } }
 
         return ForYouTokenListItemUM(
             tokenRowUM = createAssetRow(
-                userWalletId = userWalletId,
                 assetId = assetId,
-                currencies = currencies,
+                currencies = cryptoCurrencyStatus,
                 networkCount = networkGroups.size,
                 totalFiatBalance = totalFiatBalance,
             ),
-            tokenList = networkGroups.map(rowConverter::convert).toPersistentList(),
+
+            tokenList = networkGroups.map { networkGroup ->
+                ForYouPortfolioReviewTokenRowConverter(
+                    userWalletId = networkGroup.first().account.userWalletId,
+                    appCurrency = appCurrency,
+                    totalFiatBalance = totalFiatBalance,
+                    onTokenClick = onTokenClick,
+                ).convert(networkGroup.map { it.status })
+            }.toPersistentList(),
             isExpanded = assetId in expandedAssetIds,
             isExpandable = true,
         )
@@ -159,34 +170,35 @@ internal class ForYouPortfolioReviewConverter(
 
     private fun createAssetRow(
         assetId: String,
-        userWalletId: UserWalletId?,
-        currencies: List<CryptoCurrencyStatus>,
+        currencies: List<AccountCryptoCurrencyStatus>,
         networkCount: Int,
         totalFiatBalance: BigDecimal,
     ): TangemTokenRowUM {
-        if (currencies.all { it.value is CryptoCurrencyStatus.Loading }) {
+        val statuses = currencies.map { it.status }
+        if (statuses.all { it.value is CryptoCurrencyStatus.Loading }) {
             return TangemTokenRowUM.Loading(id = assetId)
         }
 
-        val asset = currencies.first()
-        val assetFiatBalance = currencies.sumOf { it.value.fiatAmount.orZero() }
+        val asset = statuses.first()
+        val assetFiatBalance = statuses.sumOf { it.value.fiatAmount.orZero() }
 
+        // The asset row itself only expands/collapses (no token click), so its wallet id is irrelevant —
+        // pass the group's representative one to reuse the shared end-content formatting.
         val rowConverter = ForYouPortfolioReviewTokenRowConverter(
-            userWalletId = userWalletId,
+            userWalletId = currencies.first().account.userWalletId,
             appCurrency = appCurrency,
             totalFiatBalance = totalFiatBalance,
             onTokenClick = onTokenClick,
         )
-        val endContent = rowConverter.toEndContent(statuses = currencies, fiatAmount = assetFiatBalance)
+        val endContent = rowConverter.toEndContent(statuses = statuses, fiatAmount = assetFiatBalance)
 
-        val onlyCryptoCurrency = currencies.firstOrNull()?.currency
+        val onlyCryptoCurrency = asset.currency
         val isMain = onlyCryptoCurrency is CryptoCurrency.Coin
 
         val subtitle = when {
             networkCount > 1 -> pluralReference(R.plurals.common_networks_count, networkCount)
             isMain -> resourceReference(R.string.common_main_network)
-            onlyCryptoCurrency != null -> stringReference(onlyCryptoCurrency.network.standardType.name)
-            else -> TextReference.EMPTY
+            else -> stringReference(onlyCryptoCurrency.network.standardType.name)
         }
 
         return TangemTokenRowUM.Content(
@@ -207,7 +219,7 @@ internal class ForYouPortfolioReviewConverter(
     }
 
     private fun createOtherItem(
-        otherAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>>,
+        otherAssets: List<Pair<List<AccountCryptoCurrencyStatus>, BigDecimal>>,
         totalFiatBalance: BigDecimal,
     ): ForYouTokenListItemUM {
         val otherAssetsBalance = otherAssets.sumOf { (_, assetBalance) -> assetBalance }
