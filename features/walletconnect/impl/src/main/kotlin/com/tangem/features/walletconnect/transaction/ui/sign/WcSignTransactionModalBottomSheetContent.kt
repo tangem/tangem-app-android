@@ -100,7 +100,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 activeButtonText = resourceReference(R.string.common_sign),
                 isLoading = state.isLoading,
                 walletInteractionIcon = state.walletInteractionIcon,
-                validationResult = null,
+                validationResult = state.validationResult,
                 isHoldToConfirmEnabled = state.isHoldToConfirmEnabled,
             )
         },
