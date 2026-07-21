@@ -69,6 +69,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
     implementation(projects.domain.marketing.models)
+    implementation(projects.domain.onramp.models)
 
     /** Common */
     implementation(projects.common.ui)
