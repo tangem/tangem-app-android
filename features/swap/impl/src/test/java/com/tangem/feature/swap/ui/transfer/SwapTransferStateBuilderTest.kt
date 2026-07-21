@@ -13,6 +13,7 @@ import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -374,6 +375,76 @@ internal class SwapTransferStateBuilderTest {
                     actions = any(),
                 )
             }
+        }
+
+    @Test
+    fun `GIVEN high network fee WHEN createTransferState THEN flag is forwarded to notifications factory`() =
+        runTest {
+            // Arrange
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1.5"),
+                toAmount = BigDecimal("1.5"),
+                isAccountsMode = false,
+            )
+
+            // Act
+            sut.createTransferState(
+                actions = actions,
+                transferState = transferState,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                feeSelectorUM = null,
+                isHighNetworkFee = true,
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                notificationsFactory.getNotifications(
+                    transferState = transferState,
+                    feeSelectorUM = any(),
+                    feeCryptoCurrencyStatus = null,
+                    actions = any(),
+                    isHighNetworkFee = true,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN high network fee warning WHEN updateTransferButtonEnableState THEN swap button stays enabled`() =
+        runTest {
+            // Arrange
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1"),
+                toAmount = BigDecimal("1"),
+                isAccountsMode = false,
+            )
+            val fee: Fee = mockk(relaxed = true)
+            coEvery {
+                notificationsFactory.getNotifications(
+                    transferState = transferState,
+                    feeSelectorUM = any(),
+                    feeCryptoCurrencyStatus = null,
+                    actions = any(),
+                    isHighNetworkFee = true,
+                )
+            } returns persistentListOf(NotificationUM.Warning.HighNetworkFee)
+
+            // Act
+            val result = sut.updateTransferButtonEnableState(
+                dataState = SwapProcessDataState(),
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = baseStateHolder(),
+                feePaidCryptoCurrencyStatus = null,
+                fee = fee,
+                isTangemPayWithdrawal = false,
+                feeSelectorUM = null,
+                isHighNetworkFee = true,
+            )
+
+            // Assert
+            assertThat(result.notifications).contains(NotificationUM.Warning.HighNetworkFee)
+            assertThat(result.swapButton.isEnabled).isTrue()
         }
 
     @Test
