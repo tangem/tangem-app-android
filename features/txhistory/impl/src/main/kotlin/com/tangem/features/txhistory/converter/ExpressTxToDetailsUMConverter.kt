@@ -74,8 +74,7 @@ internal class ExpressTxToDetailsUMConverter(
      */
     private fun convertExpressSwap(swap: ExpressTx.Swap): TxHistoryDetailsUM.TwoAssets {
         val status = exchangeStatusConverter.convert(swap.tx.status)
-        val fromOwner = resolveLegOwner(swap.tx.fromAddress, swap.tx.fromAsset.cryptoCurrency)
-        val toOwner = resolveLegOwner(swap.tx.payoutAddress, swap.tx.toAsset.cryptoCurrency)
+        val (fromOwner, toOwner) = swap.resolveLegOwners()
         val refundToken = refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
@@ -138,7 +137,7 @@ internal class ExpressTxToDetailsUMConverter(
 
     private fun convertExpressOnramp(onramp: ExpressTx.Onramp): TxHistoryDetailsUM.TwoAssets {
         val status = onrampStatusConverter.convert(onramp.tx.status)
-        val toOwner = resolveLegOwner(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)
+        val toOwner = resolveLeg(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)?.toAssetOwnerUM()
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_card_20),
@@ -167,28 +166,65 @@ internal class ExpressTxToDetailsUMConverter(
         )
     }
 
+    /** The owners shown under a swap's two legs; either may be `null` (no owner card → "You send" / "You receive"). */
+    private data class LegOwners(
+        val from: TxHistoryDetailsUM.AssetOwnerUM?,
+        val to: TxHistoryDetailsUM.AssetOwnerUM?,
+    )
+
     /**
-     * Resolves a swap/onramp leg's [address] (on the leg currency's network) to the owner shown under the amount:
-     * the user's own account / wallet, or the external [TxHistoryDetailsUM.AssetOwnerUM.Address] (e.g. a send-and-swap
-     * payout). `null` when there is no address to resolve (e.g. the very-old-version missing `fromAddress`, onramp fiat).
+     * The (from, to) owners shown under the swap legs. A swap settled entirely within one own portfolio has no
+     * counterparty to name, so both legs drop their owner and read "You send" / "You receive"; otherwise each leg keeps
+     * its own account / wallet / external address.
      */
-    private fun resolveLegOwner(address: String?, legCurrency: CryptoCurrency?): TxHistoryDetailsUM.AssetOwnerUM? {
-        if (address == null) return null
-        return when (val resolved = lookup.resolveOwner(address, legCurrency?.network?.id?.rawId)) {
-            is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
-                name = resolved.account.accountName.toUM().value,
-                iconResId = resolved.account.icon.value.getResId(),
-                backgroundColor = resolved.account.icon.color.getUiColor(),
-            )
-            is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
-                name = stringReference(resolved.walletInfo.name),
-                deviceIconUM = resolved.walletInfo.deviceIconUM,
-            )
-            is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(
-                name = stringReference(resolved.address.toBriefAddressFormat()),
-                rawAddress = resolved.address,
-            )
+    private fun ExpressTx.Swap.resolveLegOwners(): LegOwners {
+        val from = resolveLeg(tx.fromAddress, tx.fromAsset.cryptoCurrency)
+        val to = resolveLeg(tx.payoutAddress, tx.toAsset.cryptoCurrency)
+        return if (isSameOwnPortfolio(from, to)) {
+            LegOwners(from = null, to = null)
+        } else {
+            LegOwners(from = from?.toAssetOwnerUM(), to = to?.toAssetOwnerUM())
         }
+    }
+
+    /**
+     * Resolves a swap/onramp leg's [address] (on the leg currency's network) to its owner: the user's own account /
+     * wallet, or an external counterparty. `null` when there is no address to resolve (e.g. the very-old-version missing
+     * `fromAddress`, onramp fiat).
+     */
+    private fun resolveLeg(address: String?, legCurrency: CryptoCurrency?): ResolvedOwner? {
+        if (address == null) return null
+        return lookup.resolveOwner(address, legCurrency?.network?.id?.rawId)
+    }
+
+    /**
+     * True when both swap legs settle in the same own portfolio — the same account, or (in wallet mode) the same wallet.
+     * Such a swap has no counterparty to name, so its legs read "You send" / "You receive" with no owner card; legs that
+     * differ (cross-account, cross-wallet, or a send-and-swap to an external address) keep their owner.
+     */
+    private fun isSameOwnPortfolio(from: ResolvedOwner?, to: ResolvedOwner?): Boolean = when {
+        from is ResolvedOwner.OwnAccount && to is ResolvedOwner.OwnAccount ->
+            from.account.accountId == to.account.accountId
+        from is ResolvedOwner.OwnWallet && to is ResolvedOwner.OwnWallet ->
+            from.userWalletId == to.userWalletId
+        else -> false
+    }
+
+    /** Maps a resolved leg owner to the model shown under the amount (own account / own wallet / external address). */
+    private fun ResolvedOwner.toAssetOwnerUM(): TxHistoryDetailsUM.AssetOwnerUM = when (this) {
+        is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
+            name = account.accountName.toUM().value,
+            iconResId = account.icon.value.getResId(),
+            backgroundColor = account.icon.color.getUiColor(),
+        )
+        is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
+            name = stringReference(walletInfo.name),
+            deviceIconUM = walletInfo.deviceIconUM,
+        )
+        is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(
+            name = stringReference(address.toBriefAddressFormat()),
+            rawAddress = address,
+        )
     }
 
     /** Leg caption: the direction-only [fallback] ("You send" / "You receive") without an owner, "From" / "To" with one. */
