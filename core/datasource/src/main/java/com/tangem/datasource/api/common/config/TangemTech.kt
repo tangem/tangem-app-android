@@ -12,6 +12,8 @@ internal class TangemTech(
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.TangemTech
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs = listOf(

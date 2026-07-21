@@ -84,6 +84,6 @@ internal class MockApiConfigsManager(
     }
 
     private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
-        return apiConfigs.associateWith { it.defaultEnvironment }
+        return apiConfigs.values.associateWith { it.defaultEnvironment }
     }
 }
