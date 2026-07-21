@@ -33,22 +33,13 @@ import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
 internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
-    NewsListContentV2(
-        contentPadding = contentPadding,
-        state = state,
-        modifier = modifier,
-    )
-}
-
-@Composable
-internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val lazyListState = rememberLazyListState()
     val chipsListState = rememberLazyListState()
     var chipsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
     val topPadding = contentPadding.calculateTopPadding()
-    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
+    val fadeColor = TangemTheme.colors3.bg.primary.copy(BASE_FADE_LEVEL)
 
     ScrollChipsToSelected(state = state, chipsListState = chipsListState)
 
@@ -58,7 +49,7 @@ internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM,
             .background(background),
     ) {
         NewsListLazyColumn(
-            topContentPadding = topPadding + TangemTheme.dimens2.x4 + chipsHeight,
+            topContentPadding = topPadding + 16.dp + chipsHeight,
             modifier = Modifier.align(Alignment.TopStart),
             newsListState = state.newsListState,
             listOfArticles = state.listOfArticles,
@@ -69,14 +60,14 @@ internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM,
         TopFade(
             modifier = Modifier.padding(top = topPadding),
             colorStops = feedTopFadeColorStops(fadeColor),
-            height = TangemTheme.dimens2.x4 + chipsHeight,
+            height = 16.dp + chipsHeight,
         )
 
         LazyRow(
             state = chipsListState,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top = topPadding, bottom = TangemTheme.dimens2.x4)
+                .padding(top = topPadding, bottom = 16.dp)
                 .onGloballyPositioned { coordinates ->
                     if (coordinates.size.height > 0) {
                         with(density) {
