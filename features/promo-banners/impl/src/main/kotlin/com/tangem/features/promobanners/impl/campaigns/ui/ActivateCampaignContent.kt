@@ -78,8 +78,6 @@ internal fun ActivateCampaignContent(um: ActivateCampaignUM, modifier: Modifier 
             selectedAccount = um.selectedAccount,
             onChooseTokenClick = um.onChooseTokenClick,
         )
-
-        SpacerH32()
     }
 }
 
