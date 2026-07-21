@@ -1696,6 +1696,8 @@
   <string name="story_web3_title">Compatible con Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
   <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
+  <string name="support_chat_screen_title">Chat de soporte</string>
+  <string name="support_chat_share_logs_button">Adjuntar registros de la aplicación</string>
   <string name="support_chat_swap_prefilled_message">Datos de la operación SWAP:\nDe: %1$s %2$s\nPara: %3$s %4$s\nPor %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Abrir chat</string>
   <string name="support_selector_view_email_button">Abrir correo</string>

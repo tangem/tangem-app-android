@@ -286,7 +286,8 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             resourceReference(R.string.common_rate),
         ).inOrder()
         val providerRow = result.rows.first()
-        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
+        // Swap provider rows append the provider type (fixture defaults to CEX).
+        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo • CEX")
         assertThat(providerRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
         providerRow.onClick?.invoke()
         assertThat(openedUrls).containsExactly(EXTERNAL_URL)
@@ -301,7 +302,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         val providerRow = result.rows.first()
-        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
+        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo • CEX")
         assertThat(providerRow.trailingIconRes).isNull()
         assertThat(providerRow.onClick).isNull()
     }

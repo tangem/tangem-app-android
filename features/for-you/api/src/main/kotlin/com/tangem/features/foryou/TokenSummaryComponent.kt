@@ -34,6 +34,7 @@ interface TokenSummaryComponent : ComposableModularBottomSheetContentComponent {
         @Serializable
         data class Market(
             val cryptoCurrencyRawId: CryptoCurrency.RawID,
+            val symbol: String,
             val title: String,
             val tangemIconUrl: String,
         ) : Token
