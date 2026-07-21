@@ -77,6 +77,34 @@ class DefaultWalletPushNotificationPreferencesRepositoryTest {
     }
 
     @Test
+    fun `GIVEN server fails WHEN preload THEN does not throw AND does not cache`() = runTest {
+        // Arrange
+        coEvery { tangemTechApi.getPushNotificationPreferences(userWalletId.stringValue) } throws
+            IllegalStateException("boom")
+
+        // Act
+        val thrown = runCatching { repository.preload(userWalletId) }.exceptionOrNull()
+
+        // Assert
+        assertThat(thrown).isNull()
+        stubGet(userWalletId, transaction = true, offers = true, price = false)
+        repository.preload(userWalletId)
+        coVerify(exactly = 2) { tangemTechApi.getPushNotificationPreferences(userWalletId.stringValue) }
+    }
+
+    @Test
+    fun `GIVEN server fails WHEN observePreferences THEN flow errors for collectors`() = runTest {
+        // Arrange
+        coEvery { tangemTechApi.getPushNotificationPreferences(userWalletId.stringValue) } throws
+            IllegalStateException("boom")
+
+        // Act & Assert
+        repository.observePreferences(userWalletId).test {
+            assertThat(awaitError()).isInstanceOf(IllegalStateException::class.java)
+        }
+    }
+
+    @Test
     fun `GIVEN cache miss WHEN updatePreference THEN fetches baseline AND sends full-replace PUT AND caches echo`() =
         runTest {
             // Arrange

@@ -14,6 +14,8 @@ import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCate
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
 import com.tangem.domain.pushnotificationpreferences.repository.WalletPushNotificationPreferencesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -49,6 +51,16 @@ internal class DefaultWalletPushNotificationPreferencesRepository(
     }
 
     override suspend fun preload(userWalletId: UserWalletId) {
+        runSuspendCatching { preloadOrThrow(userWalletId) }
+            .onFailure { error ->
+                TangemLogger.e(
+                    "Failed to preload push notification preferences for wallet ${userWalletId.stringValue}",
+                    error,
+                )
+            }
+    }
+
+    private suspend fun preloadOrThrow(userWalletId: UserWalletId) {
         if (isCached(userWalletId)) return
         mutexFor(userWalletId).withLock {
             if (isCached(userWalletId)) return
@@ -64,7 +76,7 @@ internal class DefaultWalletPushNotificationPreferencesRepository(
     }
 
     override fun observePreferences(userWalletId: UserWalletId): Flow<WalletPushNotificationPreferences> = cache.get()
-        .onStart { preload(userWalletId) }
+        .onStart { preloadOrThrow(userWalletId) }
         .map { it[userWalletId.stringValue] }
         .filterNotNull()
         .distinctUntilChanged()
