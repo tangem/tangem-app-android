@@ -3,7 +3,6 @@ package com.tangem.datasource.api.tangemTech
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
-import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
