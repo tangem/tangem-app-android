@@ -17,8 +17,8 @@ import org.junit.Test
 class SwapMainScreenTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.TangemTech, ApiEnvironment.PROD),
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD),
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("574")
     @DisplayName("Swap: 'Swap' button is not displayed for single currency card")
