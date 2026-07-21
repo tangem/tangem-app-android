@@ -5,18 +5,23 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class MetricsUM(
-    val metrics: ImmutableList<InfoPointUM>,
-    val metricsV2: MetricsV2UM?,
-)
+    val rows: ImmutableList<Row>,
+) {
+
+    internal data class Row(
+        val first: MetricItemUM,
+        val second: MetricItemUM?,
+    )
+}
 
 @Immutable
-internal sealed interface InfoPointUMV2 {
+internal sealed interface MetricItemUM {
 
     @Immutable
     data class MarketCap(
         val capitalizationValue: TextReference?,
         val onInfoClick: () -> Unit,
-    ) : InfoPointUMV2
+    ) : MetricItemUM
 
     @Immutable
     data class TradingVolume(
@@ -24,7 +29,7 @@ internal sealed interface InfoPointUMV2 {
         val liquidity: Float?,
         val trendingVolumeLiquidityType: TrendingVolumeLiquidityType,
         val onInfoClick: () -> Unit,
-    ) : InfoPointUMV2
+    ) : MetricItemUM
 
     @Immutable
     data class MarketPosition(
@@ -33,14 +38,14 @@ internal sealed interface InfoPointUMV2 {
         val marketRatingChange24H: MarketRatingChange24H,
         val marketRatingType: MarketRatingType,
         val onInfoClick: () -> Unit,
-    ) : InfoPointUMV2
+    ) : MetricItemUM
 
     @Immutable
     data class FullyDilutedValuation(
         val value: TextReference?,
         val fullyDilutedValuationChange24: TextReference?,
         val onInfoClick: () -> Unit,
-    ) : InfoPointUMV2
+    ) : MetricItemUM
 
     @Immutable
     data class CirculatingSupply(
@@ -48,17 +53,7 @@ internal sealed interface InfoPointUMV2 {
         val maxValue: TextReference?,
         val fillValue: Float?,
         val onInfoClick: () -> Unit,
-    ) : InfoPointUMV2
-}
-
-internal data class MetricsV2UM(
-    val rows: ImmutableList<Row>,
-) {
-
-    internal data class Row(
-        val first: InfoPointUMV2,
-        val second: InfoPointUMV2?,
-    )
+    ) : MetricItemUM
 }
 
 internal enum class TrendingVolumeLiquidityType {
