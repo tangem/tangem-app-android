@@ -36,6 +36,9 @@ internal class DefaultStakingErrorResolver(
             -> {
                 // P2PEthPool errors - no specific analytics event yet
             }
+            is StakingError.TransactionValidationFailed -> {
+                // Blockaid validation errors - no specific analytics event yet
+            }
         }
 
         return error
