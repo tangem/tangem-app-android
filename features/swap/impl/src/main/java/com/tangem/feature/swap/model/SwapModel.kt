@@ -842,7 +842,8 @@ internal class SwapModel @Inject constructor(
         fromTokenAmount: String,
     ) {
         val feePaidCryptoCurrency = dataState.feePaidCryptoCurrency
-        val selectedFee = getSelectedSwapFee()?.fee
+        val selectedSwapFee = getSelectedSwapFee()
+        val selectedFee = selectedSwapFee?.fee
         val swapState = swapTransferInteractor.updateTransfer(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -864,6 +865,7 @@ internal class SwapModel @Inject constructor(
                     uiStateHolder = uiState,
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
                     feeSelectorUM = feeSelectorRepository.state.value,
+                    isHighNetworkFee = isHighNetworkFee(selectedSwapFee),
                 )
                 when {
                     uiState.successState != null -> Unit
@@ -912,6 +914,7 @@ internal class SwapModel @Inject constructor(
                 fee = fee,
                 isTangemPayWithdrawal = isTangemPayWithdrawal(),
                 feeSelectorUM = feeSelectorRepository.state.value,
+                isHighNetworkFee = isHighNetworkFee(getSelectedSwapFee()),
             )
         }
     }
