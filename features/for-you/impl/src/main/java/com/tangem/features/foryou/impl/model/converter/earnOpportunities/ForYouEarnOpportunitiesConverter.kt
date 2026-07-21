@@ -42,7 +42,6 @@ import java.math.RoundingMode
 internal class ForYouEarnOpportunitiesConverter(
     private val appCurrency: AppCurrency,
     private val isAccountsModeEnabled: Boolean,
-    private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val yieldSupplyAvailability: Map<String, BigDecimal>,
     private val yieldStakingAvailability: Map<CryptoCurrency, StakingAvailability>,
@@ -104,7 +103,6 @@ internal class ForYouEarnOpportunitiesConverter(
                 ForYouEarnOpportunitiesPotentialRewardsConverter(
                     appCurrency = appCurrency,
                     isAccountsModeEnabled = isAccountsModeEnabled,
-                    expandedAssetIds = expandedAssetIds,
                     expandClick = expandClick,
                     onTokenClick = onTokenClick,
                     onAllEarnTokensClick = onAllEarnTokensClick,
