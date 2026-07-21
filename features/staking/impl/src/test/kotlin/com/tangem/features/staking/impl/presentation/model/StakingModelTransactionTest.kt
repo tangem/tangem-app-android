@@ -11,6 +11,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -83,6 +84,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
             stakingOperationsFactory.createFeeLoader(any(), any(), any())
         } returns mockFeeLoader
         val mockTransactionSender = mockk<StakingTransactionSender> {
+            coEvery { validate() } returns StakingTransactionVerdict.SAFE
             coEvery { send(any()) } just Runs
         }
         every {
@@ -166,6 +168,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
             stakingOperationsFactory.createFeeLoader(any(), any(), any())
         } returns mockFeeLoader
         val mockTransactionSender = mockk<StakingTransactionSender> {
+            coEvery { validate() } returns StakingTransactionVerdict.SAFE
             coEvery { send(any()) } just Runs
         }
         every {
@@ -253,6 +256,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
             stakingOperationsFactory.createFeeLoader(any(), any(), any())
         } returns mockFeeLoader
         val mockTransactionSender = mockk<StakingTransactionSender> {
+            coEvery { validate() } returns StakingTransactionVerdict.SAFE
             coEvery { send(any()) } just Runs
         }
         every {
