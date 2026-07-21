@@ -25,7 +25,7 @@ internal fun LazyListScope.tokenMarketDetailsBody(
     relatedNews: RelatedNews,
     marketingBanner: @Composable (Modifier) -> Unit,
 ) {
-    tokenMarketDetailsBodyV2(
+    tokenMarketDetailsBodyBlock(
         state = state,
         relatedNews = relatedNews,
         marketingBanner = marketingBanner,
@@ -49,7 +49,7 @@ private fun LazyListScope.sectionStub(key: String) {
 }
 
 @Suppress("CanBeNonNullable")
-private fun LazyListScope.tokenMarketDetailsBodyV2(
+private fun LazyListScope.tokenMarketDetailsBodyBlock(
     state: MarketsTokenDetailsUM.Body,
     relatedNews: RelatedNews,
     marketingBanner: @Composable (Modifier) -> Unit,
@@ -69,7 +69,7 @@ private fun LazyListScope.tokenMarketDetailsBodyV2(
 
             marketingBannerItem(marketingBanner)
 
-            infoBlocksListV2(
+            infoBlocksList(
                 state = state.infoBlocks,
                 relatedNews = relatedNews,
             )
@@ -90,8 +90,8 @@ private fun LazyListScope.error(state: MarketsTokenDetailsUM.Body.Error) {
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing16,
-                        vertical = TangemTheme.dimens.spacing40,
+                        horizontal = 16.dp,
+                        vertical = 40.dp,
                     ),
                 onRetryClick = state.onLoadRetryClick,
             )
@@ -103,7 +103,7 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
     item("description") {
         DescriptionItem(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens2.x4)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
             description = description.shortDescription,
             hasFullDescription = description.fullDescription != null,
@@ -112,7 +112,7 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
     }
 }
 
-internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.InformationBlocks, relatedNews: RelatedNews) {
+internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.InformationBlocks, relatedNews: RelatedNews) {
     if (state.metrics != null) {
         item("metrics") {
             MetricsBlock(
@@ -148,7 +148,7 @@ internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.Informa
     }
 
     if (relatedNews.articles.isNotEmpty()) {
-        relatedNewsV2(relatedNews)
+        relatedNews(relatedNews)
     } else {
         sectionStub(RelatedNews.SECTION_KEY)
     }
@@ -164,10 +164,6 @@ internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.Informa
 }
 
 private fun LazyListScope.loadingInfoBlocks() {
-    loadingInfoBlocksV2()
-}
-
-private fun LazyListScope.loadingInfoBlocksV2() {
     item("metrics-loading") {
         MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
@@ -189,23 +185,23 @@ private fun LazyListScope.loadingInfoBlocksV2() {
     }
 }
 
-private fun LazyListScope.relatedNewsV2(relatedNews: RelatedNews) {
+private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
     item(RelatedNews.SECTION_KEY) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x8)
+                .padding(vertical = 32.dp)
                 .onFirstVisible(
                     minFractionVisible = 0.5f,
                     callback = relatedNews.onFirstVisible,
                 ),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                modifier = Modifier.padding(start = TangemTheme.dimens2.x6),
+                modifier = Modifier.padding(start = 24.dp),
                 text = stringResourceSafe(R.string.news_related_news),
-                style = TangemTheme.typography2.headingSemibold20,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography3.heading.small,
+                color = TangemTheme.colors3.text.primary,
             )
 
             NewsSlider(
@@ -227,6 +223,6 @@ private fun LazyListScope.relatedNewsV2(relatedNews: RelatedNews) {
 @Composable
 private fun Modifier.blockPaddings(): Modifier {
     return this
-        .padding(horizontal = TangemTheme.dimens2.x4)
-        .padding(bottom = TangemTheme.dimens2.x2)
+        .padding(horizontal = 16.dp)
+        .padding(bottom = 8.dp)
 }
