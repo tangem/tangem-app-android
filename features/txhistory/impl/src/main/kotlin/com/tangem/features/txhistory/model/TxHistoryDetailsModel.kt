@@ -6,9 +6,12 @@ import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
@@ -28,6 +31,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
@@ -51,6 +55,7 @@ import javax.inject.Inject
 internal class TxHistoryDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
+    private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -145,11 +150,23 @@ internal class TxHistoryDetailsModel @Inject constructor(
     /** Copies a counterparty address to the clipboard — wired into the detail card's copy button via the converter. */
     private fun onCopyAddress(address: String) {
         clipboardManager.setText(text = address, isSensitive = false)
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(R.string.wallet_notification_address_copied),
+                startIconId = R.drawable.ic_check_24,
+            ),
+        )
     }
 
     /** Copies the transaction id to the clipboard — wired into the header menu's "Transaction ID" row. */
     private fun onCopyTxId(id: String) {
         clipboardManager.setText(text = id, isSensitive = false)
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(R.string.express_transaction_id_copied),
+                startIconId = R.drawable.ic_check_24,
+            ),
+        )
     }
 
     /** Opens the transaction in the blockchain explorer — wired into the header menu's "Explore" row. */

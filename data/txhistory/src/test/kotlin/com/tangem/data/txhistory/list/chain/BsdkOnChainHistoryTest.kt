@@ -244,6 +244,7 @@ internal class BsdkOnChainHistoryTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = 100,
             refundAssetId = null,
