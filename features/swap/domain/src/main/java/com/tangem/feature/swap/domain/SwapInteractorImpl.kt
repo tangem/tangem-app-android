@@ -64,7 +64,7 @@ import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainFeeUtils.patchIntegratedApprovalPriorityFee
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoinBasedPsbtSwap
+import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
@@ -737,7 +737,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 amountToSwap = amountToSwap,
             )
-            isBitcoinBasedPsbtSwap(networkId) -> onSwapBitcoinPsbt(
+            isPsbtSwapSupported(networkId) -> onSwapUtxoPsbt(
                 provider = swapProvider,
                 swapData = swapData,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1090,11 +1090,11 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     /**
-     * Bitcoin DEX swap: the provider returns an almost-complete transaction as a Base64 PSBT in
+     * UTXO PSBT DEX swap: the provider returns an almost-complete transaction as a Base64 PSBT in
      * `txData`. We derive our inputs, sign and broadcast it ourselves (see [SignAndBroadcastPsbtUseCase]),
      * then reuse the shared DEX success path. No fee handling: the fee is already embedded in the PSBT.
      */
-    private suspend fun onSwapBitcoinPsbt(
+    private suspend fun onSwapUtxoPsbt(
         provider: SwapProvider,
         swapData: SwapDataModel,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
