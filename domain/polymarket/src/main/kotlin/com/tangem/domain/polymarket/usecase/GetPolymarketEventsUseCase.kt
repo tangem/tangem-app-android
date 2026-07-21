@@ -14,7 +14,8 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
  */
 class GetPolymarketEventsUseCase {
 
-    suspend operator fun invoke(): Either<DataError, List<PolymarketEvent>> {
+    // Not `suspend` while it serves fixtures; restore the modifier together with the suspending repository call.
+    operator fun invoke(): Either<DataError, List<PolymarketEvent>> {
         // TODO([REDACTED_TASK_KEY]): serve events from PolymarketRepository.getEvents() once the BFF Discovery endpoint is live
         return PolymarketMockData.events.right()
     }
