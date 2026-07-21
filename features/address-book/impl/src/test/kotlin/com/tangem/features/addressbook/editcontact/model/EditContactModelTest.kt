@@ -659,6 +659,69 @@ internal class EditContactModelTest {
     }
 
     @Test
+    fun `GIVEN existing contact AND multiple unlocked wallets WHEN created THEN wallet block changeable`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        val walletB = createWallet(id = "bb", name = "Wallet B")
+        setupWallets(wallets = listOf(walletA, walletB), selected = walletA)
+        every { getContactByIdUseCase(ContactId("c-1")) } returns
+            MutableStateFlow(existingContact(walletId = "aa", name = "Alice", address = "0xABC"))
+
+        // Act
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Assert — an existing contact can now be moved, so its wallet block is changeable.
+        assertThat(model.state.value.walletBlock.isChangeable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN existing contact AND wallet changed WHEN save clicked THEN moveContact called`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        val walletB = createWallet(id = "bb", name = "Wallet B")
+        setupWallets(wallets = listOf(walletA, walletB), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+        val moved = mockk<Contact> { every { id } returns ContactId(value = "moved-1") }
+        coEvery { saveContactInteractor.moveContact(any(), any(), any(), any(), any()) } returns moved.right()
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Act — pick wallet B in the selector, then save.
+        selectedWalletData.tryEmit(walletB to mockk())
+        advanceUntilIdle()
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert — the contact is moved to wallet B; plain update/create are not used.
+        coVerify(exactly = 1) { saveContactInteractor.moveContact(walletB, contact, "Alice", any(), any()) }
+        coVerify(exactly = 0) { saveContactInteractor.updateContact(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { saveContactInteractor.createContact(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN existing contact AND wallet unchanged WHEN save clicked THEN updateContact used not move`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        val walletB = createWallet(id = "bb", name = "Wallet B")
+        setupWallets(wallets = listOf(walletA, walletB), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+        coEvery { saveContactInteractor.updateContact(any(), any(), any(), any(), any()) } returns contact.right()
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Act — no wallet pick, so it stays in its own wallet.
+        model.state.value.saveButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { saveContactInteractor.updateContact(walletA, contact, "Alice", any(), any()) }
+        coVerify(exactly = 0) { saveContactInteractor.moveContact(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN new contact saved WHEN success THEN contact-added snackbar shown`() = runTest {
         // Arrange
         val walletA = createWallet(id = "aa", name = "Wallet A")
