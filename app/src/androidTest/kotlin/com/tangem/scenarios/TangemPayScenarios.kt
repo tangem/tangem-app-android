@@ -12,6 +12,8 @@ import com.tangem.screens.tangempay.*
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openTangemPay() {
+    // Opt this wallet into the Tangem Pay mock (existing customer) before importing the wallet.
+    markExistingTangemPayCustomer()
     step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
         openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
     }
