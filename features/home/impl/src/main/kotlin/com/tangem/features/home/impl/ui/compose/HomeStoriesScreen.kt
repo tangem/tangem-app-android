@@ -55,6 +55,9 @@ internal fun HomeStoriesScreen(state: HomeUM, modifier: Modifier = Modifier) {
             Column(
                 modifier = Modifier
                     .statusBarsPadding()
+                    // Reserve the height of the progress bar that StoriesContainer draws as a top
+                    // overlay (its 16dp top padding + 2dp bar), so the logo sits below it as before.
+                    .padding(top = TangemTheme.dimens.spacing18)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
