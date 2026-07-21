@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.common.config
 
-typealias ApiConfigs = Set<@JvmSuppressWildcards ApiConfig>
+typealias ApiConfigs = Map<String, @JvmSuppressWildcards ApiConfig>
 
 /**
  * Api config
@@ -9,7 +9,9 @@ typealias ApiConfigs = Set<@JvmSuppressWildcards ApiConfig>
  *
 [REDACTED_AUTHOR]
  */
-sealed class ApiConfig {
+// Base type for configs declared in other modules; keep it a class, not an interface.
+@Suppress("UnnecessaryAbstractClass")
+abstract class ApiConfig {
 
     /** Default environment */
     abstract val defaultEnvironment: ApiEnvironment
@@ -18,7 +20,7 @@ sealed class ApiConfig {
     abstract val environmentConfigs: List<ApiEnvironmentConfig>
 
     /** Unique id */
-    val id: ID = initializeId()
+    abstract val id: ID
 
     /**
      * Type-safe config identifier, backed by a stable string [name] (used as the persistence key
@@ -60,24 +62,6 @@ sealed class ApiConfig {
             val GaslessTxService = ID(GASLESS_TX_SERVICE)
             val SurveySparrow = ID(SURVEY_SPARROW)
             val Auth = ID(AUTH)
-        }
-    }
-
-    private fun initializeId(): ID {
-        return when (this) {
-            is Express -> ID.Express
-            is TangemTech -> ID.TangemTech
-            is StakeKit -> ID.StakeKit
-            is P2PEthPool -> ID.P2PEthPool
-            is TangemPay.Bff -> ID.TangemPay
-            is TangemPay.Auth -> ID.TangemPayAuth
-            is BlockAid -> ID.BlockAid
-            is YieldSupply -> ID.YieldSupply
-            is MoonPay -> ID.MoonPay
-            is News -> ID.News
-            is GaslessTxService -> ID.GaslessTxService
-            is SurveySparrow -> ID.SurveySparrow
-            is Auth -> ID.Auth
         }
     }
 
