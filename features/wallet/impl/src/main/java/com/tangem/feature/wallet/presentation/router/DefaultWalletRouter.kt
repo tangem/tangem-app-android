@@ -160,7 +160,7 @@ internal class DefaultWalletRouter @Inject constructor(
     override fun openTangemPaySelectPlan(status: AccountStatus.Payment) {
         val route = AppRoute.TangemPayDetails(
             status = status,
-            initialRoute = TangemPayDetailsInitialRoute.SELECT_PLAN,
+            initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
         )
         router.push(route)
     }
