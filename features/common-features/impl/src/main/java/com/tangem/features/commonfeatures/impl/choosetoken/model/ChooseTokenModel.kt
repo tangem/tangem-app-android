@@ -9,13 +9,9 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.commonfeatures.api.R
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
-import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
+import com.tangem.features.commonfeatures.api.choosetoken.*
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.impl.choosetoken.AddToPortfolioRoute
 import com.tangem.features.commonfeatures.impl.choosetoken.converter.SearchBarToggleTransformer
 import com.tangem.features.commonfeatures.impl.choosetoken.converter.SearchBarUpdateQueryTransformer
@@ -108,7 +104,7 @@ internal class ChooseTokenModel @Inject constructor(
     )
 
     init {
-        if (bridge.settings.isShowMarketBlock) {
+        if (bridge.settings.chooserBlock is ChooserBlock.Market) {
             modelScope.launch {
                 delay(MARKETS_INITIAL_LOAD_DELAY)
                 marketBlockDelegate.loadDefaultMarkets()
