@@ -20,7 +20,7 @@ import com.tangem.utils.logging.TangemLogger
  * or via an instrumentation argument.
  *
  * This rule supports @ApiEnv annotation with a map of API configs to configure different environments.
- * For any ApiConfig.ID not specified in annotations, MOCK environment will be used by default.
+ * For any api config not specified in annotations, MOCK environment will be used by default.
  */
 class ApiEnvironmentRule : TestRule {
 
@@ -78,7 +78,7 @@ class ApiEnvironmentRule : TestRule {
                     val parts = configPair.split("=").map { it.trim() }
                     if (parts.size == 2) {
                         try {
-                            val apiConfigId = ApiConfig.ID.valueOf(parts[0])
+                            val apiConfigId = ApiConfig.ID(parts[0])
                             val environment = ApiEnvironment.valueOf(parts[1])
                             apiConfigId to environment
                         } catch (e: IllegalArgumentException) {
@@ -101,12 +101,12 @@ class ApiEnvironmentRule : TestRule {
 
     private fun collectApiEnvAnnotations(description: Description): Map<ApiConfig.ID, ApiEnvironment> {
         return description.getAnnotation(ApiEnv::class.java)?.value
-            ?.associate { it.apiConfigId to it.environment } ?: emptyMap()
+            ?.associate { ApiConfig.ID(it.apiConfigId) to it.environment } ?: emptyMap()
     }
 
     private fun collectApiEnvAnnotations(testClass: Class<*>): Map<ApiConfig.ID, ApiEnvironment> {
         return testClass.getAnnotation(ApiEnv::class.java)?.value
-            ?.associate { it.apiConfigId to it.environment } ?: emptyMap()
+            ?.associate { ApiConfig.ID(it.apiConfigId) to it.environment } ?: emptyMap()
     }
 
     private fun MutableApiConfigsManager.setupEnvironments() {
@@ -115,7 +115,7 @@ class ApiEnvironmentRule : TestRule {
         runBlocking {
             targetEnvironments.forEach { (apiConfigId, environment) ->
                 changeEnvironment(apiConfigId.name, environment)
-                TangemLogger.i("$apiConfigId environment set to: ${environment.name}")
+                TangemLogger.i("${apiConfigId.name} environment set to: ${environment.name}")
             }
         }
     }
