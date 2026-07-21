@@ -53,22 +53,14 @@ import java.math.BigDecimal
 import kotlin.random.Random
 
 @Composable
-fun MarketsListItemV2(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
-    MarketListItemContentV2(
+fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    val windowSize = LocalWindowSize.current
+    TangemRowContainer(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
             .clickable(onClick = onClick)
             .testTag(MarketsTestTags.TOKENS_LIST_ITEM),
-        model = model,
-    )
-}
-
-@Composable
-fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modifier) {
-    val windowSize = LocalWindowSize.current
-    TangemRowContainer(
-        modifier = modifier,
         content = {
             TangemIcon(
                 tangemIconUM = TangemIconUM.Url(model.iconUrl, fallbackRes = R.drawable.ic_custom_token_44),
@@ -298,11 +290,11 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
         }
 
         Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
-            MarketsListItemV2(
+            MarketsListItem(
                 modifier = Modifier,
                 model = state1,
             )
-            MarketsListItemV2(
+            MarketsListItem(
                 modifier = Modifier,
                 model = state2,
             )
