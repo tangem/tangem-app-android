@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Stable
 import arrow.core.Either
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,6 +17,7 @@ import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.pay.usecase.CreateTariffPlanTransitionOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SetTariffPlanPendingTransitionUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
@@ -42,6 +44,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
     private val setPendingTransition: SetTariffPlanPendingTransitionUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
@@ -62,6 +65,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         field = MutableStateFlow(buildState())
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed())
         loadTransitions()
     }
 
@@ -77,27 +81,37 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private fun onPlanSelected(index: Int) {
         if (index == selectedIndex) return
         selectedIndex = index
+        analytics.send(TangemPayAnalyticsEvents.Tiers.TiersSwiped())
         state.update { buildState() }
     }
 
     private fun onSelectClick() {
-        if (allowedTransitions.isEmpty()) return
+        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+
+        val tierId = transition.plan.tierId
+        analytics.send(TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(tierId))
+        analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
+
         isConfirm = true
         state.update { buildState() }
     }
 
     private fun onComparePlansClick() {
         if (allowedTransitions.isEmpty()) return
+        analytics.send(TangemPayAnalyticsEvents.Tiers.ComparePlansClicked())
+        analytics.send(TangemPayAnalyticsEvents.Tiers.PlansComparisonPopupShowed())
         state.update { buildState(showPlanCompare = true) }
     }
 
     private fun onCompareDismiss() {
+        analytics.send(TangemPayAnalyticsEvents.Tiers.PlansComparisonPopupClosed())
         state.update { buildState(showPlanCompare = false) }
     }
 
     private fun onBackClick() {
         if (isProcessing) return
         if (isConfirm) {
+            analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeCancelClicked())
             isConfirm = false
             state.update { buildState() }
         } else {
@@ -109,6 +123,9 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         if (isProcessing) return
 
         val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+        if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
+            analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeUpgradeClicked())
+        }
         when (transition.type) {
             TangemPayTariffPlanTransition.Type.ACTIVATION,
             TangemPayTariffPlanTransition.Type.UPGRADE,
