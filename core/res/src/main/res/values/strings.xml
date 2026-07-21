@@ -329,6 +329,7 @@
   <string name="common_create">Create</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Custom</string>
+  <string name="common_day">day</string>
   <plurals name="common_days">
     <item quantity="one">%d day</item>
     <item quantity="other">%d days</item>
@@ -403,7 +404,22 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="common_month">month</string>
+  <string-array name="common_month_in">
+    <item>January</item>
+    <item>February</item>
+    <item>March</item>
+    <item>April</item>
+    <item>May</item>
+    <item>June</item>
+    <item>July</item>
+    <item>August</item>
+    <item>September</item>
+    <item>October</item>
+    <item>November</item>
+    <item>December</item>
+  </string-array>
   <string name="common_more">More</string>
+  <string name="common_negative">Negative</string>
   <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>
   <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
@@ -411,6 +427,7 @@
     <item quantity="one">%d network</item>
     <item quantity="other">%d networks</item>
   </plurals>
+  <string name="common_neutral">Neutral</string>
   <string name="common_new_address">New address</string>
   <string name="common_news">News</string>
   <string name="common_next">Next</string>
@@ -418,6 +435,7 @@
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
   <string name="common_no_results">No results</string>
+  <string name="common_none">None</string>
   <string name="common_not_added">Not Added</string>
   <string name="common_not_available">Not available</string>
   <string name="common_not_now">Not now</string>
@@ -431,6 +449,7 @@
   <string name="common_other">Other</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
+  <string name="common_positive">Positive</string>
   <string name="common_privacy_policy">Privacy Policy</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -733,6 +752,7 @@
   <string name="for_you_description">Review portfolio and explore earn opportunities</string>
   <string name="for_you_earn_opportunities">Earn opportunities</string>
   <string name="for_you_earn_opportunities_all_tokens_active">All your assets are at work, explore new opportunities</string>
+  <string name="for_you_earn_opportunities_explore">Explore all tokens</string>
   <string name="for_you_earn_opportunities_no_available_tokens">Get up to %1$s annually</string>
   <string name="for_you_earn_opportunities_tokens_rewards">Max potential rewards %1$s</string>
   <string name="for_you_earn_per_year">%1$s/year</string>
@@ -880,8 +900,6 @@
   <string name="main_add_funds_promo_description">Buy or receive crypto to start using your wallet.</string>
   <string name="main_add_funds_promo_title">Get your first crypto</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
-  <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
-  <string name="prediction_account_title">Prediction account</string>
   <string name="main_manage_tokens">Manage tokens</string>
   <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
@@ -1321,6 +1339,8 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
+  <string name="prediction_account_title">Prediction account</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
@@ -1844,6 +1864,12 @@
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Min trx amount is %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
+  <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluded</string>
+  <string name="tangem_pay_transaction_details_cashback_none">No cashback</string>
+  <string name="tangem_pay_transaction_details_cashback_refund">Return of purchase</string>
+  <string name="tangem_pay_transaction_details_cashback_region_excluded">Excluded region</string>
   <string name="tangem_pay_transaction_details_category">Category</string>
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">A fee is charged due to the service tariffs</string>
@@ -1944,7 +1970,7 @@
   <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">No cashback will be awarded for in-person/in-store purchases at EU merchants; also for withdrawals, transfers, quasi-cash, mobile phone bills, government services and certain other categories</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
-  <string name="tangempay_cashback_accruals_pay_description">From the 2nd and the 5th of the next month</string>
+    <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
   <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limits and exceptions</string>
   <string name="tangempay_cashback_accruals_title">Accruals</string>
@@ -2509,7 +2535,7 @@
   </plurals>
   <plurals name="warning_missing_derivation_no_nfc_message">
     <item quantity="one">Sync addresses to get an address for %d network</item>
-    <item quantity="other">Sync addresses to get an addresses for %d networks</item>
+    <item quantity="other">Sync addresses to get addresses for %d networks</item>
   </plurals>
   <string name="warning_missing_derivation_title">Some addresses are missing</string>
   <string name="warning_mobile_access_denied_message">Use %s or access code to unlock access to your wallet</string>
