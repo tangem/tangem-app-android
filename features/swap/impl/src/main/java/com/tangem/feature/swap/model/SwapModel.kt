@@ -2308,8 +2308,8 @@ internal class SwapModel @Inject constructor(
         val selectedProviderRate = selectedProviderEntry.value.toTokenInfo.tokenAmount.value
         val hundredPercent = BigDecimal("100")
         return state.entries.mapNotNull { entry ->
-            if (entry.key != selectedProviderEntry.key) {
-                val amount = entry.value.toTokenInfo.tokenAmount.value
+            val amount = entry.value.toTokenInfo.tokenAmount.value
+            if (entry.key != selectedProviderEntry.key && amount.signum() != 0) {
                 val percentDiff = BigDecimal.ONE.minus(
                     selectedProviderRate.divide(amount, RoundingMode.HALF_UP),
                 ).multiply(hundredPercent)
