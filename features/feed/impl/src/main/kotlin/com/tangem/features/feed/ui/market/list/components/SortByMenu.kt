@@ -50,38 +50,38 @@ internal fun SortByMenu(
                             },
                         )
                         .padding(
-                            vertical = TangemTheme.dimens2.x2_5,
-                            horizontal = TangemTheme.dimens2.x4,
+                            vertical = 10.dp,
+                            horizontal = 16.dp,
                         ),
                 ) {
                     Text(
                         text = sortType.text.resolveReference(),
-                        style = TangemTheme.typography2.headingSemibold17,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.body.medium,
+                        color = TangemTheme.colors3.text.primary,
                         maxLines = 1,
                     )
                     Box(
-                        modifier = Modifier.size(TangemTheme.dimens2.x6),
+                        modifier = Modifier.size(24.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (sortMenuUM.selectedOption == sortType) {
                             Box(
                                 modifier = Modifier
-                                    .padding(TangemTheme.dimens2.x0_5)
-                                    .size(TangemTheme.dimens2.x5)
+                                    .padding(2.dp)
+                                    .size(20.dp)
                                     .background(
-                                        color = TangemTheme.colors2.graphic.neutral.primary,
+                                        color = TangemTheme.colors3.icon.primary,
                                         shape = CircleShape,
                                     ),
                             ) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(R.drawable.ic_check_default_24),
                                     contentDescription = null,
-                                    tint = TangemTheme.colors2.graphic.neutral.primaryInverted,
+                                    tint = TangemTheme.colors3.icon.inverse,
                                     modifier = Modifier
                                         .align(Alignment.Center)
-                                        .padding(TangemTheme.dimens2.x0_5)
-                                        .size(TangemTheme.dimens2.x4),
+                                        .padding(2.dp)
+                                        .size(16.dp),
                                 )
                             }
                         }
@@ -90,7 +90,7 @@ internal fun SortByMenu(
                 if (index < SortByTypeUM.entries.size - 1) {
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color = TangemTheme.colors2.border.neutral.quaternary,
+                        color = TangemTheme.colors3.border.tertiary,
                     )
                 }
             }
