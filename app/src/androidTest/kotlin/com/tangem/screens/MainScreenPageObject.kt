@@ -398,6 +398,43 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     /**
+     * 'Earn' APY/APR badge shown on a token row (staking or yield-supply indicator). Present only
+     * when the token has an earn rate to display.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenEarnApyBadge(tokenTitle: String): KNode {
+        collapseHeader()
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
+            useUnmergedTree = true
+        }.child<KNode> {
+            hasTestTag(TokenElementsTestTags.TOKEN_EARN_APY_BADGE)
+        }
+    }
+
+    /**
+     * Fiat-amount text of a token row (the balance shown on the top-right of the row). The tagged
+     * container is a plain Row that merges into the clickable row, so we read its inner balance
+     * Text node from the unmerged tree.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenFiatAmountText(tokenTitle: String): KNode {
+        collapseHeader()
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
+            useUnmergedTree = true
+        }.child<KNode> {
+            hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
+            useUnmergedTree = true
+        }.child<KNode> {
+            addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
      * Find token list item with title and address
      */
     @OptIn(ExperimentalTestApi::class)

@@ -16,6 +16,8 @@ internal data class ForYouUM(
     val notifications: ImmutableList<ForYouNotification>,
     val periodPickerUM: TangemSegmentedPickerUM,
     val onPeriodClick: (tangemSegmentUM: TangemSegmentUM) -> Unit,
+    val portfolioSelectorLabel: TextReference,
+    val onSelectPortfolioClick: () -> Unit,
 )
 
 @Immutable

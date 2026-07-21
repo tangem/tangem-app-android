@@ -9,6 +9,9 @@ internal class DefaultStakingFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : StakingFeatureToggles {
 
+    override val isTransactionValidationEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
+
     override fun isIntegrationEnabled(integrationId: StakingIntegrationID): Boolean {
         val toggle = integrationId.getFeatureToggle() ?: return true
         return featureTogglesManager.isFeatureEnabled(toggle)

@@ -89,71 +89,61 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun createApiConfigs(): ApiConfigs {
-        return ApiConfig.ID.entries.mapTo(destination = hashSetOf()) {
-            when (it) {
-                ApiConfig.ID.Express -> {
-                    Express(
-                        environmentConfig = environmentConfig,
-                        expressAuthProvider = expressAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.YieldSupply -> {
-                    YieldSupply(
-                        environmentConfig = environmentConfig,
-                        authProvider = appAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.TangemTech -> {
-                    TangemTech(
-                        authProvider = appAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
-                ApiConfig.ID.TangemPay -> TangemPay.Bff(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
-                ApiConfig.ID.MoonPay -> MoonPay()
-                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
-                ApiConfig.ID.News -> News(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.GaslessTxService -> GaslessTxService(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
-                ApiConfig.ID.Auth -> Auth()
-            }
-        }
+        return setOf(
+            Express(
+                environmentConfig = environmentConfig,
+                expressAuthProvider = expressAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            YieldSupply(
+                environmentConfig = environmentConfig,
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            TangemTech(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
+            TangemPay.Bff(
+                environmentConfig = environmentConfig,
+                appInfoProvider = appInfoProvider,
+            ),
+            TangemPay.Auth(
+                environmentConfig = environmentConfig,
+                appInfoProvider = appInfoProvider,
+            ),
+            BlockAid(environmentConfig = environmentConfig),
+            MoonPay(),
+            P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
+            News(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            GaslessTxService(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            SurveySparrow(environmentConfig = environmentConfig),
+            Auth(),
+        )
     }
 
-    private fun provideTestModels() = ApiConfig.ID.entries.map {
-        when (it) {
-            ApiConfig.ID.Express -> createExpressModel()
-            ApiConfig.ID.YieldSupply -> createYieldSupplyModel()
-            ApiConfig.ID.TangemTech -> createTangemTechModel()
-            ApiConfig.ID.StakeKit -> createStakeKitModel()
-            ApiConfig.ID.TangemPay -> createTangemPayModel()
-            ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
-            ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
-            ApiConfig.ID.MoonPay -> createMoonPayModel()
-            ApiConfig.ID.P2PEthPool -> createP2PModel()
-            ApiConfig.ID.News -> createNewsModel()
-            ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
-            ApiConfig.ID.SurveySparrow -> createSurveySparrowModel()
-            ApiConfig.ID.Auth -> createAuthModel()
-        }
-    }
+    private fun provideTestModels() = listOf(
+        createExpressModel(),
+        createYieldSupplyModel(),
+        createTangemTechModel(),
+        createStakeKitModel(),
+        createTangemPayModel(),
+        createTangemPayAuthModel(),
+        createBlockAidSdkModel(),
+        createMoonPayModel(),
+        createP2PModel(),
+        createNewsModel(),
+        createGaslessTxServiceModel(),
+        createSurveySparrowModel(),
+        createAuthModel(),
+    )
 
     private fun createAuthModel(): TestModel {
         val environment = when (BuildConfig.BUILD_TYPE) {

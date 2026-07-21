@@ -55,6 +55,21 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    val stakingNoRewards: KNode = child {
+        hasText(getResourceString(CoreResR.string.staking_details_no_rewards_to_claim))
+        useUnmergedTree = true
+    }
+
+    val totalBalanceLabel: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_total))
+        useUnmergedTree = true
+    }
+
+    val availableBalanceLabel: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_available))
+        useUnmergedTree = true
+    }
+
     val stakingTitle: KNode = child {
         hasText(getResourceString(R.string.common_staking))
     }

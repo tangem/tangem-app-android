@@ -204,14 +204,14 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * the counterparty [title], and — when [onCopyClick] is non-null — a trailing copy button.
      *
      * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
-     * and whether copy is offered. Only the [CounterpartyAvatar.Address] kind is currently produced by
-     * [com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter]; resolving the own-account /
-     * own-wallet avatars here (the `TxHistoryLookupContext` is already wired for the swap/onramp legs) is a follow-up.
+     * and whether copy is offered. The kind is resolved through the shared `TxHistoryLookupContext` — the same
+     * own-account / own-wallet resolution the history list applies to its row subtitle.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
      * @property avatar Leading avatar.
-     * @property onCopyClick Copy action; `null` hides the copy button (e.g. own-wallet has nothing to copy).
+     * @property onCopyClick Copy action; `null` hides the copy button (an own account / wallet shows a display name,
+     * not an address, so there is nothing to copy).
      */
     data class CounterpartyUM(
         val label: TextReference,

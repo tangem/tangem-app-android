@@ -56,13 +56,13 @@ internal class DevApiConfigsManager(
         val apiConfigs = configs.value
 
         val config = apiConfigs.map { it }.firstOrNull { it.key.id == id }?.key
-            ?: error("Api config with id [$id] not found")
+            ?: error("Api config with id [${id.name}] not found")
 
         val currentEnvironment = apiConfigs[config]
-            ?: error("Current environment of api config with id [$id] not found")
+            ?: error("Current environment of api config with id [${id.name}] not found")
 
         return config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }
-            ?: error("Api config with id [$id] doesn't contain environment [$currentEnvironment]")
+            ?: error("Api config with id [${id.name}] doesn't contain environment [$currentEnvironment]")
     }
 
     override suspend fun changeEnvironment(id: String, environment: ApiEnvironment) {

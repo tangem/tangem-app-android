@@ -288,10 +288,12 @@ private fun StakingRewardBlock(
                 indication = ripple(),
                 enabled = yieldBalanceState.isActionable,
                 onClick = onRewardsClick,
-            ),
+            )
+            .testTag(StakingDetailsScreenTestTags.REWARDS_BLOCK),
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ActiveStakingBlock(
     balance: BalanceState,
@@ -329,6 +331,7 @@ private fun ActiveStakingBlock(
                     text = balance.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE),
                 )
                 if (balance.isPending) {
                     Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing4))
@@ -338,7 +341,9 @@ private fun ActiveStakingBlock(
                         ),
                         tint = TangemTheme.colors.icon.informative,
                         contentDescription = null,
-                        modifier = Modifier.size(TangemTheme.dimens.size18),
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.size18)
+                            .testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON),
                     )
                 }
             }
@@ -347,7 +352,9 @@ private fun ActiveStakingBlock(
                 text = caption.resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                modifier = Modifier
+                    .padding(top = TangemTheme.dimens.spacing2)
+                    .testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE),
             )
         }
 

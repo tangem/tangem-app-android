@@ -18,6 +18,7 @@ internal data class TangemPayTxHistoryDetailsUMV2(
     val iconState: TangemIconUM,
     val transactionTitle: TextReference,
     val detail: TransactionDetailUM?,
+    val cashbackDetail: CashbackDetailUM?,
     val transactionCategory: TextReference,
     val mcc: TextReference?,
     val transactionAmount: String,
@@ -49,6 +50,17 @@ internal sealed interface TransactionDetailUM {
         val cardName: TextReference?,
     ) : TransactionDetailUM
     data class Error(val onRefreshClick: () -> Unit) : TransactionDetailUM
+}
+
+@Immutable
+internal sealed interface CashbackDetailUM {
+    data object Loading : CashbackDetailUM
+    data object AwaitingCalculation : CashbackDetailUM
+    data class Content(
+        val value: TextReference,
+        val subvalue: TextReference?,
+    ) : CashbackDetailUM
+    data class Error(val onRefreshClick: () -> Unit) : CashbackDetailUM
 }
 
 internal enum class TransactionLoadState { Loading, Loaded, Error }
