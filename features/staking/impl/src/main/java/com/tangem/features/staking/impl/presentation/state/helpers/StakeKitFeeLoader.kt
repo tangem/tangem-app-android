@@ -118,7 +118,10 @@ internal class StakeKitFeeLoader @AssistedInject constructor(
         onStakingFee: (Fee, Boolean) -> Unit,
     ) {
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-            ?: error("No available address")
+            ?: run {
+                onStakingFeeError(StakingError.DomainError("No available address"))
+                return
+            }
 
         val gasEstimate = if (isCompositePendingActions(
                 networkId = cryptoCurrencyStatus.currency.network.rawId,
