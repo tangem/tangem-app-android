@@ -56,8 +56,8 @@ internal fun MarketBlock(
                         title = {
                             Text(
                                 text = stringResourceSafe(R.string.markets_common_title),
-                                style = TangemTheme.typography2.headingSemibold20,
-                                color = TangemTheme.colors2.text.neutral.primary,
+                                style = TangemTheme.typography3.heading.small,
+                                color = TangemTheme.colors3.text.primary,
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
                             )
@@ -94,8 +94,8 @@ internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, 
             title = {
                 Text(
                     text = stringResourceSafe(R.string.markets_pulse_common_title),
-                    style = TangemTheme.typography2.headingSemibold20,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.heading.small,
+                    color = TangemTheme.colors3.text.primary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
@@ -150,10 +150,8 @@ private fun Charts(
 ) {
     BlockCard(
         modifier = modifier,
-        colors = TangemBlockCardColors.copy(
-            containerColor = TangemTheme.colors2.surface.level3,
-        ),
-        shape = RoundedCornerShape(TangemTheme.dimens2.x6),
+        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
+        shape = RoundedCornerShape(24.dp),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             when (marketChart) {
