@@ -12,9 +12,11 @@ import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
+import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouPortfolioReviewConverter
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 /**
  * Applies one combined emission to the [ForYouUM] state: sets the pre-built portfolio-review and
@@ -26,6 +28,12 @@ import kotlinx.collections.immutable.persistentListOf
 
  * subsequent refreshes the previous picker is carried over so the user's selection is not reset.
  *
+ * The converters build every item collapsed (the sentiment badge is baked in for the selected period by
+ * [ForYouPortfolioReviewConverter]); the current expanded-assets selections are re-applied here, read
+ * through the [expandedPortfolioReviewAssetIds] / [expandedEarnOpportunitiesAssetIds] providers at
+ * transform time — not captured at conversion time — so a data refresh racing an expand click cannot
+ * revert the expansion.
+ *
  * Modelled on `SetTokenListTransformer` (a transformer that rebuilds the state while delegating the
  * section construction to dedicated converters).
  */
@@ -33,6 +41,8 @@ internal class SetPortfolioReviewTransformer(
     private val selectedPortfolio: ForYouSelectedPortfolio,
     private val portfolioReviewUM: PortfolioReviewUM,
     private val earnOpportunitiesUM: EarnOpportunitiesUM,
+    private val expandedPortfolioReviewAssetIds: () -> Set<String>,
+    private val expandedEarnOpportunitiesAssetIds: () -> Set<String>,
 ) : Transformer<ForYouUM> {
 
     override fun transform(prevState: ForYouUM): ForYouUM {
@@ -43,8 +53,8 @@ internal class SetPortfolioReviewTransformer(
             } else {
                 persistentListOf()
             },
-            earnOpportunities = earnOpportunitiesUM,
-            portfolioReviewUM = portfolioReviewUM,
+            earnOpportunities = earnOpportunitiesUM.applyExpandedAssets(expandedEarnOpportunitiesAssetIds()),
+            portfolioReviewUM = portfolioReviewUM.applyExpandedAssets(expandedPortfolioReviewAssetIds()),
             portfolioSelectorLabel = buildPortfolioSelectorLabel(),
             periodPickerUM = when (prevState.portfolioReviewUM) {
                 is PortfolioReviewUM.Loading -> createPeriodPicker()
@@ -68,15 +78,12 @@ internal class SetPortfolioReviewTransformer(
     }
 
     private fun createPeriodPicker(): TangemSegmentedPickerUM {
-        // TODO For you replace with data from backend
-        val day = TangemSegmentUM(id = "0", title = stringReference("Day"))
+        val items = ForYouPeriod.entries.map { period ->
+            TangemSegmentUM(id = period.id, title = period.title)
+        }
         return TangemSegmentedPickerUM(
-            items = persistentListOf(
-                day,
-                TangemSegmentUM(id = "1", title = stringReference("Week")),
-                TangemSegmentUM(id = "2", title = stringReference("Month")),
-            ),
-            initialSelectedItem = day,
+            items = items.toPersistentList(),
+            initialSelectedItem = items.first { it.id == ForYouPeriod.Day.id },
             isFixed = true,
             isAltSurface = true,
         )
