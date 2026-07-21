@@ -13,6 +13,7 @@ internal fun spendTransaction(
     cardName: String? = "Basic card",
     cardNumberLast4: String? = "9092",
     status: TangemPayTxHistoryItem.Status = TangemPayTxHistoryItem.Status.COMPLETED,
+    cashback: TangemPayTxHistoryItem.Cashback? = null,
 ): TangemPayTxHistoryItem.Spend = TangemPayTxHistoryItem.Spend(
     id = id,
     jsonRepresentation = "{}",
@@ -32,6 +33,23 @@ internal fun spendTransaction(
     declinedReason = null,
     cardName = cardName,
     cardNumberLast4 = cardNumberLast4,
+    cashback = cashback,
+)
+
+internal fun cashback(
+    status: TangemPayTxHistoryItem.Cashback.Status = TangemPayTxHistoryItem.Cashback.Status.CONFIRMED,
+    amount: BigDecimal? = BigDecimal("5.00"),
+    currency: Currency? = Currency.getInstance("USD"),
+    isCapTrimmed: Boolean = false,
+    exclusionReason: TangemPayTxHistoryItem.Cashback.ExclusionReason? = null,
+    promotionIds: List<String> = emptyList(),
+): TangemPayTxHistoryItem.Cashback = TangemPayTxHistoryItem.Cashback(
+    status = status,
+    amount = amount,
+    currency = currency,
+    isCapTrimmed = isCapTrimmed,
+    exclusionReason = exclusionReason,
+    promotionIds = promotionIds,
 )
 
 internal fun paymentTransaction(id: String = "tx_payment_1"): TangemPayTxHistoryItem.Payment =
