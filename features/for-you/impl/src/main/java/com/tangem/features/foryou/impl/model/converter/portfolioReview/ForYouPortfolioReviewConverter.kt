@@ -2,14 +2,19 @@ package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -21,7 +26,7 @@ import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.FOR_YOU_TOP_EARN_TOKENS_COUNT
 import com.tangem.features.foryou.impl.model.converter.forYouGroupKey
-import com.tangem.features.foryou.impl.model.converter.forYouPlaceholderBadge
+import com.tangem.features.foryou.impl.model.converter.forYouSentimentBadge
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
@@ -42,14 +47,20 @@ import java.math.BigDecimal
  * so a token click opens the right wallet.
  *
  * Modelled on `TokenListStateConverter` (a list converter delegating to a per-item converter).
+ *
+ * @property coinIndicators indicator readings keyed by uppercase coin symbol; an asset row (and its
+ * child rows) gets a sentiment badge built from its entry for the selected [timeframe], or no badge
+ * when the map has no data for the symbol
  */
+@Suppress("LongParameterList")
 internal class ForYouPortfolioReviewConverter(
     private val appCurrency: AppCurrency,
-    private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
     private val onAddFundsClick: (UserWalletId) -> Unit,
     private val selectedWalletId: UserWalletId?,
+    private val coinIndicators: Map<String, CoinIndicators>,
+    private val timeframe: CoinIndicators.Reading.Timeframe,
 ) : Converter<ForYouSelectedPortfolio, PortfolioReviewUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -147,23 +158,36 @@ internal class ForYouPortfolioReviewConverter(
             .values
             .sortedByDescending { group -> group.sumOf { it.status.value.fiatAmount.orZero() } }
 
+        // The badge is per-asset (indicators are keyed by symbol), so it is computed once for the
+        // selected timeframe and shared by the asset row and all its per-network child rows.
+        val indicatorSymbol = cryptoCurrencyStatus.firstOrNull()?.status?.currency?.symbol
+        val titleBadge = if (indicatorSymbol != null) {
+            forYouSentimentBadge(
+                coinIndicators = coinIndicators[indicatorSymbol.uppercase()],
+                timeframe = timeframe,
+            )
+        } else {
+            null
+        }
+
         return ForYouTokenListItemUM(
             tokenRowUM = createAssetRow(
                 assetId = assetId,
                 currencies = cryptoCurrencyStatus,
                 networkCount = networkGroups.size,
                 totalFiatBalance = totalFiatBalance,
+                badge = titleBadge,
             ),
-
             tokenList = networkGroups.map { networkGroup ->
                 ForYouPortfolioReviewTokenRowConverter(
                     userWalletId = networkGroup.first().account.userWalletId,
                     appCurrency = appCurrency,
                     totalFiatBalance = totalFiatBalance,
                     onTokenClick = onTokenClick,
+                    titleBadge = titleBadge,
                 ).convert(networkGroup.map { it.status })
             }.toPersistentList(),
-            isExpanded = assetId in expandedAssetIds,
+            isExpanded = false,
             isExpandable = true,
         )
     }
@@ -173,6 +197,7 @@ internal class ForYouPortfolioReviewConverter(
         currencies: List<AccountCryptoCurrencyStatus>,
         networkCount: Int,
         totalFiatBalance: BigDecimal,
+        badge: TangemBadgeUM?,
     ): TangemTokenRowUM {
         val statuses = currencies.map { it.status }
         if (statuses.all { it.value is CryptoCurrencyStatus.Loading }) {
@@ -206,7 +231,7 @@ internal class ForYouPortfolioReviewConverter(
             headIconUM = TangemIconUM.Currency(iconConverter.convert(asset)),
             titleUM = TangemTokenRowUM.TitleUM.Content(
                 text = stringReference(asset.currency.symbol),
-                badge = forYouPlaceholderBadge(),
+                badge = badge,
             ),
             subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
                 text = subtitle,
