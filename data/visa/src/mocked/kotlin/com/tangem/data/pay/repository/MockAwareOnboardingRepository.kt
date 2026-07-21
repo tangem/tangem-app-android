@@ -3,7 +3,6 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
-import com.tangem.data.pay.TangemPayMockControl
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -22,8 +21,9 @@ import javax.inject.Singleton
  * customer-facing state — whether a wallet has Tangem Pay ([hasTangemPayInWallet]), KYC status, ACTIVE /
  * INACTIVE, balances ([getCustomerInfo]) — is driven by the WireMock test scenario (authenticated with the
  * synthetic tokens from [com.tangem.data.pay.store.MockAwareTangemPayStorage]) rather than hardcoded:
- *  - [hasTangemPayInWallet] is answered locally via [TangemPayMockControl] (WireMock does not mock the
- *    underlying checkCustomerWalletId endpoint) — default false, opt-in true for Tangem Pay scenarios;
+ *  - [hasTangemPayInWallet] delegates to the real repo, so the "existing customer" gate follows the
+ *    checkCustomerWalletId mock (the `tangem_pay_eligibility` scenario: `Started` → 404/NotPaeraCustomer →
+ *    no Payment account, `PaeraCustomer` → 200 → Payment account);
  *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect.
  */
 @Singleton
@@ -113,14 +113,12 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.storeVirtualAccountOrderId(userWalletId, vaOrderId)
     }
 
-    // This is the gate that decides whether a wallet is treated as an existing Tangem Pay customer (and thus
-    // whether an active Payment account — and accounts mode — appears). WireMock does NOT mock the underlying
-    // checkCustomerWalletId endpoint, so we answer locally: default false (generic UI tests stay Payment-free),
-    // opt-in true via TangemPayMockControl for Tangem Pay scenarios. Never delegate to `real` here.
-    override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> {
-        if (isMockMode) return TangemPayMockControl.hasTangemPayInWallet.right()
-        return real.hasTangemPayInWallet(userWalletId)
-    }
+    // The "existing Tangem Pay customer" gate (decides whether an active Payment account — and accounts mode —
+    // appears). Delegates to WireMock's checkCustomerWalletId via the real repo (static token, no signing), so it
+    // is driven by the `tangem_pay_eligibility` scenario: `Started` (default) → 404/NotPaeraCustomer → no account;
+    // `PaeraCustomer` → 200 → account. Generic UI tests never set the scenario, so they stay Payment-free.
+    override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> =
+        real.hasTangemPayInWallet(userWalletId)
 
     override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> =
         real.checkCustomerEligibility()

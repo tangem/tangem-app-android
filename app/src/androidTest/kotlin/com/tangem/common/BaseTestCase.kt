@@ -20,7 +20,6 @@ import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.rules.ApiEnvironmentRule
-import com.tangem.data.pay.TangemPayMockControl
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -112,9 +111,6 @@ abstract class BaseTestCase : TestCase(
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
-        // Reset opt-in Tangem Pay mock switches so a previous Tangem Pay test can't leak an active Payment
-        // account into the next (e.g. generic openMainScreen) test running in the same process.
-        TangemPayMockControl.reset()
         Allure.label(ALLURE_LABEL_NAME, ALLURE_LABEL_VALUE)
         // Setup WireMock redirect for CI with local WireMock instances
         val wiremockUrl = InstrumentationRegistry.getArguments().getString(WIREMOCK_BASE_URL_ARG)
@@ -183,16 +179,6 @@ abstract class BaseTestCase : TestCase(
     }
 
     fun waitForIdle() = composeTestRule.waitForIdle()
-
-    /**
-     * Opts the current test's wallet into the Tangem Pay mock so it is treated as an existing customer
-     * (an active Payment account appears). MUST be called before the wallet is imported, so the first
-     * payment-account status fetch observes it. Paired with the [TangemPayMockControl] reset in [setupHooks],
-     * which restores the Payment-free default for every other (e.g. generic openMainScreen) test.
-     */
-    fun markExistingTangemPayCustomer() {
-        TangemPayMockControl.hasTangemPayInWallet = true
-    }
 
     /**
      * Waits until [block] stops throwing (or [timeoutMillis] elapses). Use in scenario (BaseTestCase extension)
