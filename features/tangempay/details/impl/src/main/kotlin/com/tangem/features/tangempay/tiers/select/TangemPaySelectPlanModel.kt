@@ -300,6 +300,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
             }
             TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
                 val date = nextBillingDate()
+                val currentPlan = params.tariffPlan.plan
                 buildList {
                     if (date != null) {
                         add(
@@ -312,7 +313,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     add(
                         resourceReference(
                             R.string.tangempay_select_plan_confirm_point_cards_closed,
-                            wrappedList(programName),
+                            wrappedList(currentPlan.programName),
                         ),
                     )
                     if (date != null) {
