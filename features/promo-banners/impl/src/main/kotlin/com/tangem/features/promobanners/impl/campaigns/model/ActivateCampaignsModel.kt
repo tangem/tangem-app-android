@@ -12,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.ToastMessage
@@ -219,7 +220,17 @@ internal class ActivateCampaignsModel @Inject constructor(
                 null
             }
 
-            val tokenItem = TokenItemStateConverter(appCurrency = appCurrency).convert(result.currency)
+            val tokenItem = TokenItemStateConverter(
+                appCurrency = appCurrency,
+                subtitleStateProvider = { status ->
+                    TokenItemState.SubtitleState.TextContent(
+                        value = resourceReference(
+                            R.string.domain_receive_assets_onboarding_network_name,
+                            wrappedList(status.currency.network.name),
+                        ),
+                    )
+                },
+            ).convert(result.currency)
 
             uiState.update { state ->
                 state.copy(
