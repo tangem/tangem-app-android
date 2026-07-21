@@ -178,6 +178,7 @@ internal class SwapModel @Inject constructor(
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
     private val calculateAmountUseCase: CalculateAmountUseCase,
+    private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
