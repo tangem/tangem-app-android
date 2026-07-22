@@ -164,6 +164,16 @@ fun BaseTestCase.checkStoriesChanges() {
     }
 }
 
+fun BaseTestCase.skipSwapStories() {
+    step("Skip 'Swap stories' screen if displayed") {
+        onSwapStoriesScreen {
+            if (closeButton.isDisplayedSafely()) {
+                closeButton.performClick()
+            }
+        }
+    }
+}
+
 fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
     step("Click on 'Select fee' icon") {
         onSwapTokenScreen { selectFeeIcon.performClick() }
@@ -317,6 +327,9 @@ fun BaseTestCase.openSwapInTransferModeWithHotWallet(
 }
 
 private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountName: String) {
+    step("Collapse header") {
+        onMainScreen { collapseHeader() }
+    }
     step("Scroll '$fromAccountName' into view (semantics, not touch — avoids the Markets sheet)") {
         onMainScreen { scrollToAccount(fromAccountName) }
     }

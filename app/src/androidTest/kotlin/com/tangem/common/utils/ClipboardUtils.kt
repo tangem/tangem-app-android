@@ -4,6 +4,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
 fun getClipboardText(context: Context): String? {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -27,12 +29,15 @@ fun clearClipboard(
     clipboard.clearPrimaryClip()
 }
 
+// Kotlin's assert() is a no-op on device (JVM assertions disabled) — use JUnit asserts here.
 fun assertClipboardTextEquals(
     expected: String,
     context: Context = ApplicationProvider.getApplicationContext()
 ) {
+    assertEquals("Clipboard text mismatch", expected, getClipboardText(context))
+}
+
+fun assertClipboardIsEmpty(context: Context = ApplicationProvider.getApplicationContext()) {
     val actual = getClipboardText(context)
-    assert(actual == expected) {
-        "Clipboard text mismatch.\nExpected: '$expected'\nActual: '$actual'"
-    }
+    assertTrue("Expected empty clipboard but was: '$actual'", actual.isNullOrEmpty())
 }

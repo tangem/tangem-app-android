@@ -8,47 +8,70 @@ android {
     namespace = "com.tangem.common.ui"
 }
 dependencies {
-    api(projects.common)
 
-    /** Compose */
-    implementation(deps.compose.material3)
-    implementation(deps.compose.foundation)
-    implementation(deps.compose.ui)
-    implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.navigation)
-    implementation(deps.compose.navigation.hilt)
+    // region Kotlin
+    api(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Compose
+    api(deps.compose.foundation)
+    api(deps.compose.material3)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    // endregion
 
-    /** Deps */
-    implementation(deps.kotlin.immutable.collections)
+    // region Other libraries
+    api(deps.arrow.core)
+    implementation(deps.hilt.android)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.haze)
+    // endregion
 
-    /** Project - Common */
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
-    implementation(projects.core.res)
-    implementation(projects.libs.crypto)
-    implementation(projects.libs.blockchainSdk)
-
-    /** Project - Domain */
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.card)
-    implementation(projects.domain.staking.models)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.account)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.onramp.models)
-    implementation(projects.domain.common)
-
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain) {
+    // region Tangem SDK
+    api(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+    // endregion
 
-    /** Tests */
+    // region Project - Core
+    api(projects.core.analytics)
+    api(projects.core.ui)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.res)
+    // endregion
+
+    // region Project - Common
+    // :common is intentionally re-exported (api): common:ui is a ubiquitous UI dependency and many
+    // feature modules rely on TangemBlogUrlBuilder / common types through it. Demoting to implementation
+    // cascades across the feature graph, so keep it api despite DAGP's advice (suppressed below).
+    api(projects.common)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.account)
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.common)
+    api(projects.domain.core)
+    api(projects.domain.models)
+    api(projects.domain.onramp.models)
+    api(projects.domain.staking)
+    api(projects.domain.tokens.models)
+    api(projects.domain.transaction.models)
+    implementation(projects.domain.card)
+    implementation(projects.domain.staking.models)
+    // endregion
+
+    // region Project - Libs
+    implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region Tests
     testImplementation(projects.test.core)
+    // endregion
 }
