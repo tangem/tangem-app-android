@@ -21,7 +21,6 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
-import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -51,11 +50,10 @@ internal fun MarketingBanner(
 
     TangemMessageBanner(
         title = stringReference(banner.text.orEmpty()),
-        modifier = modifier.then(
-            if (hasDeeplink) Modifier.clickableSingle(onClick = onClick) else Modifier,
-        ),
+        modifier = modifier,
         variant = TangemMessageBanner.Variant.Default,
         showGlowRing = false,
+        onClick = if (hasDeeplink) onClick else null,
         slotStart = if (isIconAtStart) {
             { BannerIcon(banner.iconUrl, onLoadError = { isIconFailed = true }) }
         } else {
