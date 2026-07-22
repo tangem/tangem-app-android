@@ -110,6 +110,7 @@ internal class TangemPayCardPageScreenComponent(
                     paymentAccountAddress = navigation.paymentAccountAddress,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onShowDetails = model::onShowVirtualAccountRequisites,
+                    onShowBankingDetailsError = model::showVaBankingDetailsError,
                     onOrderCreated = model::onVirtualAccountOrderCreated,
                 ),
             )
@@ -124,6 +125,15 @@ internal class TangemPayCardPageScreenComponent(
                     onDetailsShown = model::onVaBankingDetailsShown,
                     onShareClicked = model::onVaShareDetailsClicked,
                     onFieldCopied = model::onVaFieldCopied,
+                ),
+            )
+            is TangemPayCardNavigation.VaBankingDetailsError -> TangemPayVaBankingDetailsErrorComponent(
+                appComponentContext = context,
+                params = TangemPayVaBankingDetailsErrorComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onContactSupport = model::onContactSupportClicked,
+                    onResolved = model::onVaBankingDetailsResolved,
                 ),
             )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(
