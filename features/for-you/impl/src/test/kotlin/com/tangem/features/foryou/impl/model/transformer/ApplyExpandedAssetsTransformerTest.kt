@@ -9,7 +9,9 @@ import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.entity.asSingleForYouGroup
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import org.junit.jupiter.api.Test
 
 internal class ApplyExpandedAssetsTransformerTest {
@@ -120,7 +122,7 @@ internal class ApplyExpandedAssetsTransformerTest {
 
         // Assert
         assertThat(result.earnOpportunities).isSameInstanceAs(state.earnOpportunities)
-        val earnItems = (result.earnOpportunities as EarnOpportunitiesUM.Content).tokenList
+        val earnItems = (result.earnOpportunities as EarnOpportunitiesUM.Content).tokenList.flatMap { it.items }
         assertThat(earnItems.single().isExpanded).isFalse()
     }
 
@@ -141,7 +143,7 @@ internal class ApplyExpandedAssetsTransformerTest {
 
         // Assert
         assertThat(result.portfolioReviewUM).isSameInstanceAs(state.portfolioReviewUM)
-        val earnItems = (result.earnOpportunities as EarnOpportunitiesUM.Content).tokenList
+        val earnItems = (result.earnOpportunities as EarnOpportunitiesUM.Content).tokenList.flatMap { it.items }
         assertThat(earnItems.single().isExpanded).isTrue()
     }
 
@@ -180,7 +182,7 @@ internal class ApplyExpandedAssetsTransformerTest {
         // Assert
         val earn = result.earnOpportunities
         assertThat(earn).isInstanceOf(EarnOpportunitiesUM.Loading::class.java)
-        assertThat(earn.tokenList.single().isExpanded).isTrue()
+        assertThat(earn.tokenList.flatMap { it.items }.single().isExpanded).isTrue()
     }
 
     private fun listItem(
@@ -207,7 +209,7 @@ internal class ApplyExpandedAssetsTransformerTest {
             onAddFundsClick = null,
         ),
         earnOpportunities = EarnOpportunitiesUM.Content(
-            tokenList = persistentListOf(*earnItems.toTypedArray()),
+            tokenList = earnItems.toPersistentList().asSingleForYouGroup(),
             subtitleRes = 0,
             potentialReward = null,
             potentialRewardType = null,
@@ -232,7 +234,7 @@ internal class ApplyExpandedAssetsTransformerTest {
             ),
         ),
         earnOpportunities = EarnOpportunitiesUM.Loading(
-            tokenList = persistentListOf(*earnItems.toTypedArray()),
+            tokenList = earnItems.toPersistentList().asSingleForYouGroup(),
         ),
         notifications = persistentListOf(),
         periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
