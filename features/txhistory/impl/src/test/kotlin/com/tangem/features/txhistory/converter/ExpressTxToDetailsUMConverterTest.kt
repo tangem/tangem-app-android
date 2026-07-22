@@ -490,12 +490,13 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN swap to own address with accounts mode off WHEN convert THEN owner is wallet`() {
-        // Arrange
+    fun `GIVEN swap to own address with accounts mode off and multiple wallets WHEN convert THEN owner is wallet`() {
+        // Arrange — more than one wallet, so the own wallet leg is worth naming.
         val swap = expressSwap(status = ExpressExchangeStatus.Finished, payoutAddress = PAYOUT_ADDRESS)
         val lookup = lookupOf(
             bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
             isAccountsModeEnabled = false,
+            walletInfoById = twoWalletInfo(),
         )
 
         // Act
@@ -505,6 +506,47 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val owner = requireNotNull(result.to?.owner)
         assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Wallet::class.java)
         assertThat((owner as TxHistoryDetailsUM.AssetOwnerUM.Wallet).name).isEqualTo(stringReference("My Wallet"))
+    }
+
+    @Test
+    fun `GIVEN swap to own address with accounts mode off and a single wallet WHEN convert THEN no owner`() {
+        // Arrange — payout resolves to the user's own wallet, but a single wallet has nothing to disambiguate.
+        val swap = expressSwap(status = ExpressExchangeStatus.Finished, payoutAddress = PAYOUT_ADDRESS)
+        val lookup = lookupOf(
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+            isAccountsModeEnabled = false,
+        )
+
+        // Act
+        val result = expressConverter(lookup = lookup).convert(swap)
+
+        // Assert — own wallet leg reads "You receive" with no owner card.
+        assertThat(result.to?.owner).isNull()
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.swapping_to_title))
+    }
+
+    @Test
+    fun `GIVEN send-and-swap from own single wallet to external WHEN convert THEN from reads You send`() {
+        // Arrange — from is the user's own (single-wallet) address, payout goes to an external address.
+        val swap = expressSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = EXTERNAL_ADDRESS,
+            fromCurrency = currency,
+        )
+        val lookup = lookupOf(
+            currency.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            isAccountsModeEnabled = false,
+        )
+
+        // Act
+        val result = expressConverter(lookup = lookup).convert(swap)
+
+        // Assert — own single-wallet source reads "You send"; the external payout keeps its address.
+        assertThat(result.from?.owner).isNull()
+        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.swapping_from_title_v2))
+        assertThat((result.to?.owner as? TxHistoryDetailsUM.AssetOwnerUM.Address)?.rawAddress)
+            .isEqualTo(EXTERNAL_ADDRESS)
     }
 
     @Test
