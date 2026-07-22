@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.pay
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.pay.models.request.*
 import com.tangem.datasource.api.pay.models.response.*
 import retrofit2.http.*
