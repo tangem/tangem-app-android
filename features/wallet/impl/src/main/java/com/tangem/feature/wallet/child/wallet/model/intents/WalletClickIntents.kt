@@ -91,6 +91,7 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onRefreshSwipe(showRefreshState: Boolean) {
+        if (!stateController.isInitialized) return
         when (stateController.getSelectedWalletUM()) {
             is WalletUM.Content -> refreshMultiCurrencyContent(showRefreshState)
             is WalletUM.Locked -> Unit
