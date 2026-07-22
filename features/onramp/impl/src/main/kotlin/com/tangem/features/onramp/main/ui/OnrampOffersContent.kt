@@ -104,7 +104,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
 }
 
 @Composable
-private fun OfferWithLinkedBanner(offer: OnrampOfferUM, linkedMarketingBannerComponent: MarketingBannerComponent) {
+internal fun OfferWithLinkedBanner(offer: OnrampOfferUM, linkedMarketingBannerComponent: MarketingBannerComponent) {
     val hasBanner = linkedMarketingBannerComponent.hasLinkedBanner(offer.providerId)
     // Square the offer's bottom corners so the bottom-rounded banner glues to it as one card.
     Offer(offer, roundBottom = !hasBanner)
