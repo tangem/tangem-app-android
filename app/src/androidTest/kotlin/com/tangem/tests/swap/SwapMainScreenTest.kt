@@ -1,9 +1,12 @@
 package com.tangem.tests.swap
 
+import com.tangem.datasource.api.common.config.TangemTech
+
+import com.tangem.datasource.api.common.config.Express
+
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
-import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
@@ -17,8 +20,8 @@ import org.junit.Test
 class SwapMainScreenTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD),
-        ApiEnvConfig(ApiConfig.EXPRESS, ApiEnvironment.PROD)
+        ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD),
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("574")
     @DisplayName("Swap: 'Swap' button is not displayed for single currency card")
