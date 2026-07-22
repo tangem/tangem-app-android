@@ -14,8 +14,12 @@ import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import java.util.Currency
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -58,6 +62,14 @@ internal class MockAwareCashbackRepository @Inject constructor(
         return real.getCashbackHistory(userWalletId, months)
     }
 
+    override suspend fun getCashbackDetails(
+        userWalletId: UserWalletId,
+        transactionId: String,
+    ): Either<VisaApiError, TangemPayTxHistoryItem.Cashback?> {
+        if (isMockMode) return mockCashbackDetails(transactionId).right()
+        return real.getCashbackDetails(userWalletId, transactionId)
+    }
+
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean =
         real.isDeactivationBannerDismissed(userWalletId)
 
@@ -86,19 +98,20 @@ internal class MockAwareCashbackRepository @Inject constructor(
             cardTiers = listOf(
                 CashbackPromotions.CardTier(
                     tier = "basic",
-                    label = "Basic cards",
+                    label = "Basic",
                     scope = "All purchases",
                     minTransactionAmount = BigDecimal("30"),
                     monthlyCapAmount = BigDecimal("100"),
                 ),
                 CashbackPromotions.CardTier(
                     tier = "plus",
-                    label = "Plus cards",
+                    label = "Plus",
                     scope = "All purchases",
                     minTransactionAmount = BigDecimal("30"),
                     monthlyCapAmount = BigDecimal("300"),
                 ),
             ),
+            monthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"),
             additionalCashback = listOf(
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-permanent",
@@ -147,5 +160,53 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
             ),
         )
+
+        private val USD: Currency = Currency.getInstance("USD")
+
+        /**
+         * Per-transaction cashback detail keyed by the mock transaction id (see
+         * [MockAwareTangemPayTxHistoryRepository] `mockItems`). Covers every detail-row state.
+         */
+        fun mockCashbackDetails(transactionId: String): TangemPayTxHistoryItem.Cashback? = when (transactionId) {
+            "tx_1" -> details(status = Status.CONFIRMED, amount = "0.63")
+            "tx_2" -> details(status = Status.ESTIMATED, amount = "1.70")
+            "tx_3" -> details(status = Status.CONFIRMED, amount = "-0.80") // refund
+            "tx_4" -> details(status = Status.AWAITING_CALCULATION, amount = null)
+            "tx_5" -> details(
+                status = Status.EXCLUDED,
+                amount = "0.00",
+                exclusionReason = ExclusionReason.MCC_EXCLUDED,
+            )
+            "tx_8" -> details(status = Status.CONFIRMED, amount = "3.00", isCapTrimmed = true)
+            "tx_9" -> details(
+                status = Status.EXCLUDED,
+                amount = "0.00",
+                exclusionReason = ExclusionReason.MONTHLY_CAP_REACHED,
+            )
+            "tx_10" -> details(
+                status = Status.EXCLUDED,
+                amount = "0.00",
+                exclusionReason = ExclusionReason.MERCHANT_COUNTRY_EXCLUDED,
+            )
+            "tx_11" -> details(status = Status.EXCLUDED, amount = "0.00", exclusionReason = ExclusionReason.BELOW_MIN)
+            else -> null
+        }
+
+        private fun details(
+            status: Status,
+            amount: String?,
+            exclusionReason: ExclusionReason? = null,
+            isCapTrimmed: Boolean = false,
+        ): TangemPayTxHistoryItem.Cashback {
+            val value = amount?.let(::BigDecimal)
+            return TangemPayTxHistoryItem.Cashback(
+                status = status,
+                amount = value,
+                currency = value?.let { USD },
+                isCapTrimmed = isCapTrimmed,
+                exclusionReason = exclusionReason,
+                promotionIds = emptyList(),
+            )
+        }
     }
 }
