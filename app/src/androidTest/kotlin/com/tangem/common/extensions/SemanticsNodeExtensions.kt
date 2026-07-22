@@ -16,6 +16,16 @@ fun SemanticsNode.firstTextOrNull(): String? {
 }
 
 /**
+ * First non-blank text of the descendant (or this node) tagged [testTag], searching the unmerged subtree.
+ * Use to read a specific labelled part of a row (title, fiat amount) without relying on merged-tree text.
+ */
+fun SemanticsNode.firstTextForTestTag(testTag: String): String? {
+    if (config.getOrNull(SemanticsProperties.TestTag) == testTag) return firstTextOrNull()
+    children.forEach { child -> child.firstTextForTestTag(testTag)?.let { return it } }
+    return null
+}
+
+/**
  * Reads the first text of every currently displayed node in this collection, in visual order
  * (top-to-bottom, then left-to-right). Non-displayed nodes and nodes without text are skipped.
  */
