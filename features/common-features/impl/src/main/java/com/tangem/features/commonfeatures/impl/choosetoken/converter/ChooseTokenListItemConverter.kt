@@ -1,5 +1,6 @@
 package com.tangem.features.commonfeatures.impl.choosetoken.converter
 
+import arrow.core.toNonEmptyListOrNull
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.account.TokensListPortfolioItemConverter
 import com.tangem.common.ui.account.toUM
@@ -22,6 +23,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
+import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
@@ -136,6 +138,16 @@ internal class ChooseTokenListItemConverter(
         )
     }
 
+    private fun TokenList.recalculateBalance(): TokenList {
+        val statuses = flattenCurrencies().toNonEmptyListOrNull() ?: return this
+        val total = TotalFiatBalanceCalculator.calculate(statuses)
+        return when (this) {
+            TokenList.Empty -> this
+            is TokenList.Ungrouped -> copy(totalFiatBalance = total)
+            is TokenList.GroupedByNetwork -> copy(totalFiatBalance = total)
+        }
+    }
+
     private fun convertTokenList(
         tokenConverter: TokenItemStateConverter,
         tokenListParam: TokenList,
@@ -158,7 +170,7 @@ internal class ChooseTokenListItemConverter(
         filter { currency -> currency.filterByQuery() && tokenFilter(account, currency) }
 
     private fun filterTokenList(tokenList: TokenList, account: AccountStatus.CryptoPortfolio): TokenList {
-        return when (tokenList) {
+        val filtered = when (tokenList) {
             TokenList.Empty -> TokenList.Empty
             is TokenList.Ungrouped -> {
                 val filtered = tokenList.currencies.filterCurrencies(account)
@@ -174,6 +186,8 @@ internal class ChooseTokenListItemConverter(
                 if (filteredGroups.isEmpty()) TokenList.Empty else tokenList.copy(groups = filteredGroups)
             }
         }
+
+        return filtered.recalculateBalance()
     }
 
     private fun CryptoCurrencyStatus.filterByQuery(): Boolean {
