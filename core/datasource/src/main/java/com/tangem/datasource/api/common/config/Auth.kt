@@ -10,9 +10,9 @@ import com.tangem.datasource.BuildConfig
  * Tangem Auth Service [ApiConfig] — endpoints for device registration, authentication,
  * nonce issuance, refresh token rotation, and JWKS publication.
  */
-internal class Auth : ApiConfig() {
+class Auth : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.Auth
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -48,9 +48,8 @@ internal class Auth : ApiConfig() {
 
     companion object {
 
-        // Same-module copy of the id key for use as a Dagger @StringKey argument (kapt can't use a
-        // cross-module const). Kept in sync with the central [ApiConfig.AUTH].
-        const val KEY = ApiConfig.AUTH
+        const val KEY = "Auth"
+        val ID = ApiConfig.ID(KEY)
 
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
         private const val PROD_BASE_URL = "https://api.tangem.org/"
