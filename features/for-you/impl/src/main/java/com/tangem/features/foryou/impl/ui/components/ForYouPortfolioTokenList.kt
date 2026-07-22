@@ -27,8 +27,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.tokens.SlideInItemVisibility
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
@@ -38,10 +40,14 @@ import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.badge.TangemBadge
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
@@ -52,24 +58,69 @@ import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.sharedBoundsSafely
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun ForYouPortfolioTokenList(tokenList: ImmutableList<ForYouTokenListItemUM>, modifier: Modifier = Modifier) {
+internal fun ForYouPortfolioTokenList(items: ImmutableList<ForYouTokenListItemUM>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        val outerLastIndex = tokenList.lastIndex
-        tokenList.fastForEachIndexed { index, listItem ->
+        items.fastForEachIndexed { index, listItem ->
             key(listItem.tokenRowUM.id) {
-                PortfolioTokenItem(listItem = listItem, index = index, outerLastIndex = outerLastIndex)
+                PortfolioTokenItem(listItem = listItem, index = index)
             }
         }
     }
 }
 
 @Composable
-private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int, outerLastIndex: Int) {
-    PortfolioAssetItem(listItem = listItem, index = index, outerLastIndex = outerLastIndex)
+internal fun ForYouEarnOpportunitiesTokenList(
+    groups: ImmutableList<ForYouWalletGroupUM>,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        groups.fastForEach { group ->
+            group.header?.let { header ->
+                key(header.id) {
+                    WalletNameRow(header = header)
+                }
+            }
+            group.items.fastForEachIndexed { index, listItem ->
+                key(listItem.tokenRowUM.id) {
+                    PortfolioTokenItem(listItem = listItem, index = index)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WalletNameRow(header: ForYouWalletHeaderUM, modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 18.dp, bottom = 10.dp),
+        includeInnerPaddings = false,
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        subtitleSlot = {
+            TangemRowText(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                text = header.name.resolveReference(),
+                role = TangemRowTextRole.Subtitle,
+            )
+            TangemDeviceIcon(
+                state = header.deviceIcon,
+                modifier = Modifier.size(20.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int) {
+    PortfolioAssetItem(listItem = listItem, index = index)
 
     val lastIndex = listItem.tokenList.lastIndex.inc()
     listItem.tokenList.fastForEachIndexed { tokenIndex, item ->
@@ -99,29 +150,25 @@ private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int, oute
             }
         }
     }
+
+    SpacerH8()
 }
 
 @Suppress("MagicNumber")
 @Composable
-private fun PortfolioAssetItem(
-    listItem: ForYouTokenListItemUM,
-    index: Int,
-    outerLastIndex: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, modifier: Modifier = Modifier) {
     val itemBackgroundColor = TangemTheme.colors3.bg.secondary
 
     val currentItem by rememberUpdatedState(listItem)
 
     ProvideSharedTransitionScope(
         modifier = modifier
-            .padding(top = 8.dp)
             .semantics { lazyListItemPosition = index }
             .roundedShapeItemDecoration(
                 currentIndex = 0,
                 radius = 24.dp,
                 addDefaultPadding = false,
-                lastIndex = portfolioAssetExpandAnimation(listItem = listItem, outerLastIndex = outerLastIndex).value,
+                lastIndex = portfolioAssetExpandAnimation(listItem = listItem).value,
                 backgroundColor = itemBackgroundColor,
             ),
     ) {
@@ -347,11 +394,9 @@ private fun DrawScope.drawBadge(
 
 @Suppress("MagicNumber")
 @Composable
-private fun portfolioAssetExpandAnimation(listItem: ForYouTokenListItemUM, outerLastIndex: Int): State<Int> {
-    // Snap immediately on expand; on collapse, hold the current value until all
-    // child items finish their shrink animation, then snap to fully-rounded shape.
+private fun portfolioAssetExpandAnimation(listItem: ForYouTokenListItemUM): State<Int> {
     return animateIntAsState(
-        targetValue = if (listItem.isExpanded) outerLastIndex else 0,
+        targetValue = if (listItem.isExpanded) listItem.tokenList.size else 0,
         animationSpec = if (listItem.isExpanded) {
             snap()
         } else {

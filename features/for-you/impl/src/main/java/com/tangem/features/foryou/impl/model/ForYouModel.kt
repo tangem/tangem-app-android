@@ -46,6 +46,7 @@ import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
 import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
+import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.availableAccountIds
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.ForYouEarnOpportunitiesConverter
@@ -87,6 +88,7 @@ internal class ForYouModel @Inject constructor(
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
     val portfolioSelectorController: PortfolioSelectorController,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val walletHeaderConverter: ForYouWalletHeaderConverter,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -145,7 +147,7 @@ internal class ForYouModel @Inject constructor(
                                 ),
                             )
                         }
-                    }.toPersistentList(),
+                    }.toPersistentList().asSingleForYouGroup(),
                 ),
                 onPeriodClick = ::onPeriodClick,
                 portfolioSelectorLabel = stringReference("All account"),
@@ -193,9 +195,16 @@ internal class ForYouModel @Inject constructor(
             ) { indicators, period, isBalanceHidden ->
                 Triple(indicators, period, isBalanceHidden)
             },
-            flow5 = userWalletsListRepository.selectedUserWallet,
-        ) { selectedPortfolio, yieldAvailability, topEarnTokens, indicatorsPeriodHidden, selectedUserWallet ->
+            flow5 = combine(
+                userWalletsListRepository.userWallets,
+                userWalletsListRepository.selectedUserWallet,
+            ) { allWallets, selectedUserWallet ->
+                allWallets.orEmpty() to selectedUserWallet
+            },
+        ) { selectedPortfolio, yieldAvailability, topEarnTokens, indicatorsPeriodHidden, wallets ->
             val (indicators, period, isBalanceHidden) = indicatorsPeriodHidden
+            val (allWallets, selectedUserWallet) = wallets
+            val walletHeaders = allWallets.associate { it.walletId to walletHeaderConverter.convert(it) }
 
             val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
                 .groupBy { it.account.userWalletId }
@@ -227,6 +236,7 @@ internal class ForYouModel @Inject constructor(
                 expandClick = ::onExpandEarnOpportunitiesClick,
                 onTokenClick = ::onEarnOpportunitiesTokenClick,
                 onAllEarnTokensClick = params.callbacks::onAllEarnTokensClick,
+                walletHeaders = walletHeaders,
                 isBalanceHidden = isBalanceHidden,
             ).convert(selectedPortfolio)
 
