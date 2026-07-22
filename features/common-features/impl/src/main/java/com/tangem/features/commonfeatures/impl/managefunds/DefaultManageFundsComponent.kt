@@ -1,6 +1,9 @@
 package com.tangem.features.commonfeatures.impl.managefunds
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -22,14 +26,13 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
-import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.managefunds.model.ManageFundsModel
 import com.tangem.features.commonfeatures.impl.managefunds.model.uiSpec
-import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
-import com.tangem.features.commonfeatures.impl.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -140,6 +143,8 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                     AnimatedContent(
                         targetState = route,
                         modifier = animatedContentModifier,
+                        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+                        contentKey = { route -> route::class },
                         label = "ManageFundsContentAnimation",
                     ) { animatedRoute ->
                         ManageFundsRouteContent(

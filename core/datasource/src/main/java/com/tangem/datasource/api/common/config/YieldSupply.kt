@@ -14,6 +14,8 @@ internal class YieldSupply(
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.YieldSupply
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs = listOf(

@@ -169,7 +169,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
 
     @Test
     fun `GIVEN NotEnough allowance AND integrated active THEN permissionState is PermissionSettings`() = runTest {
-        every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
         stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE))
 
         val state = runFindBestQuoteForToken()
@@ -181,7 +180,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
 
     @Test
     fun `GIVEN Enough allowance THEN permissionState is Empty`() = runTest {
-        every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
         stubAllowance(AllowanceInfo.Enough(allowance = BigDecimal("100")))
 
         val state = runFindBestQuoteForToken()
@@ -194,7 +192,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         runTest {
             // [REDACTED_TASK_KEY] / iOS parity: yield swaps must never use the integrated approve+swap path.
             // The yield-module proxy allowance is granted at enrollment, so no in-flow approval is shown.
-            every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
             every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
@@ -221,26 +218,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
             assertThat(state.permissionState).isEqualTo(PermissionDataState.Empty)
         }
 
-    @Test
-    fun `GIVEN NotEnough allowance AND integrated toggle OFF THEN does not reach loadDexSwapDataNoFee`() = runTest {
-        // With the integrated toggle off, NotEnough is not allowance-satisfied (requires Enough),
-        // so manageDex does NOT enter loadDexSwapDataNoFee — getExchangeData is never called.
-        every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns false
-        stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE))
-
-        runFindBestQuoteForTokenRaw()
-
-        coVerify(exactly = 0) {
-            repository.getExchangeData(
-                userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
-                toContractAddress = any(), fromAddress = any(), toNetwork = any(),
-                fromAmount = any(), fromDecimals = any(), toDecimals = any(),
-                providerId = any(), rateType = any(), toAddress = any(),
-                expressOperationType = any(), refundAddress = any(),
-            )
-        }
-    }
-
     // endregion
 
     private fun stubAllowance(info: AllowanceInfo) {
@@ -259,11 +236,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         val dexProvider = stubDexQuoteAndExchangeData()
         val result = invokeFindBestQuote(dexProvider)
         return result[dexProvider] as SwapState.QuotesLoadedState
-    }
-
-    private suspend fun runFindBestQuoteForTokenRaw() {
-        val dexProvider = stubDexQuoteAndExchangeData()
-        invokeFindBestQuote(dexProvider)
     }
 
     private fun stubDexQuoteAndExchangeData(): com.tangem.feature.swap.domain.models.domain.SwapProvider {

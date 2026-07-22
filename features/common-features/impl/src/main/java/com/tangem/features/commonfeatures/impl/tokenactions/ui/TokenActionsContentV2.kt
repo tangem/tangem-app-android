@@ -3,10 +3,8 @@ package com.tangem.features.commonfeatures.impl.tokenactions.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -119,8 +117,8 @@ private fun QuickActionsList(state: TokenActionsUM, modifier: Modifier = Modifie
                 }
                 AnimatedVisibility(
                     visibleState = transitionState,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                 ) {
                     val actionModifier = when (actionUM) {
                         is QuickActionUM.V1.Buy, is QuickActionUM.V2.Buy ->
@@ -231,17 +229,15 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
 @Composable
 private fun Preview(@PreviewParameter(TokenActionsContentPreviewProviderV2::class) state: TokenActionsUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level2)
-                    .padding(horizontal = 16.dp),
-            ) {
-                TokenActionsContentV2(
-                    state = state,
-                )
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors2.surface.level2)
+                .padding(horizontal = 16.dp),
+        ) {
+            TokenActionsContentV2(
+                state = state,
+            )
         }
     }
 }

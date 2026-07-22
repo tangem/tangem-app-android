@@ -10,7 +10,7 @@ import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.WithdrawDataResponse
 import com.tangem.datasource.api.pay.models.response.WithdrawResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
-import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId

@@ -40,4 +40,7 @@ sealed class TokenDetailsBottomSheetConfig : Route {
 
     @Serializable
     data object Transfer : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data object RegionUnavailable : TokenDetailsBottomSheetConfig()
 }

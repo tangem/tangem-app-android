@@ -95,6 +95,26 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
         return flow { getInitializationStatusInternal(userWalletId).collect { emit(it) } }
     }
 
+    override suspend fun getOrFetch(
+        userWalletId: UserWalletId,
+        assetId: ExpressAsset.ID,
+    ): Either<Throwable, ExpressAsset> = either {
+        // Return the already-loaded asset (in-memory status or persisted cache) without hitting the network.
+        findLoadedAsset(userWalletId, assetId)?.let { return@either it }
+
+        // Not loaded yet — fetch it from the API, then take it from the refreshed status.
+        fetch(userWalletId = userWalletId, assetIds = setOf(assetId)).bind()
+
+        findLoadedAsset(userWalletId, assetId)
+            ?: raise(IllegalStateException("Express asset $assetId is not available after fetch"))
+    }
+
+    private suspend fun findLoadedAsset(userWalletId: UserWalletId, assetId: ExpressAsset.ID): ExpressAsset? {
+        return getInitializationStatusInternal(userWalletId).value
+            .getOrNull()
+            ?.firstOrNull { it.id == assetId }
+    }
+
     @Suppress("SuspendFunWithFlowReturnType")
     private suspend fun getInitializationStatusInternal(userWalletId: UserWalletId): InitializationStatusFlow {
         val initializationStatus = initializationStatuses.value[userWalletId]

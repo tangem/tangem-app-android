@@ -2,7 +2,6 @@ package com.tangem.domain.transaction.usecase
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
@@ -27,7 +26,6 @@ class ReceiveAddressesFactory(
     private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
@@ -68,7 +66,6 @@ class ReceiveAddressesFactory(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): String? {
-        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return null
         if (cryptoCurrency !is CryptoCurrency.Coin) return null
 
         val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)

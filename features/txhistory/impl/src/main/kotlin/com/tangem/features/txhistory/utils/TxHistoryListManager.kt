@@ -1,6 +1,5 @@
 package com.tangem.features.txhistory.utils
 
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
@@ -9,13 +8,13 @@ import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
-import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -26,15 +25,15 @@ import kotlinx.coroutines.flow.*
 private typealias TxHistoryBatchAction = BatchAction<Int, TxHistoryListConfig, Nothing>
 
 @Suppress("LongParameterList")
+@Deprecated("Remove with toggle [TxHistoryFeatureToggles.isNewTxHistoryEnabled]. Replaced by HistoryTxListManager.")
+@RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
 internal class TxHistoryListManager(
     private val repository: TxHistoryRepositoryV2,
     private val dispatchers: CoroutineDispatcherProvider,
     private val userWalletId: UserWalletId,
     private val currency: CryptoCurrency,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val txHistoryUiActions: TxHistoryUiActions,
     private val lookupDataFlow: Flow<TxHistoryLookupContext>,
-    legacyTxHistoryItemConverter: TxHistoryItemToTransactionStateConverter,
 ) {
 
     private val jobHolder = JobHolder()
@@ -45,17 +44,8 @@ internal class TxHistoryListManager(
     )
     private val state: MutableStateFlow<TxHistoryListState> = MutableStateFlow(TxHistoryListState())
     private val uiManager = TxHistoryUiManager(state = state)
-    private val legacyUiManager = TxHistoryLegacyUiManager(
-        state = state,
-        txHistoryItemConverter = legacyTxHistoryItemConverter,
-        txHistoryUiActions = txHistoryUiActions,
-    )
 
-    val uiItems: Flow<TxHistoryItemsSnapshot> = if (designFeatureToggles.isRedesignEnabled) {
-        uiManager.items.map(TxHistoryItemsSnapshot::Items)
-    } else {
-        legacyUiManager.items.map(TxHistoryItemsSnapshot::LegacyItems)
-    }
+    val uiItems: Flow<TxHistoryItemsSnapshot> = uiManager.items.map(TxHistoryItemsSnapshot::Items)
     val paginationStatus: Flow<PaginationStatus<*>> = state.map { it.status }.distinctUntilChanged()
 
     suspend fun init() = coroutineScope {
@@ -73,24 +63,16 @@ internal class TxHistoryListManager(
             .launchIn(scope = this)
             .saveIn(autoLoadMoreJobHolder)
 
-        if (designFeatureToggles.isRedesignEnabled) {
-            var previousLookup: TxHistoryLookupContext? = null
-            combine(batchFlow.state, lookupDataFlow) { batchState, lookup -> batchState to lookup }
-                .onEach { (batchState, lookup) ->
-                    val isLookupChanged = previousLookup != null && previousLookup != lookup
-                    previousLookup = lookup
-                    updateState(batchState, lookup, isLookupChanged)
-                }
-                .flowOn(dispatchers.default)
-                .launchIn(scope = this)
-                .saveIn(jobHolder)
-        } else {
-            batchFlow.state
-                .onEach { batchState -> updateState(batchState, lookupContext = null, isLookupChanged = false) }
-                .flowOn(dispatchers.default)
-                .launchIn(scope = this)
-                .saveIn(jobHolder)
-        }
+        var previousLookup: TxHistoryLookupContext? = null
+        combine(batchFlow.state, lookupDataFlow) { batchState, lookup -> batchState to lookup }
+            .onEach { (batchState, lookup) ->
+                val isLookupChanged = previousLookup != null && previousLookup != lookup
+                previousLookup = lookup
+                updateState(batchState, lookup, isLookupChanged)
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(scope = this)
+            .saveIn(jobHolder)
     }
 
     suspend fun startLoading() {
@@ -117,16 +99,6 @@ internal class TxHistoryListManager(
         )
     }
 
-    fun txInfoFlow(txHash: String, type: TxInfo.TransactionType): Flow<TxInfo> = state
-        .map { st ->
-            st.rawBatches.asSequence()
-                .flatMap { it.data.items }
-                .firstOrNull { it.txHash == txHash && it.type == type }
-        }
-        .filterNotNull()
-        .distinctUntilChanged()
-        .flowOn(dispatchers.default)
-
     private fun updateState(
         batchListState: BatchListState<Int, PaginationWrapper<TxInfo>>,
         lookupContext: TxHistoryLookupContext?,
@@ -136,32 +108,19 @@ internal class TxHistoryListManager(
             val isInitialToPaginating = state.status is PaginationStatus.InitialLoading &&
                 batchListState.status is PaginationStatus.Paginating
             val shouldClearUiBatches = isInitialToPaginating || isLookupChanged
-            val isRedesignEnabled = designFeatureToggles.isRedesignEnabled
+            val converter = TxHistoryItemToTransactionItemUMConverter(
+                currency = currency,
+                txHistoryUiActions = txHistoryUiActions,
+                lookupContext = lookupContext,
+            )
             state.copy(
                 status = batchListState.status,
                 rawBatches = batchListState.data,
-                uiBatches = if (isRedesignEnabled) {
-                    val converter = TxHistoryItemToTransactionItemUMConverter(
-                        currency = currency,
-                        txHistoryUiActions = txHistoryUiActions,
-                        lookupContext = lookupContext,
-                    )
-                    uiManager.createOrUpdateUiBatches(
-                        newCurrencyBatches = batchListState.data,
-                        shouldClearUiBatches = shouldClearUiBatches,
-                        converter = converter,
-                    )
-                } else {
-                    state.uiBatches
-                },
-                legacyUiBatches = if (isRedesignEnabled) {
-                    state.legacyUiBatches
-                } else {
-                    legacyUiManager.createOrUpdateUiBatches(
-                        newCurrencyBatches = batchListState.data,
-                        shouldClearUiBatches = shouldClearUiBatches,
-                    )
-                },
+                uiBatches = uiManager.createOrUpdateUiBatches(
+                    newCurrencyBatches = batchListState.data,
+                    shouldClearUiBatches = shouldClearUiBatches,
+                    converter = converter,
+                ),
             )
         }
     }

@@ -9,7 +9,6 @@ import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
 import com.tangem.core.ui.res.generated.icons.ic_sun_20
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
@@ -61,29 +60,20 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createFreezeCardMessage(isRedesignEnabled: Boolean, onFreezeClicked: () -> Unit): BottomSheetMessage {
+    fun createFreezeCardMessage(onFreezeClicked: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
-                if (isRedesignEnabled) {
-                    vector(Icons.ic_snowflake_20) {
-                        type = MessageBottomSheetUM.Vector.Type.Informative
-                        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Informative
-                    }
-                } else {
-                    icon(R.drawable.ic_snow_24) {
-                        type = MessageBottomSheetUM.Icon.Type.Accent
-                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
-                    }
+                vector(Icons.ic_snowflake_20) {
+                    type = MessageBottomSheetUM.Vector.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Informative
                 }
                 title = TextReference.Res(R.string.tangem_pay_freeze_card_alert_title)
                 body = TextReference.Res(R.string.tangem_pay_freeze_card_alert_body)
             }
-            if (isRedesignEnabled) {
-                secondaryButton {
-                    text = resourceReference(R.string.common_cancel)
-                    onClick {
-                        closeBs()
-                    }
+            secondaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick {
+                    closeBs()
                 }
             }
             primaryButton {
@@ -96,29 +86,20 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createUnfreezeCardMessage(isRedesignEnabled: Boolean, onUnfreezeClicked: () -> Unit): BottomSheetMessage {
+    fun createUnfreezeCardMessage(onUnfreezeClicked: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
-                if (isRedesignEnabled) {
-                    vector(Icons.ic_sun_20) {
-                        type = MessageBottomSheetUM.Vector.Type.Attention
-                        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
-                    }
-                } else {
-                    icon(R.drawable.ic_snow_24) {
-                        type = MessageBottomSheetUM.Icon.Type.Accent
-                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
-                    }
+                vector(Icons.ic_sun_20) {
+                    type = MessageBottomSheetUM.Vector.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
                 }
                 title = TextReference.Res(R.string.tangem_pay_unfreeze_card_alert_title)
                 body = TextReference.Res(R.string.tangem_pay_unfreeze_card_alert_body)
             }
-            if (isRedesignEnabled) {
-                secondaryButton {
-                    text = resourceReference(R.string.common_cancel)
-                    onClick {
-                        closeBs()
-                    }
+            secondaryButton {
+                text = resourceReference(R.string.common_cancel)
+                onClick {
+                    closeBs()
                 }
             }
             primaryButton {
@@ -150,22 +131,33 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createMaximumCardsIssued(maxCards: Int): BottomSheetMessage {
+    fun createStayOnPlanMessage(
+        planName: String,
+        targetPlanName: String,
+        onStayClick: () -> Unit,
+    ): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
-                vector(Icons.ic_error_28) {
-                    type = MessageBottomSheetUM.Vector.Type.Attention
-                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
+                icon(R.drawable.ic_heart_20) {
+                    type = MessageBottomSheetUM.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
                 }
-                title = resourceReference(R.string.tangempay_maximum_cards_issued_title)
+                title = resourceReference(R.string.tangempay_current_plan_stay_sheet_title, wrappedList(planName))
                 body = resourceReference(
-                    id = R.string.tangempay_maximum_cards_issued_description,
-                    formatArgs = wrappedList(maxCards),
+                    R.string.tangempay_current_plan_stay_sheet_body,
+                    wrappedList(targetPlanName),
                 )
             }
-            primaryButton {
-                text = resourceReference(R.string.common_got_it)
+            secondaryButton {
+                text = resourceReference(R.string.common_cancel)
                 onClick { closeBs() }
+            }
+            primaryButton {
+                text = resourceReference(R.string.tangempay_current_plan_stay_button, wrappedList(planName))
+                onClick {
+                    onStayClick()
+                    closeBs()
+                }
             }
         }
     }
@@ -208,6 +200,52 @@ internal object TangemPayMessagesFactory {
                 onClick {
                     onGotItClick()
                     closeBs()
+                }
+            }
+        }
+    }
+
+    fun createMaximumCardsIssuedMessage(): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_warning_20) {
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
+                }
+                title = resourceReference(R.string.tangempay_maximum_cards_issued_title)
+                body = resourceReference(R.string.tangempay_maximum_cards_issued_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
+    }
+
+    fun createMaximumCardsForPlanIssuedMessage(onUpgradeClick: (() -> Unit)?): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_warning_20) {
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
+                }
+                title = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_title)
+                body = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_description)
+            }
+            if (onUpgradeClick != null) {
+                secondaryButton {
+                    text = resourceReference(R.string.common_cancel)
+                    onClick { closeBs() }
+                }
+                primaryButton {
+                    text = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_upgrade_btn)
+                    onClick {
+                        onUpgradeClick()
+                        closeBs()
+                    }
+                }
+            } else {
+                primaryButton {
+                    text = resourceReference(R.string.common_got_it)
+                    onClick { closeBs() }
                 }
             }
         }

@@ -12,58 +12,54 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.home.api)
-    implementation(projects.features.hotWallet.api)
+    api(projects.features.home.api)
 
     /** Core modules */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.navigation)
-    implementation(projects.core.utils)
+    implementation(projects.core.ui)
 
     /** Common */
     implementation(projects.common.routing)
-    
-    /** Domain */
-    implementation(projects.domain.appsflyer)
-    implementation(projects.domain.common)
-    implementation(projects.domain.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.card)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.feedback)
-    implementation(projects.domain.feedback.models)
-    implementation(projects.domain.referral)
 
-    /** AndroidX libraries */
-    implementation(deps.androidx.activity.compose)
-    implementation(deps.lifecycle.runtime.ktx)
-    
+    /** Domain */
+    api(projects.domain.appsflyer)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
+    implementation(projects.domain.models)
+
+    /** Referral */
+    api(projects.features.referral.domain)
+
     /** Compose libraries */
+    api(deps.compose.animation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
-    implementation(deps.compose.coil)
-    implementation(deps.decompose.ext.compose)
-    
+
     /** Tangem libraries */
-    implementation(tangemDeps.card.android)
     implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain)
-    
+
     /** Other libraries */
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
-    
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
+
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
-} 
+
+    /** Tests */
+    testImplementation(projects.test.core)
+}

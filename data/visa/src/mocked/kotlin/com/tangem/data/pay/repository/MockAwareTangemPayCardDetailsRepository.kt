@@ -23,6 +23,7 @@ import javax.inject.Singleton
 internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
     private val real: DefaultTangemPayCardDetailsRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val cardNameHolder: MockTangemPayCardNameHolder,
 ) : TangemPayCardDetailsRepository {
 
     private val isMockMode: Boolean
@@ -97,6 +98,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         userWalletId: UserWalletId,
         displayName: CardDisplayName,
     ): Either<UniversalError, Unit> = real.updateCardDisplayName(cardId, userWalletId, displayName)
+        .onRight { if (isMockMode) cardNameHolder.displayName = displayName }
 
     override suspend fun updateCardLimit(
         cardId: String,

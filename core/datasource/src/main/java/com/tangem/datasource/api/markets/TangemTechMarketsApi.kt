@@ -44,4 +44,17 @@ interface TangemTechMarketsApi {
         @Query("currency") currency: String,
         @Query("interval") interval: String,
     ): ApiResponse<TokenMarketChartListResponse>
+
+    /**
+     * Returns technical and social indicator readings for the curated coin set
+     *
+     * @param symbols    comma-separated coin symbols (case-insensitive, e.g. `BTC,ETH`).
+     *                   Defaults to all supported coins
+     * @param indicators comma-separated indicator types (e.g. `rsi,macd`). Defaults to all
+     */
+    @GET("v1/coins/indicators")
+    suspend fun getCoinIndicators(
+        @Query("symbols") symbols: String? = null,
+        @Query("indicators") indicators: String? = null,
+    ): ApiResponse<GetCoinIndicatorsResponse>
 }

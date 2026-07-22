@@ -7,6 +7,8 @@ import com.tangem.datasource.BuildConfig
  */
 internal class MoonPay : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.MoonPay
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(

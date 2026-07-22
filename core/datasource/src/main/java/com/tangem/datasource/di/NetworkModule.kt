@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
@@ -18,8 +19,10 @@ import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
+import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.TangemPayAuthApi
+import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
@@ -34,6 +37,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
@@ -48,6 +52,15 @@ internal object NetworkModule {
         appPreferencesStore: AppPreferencesStore,
         appScope: AppCoroutineScope,
     ): ApiConfigsManager {
+        // The DI key (@StringKey in ApiConfigsModule) and the config's own id are declared separately;
+        // fail fast on startup if they drift, otherwise the config would be silently unreachable by id.
+        apiConfigs.forEach { (key, config) ->
+            check(key == config.id.name) {
+                "ApiConfig DI key [$key] doesn't match the config id [${config.id.name}]. " +
+                    "The @StringKey in ApiConfigsModule must match the config's own id."
+            }
+        }
+
         return when {
             BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs, appScope)
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
@@ -113,6 +126,16 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemTech,
             applyTimeoutAnnotations = true,
+            sessionAuth = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddressBookApi(retrofitApiBuilder: RetrofitApiBuilder): AddressBookApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemTech,
+            applyTimeoutAnnotations = false,
             sessionAuth = false,
         )
     }
@@ -225,6 +248,17 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
+    fun providePolymarketApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketApi {
+        // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemTech,
+            applyTimeoutAnnotations = false,
+            sessionAuth = false,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideAuthApi(retrofitApiBuilder: RetrofitApiBuilder): AuthApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.Auth,
@@ -240,6 +274,22 @@ internal object NetworkModule {
     @Provides
     @Singleton
     fun provideGaslessTxServiceApi(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.GaslessTxService,
+            applyTimeoutAnnotations = false,
+            sessionAuth = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGaslessTxServiceApiV2(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApiV2 {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.GaslessTxService,
             applyTimeoutAnnotations = false,

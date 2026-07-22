@@ -45,6 +45,7 @@ internal class SetButtonsStateTransformer(
         val isInProgress = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
         val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
         val isApprovalRequired = prevState.isApprovalRequired()
+        val isValidationInProgress = isConfirmation && confirmState?.isValidationInProgress == true
 
         val isHoldToConfirm = prevState.shouldShowHoldToConfirmButton &&
             isConfirmation && !isCompleted && !isApprovalRequired
@@ -54,10 +55,10 @@ internal class SetButtonsStateTransformer(
             textReference = prevState.getButtonText(),
             iconRes = R.drawable.ic_tangem_24.takeIf { prevState.isColdWalletInteractionIconVisible },
             isDimmed = isPrimaryButtonDisabled,
-            isIconVisible = isIconVisible,
-            shouldShowProgress = isInProgress,
-            isEnabled = prevState.isButtonEnabled(),
-            isHoldToConfirm = isHoldToConfirm,
+            isIconVisible = isIconVisible && !isValidationInProgress,
+            shouldShowProgress = isInProgress || isValidationInProgress,
+            isEnabled = prevState.isButtonEnabled() && !isValidationInProgress,
+            isHoldToConfirm = isHoldToConfirm && !isValidationInProgress,
             onClick = {
                 if (isPrimaryButtonDisabled) {
                     prevState.clickIntents.showPrimaryClickAlert()

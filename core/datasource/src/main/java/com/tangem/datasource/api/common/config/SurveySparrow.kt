@@ -7,6 +7,8 @@ internal class SurveySparrow(
     private val environmentConfig: EnvironmentConfig,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.SurveySparrow
+
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
     override val environmentConfigs = listOf(

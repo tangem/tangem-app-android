@@ -8,13 +8,11 @@ import androidx.compose.ui.layout.SubcomposeMeasureScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
@@ -36,28 +34,24 @@ internal fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
 
         val tagPlaceables = subcompose(ContentSlot.Tags) {
             tags.forEach { tag ->
-                if (LocalRedesignEnabled.current) {
-                    TangemBadge(
-                        text = tag.text,
-                        tangemIconUM = when (val content = tag.leadingContent) {
-                            LabelLeadingContentUM.None -> null
-                            is LabelLeadingContentUM.Token -> TangemIconUM.Url(
-                                url = content.iconUrl,
-                                fallbackRes = R.drawable.ic_alert_24,
-                            )
-                        },
-                        shape = TangemBadgeShape.Rounded,
-                        size = TangemBadgeSize.X6,
-                        type = TangemBadgeType.Tinted,
-                        color = TangemBadgeColor.Gray,
-                        iconPosition = when (tag.leadingContent) {
-                            LabelLeadingContentUM.None -> TangemBadgeIconPosition.None
-                            is LabelLeadingContentUM.Token -> TangemBadgeIconPosition.Start
-                        },
-                    )
-                } else {
-                    Label(state = tag)
-                }
+                TangemBadge(
+                    text = tag.text,
+                    tangemIconUM = when (val content = tag.leadingContent) {
+                        LabelLeadingContentUM.None -> null
+                        is LabelLeadingContentUM.Token -> TangemIconUM.Url(
+                            url = content.iconUrl,
+                            fallbackRes = R.drawable.ic_alert_24,
+                        )
+                    },
+                    shape = TangemBadgeShape.Rounded,
+                    size = TangemBadgeSize.X6,
+                    type = TangemBadgeType.Tinted,
+                    color = TangemBadgeColor.Gray,
+                    iconPosition = when (tag.leadingContent) {
+                        LabelLeadingContentUM.None -> TangemBadgeIconPosition.None
+                        is LabelLeadingContentUM.Token -> TangemBadgeIconPosition.Start
+                    },
+                )
             }
         }.map { it.measure(constraints) }
 
@@ -134,22 +128,13 @@ private fun SubcomposeMeasureScope.calculateLayoutInfo(
 
 @Composable
 private fun OverflowLabel(count: Int) {
-    if (LocalRedesignEnabled.current) {
-        TangemBadge(
-            text = TextReference.Str("${StringsSigns.PLUS}$count"),
-            shape = TangemBadgeShape.Rounded,
-            size = TangemBadgeSize.X6,
-            type = TangemBadgeType.Tinted,
-            color = TangemBadgeColor.Gray,
-        )
-    } else {
-        Label(
-            state = LabelUM(
-                text = TextReference.Str("${StringsSigns.PLUS}$count"),
-                maxLines = 1,
-            ),
-        )
-    }
+    TangemBadge(
+        text = TextReference.Str("${StringsSigns.PLUS}$count"),
+        shape = TangemBadgeShape.Rounded,
+        size = TangemBadgeSize.X6,
+        type = TangemBadgeType.Tinted,
+        color = TangemBadgeColor.Gray,
+    )
 }
 
 private fun calculateRowWidth(placeables: List<Placeable>, spacingPx: Int): Int {
