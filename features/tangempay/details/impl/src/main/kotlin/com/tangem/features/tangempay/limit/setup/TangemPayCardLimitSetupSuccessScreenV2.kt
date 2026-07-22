@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.ui.components.TangemPaySuccessScreenWrapper
 
@@ -16,6 +17,8 @@ internal fun TangemPayCardLimitSetupSuccessScreenV2(onDoneClick: () -> Unit, mod
         subtitle = resourceReference(R.string.tangempay_card_page_daily_limit_success_description),
         buttonText = resourceReference(R.string.common_done),
         onButtonClick = onDoneClick,
+        titleTestTag = TangemPayTestTags.DAILY_LIMIT_SUCCESS_TITLE,
+        buttonTestTag = TangemPayTestTags.DAILY_LIMIT_DONE_BUTTON,
     )
 }
 

@@ -237,4 +237,44 @@ internal class DefaultOfframpRepositoryTest {
         // Assert
         assertThat(pending).isNull()
     }
+
+    @Test
+    fun `GIVEN registered pending offramps WHEN getAllStoredOfframps THEN returns them without consuming`() = runTest {
+        // Arrange
+        val storedRequestId = repository.registerPendingOfframp(userWalletId, currencyId)
+
+        // Act
+        val stored = repository.getAllStoredOfframps()
+        // ...the record must survive the read so it can still be consumed afterwards
+        val consumed = repository.resolvePendingOfframp(storedRequestId, userWalletId, currencyId)
+
+        // Assert
+        assertThat(stored).hasSize(1)
+        assertThat(stored.single().requestId).isEqualTo(storedRequestId)
+        assertThat(stored.single().userWalletId).isEqualTo(userWalletId)
+        assertThat(stored.single().currencyId).isEqualTo(currencyId)
+        assertThat(consumed).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN expired pending offramp WHEN getAllStoredOfframps THEN it is still returned and flagged expired`() =
+        runTest {
+            // Arrange — seed a record created 2 hours ago (past the 1h expiry)
+            val now = System.currentTimeMillis()
+            pendingStoreState.value = listOf(
+                PendingOfframpEntry(
+                    requestId = "expired-id",
+                    userWalletId = userWalletId.stringValue,
+                    currencyId = currencyId,
+                    createdAt = now - TimeUnit.HOURS.toMillis(2),
+                ),
+            )
+
+            // Act
+            val stored = repository.getAllStoredOfframps()
+
+            // Assert
+            assertThat(stored).hasSize(1)
+            assertThat(stored.single().isExpired(now)).isTrue()
+        }
 }

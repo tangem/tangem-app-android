@@ -61,33 +61,37 @@ Consistent `.v2` segment (unlike the legacy `features/swap` which uses `feature.
 (`SwapAmountComponent.ModelCallback`, `SendDestinationComponent.ModelCallback`,
 `SendWithSwapConfirmComponent.ModelCallback`). Holds the **aggregate** state:
 - `uiState: StateFlow<SendWithSwapUM>` — `{ amountUM, destinationUM, feeSelectorUM, confirmUM, navigationUM }`
-- `currentRoute: MutableStateFlow<SendWithSwapRoute>`
 - `primaryCryptoCurrencyStatusFlow`, `primaryFeePaidCurrencyStatusFlow`, `accountFlow`,
   `isAccountModeFlow`, `isBalanceHiddenFlow` — read-only sources passed down to children as params.
 
 Child→parent merge callbacks:
 - `onAmountResult(amountUM)` → `uiState.copy(amountUM = …)`
 - `onDestinationResult(destinationUM)` → `uiState.copy(destinationUM = …)`
-- `onResult(route, sendWithSwapUM)` → **`if (currentRoute.value == route) uiState.value = …`** (full replace,
-  route-guarded; used by Confirm to publish its full state back up)
+- `onResult(sendWithSwapUM)` → `uiState.value = …` (full replace; used by Confirm to publish its full
+  state back up)
 - `onNavigationResult(navigationUM)` → drives the shared footer button/app-bar.
 
 ### childStack subscription = the state-sync mechanism (READ THIS)
-`DefaultSendWithSwapComponent.init { childStack.subscribe(CREATE_DESTROY) { stack → componentScope.launch { … } } }`:
-on every active-child change it **pushes the parent's current snapshot into the newly-active child** and
-then emits the new route:
+`DefaultSendWithSwapComponent.init { childStack.subscribe(CREATE_DESTROY) { stack → … } }`:
+on every active-child change it **pushes the parent's current snapshot into the newly-active child**:
 ```kotlin
-when (active) {
-  is SwapAmountComponent       -> active.updateState(uiState.value.amountUM)
-  is SendDestinationComponent  -> active.updateState(uiState.value.destinationUM)   // screen
-  is SendWithSwapConfirmComponent ->
-      if (model.currentRoute.value.isEditMode) active.updateState(uiState.value)    // ← gated!
+val isReturnedFromEdit = editReturnTracker.onRouteActivated(stack.active.configuration)  // synchronous!
+componentScope.launch {
+  when (active) {
+    is SwapAmountComponent       -> active.updateState(uiState.value.amountUM)
+    is SendDestinationComponent  -> active.updateState(uiState.value.destinationUM)   // screen
+    is SendWithSwapConfirmComponent -> {
+        if (isReturnedFromEdit) active.updateEditedState(uiState.value)               // ← gated!
+        active.updateDestinationState(uiState.value.destinationUM)                    // [REDACTED_TASK_KEY] bypass
+    }
+  }
 }
-model.currentRoute.emit(stack.active.configuration)   // emitted AFTER the isEditMode read
 ```
-The `isEditMode` check intentionally reads the **previous** route (the emit happens afterwards) so it is
-true exactly when returning to a *reused* Confirm from an edit step. In the linear flow Confirm is
-re-created fresh from `params.sendWithSwapUM`, so no re-push is needed.
+The gate must be true exactly when returning to a *reused* Confirm from an edit step — the Confirm route
+itself has `isEditMode = false`, so the check reads the **previous** route via `EditReturnTracker`
+(`features/send/api/.../navigation/EditReturnTracker.kt`, shared with Send and NFT Send). Gating on the
+*new* active configuration instead made the re-push unreachable and Confirm kept stale amounts ([REDACTED_TASK_KEY]).
+In the linear flow Confirm is re-created fresh from `params.sendWithSwapUM`, so no re-push is needed.
 
 ### Confirm: SendWithSwapConfirmComponent / SendWithSwapConfirmModel
 `impl/.../sendviaswap/confirm/`. The Confirm screen embeds **read-only blocks** reused from send-v2:
@@ -102,9 +106,12 @@ re-created fresh from `params.sendWithSwapUM`, so no re-push is needed.
   `enteredDestination`, `enteredMemo`, `fee`, statuses, quote, rateType, amountType, priceImpact from
   `uiState`; this is what the transaction + notifications are built from.
 - `onFeeResult/onAmountResult/onDestinationResult` — block callbacks copy into `uiState`.
-- `updateState(sendWithSwapUM)` — full replace (used by the edit-mode re-push).
-- `configConfirmNavigation` — `combine(uiState, currentRoute).filter { route is Confirm }` →
-  `callback.onResult(Confirm, state.copy(navigationUM = …))` (publishes confirm state up to the parent).
+- `updateEditedState(sendWithSwapUM)` — the edit-return re-push; copies ONLY the parent-owned fields
+  (`amountUM`, `destinationUM`). Confirm-local `confirmUM`/`feeSelectorUM` must never be overwritten
+  from the parent (a full replace kills `blockClickEnableFlow` — parent's `confirmUM` is `Empty`).
+- Publishes its state up to the parent only **after a successful send** (`callback.onResult(uiState.value)`).
+  Until then, confirm-local changes (fee selection, confirmUM) live only in this model — the parent's
+  copy is stale.
 - Sending: `SwapTransactionSender` (CEX only; DEX/DEX_BRIDGE/ONRAMP rejected). Success →
   `SendWithSwapConfirmSentStateTransformer` + `router.replaceAll(Success)`.
 
@@ -184,11 +191,11 @@ auto-next, and **on back only when `!route.isEditMode`**.
   `saveResult()` (`SendDestinationModel.configDestinationNavigation`, `if (!route.isEditMode)`), so the
   parent keeps the pre-edit value. The footer "Continue"/"Next" button always persists. This is shared
   by regular Send + NFT Send + SvS.
-- **`onResult` is route-guarded.** `SendWithSwapModel.onResult` only applies when
-  `currentRoute.value == route`, which protects against late/stale Confirm emissions overwriting the
-  parent after navigating away. Keep that guard if you refactor.
-- **`currentRoute.emit` runs at the END of the subscribe coroutine**, so the `isEditMode` re-push gate
-  reads the *previous* route. Relies on `componentScope` launches being serialized (main dispatcher).
+- **The Confirm re-push gate reads the *previous* route.** The reused-Confirm `updateState` in the
+  childStack subscription is gated on `EditReturnTracker.onRouteActivated(...)` (send api), which reports
+  whether the route active *before* the new one was an edit route. Gating on the new active
+  configuration (`Confirm.isEditMode` — always `false`) silently disables the re-push ([REDACTED_TASK_KEY]).
+  The tracker must be called synchronously in the subscribe callback, not inside a launched coroutine.
 - **CEX-only.** `SwapTransactionSender` rejects DEX/DEX_BRIDGE/ONRAMP. Destination address for CEX is
   only known after exchange-data, so confirm notifications pass `destinationAddress = null` for the
   send-notifications path.

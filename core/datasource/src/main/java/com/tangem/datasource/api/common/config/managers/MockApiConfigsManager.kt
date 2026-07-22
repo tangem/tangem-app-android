@@ -44,19 +44,19 @@ internal class MockApiConfigsManager(
         val apiConfigs = configs.value
 
         val (config, currentEnvironment) = apiConfigs.entries.firstOrNull { it.key.id == id }
-            ?: error("Api config with id [$id] not found")
+            ?: error("Api config with id [${id.name}] not found")
 
         return config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }
-            ?: error("Api config with id [$id] doesn't contain environment [$currentEnvironment]")
+            ?: error("Api config with id [${id.name}] doesn't contain environment [$currentEnvironment]")
     }
 
     override suspend fun changeEnvironment(id: String, environment: ApiEnvironment) {
-        configs.update { apiConfigs ->
-            val apiConfig = apiConfigs.keys.firstOrNull { it.id.name == id }
-                ?: error("Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI")
+        // The config key set is fixed at construction (getInitialConfigs); only mapped environments
+        // change, so this lookup can't go stale between reading configs.value and update {}.
+        val apiConfig = configs.value.keys.firstOrNull { it.id.name == id }
+            ?: error("Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI")
 
-            apiConfigs + (apiConfig to environment)
-        }
+        configs.update { apiConfigs -> apiConfigs + (apiConfig to environment) }
     }
 
     override suspend fun changeEnvironment(environment: ApiEnvironment) {
@@ -84,6 +84,6 @@ internal class MockApiConfigsManager(
     }
 
     private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
-        return apiConfigs.associateWith { it.defaultEnvironment }
+        return apiConfigs.values.associateWith { it.defaultEnvironment }
     }
 }
