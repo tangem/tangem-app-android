@@ -18,10 +18,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
@@ -258,8 +258,18 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
         valueSlot = {
             when (indicator) {
                 is TokenIndicatorUM.Content -> {
-                    TangemBadge(badgeUM = indicator.scoreBadge)
-                    TangemBadge(badgeUM = indicator.sentimentBadge)
+                    TangemBadge(
+                        text = indicator.scoreBadgeText,
+                        status = TangemBadge.Status.Neutral,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
+                    )
+                    TangemBadge(
+                        text = indicator.sentimentBadgeText,
+                        status = indicator.sentimentBadgeStatus,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
+                    )
                 }
                 is TokenIndicatorUM.Loading -> {
                     RectangleShimmer(
@@ -269,13 +279,10 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
                 }
                 is TokenIndicatorUM.NoData -> {
                     TangemBadge(
-                        badgeUM = TangemBadgeUM(
-                            text = resourceReference(R.string.common_none),
-                            size = TangemBadgeSize.X6,
-                            color = TangemBadgeColor.Gray,
-                            type = TangemBadgeType.Tinted,
-                            shape = TangemBadgeShape.Rounded,
-                        ),
+                        text = resourceReference(R.string.common_none),
+                        status = TangemBadge.Status.Neutral,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
                     )
                 }
             }
