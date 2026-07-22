@@ -7,40 +7,31 @@ package com.tangem.core.remote
  */
 interface RetrofitFactory {
 
-    /**
-     * Builds a Retrofit API instance of [clazz] for the API configuration identified by [configId].
-     *
-     * @param clazz                   the API interface to create
-     * @param configId                stable id of the API configuration to use
-     * @param applyTimeoutAnnotations whether per-method timeout annotations are honored
-     * @param sessionAuth             whether to install the session auth interceptor/authenticator
-     * @param timeouts                optional client-level timeouts
-     * @param logsSaving              whether to persist network logs
-     */
-    fun <T : Any> create(
-        clazz: Class<T>,
-        configId: String,
-        applyTimeoutAnnotations: Boolean,
-        sessionAuth: Boolean,
-        timeouts: Timeouts? = null,
-        logsSaving: Boolean = true,
-    ): T
+    /** Builds a Retrofit API instance of [clazz] according to [spec]. */
+    fun <T : Any> create(clazz: Class<T>, spec: RetrofitApiSpec): T
 }
 
 /** Reified convenience over [RetrofitFactory.create]. */
-inline fun <reified T : Any> RetrofitFactory.build(
-    configId: String,
-    applyTimeoutAnnotations: Boolean,
-    sessionAuth: Boolean,
-    timeouts: Timeouts? = null,
-    logsSaving: Boolean = true,
-): T = create(
+inline fun <reified T : Any> RetrofitFactory.build(spec: RetrofitApiSpec): T = create(
     clazz = T::class.java,
-    configId = configId,
-    applyTimeoutAnnotations = applyTimeoutAnnotations,
-    sessionAuth = sessionAuth,
-    timeouts = timeouts,
-    logsSaving = logsSaving,
+    spec = spec,
+)
+
+/**
+ * Parameters for building a Retrofit API instance.
+ *
+ * @property configId                stable id of the API configuration to use
+ * @property applyTimeoutAnnotations whether per-method timeout annotations are honored
+ * @property sessionAuth             whether to install the session auth interceptor/authenticator
+ * @property timeouts                optional client-level timeouts
+ * @property logsSaving              whether to persist network logs
+ */
+data class RetrofitApiSpec(
+    val configId: String,
+    val applyTimeoutAnnotations: Boolean,
+    val sessionAuth: Boolean,
+    val timeouts: Timeouts? = null,
+    val logsSaving: Boolean = true,
 )
 
 /** Optional client-level timeouts (seconds); `null` fields keep the client defaults. */
