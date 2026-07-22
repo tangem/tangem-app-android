@@ -10,7 +10,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
-import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -114,7 +113,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Swap failed WHEN convert THEN Content with composed failed title and close icon`() {
+    fun `GIVEN Swap failed WHEN convert THEN Content with composed failed title and directional icon`() {
         val tx = txInfo(
             type = TransactionType.Swap,
             status = TxInfo.TransactionStatus.Failed,
@@ -126,7 +125,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(result.title).isEqualTo(
             resRef(R.string.common_action_failed, listOf(resRef(R.string.common_swapping))),
         )
-        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_cross_20))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
     }
 
     @Test
@@ -652,7 +651,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     // region Misc
 
     @Test
-    fun `GIVEN failed Transfer WHEN convert THEN icon overridden to close`() {
+    fun `GIVEN failed Transfer WHEN convert THEN directional icon kept`() {
         val tx = txInfo(
             type = TransactionType.Transfer,
             isOutgoing = true,
@@ -662,7 +661,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_cross_20))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
     }
 
     @Test
