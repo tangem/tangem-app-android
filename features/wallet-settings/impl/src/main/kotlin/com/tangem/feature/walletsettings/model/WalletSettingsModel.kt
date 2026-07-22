@@ -49,7 +49,6 @@ import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
@@ -92,7 +91,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
 ) : Model() {
 
@@ -266,7 +264,7 @@ internal class WalletSettingsModel @Inject constructor(
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrNull()
 
-        if (userWallet is UserWallet.Hot && hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
+        if (userWallet is UserWallet.Hot) {
             startAssetsDiscoveryUseCase.cancel(params.userWalletId)
         }
 

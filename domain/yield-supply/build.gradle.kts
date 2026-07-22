@@ -8,35 +8,51 @@ android {
     namespace = "com.tangem.domain.yield.supply"
 }
 dependencies {
-    /** Core */
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain)
+    // endregion
+
+    // region Core modules
+    api(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.utils)
+    // endregion
+
+    // region Libs
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
+    // endregion
 
-    /** Domain */
+    // region Domain
+    api(projects.domain.account)
+    api(projects.domain.blockaid)
+    api(projects.domain.networks)
+    api(projects.domain.quotes)
+    api(projects.domain.transaction)
     implementation(projects.domain.account.status)
-    implementation(projects.domain.models)
-    implementation(projects.domain.yieldSupply.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.legacy)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.models)
+    api(projects.domain.transaction.models)
+    api(projects.domain.yieldSupply.models)
     implementation(projects.domain.blockaid.models)
-    implementation(projects.domain.blockaid)
-    implementation(projects.domain.quotes)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.appCurrency.models)
+    // endregion
 
-    /** Tandem SDK */
-    implementation(tangemDeps.blockchain)
-
-    /** Other */
-    implementation(deps.arrow.core)
-
-    /** tests */
-    testImplementation(projects.test.core)
-    testImplementation(deps.test.junit5)
+    // region Tests
+    testRuntimeOnly(projects.domain.tokens)
+    testImplementation(deps.kotlin.datetime)
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.domain.legacy)
+    testImplementation(projects.test.core)
+    // endregion
 }

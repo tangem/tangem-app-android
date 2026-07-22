@@ -27,11 +27,9 @@ class WarningsTest : BaseTestCase() {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
-
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
             }
-
             step("Open 'Main Screen'") {
                 openMainScreen()
             }

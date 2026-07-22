@@ -7,7 +7,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,7 +27,6 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalIsInDarkTheme
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
@@ -380,115 +378,113 @@ private const val BRONZE_PLACE_COLOR_LIGHT = 0xFFCC7F66
 @Preview(widthDp = 360, heightDp = 1500, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun MetricsCardsPreview() {
-    CompositionLocalProvider(LocalRedesignEnabled provides true) {
-        TangemThemePreviewRedesign {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level2)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                MarketCapCard(
-                    item = InfoPointUMV2.MarketCap(
-                        capitalizationValue = stringReference("$ 1.2 T"),
-                        onInfoClick = {},
-                    ),
-                )
+    TangemThemePreviewRedesign {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors2.surface.level2)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MarketCapCard(
+                item = InfoPointUMV2.MarketCap(
+                    capitalizationValue = stringReference("$ 1.2 T"),
+                    onInfoClick = {},
+                ),
+            )
 
-                TradingVolumeCard(
-                    item = InfoPointUMV2.TradingVolume(
-                        tradingValue = stringReference("$ 45.2 M"),
-                        liquidity = 0.75f,
-                        trendingVolumeLiquidityType = TrendingVolumeLiquidityType.HIGH,
-                        onInfoClick = {},
-                    ),
-                )
+            TradingVolumeCard(
+                item = InfoPointUMV2.TradingVolume(
+                    tradingValue = stringReference("$ 45.2 M"),
+                    liquidity = 0.75f,
+                    trendingVolumeLiquidityType = TrendingVolumeLiquidityType.HIGH,
+                    onInfoClick = {},
+                ),
+            )
 
-                TradingVolumeCard(
-                    item = InfoPointUMV2.TradingVolume(
-                        tradingValue = stringReference("$ 12.1 M"),
-                        liquidity = 0.45f,
-                        trendingVolumeLiquidityType = TrendingVolumeLiquidityType.MEDIUM,
-                        onInfoClick = {},
-                    ),
-                )
+            TradingVolumeCard(
+                item = InfoPointUMV2.TradingVolume(
+                    tradingValue = stringReference("$ 12.1 M"),
+                    liquidity = 0.45f,
+                    trendingVolumeLiquidityType = TrendingVolumeLiquidityType.MEDIUM,
+                    onInfoClick = {},
+                ),
+            )
 
-                TradingVolumeCard(
-                    item = InfoPointUMV2.TradingVolume(
-                        tradingValue = stringReference("$ 2.3 M"),
-                        liquidity = 0.15f,
-                        trendingVolumeLiquidityType = TrendingVolumeLiquidityType.LOW,
-                        onInfoClick = {},
-                    ),
-                )
+            TradingVolumeCard(
+                item = InfoPointUMV2.TradingVolume(
+                    tradingValue = stringReference("$ 2.3 M"),
+                    liquidity = 0.15f,
+                    trendingVolumeLiquidityType = TrendingVolumeLiquidityType.LOW,
+                    onInfoClick = {},
+                ),
+            )
 
-                MarketPositionCard(
-                    item = InfoPointUMV2.MarketPosition(
-                        position = stringReference("1"),
-                        rangeValue = 0.02f,
-                        marketRatingType = MarketRatingType.GOLD,
-                        onInfoClick = {},
-                        marketRatingChange24H = MarketRatingChange24H.NoChanges,
-                    ),
-                )
+            MarketPositionCard(
+                item = InfoPointUMV2.MarketPosition(
+                    position = stringReference("1"),
+                    rangeValue = 0.02f,
+                    marketRatingType = MarketRatingType.GOLD,
+                    onInfoClick = {},
+                    marketRatingChange24H = MarketRatingChange24H.NoChanges,
+                ),
+            )
 
-                MarketPositionCard(
-                    item = InfoPointUMV2.MarketPosition(
-                        position = stringReference("2"),
-                        rangeValue = 0.05f,
-                        marketRatingChange24H = MarketRatingChange24H.Up(1),
-                        marketRatingType = MarketRatingType.SILVER,
-                        onInfoClick = {},
-                    ),
-                )
+            MarketPositionCard(
+                item = InfoPointUMV2.MarketPosition(
+                    position = stringReference("2"),
+                    rangeValue = 0.05f,
+                    marketRatingChange24H = MarketRatingChange24H.Up(1),
+                    marketRatingType = MarketRatingType.SILVER,
+                    onInfoClick = {},
+                ),
+            )
 
-                MarketPositionCard(
-                    item = InfoPointUMV2.MarketPosition(
-                        position = null,
-                        rangeValue = null,
-                        marketRatingType = MarketRatingType.OTHER,
-                        onInfoClick = {},
-                        marketRatingChange24H = MarketRatingChange24H.NoChanges,
-                    ),
-                )
+            MarketPositionCard(
+                item = InfoPointUMV2.MarketPosition(
+                    position = null,
+                    rangeValue = null,
+                    marketRatingType = MarketRatingType.OTHER,
+                    onInfoClick = {},
+                    marketRatingChange24H = MarketRatingChange24H.NoChanges,
+                ),
+            )
 
-                MarketPositionCard(
-                    item = InfoPointUMV2.MarketPosition(
-                        position = stringReference("42"),
-                        rangeValue = 0.42f,
-                        marketRatingType = MarketRatingType.OTHER,
-                        onInfoClick = {},
-                        marketRatingChange24H = MarketRatingChange24H.Down(15),
-                    ),
-                )
+            MarketPositionCard(
+                item = InfoPointUMV2.MarketPosition(
+                    position = stringReference("42"),
+                    rangeValue = 0.42f,
+                    marketRatingType = MarketRatingType.OTHER,
+                    onInfoClick = {},
+                    marketRatingChange24H = MarketRatingChange24H.Down(15),
+                ),
+            )
 
-                FDVCard(
-                    item = InfoPointUMV2.FullyDilutedValuation(
-                        value = stringReference("$ 1.5 T"),
-                        fullyDilutedValuationChange24 = stringReference("$ 2.44 M in total"),
-                        onInfoClick = {},
-                    ),
-                )
+            FDVCard(
+                item = InfoPointUMV2.FullyDilutedValuation(
+                    value = stringReference("$ 1.5 T"),
+                    fullyDilutedValuationChange24 = stringReference("$ 2.44 M in total"),
+                    onInfoClick = {},
+                ),
+            )
 
-                CirculatingSupplyCard(
-                    item = InfoPointUMV2.CirculatingSupply(
-                        currentValue = stringReference("12.5 B POL"),
-                        maxValue = stringReference("21 B POL"),
-                        fillValue = 0.6f,
-                        onInfoClick = {},
-                    ),
-                )
+            CirculatingSupplyCard(
+                item = InfoPointUMV2.CirculatingSupply(
+                    currentValue = stringReference("12.5 B POL"),
+                    maxValue = stringReference("21 B POL"),
+                    fillValue = 0.6f,
+                    onInfoClick = {},
+                ),
+            )
 
-                CirculatingSupplyCard(
-                    item = InfoPointUMV2.CirculatingSupply(
-                        currentValue = stringReference("18.9 M ETH"),
-                        maxValue = null,
-                        fillValue = null,
-                        onInfoClick = {},
-                    ),
-                )
-            }
+            CirculatingSupplyCard(
+                item = InfoPointUMV2.CirculatingSupply(
+                    currentValue = stringReference("18.9 M ETH"),
+                    maxValue = null,
+                    fillValue = null,
+                    onInfoClick = {},
+                ),
+            )
         }
     }
 }
