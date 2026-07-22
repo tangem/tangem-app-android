@@ -1,6 +1,7 @@
 package com.tangem.tap.core.security
 
-import com.tangem.core.remote.config.ApiConfig
+import com.tangem.datasource.api.common.config.TangemPay
+
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -13,7 +14,7 @@ internal class MockAwareDeviceSecurityInfoProvider(
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
-            .getEnvironmentConfig(ApiConfig.ID.TangemPay)
+            .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
     override val isRooted: Boolean

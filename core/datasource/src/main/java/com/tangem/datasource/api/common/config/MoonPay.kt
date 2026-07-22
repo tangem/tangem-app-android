@@ -9,9 +9,9 @@ import com.tangem.datasource.BuildConfig
 /**
  * MoonPay [ApiConfig]
  */
-internal class MoonPay : ApiConfig() {
+class MoonPay : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.MoonPay
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -48,7 +48,7 @@ internal class MoonPay : ApiConfig() {
     }
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.MOON_PAY].
-        const val KEY = ApiConfig.MOON_PAY
+        const val KEY = "MoonPay"
+        val ID = ApiConfig.ID(KEY)
     }
 }

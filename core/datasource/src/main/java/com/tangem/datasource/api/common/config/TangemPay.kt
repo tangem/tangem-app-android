@@ -10,7 +10,7 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 
-internal sealed class TangemPay(
+sealed class TangemPay(
     private val environmentConfig: EnvironmentConfig,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
@@ -84,7 +84,7 @@ internal sealed class TangemPay(
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
 
-        override val id: ApiConfig.ID = ApiConfig.ID.TangemPay
+        override val id: ApiConfig.ID get() = ID
 
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
@@ -101,8 +101,8 @@ internal sealed class TangemPay(
         }
 
         companion object {
-            // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.TANGEM_PAY].
-            const val KEY = ApiConfig.TANGEM_PAY
+            const val KEY = "TangemPay"
+            val ID = ApiConfig.ID(KEY)
         }
     }
 
@@ -111,7 +111,7 @@ internal sealed class TangemPay(
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
 
-        override val id: ApiConfig.ID = ApiConfig.ID.TangemPayAuth
+        override val id: ApiConfig.ID get() = ID
 
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
@@ -128,8 +128,8 @@ internal sealed class TangemPay(
         }
 
         companion object {
-            // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.TANGEM_PAY_AUTH].
-            const val KEY = ApiConfig.TANGEM_PAY_AUTH
+            const val KEY = "TangemPayAuth"
+            val ID = ApiConfig.ID(KEY)
         }
     }
 }
