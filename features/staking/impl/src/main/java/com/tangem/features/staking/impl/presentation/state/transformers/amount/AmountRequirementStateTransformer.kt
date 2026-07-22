@@ -29,7 +29,6 @@ internal class AmountRequirementStateTransformer(
     private val maxAmount: EnterAmountBoundary,
     private val integration: StakingIntegration,
     private val actionType: StakingActionCommonType,
-    private val isSolanaUnstakeValidationEnabled: Boolean = false,
 ) : Transformer<AmountState> {
     override fun transform(prevState: AmountState): AmountState {
         return if (prevState is AmountState.Data) {
@@ -105,9 +104,7 @@ internal class AmountRequirementStateTransformer(
                 )
             }
             is StakingActionCommonType.Exit -> {
-                if (isSolanaUnstakeValidationEnabled &&
-                    isSolana(cryptoCurrencyStatus.currency.network.rawId)
-                ) {
+                if (isSolana(cryptoCurrencyStatus.currency.network.rawId)) {
                     getSolanaUnstakeError(amount = amountDecimal, staked = maxAmount.amount)
                 } else {
                     integration.exitArgs?.amountRequirement?.getError(

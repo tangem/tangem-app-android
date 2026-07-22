@@ -1,12 +1,10 @@
 package com.tangem.features.feed.ui.feed.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -26,7 +24,6 @@ import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
@@ -37,9 +34,6 @@ private const val GRADIENT_START = 0f
 private const val GRADIENT_END = 0.5f
 private const val LINEAR_GRADIENT_FIRST_PART_V2 = 0xFF7B78FF
 private const val LINEAR_GRADIENT_SECOND_PART_V2 = 0xFFC56BCD
-
-private const val LINEAR_GRADIENT_FIRST_PART_V1 = 0xFF635EEC
-private const val LINEAR_GRADIENT_SECOND_PART_V1 = 0xFFE05AED
 
 private const val MAGIC_ICON_COLOR = 0xFF7D78FF
 
@@ -65,22 +59,8 @@ internal fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trend
 @Suppress("LongMethod")
 @Composable
 private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
-    val gradientStart = remember(isRedesignEnabled) {
-        if (isRedesignEnabled) {
-            Color(LINEAR_GRADIENT_FIRST_PART_V2)
-        } else {
-            Color(LINEAR_GRADIENT_FIRST_PART_V1)
-        }
-    }
-
-    val gradientEnd = remember(isRedesignEnabled) {
-        if (isRedesignEnabled) {
-            Color(LINEAR_GRADIENT_SECOND_PART_V2)
-        } else {
-            Color(LINEAR_GRADIENT_SECOND_PART_V1)
-        }
-    }
+    val gradientStart = Color(LINEAR_GRADIENT_FIRST_PART_V2)
+    val gradientEnd = Color(LINEAR_GRADIENT_SECOND_PART_V2)
 
     Column {
         Header(
@@ -88,33 +68,18 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResourceSafe(R.string.common_news),
-                        style = if (isRedesignEnabled) {
-                            TangemTheme.typography2.headingSemibold20
-                        } else {
-                            TangemTheme.typography.h3
-                        },
-                        color = if (isRedesignEnabled) {
-                            TangemTheme.colors2.text.neutral.primary
-                        } else {
-                            TangemTheme.colors.text.primary1
-                        },
+                        style = TangemTheme.typography2.headingSemibold20,
+                        color = TangemTheme.colors2.text.neutral.primary,
                     )
 
                     SpacerW(4.dp)
 
-                    if (isRedesignEnabled) {
-                        Icon(
-                            modifier = Modifier.size(TangemTheme.dimens2.x6),
-                            tint = Color(MAGIC_ICON_COLOR),
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_magic_28),
-                            contentDescription = null,
-                        )
-                    } else {
-                        Image(
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_stars_20),
-                            contentDescription = null,
-                        )
-                    }
+                    Icon(
+                        modifier = Modifier.size(TangemTheme.dimens2.x6),
+                        tint = Color(MAGIC_ICON_COLOR),
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_magic_28),
+                        contentDescription = null,
+                    )
 
                     SpacerW(2.dp)
 
@@ -131,11 +96,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                                 append(stringResourceSafe(R.string.feed_tangem_ai))
                             }
                         },
-                        style = if (isRedesignEnabled) {
-                            TangemTheme.typography2.bodyRegular16.copy(fontWeight = FontWeight.Medium)
-                        } else {
-                            TangemTheme.typography.subtitle1
-                        },
+                        style = TangemTheme.typography2.bodyRegular16.copy(fontWeight = FontWeight.Medium),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                     )
@@ -156,7 +117,6 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                         .padding(horizontal = 16.dp),
                     articleConfigUM = trendingArticle,
                     onArticleClick = { feedListCallbacks.onArticleClick(trendingArticle.id) },
-                    colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 )
                 SpacerH(12.dp)
             }
