@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +35,6 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -49,17 +47,10 @@ private const val DISABLED_ALPHA = 0.4f
 
 @Composable
 internal fun ChooseNetworkContent(state: ChooseNetworkUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        ChooseNetworkContentV2(
-            state = state,
-            modifier = modifier,
-        )
-    } else {
-        ChooseNetworkContentV1(
-            state = state,
-            modifier = modifier,
-        )
-    }
+    ChooseNetworkContentV2(
+        state = state,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -227,11 +218,9 @@ private fun Preview(@PreviewParameter(ChooseNetworkContentProvider::class) conte
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun PreviewV2(@PreviewParameter(ChooseNetworkContentProvider::class) content: ChooseNetworkUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            ChooseNetworkContent(
-                state = content,
-            )
-        }
+        ChooseNetworkContent(
+            state = content,
+        )
     }
 }
 

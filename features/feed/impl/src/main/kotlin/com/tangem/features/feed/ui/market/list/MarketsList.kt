@@ -2,17 +2,12 @@ package com.tangem.features.feed.ui.market.list
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -21,18 +16,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.preview.MarketChartListItemPreviewDataProvider
-import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
+import com.tangem.core.ui.components.Keyboard
+import com.tangem.core.ui.components.TopFade
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -41,68 +31,9 @@ import com.tangem.features.feed.model.market.list.state.*
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.feedTopFadeColorStops
 import com.tangem.features.feed.ui.market.list.components.MarketsListLazyColumn
-import com.tangem.features.feed.ui.market.list.components.MarketsListSortByBottomSheet
 import com.tangem.features.feed.ui.market.list.components.Options
 import com.tangem.features.feed.ui.utils.FadeConstants.BASE_FADE_LEVEL
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.delay
-
-private const val DELAY_FOR_FOCUS_REQUEST = 500L
-
-@Composable
-internal fun TopBarWithSearch(
-    onBackClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    marketsSearchBar: MarketsSearchBar,
-    bottomSheetState: BottomSheetState = BottomSheetState.EXPANDED,
-) {
-    val background = LocalMainBottomSheetColor.current.value
-    val focusRequester = remember { FocusRequester() }
-
-    val shouldShowAppBar = !marketsSearchBar.shouldAlwaysShowSearchBar &&
-        !marketsSearchBar.searchBarUM.isActive &&
-        marketsSearchBar.searchBarUM.query.isEmpty()
-
-    AnimatedContent(
-        targetState = shouldShowAppBar,
-        label = "TopBarTransition",
-    ) { showAppBar ->
-        if (showAppBar) {
-            AppBarWithBackButtonAndIcon(
-                onBackClick = onBackClick,
-                backButtonEnabled = bottomSheetState == BottomSheetState.EXPANDED,
-                endButtonEnabled = bottomSheetState == BottomSheetState.EXPANDED,
-                text = stringResourceSafe(R.string.markets_common_title),
-                iconRes = R.drawable.ic_search_24,
-                onIconClick = onSearchClick,
-                backgroundColor = background,
-            )
-        } else {
-            SearchBar(
-                modifier = Modifier
-                    .drawBehind { drawRect(background) }
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp),
-                state = marketsSearchBar.searchBarUM,
-                colors = TangemSearchBarDefaults.defaultTextFieldColors.copy(
-                    focusedContainerColor = TangemTheme.colors.field.focused,
-                    unfocusedContainerColor = TangemTheme.colors.field.focused,
-                ),
-                focusRequester = focusRequester,
-            )
-
-            val shouldRequestFocus =
-                (marketsSearchBar.shouldAlwaysShowSearchBar || marketsSearchBar.searchBarUM.isActive) &&
-                    bottomSheetState == BottomSheetState.EXPANDED
-            if (shouldRequestFocus) {
-                LaunchedEffect(bottomSheetState) {
-                    delay(DELAY_FOR_FOCUS_REQUEST)
-                    focusRequester.requestFocus()
-                }
-            }
-        }
-    }
-}
 
 @Composable
 internal fun MarketsList(contentPadding: PaddingValues, state: MarketsListUM, modifier: Modifier = Modifier) {
@@ -115,93 +46,16 @@ internal fun MarketsList(contentPadding: PaddingValues, state: MarketsListUM, mo
     ) {
         Content(state = state, contentPadding = contentPadding)
     }
-    MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
-    KeyboardEvents(isSortByBottomSheetShown = state.sortByBottomSheet.isShown)
+    KeyboardEvents()
 }
 
 @Suppress("LongMethod")
 @Composable
-private fun ColumnScope.Content(contentPadding: PaddingValues, state: MarketsListUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        ContentV2(
-            contentPadding = contentPadding,
-            state = state,
-        )
-    } else {
-        ContentV1(
-            contentPadding = contentPadding,
-            state = state,
-            modifier = modifier,
-        )
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun ColumnScope.ContentV1(contentPadding: PaddingValues, state: MarketsListUM, modifier: Modifier = Modifier) {
-    val strokeColor = TangemTheme.colors.stroke.primary
-    val scrolledState = remember { mutableStateOf(false) }
-    Column(modifier.padding(horizontal = TangemTheme.dimens.size16)) {
-        SpacerH(contentPadding.calculateTopPadding())
-        AnimatedVisibility(
-            visible = scrolledState.value.not() &&
-                state.isInSearchMode &&
-                state.marketsSearchBar.searchBarUM.query.isNotEmpty(),
-        ) {
-            Column {
-                SpacerH8()
-                Text(
-                    text = stringResourceSafe(id = R.string.markets_search_result_title),
-                    style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
-                )
-                SpacerH12()
-            }
-        }
-        Column {
-            AnimatedVisibility(!state.isInSearchMode && !state.marketsSearchBar.shouldAlwaysShowSearchBar) {
-                Options(
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                    sortByTypeUM = state.selectedSortBy,
-                    trendInterval = state.selectedInterval,
-                    onIntervalClick = state.onIntervalClick,
-                    onSortByClick = state.onSortByButtonClick,
-                    sortMenuUM = state.sortByMenuUM,
-                )
-            }
-        }
-    }
-    val strokeWidth = TangemTheme.dimens.size0_5
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(strokeWidth)
-            .drawBehind {
-                // draw horizontal line
-                if (scrolledState.value) {
-                    drawLine(
-                        color = strokeColor,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = strokeWidth.toPx(),
-                    )
-                }
-            },
-    )
-    ItemsList(
-        scrolledState = scrolledState,
-        isInSearchMode = state.isInSearchMode,
-        state = state.list,
-    )
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun ColumnScope.ContentV2(contentPadding: PaddingValues, state: MarketsListUM) {
+private fun ColumnScope.Content(contentPadding: PaddingValues, state: MarketsListUM) {
     val scrolledState = remember { mutableStateOf(false) }
     var optionsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
-    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
+    val fadeColor = TangemTheme.colors3.bg.primary.copy(BASE_FADE_LEVEL)
     val topPadding = contentPadding.calculateTopPadding()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -215,13 +69,13 @@ private fun ColumnScope.ContentV2(contentPadding: PaddingValues, state: MarketsL
         TopFade(
             modifier = Modifier.padding(top = topPadding),
             colorStops = feedTopFadeColorStops(fadeColor),
-            height = TangemTheme.dimens2.x4 + optionsHeight,
+            height = 16.dp + optionsHeight,
         )
         Options(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(bottom = TangemTheme.dimens2.x4, top = topPadding)
-                .padding(horizontal = TangemTheme.dimens2.x4)
+                .padding(bottom = 16.dp, top = topPadding)
+                .padding(horizontal = 16.dp)
                 .onGloballyPositioned { coordinates ->
                     if (coordinates.size.height > 0) {
                         with(density) {
@@ -229,10 +83,8 @@ private fun ColumnScope.ContentV2(contentPadding: PaddingValues, state: MarketsL
                         }
                     }
                 },
-            sortByTypeUM = state.selectedSortBy,
             trendInterval = state.selectedInterval,
             onIntervalClick = state.onIntervalClick,
-            onSortByClick = state.onSortByButtonClick,
             sortMenuUM = state.sortByMenuUM,
         )
     }
@@ -283,7 +135,7 @@ private fun ItemsList(
 }
 
 @Composable
-private fun KeyboardEvents(isSortByBottomSheetShown: Boolean) {
+private fun KeyboardEvents() {
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboard by keyboardAsState()
     val focusManager = LocalFocusManager.current
@@ -297,10 +149,6 @@ private fun KeyboardEvents(isSortByBottomSheetShown: Boolean) {
             focusManager.clearFocus()
         }
     }
-
-    LaunchedEffect(isSortByBottomSheetShown) {
-        keyboardController?.hide()
-    }
 }
 
 //region: Preview
@@ -310,7 +158,7 @@ private fun KeyboardEvents(isSortByBottomSheetShown: Boolean) {
 @Composable
 private fun Preview() {
     TangemThemePreview(alwaysShowBottomSheets = false) {
-        val primaryBackground = TangemTheme.colors.background.primary
+        val primaryBackground = TangemTheme.colors3.bg.primary
 
         CompositionLocalProvider(
             LocalMainBottomSheetColor provides remember { mutableStateOf(primaryBackground) },
@@ -346,12 +194,6 @@ private fun Preview() {
                     selectedSortBy = SortByTypeUM.Rating,
                     selectedInterval = MarketsListUM.TrendInterval.H24,
                     onIntervalClick = {},
-                    onSortByButtonClick = {},
-                    sortByBottomSheet = TangemBottomSheetConfig(
-                        isShown = false,
-                        onDismissRequest = {},
-                        content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
-                    ),
                     onSearchClicked = {},
                     feedListSearchBar = FeedListSearchBar(
                         onBarClick = {},

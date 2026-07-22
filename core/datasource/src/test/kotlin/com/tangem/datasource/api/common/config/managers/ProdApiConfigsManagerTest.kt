@@ -18,6 +18,7 @@ import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -70,6 +71,7 @@ internal class ProdApiConfigsManagerTest {
         every { appInfoProvider.osVersion } returns "Android 16"
         every { appInfoProvider.language } returns Locale.getDefault().toLanguageTag()
         every { appInfoProvider.device } returns "${Build.MANUFACTURER} ${Build.MODEL}"
+        every { appInfoProvider.deviceScale } returns DEVICE_SCALE
 
         manager = ProdApiConfigsManager(apiConfigs = createApiConfigs())
     }
@@ -87,71 +89,64 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun createApiConfigs(): ApiConfigs {
-        return ApiConfig.ID.entries.mapTo(destination = hashSetOf()) {
-            when (it) {
-                ApiConfig.ID.Express -> {
-                    Express(
-                        environmentConfig = environmentConfig,
-                        expressAuthProvider = expressAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.YieldSupply -> {
-                    YieldSupply(
-                        environmentConfig = environmentConfig,
-                        authProvider = appAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.TangemTech -> {
-                    TangemTech(
-                        authProvider = appAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
-                ApiConfig.ID.TangemPay -> TangemPay.Bff(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
-                ApiConfig.ID.MoonPay -> MoonPay()
-                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
-                ApiConfig.ID.News -> News(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.GaslessTxService -> GaslessTxService(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
-                ApiConfig.ID.Auth -> Auth()
-            }
-        }
+        val configs = listOf(
+            Express(
+                environmentConfig = environmentConfig,
+                expressAuthProvider = expressAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            YieldSupply(
+                environmentConfig = environmentConfig,
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            TangemTech(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
+            TangemPay.Bff(
+                environmentConfig = environmentConfig,
+                appInfoProvider = appInfoProvider,
+            ),
+            TangemPay.Auth(
+                environmentConfig = environmentConfig,
+                appInfoProvider = appInfoProvider,
+            ),
+            BlockAid(environmentConfig = environmentConfig),
+            MoonPay(),
+            P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
+            News(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            GaslessTxService(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            SurveySparrow(environmentConfig = environmentConfig),
+            Auth(),
+        )
+
+        return configs.associateBy { it.id.name }
+            .also { check(it.size == configs.size) { "Duplicate ApiConfig id in test setup" } }
     }
 
-    private fun provideTestModels() = ApiConfig.ID.entries.map {
-        when (it) {
-            ApiConfig.ID.Express -> createExpressModel()
-            ApiConfig.ID.YieldSupply -> createYieldSupplyModel()
-            ApiConfig.ID.TangemTech -> createTangemTechModel()
-            ApiConfig.ID.StakeKit -> createStakeKitModel()
-            ApiConfig.ID.TangemPay -> createTangemPayModel()
-            ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
-            ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
-            ApiConfig.ID.MoonPay -> createMoonPayModel()
-            ApiConfig.ID.P2PEthPool -> createP2PModel()
-            ApiConfig.ID.News -> createNewsModel()
-            ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
-            ApiConfig.ID.SurveySparrow -> createSurveySparrowModel()
-            ApiConfig.ID.Auth -> createAuthModel()
-        }
-    }
+    private fun provideTestModels() = listOf(
+        createExpressModel(),
+        createYieldSupplyModel(),
+        createTangemTechModel(),
+        createStakeKitModel(),
+        createTangemPayModel(),
+        createTangemPayAuthModel(),
+        createBlockAidSdkModel(),
+        createMoonPayModel(),
+        createP2PModel(),
+        createNewsModel(),
+        createGaslessTxServiceModel(),
+        createSurveySparrowModel(),
+        createAuthModel(),
+    )
 
     private fun createAuthModel(): TestModel {
         val environment = when (BuildConfig.BUILD_TYPE) {
@@ -170,7 +165,7 @@ internal class ProdApiConfigsManagerTest {
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (environment) {
-                    ApiEnvironment.PROD -> "https://authentication.tangem.org/"
+                    ApiEnvironment.PROD -> "https://api.tangem.org/"
                     else -> "[REDACTED_ENV_URL]"
                 },
                 headers = emptyMap(),
@@ -298,6 +293,8 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
+                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
+                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
@@ -313,6 +310,8 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
+                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
+                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
@@ -457,6 +456,7 @@ internal class ProdApiConfigsManagerTest {
     private companion object {
 
         const val VERSION_NAME = "debug"
+        const val DEVICE_SCALE = 3f
         const val EXPRESS_SESSION_ID = "express_session_id"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
         const val P2P_API_KEY = "p2p_api_key"
