@@ -40,7 +40,7 @@ internal class Express(
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV
             INTERNAL_BUILD_TYPE,
-            -> ApiEnvironment.STAGE
+            -> ApiEnvironment.PROD
             MOCKED_BUILD_TYPE,
             -> ApiEnvironment.MOCK
             EXTERNAL_BUILD_TYPE,
