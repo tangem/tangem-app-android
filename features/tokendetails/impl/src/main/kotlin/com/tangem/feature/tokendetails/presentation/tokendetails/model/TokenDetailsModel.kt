@@ -1486,10 +1486,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun observeQuickTopUpBlock() {
-        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+        val statusFlow = getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
             .map { it.status }
             .distinctUntilChanged()
-            .flatMapLatest { status ->
+
+        combine(statusFlow, selectedAppCurrencyFlow) { status, appCurrency -> status to appCurrency }
+            .flatMapLatest { (status, appCurrency) ->
                 flow {
                     val amount = status.value.amount
                     if (amount == null || !amount.isZero()) {
@@ -1503,6 +1505,8 @@ internal class TokenDetailsModel @Inject constructor(
                         ifLeft = { true },
                         ifRight = { it.isEmpty() },
                     )
+                    // Read the saved onramp currency BEFORE checkOnrampAvailabilityUseCase:
+                    // the latter auto-persists the regional currency once the country is confirmed.
                     val selectedOnrampCurrency = onrampGetDefaultCurrencyUseCase().getOrNull()
                     val availability = checkOnrampAvailabilityUseCase(userWallet)
                     emit(
@@ -1511,7 +1515,7 @@ internal class TokenDetailsModel @Inject constructor(
                             isHistoryEmpty = isHistoryEmpty,
                             onrampAvailability = availability,
                             selectedOnrampCurrency = selectedOnrampCurrency,
-                            appCurrency = selectedAppCurrencyFlow.value,
+                            appCurrency = appCurrency,
                             onPresetClick = ::onQuickTopUpClick,
                             onOtherClick = ::onQuickTopUpOtherClick,
                         ),
