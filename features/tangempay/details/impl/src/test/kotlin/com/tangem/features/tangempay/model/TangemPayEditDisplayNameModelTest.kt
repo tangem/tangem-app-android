@@ -14,7 +14,6 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayEditDisplayNameComponent
 import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsController
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -36,7 +35,6 @@ internal class TangemPayEditDisplayNameModelTest {
     private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val featureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory = mockk(relaxed = true)
 
     init {
@@ -55,7 +53,6 @@ internal class TangemPayEditDisplayNameModelTest {
         updateCardNameUseCase = updateCardNameUseCase,
         uiMessageSender = uiMessageSender,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-        featureToggles = featureToggles,
         cardDetailsControllerFactory = cardDetailsControllerFactory,
     )
 
@@ -162,6 +159,7 @@ internal class TangemPayEditDisplayNameModelTest {
         limit = null,
         frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
+        images = emptyList(),
         state = TangemPayCardState.Active,
     )
 }

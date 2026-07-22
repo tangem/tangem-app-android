@@ -11,16 +11,22 @@ android {
 
 dependencies {
 
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
+    api(deps.kotlin.serialization.core)
+    // endregion
+
     /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.markets)
-    implementation(projects.domain.account)
+    api(projects.domain.account)
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.markets.models)
+    api(projects.domain.models)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Compose */
     implementation(deps.compose.runtime)
-    implementation(deps.kotlin.immutable.collections)
 }

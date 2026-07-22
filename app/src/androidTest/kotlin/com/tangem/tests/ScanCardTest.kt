@@ -20,8 +20,8 @@ import org.junit.Test
 class ScanCardTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.TangemTech, ApiEnvironment.PROD),
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD),
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("868")
     @DisplayName("Scan: Scanning single-currency cards")
