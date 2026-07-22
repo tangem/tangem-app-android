@@ -43,6 +43,7 @@ dependencies {
     api(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.material3)
     implementation(deps.lifecycle.compose)
 
     /** Other */

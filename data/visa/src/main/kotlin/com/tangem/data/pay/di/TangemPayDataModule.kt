@@ -366,10 +366,14 @@ internal interface TangemPayDataModule {
         fun provideCreateVirtualAccountOrderUseCase(
             onboardingRepository: OnboardingRepository,
             pollingUseCase: StartTangemPayOrderPollingUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
         ): CreateVirtualAccountOrderUseCase {
             return CreateVirtualAccountOrderUseCase(
                 onboardingRepository = onboardingRepository,
                 pollingUseCase = pollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                appCoroutineScope = appCoroutineScope,
             )
         }
 
