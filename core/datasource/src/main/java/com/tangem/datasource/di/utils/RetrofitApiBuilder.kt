@@ -1,5 +1,7 @@
 package com.tangem.datasource.di.utils
 
+import com.tangem.datasource.api.common.config.MoonPay
+
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
@@ -259,8 +261,8 @@ internal class RetrofitApiBuilder @Inject constructor(
     private companion object {
 
         val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
-            // ApiConfig.ID.StakeKit,
-            ApiConfig.ID.MoonPay,
+            // StakeKit.ID,
+            MoonPay.ID,
         )
     }
 }

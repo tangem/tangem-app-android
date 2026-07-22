@@ -14,12 +14,12 @@ import com.tangem.utils.info.AppInfoProvider
  * News [ApiConfig]
 [REDACTED_AUTHOR]
  */
-internal class News(
+class News(
     private val appInfoProvider: AppInfoProvider,
     private val authProvider: AuthProvider,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.News
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -73,9 +73,8 @@ internal class News(
 
     companion object {
 
-        // Same-module copy of the id key for use as a Dagger @StringKey argument (kapt can't use a
-        // cross-module const). Kept in sync with the central [ApiConfig.NEWS].
-        const val KEY = ApiConfig.NEWS
+        const val KEY = "News"
+        val ID = ApiConfig.ID(KEY)
 
         private const val PROD_BASE_URL = "https://api.tangem.org/"
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"

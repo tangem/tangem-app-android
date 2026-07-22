@@ -12,13 +12,13 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
 /** YieldSupply [ApiConfig] */
-internal class YieldSupply(
+class YieldSupply(
     private val environmentConfig: EnvironmentConfig,
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.YieldSupply
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -89,7 +89,7 @@ internal class YieldSupply(
     }
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.YIELD_SUPPLY].
-        const val KEY = ApiConfig.YIELD_SUPPLY
+        const val KEY = "YieldSupply"
+        val ID = ApiConfig.ID(KEY)
     }
 }
