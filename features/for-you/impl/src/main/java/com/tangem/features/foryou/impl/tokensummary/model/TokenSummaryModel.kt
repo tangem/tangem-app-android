@@ -17,6 +17,8 @@ import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
+import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
+import com.tangem.domain.markets.GetCoinIndicatorsUpdatesUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -26,43 +28,38 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
-import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryBottomSheetConfig
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryHeaderUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
-import com.tangem.features.foryou.impl.tokensummary.model.transformer.TokenSummaryTransformer
+import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
+import com.tangem.features.foryou.impl.tokensummary.entity.*
+import com.tangem.features.foryou.impl.tokensummary.model.transformer.SetTokenSentimentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.Unit
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class TokenSummaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val appRouter: AppRouter,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
     private val singleAccountStatusSupplier: SingleAccountStatusSupplier,
+    private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase,
+    private val getCoinIndicatorsUpdatesUseCase: GetCoinIndicatorsUpdatesUseCase,
     val portfolioSelectorController: PortfolioSelectorController,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenSummaryComponent.Params>()
+
+    private val tokenSymbol: String = when (val token = params.token) {
+        is TokenSummaryComponent.Token.Portfolio -> token.cryptoCurrency.symbol
+        is TokenSummaryComponent.Token.Market -> token.symbol
+    }
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
     private val swapNavigationJob = JobHolder()
@@ -89,27 +86,33 @@ internal class TokenSummaryModel @Inject constructor(
         field = MutableStateFlow<TokenSummaryUm>(buildInitialUiState())
 
     init {
-        selectedTokenPeriodId
-            .onEach { periodId ->
-                uiState.update(
-                    TokenSummaryTransformer(),
-                )
-            }
+        modelScope.launch {
+            fetchCoinIndicatorsUseCase(symbols = listOf(tokenSymbol))
+        }
+
+        combine(
+            getCoinIndicatorsUpdatesUseCase().map { it[tokenSymbol.uppercase()] }.distinctUntilChanged(),
+            selectedTokenPeriodId,
+        ) { coinIndicators, periodId ->
+            uiState.update(
+                SetTokenSentimentTransformer(coinIndicators, periodId),
+            )
+        }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
 
     private fun buildInitialUiState(): TokenSummaryUm {
+        val periodItems = ForYouPeriod.entries
+            .map { period -> TangemSegmentUM(id = period.id, title = period.title) }
+            .toPersistentList()
+
         return TokenSummaryUm(
             header = buildHeader(),
             periodPicker = PeriodPickerUM.Content(
                 TangemSegmentedPickerUM(
-                    items = persistentListOf(
-                        TangemSegmentUM(id = "0", title = stringReference("Day")),
-                        TangemSegmentUM(id = "1", title = stringReference("Week")),
-                        TangemSegmentUM(id = "2", title = stringReference("Month")),
-                    ),
-                    initialSelectedItem = null,
+                    items = periodItems,
+                    initialSelectedItem = periodItems.firstOrNull { it.id == params.selectedTokenPeriodId },
                     isFixed = true,
                     isAltSurface = true,
                 ),
@@ -141,10 +144,6 @@ internal class TokenSummaryModel @Inject constructor(
 
     private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
         if (tangemSegmentUM.id == selectedTokenPeriodId.value) return
-
-        uiState.update {
-            it.copy(tokenSentiment = TokenSentimentUM.Loading)
-        }
 
         selectedTokenPeriodId.value = tangemSegmentUM.id
     }
