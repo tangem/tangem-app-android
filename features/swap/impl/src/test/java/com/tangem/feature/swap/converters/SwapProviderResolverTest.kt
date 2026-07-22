@@ -20,8 +20,8 @@ import java.math.BigDecimal
  * row-badge resolution ([SwapProviderResolver.resolveBadge]).
  *
  * Ranking metric: best provider == lowest `from/to` fiat ratio == highest `to` fiat output for the
- * same `from` input. "Best DEX Rate" prefers the best-rated DEX/DEX_BRIDGE provider when the feature
- * is on and any DEX is present.
+ * same `from` input. "Best DEX Rate" prefers the best-rated DEX/DEX_BRIDGE provider when any DEX is
+ * present.
  */
 internal class SwapProviderResolverTest {
 
@@ -50,7 +50,7 @@ internal class SwapProviderResolverTest {
             dexBridge to quote(fromFiat = "100", toFiat = "105"),
         )
 
-        val best = SwapProviderResolver.findBest(states, isSwapBestDexRateEnabled = true)
+        val best = SwapProviderResolver.findBest(states)
 
         assertThat(best).isEqualTo(dex1)
     }
@@ -62,21 +62,9 @@ internal class SwapProviderResolverTest {
             cex2 to quote(fromFiat = "100", toFiat = "120"), // best CEX
         )
 
-        val best = SwapProviderResolver.findBest(states, isSwapBestDexRateEnabled = true)
+        val best = SwapProviderResolver.findBest(states)
 
         assertThat(best).isEqualTo(cex2)
-    }
-
-    @Test
-    fun `GIVEN best dex rate off WHEN findBest THEN best overall regardless of type`() {
-        val states = mapOf(
-            cex1 to quote(fromFiat = "100", toFiat = "120"), // best overall (a CEX)
-            dex1 to quote(fromFiat = "100", toFiat = "110"),
-        )
-
-        val best = SwapProviderResolver.findBest(states, isSwapBestDexRateEnabled = false)
-
-        assertThat(best).isEqualTo(cex1)
     }
 
     @Test
@@ -87,7 +75,7 @@ internal class SwapProviderResolverTest {
             dexBridge to quote(fromFiat = "100", toFiat = "115"), // best among DEX-based
         )
 
-        val best = SwapProviderResolver.findBest(states, isSwapBestDexRateEnabled = true)
+        val best = SwapProviderResolver.findBest(states)
 
         assertThat(best).isEqualTo(dexBridge)
     }
@@ -110,7 +98,6 @@ internal class SwapProviderResolverTest {
             provider = dex1,
             needApplyFCARestrictions = false,
             state = states.getValue(dex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         // Overall best is the DEX → it gets the single "Best rate" badge, NOT "Best DEX rate".
@@ -129,7 +116,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
@@ -150,7 +136,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.BestTrade)
@@ -169,7 +154,6 @@ internal class SwapProviderResolverTest {
             provider = dex1,
             needApplyFCARestrictions = false,
             state = states.getValue(dex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         // CEX wins overall, so the best DEX additionally gets the "Best DEX rate" badge.
@@ -189,7 +173,6 @@ internal class SwapProviderResolverTest {
             provider = dexBridge,
             needApplyFCARestrictions = false,
             state = states.getValue(dexBridge),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
@@ -209,7 +192,6 @@ internal class SwapProviderResolverTest {
             provider = dex1,
             needApplyFCARestrictions = false,
             state = states.getValue(dex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.BestTrade)
@@ -227,7 +209,6 @@ internal class SwapProviderResolverTest {
             provider = dexBridge,
             needApplyFCARestrictions = false,
             state = states.getValue(dexBridge),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
@@ -247,49 +228,9 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.BestTrade)
-    }
-
-    // --- Toggle off → only the overall best gets BestTrade; "Best DEX rate" is never produced.
-
-    @Test
-    fun `GIVEN toggle off AND both types present with CEX best WHEN resolveBadge for the CEX THEN BestTrade`() {
-        val states = mapOf(
-            cex1 to quote(fromFiat = "100", toFiat = "120"), // best overall
-            dex1 to quote(fromFiat = "100", toFiat = "110"),
-        )
-
-        val badge = SwapProviderResolver.resolveBadge(
-            states = states,
-            provider = cex1,
-            needApplyFCARestrictions = false,
-            state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = false,
-        )
-
-        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.BestTrade)
-    }
-
-    @Test
-    fun `GIVEN toggle off AND both types present with CEX best WHEN resolveBadge for the DEX THEN Empty`() {
-        val states = mapOf(
-            cex1 to quote(fromFiat = "100", toFiat = "120"), // best overall
-            dex1 to quote(fromFiat = "100", toFiat = "110"),
-        )
-
-        val badge = SwapProviderResolver.resolveBadge(
-            states = states,
-            provider = dex1,
-            needApplyFCARestrictions = false,
-            state = states.getValue(dex1),
-            isSwapBestDexRateEnabled = false,
-        )
-
-        // Toggle off → no "Best DEX rate" badge even though a DEX is present and not the overall best.
-        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
     }
 
     @Test
@@ -305,7 +246,6 @@ internal class SwapProviderResolverTest {
             provider = restricted,
             needApplyFCARestrictions = true,
             state = states.getValue(restricted),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.FCAWarningList)
@@ -326,7 +266,6 @@ internal class SwapProviderResolverTest {
                 provider = restricted,
                 needApplyFCARestrictions = true,
                 state = states.getValue(restricted),
-                isSwapBestDexRateEnabled = true,
             )
 
             assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.FCAWarningList)
@@ -346,7 +285,6 @@ internal class SwapProviderResolverTest {
             provider = restricted,
             needApplyFCARestrictions = false,
             state = states.getValue(restricted),
-            isSwapBestDexRateEnabled = false,
         )
 
         // Restrictions are off → the restricted id is ignored and the normal best-rate badge wins.
@@ -365,7 +303,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = true,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         // FCA restrictions globally on suppress the best-rate badge even for non-restricted providers.
@@ -388,7 +325,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.PermissionRequired)
@@ -407,7 +343,6 @@ internal class SwapProviderResolverTest {
             provider = recommended,
             needApplyFCARestrictions = false,
             state = states.getValue(recommended),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Recommended)
@@ -422,7 +357,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
@@ -440,7 +374,6 @@ internal class SwapProviderResolverTest {
             provider = cex2, // not the best
             needApplyFCARestrictions = false,
             state = states.getValue(cex2),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
@@ -458,7 +391,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = states.getValue(cex1),
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
@@ -476,7 +408,6 @@ internal class SwapProviderResolverTest {
             provider = cex1,
             needApplyFCARestrictions = false,
             state = null,
-            isSwapBestDexRateEnabled = true,
         )
 
         assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)

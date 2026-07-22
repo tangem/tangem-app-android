@@ -56,6 +56,7 @@ class RestoreActiveIssueOrdersUseCase(
                 startTangemPayOrderPollingUseCase(
                     order = TangemPayOrderInfo(orderId = order.id, orderStatus = order.status),
                     userWalletId = userWalletId,
+                    onTerminalReached = { issueCardRepository.removeIssueOrderId(userWalletId, order.id) },
                 )
             }
         }

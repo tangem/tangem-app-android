@@ -32,4 +32,7 @@ interface BaseStakingBalancesStore {
 
     /** Clear staking balances */
     suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
+
+    /** Remove all staking balances for the given [userWalletIds] */
+    suspend fun remove(userWalletIds: List<UserWalletId>)
 }

@@ -1,9 +1,9 @@
 package com.tangem.data.staking.toggles
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.google.common.truth.Truth.assertThat
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -24,21 +24,10 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `P2PEthPool returns true when STAKING_ETH_ENABLED is enabled`() {
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) } returns true
-
+    fun `P2PEthPool integration is always enabled`() {
         assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isTrue()
 
-        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) }
-    }
-
-    @Test
-    fun `P2PEthPool returns false when STAKING_ETH_ENABLED is disabled`() {
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) } returns false
-
-        assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isFalse()
-
-        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) }
+        verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
     }
 
     @Test
@@ -60,28 +49,58 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `isSolanaUnstakeValidationEnabled returns true when toggle enabled`() {
+    fun `GIVEN toggle enabled WHEN isRegionUnavailableHandlingEnabled THEN returns true`() {
+        // Arrange
         every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED)
         } returns true
 
-        assertThat(toggles.isSolanaUnstakeValidationEnabled()).isTrue()
+        // Act
+        val result = toggles.isRegionUnavailableHandlingEnabled()
 
+        // Assert
+        assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `GIVEN toggle disabled WHEN isRegionUnavailableHandlingEnabled THEN returns false`() {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED)
+        } returns false
+
+        // Act
+        val result = toggles.isRegionUnavailableHandlingEnabled()
+
+        // Assert
+        assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION enabled WHEN isTransactionValidationEnabled THEN true`() {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
+        } returns true
+
+        // Act & Assert
+        assertThat(toggles.isTransactionValidationEnabled).isTrue()
         verify(exactly = 1) {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
         }
     }
 
     @Test
-    fun `isSolanaUnstakeValidationEnabled returns false when toggle disabled`() {
+    fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION disabled WHEN isTransactionValidationEnabled THEN false`() {
+        // Arrange
         every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
         } returns false
 
-        assertThat(toggles.isSolanaUnstakeValidationEnabled()).isFalse()
-
+        // Act & Assert
+        assertThat(toggles.isTransactionValidationEnabled).isFalse()
         verify(exactly = 1) {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED)
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
         }
     }
 }

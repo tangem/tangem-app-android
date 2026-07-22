@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.approval.impl.model.GiveApprovalUM
-import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 

@@ -34,6 +34,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         repository = tangemPayTxHistoryRepository,
         dispatchers = dispatchers,
         txHistoryUiActions = params.uiActions,
+        isCashbackEnabled = featureToggles.isCashbackEnabled,
     )
 
     val uiState: StateFlow<TangemPayTxHistoryUM>
@@ -45,8 +46,6 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         subscribeToUiItemChanges()
         subscribeToUpdateListener()
     }
-
-    fun isRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     private fun launchPagination() {
         modelScope.launch { listManager.launchPagination(params.userWalletId) }

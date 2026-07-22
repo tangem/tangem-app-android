@@ -5,7 +5,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
-import com.tangem.common.ui.expressStatus.expressTransactionsItemsLegacy
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.decompose.context.AppComponentContext
@@ -32,13 +31,6 @@ internal class DefaultExpressTransactionsComponent @AssistedInject constructor(
             onPause = model::onPause,
             onResume = model::onResume,
         )
-    }
-
-    override fun LazyListScope.expressTransactionsContentLegacy(
-        state: PersistentList<ExpressTransactionStateUM>,
-        modifier: Modifier,
-    ) {
-        expressTransactionsItemsLegacy(expressTxs = state, modifier = modifier)
     }
 
     override fun LazyListScope.expressTransactionsContent(

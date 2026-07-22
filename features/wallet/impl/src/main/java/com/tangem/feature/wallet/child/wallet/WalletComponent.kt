@@ -15,7 +15,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
@@ -30,7 +29,6 @@ import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
-import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
@@ -71,7 +69,6 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
-    private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -295,50 +292,28 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
-        if (designFeatureToggles.isRedesignEnabled) {
-            WalletScreen2(
-                state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponent,
-                tangemPayComponent = tangemPayMainBlockComponent,
-                virtualAccountComponent = virtualAccountMainBlockComponent,
-                bottomSheetContent = { onExpandSheet ->
-                    BottomSheetContent(
-                        bottomSheetState = bottomSheetState,
-                        onHeaderSizeChange = { headerSize = it },
-                        onExpandSheet = onExpandSheet,
-                        modifier = modifier,
-                    )
-                },
-                bottomSheetHeaderHeightProvider = { headerSize },
-                onBottomSheetStateChange = { bottomSheetState.value = it },
-            )
-        } else {
-            WalletScreen(
-                state = uiState,
-                promoBannersBlockComponent = promoBannersBlockComponent,
-                tangemPayComponent = tangemPayMainBlockComponent,
-                virtualAccountComponent = virtualAccountMainBlockComponent,
-                bottomSheetContent = { onExpandSheet ->
-                    BottomSheetContent(
-                        bottomSheetState = bottomSheetState,
-                        onHeaderSizeChange = { headerSize = it },
-                        onExpandSheet = onExpandSheet,
-                        modifier = modifier,
-                    )
-                },
-                bottomSheetHeaderHeightProvider = { headerSize },
-                onBottomSheetStateChange = { bottomSheetState.value = it },
-            )
-        }
+        WalletScreen2(
+            state = uiState,
+            promoBannersBlockComponent = promoBannersBlockComponent,
+            tangemPayComponent = tangemPayMainBlockComponent,
+            virtualAccountComponent = virtualAccountMainBlockComponent,
+            modifier = modifier,
+            bottomSheetContent = { onExpandSheet ->
+                BottomSheetContent(
+                    bottomSheetState = bottomSheetState,
+                    onHeaderSizeChange = { headerSize = it },
+                    onExpandSheet = onExpandSheet,
+                    modifier = Modifier,
+                )
+            },
+            bottomSheetHeaderHeightProvider = { headerSize },
+            onBottomSheetStateChange = { bottomSheetState.value = it },
+        )
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()
             is DefaultTokenActionsComponent -> {
-                if (designFeatureToggles.isRedesignEnabled) {
-                    dialog.Content(Modifier.hazeEffectTangem())
-                } else {
-                    dialog.BottomSheet()
-                }
+                dialog.Content(Modifier.hazeEffectTangem())
             }
             is ComposableBottomSheetComponent -> dialog.BottomSheet()
             else -> {}

@@ -27,6 +27,8 @@ sealed class PaymentAccountStatusValue {
         get() = when (this) {
             is Error,
             is IssuingCard,
+            is AwaitingPlanSelection,
+            is Inactive,
             is Empty,
             is NotCreated,
             is UnderReview,
@@ -54,6 +56,8 @@ sealed class PaymentAccountStatusValue {
             is UnderReview -> copy(source = source)
             is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
+            is AwaitingPlanSelection,
+            is Inactive,
             is Empty,
             is NotCreated,
             is Error,
@@ -100,6 +104,36 @@ sealed class PaymentAccountStatusValue {
      */
     @Serializable
     data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where KYC is approved but no tariff plan has been selected yet
+     *
+     * @property source The source of the status information.
+     * @property cryptoCurrency The crypto currency held by the account.
+     * @property tariffPlan Current tariff plan
+     */
+    @Serializable
+    data class AwaitingPlanSelection(
+        override val source: StatusSource,
+        val cryptoCurrency: CryptoCurrency.Token,
+        val tariffPlan: TangemPayCustomerTariffPlan,
+    ) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where a tariff plan has been selected and the card is being issued
+     *
+     * @property source The source of the status information.
+     * @property fiatBalance The fiat balance of state.
+     * @property cryptoCurrency The crypto currency held by the account.
+     * @property tariffPlan Current tariff plan
+     */
+    @Serializable
+    data class Inactive(
+        override val source: StatusSource,
+        val fiatBalance: FiatBalance,
+        val cryptoCurrency: CryptoCurrency.Token,
+        val tariffPlan: TangemPayTariffPlanState,
+    ) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where the account is deactivated.
@@ -152,6 +186,8 @@ sealed class PaymentAccountStatusValue {
      * @property virtualAccount Virtual Account (Visa on-ramp) availability — VA MVP0 (TWI-1638), or `null`
      *                          when not applicable (feature toggle off / wallet not eligible).
      *                          Transient: not persisted in the local cache.
+     * @property tariffPlan Current tariff plan with subscription data (Tiers).
+     *                      Transient: not persisted in the local cache.
      */
     @Serializable
     data class Loaded(
@@ -164,6 +200,7 @@ sealed class PaymentAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
         val virtualAccount: VirtualAccountOnramp?,
+        val tariffPlan: TangemPayTariffPlanState?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,

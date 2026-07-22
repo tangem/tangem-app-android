@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +31,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -79,7 +81,8 @@ private fun Content(state: TangemPayCardLimitSetupUM, modifier: Modifier = Modif
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x3),
+                .padding(top = TangemTheme.dimens2.x3)
+                .testTag(TangemPayTestTags.DAILY_LIMIT_SET_BUTTON),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_daily_limit_set_button),
             onClick = state.onSubmitClick,
@@ -99,6 +102,7 @@ private fun AmountBlock(state: TangemPayCardLimitSetupUM, modifier: Modifier = M
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
     ) {
         Text(
+            modifier = Modifier.testTag(TangemPayTestTags.DAILY_LIMIT_HINT),
             text = state.subtitle.resolveReference(),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.tertiary,
@@ -158,6 +162,7 @@ private fun PresetChip(preset: TangemPayCardLimitSetupUM.LimitPresetUM, modifier
             .clip(RoundedCornerShape(14.dp))
             .background(TangemTheme.colors3.bg.tertiary)
             .clickable(onClick = preset.onClick)
+            .testTag(preset.testTag)
             .padding(horizontal = TangemTheme.dimens2.x5, vertical = TangemTheme.dimens2.x1)
             .wrapContentHeight(),
         horizontalArrangement = Arrangement.Center,

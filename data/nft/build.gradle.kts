@@ -4,55 +4,61 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.data.nft"
 }
+
 dependencies {
 
-    /** Project - Data */
-    implementation(projects.core.datasource)
-    implementation(projects.data.common)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /** Project - Domain */
+    // region Other libraries
+    implementation(deps.arrow.core)
+    implementation(deps.arrow.fx)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
+
+    // region Libs - Tangem
+    implementation(tangemDeps.blockchain)
+    // endregion
+
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Project - Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
+
+    // region Project - Data
+    api(projects.data.common)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.common)
+    api(projects.domain.walletManager)
     implementation(projects.domain.card)
-    implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets.models)
+    // endregion
 
-    /** Project - Utils */
-    implementation(projects.core.utils)
-    implementation(projects.domain.legacy)
-    implementation(projects.libs.blockchainSdk)
+    // region Project - Libs
+    api(projects.libs.blockchainSdk)
+    // endregion
 
-    /** Feature Api modules */
-    implementation(projects.features.nft.api)
-
-    /** Libs - Other */
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
-    implementation(deps.arrow.fx)
-    implementation(deps.jodatime)
-    implementation(deps.androidx.paging.runtime)
-    implementation(deps.moshi.kotlin)
-    ksp(deps.moshi.kotlin.codegen)
-    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
-
-    /** Libs - Tangem */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
-
-    /** DI */
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-
-    testImplementation(projects.test.core)
+    // region Tests
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    // endregion
 }

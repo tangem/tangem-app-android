@@ -17,24 +17,30 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
+@Suppress("LongParameterList")
 class GetFeeForTokenUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
+    private val gaslessYieldRepository: GaslessYieldRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
         walletManagersFacade = walletManagersFacade,
         gaslessTransactionRepository = gaslessTransactionRepository,
         demoConfig = demoConfig,
+        gaslessYieldRepository = gaslessYieldRepository,
     )
 
     suspend operator fun invoke(
@@ -74,12 +80,30 @@ class GetFeeForTokenUseCase(
                         raiseIllegalStateError("Token currency not found for network ${token.network.id}")
                     }
 
-                    tokenFeeCalculator.calculateTokenFee(
+                    val isYieldActive = isYieldWithdrawEnabled &&
+                        tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+
+                    val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,
                         tokenForPayFeeStatus = tokenCurrencyStatus,
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         initialFee = initialFeeEth,
+                        isYieldActive = isYieldActive,
+                        userWallet = userWallet,
                     ).bind()
+
+                    if (isYieldActive) {
+                        attachGaslessFeePlan(
+                            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+                            userWallet = userWallet,
+                            tokenStatus = tokenCurrencyStatus,
+                            tokenFeeExtended = tokenFeeExtended,
+                            transactionData = transactionData,
+                            isYieldActive = true,
+                        )
+                    } else {
+                        tokenFeeExtended
+                    }
                 },
                 catch = {
                     raise(GaslessError.DataError(it))

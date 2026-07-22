@@ -2,7 +2,6 @@ package com.tangem.features.managetokens.utils
 
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.network.Network
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.firstOrNull
  */
 internal class DynamicAddressesDerivationValidator(
     private val dynamicAddressesRepository: DynamicAddressesRepository,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
 ) {
 
     /**
@@ -29,7 +27,6 @@ internal class DynamicAddressesDerivationValidator(
         networkId: Network.ID,
         path: String?,
     ): Boolean {
-        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return false
         if (path == null) return false
         if (!isSupportedBlockchain(networkId)) return false
 

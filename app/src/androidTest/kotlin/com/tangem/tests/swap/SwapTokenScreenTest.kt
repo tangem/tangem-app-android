@@ -25,7 +25,7 @@ import org.junit.Test
 class SwapTokenScreenTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("3546")
     @DisplayName("Swap: network fee")
@@ -115,7 +115,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("3549")
     @DisplayName("Swap: network error test")
@@ -177,7 +177,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("3547")
     @DisplayName("Swap: change network fee")
@@ -280,7 +280,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("2828")
     @DisplayName("Swap: go to token swap")
@@ -333,7 +333,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("575")
     @DisplayName("Swap: check UI")
@@ -428,7 +428,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("5162")
     @DisplayName("Swap: check swap tokens switch")
@@ -535,7 +535,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("583")
     @DisplayName("Swap: check switch fee type (enable to cover 'Market' and 'Fast' fee)")

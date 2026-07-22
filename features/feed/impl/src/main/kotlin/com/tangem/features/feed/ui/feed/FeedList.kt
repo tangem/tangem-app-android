@@ -4,11 +4,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.testTag
@@ -16,17 +17,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_pie_chart_20
 import com.tangem.core.ui.test.BaseSearchBarTestTags.SEARCH_BAR
+import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.feed.components.*
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.feed.state.FeedListUM
+import com.tangem.features.feed.ui.feed.state.ForYouBannerUM
 import com.tangem.features.feed.ui.feed.state.GlobalFeedState
 
 @Composable
@@ -101,10 +105,28 @@ private fun FeedListContent(
             .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
             .drawBehind { drawRect(background) },
     ) {
-        if (LocalRedesignEnabled.current) {
-            SpacerH(contentPadding.calculateTopPadding())
-        }
+        SpacerH(contentPadding.calculateTopPadding())
         DateBlock(state.currentDate)
+
+        if (state.forYouBannerUM is ForYouBannerUM.Content) {
+            SpacerH(16.dp)
+            TangemMessageBanner(
+                title = resourceReference(R.string.for_you_title),
+                description = resourceReference(R.string.for_you_description),
+                variant = TangemMessageBanner.Variant.Default,
+                slotStart = {
+                    Icon(
+                        imageVector = Icons.ic_pie_chart_20,
+                        tint = TangemTheme.colors3.icon.primary,
+                        contentDescription = null,
+                    )
+                },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .clickable(onClick = state.forYouBannerUM.onClick),
+            )
+        }
+
         SpacerH(32.dp)
 
         MarketBlock(
@@ -139,17 +161,7 @@ private fun FeedListContent(
 @Preview(showBackground = true, heightDp = 1500)
 @Composable
 private fun FeedListPreview() {
-    TangemThemePreview {
-        FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
-    }
-}
-
-@Preview(showBackground = true, heightDp = 1500)
-@Composable
-private fun FeedListPreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
-        }
+        FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
     }
 }

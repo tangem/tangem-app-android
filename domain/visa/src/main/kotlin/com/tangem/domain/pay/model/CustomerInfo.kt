@@ -2,6 +2,8 @@ package com.tangem.domain.pay.model
 
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -30,6 +32,7 @@ data class CustomerInfo(
     val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
     val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
     val availableForWithdrawal: BigDecimal,
+    val tariffPlan: TangemPayCustomerTariffPlan?,
 ) {
 
     /** Transitional single-card accessor — returns the first product instance, or null if none. */
@@ -101,5 +104,6 @@ data class CustomerInfo(
         val cardStatus: TangemPayCard.Status,
         val lastFourDigits: String,
         val isPinSet: Boolean,
+        val images: List<TangemPayTariffPlan.Image>,
     )
 }

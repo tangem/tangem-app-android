@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -27,6 +26,7 @@ import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
@@ -37,16 +37,17 @@ import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.features.send.api.SendNotificationsComponent
-import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.api.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.swap.v2.api.SwapFeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -76,7 +77,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import com.tangem.features.send.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.utils.transformer.update as transformerUpdate
 
 @Suppress("LongParameterList", "LargeClass")
@@ -89,6 +90,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase,
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val sendNotificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
@@ -172,7 +175,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     init {
         updateAmountSubtractAvailability()
-        configConfirmNavigation()
         initialState()
         subscribeOnNotificationUpdates()
         subscribeOnTapHelpUpdates()
@@ -194,8 +196,19 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         updateConfirmNotifications()
     }
 
-    fun updateState(sendWithSwapUM: SendWithSwapUM) {
-        uiState.value = sendWithSwapUM
+    /**
+     * Applies the fields editable outside Confirm (amount, destination) from the parent's [sendWithSwapUM].
+     * Confirm-local fields (confirmUM, feeSelectorUM) must be kept — the parent's copies of them
+     * stay stale until a successful send.
+     */
+    fun updateEditedState(sendWithSwapUM: SendWithSwapUM) {
+        uiState.update { state ->
+            state.copy(
+                amountUM = sendWithSwapUM.amountUM,
+                destinationUM = sendWithSwapUM.destinationUM,
+            )
+        }
+        updateConfirmNotifications()
     }
 
     override fun onFeeReload() {
@@ -379,6 +392,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                             swapDataModel = data,
                         ),
                     )
+                    params.callback.onResult(uiState.value)
                     router.replaceAll(SendWithSwapRoute.Success)
                 },
                 expressOperationType = ExpressOperationType.SEND_WITH_SWAP,
@@ -467,10 +481,17 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     feeValue = confirmData.fee?.amount?.value,
                 ),
             )
+            val isHighNetworkFee = isHighNetworkFee(feeCryptoCurrencyStatus.currency)
             uiState.transformerUpdate(
-                SendWithSwapConfirmationNotificationsTransformer(),
+                SendWithSwapConfirmationNotificationsTransformer(isHighNetworkFee = isHighNetworkFee),
             )
         }
+    }
+
+    private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
+        if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
+        val feeAmount = confirmData.fee?.amount?.value ?: return false
+        return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }
 
     private fun subscribeOnNotificationUpdates() {
@@ -571,49 +592,29 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
-    private fun configConfirmNavigation() {
-        combine(
-            flow = uiState,
-            flow2 = params.currentRoute,
-            transform = { state, route -> state to route },
-        ).filter {
-            it.second is SendWithSwapRoute.Confirm
-        }.onEach { (state, _) ->
-            val confirmUM = state.confirmUM
-            val isContent = confirmUM is ConfirmUM.Content
-            val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
-            val isHoldToConfirm = params.userWallet.isHotWallet && isContent
-            params.callback.onResult(
-                route = SendWithSwapRoute.Confirm,
-                sendWithSwapUM = state.copy(
-                    navigationUM = NavigationUM.Content(
-                        source = SendWithSwapRoute.Confirm.javaClass.simpleName,
-                        title = resourceReference(id = R.string.send_with_swap_confirm_title),
-                        subtitle = null,
-                        backIconRes = R.drawable.ic_back_24,
-                        backIconClick = router::pop,
-                        primaryButton = NavigationButton(
-                            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
-                            iconRes = walletInterationIcon(params.userWallet),
-                            isIconVisible = isReadyToSend && !isHoldToConfirm,
-                            isHapticClick = isReadyToSend,
-                            isHoldToConfirm = isHoldToConfirm,
-                            isEnabled = confirmUM.isPrimaryButtonEnabled,
-                            onClick = {
-                                when (confirmUM) {
-                                    is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
-                                        return@NavigationButton
-                                    } else {
-                                        onSendClick()
-                                    }
-                                    else -> return@NavigationButton
-                                }
-                            },
-                        ),
-                    ),
-                ),
-            )
-        }.launchIn(modelScope)
+    fun primaryButtonUM(confirmUM: ConfirmUM): NavigationButton {
+        val isContent = confirmUM is ConfirmUM.Content
+        val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
+        val isHoldToConfirm = params.userWallet.isHotWallet && isContent
+
+        return NavigationButton(
+            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
+            iconRes = walletInterationIcon(params.userWallet),
+            isIconVisible = isReadyToSend && !isHoldToConfirm,
+            isHapticClick = isReadyToSend,
+            isHoldToConfirm = isHoldToConfirm,
+            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            onClick = {
+                when (confirmUM) {
+                    is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
+                        return@NavigationButton
+                    } else {
+                        onSendClick()
+                    }
+                    else -> return@NavigationButton
+                }
+            },
+        )
     }
 
     private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
