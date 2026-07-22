@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -249,6 +250,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val title: TextReference,
         val subtitle: TextReference,
         val menu: ImmutableList<MenuItemUM> = persistentListOf(),
+        val debugModel: TxHistoryInfo? = null,
     )
 
     /**
