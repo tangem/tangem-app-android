@@ -31,6 +31,8 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
 internal class PolymarketEventDetailsComponent(
     appComponentContext: AppComponentContext,
     private val eventId: String,
+    private val marketId: String? = null,
+    private val assetId: String? = null,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val slotNavigation = SlotNavigation<PlacePredictionConfig>()
@@ -59,6 +61,9 @@ internal class PolymarketEventDetailsComponent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(text = "Event details: $eventId")
+            if (marketId != null) {
+                Text(text = "Preselected: $marketId / $assetId")
+            }
             Text(
                 text = "Place prediction",
                 modifier = Modifier.clickable(onClick = ::onPlacePrediction),
@@ -69,7 +74,9 @@ internal class PolymarketEventDetailsComponent(
     }
 
     private fun onPlacePrediction() {
-        slotNavigation.activate(PlacePredictionConfig(eventId = eventId))
+        slotNavigation.activate(
+            PlacePredictionConfig(eventId = eventId, marketId = marketId, side = assetId),
+        )
     }
 
     private fun createBottomSheet(
