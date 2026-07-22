@@ -311,6 +311,7 @@ fun BoxScope.FooterOverlay(
         0.dp
     }
     val fadeMax = TangemTheme.colors2.surface.level2
+
     CompositionLocalProvider(
         LocalTangemBottomSheetContentBottomInset provides contentBottomOverlayHeight,
         LocalBottomSheetContentScrollable provides isContentScrollable,
@@ -323,17 +324,20 @@ fun BoxScope.FooterOverlay(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
         ) {
-            if (gradientHeight > 0.dp) {
+            val isGradientDisplayed = gradientHeight > 0.dp
+
+            if (isGradientDisplayed) {
                 Fade(
                     backgroundColor = fadeMax,
                     height = gradientHeight,
                 )
             }
+
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(measuredFooterHeight ?: 0.dp)
-                    .background(fadeMax),
+                    .background(if (isGradientDisplayed) fadeMax else Color.Transparent),
             )
         }
     }

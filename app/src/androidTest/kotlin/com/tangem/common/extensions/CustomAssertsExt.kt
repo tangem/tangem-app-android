@@ -12,6 +12,7 @@ import com.tangem.core.ui.components.buttons.actions.IsDimmedKey
 import io.github.kakaocup.compose.node.element.KNode
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import java.math.BigDecimal
 
 fun BaseTestCase.assertSnackbarWithText(text: String, timeoutMs: Long = WAIT_UNTIL_TIMEOUT) {
     composeTestRule.waitUntil(timeoutMillis = timeoutMs) {
@@ -113,6 +114,21 @@ private fun extractText(node: SemanticsNode): String? {
     return null
 }
 
+/** Matches everything that isn't a digit or a decimal point, used to strip currency symbols and separators. */
+private val NON_NUMERIC_REGEX = "[^0-9.]".toRegex()
+
+/** This label's numeric part with currency symbols and grouping separators stripped (US-locale format). */
+private fun String.stripToNumeric(): String = replace(NON_NUMERIC_REGEX, "")
+
+/**
+ * Numeric value parsed from a balance/amount label such as `"$0.00"` or `"1,234.5"` — strips currency
+ * symbols and grouping separators. So a dash balance (`"—"`) has no digits and fails here by design:
+ * callers must branch on the dash before parsing.
+ */
+fun String.parseNumericBalance(): BigDecimal =
+    stripToNumeric().toBigDecimalOrNull()
+        ?: error("Cannot parse a numeric balance from '$this'")
+
 private fun parseVolume(node: SemanticsNode): Double? {
     val text = extractText(node) ?: return null
     val multiplier = when {
@@ -122,6 +138,6 @@ private fun parseVolume(node: SemanticsNode): Double? {
         text.contains('K', ignoreCase = true) -> 1_000.0
         else -> 1.0
     }
-    val number = text.replace("[^0-9.]".toRegex(), "").toDoubleOrNull() ?: return null
+    val number = text.stripToNumeric().toDoubleOrNull() ?: return null
     return number * multiplier
 }

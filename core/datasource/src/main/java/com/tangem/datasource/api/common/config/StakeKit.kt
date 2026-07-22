@@ -15,6 +15,8 @@ internal class StakeKit(
     private val stakeKitAuthProvider: StakeKitAuthProvider,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.StakeKit
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(

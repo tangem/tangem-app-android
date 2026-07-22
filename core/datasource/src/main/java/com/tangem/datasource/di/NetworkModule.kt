@@ -52,6 +52,15 @@ internal object NetworkModule {
         appPreferencesStore: AppPreferencesStore,
         appScope: AppCoroutineScope,
     ): ApiConfigsManager {
+        // The DI key (@StringKey in ApiConfigsModule) and the config's own id are declared separately;
+        // fail fast on startup if they drift, otherwise the config would be silently unreachable by id.
+        apiConfigs.forEach { (key, config) ->
+            check(key == config.id.name) {
+                "ApiConfig DI key [$key] doesn't match the config id [${config.id.name}]. " +
+                    "The @StringKey in ApiConfigsModule must match the config's own id."
+            }
+        }
+
         return when {
             BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs, appScope)
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)

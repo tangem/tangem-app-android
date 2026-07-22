@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.common.config
 
-typealias ApiConfigs = Set<@JvmSuppressWildcards ApiConfig>
+typealias ApiConfigs = Map<String, @JvmSuppressWildcards ApiConfig>
 
 /**
  * Api config
@@ -9,7 +9,9 @@ typealias ApiConfigs = Set<@JvmSuppressWildcards ApiConfig>
  *
 [REDACTED_AUTHOR]
  */
-sealed class ApiConfig {
+// Base type for configs declared in other modules; keep it a class, not an interface.
+@Suppress("UnnecessaryAbstractClass")
+abstract class ApiConfig {
 
     /** Default environment */
     abstract val defaultEnvironment: ApiEnvironment
@@ -18,39 +20,48 @@ sealed class ApiConfig {
     abstract val environmentConfigs: List<ApiEnvironmentConfig>
 
     /** Unique id */
-    val id: ID = initializeId()
+    abstract val id: ID
 
-    enum class ID {
-        Express,
-        TangemTech,
-        StakeKit,
-        P2PEthPool,
-        TangemPay,
-        TangemPayAuth,
-        BlockAid,
-        YieldSupply,
-        MoonPay,
-        News,
-        GaslessTxService,
-        SurveySparrow,
-        Auth,
-    }
+    /**
+     * Type-safe config identifier, backed by a stable string [name] (used as the persistence key
+     * for the selected environment). Constants for the built-in configs live in the companion.
+     */
+    @JvmInline
+    value class ID(val name: String) {
 
-    private fun initializeId(): ID {
-        return when (this) {
-            is Express -> ID.Express
-            is TangemTech -> ID.TangemTech
-            is StakeKit -> ID.StakeKit
-            is P2PEthPool -> ID.P2PEthPool
-            is TangemPay.Bff -> ID.TangemPay
-            is TangemPay.Auth -> ID.TangemPayAuth
-            is BlockAid -> ID.BlockAid
-            is YieldSupply -> ID.YieldSupply
-            is MoonPay -> ID.MoonPay
-            is News -> ID.News
-            is GaslessTxService -> ID.GaslessTxService
-            is SurveySparrow -> ID.SurveySparrow
-            is Auth -> ID.Auth
+        companion object {
+
+            /**
+             * Raw string keys. Use these where a compile-time constant is required (e.g. as an
+             * annotation argument); prefer the type-safe [ID] instances everywhere else.
+             */
+            const val EXPRESS = "Express"
+            const val TANGEM_TECH = "TangemTech"
+            const val STAKE_KIT = "StakeKit"
+            const val P2P_ETH_POOL = "P2PEthPool"
+            const val TANGEM_PAY = "TangemPay"
+            const val TANGEM_PAY_AUTH = "TangemPayAuth"
+            const val BLOCK_AID = "BlockAid"
+            const val YIELD_SUPPLY = "YieldSupply"
+            const val MOON_PAY = "MoonPay"
+            const val NEWS = "News"
+            const val GASLESS_TX_SERVICE = "GaslessTxService"
+            const val SURVEY_SPARROW = "SurveySparrow"
+            const val AUTH = "Auth"
+
+            val Express = ID(EXPRESS)
+            val TangemTech = ID(TANGEM_TECH)
+            val StakeKit = ID(STAKE_KIT)
+            val P2PEthPool = ID(P2P_ETH_POOL)
+            val TangemPay = ID(TANGEM_PAY)
+            val TangemPayAuth = ID(TANGEM_PAY_AUTH)
+            val BlockAid = ID(BLOCK_AID)
+            val YieldSupply = ID(YIELD_SUPPLY)
+            val MoonPay = ID(MOON_PAY)
+            val News = ID(NEWS)
+            val GaslessTxService = ID(GASLESS_TX_SERVICE)
+            val SurveySparrow = ID(SURVEY_SPARROW)
+            val Auth = ID(AUTH)
         }
     }
 

@@ -34,6 +34,7 @@ internal sealed class TangemPayTxHistoryItemDM {
         @SerialName("status") val status: Status,
         @SerialName("enriched_merchant_icon_url") val enrichedMerchantIconUrl: String?,
         @SerialName("declined_reason") val declinedReason: String?,
+        @SerialName("cashback") val cashback: Cashback? = null,
     ) : TangemPayTxHistoryItemDM()
 
     @Serializable
@@ -98,5 +99,54 @@ internal sealed class TangemPayTxHistoryItemDM {
 
         @SerialName("unknown")
         UNKNOWN,
+    }
+
+    @Serializable
+    data class Cashback(
+        @SerialName("status") val status: Status,
+        @SerialName("amount") val amount: SerializedBigDecimal? = null,
+        @SerialName("currency") val currency: SerializedCurrency? = null,
+        @SerialName("cap_trimmed") val isCapTrimmed: Boolean = false,
+        @SerialName("exclusion_reason") val exclusionReason: ExclusionReason? = null,
+        @SerialName("promotion_ids") val promotionIds: List<String> = emptyList(),
+    ) {
+        @Serializable
+        enum class Status {
+            @SerialName("estimated")
+            ESTIMATED,
+
+            @SerialName("confirmed")
+            CONFIRMED,
+
+            @SerialName("excluded")
+            EXCLUDED,
+
+            @SerialName("awaiting_calculation")
+            AWAITING_CALCULATION,
+
+            @SerialName("unknown")
+            UNKNOWN,
+        }
+
+        @Serializable
+        enum class ExclusionReason {
+            @SerialName("mcc_excluded")
+            MCC_EXCLUDED,
+
+            @SerialName("monthly_cap_reached")
+            MONTHLY_CAP_REACHED,
+
+            @SerialName("customer_blocklisted")
+            CUSTOMER_BLOCKLISTED,
+
+            @SerialName("merchant_country_excluded")
+            MERCHANT_COUNTRY_EXCLUDED,
+
+            @SerialName("below-min")
+            BELOW_MIN,
+
+            @SerialName("unknown")
+            UNKNOWN,
+        }
     }
 }

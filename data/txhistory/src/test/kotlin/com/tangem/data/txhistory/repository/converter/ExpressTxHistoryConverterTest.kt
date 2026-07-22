@@ -131,6 +131,27 @@ internal class ExpressTxHistoryConverterTest {
     }
 
     @Test
+    fun `GIVEN exchange entity with external tx id WHEN convert THEN external tx id mapped to domain`() {
+        // Arrange
+        val entity = createExchangeEntity(externalTxId = "ext-1")
+
+        // Act
+        val swap = swapConverter.convert(
+            ExpressSwapConverter.Input(
+                entity = entity,
+                provider = null,
+                isOutgoing = true,
+                fromCurrency = null,
+                toCurrency = null,
+                refundCurrency = null,
+            ),
+        )
+
+        // Assert
+        assertThat(swap.tx.externalTxId).isEqualTo("ext-1")
+    }
+
+    @Test
     fun `GIVEN onramp entity WHEN toOnramp THEN matched by payout hash with fiat from-leg`() {
         // Arrange
         val entity = createOnrampEntity(payoutHash = "payout", status = "finished")
@@ -158,6 +179,7 @@ internal class ExpressTxHistoryConverterTest {
         toActualAmount: String? = null,
         refundNetwork: String? = null,
         refundContractAddress: String? = null,
+        externalTxId: String? = null,
     ) = ExpressExchangeEntity(
         txId = "tx-1",
         providerId = "provider",
@@ -169,7 +191,7 @@ internal class ExpressTxHistoryConverterTest {
         refundExtraId = null,
         rateType = "float",
         status = status,
-        externalTxId = null,
+        externalTxId = externalTxId,
         externalTxUrl = "https://ex.url",
         payinHash = payinHash,
         payoutHash = payoutHash,

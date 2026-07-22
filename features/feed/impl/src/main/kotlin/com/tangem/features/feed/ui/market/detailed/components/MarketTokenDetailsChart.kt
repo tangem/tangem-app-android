@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.charts.MarketChart
 import com.tangem.common.ui.charts.getMarketChartBottomAxisHeight
 import com.tangem.common.ui.charts.state.MarketChartLook
@@ -24,9 +25,9 @@ internal fun MarketTokenDetailsChart(
     backgroundColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val growingColor = TangemTheme.colors.icon.accent
-    val fallingColor = TangemTheme.colors.icon.warning
-    val neutralColor = TangemTheme.colors.icon.informative
+    val growingColor = TangemTheme.colors3.icon.accent.blue
+    val fallingColor = TangemTheme.colors3.icon.accent.red
+    val neutralColor = TangemTheme.colors3.icon.secondary
 
     val chartState = rememberMarketChartState(
         dataProducer = state.dataProducer,
@@ -59,18 +60,18 @@ internal fun MarketTokenDetailsChart(
                     MarketsTokenDetailsUM.ChartState.Status.LOADING -> {
                         CircularProgressIndicator(
                             modifier = Modifier
-                                .size(TangemTheme.dimens.size16)
+                                .size(16.dp)
                                 .align(Alignment.Center),
-                            color = TangemTheme.colors.text.accent,
-                            strokeWidth = TangemTheme.dimens.size2,
+                            color = TangemTheme.colors3.icon.accent.neutral,
+                            strokeWidth = 2.dp,
                         )
                     }
                     MarketsTokenDetailsUM.ChartState.Status.ERROR -> {
                         UnableToLoadData(
                             modifier = Modifier
                                 .padding(
-                                    horizontal = TangemTheme.dimens.spacing16,
-                                    vertical = TangemTheme.dimens.spacing12,
+                                    horizontal = 16.dp,
+                                    vertical = 12.dp,
                                 )
                                 .align(Alignment.Center),
                             onRetryClick = state.onLoadRetryClick,

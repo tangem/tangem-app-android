@@ -1,7 +1,10 @@
 package com.tangem.features.feed.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,23 +34,6 @@ internal fun FeedSearchBar(
     startContent: @Composable (() -> Unit)? = null,
     endContent: @Composable (() -> Unit)? = null,
 ) {
-    FeedSearchBarV2(
-        isSearchBarClickable = isSearchBarClickable,
-        feedListSearchBar = feedListSearchBar,
-        modifier = modifier,
-        startContent = startContent,
-        endContent = endContent,
-    )
-}
-
-@Composable
-private fun FeedSearchBarV2(
-    isSearchBarClickable: Boolean,
-    feedListSearchBar: FeedListSearchBar,
-    modifier: Modifier = Modifier,
-    startContent: @Composable (() -> Unit)? = null,
-    endContent: @Composable (() -> Unit)? = null,
-) {
     TangemTopBar(
         modifier = modifier,
         startContent = startContent,
@@ -59,8 +45,8 @@ private fun FeedSearchBarV2(
                 modifier = Modifier
                     .weight(1f)
                     .padding(
-                        start = if (startContent != null) TangemTheme.dimens2.x3 else 0.dp,
-                        end = if (endContent != null) TangemTheme.dimens2.x3 else 0.dp,
+                        start = if (startContent != null) 12.dp else 0.dp,
+                        end = if (endContent != null) 12.dp else 0.dp,
                     )
                     .clip(CircleShape)
                     .hazeEffectTangem {
@@ -69,22 +55,22 @@ private fun FeedSearchBarV2(
                     .conditional(condition = isSearchBarClickable) {
                         clickable(onClick = feedListSearchBar.onBarClick)
                     }
-                    .padding(TangemTheme.dimens2.x3),
+                    .padding(12.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens2.x5),
+                    modifier = Modifier.size(20.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_search_default_24),
-                    tint = TangemTheme.colors2.markers.iconGray,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
 
-                SpacerW(TangemTheme.dimens2.x1)
+                SpacerW(4.dp)
 
                 Text(
                     text = feedListSearchBar.placeholderText.resolveReference(),
-                    style = TangemTheme.typography2.bodySemibold16,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
