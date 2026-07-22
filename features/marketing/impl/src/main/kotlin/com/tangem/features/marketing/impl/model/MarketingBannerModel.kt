@@ -125,9 +125,12 @@ internal class MarketingBannerModel @Inject constructor(
         campaignId = id,
         text = banner.text,
         iconUrl = banner.iconUrl,
+        // When the backend omits iconAlign, follow the design default: a dismissible banner keeps the icon
+        // on the left (the close button occupies the right slot), a non-dismissible one moves it to the right.
         iconAlign = when (banner.iconAlign) {
             MarketingBanner.IconAlign.RIGHT -> MarketingBannerUM.IconAlign.RIGHT
-            MarketingBanner.IconAlign.LEFT, null -> MarketingBannerUM.IconAlign.LEFT
+            MarketingBanner.IconAlign.LEFT -> MarketingBannerUM.IconAlign.LEFT
+            null -> if (banner.isDismissible) MarketingBannerUM.IconAlign.LEFT else MarketingBannerUM.IconAlign.RIGHT
         },
         isDismissible = banner.isDismissible,
         deeplink = banner.deeplink,
