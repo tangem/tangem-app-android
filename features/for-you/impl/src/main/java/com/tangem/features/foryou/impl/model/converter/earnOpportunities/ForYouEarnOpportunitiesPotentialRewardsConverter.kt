@@ -35,19 +35,11 @@ import java.math.BigDecimal
 @Suppress("LongParameterList")
 internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
     private val appCurrency: AppCurrency,
-    private val userWalletId: UserWalletId?,
     private val isAccountsModeEnabled: Boolean,
-    private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
 ) : Converter<List<EarnOpportunities>, EarnOpportunitiesUM> {
-
-    private val rowConverter = ForYouEarnOpportunitiesTokenRowConverter(
-        appCurrency = appCurrency,
-        userWalletId = userWalletId,
-        onTokenClick = onTokenClick,
-    )
 
     override fun convert(value: List<EarnOpportunities>): EarnOpportunitiesUM {
         val totalPotentialReward = value.sumOf { it.accountPotentialReward }
@@ -65,6 +57,13 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
 
         return EarnOpportunitiesUM.Content(
             tokenList = value.flatMap { earnData ->
+                // Each account keeps its own wallet id (the selection can span wallets), so build a row
+                // converter per account to route token clicks to the wallet that owns them.
+                val rowConverter = ForYouEarnOpportunitiesTokenRowConverter(
+                    appCurrency = appCurrency,
+                    userWalletId = earnData.userWalletId,
+                    onTokenClick = onTokenClick,
+                )
                 if (isAccountsModeEnabled) {
                     listOf(
                         ForYouTokenListItemUM(
@@ -75,7 +74,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                             ),
                             tokenList = rowConverter.convertList(earnData.earnCurrencies.toList())
                                 .toPersistentList(),
-                            isExpanded = earnData.account.accountId.value in expandedAssetIds,
+                            isExpanded = false,
                             isExpandable = true,
                         ),
                     )
