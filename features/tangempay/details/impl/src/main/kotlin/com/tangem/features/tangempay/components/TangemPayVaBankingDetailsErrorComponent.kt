@@ -8,19 +8,22 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.tangempay.model.TangemPayVirtualAccountDepositModel
-import com.tangem.features.tangempay.ui.TangemPayVirtualAccountDepositBottomSheet
+import com.tangem.features.tangempay.model.TangemPayVaBankingDetailsErrorModel
+import com.tangem.features.tangempay.ui.TangemPayVaBankingDetailsErrorBottomSheet
 
 /**
- * Bank-transfer deposit bottom sheet (VA MVP0, TWI-1638). Opened from the add-funds "Bank transfer" option.
- * Renders the on-ramp intro; the [VirtualAccountOnramp.Eligible] state additionally shows a T&C consent footer.
+ * Error bottom sheet shown when VA bank credentials fail to load ([VirtualAccountOnramp.BankCredentialsError]).
+ *
+ * "Try again" re-fetches the payment account status while showing a loader on the button; on success the
+ * resolved on-ramp is handed back via [Params.onResolved] (the parent opens the bank-transfer sheet), otherwise
+ * the error stays visible with the loader cleared.
  */
-internal class TangemPayVirtualAccountDepositComponent(
+internal class TangemPayVaBankingDetailsErrorComponent(
     appComponentContext: AppComponentContext,
     params: Params,
 ) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
 
-    private val model: TangemPayVirtualAccountDepositModel = getOrCreateModel(params = params)
+    private val model: TangemPayVaBankingDetailsErrorModel = getOrCreateModel(params = params)
 
     override fun dismiss() {
         model.onDismiss()
@@ -29,16 +32,13 @@ internal class TangemPayVirtualAccountDepositComponent(
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        TangemPayVirtualAccountDepositBottomSheet(state = state)
+        TangemPayVaBankingDetailsErrorBottomSheet(state = state)
     }
 
     data class Params(
-        val virtualAccountOnramp: VirtualAccountOnramp,
         val userWalletId: UserWalletId,
-        val paymentAccountAddress: String,
         val onDismiss: () -> Unit,
-        val onShowDetails: (VirtualAccountOnramp.Available) -> Unit,
-        val onShowBankingDetailsError: () -> Unit,
-        val onOrderCreated: () -> Unit,
+        val onContactSupport: () -> Unit,
+        val onResolved: (VirtualAccountOnramp) -> Unit,
     )
 }

@@ -114,6 +114,14 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.storeVirtualAccountOrderId(userWalletId, vaOrderId)
     }
 
+    override suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId) {
+        if (isMockMode) {
+            mockVaOrderIds.remove(userWalletId)
+            return
+        }
+        real.clearVirtualAccountOrderId(userWalletId)
+    }
+
     // The "existing Tangem Pay customer" gate (decides whether an active Payment account — and accounts mode —
     // appears). Delegates to WireMock's checkCustomerWalletId via the real repo (static token, no signing), so it
     // is driven by the `tangem_pay_eligibility` scenario: `Started` (default) → 404/NotPaeraCustomer → no account;
