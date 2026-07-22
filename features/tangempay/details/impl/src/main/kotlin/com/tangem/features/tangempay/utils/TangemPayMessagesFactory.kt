@@ -209,7 +209,7 @@ internal object TangemPayMessagesFactory {
         return bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_warning_20) {
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                 }
                 title = resourceReference(R.string.tangempay_maximum_cards_issued_title)
                 body = resourceReference(R.string.tangempay_maximum_cards_issued_description)
@@ -225,7 +225,7 @@ internal object TangemPayMessagesFactory {
         return bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_warning_20) {
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                 }
                 title = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_title)
                 body = resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_description)
