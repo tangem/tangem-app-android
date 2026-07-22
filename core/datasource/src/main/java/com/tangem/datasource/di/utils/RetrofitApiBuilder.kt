@@ -83,38 +83,18 @@ internal class RetrofitApiBuilder @Inject constructor(
 
     /**
      * Builds a Retrofit API instance of [clazz] according to [spec] (see [RetrofitApiSpec] for the
-     * available options). [RetrofitApiSpec.configId] is wrapped back into an [ApiConfig.ID] for lookup.
+     * available options).
      */
     override fun <T : Any> create(clazz: Class<T>, spec: RetrofitApiSpec): T = createApi(
         clazz = clazz,
-        apiConfigId = ApiConfig.ID(spec.configId),
+        apiConfigId = spec.apiConfigId,
         applyTimeoutAnnotations = spec.shouldApplyTimeoutAnnotations,
         sessionAuth = spec.shouldUseSessionAuth,
         timeouts = spec.timeouts,
         logsSaving = spec.shouldSaveLogs,
     )
 
-    /**
-     * Reified convenience for call sites that hold the type-safe [ApiConfig.ID] (e.g. the datasource's
-     * own network module). External modules use the [RetrofitFactory] contract with a string id.
-     */
-    inline fun <reified T : Any> build(
-        apiConfigId: ApiConfig.ID,
-        applyTimeoutAnnotations: Boolean,
-        sessionAuth: Boolean,
-        timeouts: Timeouts? = null,
-        logsSaving: Boolean = true,
-    ): T = createApi(
-        clazz = T::class.java,
-        apiConfigId = apiConfigId,
-        applyTimeoutAnnotations = applyTimeoutAnnotations,
-        sessionAuth = sessionAuth,
-        timeouts = timeouts,
-        logsSaving = logsSaving,
-    )
-
-    @PublishedApi
-    internal fun <T : Any> createApi(
+    private fun <T : Any> createApi(
         clazz: Class<T>,
         apiConfigId: ApiConfig.ID,
         applyTimeoutAnnotations: Boolean,
