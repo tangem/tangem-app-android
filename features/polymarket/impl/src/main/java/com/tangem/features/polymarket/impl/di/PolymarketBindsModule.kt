@@ -7,6 +7,7 @@ import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import dagger.Binds
 import dagger.Module
@@ -33,6 +34,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketModel::class)
     fun bindPolymarketModel(impl: PolymarketModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketMainModel::class)
+    fun bindPolymarketMainModel(impl: PolymarketMainModel): Model
 }
 
 @Module

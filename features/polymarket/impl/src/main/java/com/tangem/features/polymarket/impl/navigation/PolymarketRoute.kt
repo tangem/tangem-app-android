@@ -13,8 +13,18 @@ internal sealed interface PolymarketRoute : Route {
     /** Discovery feed — the entry screen of the feature. */
     data object Main : PolymarketRoute
 
-    /** Details of a single prediction event. */
-    data class EventDetails(val eventId: String) : PolymarketRoute
+    /**
+     * Details of a single prediction event.
+     *
+     * @property eventId event to show
+     * @property marketId market preselected by the caller, e.g. by tapping an outcome on the feed card
+     * @property assetId outcome preselected by the caller
+     */
+    data class EventDetails(
+        val eventId: String,
+        val marketId: String? = null,
+        val assetId: String? = null,
+    ) : PolymarketRoute
 
     /** Events/markets search screen. */
     data object Search : PolymarketRoute
