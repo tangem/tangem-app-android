@@ -30,6 +30,8 @@ import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
 import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
 import com.tangem.domain.markets.GetCoinIndicatorsUpdatesUseCase
+import com.tangem.domain.markets.RawMarketToken
+import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.wallet.UserWalletId
@@ -339,39 +341,58 @@ internal class ForYouModel @Inject constructor(
         currency: CryptoCurrency,
         type: ForYouEarnOpportunitiesType,
     ) {
-        when {
-            selectedWalletId != null -> openEarnScreen(
-                userWalletId = selectedWalletId,
-                currency = currency,
-                type = type,
-            )
-            else -> {
-                // TODO For you make logic if not added add token, otherwise manage funds
-                // val token = RawMarketToken(
-                //     id = currency.id.rawCurrencyId ?: return,
-                //     name = currency.name,
-                //     symbol = currency.symbol,
-                // )
-                // val network = TokenMarketInfo.Network(
-                //     networkId = currency.network.rawId,
-                //     isExchangeable = false,
-                //     contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
-                //     decimalCount = currency.decimals,
-                // )
-                // val manager = createAddToPortfolioManager().apply {
-                //     setTokenParams(token)
-                //     setTokenNetworks(listOf(network))
-                // }
-                // addToPortfolioManager = manager
-                // Drop the slot through null so the same-source repeat click still recreates the child.
-                bottomSheetNavigation.dismiss()
-                bottomSheetNavigation.activate(
-                    ForYouBottomSheetConfig.ManageFunds(
-                        currency.id.rawCurrencyId ?: return,
-                    ),
-                )
+        if (selectedWalletId != null) {
+            openEarnScreen(userWalletId = selectedWalletId, currency = currency, type = type)
+        } else {
+            openSuggestedEarnToken(currency)
+        }
+    }
+
+    private fun openSuggestedEarnToken(currency: CryptoCurrency) {
+        val rawCurrencyId = currency.id.rawCurrencyId ?: return
+
+        modelScope.launch {
+            if (isCurrencyInPortfolio(rawCurrencyId)) {
+                openManageFunds(rawCurrencyId)
+            } else {
+                openAddToPortfolio(currency)
             }
         }
+    }
+
+    private suspend fun isCurrencyInPortfolio(rawCurrencyId: CryptoCurrency.RawID): Boolean {
+        return multiAccountStatusListSupplier.invokeAsMap().first().values.any { accountStatusList ->
+            accountStatusList.flattenCurrencies().any { status ->
+                status.currency.id.rawCurrencyId == rawCurrencyId
+            }
+        }
+    }
+
+    private fun openManageFunds(rawCurrencyId: CryptoCurrency.RawID) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(ForYouBottomSheetConfig.ManageFunds(rawCurrencyId))
+    }
+
+    private fun openAddToPortfolio(currency: CryptoCurrency) {
+        val token = RawMarketToken(
+            id = currency.id.rawCurrencyId ?: return,
+            name = currency.name,
+            symbol = currency.symbol,
+        )
+        val network = TokenMarketInfo.Network(
+            networkId = currency.network.rawId,
+            isExchangeable = false,
+            contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
+            decimalCount = currency.decimals,
+        )
+
+        addToPortfolioManager = createAddToPortfolioManager().apply {
+            setTokenParams(token)
+            setTokenNetworks(listOf(network))
+        }
+
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(ForYouBottomSheetConfig.AddToPortfolio)
     }
 
     private fun <T> StateFlow<T>.updateStateOnEach(transformer: (T) -> Transformer<ForYouUM>) {
@@ -403,8 +424,6 @@ internal class ForYouModel @Inject constructor(
         selectedPeriod.value = ForYouPeriod.fromId(tangemSegmentUM.id)
     }
 
-    // TODO For you make logic if not added add token, otherwise manage funds
-    @Suppress("UnusedPrivateMember")
     private fun createAddToPortfolioManager(): AddToPortfolioManager {
         addToPortfolioManagerScope?.cancel()
         val managerScope = CoroutineScope(
