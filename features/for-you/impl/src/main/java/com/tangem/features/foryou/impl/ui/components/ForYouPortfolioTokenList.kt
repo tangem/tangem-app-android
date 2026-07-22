@@ -89,7 +89,7 @@ private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int, oute
             ) {
                 TangemTokenRow(
                     tokenRowUM = item,
-                    isBalanceHidden = false, // TODO For You
+                    isBalanceHidden = false, // Handled in converters
                     modifier = Modifier
                         .semantics { lazyListItemPosition = tokenIndex + 1 }
                         .conditionalCompose(item.onItemClick != null) {
@@ -175,7 +175,7 @@ private fun PortfolioAssetItem(
                     tokenRowUM = currentItem.tokenRowUM,
                     headComponent = composables.icon,
                     titleComponent = composables.title,
-                    isBalanceHidden = false, // todo For You
+                    isBalanceHidden = false, // Handled in converters
                 )
             }
         }

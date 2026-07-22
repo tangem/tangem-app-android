@@ -52,7 +52,7 @@ interface TangemTechMarketsApi {
      *                   Defaults to all supported coins
      * @param indicators comma-separated indicator types (e.g. `rsi,macd`). Defaults to all
      */
-    @GET("v1/coins/indicators")
+    @GET("api/v1/coins/indicators")
     suspend fun getCoinIndicators(
         @Query("symbols") symbols: String? = null,
         @Query("indicators") indicators: String? = null,
