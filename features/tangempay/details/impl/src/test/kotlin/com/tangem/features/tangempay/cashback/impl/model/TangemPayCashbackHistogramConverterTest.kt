@@ -2,7 +2,10 @@ package com.tangem.features.tangempay.cashback.impl.model
 
 import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
@@ -54,7 +57,7 @@ internal class TangemPayCashbackHistogramConverterTest {
 
         // Assert
         val expected = TangemPayCashbackHistogramUM(
-            title = stringReference("$88.39 earned in total"),
+            title = resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$88.39")),
             bars = persistentListOf(
                 bar("Feb", "$12.02", 12.02f, Style.Regular),
                 bar("Mar", "$44.22", 44.22f, Style.Regular),
@@ -76,7 +79,8 @@ internal class TangemPayCashbackHistogramConverterTest {
         val actual = converter.convert(history)
 
         // Assert
-        assertThat(actual.title).isEqualTo(stringReference("$0 earned in total"))
+        assertThat(actual.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$0")))
         assertThat(actual.bars.map { it.style }).containsExactly(Style.Regular, Style.Highlighted).inOrder()
         assertThat(actual.bars.last().amount).isEqualTo(stringReference("$0.00"))
     }
@@ -93,7 +97,8 @@ internal class TangemPayCashbackHistogramConverterTest {
         val actual = converter.convert(history)
 
         // Assert
-        assertThat(actual.title).isEqualTo(stringReference("$23.95 earned in total"))
+        assertThat(actual.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$23.95")))
         assertThat(actual.bars.last().style).isEqualTo(Style.HighlightedNegative)
         assertThat(actual.bars.last().amount).isEqualTo(stringReference("-$2.15"))
     }

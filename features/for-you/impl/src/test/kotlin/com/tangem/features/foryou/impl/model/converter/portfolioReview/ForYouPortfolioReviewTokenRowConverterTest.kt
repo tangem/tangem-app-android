@@ -1,6 +1,7 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -258,17 +259,54 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
             assertThat(topEnd.endIcons).isEmpty()
         }
+
+        @Test
+        fun `GIVEN title badge passed WHEN convert THEN row title carries that badge`() {
+            // Arrange
+            val badge = TangemBadgeUM(text = stringReference("Positive"))
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal.ONE, fiatAmount = BigDecimal("100"))),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"), titleBadge = badge)
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val title = result.titleUM as TangemTokenRowUM.TitleUM.Content
+            assertThat(title.badge).isEqualTo(badge)
+        }
+
+        @Test
+        fun `GIVEN no title badge WHEN convert THEN row title has no badge`() {
+            // Arrange
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal.ONE, fiatAmount = BigDecimal("100"))),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val title = result.titleUM as TangemTokenRowUM.TitleUM.Content
+            assertThat(title.badge).isNull()
+        }
     }
 
     private fun createConverter(
         totalFiatBalance: BigDecimal,
         userWalletId: UserWalletId? = UserWalletId("01"),
         onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
+        titleBadge: TangemBadgeUM? = null,
     ) = ForYouPortfolioReviewTokenRowConverter(
         appCurrency = appCurrency,
         userWalletId = userWalletId,
         totalFiatBalance = totalFiatBalance,
         onTokenClick = onTokenClick,
+        titleBadge = titleBadge,
     )
 
     /** Mirrors the production fiat rendering used by [ForYouPortfolioReviewTokenRowConverter] for a resolved row. */
