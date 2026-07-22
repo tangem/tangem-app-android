@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.core.remote.config
 
 typealias ApiConfigs = Map<String, @JvmSuppressWildcards ApiConfig>
 
@@ -30,25 +30,6 @@ abstract class ApiConfig {
     value class ID(val name: String) {
 
         companion object {
-
-            /**
-             * Raw string keys. Use these where a compile-time constant is required (e.g. as an
-             * annotation argument); prefer the type-safe [ID] instances everywhere else.
-             */
-            const val EXPRESS = "Express"
-            const val TANGEM_TECH = "TangemTech"
-            const val STAKE_KIT = "StakeKit"
-            const val P2P_ETH_POOL = "P2PEthPool"
-            const val TANGEM_PAY = "TangemPay"
-            const val TANGEM_PAY_AUTH = "TangemPayAuth"
-            const val BLOCK_AID = "BlockAid"
-            const val YIELD_SUPPLY = "YieldSupply"
-            const val MOON_PAY = "MoonPay"
-            const val NEWS = "News"
-            const val GASLESS_TX_SERVICE = "GaslessTxService"
-            const val SURVEY_SPARROW = "SurveySparrow"
-            const val AUTH = "Auth"
-
             val Express = ID(EXPRESS)
             val TangemTech = ID(TANGEM_TECH)
             val StakeKit = ID(STAKE_KIT)
@@ -66,10 +47,30 @@ abstract class ApiConfig {
     }
 
     companion object {
-        internal const val DEBUG_BUILD_TYPE = "debug"
-        internal const val INTERNAL_BUILD_TYPE = "internal"
-        internal const val MOCKED_BUILD_TYPE = "mocked"
-        internal const val EXTERNAL_BUILD_TYPE = "external"
-        internal const val RELEASE_BUILD_TYPE = "release"
+
+        /**
+         * Raw string keys. Declared on the (regular) companion — not the value-class [ID] companion —
+         * so they remain usable as compile-time constants in annotation arguments across modules
+         * (e.g. Dagger's `@StringKey`). Prefer the type-safe [ID] instances everywhere else.
+         */
+        const val EXPRESS = "Express"
+        const val TANGEM_TECH = "TangemTech"
+        const val STAKE_KIT = "StakeKit"
+        const val P2P_ETH_POOL = "P2PEthPool"
+        const val TANGEM_PAY = "TangemPay"
+        const val TANGEM_PAY_AUTH = "TangemPayAuth"
+        const val BLOCK_AID = "BlockAid"
+        const val YIELD_SUPPLY = "YieldSupply"
+        const val MOON_PAY = "MoonPay"
+        const val NEWS = "News"
+        const val GASLESS_TX_SERVICE = "GaslessTxService"
+        const val SURVEY_SPARROW = "SurveySparrow"
+        const val AUTH = "Auth"
+
+        const val DEBUG_BUILD_TYPE = "debug"
+        const val INTERNAL_BUILD_TYPE = "internal"
+        const val MOCKED_BUILD_TYPE = "mocked"
+        const val EXTERNAL_BUILD_TYPE = "external"
+        const val RELEASE_BUILD_TYPE = "release"
     }
 }
