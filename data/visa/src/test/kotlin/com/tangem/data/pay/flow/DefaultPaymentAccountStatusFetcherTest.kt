@@ -142,6 +142,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     private val customerTariffPlan = TangemPayCustomerTariffPlan(
         status = TangemPayCustomerTariffPlan.Status.ACTIVE,
+        source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
         plan = basicPlan,
         nextBillingAt = null,
         pendingPlan = null,
