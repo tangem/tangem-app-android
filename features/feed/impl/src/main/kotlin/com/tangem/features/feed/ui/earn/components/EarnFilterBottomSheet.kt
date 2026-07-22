@@ -28,7 +28,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> EarnFilterBotto
     TangemBottomSheet<T>(
         config = config,
         type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors2.surface.level2,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemTopBar(
                 title = resourceReference(R.string.earn_filter_by),

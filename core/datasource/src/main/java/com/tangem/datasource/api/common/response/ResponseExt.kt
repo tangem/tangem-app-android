@@ -5,6 +5,7 @@ import com.tangem.datasource.api.common.response.analytics.ApiErrorEvent
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.TimeoutCancellationException
 import retrofit2.Response
+import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -64,5 +65,7 @@ internal fun Throwable.toApiError(): ApiResponseError = when (this) {
     is TimeoutCancellationException,
     is SocketTimeoutException,
     -> ApiResponseError.TimeoutException()
+    is IOException,
+    -> ApiResponseError.NetworkException()
     else -> ApiResponseError.UnknownException(cause = this)
 }

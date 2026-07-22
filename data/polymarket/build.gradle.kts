@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
     id("configuration")
 }
@@ -14,7 +15,16 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
     implementation(deps.arrow.core)
+    // endregion
+
+    // region Tangem SDK
+    implementation(tangemDeps.card.core)
+    // AndroidSecureStorageV2 for Polymarket API credentials (see com.tangem.data.polymarket.store).
+    implementation(tangemDeps.card.android) {
+        exclude(module = "joda-time")
+    }
     // endregion
 
     // region DI

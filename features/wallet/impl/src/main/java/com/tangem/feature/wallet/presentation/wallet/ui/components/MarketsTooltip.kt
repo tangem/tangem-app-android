@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -40,6 +41,17 @@ import com.tangem.feature.wallet.impl.R
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
+/** Gap between the lifted tooltip and the obstacle below it. */
+private val OBSTACLE_GAP = 4.dp
+
+/**
+ * Onboarding tooltip for the markets bottom sheet, anchored right above the sheet peek.
+ *
+ * @param obstacleBounds provider of root-coordinates bounds of content the tooltip must not cover —
+ * e.g. the "Add & Manage" button. When the anchored tooltip would overlap the obstacle, the tooltip
+ * is lifted to sit just above it.
+ */
+@Suppress("LongParameterList")
 @Composable
 internal fun MarketsTooltip(
     availableHeight: Dp,
@@ -48,17 +60,28 @@ internal fun MarketsTooltip(
     onCloseClick: () -> Unit,
     sheetTopInset: Dp,
     modifier: Modifier = Modifier,
+    obstacleBounds: () -> Rect? = { null },
 ) {
     val density = LocalDensity.current
-    val tooltipOffset by remember(availableHeight, sheetTopInset) {
+    var tooltipHeight by remember { mutableIntStateOf(0) }
+    val tooltipOffset by remember(availableHeight, sheetTopInset, obstacleBounds) {
         derivedStateOf {
-            val bottomSheetOffset = try {
-                // Can throw exception during the first composition
-                with(density) { bottomSheetState.requireOffset().toDp() }
-            } catch (e: Exception) {
-                0.dp
+            // Sheet offset is in root coordinates: the scaffold content fills the screen edge to edge
+            val sheetTop = runCatching { bottomSheetState.requireOffset() }.getOrElse { 0f }
+
+            with(density) {
+                val anchoredBottom = sheetTop + sheetTopInset.toPx()
+                val anchoredTop = anchoredBottom - tooltipHeight
+                val obstacle = obstacleBounds()?.takeIf { tooltipHeight > 0 }
+                val isObstacleInTheWay = obstacle != null &&
+                    obstacle.top < anchoredBottom && obstacle.bottom > anchoredTop
+                val bottom = if (isObstacleInTheWay) {
+                    obstacle.top - OBSTACLE_GAP.toPx()
+                } else {
+                    anchoredBottom
+                }
+                (bottom - availableHeight.toPx()).toDp()
             }
-            bottomSheetOffset + sheetTopInset - availableHeight
         }
     }
 
@@ -86,7 +109,10 @@ internal fun MarketsTooltip(
         ) + fadeIn(),
         exit = fadeOut(),
     ) {
-        MarketsTooltipContent(onCloseClick = onCloseClick)
+        MarketsTooltipContent(
+            onCloseClick = onCloseClick,
+            modifier = Modifier.onSizeChanged { tooltipHeight = it.height },
+        )
     }
 }
 

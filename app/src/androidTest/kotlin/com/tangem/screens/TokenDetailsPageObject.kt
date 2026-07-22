@@ -115,6 +115,14 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    val totalBalanceSwitcher: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_total))
+    }
+
+    val availableBalanceSwitcher: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_available))
+    }
+
     val addFundsButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.tangempay_card_details_add_funds)))

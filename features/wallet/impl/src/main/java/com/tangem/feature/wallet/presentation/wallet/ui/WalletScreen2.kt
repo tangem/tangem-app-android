@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -266,6 +267,10 @@ private fun WalletContent2(
 
             val overlay = TangemTheme.colors2.overlay.overlayPrimary
 
+            // Root-coordinates bounds of the "Add & Manage" button per pager page, reported by the
+            // button itself, so the markets hint and tooltip can avoid covering it
+            val organizeButtonBounds = remember { mutableStateMapOf<Int, Rect>() }
+
             HorizontalPager(
                 state = walletsPagerState,
                 userScrollEnabled = canPagerScroll,
@@ -355,6 +360,15 @@ private fun WalletContent2(
                                     promoBannersBlockComponent = promoBannersBlockComponent,
                                     walletId = currentWalletId,
                                     virtualAccountComponent = virtualAccountComponent,
+                                    onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
+                                        { bounds ->
+                                            if (bounds != null) {
+                                                organizeButtonBounds[currentWalletIndex] = bounds
+                                            } else {
+                                                organizeButtonBounds.remove(currentWalletIndex)
+                                            }
+                                        }
+                                    },
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .nestedScroll(behavior.nestedScrollConnection),
@@ -371,6 +385,9 @@ private fun WalletContent2(
                             .fillMaxWidth(fraction = .6f)
                             .padding(bottom = peekHeight),
                         isVisible = isShowMarketsHint,
+                        obstacleBounds = remember(currentWalletIndex) {
+                            { organizeButtonBounds[currentWalletIndex] }
+                        },
                     )
                 }
             }
@@ -386,6 +403,9 @@ private fun WalletContent2(
                 sheetTopInset = TangemTheme.dimens2.x3,
                 bottomSheetState = bottomSheetState,
                 onCloseClick = state.onDismissMarketsTooltip,
+                obstacleBounds = remember(walletsPagerState, organizeButtonBounds) {
+                    { organizeButtonBounds[walletsPagerState.currentPage] }
+                },
             )
         }
     }

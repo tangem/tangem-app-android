@@ -1549,9 +1549,9 @@ internal class SwapInteractorImpl @Inject constructor(
      *
      * Numeric fee used for downstream computation:
      *  - If `fee.selectedFeeToken.currency` is a token → `0` for the balance / include-fee math
-     *    when the fee currency differs from the from-token (matches legacy `manageWarnings`
-     *    semantics at line 422 of the pre-Phase-4 code).
-     *  - Otherwise → `fee.fee.amount.value + fee.otherNativeFee` (the bridge-aware native fee).
+     *    when the fee currency differs from the from-token.
+     *  - Otherwise → `fee.fee.amount.value` (already the bridge-aware native total: folds
+     *    `otherNativeFee` into `fee.amount` in `SwapFeeFactory`, so it must NOT be re-added here).
      *
      * The fee is folded into a single [SwapBalanceStatus] by [computeBalanceStatus], which is
      * then assigned to `preparedSwapConfigState.balanceStatus`.
@@ -1564,7 +1564,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromSwapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus
         val amount = state.fromTokenInfo.tokenAmount
         val isFeeInToken = fee.selectedFeeToken.currency is CryptoCurrency.Token
-        val nativeFee = (fee.fee.amount.value ?: BigDecimal.ZERO) + fee.otherNativeFee
+        val nativeFee = fee.fee.amount.value ?: BigDecimal.ZERO
 
         // Mirrors legacy manageWarnings: token-fee paths skip the native deduction.
         val warningsFee = if (isFeeInToken && fromSwapCurrencyStatus.currency.id != fee.selectedFeeToken.currency.id) {
