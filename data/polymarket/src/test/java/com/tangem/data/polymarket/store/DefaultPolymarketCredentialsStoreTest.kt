@@ -2,6 +2,8 @@ package com.tangem.data.polymarket.store
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.data.polymarket.converter.PolymarketApiCredentialsConverter
+import com.tangem.data.polymarket.entity.PolymarketApiCredentialsDTO
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.Severity
@@ -123,10 +125,15 @@ internal class DefaultPolymarketCredentialsStoreTest {
     }
 
     private fun encode(credentials: PolymarketApiCredentials): String =
-        json.encodeToString(PolymarketApiCredentials.serializer(), credentials)
+        json.encodeToString(
+            PolymarketApiCredentialsDTO.serializer(),
+            PolymarketApiCredentialsConverter.convert(credentials),
+        )
 
     private fun decode(payload: String): PolymarketApiCredentials =
-        json.decodeFromString(PolymarketApiCredentials.serializer(), payload)
+        PolymarketApiCredentialsConverter.convertBack(
+            json.decodeFromString(PolymarketApiCredentialsDTO.serializer(), payload),
+        )
 
     private class RecordingLogWriter : TangemLogger.LogWriter {
 
