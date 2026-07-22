@@ -1,7 +1,7 @@
 package com.tangem.data.polymarket.error
 
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.polymarket.models.ProblemDetailResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.polymarket.model.PolymarketWalletError
