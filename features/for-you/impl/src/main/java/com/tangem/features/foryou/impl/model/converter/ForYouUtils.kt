@@ -88,14 +88,6 @@ internal enum class ForYouPeriod(
     }
 }
 
-// TODO For You: replace this placeholder with the real price-change badge once the design is wired.
-internal fun forYouPlaceholderBadge(): TangemBadgeUM = TangemBadgeUM(
-    text = resourceReference(R.string.common_positive),
-    size = TangemBadgeSize.X4,
-    type = TangemBadgeType.Tinted,
-    color = TangemBadgeColor.Green,
-)
-
 /**
  * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
  * [timeframe]. The sign of [totalSentimentScore] — the exact score shown on the token summary
