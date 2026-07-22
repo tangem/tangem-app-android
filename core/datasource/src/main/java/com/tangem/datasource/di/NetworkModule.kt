@@ -38,6 +38,8 @@ import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
+import com.tangem.core.remote.RetrofitApiSpec
+import com.tangem.core.remote.build
 import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
@@ -84,9 +86,11 @@ internal object NetworkModule {
     @Singleton
     fun provideExpressApi(retrofitApiBuilder: RetrofitApiBuilder): TangemExpressApi {
         return retrofitApiBuilder.build(
-            apiConfigId = Express.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = Express.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -94,14 +98,16 @@ internal object NetworkModule {
     @Singleton
     fun provideStakeKitApi(retrofitApiBuilder: RetrofitApiBuilder): StakeKitApi {
         return retrofitApiBuilder.build(
-            apiConfigId = StakeKit.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = StakeKit.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
             ),
         )
     }
@@ -110,14 +116,16 @@ internal object NetworkModule {
     @Singleton
     fun provideP2PEthPoolApi(retrofitApiBuilder: RetrofitApiBuilder): P2PEthPoolApi {
         return retrofitApiBuilder.build(
-            apiConfigId = P2PEthPool.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_90_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_90_SECONDS,
-                readTimeoutSeconds = TIMEOUT_90_SECONDS,
-                writeTimeoutSeconds = TIMEOUT_90_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = P2PEthPool.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_90_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_90_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_90_SECONDS,
+                    writeTimeoutSeconds = TIMEOUT_90_SECONDS,
+                ),
             ),
         )
     }
@@ -126,9 +134,11 @@ internal object NetworkModule {
     @Singleton
     fun provideOnrampApi(retrofitApiBuilder: RetrofitApiBuilder): OnrampApi {
         return retrofitApiBuilder.build(
-            apiConfigId = Express.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = Express.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -136,9 +146,11 @@ internal object NetworkModule {
     @Singleton
     fun provideTangemTechApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechApi {
         return retrofitApiBuilder.build(
-            apiConfigId = TangemTech.ID,
-            applyTimeoutAnnotations = true,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -146,9 +158,11 @@ internal object NetworkModule {
     @Singleton
     fun provideAddressBookApi(retrofitApiBuilder: RetrofitApiBuilder): AddressBookApi {
         return retrofitApiBuilder.build(
-            apiConfigId = TangemTech.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -156,9 +170,11 @@ internal object NetworkModule {
     @Singleton
     fun provideYieldSupplyApi(retrofitApiBuilder: RetrofitApiBuilder): YieldSupplyApi {
         return retrofitApiBuilder.build(
-            apiConfigId = YieldSupply.ID,
-            applyTimeoutAnnotations = true,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = YieldSupply.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -166,15 +182,17 @@ internal object NetworkModule {
     @Singleton
     fun provideTangemTechMarketsApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechMarketsApi {
         return retrofitApiBuilder.build(
-            apiConfigId = TangemTech.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
+                shouldSaveLogs = false,
             ),
-            logsSaving = false,
         )
     }
 
@@ -182,13 +200,15 @@ internal object NetworkModule {
     @Singleton
     fun provideTangemPayApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayApi {
         return retrofitApiBuilder.build(
-            apiConfigId = TangemPay.Bff.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = TangemPay.Bff.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
             ),
         )
     }
@@ -197,13 +217,15 @@ internal object NetworkModule {
     @Singleton
     fun provideVisaApi(retrofitApiBuilder: RetrofitApiBuilder): VisaApi {
         return retrofitApiBuilder.build(
-            apiConfigId = TangemPay.Bff.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = TangemPay.Bff.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
             ),
         )
     }
@@ -212,9 +234,11 @@ internal object NetworkModule {
     @Singleton
     fun provideTangemPayAuthApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayAuthApi {
         return retrofitApiBuilder.build(
-            apiConfigId = TangemPay.Auth.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = TangemPay.Auth.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -222,9 +246,11 @@ internal object NetworkModule {
     @Singleton
     fun provideBlockAidApi(retrofitApiBuilder: RetrofitApiBuilder): BlockAidApi {
         return retrofitApiBuilder.build(
-            apiConfigId = BlockAid.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = BlockAid.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -232,9 +258,11 @@ internal object NetworkModule {
     @Singleton
     fun provideSurveySparrowApi(retrofitApiBuilder: RetrofitApiBuilder): SurveySparrowApi {
         return retrofitApiBuilder.build(
-            apiConfigId = SurveySparrow.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = SurveySparrow.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -242,9 +270,11 @@ internal object NetworkModule {
     @Singleton
     fun provideMoonPayApi(retrofitApiBuilder: RetrofitApiBuilder): MoonPayApi {
         return retrofitApiBuilder.build(
-            apiConfigId = MoonPay.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = MoonPay.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -252,9 +282,11 @@ internal object NetworkModule {
     @Singleton
     fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
         return retrofitApiBuilder.build(
-            apiConfigId = News.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = News.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -263,9 +295,11 @@ internal object NetworkModule {
     fun providePolymarketApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketApi {
         // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
         return retrofitApiBuilder.build(
-            apiConfigId = TangemTech.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
         )
     }
 
@@ -273,13 +307,15 @@ internal object NetworkModule {
     @Singleton
     fun provideAuthApi(retrofitApiBuilder: RetrofitApiBuilder): AuthApi {
         return retrofitApiBuilder.build(
-            apiConfigId = Auth.ID,
-            applyTimeoutAnnotations = false,
-            // Per-method annotations (`@RequiresDpopProof`, `@RequiresSessionAuth`) gate the hooks
-            // installed here. `/refresh` carries `@RequiresDpopProof` only, so the Authenticator
-            // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
-            // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
-            sessionAuth = true,
+            RetrofitApiSpec(
+                apiConfigId = Auth.ID,
+                shouldApplyTimeoutAnnotations = false,
+                // Per-method annotations (`@RequiresDpopProof`, `@RequiresSessionAuth`) gate the hooks
+                // installed here. `/refresh` carries `@RequiresDpopProof` only, so the Authenticator
+                // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
+                // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
+                shouldUseSessionAuth = true,
+            ),
         )
     }
 
@@ -287,14 +323,16 @@ internal object NetworkModule {
     @Singleton
     fun provideGaslessTxServiceApi(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApi {
         return retrofitApiBuilder.build(
-            apiConfigId = GaslessTxService.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = GaslessTxService.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
             ),
         )
     }
@@ -303,14 +341,16 @@ internal object NetworkModule {
     @Singleton
     fun provideGaslessTxServiceApiV2(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApiV2 {
         return retrofitApiBuilder.build(
-            apiConfigId = GaslessTxService.ID,
-            applyTimeoutAnnotations = false,
-            sessionAuth = false,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+            RetrofitApiSpec(
+                apiConfigId = GaslessTxService.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
             ),
         )
     }
