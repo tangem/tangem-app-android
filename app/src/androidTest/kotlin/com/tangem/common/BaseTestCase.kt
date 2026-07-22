@@ -202,6 +202,7 @@ abstract class BaseTestCase : TestCase(
                 "TWI_1326_YIELD_MODE_SWAP_ENABLED" to true,
                 // 6.1
                 "TWI_1638_VA_MVP0_ENABLED" to true,
+                "TWI_1403_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED" to true,
             )
         )
     }
