@@ -48,6 +48,7 @@ internal class ForYouEarnOpportunitiesConverter(
     private val topEarnTokens: EarnTopToken?,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
+    private val isBalanceHidden: Boolean = false,
 ) : Converter<ForYouSelectedPortfolio, EarnOpportunitiesUM> {
 
     override fun convert(value: ForYouSelectedPortfolio): EarnOpportunitiesUM {
@@ -106,6 +107,7 @@ internal class ForYouEarnOpportunitiesConverter(
                     expandClick = expandClick,
                     onTokenClick = onTokenClick,
                     onAllEarnTokensClick = onAllEarnTokensClick,
+                    isBalanceHidden = isBalanceHidden,
                 ).convert(data)
             }
         }
