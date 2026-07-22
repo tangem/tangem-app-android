@@ -207,11 +207,11 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         clickIntents: WalletClickIntents,
     ) {
         val currencies = flattenCurrencies.getMissingAddressCurrencies().ifEmpty { return }
-
         addIf(
             element = WalletNotificationUM.MissingAddresses(
                 tangemIcon = walletInterationIcon(userWallet),
                 missingAddressesCount = currencies.distinctBy { it.network.id }.count(),
+                isHotWallet = userWallet is UserWallet.Hot,
                 onGenerateClick = {
                     clickIntents.onGenerateMissedAddressesClick(
                         userWalletId = userWallet.walletId,
