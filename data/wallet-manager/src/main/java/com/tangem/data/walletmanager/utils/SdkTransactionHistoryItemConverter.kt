@@ -32,6 +32,7 @@ internal class SdkTransactionHistoryItemConverter(
         },
         type = typeConverter.convert(value),
         amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
+        fee = value.fee.toDomain(),
     )
 
     private fun SdkTransactionHistoryItem.SourceType.toDomain(): TxInfo.SourceType = when (this) {

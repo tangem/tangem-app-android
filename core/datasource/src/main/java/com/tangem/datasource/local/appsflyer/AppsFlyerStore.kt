@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.appsflyer
 
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import kotlinx.coroutines.flow.Flow
 
 interface AppsFlyerStore {
 
@@ -14,20 +15,11 @@ interface AppsFlyerStore {
 
     suspend fun storeUIDIfAbsent(value: String)
 
-    suspend fun getDeeplink(source: AppsFlyerDeeplinkSource): String?
+    fun observeNavigationDeeplink(): Flow<String?>
 
-    suspend fun storeDeeplink(source: AppsFlyerDeeplinkSource, deeplink: String)
+    suspend fun getNavigationDeeplink(): String?
 
-    suspend fun clearDeeplink(source: AppsFlyerDeeplinkSource)
-}
+    suspend fun storeNavigationDeeplink(deepLinkValue: String)
 
-enum class AppsFlyerDeeplinkSource {
-    TangemPayHotWalletOnboarding,
-    Referral,
-    ;
-
-    fun toStoreKey() = when (this) {
-        TangemPayHotWalletOnboarding -> "tangem_pay_hot_wallet_onboarding"
-        Referral -> "referral"
-    }
+    suspend fun clearNavigationDeeplink()
 }
