@@ -5,8 +5,8 @@ import arrow.core.getOrElse
 import com.squareup.moshi.Moshi
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow

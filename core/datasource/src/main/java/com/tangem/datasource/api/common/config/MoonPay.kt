@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 
 /**
@@ -41,5 +45,10 @@ internal class MoonPay : ApiConfig() {
             environment = ApiEnvironment.MOCK,
             baseUrl = "[REDACTED_ENV_URL]",
         )
+    }
+
+    companion object {
+        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.MOON_PAY].
+        const val KEY = ApiConfig.MOON_PAY
     }
 }
