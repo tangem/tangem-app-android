@@ -10,7 +10,7 @@ import com.tangem.data.onramp.converters.CurrencyConverter
 import com.tangem.data.onramp.converters.PaymentMethodConverter
 import com.tangem.data.onramp.converters.StatusConverter
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExchangeProvider
