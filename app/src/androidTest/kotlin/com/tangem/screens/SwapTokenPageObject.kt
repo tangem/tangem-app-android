@@ -78,6 +78,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun providerWithName(name: String): KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK)
+        hasAnyDescendant(withText(name, substring = true))
+        useUnmergedTree = true
+    }
+
     val bestRateText: KNode = child {
         hasText(getResourceString(R.string.express_provider_best_rate))
         useUnmergedTree = true
@@ -199,6 +205,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE)
         hasText(getResourceString(R.string.swapping_insufficient_funds))
         useUnmergedTree = true
+    }
+
+    // On the Swap screen an insufficient balance turns the main button into a disabled "Insufficient funds" button.
+    val insufficientFundsButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.swapping_insufficient_funds))
     }
 
     val receiveFiatAmount: KNode = child {
