@@ -13,45 +13,36 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.kyc.api)
+    api(projects.features.kyc.api)
 
     /** Domain */
-    implementation(projects.domain.visa)
-    implementation(projects.domain.wallets.models)
+    api(projects.domain.visa)
+    api(projects.domain.visa.models)
+    implementation(projects.domain.models)
 
     /** Core modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
-    implementation(projects.core.error)
-
-    /** Common */
-    implementation(projects.common.ui)
-    implementation(projects.common.routing)
 
     /** Compose libraries */
+    api(deps.compose.animation)
+    api(deps.decompose.ext.compose)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
-    implementation(deps.lottie.compose)
-    implementation(deps.decompose.ext.compose)
-    implementation(deps.androidx.activity.compose)
 
     /** Other libraries */
-    implementation(deps.kotlin.immutable.collections)
-    implementation(deps.kotlin.serialization)
+    api(deps.androidx.appCompat)
+    api(deps.kotlin.coroutines)
+    implementation(deps.androidx.core)
     implementation(deps.firebase.crashlytics)
     implementation(deps.sumsub.sdk)
     implementation(deps.arrow.core)
+    runtimeOnly(deps.lottie)
 
     /** DI */
     implementation(deps.hilt.android)

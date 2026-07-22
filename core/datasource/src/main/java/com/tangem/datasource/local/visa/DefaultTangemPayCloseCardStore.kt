@@ -10,15 +10,15 @@ internal class DefaultTangemPayCloseCardStore(
     private val prefs: AppPreferencesStore,
 ) : TangemPayCloseCardStore {
 
-    override suspend fun setCloseOrderId(cardId: String, orderId: String?) {
-        if (orderId == null) {
-            prefs.edit { it.remove(getCloseKey(cardId)) }
-        } else {
-            prefs.store(
-                key = getCloseKey(cardId),
-                value = orderId,
-            )
-        }
+    override suspend fun storeCloseOrderId(cardId: String, orderId: String) {
+        prefs.store(
+            key = getCloseKey(cardId),
+            value = orderId,
+        )
+    }
+
+    override suspend fun removeCloseOrderId(cardId: String) {
+        prefs.edit { it.remove(getCloseKey(cardId)) }
     }
 
     override suspend fun getOrderId(cardId: String): String? {

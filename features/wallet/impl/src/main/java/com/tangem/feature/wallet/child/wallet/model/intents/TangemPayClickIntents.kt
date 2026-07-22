@@ -42,6 +42,8 @@ internal interface TangemPayIntents {
 
     fun openDetails(status: AccountStatus.Payment)
 
+    fun onSelectPlanClicked(status: AccountStatus.Payment)
+
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
     fun onKycRejectedClicked(userWalletId: UserWalletId, customerId: String)
@@ -112,6 +114,10 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun openDetails(status: AccountStatus.Payment) {
         router.openTangemPayDetails(status = status)
+    }
+
+    override fun onSelectPlanClicked(status: AccountStatus.Payment) {
+        router.openTangemPaySelectPlan(status = status)
     }
 
     override fun onKycProgressClicked(userWalletId: UserWalletId) {

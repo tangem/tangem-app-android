@@ -15,22 +15,19 @@ import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
 import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
+import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
-import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -40,7 +37,6 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
@@ -50,12 +46,10 @@ import com.tangem.datasource.api.express.models.request.LeastTokenInfo as Networ
 internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
-    private val walletManagersFacade: WalletManagersFacade,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
-    private val rampStateManager: RampStateManager,
-    private val expressHistoryDao: ExpressHistoryDao,
+    private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     moshi: Moshi,
 ) : SwapRepository {
@@ -124,98 +118,6 @@ internal class DefaultSwapRepository(
         }
     }
 
-    override suspend fun getPairsOnly(
-        userWallet: UserWallet,
-        initialCurrency: LeastTokenInfo,
-        currencyList: List<CryptoCurrency>,
-        isIgnoreExpress: Boolean,
-    ): PairsWithProviders {
-        return withContext(coroutineDispatcher.io) {
-            val currenciesList = filterByAssetRequirements(userWallet, currencyList)
-
-            if (isIgnoreExpress) {
-                buildLocalPairs(initialCurrency, currenciesList)
-            } else {
-                fetchExpressPairs(userWallet, initialCurrency, currenciesList)
-            }
-        }
-    }
-
-    private fun buildLocalPairs(
-        initialCurrency: LeastTokenInfo,
-        currenciesList: List<NetworkLeastTokenInfo>,
-    ): PairsWithProviders {
-        val pairs = currenciesList.map { tokenInfo ->
-            SwapPairLeast(
-                from = initialCurrency,
-                to = LeastTokenInfo(
-                    contractAddress = tokenInfo.contractAddress,
-                    network = tokenInfo.network,
-                ),
-                providers = emptyList(),
-            )
-        }
-        return PairsWithProviders(pairs = pairs, allProviders = emptyList())
-    }
-
-    private suspend fun fetchExpressPairs(
-        userWallet: UserWallet,
-        initialCurrency: LeastTokenInfo,
-        currenciesList: List<NetworkLeastTokenInfo>,
-    ): PairsWithProviders {
-        try {
-            val initial = NetworkLeastTokenInfo(
-                contractAddress = initialCurrency.contractAddress,
-                network = initialCurrency.network,
-            )
-
-            val allPairs = supervisorScope {
-                val pairsDeferred = async {
-                    getPairsInternal(
-                        userWallet = userWallet,
-                        from = arrayListOf(initial),
-                        to = currenciesList,
-                    )
-                }
-
-                val reversedPairsDeferred = async {
-                    getPairsInternal(
-                        userWallet = userWallet,
-                        from = currenciesList,
-                        to = arrayListOf(initial),
-                    )
-                }
-
-                pairsDeferred.await().getOrThrow() + reversedPairsDeferred.await().getOrThrow()
-            }
-
-            return swapPairInfoConverter.convert(
-                SwapPairsWithProviders(
-                    swapPair = allPairs,
-                    providers = emptyList(),
-                ),
-            )
-        } catch (exception: Exception) {
-            if (exception is ApiResponseError.HttpException) {
-                throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
-            } else {
-                throw exception
-            }
-        }
-    }
-
-    private suspend fun filterByAssetRequirements(
-        userWallet: UserWallet,
-        currencyList: List<CryptoCurrency>,
-    ): List<NetworkLeastTokenInfo> {
-        return currencyList
-            .filter { currency ->
-                val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, currency)
-                rampStateManager.checkAssetRequirements(requirements)
-            }
-            .map { currency -> leastTokenInfoConverter.convert(currency) }
-    }
-
     private suspend fun getPairsInternal(
         userWallet: UserWallet,
         from: List<NetworkLeastTokenInfo>,
@@ -254,9 +156,8 @@ internal class DefaultSwapRepository(
                             )
                             .getOrThrow()
 
-                        val entity = response.toEntity(ownerAddress = response.fromAddress.orEmpty())
                         if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-                            expressHistoryDao.upsertExchanges(listOf(entity))
+                            expressHistoryRepository.storeExchanges(items = listOf(response))
                         }
 
                         exchangeStatusConverter.convert(response)

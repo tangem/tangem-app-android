@@ -31,7 +31,7 @@ class FinalizeTwinTask(
                                 ScanProductTask(
                                     card = readResult.data,
                                     visaCardScanHandler = null,
-                                    visaCoroutineScope = null,
+                                    sessionCoroutineScope = null,
                                     shouldCheckIsAlreadyActivated = false,
                                     onboardingV2FeatureToggles = null,
                                     cardRepository = cardRepository,

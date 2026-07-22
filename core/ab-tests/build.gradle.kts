@@ -3,7 +3,6 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -12,19 +11,23 @@ android {
 }
 
 dependencies {
-    /** DI */
+
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Other libraries */
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /** Core modules */
+    // region Other libraries
+    implementation(deps.amplitude.experiment)
+    // endregion
+
+    // region Core modules
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
-
-    implementation(projects.domain.models)
-
-    /** Amplitude experiment */
-    implementation(deps.amplitude.experiment)
+    // endregion
 }

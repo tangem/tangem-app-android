@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.navigation
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.pay.TangemPayCard
 import kotlinx.serialization.Serializable
 
@@ -16,5 +17,18 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     data class AddToWallet(val card: TangemPayCard) : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
+    data class CurrentPlan(
+        val tariffPlan: TangemPayCustomerTariffPlan,
+    ) : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data class SelectPlan(
+        val tariffPlan: TangemPayCustomerTariffPlan,
+    ) : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
     data object VirtualAccountDepositSuccess : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data object Cashback : TangemPayAccountDetailsInnerRoute()
 }

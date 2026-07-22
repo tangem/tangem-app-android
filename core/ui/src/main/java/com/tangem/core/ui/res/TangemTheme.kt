@@ -65,11 +65,7 @@ fun TangemTheme(
         typography = typography,
         dimens = dimens,
         content = {
-            if (uiDependencies.designFeatureToggles.isRedesignEnabled) {
-                TangemThemeRedesign { content() }
-            } else {
-                content()
-            }
+            TangemThemeRedesign { content() }
         },
     )
 }
@@ -450,14 +446,6 @@ val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
 
 val LocalHazeState = staticCompositionLocalOf<HazeState> {
     error("No HazeState provided")
-}
-
-val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
-    false
-}
-
-val LocalVisaRedesignEnabled = staticCompositionLocalOf<Boolean> {
-    false
 }
 
 val LocalPowerSavingState = compositionLocalOf<PowerSavingState> {
