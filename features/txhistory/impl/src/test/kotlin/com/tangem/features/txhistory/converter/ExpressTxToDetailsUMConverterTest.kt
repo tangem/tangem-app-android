@@ -286,7 +286,8 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             resourceReference(R.string.common_rate),
         ).inOrder()
         val providerRow = result.rows.first()
-        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
+        // Swap provider rows append the provider type (fixture defaults to CEX).
+        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo • CEX")
         assertThat(providerRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
         providerRow.onClick?.invoke()
         assertThat(openedUrls).containsExactly(EXTERNAL_URL)
@@ -301,7 +302,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         val providerRow = result.rows.first()
-        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo")
+        assertThat(providerRow.value.resolveString()).isEqualTo("Mercuryo • CEX")
         assertThat(providerRow.trailingIconRes).isNull()
         assertThat(providerRow.onClick).isNull()
     }
@@ -441,8 +442,8 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     // region Leg owner
 
     @Test
-    fun `GIVEN swap between own accounts WHEN convert THEN legs labelled From-To with account owners`() {
-        // Arrange — from leg on ethereum, payout leg on bitcoin, both addresses owned, accounts mode on.
+    fun `GIVEN swap within one own account WHEN convert THEN legs read You send-You receive with no owner`() {
+        // Arrange — from leg on ethereum, payout leg on bitcoin, both addresses in the same own account.
         val swap = expressSwap(
             status = ExpressExchangeStatus.Finished,
             fromAddress = FROM_ADDRESS,
@@ -457,7 +458,31 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val result = expressConverter(lookup = lookup).convert(swap)
 
-        // Assert
+        // Assert — same portfolio has no counterparty to name.
+        assertThat(result.from?.label).isEqualTo(resourceReference(R.string.swapping_from_title_v2))
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.swapping_to_title))
+        assertThat(result.from?.owner).isNull()
+        assertThat(result.to?.owner).isNull()
+    }
+
+    @Test
+    fun `GIVEN swap between two own accounts WHEN convert THEN legs labelled From-To with account owners`() {
+        // Arrange — from leg owned by one account, payout leg owned by a different account, accounts mode on.
+        val swap = expressSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+            fromCurrency = currency,
+        )
+        val lookup = lookupOf(
+            currency.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to secondAccount),
+        )
+
+        // Act
+        val result = expressConverter(lookup = lookup).convert(swap)
+
+        // Assert — distinct accounts each keep their owner card.
         assertThat(result.from?.label).isEqualTo(resourceReference(R.string.common_from))
         assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
         assertThat(result.from?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)

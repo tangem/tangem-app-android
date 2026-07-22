@@ -234,9 +234,30 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUMV2, modifi
     Column(modifier = modifier) {
         when (val detail = state.detail) {
             null -> Unit
-            TransactionDetailUM.Loading -> CardRowShimmer()
-            is TransactionDetailUM.Content -> CardRow(content = detail)
-            is TransactionDetailUM.Error -> CardRowError(onRefreshClick = detail.onRefreshClick)
+            TransactionDetailUM.Loading -> DetailRowShimmer()
+            is TransactionDetailUM.Content -> DetailValueRow(
+                title = resourceReference(R.string.tangempay_common_card),
+                value = detail.cardNumber,
+                subvalue = detail.cardName,
+            )
+            is TransactionDetailUM.Error -> DetailRowError(
+                title = resourceReference(R.string.tangempay_common_card),
+                onRefreshClick = detail.onRefreshClick,
+            )
+        }
+        when (val cashback = state.cashbackDetail) {
+            null -> Unit
+            CashbackDetailUM.Loading -> DetailRowShimmer()
+            CashbackDetailUM.AwaitingCalculation -> CashbackRowPlaceholder()
+            is CashbackDetailUM.Content -> DetailValueRow(
+                title = resourceReference(R.string.tangempay_cashback_title),
+                value = cashback.value,
+                subvalue = cashback.subvalue,
+            )
+            is CashbackDetailUM.Error -> DetailRowError(
+                title = resourceReference(R.string.tangempay_cashback_title),
+                onRefreshClick = cashback.onRefreshClick,
+            )
         }
         TangemRow(
             divider = state.mcc != null,
@@ -264,27 +285,28 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUMV2, modifi
     }
 }
 
+/** A value-and-optional-subvalue row shared by the Card and Cashback rows. */
 @Composable
-private fun CardRow(content: TransactionDetailUM.Content, modifier: Modifier = Modifier) {
-    val cardNumber = content.cardNumber
-    val cardName = content.cardName
+private fun DetailValueRow(
+    title: TextReference,
+    value: TextReference?,
+    subvalue: TextReference?,
+    modifier: Modifier = Modifier,
+) {
     TangemRow(
         modifier = modifier,
         divider = true,
         contentLead = TangemRowContentLead.End,
         titleSlot = {
-            TangemRowText(
-                text = resourceReference(R.string.tangempay_common_card),
-                role = TangemRowTextRole.Title,
-            )
+            TangemRowText(text = title, role = TangemRowTextRole.Title)
         },
-        valueSlot = if (cardNumber != null) {
-            { DetailRowValue(text = cardNumber) }
+        valueSlot = if (value != null) {
+            { DetailRowValue(text = value) }
         } else {
             null
         },
-        subvalueSlot = if (cardName != null) {
-            { DetailRowSubvalue(text = cardName) }
+        subvalueSlot = if (subvalue != null) {
+            { DetailRowSubvalue(text = subvalue) }
         } else {
             null
         },
@@ -292,7 +314,7 @@ private fun CardRow(content: TransactionDetailUM.Content, modifier: Modifier = M
 }
 
 @Composable
-private fun CardRowShimmer(modifier: Modifier = Modifier) {
+private fun DetailRowShimmer(modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier,
         divider = true,
@@ -318,18 +340,37 @@ private fun CardRowShimmer(modifier: Modifier = Modifier) {
     )
 }
 
+/** Cashback not yet calculated by the backend — placeholder shimmer in place of the value. */
 @Composable
-private fun CardRowError(onRefreshClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun CashbackRowPlaceholder(modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier,
+        divider = true,
+        contentLead = TangemRowContentLead.End,
+        titleSlot = {
+            TangemRowText(
+                text = resourceReference(R.string.tangempay_cashback_title),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        valueSlot = {
+            TangemShimmer(
+                modifier = Modifier.size(width = 56.dp, height = 20.dp),
+                radius = 999.dp,
+            )
+        },
+    )
+}
+
+@Composable
+private fun DetailRowError(title: TextReference, onRefreshClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier,
         divider = true,
         contentLead = TangemRowContentLead.End,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
-            TangemRowText(
-                text = resourceReference(R.string.tangempay_common_card),
-                role = TangemRowTextRole.Title,
-            )
+            TangemRowText(text = title, role = TangemRowTextRole.Title)
         },
         valueSlot = {
             Row(
@@ -408,6 +449,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                     cardNumber = stringReference("*9092"),
                     cardName = stringReference("Basic card"),
                 ),
+                cashbackDetail = CashbackDetailUM.Content(value = stringReference("+$0.75"), subvalue = null),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = stringReference("5814"),
                 transactionAmount = "-$5.86",
@@ -432,6 +474,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 detail = TransactionDetailUM.Content(
                     cardNumber = stringReference("*9092"),
                     cardName = stringReference("Basic card"),
+                ),
+                cashbackDetail = CashbackDetailUM.Content(
+                    value = stringReference("No cashback"),
+                    subvalue = stringReference("MCC excluded"),
                 ),
                 transactionCategory = stringReference("Groceries"),
                 mcc = stringReference("0000"),
@@ -459,6 +505,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                     cardNumber = stringReference("*9092"),
                     cardName = stringReference("Basic card"),
                 ),
+                cashbackDetail = CashbackDetailUM.Content(
+                    value = stringReference("-$0.50"),
+                    subvalue = stringReference("return of purchase"),
+                ),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = null,
                 transactionAmount = "-$5.86",
@@ -481,6 +531,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_percent_24),
                 transactionTitle = stringReference("Service fees"),
                 detail = null,
+                cashbackDetail = null,
                 transactionCategory = stringReference("Service fees"),
                 mcc = null,
                 transactionAmount = "-$5.86",
@@ -504,6 +555,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 iconState = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
                 transactionTitle = resourceReference(R.string.common_transfer),
                 detail = null,
+                cashbackDetail = null,
                 transactionCategory = resourceReference(R.string.common_transfer),
                 mcc = null,
                 transactionAmount = "+$20",
@@ -522,6 +574,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
                 detail = TransactionDetailUM.Loading,
+                cashbackDetail = CashbackDetailUM.Loading,
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = stringReference("5814"),
                 transactionAmount = "-$5.86",
@@ -544,6 +597,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
                 detail = TransactionDetailUM.Error(onRefreshClick = {}),
+                cashbackDetail = CashbackDetailUM.Error(onRefreshClick = {}),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = stringReference("5814"),
                 transactionAmount = "-$5.86",
