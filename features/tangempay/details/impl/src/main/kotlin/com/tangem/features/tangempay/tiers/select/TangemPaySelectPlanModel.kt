@@ -90,10 +90,15 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
         val tierId = transition.plan.tierId
         analytics.send(TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(tierId))
-        analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
 
-        isConfirm = true
-        state.update { buildState() }
+        when (params.source) {
+            TangemPaySelectPlanSource.TIERS_ONBOARDING -> applyTransition(transition)
+            TangemPaySelectPlanSource.CHANGE_PLAN -> {
+                analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
+                isConfirm = true
+                state.update { buildState() }
+            }
+        }
     }
 
     private fun onComparePlansClick() {
@@ -108,7 +113,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         state.update { buildState(showPlanCompare = false) }
     }
 
-    private fun onBackClick() {
+    fun onBackClick() {
         if (isProcessing) return
         if (isConfirm) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeCancelClicked())
@@ -119,10 +124,19 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         }
     }
 
+    private fun onCloseClick() {
+        if (isProcessing) return
+        router.pop()
+    }
+
     private fun onConfirmClick() {
+        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
+        applyTransition(transition)
+    }
+
+    private fun applyTransition(transition: TangemPayTariffPlanTransition) {
         if (isProcessing) return
 
-        val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
         if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeUpgradeClicked())
         }
@@ -151,7 +165,16 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         state.update { buildState() }
         modelScope.launch {
             action().fold(
-                ifRight = { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) },
+                ifRight = {
+                    when (params.source) {
+                        TangemPaySelectPlanSource.TIERS_ONBOARDING -> {
+                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
+                        }
+                        TangemPaySelectPlanSource.CHANGE_PLAN -> {
+                            router.pop()
+                        }
+                    }
+                },
                 ifLeft = {
                     isProcessing = false
                     state.update { buildState() }
@@ -173,12 +196,13 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         selectedIndex = selectedIndex,
         onPlanSelected = ::onPlanSelected,
         onBackClick = ::onBackClick,
-        onCloseClick = router::pop,
+        onCloseClick = ::onCloseClick,
         content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
         compare = if (showPlanCompare) buildCompare() else null,
     )
 
     private fun buildSelectContent() = TangemPaySelectPlanUM.Content.Select(
+        isProcessing = isProcessing,
         onComparePlansClick = ::onComparePlansClick,
         onSelectClick = ::onSelectClick,
     )
@@ -276,6 +300,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
             }
             TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
                 val date = nextBillingDate()
+                val currentPlan = params.tariffPlan.plan
                 buildList {
                     if (date != null) {
                         add(
@@ -288,7 +313,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     add(
                         resourceReference(
                             R.string.tangempay_select_plan_confirm_point_cards_closed,
-                            wrappedList(programName),
+                            wrappedList(currentPlan.programName),
                         ),
                     )
                     if (date != null) {
