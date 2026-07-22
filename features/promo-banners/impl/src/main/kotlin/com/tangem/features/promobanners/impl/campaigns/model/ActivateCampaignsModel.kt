@@ -11,12 +11,11 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
@@ -47,6 +46,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -61,7 +61,7 @@ internal class ActivateCampaignsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val multiAccountListSupplier: MultiAccountListSupplier,
     private val enrollPromoCampaignUseCase: EnrollPromoCampaignUseCase,
     private val urlOpener: UrlOpener,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
@@ -199,22 +199,30 @@ internal class ActivateCampaignsModel @Inject constructor(
         urlOpener.openUrl(campaignContent.learnMoreUrl)
     }
 
+    private suspend fun hasMultipleCryptoPortfolioAccounts(): Boolean {
+        return multiAccountListSupplier.invoke()
+            .first()
+            .any { accountList ->
+                accountList.accounts.filterIsInstance<Account.CryptoPortfolio>().size > 1
+            }
+    }
+
     private fun onTokenChosen(result: ChooseTokenResult) {
         val selectedToken = result.currency.currency as? CryptoCurrency.Token ?: return
         val networkAddress = result.currency.value.networkAddress ?: return
 
         modelScope.launch {
-            val selectedAccountUM = if (isAccountsModeEnabledUseCase.invokeSync()) {
+            val selectedAccountUM = if (hasMultipleCryptoPortfolioAccounts()) {
                 when (val account = result.account.account) {
                     is Account.CryptoPortfolio -> SelectedAccountUM(
                         iconState = accountIconConverter.convert(account),
                         name = account.accountName.toUM().value,
                     )
-                    is Account.Payment -> SelectedAccountUM(
-                        iconState = CurrencyIconState.PaymentAccount(size = AccountIconSize.ExtraSmall),
-                        name = account.accountName.toUM().value,
-                    )
-                    is Account.Virtual -> null
+                    // Payment accounts are hidden in the chooser and don't count towards accounts mode,
+                    // so there is no account label to show for them.
+                    is Account.Payment,
+                    is Account.Virtual,
+                    -> null
                 }
             } else {
                 null
