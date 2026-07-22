@@ -1970,7 +1970,7 @@
   <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">No cashback will be awarded for in-person/in-store purchases at EU merchants; also for withdrawals, transfers, quasi-cash, mobile phone bills, government services and certain other categories</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
-    <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
+  <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
   <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limits and exceptions</string>
   <string name="tangempay_cashback_accruals_title">Accruals</string>
