@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
@@ -27,19 +28,6 @@ internal fun RelatedTokensBlock(
     onItemClick: ((MarketsListItemUM) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    RelatedTokensBlockV2(
-        relatedTokensUM = relatedTokensUM,
-        onItemClick = onItemClick,
-        modifier = modifier,
-    )
-}
-
-@Composable
-internal fun RelatedTokensBlockV2(
-    relatedTokensUM: RelatedTokensUM,
-    onItemClick: ((MarketsListItemUM) -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
     val isVisible = remember(relatedTokensUM) {
         when (relatedTokensUM) {
             is RelatedTokensUM.Content -> relatedTokensUM.items.isNotEmpty()
@@ -51,16 +39,16 @@ internal fun RelatedTokensBlockV2(
     if (!isVisible) return
 
     Column(modifier = modifier) {
-        SpacerH(TangemTheme.dimens2.x6)
+        SpacerH(24.dp)
         Text(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens2.x2)
-                .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2),
+                .padding(horizontal = 8.dp)
+                .padding(top = 16.dp, bottom = 8.dp),
             text = stringResourceSafe(R.string.news_related_tokens),
-            style = TangemTheme.typography2.headingSemibold20,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.heading.small,
+            color = TangemTheme.colors3.text.primary,
         )
-        SpacerH(TangemTheme.dimens2.x3)
+        SpacerH(12.dp)
 
         Column(modifier = Modifier.fillMaxWidth()) {
             when (relatedTokensUM) {
@@ -72,7 +60,7 @@ internal fun RelatedTokensBlockV2(
                                 onClick = { onItemClick?.invoke(marketsListItemUM) },
                             )
                         }
-                        SpacerH(TangemTheme.dimens2.x2)
+                        SpacerH(8.dp)
                     }
                 }
                 RelatedTokensUM.Loading -> {
@@ -80,7 +68,7 @@ internal fun RelatedTokensBlockV2(
                         WithDecorated {
                             MarketsListItemPlaceholder()
                         }
-                        SpacerH(TangemTheme.dimens2.x2)
+                        SpacerH(8.dp)
                     }
                 }
                 RelatedTokensUM.LoadingError -> Unit
@@ -95,8 +83,8 @@ private fun WithDecorated(modifier: Modifier = Modifier, content: @Composable Co
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(20.dp),
             ),
         content = content,
     )
