@@ -43,17 +43,6 @@ private fun LazyListScope.marketingBannerItem(marketingBanner: @Composable (Modi
     }
 }
 
-private fun LazyListScope.marketingBannerItem(marketingBanner: @Composable (Modifier) -> Unit) {
-    item(key = "marketing_banner") {
-        marketingBanner(
-            Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp)
-                .fillMaxWidth(),
-        )
-    }
-}
-
 // Empty item with a key so that deeplink scroll-to-section can target it before the real content is composed
 private fun LazyListScope.sectionStub(key: String) {
     item(key) { }
