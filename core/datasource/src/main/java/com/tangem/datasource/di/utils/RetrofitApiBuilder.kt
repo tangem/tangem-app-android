@@ -96,10 +96,10 @@ internal class RetrofitApiBuilder @Inject constructor(
     override fun <T : Any> create(clazz: Class<T>, spec: RetrofitApiSpec): T = createApi(
         clazz = clazz,
         apiConfigId = ApiConfig.ID(spec.configId),
-        applyTimeoutAnnotations = spec.applyTimeoutAnnotations,
-        sessionAuth = spec.sessionAuth,
+        applyTimeoutAnnotations = spec.shouldApplyTimeoutAnnotations,
+        sessionAuth = spec.shouldUseSessionAuth,
         timeouts = spec.timeouts,
-        logsSaving = spec.logsSaving,
+        logsSaving = spec.shouldSaveLogs,
     )
 
     /**
@@ -116,10 +116,10 @@ internal class RetrofitApiBuilder @Inject constructor(
         clazz = T::class.java,
         spec = RetrofitApiSpec(
             configId = apiConfigId.name,
-            applyTimeoutAnnotations = applyTimeoutAnnotations,
-            sessionAuth = sessionAuth,
+            shouldApplyTimeoutAnnotations = applyTimeoutAnnotations,
+            shouldUseSessionAuth = sessionAuth,
             timeouts = timeouts,
-            logsSaving = logsSaving,
+            shouldSaveLogs = logsSaving,
         ),
     )
 
