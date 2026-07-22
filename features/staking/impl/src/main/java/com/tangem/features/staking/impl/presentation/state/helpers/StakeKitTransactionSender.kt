@@ -131,8 +131,10 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
 
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
             ?: error("No confirmation state")
-        val fee = (confirmationState.feeState as? FeeState.Content)?.fee
-            ?: error("No fee provided")
+        val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: run {
+            onConstructError(StakingError.DomainError("No fee provided"))
+            return
+        }
         val amountState = state.amountState as? AmountState.Data ?: error("No amount state")
 
         val reused = reusableBuild(state)
