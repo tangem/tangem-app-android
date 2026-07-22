@@ -39,6 +39,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         // Assert — flat, non-expandable token rows
         assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("token-a", "token-b").inOrder()
         assertThat(result.tokenList.map { it.isExpandable }).containsExactly(false, false)
+        assertThat(result.tokenList.map { it.isExpanded }).containsExactly(false, false)
         assertThat(result.tokenList.flatMap { it.tokenList }).isEmpty()
     }
 
@@ -69,28 +70,6 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
     }
 
     @Test
-    fun `GIVEN account id in expanded set WHEN convert THEN account row is expanded`() {
-        // Arrange
-        val account = MockAccounts.createAccount(derivationIndex = 1)
-        val earnData = createEarnOpportunities(
-            account = account,
-            earnCurrencies = mapOf(
-                createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
-            ),
-        )
-        val converter = createConverter(
-            isAccountsModeEnabled = true,
-            expandedAssetIds = setOf(account.accountId.value),
-        )
-
-        // Act
-        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
-
-        // Assert
-        assertThat(result.tokenList.single().isExpanded).isTrue()
-    }
-
-    @Test
     fun `GIVEN account row clicked WHEN convert THEN expand callback receives account id`() {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1)
@@ -116,16 +95,16 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         // Arrange
         val currency = createEarnCurrency()
         val earnType = ForYouEarnOpportunitiesType.YieldSupply(apy = "7.5")
+        val walletId = UserWalletId("01")
         val earnData = createEarnOpportunities(
+            userWalletId = walletId,
             earnCurrencies = mapOf(
                 createStatus(currency, createRowLoadedValue()) to createEarnApyInfo(isActive = false, type = earnType),
             ),
         )
-        val walletId = UserWalletId("01")
         var clicked: Triple<UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType>? = null
         val converter = createConverter(
             isAccountsModeEnabled = false,
-            userWalletId = walletId,
             onTokenClick = { id, clickedCurrency, type -> clicked = Triple(id, clickedCurrency, type) },
         )
 
@@ -164,15 +143,11 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
 
     private fun createConverter(
         isAccountsModeEnabled: Boolean,
-        expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
-        userWalletId: UserWalletId? = UserWalletId("01"),
         onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
     ) = ForYouEarnOpportunitiesPotentialRewardsConverter(
         appCurrency = appCurrency,
-        userWalletId = userWalletId,
         isAccountsModeEnabled = isAccountsModeEnabled,
-        expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
         onTokenClick = onTokenClick,
         onAllEarnTokensClick = {},

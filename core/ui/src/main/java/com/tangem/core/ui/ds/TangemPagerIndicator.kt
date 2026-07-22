@@ -367,8 +367,8 @@ val TangemPagerIndicatorColors: PagerIndicatorColors
     @Composable
     @ReadOnlyComposable
     get() = PagerIndicatorColors(
-        active = TangemTheme.colors2.graphic.neutral.primary,
-        inactive = TangemTheme.colors2.graphic.neutral.tertiary,
+        active = TangemTheme.colors3.bg.inverse,
+        inactive = TangemTheme.colors3.bg.opaque.secondary,
         overlay = null,
     )
 

@@ -41,6 +41,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -110,6 +112,7 @@ private fun TxHistoryDetailsOverflowMenu(
     menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
     modifier: Modifier = Modifier,
 ) {
+    val hapticManager = LocalHapticManager.current
     var isMenuExpanded by remember { mutableStateOf(false) }
     Box(modifier = modifier) {
         TangemButton(
@@ -132,6 +135,7 @@ private fun TxHistoryDetailsOverflowMenu(
                 TxHistoryDetailsMenuItem(
                     item = item,
                     onClick = {
+                        hapticManager.perform(TangemHapticEffect.OneTime.Click)
                         isMenuExpanded = false
                         item.onClick()
                     },

@@ -148,7 +148,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     )
 
     private fun getConfigsBaseUrls(): Map<ApiConfig.ID, Set<String>> {
-        return apiConfigs.associate { config ->
+        return apiConfigs.values.associate { config ->
             val allBaseUrls = config.environmentConfigs.mapTo(hashSetOf(), ApiEnvironmentConfig::baseUrl)
 
             config.id to allBaseUrls

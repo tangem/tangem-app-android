@@ -243,7 +243,7 @@ private fun WalletContent2(
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(backgroundColor),
+                    .background(TangemTheme.colors3.bg.primary),
             )
             val isSheetExpanded by remember {
                 derivedStateOf { bottomSheetState.targetValue == TangemSheetValue.Expanded }
@@ -432,8 +432,8 @@ private inline fun BaseScaffoldWithMarkets(
     val bottomSheetState = rememberTangemStandardBottomSheetState()
     val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
 
-    val expandedBackground = TangemTheme.colors2.surface.level2
-    val collapsedBackground = TangemTheme.colors2.surface.level3
+    val expandedBackground = TangemTheme.colors3.bg.primary
+    val collapsedBackground = TangemTheme.colors3.bg.secondary
     val background by animateColorAsState(
         targetValue = if (bottomSheetState.targetValue == TangemSheetValue.Expanded) {
             expandedBackground
