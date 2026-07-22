@@ -10,16 +10,23 @@ android {
     namespace = "com.tangem.feature.rating.impl"
 }
 dependencies {
-    implementation(projects.features.rating.api)
+    api(projects.features.rating.api)
 
-    implementation(projects.core.decompose)
-    implementation(projects.core.res)
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
+    implementation(projects.features.swap.domain)
 
-    implementation(deps.compose.foundation)
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    api(projects.core.utils)
+
+    api(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
+
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)

@@ -290,6 +290,10 @@
   <string name="common_approve">Aprovar</string>
   <string name="common_approved">Aprovado</string>
   <string name="common_approving">Aprovando</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d ativo</item>
+    <item quantity="other">%d ativos</item>
+  </plurals>
   <string name="common_attention">Atenção</string>
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>

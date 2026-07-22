@@ -32,7 +32,6 @@ import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalCanScrollBackward
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
@@ -218,16 +217,14 @@ private fun WalletNameRow(model: PortfolioSelectorItemUM.GroupTitle, modifier: M
 @Composable
 private fun Preview(@PreviewParameter(PortfolioSelectorPreviewStateProvider::class) params: PortfolioSelectorUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                PortfolioSelectorContentV2(
-                    state = params,
-                    modifier = Modifier.background(color = TangemTheme.colors.background.tertiary),
-                )
-            }
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            PortfolioSelectorContentV2(
+                state = params,
+                modifier = Modifier.background(color = TangemTheme.colors.background.tertiary),
+            )
         }
     }
 }

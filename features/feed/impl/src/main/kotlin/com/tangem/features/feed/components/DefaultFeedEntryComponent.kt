@@ -19,6 +19,7 @@ import com.tangem.domain.markets.PreselectedMarketsInterval
 import com.tangem.domain.markets.PreselectedMarketsOrder
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
@@ -32,6 +33,7 @@ import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
+import com.tangem.features.foryou.TokenSummaryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -141,6 +143,19 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
 
         override fun openSearch(source: String) {
             stackNavigation.bringToFront(FeedEntryChildFactory.Child.Search(source))
+        }
+
+        override fun openForYou() {
+            stackNavigation.bringToFront(FeedEntryChildFactory.Child.ForYou)
+        }
+
+        override fun openTokenSummary(userWalletId: UserWalletId, token: TokenSummaryComponent.Token) {
+            innerRouter.push(
+                FeedEntryChildFactory.Child.TokenSummary(
+                    userWalletId = userWalletId,
+                    token = token,
+                ),
+            )
         }
     }
 
