@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -36,6 +37,7 @@ import com.tangem.core.ui.ds.row.token.internal.TokenRowPriceChangeContent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenMarketBlockTestTags
 import com.tangem.core.ui.R as CoreR
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.token.block.impl.model.formatter.toChartType
@@ -53,13 +55,16 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
             .fillMaxWidth()
             .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
             .background(TangemTheme.colors2.surface.level3)
-            .clickable(onClick = tokenMarketBlockUM.onClick),
+            .clickable(onClick = tokenMarketBlockUM.onClick)
+            .testTag(TokenMarketBlockTestTags.BLOCK),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.markets_common_market_price),
             style = TangemTheme.typography2.bodySemibold16,
             color = TangemTheme.colors2.text.neutral.primary,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
+            modifier = Modifier
+                .layoutId(TangemRowLayoutId.START_TOP)
+                .testTag(TokenMarketBlockTestTags.TITLE),
         )
 
         Row(
@@ -72,6 +77,7 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
                 overflow = TextOverflow.Ellipsis,
                 style = TangemTheme.typography2.captionMedium12,
                 color = TangemTheme.colors2.text.neutral.primary,
+                modifier = Modifier.testTag(TokenMarketBlockTestTags.PRICE),
             )
             TokenRowPriceChangeContent(
                 priceChangeState = PriceChangeState.Content(
@@ -79,11 +85,14 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
                     valueInPercent = tokenMarketBlockUM.h24Percent.orEmpty(),
                 ),
                 isFlickering = false,
+                modifier = Modifier.testTag(TokenMarketBlockTestTags.PRICE_CHANGE),
             )
         }
 
         Box(
-            modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
+            modifier = Modifier
+                .layoutId(TangemRowLayoutId.END_BOTTOM)
+                .testTag(TokenMarketBlockTestTags.CHART),
         ) {
             val chartModifier = Modifier.requiredSize(width = ChartWidth, height = ChartHeight)
 

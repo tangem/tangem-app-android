@@ -8,7 +8,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayReissueCardModel
-import com.tangem.features.tangempay.ui.TangemPayReissueCardContent
 import com.tangem.features.tangempay.ui.TangemPayReissueCardContentV2
 
 internal class TangemPayReissueCardComponent(
@@ -23,11 +22,7 @@ internal class TangemPayReissueCardComponent(
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
-        if (model.isRedesignEnabled()) {
-            TangemPayReissueCardContentV2(state)
-        } else {
-            TangemPayReissueCardContent(state)
-        }
+        TangemPayReissueCardContentV2(state)
     }
 
     data class Params(
