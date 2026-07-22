@@ -10,15 +10,14 @@ android {
 }
 
 dependencies {
+    /* Kotlin */
+    api(deps.kotlin.coroutines)
+
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Project - Domain */
-    implementation(projects.domain.onramp.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-
-    /* Compose */
-    implementation(deps.compose.runtime)
+    api(projects.domain.models)
+    api(projects.domain.onramp.models)
 }

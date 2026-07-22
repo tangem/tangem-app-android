@@ -78,6 +78,8 @@ interface TokenDetailsClickIntents {
 
     fun onYieldInfoClick()
 
+    fun onStakingRegionUnavailableClick()
+
     // region Clore migration
     // TODO: Remove after 2025-04-01 when Clore migration ends ([REDACTED_TASK_KEY])
 
@@ -174,6 +176,8 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) { /* no op */ }
 
     override fun onYieldInfoClick() { /* no op */ }
+
+    override fun onStakingRegionUnavailableClick() { /* no op */ }
 
     override fun onQuickTopUpClick(amount: BigDecimal, currencyCode: String) { /* no op */ }
 

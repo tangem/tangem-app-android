@@ -58,8 +58,8 @@ class SearchAndSwapTest : BaseTestCase() {
                     onSwapSelectTokenScreen { marketsTokenWithName(receiveTokenName).clickWithAssertion() }
                 }
             }
-            step("Click on 'Add' button") {
-                onAddTokenBottomSheet { addButton.performClick() }
+            step("Click on 'Confirm' button") {
+                onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
@@ -106,8 +106,8 @@ class SearchAndSwapTest : BaseTestCase() {
                     onSwapSelectTokenScreen { marketsTokenWithName(receiveTokenName).clickWithAssertion() }
                 }
             }
-            step("Click on 'Add' button") {
-                onAddTokenBottomSheet { addButton.performClick() }
+            step("Click on 'Confirm' button") {
+                onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
@@ -195,8 +195,8 @@ class SearchAndSwapTest : BaseTestCase() {
                     onSwapSelectTokenScreen { marketsTokenWithName(receiveTokenName).clickWithAssertion() }
                 }
             }
-            step("Click on 'Add' button") {
-                onAddTokenBottomSheet { addButton.performClick() }
+            step("Click on 'Confirm' button") {
+                onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert warning title '$warningTitle' is displayed") {
                 onSwapTokenScreen { warningTitle(warningTitle).assertIsDisplayed() }
@@ -251,8 +251,8 @@ class SearchAndSwapTest : BaseTestCase() {
                     onSwapSelectTokenScreen { marketsTokenWithName(swapTokenName).performClick() }
                 }
             }
-            step("Click on 'Add' button") {
-                onAddTokenBottomSheet { addButton.performClick() }
+            step("Click on 'Confirm' button") {
+                onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }

@@ -25,10 +25,18 @@ internal class LegacyUserTokensResponseStore @Inject constructor(
     }
 
     suspend fun clear(userWalletId: UserWalletId) {
-        appPreferencesStore.updateData { preferences ->
-            val key = createPreferencesKey(userWalletId = userWalletId.stringValue)
+        clear(userWalletIds = listOf(userWalletId))
+    }
 
-            preferences.toMutablePreferences().apply { remove(key) }
+    suspend fun clear(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        val keys = userWalletIds.map { createPreferencesKey(userWalletId = it.stringValue) }
+
+        appPreferencesStore.updateData { preferences ->
+            preferences.toMutablePreferences().apply {
+                keys.forEach { key -> remove(key) }
+            }
         }
     }
 
