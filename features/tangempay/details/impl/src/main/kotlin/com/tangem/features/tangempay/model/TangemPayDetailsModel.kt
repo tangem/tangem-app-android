@@ -80,7 +80,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
-    private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
+    private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
@@ -156,11 +156,11 @@ internal class TangemPayDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    override fun onCancelPlusTransition(orderId: String) {
+    override fun onCancelTariffTransition(orderId: String) {
         analytics.send(TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked())
         uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
         modelScope.launch {
-            cancelTangemPayOrderUseCase(userWalletId = userWalletId, orderId = orderId)
+            cancelTariffTransitionUseCase(userWalletId = userWalletId, orderId = orderId)
                 .onLeft {
                     uiMessageSender.send(TangemPayMessagesFactory.createGenericError())
                 }

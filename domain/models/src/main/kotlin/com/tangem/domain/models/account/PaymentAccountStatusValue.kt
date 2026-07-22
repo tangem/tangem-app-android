@@ -2,8 +2,6 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
-import com.tangem.domain.models.account.PaymentAccountStatusValue.Deactivated
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
@@ -326,10 +324,30 @@ private fun buildCryptoCurrencyStatusValue(
     }
 }
 
-fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is Loaded || this is Deactivated
+val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
+    get() = when (this) {
+        is PaymentAccountStatusValue.Error,
+        is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.Empty,
+        is PaymentAccountStatusValue.NotCreated,
+        is PaymentAccountStatusValue.UnderReview,
+        is PaymentAccountStatusValue.Loading,
+        is PaymentAccountStatusValue.Deactivated,
+        -> null
+        is PaymentAccountStatusValue.Inactive -> tariffPlan.tariff
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> tariffPlan
+        is PaymentAccountStatusValue.Loaded -> tariffPlan?.tariff
+    }
 
-fun Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
+fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is PaymentAccountStatusValue.Loaded ||
+    this is PaymentAccountStatusValue.Deactivated
 
-fun Loaded.findCardWithId(cardId: String): TangemPayCard? = cards.firstOrNull { it.id == cardId }
+fun PaymentAccountStatusValue.Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
 
-fun Loaded.requireCardWithId(cardId: String): TangemPayCard = requireNotNull(findCardWithId(cardId))
+fun PaymentAccountStatusValue.Loaded.findCardWithId(cardId: String): TangemPayCard? {
+    return cards.firstOrNull { it.id == cardId }
+}
+
+fun PaymentAccountStatusValue.Loaded.requireCardWithId(cardId: String): TangemPayCard {
+    return requireNotNull(findCardWithId(cardId))
+}
