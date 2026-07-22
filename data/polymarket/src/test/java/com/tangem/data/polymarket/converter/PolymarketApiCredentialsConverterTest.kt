@@ -8,18 +8,18 @@ import org.junit.jupiter.api.Test
 internal class PolymarketApiCredentialsConverterTest {
 
     @Test
-    fun `GIVEN domain credentials WHEN convert THEN maps every field to the dto`() {
+    fun `GIVEN domain credentials WHEN toDto THEN maps every field to the dto`() {
         // Act
-        val actual = PolymarketApiCredentialsConverter.convert(CREDENTIALS)
+        val actual = CREDENTIALS.toDto()
 
         // Assert
         assertThat(actual).isEqualTo(DTO)
     }
 
     @Test
-    fun `GIVEN dto WHEN convertBack THEN maps every field to the domain model`() {
+    fun `GIVEN dto WHEN toDomain THEN maps every field to the domain model`() {
         // Act
-        val actual = PolymarketApiCredentialsConverter.convertBack(DTO)
+        val actual = DTO.toDomain()
 
         // Assert
         assertThat(actual).isEqualTo(CREDENTIALS)
@@ -28,9 +28,7 @@ internal class PolymarketApiCredentialsConverterTest {
     @Test
     fun `GIVEN domain credentials WHEN round-tripped THEN unchanged`() {
         // Act
-        val actual = PolymarketApiCredentialsConverter.convertBack(
-            PolymarketApiCredentialsConverter.convert(CREDENTIALS),
-        )
+        val actual = CREDENTIALS.toDto().toDomain()
 
         // Assert
         assertThat(actual).isEqualTo(CREDENTIALS)
