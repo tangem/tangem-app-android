@@ -8,6 +8,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -84,6 +85,28 @@ internal class PaymentAccountStatusesStore(
             stored.toMutableMap().apply {
                 val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
                 val newValue = paymentAccountStatus.copy(value = paymentAccountStatus.value.copySealed(source = source))
+                put(key = userWalletId.stringValue, value = newValue)
+            }
+        }
+    }
+
+    /**
+     * Optimistically marks the cached VA on-ramp as [VirtualAccountOnramp.Processing] so the UI reflects a
+
+     * read-modify-write atomically inside [RuntimeSharedStore.update] to avoid a lost update racing with a
+     * concurrent [store]/[updateStatusSource] call. No-op (no write) when there is no cached entry for
+     * [userWalletId], or when its value isn't [PaymentAccountStatusValue.Loaded]. Not persisted, mirroring
+     * [updateStatusSource].
+     */
+    suspend fun markVirtualAccountProcessing(userWalletId: UserWalletId) {
+        logger.i("markVirtualAccountProcessing($userWalletId)")
+        runtimeStore.update(emptyMap()) { stored ->
+            stored.toMutableMap().apply {
+                val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
+                val loaded = paymentAccountStatus.value as? PaymentAccountStatusValue.Loaded ?: return@update stored
+                val newValue = paymentAccountStatus.copy(
+                    value = loaded.copy(virtualAccount = VirtualAccountOnramp.Processing),
+                )
                 put(key = userWalletId.stringValue, value = newValue)
             }
         }
