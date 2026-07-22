@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.tiers.current
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,6 +20,8 @@ internal class TangemPayCurrentPlanComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        BackHandler { model.onBackClick() }
+
         val state by model.state.collectAsStateWithLifecycle()
         TangemPayCurrentPlanScreen(state = state, modifier = modifier)
     }
