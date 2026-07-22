@@ -112,18 +112,17 @@ internal class RetrofitApiBuilder @Inject constructor(
         sessionAuth: Boolean,
         timeouts: Timeouts? = null,
         logsSaving: Boolean = true,
-    ): T = create(
+    ): T = createApi(
         clazz = T::class.java,
-        spec = RetrofitApiSpec(
-            configId = apiConfigId.name,
-            shouldApplyTimeoutAnnotations = applyTimeoutAnnotations,
-            shouldUseSessionAuth = sessionAuth,
-            timeouts = timeouts,
-            shouldSaveLogs = logsSaving,
-        ),
+        apiConfigId = apiConfigId,
+        applyTimeoutAnnotations = applyTimeoutAnnotations,
+        sessionAuth = sessionAuth,
+        timeouts = timeouts,
+        logsSaving = logsSaving,
     )
 
-    private fun <T : Any> createApi(
+    @PublishedApi
+    internal fun <T : Any> createApi(
         clazz: Class<T>,
         apiConfigId: ApiConfig.ID,
         applyTimeoutAnnotations: Boolean,
