@@ -5,8 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse

@@ -1,5 +1,8 @@
 package com.tangem.datasource.api.common.response
 
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.api.common.response.analytics.ApiErrorEvent
 import com.tangem.utils.logging.TangemLogger

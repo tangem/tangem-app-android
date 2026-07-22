@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.response
+package com.tangem.core.remote.response
 
 /**
  * Represents the possible errors that can occur during an API request.

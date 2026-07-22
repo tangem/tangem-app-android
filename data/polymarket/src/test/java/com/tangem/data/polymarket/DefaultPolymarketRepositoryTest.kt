@@ -7,9 +7,9 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
