@@ -5,11 +5,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -226,16 +222,20 @@ internal class ForYouPortfolioReviewConverter(
         val isMain = onlyCryptoCurrency is CryptoCurrency.Coin
 
         val subtitle = when {
-            networkCount > 1 -> pluralReference(R.plurals.common_networks_count, networkCount)
+            networkCount > 1 -> pluralReference(
+                id = R.plurals.common_networks_count,
+                count = networkCount,
+                formatArgs = wrappedList(networkCount),
+            )
             isMain -> resourceReference(R.string.common_main_network)
-            else -> stringReference(onlyCryptoCurrency.network.standardType.name)
+            else -> stringReference(onlyCryptoCurrency.network.name)
         }
 
         return TangemTokenRowUM.Content(
             id = assetId,
             headIconUM = TangemIconUM.Currency(iconConverter.convert(asset)),
             titleUM = TangemTokenRowUM.TitleUM.Content(
-                text = stringReference(asset.currency.symbol),
+                text = stringReference(asset.currency.name),
                 badge = badge,
             ),
             subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
@@ -243,7 +243,16 @@ internal class ForYouPortfolioReviewConverter(
             ),
             topEndContentUM = endContent.top,
             bottomEndContentUM = endContent.bottom,
-            onItemClick = { expandClick(assetId) },
+            onItemClick = {
+                if (networkCount > 1) {
+                    expandClick(assetId)
+                } else {
+                    onTokenClick(
+                        currencies.first().account.userWalletId,
+                        asset.currency,
+                    )
+                }
+            },
             onItemLongClick = null,
         )
     }

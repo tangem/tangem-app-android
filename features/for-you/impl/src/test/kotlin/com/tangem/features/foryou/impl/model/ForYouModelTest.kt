@@ -267,10 +267,27 @@ internal class ForYouModelTest {
     inner class ExpandClick {
 
         @Test
-        fun `GIVEN asset row clicked WHEN clicked again THEN isExpanded toggles back to false`() = runTest {
-            // Arrange
-            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
-            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+        fun `GIVEN multi-network asset clicked twice THEN isExpanded toggles back to false`() = runTest {
+            // Arrange — a single-network row navigates instead of expanding, so use one asset spanning two
+            // networks (same rawCurrencyId, different networks) to exercise the expand/collapse toggle wiring
+            val onFirstNetwork = createCoin(
+                rawCurrencyId = "btc",
+                symbol = "BTC",
+                networkRawId = "bitcoin",
+                idValue = "coin-btc-bitcoin",
+            )
+            val onSecondNetwork = createCoin(
+                rawCurrencyId = "btc",
+                symbol = "BTC",
+                networkRawId = "ethereum",
+                idValue = "coin-btc-ethereum",
+            )
+            stubSelectedWallet(
+                currencies = listOf(
+                    createStatus(onFirstNetwork, loadedValue(BigDecimal("100"))),
+                    createStatus(onSecondNetwork, loadedValue(BigDecimal("200"))),
+                ),
+            )
             val model = createModel(testScope = this)
             advanceUntilIdle()
             val initialContent = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
@@ -818,10 +835,11 @@ internal class ForYouModelTest {
         name: String = symbol,
         networkRawId: String = rawCurrencyId,
         decimals: Int = 8,
+        idValue: String = "coin-$rawCurrencyId",
     ): CryptoCurrency.Coin {
         val network = createNetwork(networkRawId)
         val currencyId: CryptoCurrency.ID = mockk {
-            every { value } returns "coin-$rawCurrencyId"
+            every { value } returns idValue
             every { this@mockk.rawCurrencyId } returns CryptoCurrency.RawID(rawCurrencyId)
         }
         return mockk<CryptoCurrency.Coin> {
