@@ -22,6 +22,7 @@ import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.EarnErrorResolver
 import com.tangem.domain.earn.model.EarnTokensBatchingContext
@@ -74,6 +75,7 @@ internal class ForYouModel @Inject constructor(
     private val router: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase,
     private val getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
@@ -182,11 +184,16 @@ internal class ForYouModel @Inject constructor(
             flow = selectedPortfolio,
             flow2 = yieldSupplyApyFlowUseCase(),
             flow3 = createTopEarnTokensFlow(),
-            flow4 = combine(getCoinIndicatorsUpdatesUseCase(), selectedPeriod) { indicators, period ->
-                indicators to period
+            flow4 = combine(
+                getCoinIndicatorsUpdatesUseCase(),
+                selectedPeriod,
+                getBalanceHidingSettingsUseCase.isBalanceHidden(),
+            ) { indicators, period, isBalanceHidden ->
+                Triple(indicators, period, isBalanceHidden)
             },
             flow5 = userWalletsListRepository.selectedUserWallet,
-        ) { selectedPortfolio, yieldAvailability, topEarnTokens, (indicators, period), selectedUserWallet ->
+        ) { selectedPortfolio, yieldAvailability, topEarnTokens, indicatorsPeriodHidden, selectedUserWallet ->
+            val (indicators, period, isBalanceHidden) = indicatorsPeriodHidden
 
             val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
                 .groupBy { it.account.userWalletId }
@@ -206,6 +213,7 @@ internal class ForYouModel @Inject constructor(
                 selectedWalletId = selectedUserWallet?.walletId,
                 coinIndicators = indicators,
                 timeframe = period.timeframe,
+                isBalanceHidden = isBalanceHidden,
             ).convert(selectedPortfolio)
 
             val earnOpportunitiesUM = ForYouEarnOpportunitiesConverter(
@@ -217,6 +225,7 @@ internal class ForYouModel @Inject constructor(
                 expandClick = ::onExpandEarnOpportunitiesClick,
                 onTokenClick = ::onEarnOpportunitiesTokenClick,
                 onAllEarnTokensClick = params.callbacks::onAllEarnTokensClick,
+                isBalanceHidden = isBalanceHidden,
             ).convert(selectedPortfolio)
 
             uiState.update(
