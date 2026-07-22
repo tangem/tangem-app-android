@@ -43,10 +43,12 @@ dependencies {
     api(projects.domain.markets)
     api(projects.domain.yieldSupply)
     implementation(projects.domain.account)
+    api(projects.domain.balanceHiding)
     implementation(projects.domain.models)
 
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.markets.models)
 
     /** Compose */

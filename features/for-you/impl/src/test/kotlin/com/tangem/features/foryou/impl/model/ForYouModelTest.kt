@@ -10,12 +10,15 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.EarnErrorResolver
 import com.tangem.domain.earn.model.EarnTokensBatchFlow
@@ -55,6 +58,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -76,6 +80,7 @@ internal class ForYouModelTest {
 
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase = mockk()
     private val getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase = mockk()
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase = mockk()
@@ -107,6 +112,7 @@ internal class ForYouModelTest {
         // Default: a real, non-empty emission so the model's `getOrElse { Default }` mapping path is
         // actually exercised in every test, not bypassed by an empty flow.
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
         every { yieldSupplyApyFlowUseCase() } returns flowOf(emptyMap())
         coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns emptyMap()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
@@ -603,6 +609,56 @@ internal class ForYouModelTest {
         }
     }
 
+    @Nested
+    inner class BalanceHiding {
+
+        @Test
+        fun `GIVEN balance hidden WHEN advanced THEN monetary amounts masked and percentages visible`() = runTest {
+            // Arrange
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert — the fiat balance is masked, the percentage share stays visible
+            val content = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
+            val assetRow = content.assetRow()
+            assertThat(assetRow.topEndText()).isEqualTo(stringReference(THREE_STARS))
+            assertThat(assetRow.bottomEndText()).isNotEqualTo(stringReference(THREE_STARS))
+
+            // Assert — the donut total is masked, its top-holding percentage stays visible
+            val chart = content.marketChartUM as MarketChartUM.Loaded
+            assertThat(chart.donutChart.totalAmount).isEqualTo(THREE_STARS)
+            assertThat(chart.topHoldingPercent).isNotEqualTo(stringReference(THREE_STARS))
+        }
+
+        @Test
+        fun `GIVEN balance not hidden WHEN advanced THEN monetary amounts are shown`() = runTest {
+            // Arrange — the default stub already emits false
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert — no masking is applied
+            val content = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
+            assertThat(content.assetRow().topEndText()).isNotEqualTo(stringReference(THREE_STARS))
+            assertThat((content.marketChartUM as MarketChartUM.Loaded).donutChart.totalAmount)
+                .isNotEqualTo(THREE_STARS)
+        }
+
+        private fun TangemTokenRowUM.Content.topEndText(): TextReference =
+            (topEndContentUM as TangemTokenRowUM.EndContentUM.Content).text
+
+        private fun TangemTokenRowUM.Content.bottomEndText(): TextReference =
+            (bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content).text
+    }
+
     private fun PortfolioReviewUM.Content.assetRow(): TangemTokenRowUM.Content =
         tokenList.single().tokenRowUM as TangemTokenRowUM.Content
 
@@ -689,6 +745,7 @@ internal class ForYouModelTest {
             router = router,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+            getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             userWalletsListRepository = userWalletsListRepository,
             fetchCoinIndicatorsUseCase = fetchCoinIndicatorsUseCase,
             getCoinIndicatorsUpdatesUseCase = getCoinIndicatorsUpdatesUseCase,
