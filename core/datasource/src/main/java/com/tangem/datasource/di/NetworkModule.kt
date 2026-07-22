@@ -26,9 +26,9 @@ import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
+import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
-import com.tangem.datasource.di.utils.RetrofitApiBuilder.Timeouts
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
