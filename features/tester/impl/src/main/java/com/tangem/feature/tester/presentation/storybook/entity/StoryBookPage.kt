@@ -384,6 +384,7 @@ internal data class TangemMessageBannerStory(
     val hasSlotStart: Boolean,
     val hasSlotEnd: Boolean,
     val hasExtraContent: Boolean,
+    val isClickable: Boolean,
     val background: Background,
     val onVariantChange: (TangemMessageBanner.Variant) -> Unit,
     val onContentAlignChange: (TangemMessageBanner.ContentAlign) -> Unit,
@@ -395,6 +396,7 @@ internal data class TangemMessageBannerStory(
     val onSlotStartToggle: () -> Unit,
     val onSlotEndToggle: () -> Unit,
     val onExtraContentToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
     val onBackgroundChange: (Background) -> Unit,
 ) : DsStoryBookPage {
 
