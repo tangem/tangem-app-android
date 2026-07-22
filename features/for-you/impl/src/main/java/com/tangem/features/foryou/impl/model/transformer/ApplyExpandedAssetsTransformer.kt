@@ -3,6 +3,7 @@ package com.tangem.features.foryou.impl.model.transformer
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -45,12 +46,28 @@ internal fun PortfolioReviewUM.applyExpandedAssets(expandedAssetIds: Set<String>
 
 /** Returns `this` when no item's expansion changes, so callers can skip the state update entirely. */
 internal fun EarnOpportunitiesUM.applyExpandedAssets(expandedAssetIds: Set<String>): EarnOpportunitiesUM {
-    val updated = tokenList.applyExpandedAssets(expandedAssetIds)
+    val updated = tokenList.applyExpandedAssetsToGroups(expandedAssetIds)
     if (updated === tokenList) return this
     return when (this) {
         is EarnOpportunitiesUM.Loading -> copy(tokenList = updated)
         is EarnOpportunitiesUM.Content -> copy(tokenList = updated)
     }
+}
+
+private fun ImmutableList<ForYouWalletGroupUM>.applyExpandedAssetsToGroups(
+    expandedAssetIds: Set<String>,
+): ImmutableList<ForYouWalletGroupUM> {
+    var isChanged = false
+    val updated = map { group ->
+        val updatedItems = group.items.applyExpandedAssets(expandedAssetIds)
+        if (updatedItems === group.items) {
+            group
+        } else {
+            isChanged = true
+            group.copy(items = updatedItems)
+        }
+    }
+    return if (isChanged) updated.toPersistentList() else this
 }
 
 private fun ImmutableList<ForYouTokenListItemUM>.applyExpandedAssets(
