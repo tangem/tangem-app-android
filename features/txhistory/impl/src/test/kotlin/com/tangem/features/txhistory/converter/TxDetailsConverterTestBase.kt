@@ -266,6 +266,15 @@ internal open class TxDetailsConverterTestBase {
         walletInfoById = walletInfoById,
     )
 
+    /** A `walletInfoById` with the own [MockAccounts.userWalletId] plus a second wallet, so an own-wallet leg has
+     * something to disambiguate against. */
+    protected fun twoWalletInfo(): Map<UserWalletId, WalletInfo> = mapOf(
+        MockAccounts.userWalletId to WalletInfo(name = "My Wallet", deviceIconUM = deviceIcon()),
+        UserWalletId("022") to WalletInfo(name = "Second Wallet", deviceIconUM = deviceIcon()),
+    )
+
+    private fun deviceIcon(): DeviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null)
+
     protected fun TextReference.resolveString(): String = (this as TextReference.Str).value
 
     protected companion object {
