@@ -44,6 +44,7 @@ internal class UpdateStakingNotificationTransformer(
     private fun buildEarnBlock(isBalanceHidden: Boolean): EarnBlockUM? {
         return when (val availability = stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> buildTemporaryUnavailable()
+            StakingAvailability.RegionUnavailable -> buildRegionUnavailableOrNull()
             StakingAvailability.Unavailable -> null
             is StakingAvailability.Full -> buildActiveBlockOrNull(isBalanceHidden)
             is StakingAvailability.Available -> getStakingInfoBlock(availability, isBalanceHidden)
@@ -66,6 +67,31 @@ internal class UpdateStakingNotificationTransformer(
                 tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = null,
+        )
+    }
+
+    private fun buildRegionUnavailableOrNull(): EarnBlockUM? {
+        val status = cryptoCurrencyStatus
+        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
+        val hasStake = !stakingCryptoAmount.isNullOrZero() || stakingBalance.hasPendingBalances()
+        if (!hasStake) return null
+        return EarnBlockUM.Content(
+            type = EarnBlockUM.Type.Staking,
+            backgroundUM = EarnBlockUM.BackgroundUM.Surface,
+            iconUM = EarnBlockUM.IconUM.Plain(iconRes = CoreUiR.drawable.ic_staking_disable_40),
+            titleUM = EarnBlockUM.TitleUM(
+                text = resourceReference(CoreResR.string.common_staking),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
+            ),
+            subtitleUM = EarnBlockUM.SubtitleUM.Text(
+                text = resourceReference(CoreResR.string.staking_error_unavailable_region),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
+            ),
+            trailingUM = null,
+            onClick = clickIntents::onStakingRegionUnavailableClick,
         )
     }
 

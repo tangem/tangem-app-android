@@ -14,6 +14,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.TangemPayTransactionCashbackUM
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -24,6 +25,7 @@ import org.joda.time.DateTimeZone
 
 internal class TangemPayTxHistoryItemsConverter(
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
+    private val isCashbackEnabled: Boolean,
 ) : Converter<TangemPayTxHistoryItem, TangemPayTransactionState.Content> {
 
     private val paySpendSubtitleConverter = PaySpendSubtitleConverter
@@ -87,7 +89,39 @@ internal class TangemPayTxHistoryItemsConverter(
                     tintReference = { TangemTheme.colors3.icon.secondary },
                 )
             },
+            cashback = buildCashbackUm(spend.cashback),
         )
+    }
+
+    /**
+     * Maps [cashback] to the inline badge UM, or `null` to hide it. Hidden when the feature toggle is
+     * off, cashback is absent, excluded/awaiting/unknown, or has a zero/absent amount.
+     */
+    private fun buildCashbackUm(cashback: TangemPayTxHistoryItem.Cashback?): TangemPayTransactionCashbackUM? {
+        if (!isCashbackEnabled || cashback == null) return null
+        return when (cashback.status) {
+            TangemPayTxHistoryItem.Cashback.Status.CONFIRMED ->
+                cashback.toBadgeUm(TangemPayTransactionCashbackUM.Style.Confirmed)
+            TangemPayTxHistoryItem.Cashback.Status.ESTIMATED ->
+                cashback.toBadgeUm(TangemPayTransactionCashbackUM.Style.Estimated)
+            TangemPayTxHistoryItem.Cashback.Status.EXCLUDED,
+            TangemPayTxHistoryItem.Cashback.Status.AWAITING_CALCULATION,
+            TangemPayTxHistoryItem.Cashback.Status.UNKNOWN,
+            -> null
+        }
+    }
+
+    private fun TangemPayTxHistoryItem.Cashback.toBadgeUm(
+        style: TangemPayTransactionCashbackUM.Style,
+    ): TangemPayTransactionCashbackUM? {
+        val amount = amount?.takeUnless { it.isZero() }
+        val currency = currency
+        if (amount == null || currency == null) return null
+        val prefix = if (amount.signum() < 0) StringsSigns.MINUS else StringsSigns.PLUS
+        val formatted = amount.abs().format {
+            fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
+        }
+        return TangemPayTransactionCashbackUM(amount = prefix + formatted, style = style)
     }
 
     private fun convertPayment(payment: TangemPayTxHistoryItem.Payment): TangemPayTransactionState.Content.Payment {
