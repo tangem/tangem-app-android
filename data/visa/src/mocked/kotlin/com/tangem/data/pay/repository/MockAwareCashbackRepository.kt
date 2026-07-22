@@ -1,8 +1,9 @@
 package com.tangem.data.pay.repository
 
+import com.tangem.datasource.api.common.config.TangemPay
+
 import arrow.core.Either
 import arrow.core.right
-import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
@@ -32,7 +33,7 @@ internal class MockAwareCashbackRepository @Inject constructor(
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
-            .getEnvironmentConfig(ApiConfig.ID.TangemPay)
+            .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
     override suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary> {
