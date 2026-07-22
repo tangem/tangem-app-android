@@ -7,8 +7,8 @@ import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.assertMarketsExchangesScreen
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openMarketsExchangesScreen
@@ -25,7 +25,7 @@ import org.junit.Test
 class MarketsExchangesTest : BaseTestCase() {
 
     @Test
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @AllureId("58")
     @DisplayName("Markets: verify exchanges list screen")
     fun marketsExchangesListTest() {
@@ -43,7 +43,7 @@ class MarketsExchangesTest : BaseTestCase() {
     @OptIn(ExperimentalTestApi::class)
     @Test
     @AllureId("56")
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchanges block is displayed in token details")
     fun marketsExchangesBlockDisplayedTest() {
         val tokenName = "Bitcoin"
@@ -86,7 +86,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("60")
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchanges list is sorted by volume descending")
     fun marketsExchangesListSortedByVolumeTest() {
         val tokenName = "Bitcoin"
@@ -104,7 +104,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("61")
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchange types are CEX or DEX")
     fun marketsExchangesTypeTest() {
         val tokenName = "Bitcoin"
@@ -122,7 +122,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("62")
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchange trust scores are valid")
     fun marketsExchangesTrustScoreTest() {
         val tokenName = "Bitcoin"

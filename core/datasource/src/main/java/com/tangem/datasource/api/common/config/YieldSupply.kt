@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -82,5 +86,10 @@ internal class YieldSupply(
             -> environmentConfig.yieldModuleApiKeyDev
             ApiEnvironment.PROD -> environmentConfig.yieldModuleApiKey
         } ?: error("No tangem tech api config provided")
+    }
+
+    companion object {
+        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.YIELD_SUPPLY].
+        const val KEY = ApiConfig.YIELD_SUPPLY
     }
 }
