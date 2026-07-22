@@ -21,4 +21,21 @@ sealed interface VirtualAccountOnramp {
         val productInstanceId: String,
         val bankCredentials: BankCredentials,
     ) : VirtualAccountOnramp
+
+    /**
+     * A VA on-ramp order has been submitted and is being provisioned (order status NEW/PROCESSING, or
+     * COMPLETED before the ACCOUNT product instance appears). The bank-transfer entry point stays visible;
+     * tapping it shows the "Preparing your banking details" bottom sheet. Transient — never persisted,
+     * re-resolved on the next status fetch, cleared once the ACCOUNT instance appears or the order is canceled.
+     */
+    @Serializable
+    data object Processing : VirtualAccountOnramp
+
+    /**
+     * VA product instance exists, but its bank credentials failed to load. The bank-transfer entry point
+     * stays visible; tapping it surfaces a retryable "couldn't load banking details" error instead of the
+     * requisites. Transient — never persisted, re-resolved on the next status fetch.
+     */
+    @Serializable
+    data object BankCredentialsError : VirtualAccountOnramp
 }

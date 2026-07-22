@@ -45,6 +45,7 @@ dependencies {
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
 
     /** Common */
     api(projects.common.routing)

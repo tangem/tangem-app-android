@@ -42,6 +42,8 @@ interface OnboardingRepository {
 
     suspend fun storeVirtualAccountOrderId(userWalletId: UserWalletId, vaOrderId: String)
 
+    suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId)
+
     suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 
     suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType>
