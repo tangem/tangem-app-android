@@ -4,31 +4,35 @@ import arrow.core.Either
 import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
+import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Storage of encrypted wallet backup files in the user's cloud (Google Drive), plus a locally
  * persisted record of which wallets are backed up.
  *
- * The transport methods only move already-encrypted content — the backup file is encrypted before it
- * reaches this repository. The [isBackedUp] status is persisted locally and does not require network.
+ * Encryption and decryption of the backup file happen inside this layer: callers pass and receive the
+ * plaintext [CloudBackupSecretData] and never handle the cipher, KDF or file format. The [isBackedUp]
+ * status is persisted locally and does not require network.
  */
 interface CloudBackupRepository {
 
     /**
-     * Uploads a backup file. If a backup for [walletId] already exists, it is overwritten,
-     * so a wallet always has at most one backup file.
+     * Encrypts [secret] with [password] and uploads the resulting backup file. If a backup for
+     * [walletId] already exists, it is overwritten, so a wallet always has at most one backup file.
      *
      * @param walletId        id of the backed up wallet
      * @param walletName      wallet name, used for the visible file name and backups list
 
-     * @param content         encrypted backup file content (JSON)
+     * @param secret          the wallet secret (mnemonic + optional passphrase) to encrypt
+     * @param password        user password the backup is encrypted with
      */
     suspend fun uploadBackup(
         walletId: String,
         walletName: String,
         createdAtMillis: Long,
-        content: String,
+        secret: CloudBackupSecretData,
+        password: CharArray,
     ): Either<CloudBackupError, CloudBackupInfo>
 
     /**
@@ -49,8 +53,12 @@ interface CloudBackupRepository {
      */
     suspend fun signOut()
 
-    /** Downloads the encrypted content of the backup file with [fileId] */
-    suspend fun downloadBackup(fileId: String): Either<CloudBackupError, String>
+    /**
+     * Downloads the backup file with [fileId] and decrypts it with [password], returning the wallet
+     * secret. Fails with [CloudBackupError.WrongPassword] on a bad password and
+     * [CloudBackupError.InvalidBackupFile] on a malformed/unsupported file.
+     */
+    suspend fun readBackup(fileId: String, password: CharArray): Either<CloudBackupError, CloudBackupSecretData>
 
     /** Deletes the backup file with [fileId]. Deleting an already absent file is a success */
     suspend fun deleteBackup(fileId: String): Either<CloudBackupError, Unit>
