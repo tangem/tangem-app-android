@@ -9,7 +9,8 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -53,7 +54,7 @@ internal class ActivateCampaignsModelTest {
 
     private val chooseTokenBridgeFactory: ChooseTokenBridge.Factory = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
+    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
     private val enrollPromoCampaignUseCase: EnrollPromoCampaignUseCase = mockk()
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
@@ -72,7 +73,7 @@ internal class ActivateCampaignsModelTest {
     fun setup() {
         clearMocks(
             getSelectedAppCurrencyUseCase,
-            isAccountsModeEnabledUseCase,
+            multiAccountListSupplier,
             enrollPromoCampaignUseCase,
             getWalletsUseCase,
             messageSender,
@@ -258,7 +259,7 @@ internal class ActivateCampaignsModelTest {
         }
         every { chooseTokenBridgeFactory.create(any(), any(), any()) } returns bridge
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
-        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        every { multiAccountListSupplier.invoke() } returns flowOf(emptyList<AccountList>())
         coEvery { getPromoCampaignStateUseCase(any(), any(), any()) } returns Either.Left(Throwable())
         every { getWalletsUseCase.invokeSync() } returns allWalletIds.map { walletId ->
             mockk<UserWallet> { every { this@mockk.walletId } returns walletId }
@@ -274,7 +275,7 @@ internal class ActivateCampaignsModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             chooseTokenBridgeFactory = chooseTokenBridgeFactory,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-            isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
+            multiAccountListSupplier = multiAccountListSupplier,
             enrollPromoCampaignUseCase = enrollPromoCampaignUseCase,
             urlOpener = urlOpener,
             messageSender = messageSender,
