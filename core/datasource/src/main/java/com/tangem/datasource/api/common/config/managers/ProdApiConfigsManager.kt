@@ -1,8 +1,8 @@
 package com.tangem.datasource.api.common.config.managers
 
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiConfigs
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiConfigs
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

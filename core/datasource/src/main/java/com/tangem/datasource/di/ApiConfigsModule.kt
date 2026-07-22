@@ -1,5 +1,6 @@
 package com.tangem.datasource.di
 
+import com.tangem.core.remote.config.ApiConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -20,7 +21,7 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.EXPRESS)
+    @StringKey(Express.KEY)
     fun provideExpressConfig(
         environmentConfig: EnvironmentConfig,
         expressAuthProvider: ExpressAuthProvider,
@@ -35,21 +36,21 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.STAKE_KIT)
+    @StringKey(StakeKit.KEY)
     fun provideStakeKitConfig(stakeKitAuthProvider: StakeKitAuthProvider): ApiConfig {
         return StakeKit(stakeKitAuthProvider)
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.P2P_ETH_POOL)
+    @StringKey(P2PEthPool.KEY)
     fun provideP2PEthPoolConfig(p2pAuthProvider: P2PEthPoolAuthProvider): ApiConfig {
         return P2PEthPool(p2pAuthProvider)
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.TANGEM_TECH)
+    @StringKey(TangemTech.KEY)
     fun provideTangemTechConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return TangemTech(
             authProvider = authProvider,
@@ -59,7 +60,7 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.NEWS)
+    @StringKey(News.KEY)
     fun provideNewsConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return News(
             appInfoProvider = appInfoProvider,
@@ -69,7 +70,7 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.YIELD_SUPPLY)
+    @StringKey(YieldSupply.KEY)
     fun provideYieldSupplyConfig(
         environmentConfig: EnvironmentConfig,
         authProvider: AuthProvider,
@@ -84,35 +85,35 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.TANGEM_PAY)
+    @StringKey(TangemPay.Bff.KEY)
     fun provideTangemPayBffConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
         return TangemPay.Bff(environmentConfig, appInfoProvider)
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.TANGEM_PAY_AUTH)
+    @StringKey(TangemPay.Auth.KEY)
     fun provideTangemPayAuthConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
         return TangemPay.Auth(environmentConfig, appInfoProvider)
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.BLOCK_AID)
+    @StringKey(BlockAid.KEY)
     fun provideBlockAidConfig(environmentConfig: EnvironmentConfig): ApiConfig {
         return BlockAid(environmentConfig)
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.MOON_PAY)
+    @StringKey(MoonPay.KEY)
     fun provideMoonPayConfig(): ApiConfig {
         return MoonPay()
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.GASLESS_TX_SERVICE)
+    @StringKey(GaslessTxService.KEY)
     fun provideGaslessServiceConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return GaslessTxService(
             authProvider = authProvider,
@@ -122,14 +123,14 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.SURVEY_SPARROW)
+    @StringKey(SurveySparrow.KEY)
     fun provideSurveySparrowConfig(environmentConfig: EnvironmentConfig): ApiConfig {
         return SurveySparrow(environmentConfig)
     }
 
     @Provides
     @IntoMap
-    @StringKey(ApiConfig.ID.AUTH)
+    @StringKey(Auth.KEY)
     fun provideAuthConfig(): ApiConfig {
         return Auth()
     }
