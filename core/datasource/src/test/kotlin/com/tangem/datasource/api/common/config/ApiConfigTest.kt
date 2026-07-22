@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.google.common.truth.Truth
+import com.tangem.core.remote.config.ApiConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend

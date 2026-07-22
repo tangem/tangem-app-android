@@ -9,8 +9,8 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.RainCryptoUtil
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.data.visa.config.VisaLibLoader
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
