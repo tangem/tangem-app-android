@@ -21,6 +21,12 @@ sealed interface CloudBackupError {
     /** No backup file found in the cloud storage */
     data object BackupNotFound : CloudBackupError
 
+    /** The password did not decrypt the backup (wrong password or tampered file) */
+    data object WrongPassword : CloudBackupError
+
+    /** The downloaded file is not a valid Tangem backup (unsupported structure or corrupted payload) */
+    data object InvalidBackupFile : CloudBackupError
+
     /** Failed to write the backup file to the cloud storage */
     data class WriteError(val cause: Throwable? = null) : CloudBackupError
 
