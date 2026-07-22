@@ -39,6 +39,7 @@ import com.tangem.features.details.entity.SelectContactSupportTypeBS
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
@@ -71,6 +72,7 @@ internal class DetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase,
 ) : Model() {
@@ -335,8 +337,9 @@ internal class DetailsModel @Inject constructor(
 
     private fun addVirtualAccountItemIfEligible() {
         modelScope.launch {
+            val isVirtualAccountEnabled = virtualAccountFeatureToggles.isVirtualAccountsEnabled
             val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)
-            if (eligibility is VirtualAccountEligibility.Available) {
+            if (eligibility is VirtualAccountEligibility.Available && isVirtualAccountEnabled) {
                 items.update { items ->
                     itemsBuilder.addVirtualAccountItem(
                         items = items,
