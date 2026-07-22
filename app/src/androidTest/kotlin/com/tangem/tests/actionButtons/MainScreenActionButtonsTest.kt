@@ -26,7 +26,7 @@ import org.junit.Test
 @HiltAndroidTest
 class MainScreenActionButtonsTest : BaseTestCase() {
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MOON_PAY, ApiEnvironment.PROD))
     @AllureId("79")
     @DisplayName("Action buttons (long tap): validate UI")
     @Test
@@ -294,7 +294,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MOON_PAY, ApiEnvironment.PROD))
     @AllureId("85")
     @DisplayName("Action buttons (long tap): check 'Sell' button")
     @Test
@@ -411,7 +411,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MOON_PAY, ApiEnvironment.PROD))
     @AllureId("4395")
     @DisplayName("Action buttons (main screen): click on buttons with success response")
     @Test
@@ -502,6 +502,9 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             }
             step("Click on 'Swap' button") {
                 onMainScreen { swapButton.performClick() }
+            }
+            step("Skip stories if displayed") {
+                skipSwapStories()
             }
             step("Check 'Action is unavailable' dialog") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {

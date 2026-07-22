@@ -1,6 +1,7 @@
 package com.tangem.domain.pay.repository
 
 import arrow.core.Either
+import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
@@ -34,7 +35,11 @@ interface CustomerOrderRepository {
     suspend fun createOrder(
         userWalletId: UserWalletId,
         type: OrderType,
-        specificationName: String,
+        specificationName: String?,
         idempotencyKey: String,
+        targetTariffPlanId: String? = null,
+        transitionType: TangemPayTariffPlanTransition.Type? = null,
     ): Either<VisaApiError, Order>
+
+    suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit>
 }

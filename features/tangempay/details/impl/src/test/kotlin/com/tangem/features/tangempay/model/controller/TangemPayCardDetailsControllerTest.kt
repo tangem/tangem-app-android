@@ -238,6 +238,7 @@ internal class TangemPayCardDetailsControllerTest {
         limit = null,
         frozenState = frozenState,
         lastDigits = lastDigits,
+        images = emptyList(),
         state = state,
     )
 
