@@ -75,14 +75,14 @@ internal open class TxDetailsConverterTestBase {
     protected fun onChainConverter(
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         validators: List<Yield.Validator> = emptyList(),
-        ownAddresses: Set<String> = emptySet(),
+        lookup: TxHistoryLookupContext = lookupOf(),
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         menu = menu,
         validatorsByAddress = validators.associateBy(Yield.Validator::address),
         onOpenValidator = openedUrls::add,
-        ownAddresses = ownAddresses,
+        lookup = lookup,
     )
 
     protected fun expressConverter(
@@ -192,6 +192,7 @@ internal open class TxDetailsConverterTestBase {
                 cryptoCurrency = bitcoin,
             ),
             externalTxUrl = externalTxUrl,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,
