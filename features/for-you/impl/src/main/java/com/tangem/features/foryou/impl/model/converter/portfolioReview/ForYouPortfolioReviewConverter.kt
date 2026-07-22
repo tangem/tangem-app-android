@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -61,6 +62,7 @@ internal class ForYouPortfolioReviewConverter(
     private val selectedWalletId: UserWalletId?,
     private val coinIndicators: Map<String, CoinIndicators>,
     private val timeframe: CoinIndicators.Reading.Timeframe,
+    private val isBalanceHidden: Boolean = false,
 ) : Converter<ForYouSelectedPortfolio, PortfolioReviewUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -130,6 +132,7 @@ internal class ForYouPortfolioReviewConverter(
         val marketChartUM = ForYouPortfolioReviewMarketChartConverter(
             appCurrency = appCurrency,
             topAssets = topAssets.map { (networks, assetBalance) -> networks.map { it.status } to assetBalance },
+            isBalanceHidden = isBalanceHidden,
         ).convert(totalFiatBalance)
 
         return PortfolioReviewUM.Content(
@@ -184,6 +187,7 @@ internal class ForYouPortfolioReviewConverter(
                     appCurrency = appCurrency,
                     totalFiatBalance = totalFiatBalance,
                     onTokenClick = onTokenClick,
+                    isBalanceHidden = isBalanceHidden,
                     titleBadge = titleBadge,
                 ).convert(networkGroup.map { it.status })
             }.toPersistentList(),
@@ -214,6 +218,7 @@ internal class ForYouPortfolioReviewConverter(
             appCurrency = appCurrency,
             totalFiatBalance = totalFiatBalance,
             onTokenClick = onTokenClick,
+            isBalanceHidden = isBalanceHidden,
         )
         val endContent = rowConverter.toEndContent(statuses = statuses, fiatAmount = assetFiatBalance)
 
@@ -267,7 +272,7 @@ internal class ForYouPortfolioReviewConverter(
                                 fiatCurrencyCode = appCurrency.code,
                                 fiatCurrencySymbol = appCurrency.symbol,
                             )
-                        },
+                        }.orMaskWithStars(isBalanceHidden),
                     ),
                 ),
                 bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
