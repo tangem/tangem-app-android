@@ -4,6 +4,8 @@ import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.remote.RetrofitFactory
+import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
 import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
@@ -63,7 +65,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     @SessionAuthInterceptor private val sessionAuthInterceptor: Provider<Interceptor>,
     @SessionAuthAuthenticator private val sessionAuthenticator: Provider<Authenticator>,
     @Named("isBackendAuthenticationEnabled") private val isBackendAuthEnabled: Provider<Boolean>,
-) {
+) : RetrofitFactory {
 
     private val configsBaseUrls: Map<ApiConfig.ID, Set<String>> = getConfigsBaseUrls()
 
@@ -90,12 +92,48 @@ internal class RetrofitApiBuilder @Inject constructor(
      *
      * @return an instance [T] of the specified API interface
      */
-    inline fun <reified T> build(
+    override fun <T : Any> create(
+        clazz: Class<T>,
+        configId: String,
+        applyTimeoutAnnotations: Boolean,
+        sessionAuth: Boolean,
+        timeouts: Timeouts?,
+        logsSaving: Boolean,
+    ): T = createApi(
+        clazz = clazz,
+        apiConfigId = ApiConfig.ID(configId),
+        applyTimeoutAnnotations = applyTimeoutAnnotations,
+        sessionAuth = sessionAuth,
+        timeouts = timeouts,
+        logsSaving = logsSaving,
+    )
+
+    /**
+     * Reified convenience for call sites that hold the type-safe [ApiConfig.ID] (e.g. the datasource's
+     * own network module). External modules use the [RetrofitFactory] contract with a string id.
+     */
+    inline fun <reified T : Any> build(
         apiConfigId: ApiConfig.ID,
         applyTimeoutAnnotations: Boolean,
         sessionAuth: Boolean,
         timeouts: Timeouts? = null,
         logsSaving: Boolean = true,
+    ): T = create(
+        clazz = T::class.java,
+        configId = apiConfigId.name,
+        applyTimeoutAnnotations = applyTimeoutAnnotations,
+        sessionAuth = sessionAuth,
+        timeouts = timeouts,
+        logsSaving = logsSaving,
+    )
+
+    private fun <T : Any> createApi(
+        clazz: Class<T>,
+        apiConfigId: ApiConfig.ID,
+        applyTimeoutAnnotations: Boolean,
+        sessionAuth: Boolean,
+        timeouts: Timeouts?,
+        logsSaving: Boolean,
     ): T {
         val environmentConfig = apiConfigsManager.getEnvironmentConfig(apiConfigId)
 
@@ -119,11 +157,10 @@ internal class RetrofitApiBuilder @Inject constructor(
                     .build(),
             )
             .build()
-            .create(T::class.java)
+            .create(clazz)
     }
 
-    @PublishedApi
-    internal fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
+    private fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
         // Belt-and-suspenders: callers opt in via the `sessionAuth` flag, but if the backend-auth
         // feature toggle is OFF we skip installing the hooks entirely (avoids wiring up DPoP
         // header generation and 401 retry logic on builds where auth isn't live yet).
@@ -139,13 +176,6 @@ internal class RetrofitApiBuilder @Inject constructor(
 
         return this
     }
-
-    data class Timeouts(
-        val callTimeoutSeconds: Long? = null,
-        val connectTimeoutSeconds: Long? = null,
-        val readTimeoutSeconds: Long? = null,
-        val writeTimeoutSeconds: Long? = null,
-    )
 
     private fun getConfigsBaseUrls(): Map<ApiConfig.ID, Set<String>> {
         return apiConfigs.values.associate { config ->
@@ -179,19 +209,10 @@ internal class RetrofitApiBuilder @Inject constructor(
         if (timeouts == null) return this
 
         var b = this
-
-        if (timeouts.callTimeoutSeconds != null) {
-            b = b.callTimeout(timeouts.callTimeoutSeconds, TimeUnit.SECONDS)
-        }
-        if (timeouts.connectTimeoutSeconds != null) {
-            b = b.connectTimeout(timeouts.connectTimeoutSeconds, TimeUnit.SECONDS)
-        }
-        if (timeouts.readTimeoutSeconds != null) {
-            b = b.readTimeout(timeouts.readTimeoutSeconds, TimeUnit.SECONDS)
-        }
-        if (timeouts.writeTimeoutSeconds != null) {
-            b = b.writeTimeout(timeouts.writeTimeoutSeconds, TimeUnit.SECONDS)
-        }
+        timeouts.callTimeoutSeconds?.let { b = b.callTimeout(it, TimeUnit.SECONDS) }
+        timeouts.connectTimeoutSeconds?.let { b = b.connectTimeout(it, TimeUnit.SECONDS) }
+        timeouts.readTimeoutSeconds?.let { b = b.readTimeout(it, TimeUnit.SECONDS) }
+        timeouts.writeTimeoutSeconds?.let { b = b.writeTimeout(it, TimeUnit.SECONDS) }
 
         return b
     }
