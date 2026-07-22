@@ -1,5 +1,7 @@
 package com.tangem.core.remote.config
 
+import kotlinx.serialization.Serializable
+
 /**
  * Api environment.
  *
@@ -8,6 +10,7 @@ package com.tangem.core.remote.config
  *
 [REDACTED_AUTHOR]
  */
+@Serializable
 enum class ApiEnvironment {
     DEV,
     DEV_2,
