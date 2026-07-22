@@ -46,6 +46,7 @@ internal data class TangemPaySelectPlanUM(
     sealed interface Content {
 
         data class Select(
+            val isProcessing: Boolean,
             val onComparePlansClick: () -> Unit,
             val onSelectClick: () -> Unit,
         ) : Content
