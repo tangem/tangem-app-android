@@ -15,6 +15,7 @@ import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
@@ -48,6 +49,7 @@ internal class ForYouEarnOpportunitiesConverter(
     private val topEarnTokens: EarnTopToken?,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
+    private val walletHeaders: Map<UserWalletId, ForYouWalletHeaderUM>,
     private val isBalanceHidden: Boolean = false,
 ) : Converter<ForYouSelectedPortfolio, EarnOpportunitiesUM> {
 
@@ -107,6 +109,7 @@ internal class ForYouEarnOpportunitiesConverter(
                     expandClick = expandClick,
                     onTokenClick = onTokenClick,
                     onAllEarnTokensClick = onAllEarnTokensClick,
+                    walletHeaders = walletHeaders,
                     isBalanceHidden = isBalanceHidden,
                 ).convert(data)
             }
