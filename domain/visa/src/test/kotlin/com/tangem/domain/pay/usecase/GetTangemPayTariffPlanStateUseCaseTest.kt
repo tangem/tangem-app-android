@@ -169,6 +169,7 @@ internal class GetTangemPayTariffPlanStateUseCaseTest {
         )
         val CUSTOMER_TARIFF = TangemPayCustomerTariffPlan(
             status = TangemPayCustomerTariffPlan.Status.ACTIVE,
+            source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
             plan = CURRENT_PLAN,
             nextBillingAt = null,
             pendingPlan = null,
