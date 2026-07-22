@@ -78,6 +78,6 @@ interface AuthApi {
      * Returns refreshed session tokens reflecting the updated wallet list.
      */
     @POST("api/authentication/v1/mobile/wallet/register")
-    @RequiresDpopProof
+    @RequiresSessionAuth
     suspend fun registerWallet(@Body request: WalletRegistrationRequest): ApiResponse<TokenApiResponse>
 }
