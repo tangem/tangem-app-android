@@ -16,8 +16,8 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.utils.AddHeadersInterceptor
