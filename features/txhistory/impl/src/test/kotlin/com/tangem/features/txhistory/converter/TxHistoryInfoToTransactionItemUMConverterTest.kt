@@ -121,6 +121,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,

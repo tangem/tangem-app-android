@@ -1,11 +1,14 @@
 package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
@@ -14,6 +17,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
+import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.test.mock.MockAccounts
@@ -166,12 +170,14 @@ internal fun createStatus(
 ): CryptoCurrencyStatus = CryptoCurrencyStatus(currency = currency, value = value)
 
 internal fun createEarnOpportunities(
+    userWalletId: UserWalletId = MockAccounts.userWalletId,
     account: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1),
     earnCurrencies: Map<CryptoCurrencyStatus, EarnApyInfo> = mapOf(
         createStatus(createEarnCurrency()) to createEarnApyInfo(),
     ),
     accountPotentialReward: BigDecimal = BigDecimal.ZERO,
 ): EarnOpportunities = EarnOpportunities(
+    userWalletId = userWalletId,
     account = account,
     earnCurrencies = earnCurrencies,
     accountPotentialReward = accountPotentialReward,
@@ -190,9 +196,32 @@ internal fun createPortfolioStatus(
 ): AccountStatus.CryptoPortfolio = mockk {
     every { flattenCurrencies() } returns currencies
     every { this@mockk.account } returns account
+    every { accountId } returns account.accountId
 }
 
 internal fun createAccountStatusList(vararg statuses: AccountStatus): AccountStatusList = mockk {
     every { accountStatuses } returns statuses.toList()
     every { userWalletId } returns MockAccounts.userWalletId
+}
+
+/** Builds the selected-portfolio aggregate consumed by the earn/review converters. */
+internal fun createSelectedPortfolio(
+    vararg accounts: AccountStatus.CryptoPortfolio,
+    totalAccountsCount: Int = accounts.size,
+    totalFiatBalance: TotalFiatBalance =
+        TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+): ForYouSelectedPortfolio {
+    val accountCryptoCurrencyStatuses = accounts.flatMap { accountStatus ->
+        accountStatus.flattenCurrencies().map { currencyStatus ->
+            mockk<AccountCryptoCurrencyStatus> {
+                every { account } returns accountStatus.account
+                every { status } returns currencyStatus
+            }
+        }
+    }
+    return ForYouSelectedPortfolio(
+        accountCryptoCurrencyStatuses = accountCryptoCurrencyStatuses,
+        totalAccountsCount = totalAccountsCount,
+        totalFiatBalance = totalFiatBalance,
+    )
 }
