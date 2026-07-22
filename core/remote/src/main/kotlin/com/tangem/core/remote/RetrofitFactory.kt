@@ -20,18 +20,18 @@ inline fun <reified T : Any> RetrofitFactory.build(spec: RetrofitApiSpec): T = c
 /**
  * Parameters for building a Retrofit API instance.
  *
- * @property configId                stable id of the API configuration to use
- * @property applyTimeoutAnnotations whether per-method timeout annotations are honored
- * @property sessionAuth             whether to install the session auth interceptor/authenticator
- * @property timeouts                optional client-level timeouts
- * @property logsSaving              whether to persist network logs
+ * @property configId                      stable id of the API configuration to use
+ * @property shouldApplyTimeoutAnnotations whether per-method timeout annotations are honored
+ * @property shouldUseSessionAuth          whether to install the session auth interceptor/authenticator
+ * @property timeouts                      optional client-level timeouts
+ * @property shouldSaveLogs                whether to persist network logs
  */
 data class RetrofitApiSpec(
     val configId: String,
-    val applyTimeoutAnnotations: Boolean,
-    val sessionAuth: Boolean,
+    val shouldApplyTimeoutAnnotations: Boolean,
+    val shouldUseSessionAuth: Boolean,
     val timeouts: Timeouts? = null,
-    val logsSaving: Boolean = true,
+    val shouldSaveLogs: Boolean = true,
 )
 
 /** Optional client-level timeouts (seconds); `null` fields keep the client defaults. */
