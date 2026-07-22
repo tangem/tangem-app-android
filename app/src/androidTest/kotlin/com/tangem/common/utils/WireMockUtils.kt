@@ -4,6 +4,7 @@ import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
 
@@ -50,6 +51,43 @@ fun setWireMockScenarioState(
     } catch (e: IOException) {
         TangemLogger.e("WireMock scenario error", e)
         false
+    }
+}
+
+/**
+ * Counts requests matching [method] and [urlPathPattern] in the WireMock journal (`/__admin/requests/count`).
+ * @param method HTTP method to match (e.g. "POST")
+ * @param urlPathPattern Regex matched against the request URL path (e.g. "/v1/exchange-sent")
+ * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
+ * @return number of matching requests, or 0 if the journal could not be queried
+ */
+fun getWireMockRequestCount(
+    method: String,
+    urlPathPattern: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): Int {
+    val client = OkHttpClient()
+    // Build via JSONObject so a regex urlPathPattern with quotes/backslashes stays valid JSON.
+    val json = JSONObject()
+        .put("method", method)
+        .put("urlPathPattern", urlPathPattern)
+        .toString()
+    val mediaType = "application/json".toMediaType()
+
+    val request = Request.Builder()
+        .url("$baseUrl/__admin/requests/count")
+        .post(json.toRequestBody(mediaType))
+        .build()
+
+    return try {
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            TangemLogger.d("WireMock request count response: ${response.code} - $body")
+            if (response.isSuccessful) JSONObject(body).getInt("count") else 0
+        }
+    } catch (e: IOException) {
+        TangemLogger.e("WireMock request count error", e)
+        0
     }
 }
 
