@@ -11,15 +11,12 @@ android {
 }
 
 dependencies {
-    implementation(deps.compose.foundation)
+    api(deps.kotlin.serialization.core)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Project - Domain */
-    implementation(projects.domain.core)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.markets.models)
+    api(projects.domain.models)
 }

@@ -290,6 +290,10 @@
   <string name="common_approve">Genehmigen</string>
   <string name="common_approved">Genehmigt</string>
   <string name="common_approving">Genehmigen</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d Vermögenswert</item>
+    <item quantity="other">%d Vermögenswerte</item>
+  </plurals>
   <string name="common_attention">Achtung</string>
   <string name="common_available_networks">Verfügbare Netzwerke</string>
   <string name="common_backup">Sicherungskopie</string>
