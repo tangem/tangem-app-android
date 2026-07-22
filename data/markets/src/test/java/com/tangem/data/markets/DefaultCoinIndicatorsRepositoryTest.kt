@@ -1,7 +1,7 @@
 package com.tangem.data.markets
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse
 import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset
