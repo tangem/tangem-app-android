@@ -15,11 +15,11 @@ import com.tangem.utils.ProviderSuspend
  *
 [REDACTED_AUTHOR]
  */
-internal class StakeKit(
+class StakeKit(
     private val stakeKitAuthProvider: StakeKitAuthProvider,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.StakeKit
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -63,7 +63,7 @@ internal class StakeKit(
     }
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.STAKE_KIT].
-        const val KEY = ApiConfig.STAKE_KIT
+        const val KEY = "StakeKit"
+        val ID = ApiConfig.ID(KEY)
     }
 }

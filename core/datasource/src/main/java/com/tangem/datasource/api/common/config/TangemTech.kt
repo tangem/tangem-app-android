@@ -11,12 +11,12 @@ import com.tangem.utils.Provider
 import com.tangem.utils.info.AppInfoProvider
 
 /** TangemTech [ApiConfig] */
-internal class TangemTech(
+class TangemTech(
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.TangemTech
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -71,7 +71,7 @@ internal class TangemTech(
     }
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.TANGEM_TECH].
-        const val KEY = ApiConfig.TANGEM_TECH
+        const val KEY = "TangemTech"
+        val ID = ApiConfig.ID(KEY)
     }
 }
