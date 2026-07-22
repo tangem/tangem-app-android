@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.core.remote.config
 
 import com.tangem.utils.ProviderSuspend
 
