@@ -107,6 +107,62 @@ internal class DonutSegmentSweepsTest {
     }
 
     @Test
+    fun `GIVEN a grey gap thinner than the floor WHEN visualSweepAngles THEN it is grown to the floor`() {
+        // Arrange — segments sum to 0.99, leaving a 3.6° grey sliver below the 7% floor.
+        val weights = listOf(0.6f, 0.39f)
+
+        // Act
+        val actual = visualSweepAngles(weights)
+
+        // Assert — segments shrink to 360° − floor so the grey gap reads at exactly the floor,
+        // and the two segments keep their 0.6 : 0.39 proportion.
+        assertThat(actual.sum()).isWithin(TOLERANCE).of(360f - FLOOR_DEG)
+        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / 0.39f)
+    }
+
+    @Test
+    fun `GIVEN segments filling the whole ring WHEN visualSweepAngles THEN no grey gap is reserved`() {
+        // Arrange — segments sum to exactly 1.0.
+        val weights = listOf(0.6f, 0.4f)
+
+        // Act
+        val actual = visualSweepAngles(weights)
+
+        // Assert — full ring: segments still occupy the whole circle, no 7% grey gap carved out.
+        assertThat(actual.sum()).isWithin(TOLERANCE).of(360f)
+    }
+
+    @Test
+    fun `GIVEN a grey gap already wider than the floor WHEN visualSweepAngles THEN segments are untouched`() {
+        // Arrange — segments sum to 0.6, leaving a 144° grey gap well above the floor.
+        val weights = listOf(0.3f, 0.3f)
+        val filledSum = 0.6f * 360f
+
+        // Act
+        val actual = visualSweepAngles(weights)
+
+        // Assert — filled sweep (and therefore the grey gap) is left exactly as-is.
+        assertThat(actual.sum()).isWithin(TOLERANCE).of(filledSum)
+        assertThat(actual[0]).isWithin(TOLERANCE).of(108f)
+        assertThat(actual[1]).isWithin(TOLERANCE).of(108f)
+    }
+
+    @Test
+    fun `GIVEN a grey gap and capDeg WHEN visualSweepAngles THEN grey floor is padded by the cap overlap`() {
+        // Arrange — a thin grey gap grown to the floor. With a round-cap width, both neighbouring caps eat
+        // into the gap, so the reserved grey sweep is padded by capDeg to keep the *visible* grey at 7%.
+        val weights = listOf(0.6f, 0.39f)
+
+        // Act
+        val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
+
+        // Assert — segments give up FLOOR_DEG + CAP_DEG so the visible grey reads as the floor; the last
+        // slice itself is not bumped (free end), so the two keep their 0.6 : 0.39 proportion.
+        assertThat(actual.sum()).isWithin(TOLERANCE).of(360f - (FLOOR_DEG + CAP_DEG))
+        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / 0.39f)
+    }
+
+    @Test
     fun `GIVEN a full ring and capDeg WHEN visualSweepAngles THEN only the last floored slice is bumped`() {
         // Arrange — two tiny slices below the floor on a full ring; index 2 is the last active.
         val weights = listOf(0.9f, 0.05f, 0.05f)
