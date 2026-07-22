@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 
@@ -29,4 +33,9 @@ internal class BlockAid(
             put("content-type", ProviderSuspend { "application/json" })
         },
     )
+
+    companion object {
+        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.BLOCK_AID].
+        const val KEY = ApiConfig.BLOCK_AID
+    }
 }
