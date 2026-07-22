@@ -165,7 +165,7 @@ internal class ProdApiConfigsManagerTest {
         }
 
         return TestModel(
-            id = ApiConfig.ID.Auth,
+            id = Auth.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (environment) {
@@ -191,7 +191,7 @@ internal class ProdApiConfigsManagerTest {
         }
 
         return TestModel(
-            id = ApiConfig.ID.Express,
+            id = Express.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (BuildConfig.BUILD_TYPE) {
@@ -229,7 +229,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createTangemTechModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.TangemTech,
+            id = TangemTech.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.tangem.org/",
@@ -252,7 +252,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createYieldSupplyModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.YieldSupply,
+            id = YieldSupply.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://yield.tangem.org/",
@@ -275,7 +275,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createStakeKitModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.StakeKit,
+            id = StakeKit.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.stakek.it/v1/",
@@ -289,7 +289,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createTangemPayModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.TangemPay,
+            id = TangemPay.Bff.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.DEV,
                 baseUrl = "https://api.dev.us.paera.com/bff-v2/",
@@ -306,7 +306,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createTangemPayAuthModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.TangemPayAuth,
+            id = TangemPay.Auth.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.DEV,
                 baseUrl = "https://api.dev.us.paera.com/",
@@ -334,7 +334,7 @@ internal class ProdApiConfigsManagerTest {
             else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
         }
         return TestModel(
-            id = ApiConfig.ID.GaslessTxService,
+            id = GaslessTxService.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = baseUrl,
@@ -355,7 +355,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createSurveySparrowModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.SurveySparrow,
+            id = SurveySparrow.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://eu-api.surveysparrow.com/",
@@ -368,7 +368,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createBlockAidSdkModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.BlockAid,
+            id = BlockAid.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.blockaid.io/v0/",
@@ -383,7 +383,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createMoonPayModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.MoonPay,
+            id = MoonPay.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.moonpay.com/",
@@ -399,7 +399,7 @@ internal class ProdApiConfigsManagerTest {
         }
 
         return TestModel(
-            id = ApiConfig.ID.P2PEthPool,
+            id = P2PEthPool.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = baseUrl,
@@ -425,7 +425,7 @@ internal class ProdApiConfigsManagerTest {
             else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
         }
         return TestModel(
-            id = ApiConfig.ID.News,
+            id = News.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = baseUrl,

@@ -1,5 +1,15 @@
 package com.tangem.common.rules
 
+import com.tangem.datasource.api.common.config.TangemPay
+
+import com.tangem.datasource.api.common.config.News
+
+import com.tangem.datasource.api.common.config.TangemTech
+
+import com.tangem.datasource.api.common.config.StakeKit
+
+import com.tangem.datasource.api.common.config.Express
+
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.core.remote.config.ApiConfig
@@ -124,11 +134,11 @@ class ApiEnvironmentRule : TestRule {
         const val ENV_CONFIGS_ARGUMENT = "testEnvironmentConfigs"
 
         val DEFAULT_API_CONFIGS = listOf(
-            ApiConfig.ID.TangemTech,
-            ApiConfig.ID.Express,
-            ApiConfig.ID.TangemPay,
-            ApiConfig.ID.StakeKit,
-            ApiConfig.ID.News,
+            TangemTech.ID,
+            Express.ID,
+            TangemPay.Bff.ID,
+            StakeKit.ID,
+            News.ID,
         )
     }
 }
