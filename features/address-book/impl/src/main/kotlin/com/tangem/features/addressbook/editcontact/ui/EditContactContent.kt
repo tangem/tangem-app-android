@@ -62,48 +62,45 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
             .background(color = TangemTheme.colors3.bg.primary),
     ) {
         var topBarHeightPx by remember { mutableIntStateOf(0) }
+        var saveButtonHeightPx by remember { mutableIntStateOf(0) }
         val topBarHeight = with(LocalDensity.current) { topBarHeightPx.toDp() }
+        val saveButtonHeight = with(LocalDensity.current) { saveButtonHeightPx.toDp() }
 
-        BoxWithConstraints(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSourceTangem()
                 .background(color = TangemTheme.colors3.bg.primary)
                 .imePadding()
-                .navigationBarsPadding(),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = topBarHeight + 12.dp, bottom = saveButtonHeight + 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            val minContentHeight = maxHeight
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+            ContactSummary(state = state)
+            ContactColor(colors = state.colors)
+            BlockCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
             ) {
-                Column(
-                    modifier = Modifier
-                        .heightIn(min = minContentHeight)
-                        .padding(horizontal = 16.dp)
-                        .padding(top = topBarHeight + 12.dp, bottom = 12.dp),
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        ContactSummary(state = state)
-                        ContactColor(colors = state.colors)
-                        BlockCard(
-                            shape = RoundedCornerShape(24.dp),
-                            colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
-                        ) {
-                            ContactAddresses(addresses = state.addresses, onAddressClick = state.onAddressClick)
-                            AddAddressRow(isEnabled = state.isAddAddressEnabled, onClick = state.onAddAddressClick)
-                        }
-                        WalletBlock(walletBlock = state.walletBlock)
-                        state.onDeleteClick?.let {
-                            DeleteContactButton(onClick = it)
-                        }
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    SaveButton(saveButton = state.saveButton)
-                }
+                ContactAddresses(addresses = state.addresses, onAddressClick = state.onAddressClick)
+                AddAddressRow(isEnabled = state.isAddAddressEnabled, onClick = state.onAddAddressClick)
+            }
+            WalletBlock(walletBlock = state.walletBlock)
+            state.onDeleteClick?.let {
+                DeleteContactButton(onClick = it)
             }
         }
+
+        SaveButton(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .imePadding()
+                .navigationBarsPadding()
+                .onSizeChanged { saveButtonHeightPx = it.height },
+            saveButton = state.saveButton,
+        )
 
         TangemTopNavigation(
             modifier = Modifier
@@ -117,11 +114,11 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
 }
 
 @Composable
-private fun SaveButton(saveButton: TangemButtonUM) {
+private fun SaveButton(saveButton: TangemButtonUM, modifier: Modifier = Modifier) {
     TangemButton(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         text = saveButton.text,
         iconEnd = saveButton.tangemIconUM,
         onClick = saveButton.onClick,
