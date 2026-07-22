@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
@@ -43,6 +44,8 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
+import com.tangem.domain.models.wallet.UserWalletIcon
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
@@ -52,7 +55,9 @@ import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
+import com.tangem.features.foryou.impl.model.converter.earnOpportunities.items
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
@@ -101,9 +106,17 @@ internal class ForYouModelTest {
     }
 
     private val selectedUserWalletFlow = MutableStateFlow<UserWallet?>(null)
+    private val userWalletsFlow = MutableStateFlow<List<UserWallet>?>(emptyList())
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true) {
         every { selectedUserWallet } returns selectedUserWalletFlow
+        every { userWallets } returns userWalletsFlow
     }
+
+    private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
+    private val walletHeaderConverter = ForYouWalletHeaderConverter(
+        getWalletIconUseCase = getWalletIconUseCase,
+        walletIconUMConverter = WalletIconUMConverter(),
+    )
 
     private var model: ForYouModel? = null
 
@@ -118,6 +131,7 @@ internal class ForYouModelTest {
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { fetchCoinIndicatorsUseCase(any(), any()) } returns Unit.right()
         every { getCoinIndicatorsUpdatesUseCase() } returns MutableStateFlow(emptyMap())
+        every { getWalletIconUseCase(any()) } returns UserWalletIcon.Stub(cardsCount = 1)
         stubTopEarnTokens(status = PaginationStatus.None)
     }
 
@@ -155,8 +169,8 @@ internal class ForYouModelTest {
 
             // Assert
             val loading = model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Loading
-            assertThat(loading.tokenList).hasSize(5)
-            assertThat(loading.tokenList.all { it.tokenRowUM is TangemTokenRowUM.Loading }).isTrue()
+            assertThat(loading.items).hasSize(5)
+            assertThat(loading.items.all { it.tokenRowUM is TangemTokenRowUM.Loading }).isTrue()
         }
     }
 
@@ -216,7 +230,7 @@ internal class ForYouModelTest {
 
                 // Assert
                 val earn = model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
-                assertThat(earn.tokenList.map { it.tokenRowUM.id }).containsExactly("coin-solana")
+                assertThat(earn.items.map { it.tokenRowUM.id }).containsExactly("coin-solana")
             }
 
         @Test
@@ -325,7 +339,7 @@ internal class ForYouModelTest {
             stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
             val model = createModel(testScope = this)
             advanceUntilIdle()
-            val accountRow = (model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content).tokenList.first()
+            val accountRow = (model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content).items.first()
             assertThat(accountRow.isExpandable).isTrue()
             assertThat(accountRow.isExpanded).isFalse()
 
@@ -334,7 +348,7 @@ internal class ForYouModelTest {
             advanceUntilIdle()
 
             // Assert — the earn-section expand wiring toggled isExpanded on that row
-            val expanded = (model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content).tokenList.first()
+            val expanded = (model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content).items.first()
             assertThat(expanded.isExpanded).isTrue()
         }
     }
@@ -681,7 +695,7 @@ internal class ForYouModelTest {
 
     private fun ForYouModel.clickFirstEarnRow() {
         val earn = uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
-        val row = earn.tokenList.first().tokenRowUM as TangemTokenRowUM.Content
+        val row = earn.items.first().tokenRowUM as TangemTokenRowUM.Content
         row.onItemClick?.invoke()
     }
 
@@ -773,6 +787,7 @@ internal class ForYouModelTest {
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
             portfolioFetcherFactory = portfolioFetcherFactory,
             portfolioSelectorController = portfolioSelectorController,
+            walletHeaderConverter = walletHeaderConverter,
         ).also { model = it }
     }
 

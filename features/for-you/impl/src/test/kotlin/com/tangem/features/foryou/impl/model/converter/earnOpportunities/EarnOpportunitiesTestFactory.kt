@@ -16,7 +16,12 @@ import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
+import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
@@ -24,6 +29,19 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
+
+/** All token items across every wallet group, for tests asserting on the flat item list. */
+internal val EarnOpportunitiesUM.items: List<ForYouTokenListItemUM>
+    get() = tokenList.flatMap { it.items }
+
+internal fun createWalletHeader(
+    userWalletId: UserWalletId,
+    name: String = "Wallet ${userWalletId.stringValue}",
+): ForYouWalletHeaderUM = ForYouWalletHeaderUM(
+    id = userWalletId.stringValue,
+    name = stringReference(name),
+    deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+)
 
 /**
  * Factories for the earn-opportunities converter tests. Every argument is defaulted so a test

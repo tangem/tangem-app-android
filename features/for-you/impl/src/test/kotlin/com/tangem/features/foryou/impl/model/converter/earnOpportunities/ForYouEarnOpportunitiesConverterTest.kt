@@ -268,7 +268,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
         /** Extracts the rendered rate (the styled bottom-end text) of the row with the given [id]. */
         private fun EarnOpportunitiesUM.Content.rateOfRow(id: String): String {
-            val row = tokenList.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
+            val row = items.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
             val bottomEnd = row.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
             return (bottomEnd.text as TextReference.StyledStr).value
         }
@@ -336,7 +336,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
         }
 
         private fun EarnOpportunitiesUM.clickFirstRow() {
-            val row = tokenList.first().tokenRowUM as TangemTokenRowUM.Content
+            val row = items.first().tokenRowUM as TangemTokenRowUM.Content
             row.onItemClick?.invoke()
         }
     }
@@ -368,7 +368,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             val result = converter.convert(createSelectedPortfolio(smallAccount, largeAccount))
 
             // Assert — the higher-earning account's token leads the flat list
-            assertThat((result as EarnOpportunitiesUM.Content).tokenList.map { it.tokenRowUM.id })
+            assertThat((result as EarnOpportunitiesUM.Content).items.map { it.tokenRowUM.id })
                 .containsExactly("coin-sol", "coin-eth")
                 .inOrder()
         }
@@ -389,6 +389,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
         topEarnTokens = topEarnTokens,
         onTokenClick = onTokenClick,
         onAllEarnTokensClick = {},
+        walletHeaders = emptyMap(),
     )
 
     // Real StakingIntegrationID values are used below: mocking the sealed interface makes mockk try to
