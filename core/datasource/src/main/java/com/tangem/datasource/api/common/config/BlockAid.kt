@@ -7,6 +7,8 @@ internal class BlockAid(
     private val environmentConfig: EnvironmentConfig,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.BlockAid
+
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
     override val environmentConfigs = listOf(

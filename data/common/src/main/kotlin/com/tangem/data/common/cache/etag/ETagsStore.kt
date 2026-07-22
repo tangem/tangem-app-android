@@ -33,9 +33,17 @@ interface ETagsStore {
      */
     suspend fun clear(userWalletId: UserWalletId, key: Key)
 
+    /**
+     * Clears all stored ETag values (every [Key]) for the specified wallets in a single operation
+     *
+     * @param userWalletIds identifiers of the user wallets
+     */
+    suspend fun clear(userWalletIds: List<UserWalletId>)
+
     /** Enumeration of possible keys for storing ETag values */
     enum class Key {
         WalletAccounts,
         UserTokens,
+        AddressBook,
     }
 }

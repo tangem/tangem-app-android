@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.components.express
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
-import com.tangem.common.ui.expressStatus.expressTransactionsItemsLegacy
+import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
@@ -17,18 +17,11 @@ internal class PreviewEmptyExpressTransactionsComponent : ExpressTransactionsCom
 
     override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(getInitialState())
 
-    override fun LazyListScope.expressTransactionsContentLegacy(
-        state: PersistentList<ExpressTransactionStateUM>,
-        modifier: Modifier,
-    ) {
-        expressTransactionsItemsLegacy(expressTxs = state, modifier = modifier)
-    }
-
     override fun LazyListScope.expressTransactionsContent(
         state: PersistentList<ExpressTransactionStateUM>,
         modifier: Modifier,
     ) {
-        expressTransactionsItemsLegacy(expressTxs = state, modifier = modifier)
+        expressTransactionsItems(expressTxs = state, modifier = modifier)
     }
 
     private fun getInitialState(): ExpressTransactionsBlockState {

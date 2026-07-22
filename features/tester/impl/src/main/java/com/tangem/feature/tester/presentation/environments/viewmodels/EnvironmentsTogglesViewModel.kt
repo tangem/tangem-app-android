@@ -64,9 +64,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
     }
 
     private fun Map<ApiConfig, ApiEnvironment>.toUiModel(): ImmutableSet<EnvironmentTogglesScreenUM.ApiInfoUM> {
-        return mapNotNull {
-            val (config, currentEnvironment) = it
-
+        return mapNotNull { (config, currentEnvironment) ->
             if (config.environmentConfigs.size <= 1) return@mapNotNull null
 
             EnvironmentTogglesScreenUM.ApiInfoUM(
