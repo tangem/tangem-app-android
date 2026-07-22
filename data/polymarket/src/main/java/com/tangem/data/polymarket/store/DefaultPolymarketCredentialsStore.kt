@@ -1,7 +1,8 @@
 package com.tangem.data.polymarket.store
 
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.data.polymarket.converter.PolymarketApiCredentialsConverter
+import com.tangem.data.polymarket.converter.toDomain
+import com.tangem.data.polymarket.converter.toDto
 import com.tangem.data.polymarket.entity.PolymarketApiCredentialsDTO
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -25,8 +26,7 @@ internal class DefaultPolymarketCredentialsStore(
 
     override suspend fun store(ownerAddress: String, credentials: PolymarketApiCredentials) {
         withContext(dispatchers.io) {
-            val dto = PolymarketApiCredentialsConverter.convert(credentials)
-            val payload = json.encodeToString(PolymarketApiCredentialsDTO.serializer(), dto)
+            val payload = json.encodeToString(PolymarketApiCredentialsDTO.serializer(), credentials.toDto())
 
             secureStorage.store(createKey(ownerAddress), payload)
         }
@@ -37,8 +37,7 @@ internal class DefaultPolymarketCredentialsStore(
         val payload = secureStorage.getAsString(key) ?: return@withContext null
 
         try {
-            val dto = json.decodeFromString(PolymarketApiCredentialsDTO.serializer(), payload)
-            PolymarketApiCredentialsConverter.convertBack(dto)
+            json.decodeFromString(PolymarketApiCredentialsDTO.serializer(), payload).toDomain()
         } catch (e: SerializationException) {
             TangemLogger.e("Failed to decode Polymarket API credentials; clearing storage")
             secureStorage.delete(key)
