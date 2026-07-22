@@ -28,7 +28,6 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.FeedListCallbacks
@@ -42,7 +41,6 @@ internal fun MarketBlock(
     onItemClick: (MarketsListItemUM) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
     AnimatedContent(
         targetState = marketChart,
         label = "MarketBlockChartAnimation",
@@ -58,16 +56,8 @@ internal fun MarketBlock(
                         title = {
                             Text(
                                 text = stringResourceSafe(R.string.markets_common_title),
-                                style = if (isRedesignEnabled) {
-                                    TangemTheme.typography2.headingSemibold20
-                                } else {
-                                    TangemTheme.typography.h3
-                                },
-                                color = if (isRedesignEnabled) {
-                                    TangemTheme.colors2.text.neutral.primary
-                                } else {
-                                    TangemTheme.colors.text.primary1
-                                },
+                                style = TangemTheme.typography2.headingSemibold20,
+                                color = TangemTheme.colors2.text.neutral.primary,
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
                             )
@@ -80,7 +70,7 @@ internal fun MarketBlock(
                         modifier = Modifier.padding(horizontal = MARKET_BLOCK_HEADER_PADDING),
                     )
 
-                    SpacerH(if (isRedesignEnabled) 20.dp else 12.dp)
+                    SpacerH(20.dp)
 
                     Charts(
                         onItemClick = onItemClick,
@@ -96,7 +86,6 @@ internal fun MarketBlock(
 @Suppress("LongMethod")
 @Composable
 internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
     val onSeeAllClick by rememberUpdatedState {
         feedListCallbacks.onMarketOpenClick(marketChartConfig.currentSortByType)
     }
@@ -105,16 +94,8 @@ internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, 
             title = {
                 Text(
                     text = stringResourceSafe(R.string.markets_pulse_common_title),
-                    style = if (isRedesignEnabled) {
-                        TangemTheme.typography2.headingSemibold20
-                    } else {
-                        TangemTheme.typography.h3
-                    },
-                    color = if (isRedesignEnabled) {
-                        TangemTheme.colors2.text.neutral.primary
-                    } else {
-                        TangemTheme.colors.text.primary1
-                    },
+                    style = TangemTheme.typography2.headingSemibold20,
+                    color = TangemTheme.colors2.text.neutral.primary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
@@ -128,11 +109,7 @@ internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, 
         LazyRow(
             modifier = Modifier.padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            contentPadding = if (isRedesignEnabled) {
-                PaddingValues(horizontal = 16.dp, vertical = 6.dp)
-            } else {
-                PaddingValues(16.dp)
-            },
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             state = rememberLazyListState(),
         ) {
@@ -140,19 +117,11 @@ internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, 
                 items = marketChartConfig.getFilterPreset(),
                 key = SortByTypeUM::name,
             ) { sortByTypeUM ->
-                if (isRedesignEnabled) {
-                    TangemTab(
-                        text = sortByTypeUM.text,
-                        isChecked = sortByTypeUM == marketChartConfig.currentSortByType,
-                        onCheckedChange = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
-                    )
-                } else {
-                    ChartsFilterChip(
-                        sortByTypeUM = sortByTypeUM,
-                        isSelected = sortByTypeUM == marketChartConfig.currentSortByType,
-                        onClick = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
-                    )
-                }
+                TangemTab(
+                    text = sortByTypeUM.text,
+                    isChecked = sortByTypeUM == marketChartConfig.currentSortByType,
+                    onCheckedChange = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
+                )
             }
         }
 
@@ -179,21 +148,12 @@ private fun Charts(
     onItemClick: (MarketsListItemUM) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
     BlockCard(
         modifier = modifier,
         colors = TangemBlockCardColors.copy(
-            containerColor = if (isRedesignEnabled) {
-                TangemTheme.colors2.surface.level3
-            } else {
-                TangemTheme.colors.background.action
-            },
+            containerColor = TangemTheme.colors2.surface.level3,
         ),
-        shape = if (isRedesignEnabled) {
-            RoundedCornerShape(TangemTheme.dimens2.x6)
-        } else {
-            TangemTheme.shapes.roundedCornersXMedium
-        },
+        shape = RoundedCornerShape(TangemTheme.dimens2.x6),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             when (marketChart) {

@@ -23,7 +23,7 @@ import org.junit.Test
 class SwapChooseTokenScreenTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("8505")
     @DisplayName("Swap: check available to swap tokens list")
@@ -87,7 +87,7 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(ApiConfig.ID.EXPRESS, ApiEnvironment.PROD)
     )
     @AllureId("8506")
     @DisplayName("Swap: check search on choose swap token screen")

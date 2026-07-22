@@ -10,6 +10,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * How to use
@@ -32,6 +33,16 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
         val portfolioFetcher: PortfolioFetcher,
         val controller: PortfolioSelectorController,
         val bsCallback: BottomSheetCallback? = null,
+        val settings: Settings = Settings(),
+    )
+
+    /**
+     * @param isWalletSelectionOnly when `true`, the selector always shows a flat wallet list and ignores the global
+     * accounts mode (no account grouping).
+     */
+    data class Settings(
+        val isWalletSelectionOnly: Boolean = false,
+        val isMultiChoice: Boolean = false,
     )
 
     interface BottomSheetCallback {
@@ -49,8 +60,12 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
  */
 interface PortfolioSelectorController {
     val isAccountMode: Flow<Boolean>
-    val selectedAccount: Flow<AccountId?>
-    val selectedAccountSync: AccountId?
+
+    val selectedAccounts: Flow<Set<AccountId>>
+    val selectedAccount: Flow<AccountId?> get() = selectedAccounts.map { it.firstOrNull() }
+
+    val selectedAccountsSync: Set<AccountId>
+    val selectedAccountSync: AccountId? get() = selectedAccountsSync.firstOrNull()
 
     /**
      * for some Feature specific filtering
@@ -59,8 +74,15 @@ interface PortfolioSelectorController {
     val isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
     suspend fun isAccountModeSync(): Boolean
 
-    fun selectAccount(accountId: AccountId?)
+    fun selectAccount(accountIds: Set<AccountId>)
+    fun selectAccount(accountId: AccountId?) = selectAccount(accountId?.let { setOf(it) }.orEmpty())
+
+    fun selectedAccountsWithData(
+        portfolioFetcher: PortfolioFetcher,
+    ): Flow<Set<Pair<UserWallet, AccountStatus.CryptoPortfolio>>>
+
     fun selectedAccountWithData(
         portfolioFetcher: PortfolioFetcher,
-    ): Flow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>
+    ): Flow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?> =
+        selectedAccountsWithData(portfolioFetcher).map { it.firstOrNull() }
 }

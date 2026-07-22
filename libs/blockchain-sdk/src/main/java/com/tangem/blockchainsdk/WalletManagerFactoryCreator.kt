@@ -39,10 +39,10 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isYieldSupplyEnabled = true,
                 isYieldModeSwapEnabled = featureToggleValues.isYieldModeSwapEnabled,
                 isPendingTransactionsEnabled = true,
-                isSolanaTxHistoryEnabled = featureToggleValues.isSolanaTxHistoryEnabled,
-                isSolanaScaledUiAmountEnabled = featureToggleValues.isSolanaScaledUiAmountEnabled,
-                isHederaErc20Enabled = featureToggleValues.isHederaErc20Enabled,
-                isStateOverrideGasEstimateEnabled = featureToggleValues.isStateOverrideGasEstimateEnabled,
+                isSolanaTxHistoryEnabled = true,
+                isSolanaScaledUiAmountEnabled = true,
+                isHederaErc20Enabled = true,
+                isStateOverrideGasEstimateEnabled = true,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
@@ -50,10 +50,6 @@ internal class WalletManagerFactoryCreator @Inject constructor(
     }
 
     data class FeatureToggleValues(
-        val isSolanaTxHistoryEnabled: Boolean,
-        val isSolanaScaledUiAmountEnabled: Boolean,
         val isYieldModeSwapEnabled: Boolean,
-        val isHederaErc20Enabled: Boolean,
-        val isStateOverrideGasEstimateEnabled: Boolean,
     )
 }
