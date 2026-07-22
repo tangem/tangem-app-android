@@ -1,5 +1,7 @@
 package com.tangem.tests.swap
 
+import com.tangem.datasource.api.common.config.Express
+
 import com.tangem.common.BaseTestCase
 import com.tangem.common.R
 import com.tangem.common.annotations.ApiEnv
@@ -10,7 +12,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
@@ -30,7 +31,7 @@ import org.junit.Test
 class SwapTokenScreenWarningsTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.EXPRESS, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("580")
     @DisplayName("Swap: check 'Insufficient funds' warning")

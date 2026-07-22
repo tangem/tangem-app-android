@@ -7,11 +7,11 @@ import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 
-internal class BlockAid(
+class BlockAid(
     private val environmentConfig: EnvironmentConfig,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.BlockAid
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
@@ -35,7 +35,7 @@ internal class BlockAid(
     )
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.BLOCK_AID].
-        const val KEY = ApiConfig.BLOCK_AID
+        const val KEY = "BlockAid"
+        val ID = ApiConfig.ID(KEY)
     }
 }

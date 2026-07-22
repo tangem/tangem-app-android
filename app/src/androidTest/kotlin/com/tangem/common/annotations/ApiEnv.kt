@@ -6,7 +6,7 @@ import com.tangem.core.remote.config.ApiEnvironment
  * Single API environment configuration.
  *
  * @property apiConfigId the API configuration id key; pass a raw-key constant from the config
- *                       (e.g. `ApiConfig.TANGEM_TECH`). A value class can't be an annotation
+ *                       (e.g. `TangemTech.KEY`). A value class can't be an annotation
  *                       argument, so the string key is used instead of the type-safe id here
  * @property environment the API environment to be used (defaults to [ApiEnvironment.MOCK])
  */
