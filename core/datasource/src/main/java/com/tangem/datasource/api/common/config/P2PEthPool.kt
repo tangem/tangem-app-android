@@ -12,6 +12,8 @@ internal class P2PEthPool(
     private val p2pAuthProvider: P2PEthPoolAuthProvider,
 ) : ApiConfig() {
 
+    override val id: ApiConfig.ID = ApiConfig.ID.P2PEthPool
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(

@@ -14,12 +14,12 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -46,7 +46,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     onrampStatusFactory: OnrampStatusFactory.Factory,
     exchangeStatusFactory: ExchangeStatusFactory.Factory,
-    private val swapFeatureToggles: SwapFeatureToggles,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) {
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -106,12 +106,17 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         if (currentTx is ExchangeUM && currentTx.activeStatus == ExchangeStatus.Finished) {
             updateBalance(currentTx.toCryptoCurrency)
         }
-        val expressTxsToDisplay = expressTxs.filterNot {
-            when (it) {
-                is ExpressTransactionStateUM.OnrampUM -> it.activeStatus.isHidden
-                else -> false
-            }
-        }.toPersistentList()
+
+        val expressTxsToDisplay = if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+            persistentListOf()
+        } else {
+            expressTxs.filterNot {
+                when (it) {
+                    is ExpressTransactionStateUM.OnrampUM -> it.activeStatus.isHidden
+                    else -> false
+                }
+            }.toPersistentList()
+        }
         return state.copy(
             transactions = expressTxs,
             transactionsToDisplay = expressTxsToDisplay,
@@ -214,7 +219,6 @@ internal class ExpressStatusFactory @AssistedInject constructor(
                 is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(
                     config = this,
                     extraContent = extraContent,
-                    isExpressShareButtonEnabled = swapFeatureToggles.isExpressShareButtonEnabled,
                 )
             }
         }

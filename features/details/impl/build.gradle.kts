@@ -13,64 +13,55 @@ android {
 dependencies {
 
     /* Project - API */
-    implementation(projects.features.details.api)
-    implementation(projects.features.wallet.api)
-    implementation(projects.features.disclaimer.api)
-    implementation(projects.features.tester.api)
-    implementation(projects.features.createWalletSelection.api)
-    implementation(projects.features.onboardingV2.api)
-    implementation(projects.features.addressBook.api)
+    api(projects.features.addressBook.api)
+    api(projects.features.details.api)
+    api(projects.features.onboardingV2.api)
+    api(projects.features.wallet.api)
     implementation(projects.features.virtualAccounts.details.api)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.navigation)
-    implementation(projects.core.analytics)
-    implementation(projects.core.utils)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.ui)
+
+    /* Common */
     implementation(projects.common.routing)
     implementation(projects.common.ui)
-    implementation(projects.core.datasource)
 
     /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.feedback)
+    api(projects.domain.card)
+    api(projects.domain.feedback)
+    api(projects.domain.settings)
+    api(projects.domain.virtualAccount)
+    api(projects.domain.visa)
+    api(projects.domain.walletConnect)
+    api(projects.domain.wallets)
+    implementation(projects.domain.common)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.walletConnect)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.virtualAccount)
+    implementation(projects.domain.models)
+    implementation(projects.domain.virtualAccount.models)
+    runtimeOnly(projects.domain.appCurrency)
+    runtimeOnly(projects.domain.balanceHiding)
+    runtimeOnly(projects.domain.tokens)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring
     implementation(tangemDeps.card.core)
-    // For image resolving
-    implementation(tangemDeps.blockchain)
 
     /* AndroidX */
-    implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
 
     /* Compose */
+    api(deps.compose.foundation)
+    implementation(deps.compose.animation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.shimmer)
     implementation(deps.compose.coil)
     implementation(deps.compose.reorderableV2)
 
@@ -79,9 +70,11 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /* Other */
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.immutable.collections)
 
     /* Test */
     testImplementation(deps.test.junit5)
