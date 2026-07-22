@@ -2,6 +2,8 @@ package com.tangem.features.txhistory.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -28,6 +30,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -42,8 +45,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -90,6 +95,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
      */
     private val refundCurrency = MutableStateFlow<CryptoCurrency?>(null)
 
+    /**
+     * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap — the card is
+     * shown for any swap status, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
+     */
+    val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
+
+    private var isRatingActivationStarted = false
+
     init {
         // One-shot: the portfolio add must not re-run when the UI resubscribes.
         modelScope.launch(dispatchers.default) {
@@ -127,6 +140,38 @@ internal class TxHistoryDetailsModel @Inject constructor(
     }
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
+
+    /**
+     * Activates the rating slot for an express swap. The rating key is the provider-side deal id when present, the
+     * express id otherwise — same as the legacy surface, so ratings stay shared between the old and new UI.
+
+     */
+    fun activateRatingForSwap() {
+        if (isRatingActivationStarted) return
+        isRatingActivationStarted = true
+        params.txHistoryInfo
+            .mapNotNull { (it as? ExpressTx.Swap)?.tx }
+            .map { tx ->
+                RatingKey(
+                    txExternalId = tx.externalTxId ?: tx.txId,
+                    providerName = tx.provider?.name.orEmpty(),
+                    txExternalUrl = tx.externalTxUrl.orEmpty(),
+                )
+            }
+            .distinctUntilChanged()
+            .onEach { key ->
+                ratingSlotNavigation.activate(
+                    RatingComponent.Params(
+                        txExternalId = key.txExternalId,
+                        providerName = key.providerName,
+                        txExternalUrl = key.txExternalUrl,
+                        userWalletId = params.userWalletId,
+                        isRedesign = true,
+                    ),
+                )
+            }
+            .launchIn(modelScope)
+    }
 
     /**
      * Resolves the viewed currency's staking validators into an address-keyed map. Returns empty when the currency has
@@ -214,6 +259,13 @@ internal class TxHistoryDetailsModel @Inject constructor(
             .getOrNull()
     }
 }
+
+/** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
+private data class RatingKey(
+    val txExternalId: String,
+    val providerName: String,
+    val txExternalUrl: String,
+)
 
 /**
  * The deal of a refunded DEX-bridge swap; `null` for everything else. Only a DEX-bridge deal is refunded in an

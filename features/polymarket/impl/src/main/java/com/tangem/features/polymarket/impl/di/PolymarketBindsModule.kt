@@ -1,15 +1,20 @@
 package com.tangem.features.polymarket.impl.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.decompose.di.ModelComponent
+import com.tangem.core.decompose.model.Model
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.model.PolymarketModel
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
 import javax.inject.Singleton
 
 @Module
@@ -18,6 +23,16 @@ internal interface PolymarketBindsModule {
     @Binds
     @Singleton
     fun providePolymarketComponentFactory(impl: DefaultPolymarketComponent.Factory): PolymarketComponent.Factory
+}
+
+@Module
+@InstallIn(ModelComponent::class)
+internal interface PolymarketModelModule {
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketModel::class)
+    fun bindPolymarketModel(impl: PolymarketModel): Model
 }
 
 @Module
