@@ -9,8 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.vectorResource
@@ -20,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -35,74 +32,10 @@ import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 
 @Composable
 internal fun EarnListItem(item: EarnListItemUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        EarnListItemV2(
-            item = item,
-            modifier = modifier,
-        )
-    } else {
-        EarnListItemV1(
-            item = item,
-            modifier = modifier,
-        )
-    }
-}
-
-@Composable
-private fun EarnListItemV1(item: EarnListItemUM, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RectangleShape)
-            .clickable { item.onItemClick() }
-            .padding(
-                horizontal = 12.dp,
-                vertical = 15.dp,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CurrencyIcon(
-            modifier = Modifier.size(36.dp),
-            state = item.currencyIconState,
-            shouldDisplayNetwork = true,
-            networkBadgeBackground = TangemTheme.colors.background.action,
-        )
-
-        SpacerW(12.dp)
-
-        Column(modifier = Modifier.weight(1f)) {
-            TokenTitle(
-                name = item.tokenName.resolveReference(),
-                symbol = item.symbol.resolveReference(),
-            )
-            SpacerH(2.dp)
-            Text(
-                text = item.network.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption2,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
-        SpacerW(8.dp)
-
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = item.earnValue.resolveReference(),
-                color = TangemTheme.colors.text.accent,
-                style = TangemTheme.typography.body2,
-                maxLines = 1,
-            )
-            SpacerH(2.dp)
-            Text(
-                text = item.earnTypeTitle.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption2,
-                maxLines = 1,
-            )
-        }
-    }
+    EarnListItemV2(
+        item = item,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -158,47 +91,25 @@ private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) 
 @Composable
 private fun TokenTitle(name: String, symbol: String, modifier: Modifier = Modifier) {
     Row(modifier = modifier) {
-        if (LocalRedesignEnabled.current) {
-            Text(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .alignByBaseline(),
-                text = name,
-                color = TangemTheme.colors2.text.neutral.primary,
-                style = TangemTheme.typography2.bodySemibold16,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            SpacerW(4.dp)
-            Text(
-                modifier = Modifier.alignByBaseline(),
-                text = symbol,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                style = TangemTheme.typography2.captionSemibold12,
-                maxLines = 1,
-                overflow = TextOverflow.Visible,
-            )
-        } else {
-            Text(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .alignByBaseline(),
-                text = name,
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.subtitle2,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            SpacerW(4.dp)
-            Text(
-                modifier = Modifier.alignByBaseline(),
-                text = symbol,
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.body2,
-                maxLines = 1,
-                overflow = TextOverflow.Visible,
-            )
-        }
+        Text(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .alignByBaseline(),
+            text = name,
+            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography2.bodySemibold16,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        SpacerW(4.dp)
+        Text(
+            modifier = Modifier.alignByBaseline(),
+            text = symbol,
+            color = TangemTheme.colors2.text.neutral.secondary,
+            style = TangemTheme.typography2.captionSemibold12,
+            maxLines = 1,
+            overflow = TextOverflow.Visible,
+        )
     }
 }
 
