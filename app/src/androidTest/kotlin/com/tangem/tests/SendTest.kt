@@ -23,9 +23,9 @@ class SendTest : BaseTestCase() {
         val currencyName = "USDC"
         val feeCurrencyName = "Solana"
         val feeCurrencySymbol = "SOL"
-        val balanceScenarioName = "solana_balance"
+        val balanceScenarioName = "solana_get_account_info_recipient"
         val tokensScenarioName = "user_tokens_api"
-        val balanceState = "Empty"
+        val balanceState = "ZeroBalance"
         val tokensState = "SolanaUSDC"
 
         setupHooks(

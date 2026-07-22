@@ -12,19 +12,20 @@ android {
 dependencies {
 
     /** Feature */
-    implementation(projects.features.approval.api)
-    implementation(projects.features.send.api)
+    api(projects.features.approval.api)
+    api(projects.features.send.api)
 
     /** Core */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.ui)
 
     /** Common */
+    implementation(projects.common)
     implementation(projects.common.ui)
 
     /** SDK */
@@ -33,11 +34,10 @@ dependencies {
     }
 
     /** Domain */
+    api(projects.domain.transaction)
+    api(projects.domain.wallets)
     implementation(projects.domain.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
     implementation(projects.domain.transaction.models)
-    implementation(projects.domain.transaction)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -47,10 +47,15 @@ dependencies {
     implementation(deps.compose.ui.tooling)
 
     /** Other */
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.arrow.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** DI */
     implementation(deps.hilt.android)

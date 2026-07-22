@@ -1,8 +1,12 @@
 package com.tangem.core.ui.components.transactions.state
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 
@@ -22,21 +26,23 @@ sealed interface TransactionItemUM {
     /**
      * Content state.
      *
-     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded
+     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
+     *                          `null` hides the numeric value while [currencySymbol] still shows.
      * @property currencySymbol currency symbol shown alongside [amount], e.g. "BTC", "USDT"
      */
     data class Content(
         override val txHash: String,
-        val amount: String,
+        val amount: String?,
         val currencySymbol: String,
         val time: String,
         val status: Status,
         val direction: Direction,
         val onClick: () -> Unit,
-        @DrawableRes val iconRes: Int,
+        val icon: TxIcon,
         val title: TextReference,
         val subtitle: ContentSubtitle,
         val timestamp: Long,
+        val warning: TextReference? = null,
     ) : TransactionItemUM {
 
         @Immutable
@@ -95,6 +101,19 @@ sealed interface TransactionItemUM {
             val deviceIconUM: DeviceIconUM,
         ) : ContentSubtitle
 
+        /**
+         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>". Used for express rows
+         * (swap counterparty currency / onramp fiat), e.g. "to: ◎ POL" or "from: 🇸🇪 SEK".
+         *
+         * @property icon resolved counterparty currency icon, rendered via `CurrencyIcon`. `null` when no icon
+         *   is available (e.g. onramp fiat carries no `CryptoCurrency`) — the ticker then renders without a leading icon.
+         */
+        data class Asset(
+            val direction: Direction,
+            val symbol: String,
+            val icon: CurrencyIconState?,
+        ) : ContentSubtitle
+
         enum class Direction { TO, FROM }
     }
 
@@ -137,4 +156,40 @@ sealed interface TransactionItemUM {
     data class Loading(override val txHash: String) : TransactionItemUM
 
     data class Locked(override val txHash: String) : TransactionItemUM
+}
+
+/**
+ * Status-circle icon for a [TransactionItemUM.Content] row.
+ *
+ * [Vector] holds a design-system [ImageVector] (`Icons.ic_*`) — the migration target; [Res] holds a `@DrawableRes`
+ * XML fallback for transaction types that don't have a DS3 icon yet (e.g. gear / claim rewards).
+ */
+@Immutable
+sealed interface TxIcon {
+
+    /** Design-system vector icon (`Icons.ic_*`). */
+    data class Vector(val imageVector: ImageVector) : TxIcon
+
+    /**
+     * Legacy XML drawable fallback.
+     *
+     * Forced temporary bridge: a few transaction types still map to legacy XML drawables that have no DS3
+     * `Icons.ic_*` counterpart yet (e.g. gear / claim rewards), while some DS3 icons in turn have no legacy
+     * drawable. Once the DS team ships the full icon set, every call site switches to [Vector] and this whole
+     * subclass is removed.
+     */
+    @Deprecated(
+        message = "Temporary fallback for tx types missing a DS3 icon. Migrate to TxIcon.Vector once the DS team " +
+            "ships the remaining Icons.ic_* glyphs; this subclass will then be removed.",
+        replaceWith = ReplaceWith("TxIcon.Vector(imageVector)"),
+    )
+    data class Res(@DrawableRes val resId: Int) : TxIcon
+}
+
+/** Resolves a [TxIcon] to the [ImageVector] to draw: the DS3 vector directly, or the legacy XML drawable parsed. */
+@Suppress("DEPRECATION")
+@Composable
+fun TxIcon.asImageVector(): ImageVector = when (this) {
+    is TxIcon.Vector -> imageVector
+    is TxIcon.Res -> ImageVector.vectorResource(resId)
 }

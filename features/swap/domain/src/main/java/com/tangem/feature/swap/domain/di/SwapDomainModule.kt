@@ -39,11 +39,9 @@ internal class SwapDomainModule {
     @Provides
     @Singleton
     fun provideGetSwapUiModeUseCase(
-        swapFeatureToggles: SwapFeatureToggles,
         swapRepository: SwapRepository,
         abTestsManager: ABTestsManager,
     ): GetSwapUiModeUseCase = GetSwapUiModeUseCase(
-        swapFeatureToggles = swapFeatureToggles,
         swapRepository = swapRepository,
         abTestsManager = abTestsManager,
     )
@@ -77,6 +75,7 @@ internal class SwapDomainModule {
         walletManagersFacade: WalletManagersFacade,
         @SwapDexGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
         wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
+        swapFeatureToggles: SwapFeatureToggles,
     ): DexSwapFeeCalculator = DexSwapFeeCalculator(
         getFeeUseCase = getFeeUseCase,
         getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
@@ -85,6 +84,7 @@ internal class SwapDomainModule {
         walletManagersFacade = walletManagersFacade,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
         wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
+        swapFeatureToggles = swapFeatureToggles,
     )
 
     @Provides

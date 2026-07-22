@@ -1,7 +1,6 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicAddressesStatusUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
@@ -71,10 +70,8 @@ internal object DynamicAddressesDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsDynamicAddressesAvailableUseCase(
-        featureToggles: DynamicAddressesFeatureToggles,
-    ): IsDynamicAddressesAvailableUseCase {
-        return IsDynamicAddressesAvailableUseCase(featureToggles)
+    fun provideIsDynamicAddressesAvailableUseCase(): IsDynamicAddressesAvailableUseCase {
+        return IsDynamicAddressesAvailableUseCase()
     }
 
     @Provides

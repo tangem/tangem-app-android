@@ -58,8 +58,10 @@ import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
+import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -77,6 +79,9 @@ internal class DefaultTangemSdkManager(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
+    // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
+    // TangemSdkManager. It's only needed when a scan actually runs.
+    private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
 ) : TangemSdkManager {
 
     private val tangemSdk: TangemSdk
@@ -88,7 +93,7 @@ internal class DefaultTangemSdkManager(
             secureStorage = tangemSdk.secureStorage,
         )
     }
-    override val needEnrollBiometrics: Boolean
+    override val isEnrollBiometricsNeeded: Boolean
         get() {
             val isNeedEnrollBiometrics = tangemSdk.authenticationManager.needEnrollBiometrics
             if (isNeedEnrollBiometrics) {
@@ -104,7 +109,7 @@ internal class DefaultTangemSdkManager(
 
     override val canUseBiometry: Boolean
         get() {
-            val isCanUseBiometry = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
+            val isCanUseBiometry = tangemSdk.authenticationManager.canAuthenticate || isEnrollBiometricsNeeded
             if (!isCanUseBiometry) {
                 analyticsErrorHandler.sendErrorEvent(
                     AnalyticsEvent(
@@ -126,7 +131,7 @@ internal class DefaultTangemSdkManager(
         get() = tangemSdk.config.userCodeRequestPolicy
 
     override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean {
-        return needEnrollBiometrics
+        return isEnrollBiometricsNeeded
     }
 
     override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean {
@@ -147,10 +152,11 @@ internal class DefaultTangemSdkManager(
                     card = null,
                     allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
                     visaCardScanHandler = visaCardScanHandler,
-                    visaCoroutineScope = this,
+                    sessionCoroutineScope = this,
                     shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     cardRepository = cardRepository,
+                    walletRegistrationLauncher = walletRegistrationLauncher.get(),
                 ),
                 cardId = cardId,
                 initialMessage = message,

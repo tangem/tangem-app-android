@@ -47,6 +47,7 @@ class WireMockRedirectInterceptor : Interceptor {
             "deep-index.moralis.io",
             "solana-gateway.moralis.io",
             "api.etherscan.io",
+            "eth-blockbook.nownodes.io",
         )
 
         /**

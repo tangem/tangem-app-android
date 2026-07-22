@@ -23,6 +23,61 @@ fun BaseTestCase.openTangemPay() {
     }
 }
 
+/** Opens Tangem Pay and taps the card to reach the card management page. */
+fun BaseTestCase.openTangemPayCardPage() {
+    openTangemPay()
+    step("Click on 'Card' button") {
+        onTangemPayMainScreen { cardButton.clickWithAssertion() }
+    }
+    step("Assert card page 'More' button is displayed") {
+        awaitSuccess { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
+    }
+}
+
+/** Opens the card page and taps the card name to reach the rename screen. */
+fun BaseTestCase.openTangemPayCardRename() {
+    openTangemPayCardPage()
+    step("Click on card name to start renaming") {
+        awaitSuccess { onTangemPayCardPageScreen { cardNameEditButton.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { cardNameEditButton.performClick() }
+    }
+    step("Assert card rename screen is displayed") {
+        awaitSuccess {
+            onTangemPayCardRenameScreen {
+                nameField.assertIsDisplayed()
+                doneButton.assertIsDisplayed()
+            }
+        }
+    }
+}
+
+/** Opens the card page and taps 'Change' on the daily limit block to reach the limit setup screen. */
+fun BaseTestCase.openTangemPayDailyLimitSetup() {
+    openTangemPayCardPage()
+    step("Click on 'Change' daily limit button") {
+        awaitSuccess { onTangemPayCardPageScreen { dailyLimitChangeButton.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { dailyLimitChangeButton.performClick() }
+    }
+    step("Assert daily limit setup screen is displayed") {
+        awaitSuccess { onTangemPayDailyLimitScreen { amountField.assertIsDisplayed() } }
+        onTangemPayDailyLimitScreen { setLimitsButton.assertIsDisplayed() }
+    }
+}
+
+/** From the card page, opens the 'Replace card' reissue bottom sheet via the 'More' menu. */
+fun BaseTestCase.openReissueSheet() {
+    step("Click on 'More' button") {
+        onTangemPayCardPageScreen { moreButton.clickWithAssertion() }
+    }
+    step("Click on 'Replace card' menu item") {
+        awaitSuccess { onTangemPayCardPageScreen { replaceCardMenuItem.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { replaceCardMenuItem.performClick() }
+    }
+    step("Assert reissue bottom sheet is displayed") {
+        awaitSuccess { onTangemPayReissueSheet { confirmButton.assertIsDisplayed() } }
+    }
+}
+
 // Compose Test gesture — UiAutomator swipe doesn't reach Material3 PullToRefreshBox's NestedScrollConnection.
 fun BaseTestCase.pullToRefreshTangemPay() {
     val balance = composeTestRule.onNode(hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE))
