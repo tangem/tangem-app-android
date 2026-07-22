@@ -101,8 +101,9 @@ internal class ChooseTokenListItemConverter(
     private fun AccountStatus.CryptoPortfolio.toPortfolioItem(
         params: TokenConverterParams.Account,
     ): TokensListItemUM.Portfolio {
-        val tokenList: TokenList = this.tokenList
-        val account: Account.CryptoPortfolio = this.account
+        val displayedStatus = filterForDisplay()
+        val account: Account.CryptoPortfolio = displayedStatus.account
+        val displayedTokenList: TokenList = displayedStatus.tokenList
         val isExpanded = isSearchingState || params.expandedAccounts.contains(account.accountId)
         val onItemClick: (Account.CryptoPortfolio) -> Unit = { clickedAccount ->
             onAccountItemClick(clickedAccount, isExpanded)
@@ -116,10 +117,9 @@ internal class ChooseTokenListItemConverter(
             fiatAmountStateProvider = { fiatBalance -> fiatAmountStateProvider(fiatBalance, isExpanded) },
             subtitle2StateProvider = { _ -> null },
         )
-        val accountItem = converter.convert(tokenList.totalFiatBalance)
-        val tokenConverter = tokenStatusConverter(this)
-        val tokensListState = convertTokenList(tokenConverter, tokenList, this)
-        val items = tokensListState.tokensList
+        val accountItem = converter.convert(displayedTokenList.totalFiatBalance)
+        val items = displayedTokenList.toUmData(tokenStatusConverter(this)).tokensList
+
         return TokensListPortfolioItemConverter(
             tokenItemUM = accountItem,
             isExpanded = isExpanded,
@@ -128,22 +128,30 @@ internal class ChooseTokenListItemConverter(
         ).convert(Unit)
     }
 
+    private fun AccountStatus.CryptoPortfolio.filterForDisplay(): AccountStatus.CryptoPortfolio {
+        val filteredTokenList = filterTokenList(tokenList, this)
+        return copy(
+            account = account.copy(cryptoCurrencies = filteredTokenList.flattenCurrencies().map { it.currency }),
+            tokenList = filteredTokenList,
+        )
+    }
+
     private fun convertTokenList(
         tokenConverter: TokenItemStateConverter,
         tokenListParam: TokenList,
         account: AccountStatus.CryptoPortfolio,
-    ): TokenListUMData {
-        return when (val tokenList = filterTokenList(tokenListParam, account)) {
-            is TokenList.Empty -> TokenListUMData.EmptyList
-            is TokenList.GroupedByNetwork -> TokenListUMData.TokenList(
-                tokensList = tokenList.toGroupedItems(tokenConverter).toPersistentList(),
-                totalTokensCount = tokenList.flattenCurrencies().size,
-            )
-            is TokenList.Ungrouped -> TokenListUMData.TokenList(
-                tokensList = tokenList.toUngroupedItems(tokenConverter).toPersistentList(),
-                totalTokensCount = tokenList.flattenCurrencies().size,
-            )
-        }
+    ): TokenListUMData = filterTokenList(tokenListParam, account).toUmData(tokenConverter)
+
+    private fun TokenList.toUmData(tokenConverter: TokenItemStateConverter): TokenListUMData = when (this) {
+        TokenList.Empty -> TokenListUMData.EmptyList
+        is TokenList.GroupedByNetwork -> TokenListUMData.TokenList(
+            tokensList = toGroupedItems(tokenConverter).toPersistentList(),
+            totalTokensCount = flattenCurrencies().size,
+        )
+        is TokenList.Ungrouped -> TokenListUMData.TokenList(
+            tokensList = toUngroupedItems(tokenConverter).toPersistentList(),
+            totalTokensCount = flattenCurrencies().size,
+        )
     }
 
     private fun List<CryptoCurrencyStatus>.filterCurrencies(account: AccountStatus): List<CryptoCurrencyStatus> =
