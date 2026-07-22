@@ -11,9 +11,9 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
 import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiConfigs
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiConfigs
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory

@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
@@ -64,5 +68,10 @@ internal class TangemTech(
         putAll(from = RequestHeader.TangemApiKeyHeader(authProvider, Provider { apiEnvironment }).values)
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
         putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
+    }
+
+    companion object {
+        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.TANGEM_TECH].
+        const val KEY = ApiConfig.TANGEM_TECH
     }
 }
