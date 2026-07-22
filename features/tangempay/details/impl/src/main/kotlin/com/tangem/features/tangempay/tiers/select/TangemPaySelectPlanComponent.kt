@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.tiers.select
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,6 +20,8 @@ internal class TangemPaySelectPlanComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        BackHandler { model.onBackClick() }
+
         val state by model.state.collectAsStateWithLifecycle()
         TangemPaySelectPlanScreen(state = state, modifier = modifier)
     }
@@ -26,5 +29,6 @@ internal class TangemPaySelectPlanComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val tariffPlan: TangemPayCustomerTariffPlan,
+        val source: TangemPaySelectPlanSource,
     )
 }
