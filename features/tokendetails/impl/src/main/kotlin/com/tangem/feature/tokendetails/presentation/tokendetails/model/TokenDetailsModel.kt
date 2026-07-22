@@ -65,6 +65,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
+import com.tangem.domain.onramp.OnrampGetDefaultCurrencyUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.FetchStakingOptionsUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
@@ -182,6 +183,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
+    private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -1501,12 +1503,15 @@ internal class TokenDetailsModel @Inject constructor(
                         ifLeft = { true },
                         ifRight = { it.isEmpty() },
                     )
+                    val selectedOnrampCurrency = onrampGetDefaultCurrencyUseCase().getOrNull()
                     val availability = checkOnrampAvailabilityUseCase(userWallet)
                     emit(
                         quickTopUpBlockFactory.build(
                             currencyStatus = status,
                             isHistoryEmpty = isHistoryEmpty,
                             onrampAvailability = availability,
+                            selectedOnrampCurrency = selectedOnrampCurrency,
+                            appCurrency = selectedAppCurrencyFlow.value,
                             onPresetClick = ::onQuickTopUpClick,
                             onOtherClick = ::onQuickTopUpOtherClick,
                         ),
