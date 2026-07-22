@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
@@ -95,6 +99,11 @@ internal sealed class TangemPay(
                 -> error("Unknown environment: $apiEnvironment")
             }
         }
+
+        companion object {
+            // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.TANGEM_PAY].
+            const val KEY = ApiConfig.TANGEM_PAY
+        }
     }
 
     class Auth(
@@ -116,6 +125,11 @@ internal sealed class TangemPay(
                 ApiEnvironment.STAGE_3,
                 -> error("Unknown environment: $apiEnvironment")
             }
+        }
+
+        companion object {
+            // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.TANGEM_PAY_AUTH].
+            const val KEY = ApiConfig.TANGEM_PAY_AUTH
         }
     }
 }

@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 
 /**
@@ -42,7 +46,11 @@ internal class Auth : ApiConfig() {
         headers = emptyMap(),
     )
 
-    private companion object {
+    companion object {
+
+        // Same-module copy of the id key for use as a Dagger @StringKey argument (kapt can't use a
+        // cross-module const). Kept in sync with the central [ApiConfig.AUTH].
+        const val KEY = ApiConfig.AUTH
 
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
         private const val PROD_BASE_URL = "https://api.tangem.org/"

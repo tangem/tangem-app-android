@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
@@ -57,5 +61,10 @@ internal class P2PEthPool(
         put(key = "Authorization", value = ProviderSuspend { "Bearer ${p2pAuthProvider.getApiKey()}" })
         put(key = "accept", value = ProviderSuspend { "application/json" })
         put(key = "Content-Type", value = ProviderSuspend { "application/json" })
+    }
+
+    companion object {
+        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.P2P_ETH_POOL].
+        const val KEY = ApiConfig.P2P_ETH_POOL
     }
 }

@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
@@ -67,7 +71,11 @@ internal class News(
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
     }
 
-    private companion object {
+    companion object {
+
+        // Same-module copy of the id key for use as a Dagger @StringKey argument (kapt can't use a
+        // cross-module const). Kept in sync with the central [ApiConfig.NEWS].
+        const val KEY = ApiConfig.NEWS
 
         private const val PROD_BASE_URL = "https://api.tangem.org/"
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"

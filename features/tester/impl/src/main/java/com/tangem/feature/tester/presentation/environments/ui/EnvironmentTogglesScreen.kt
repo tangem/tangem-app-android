@@ -25,8 +25,8 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.environments.state.EnvironmentTogglesScreenUM
 import kotlinx.collections.immutable.persistentSetOf

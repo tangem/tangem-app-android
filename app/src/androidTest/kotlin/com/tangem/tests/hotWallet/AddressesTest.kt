@@ -10,8 +10,8 @@ import com.tangem.common.constants.TestConstants.SEED_PHRASE_21
 import com.tangem.common.constants.TestConstants.SEED_PHRASE_24
 import com.tangem.common.utils.checkServiceHealth
 import com.tangem.common.utils.getAddressesFromApi
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.verifyAddresses
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -34,7 +34,7 @@ class AddressesTest : BaseTestCase() {
         },
     )
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @AllureId("1792")
     @DisplayName("Hot wallet: auto derivation addresses for seed 12")
     @Test
@@ -44,7 +44,7 @@ class AddressesTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @AllureId("5106")
     @DisplayName("Hot wallet: auto derivation addresses for seed 15")
     @Test
@@ -54,7 +54,7 @@ class AddressesTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @AllureId("5107")
     @DisplayName("Hot wallet: auto derivation addresses for seed 18")
     @Test
@@ -64,7 +64,7 @@ class AddressesTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @AllureId("5108")
     @DisplayName("Hot wallet: auto derivation addresses for seed 21")
     @Test
@@ -74,7 +74,7 @@ class AddressesTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.TANGEM_TECH, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(ApiConfig.TANGEM_TECH, ApiEnvironment.PROD))
     @AllureId("5109")
     @DisplayName("Hot wallet: auto derivation addresses for seed 24")
     @Test

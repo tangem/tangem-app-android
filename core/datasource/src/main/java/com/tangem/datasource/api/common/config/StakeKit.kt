@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
@@ -56,5 +60,10 @@ internal class StakeKit(
     private fun createHeaders() = buildMap {
         put(key = "X-API-KEY", value = ProviderSuspend(stakeKitAuthProvider::getApiKey))
         put(key = "accept", value = ProviderSuspend { "application/json" })
+    }
+
+    companion object {
+        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.STAKE_KIT].
+        const val KEY = ApiConfig.STAKE_KIT
     }
 }
