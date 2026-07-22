@@ -7,24 +7,24 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
-import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * In MOCK env returns canned onboarding data so the Payment Account shows up as fully loaded on the main
- * screen (the entry point to the TangemPay details & cashback screens), and skips local-storage / signing
- * enrollment; remaining server calls go to WireMock.
+ * In MOCK env only skips the local-storage / NFC-signing enrollment steps (order ids, initial data). The
+ * customer-facing state — whether a wallet has Tangem Pay ([hasTangemPayInWallet]), KYC status, ACTIVE /
+ * INACTIVE, balances ([getCustomerInfo]) — is driven by the WireMock test scenario (authenticated with the
+ * synthetic tokens from [com.tangem.data.pay.store.MockAwareTangemPayStorage]) rather than hardcoded:
+ *  - [hasTangemPayInWallet] delegates to the real repo, so the "existing customer" gate follows the
+ *    checkCustomerWalletId mock (the `tangem_pay_eligibility` scenario: `Started` → 404/NotPaeraCustomer →
+ *    no Payment account, `PaeraCustomer` → 200 → Payment account);
+ *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect.
  */
 @Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
@@ -56,16 +56,12 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.produceInitialData(userWalletId)
     }
 
-    override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
-        if (isMockMode) return mockCustomerInfo().right()
-        return real.getCustomerInfo(userWalletId)
-    }
-
-    private fun mockCustomerInfo(): CustomerInfo = MOCK_CUSTOMER_INFO.copy(
-        productInstances = MOCK_CUSTOMER_INFO.productInstances.map {
-            it.copy(displayName = cardNameHolder.displayName)
-        },
-    )
+    // Delegates to WireMock (via the real repo + synthetic storage tokens) so the customer state — KYC status,
+    // ACTIVE/INACTIVE, balances — follows the test scenario instead of a hardcoded "always active" customer.
+    // Note: this may be invoked even when `hasTangemPayInWallet` is false (e.g., onboarding/deeplink flows),
+    // so tests must provide the corresponding WireMock mappings.
+    override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> =
+        real.getCustomerInfo(userWalletId)
 
     override suspend fun getBankCredentials(
         userWalletId: UserWalletId,
@@ -126,10 +122,12 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.clearVirtualAccountOrderId(userWalletId)
     }
 
-    override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> {
-        if (isMockMode) return true.right()
-        return real.hasTangemPayInWallet(userWalletId)
-    }
+    // The "existing Tangem Pay customer" gate (decides whether an active Payment account — and accounts mode —
+    // appears). Delegates to WireMock's checkCustomerWalletId via the real repo (static token, no signing), so it
+    // is driven by the `tangem_pay_eligibility` scenario: `Started` (default) → 404/NotPaeraCustomer → no account;
+    // `PaeraCustomer` → 200 → account. Generic UI tests never set the scenario, so they stay Payment-free.
+    override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> =
+        real.hasTangemPayInWallet(userWalletId)
 
     override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> =
         real.checkCustomerEligibility()
@@ -167,52 +165,5 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     private companion object {
         const val MOCK_ORDER_ID = "mock-order-id"
         const val MOCK_VA_ORDER_ID = "mock-va-order-id"
-
-        const val MOCK_CUSTOMER_ID = "mock-customer-id"
-        const val MOCK_CARD_ID = "mock-card-id"
-        const val MOCK_PRODUCT_INSTANCE_ID = "mock-product-instance-id"
-        const val MOCK_CUSTOMER_WALLET_ADDRESS = "0x0000000000000000000000000000000000000002"
-        const val MOCK_TOKEN_CONTRACT_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
-        const val MOCK_POLYGON_CHAIN_ID = 137L
-
-        val MOCK_CUSTOMER_INFO = CustomerInfo(
-            customerId = MOCK_CUSTOMER_ID,
-            productInstances = listOf(
-                CustomerInfo.ProductInstance(
-                    id = MOCK_PRODUCT_INSTANCE_ID,
-                    cardId = MOCK_CARD_ID,
-                    frozenState = TangemPayCardFrozenState.Unfrozen,
-                    displayName = null,
-                    actualCardLimit = null,
-                    adminCardLimit = null,
-                    status = CustomerInfo.ProductInstance.Status.ACTIVE,
-                    specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.CARD,
-                ),
-            ),
-            cards = listOf(
-                CustomerInfo.CardInfo(
-                    cardId = MOCK_CARD_ID,
-                    cardStatus = TangemPayCard.Status.ACTIVE,
-                    lastFourDigits = "4242",
-                    isPinSet = true,
-                    images = emptyList(),
-                ),
-            ),
-            kycStatus = KycStatus.APPROVED,
-            state = CustomerInfo.State.ACTIVE,
-            fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                availableBalance = BigDecimal("123.45"),
-                currency = "USD",
-            ),
-            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                id = "usd-coin",
-                chainId = MOCK_POLYGON_CHAIN_ID,
-                depositAddress = MOCK_CUSTOMER_WALLET_ADDRESS,
-                tokenContractAddress = MOCK_TOKEN_CONTRACT_ADDRESS,
-                balance = BigDecimal("123.45"),
-            ),
-            availableForWithdrawal = BigDecimal("123.45"),
-            tariffPlan = null,
-        )
     }
 }
