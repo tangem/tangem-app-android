@@ -35,4 +35,6 @@ interface ExpressServiceFetcher {
      * @return A flow emitting Lce states containing either a list of Express assets or an error.
      */
     fun getInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, List<ExpressAsset>>>
+
+    suspend fun getOrFetch(userWalletId: UserWalletId, assetId: ExpressAsset.ID): Either<Throwable, ExpressAsset>
 }

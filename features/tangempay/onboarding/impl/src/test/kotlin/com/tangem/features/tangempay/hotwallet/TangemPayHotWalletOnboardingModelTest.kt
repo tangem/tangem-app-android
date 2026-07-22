@@ -7,8 +7,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -17,17 +15,21 @@ import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class TangemPayHotWalletOnboardingModelTest {
 
     private val createHotWalletUseCase: CreateHotWalletUseCase = mockk()
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk() {
         every { getLeastVersionName() } returns "Android 10"
     }
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -41,11 +43,16 @@ internal class TangemPayHotWalletOnboardingModelTest {
 
         @Test
         fun `WHEN onTermsClick THEN navigate to Disclaimer`() = runTest {
-            val model = createModel()
+            // Arrange
+            val model = createModel(testScope = this)
 
+            // Act
             model.uiState.value.onTermsClick.invoke()
+            advanceUntilIdle()
 
+            // Assert
             verify { router.push(AppRoute.Disclaimer(isTosAccepted = true)) }
+            model.onDestroy()
         }
     }
 
@@ -55,29 +62,34 @@ internal class TangemPayHotWalletOnboardingModelTest {
         @Test
         fun `GIVEN hot wallet creation not supported WHEN onGetCardClick THEN wallet creation not attempted`() =
             runTest {
+                // Arrange
                 every { isHotWalletCreationSupported() } returns false
-                coEvery { clearAppsFlyerDeeplinkUseCase(any()) } just Runs
+                val model = createModel(testScope = this)
 
-                val model = createModel()
+                // Act
                 model.uiState.value.onGetCardClick.invoke()
+                advanceUntilIdle()
 
+                // Assert
                 verify { uiMessageSender.send(any()) }
                 verify { router.replaceCurrent(AppRoute.Home()) }
-                coVerify { clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) }
                 coVerify(exactly = 0) { createHotWalletUseCase(any(), any()) }
+                model.onDestroy()
             }
 
         @Test
-        fun `GIVEN hot wallet supported AND wallet creation succeeds WHEN onGetCardClick THEN deeplink cleared AND navigate to CreateWalletBackup`() =
+        fun `GIVEN hot wallet supported AND wallet creation succeeds WHEN onGetCardClick THEN navigate to CreateWalletBackup`() =
             runTest {
+                // Arrange
                 every { isHotWalletCreationSupported() } returns true
                 coEvery { createHotWalletUseCase(HotAuth.NoAuth, MnemonicType.Words12) } returns testUserWallet.right()
-                coEvery { clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) } just Runs
+                val model = createModel(testScope = this)
 
-                val model = createModel()
+                // Act
                 model.uiState.value.onGetCardClick.invoke()
+                advanceUntilIdle()
 
-                coVerify { clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) }
+                // Assert
                 verify {
                     router.replaceAll(
                         match { route ->
@@ -87,34 +99,49 @@ internal class TangemPayHotWalletOnboardingModelTest {
                         },
                     )
                 }
+                model.onDestroy()
             }
 
         @Test
         fun `GIVEN hot wallet supported AND wallet creation fails WHEN onGetCardClick THEN error dialog sent`() =
             runTest {
+                // Arrange
                 every { isHotWalletCreationSupported() } returns true
                 coEvery {
                     createHotWalletUseCase(HotAuth.NoAuth, MnemonicType.Words12)
                 } returns RuntimeException("error").left()
+                val model = createModel(testScope = this)
 
-                val model = createModel()
+                // Act
                 model.uiState.value.onGetCardClick.invoke()
+                advanceUntilIdle()
 
+                // Assert
                 assertThat(model.uiState.value.isLoading).isFalse()
                 verify { uiMessageSender.send(match<DialogMessage> { true }) }
-                coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase(any()) }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
+                model.onDestroy()
             }
     }
 
-    private fun createModel(): TangemPayHotWalletOnboardingModel {
+    private fun createModel(testScope: TestScope): TangemPayHotWalletOnboardingModel {
         return TangemPayHotWalletOnboardingModel(
-            dispatchers = TestingCoroutineDispatcherProvider(),
+            dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             createHotWalletUseCase = createHotWalletUseCase,
             isHotWalletCreationSupported = isHotWalletCreationSupported,
-            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             router = router,
             uiMessageSender = uiMessageSender,
+        )
+    }
+
+    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        return TestingCoroutineDispatcherProvider(
+            main = testDispatcher,
+            mainImmediate = testDispatcher,
+            io = testDispatcher,
+            default = testDispatcher,
+            single = testDispatcher,
         )
     }
 }
