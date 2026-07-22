@@ -1,5 +1,8 @@
 package com.tangem.datasource.api.common.response
 
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+
 fun <T : Any> ApiResponse<T>.getOrThrow(): T = when (this) {
     is ApiResponse.Error -> throw cause
     is ApiResponse.Success -> data
