@@ -5,6 +5,8 @@ import androidx.room.Room
 import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
+import com.tangem.datasource.local.txhistory.db.dao.TokenInfoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,5 +39,11 @@ internal interface TxHistoryModule {
 
         @Provides
         fun provideSyncStateDao(database: TxHistoryDatabase): ExpressSyncStateDao = database.syncStateDao()
+
+        @Provides
+        fun provideTokenInfoDao(database: TxHistoryDatabase): TokenInfoDao = database.tokenInfoDao()
+
+        @Provides
+        fun provideHistoryIndexDao(database: TxHistoryDatabase): HistoryIndexDao = database.historyIndexDao()
     }
 }

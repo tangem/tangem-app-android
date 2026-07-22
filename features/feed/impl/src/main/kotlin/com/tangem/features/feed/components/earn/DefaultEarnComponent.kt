@@ -21,8 +21,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
@@ -31,9 +29,6 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
@@ -60,44 +55,31 @@ internal class DefaultEarnComponent(
 
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
-        val background = LocalMainBottomSheetColor.current.value
         val state by earnModel.state.collectAsStateWithLifecycle()
-        if (LocalRedesignEnabled.current) {
-            TangemTopBar(
-                title = resourceReference(R.string.earn_title),
-                type = if (LocalIsOpenedInBottomSheet.current) {
-                    TangemTopBarType.BottomSheet
-                } else {
-                    TangemTopBarType.Default
-                },
-                startContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .clip(CircleShape)
-                            .hazeEffectTangem { blurRadius = 8.dp }
-                            .clickableSingle(
-                                onClick = state.onBackClick,
-                                enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                            )
-                            .padding(TangemTheme.dimens2.x2),
-                    )
-                },
-            )
-        } else {
-            TangemTopAppBar(
-                containerColor = background,
-                title = stringResourceSafe(R.string.earn_title),
-                startButton = TopAppBarButtonUM.Icon(
-                    iconRes = R.drawable.ic_back_24,
-                    onClicked = state.onBackClick,
-                    isEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-                ),
-            )
-        }
+        TangemTopBar(
+            title = resourceReference(R.string.earn_title),
+            type = if (LocalIsOpenedInBottomSheet.current) {
+                TangemTopBarType.BottomSheet
+            } else {
+                TangemTopBarType.Default
+            },
+            startContent = {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
+                    contentDescription = null,
+                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    modifier = Modifier
+                        .size(TangemTheme.dimens2.x11)
+                        .clip(CircleShape)
+                        .hazeEffectTangem { blurRadius = 8.dp }
+                        .clickableSingle(
+                            onClick = state.onBackClick,
+                            enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+                        )
+                        .padding(TangemTheme.dimens2.x2),
+                )
+            },
+        )
     }
 
     @Composable

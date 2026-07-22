@@ -13,14 +13,20 @@ android {
 
 dependencies {
     /** AndroidX */
+    implementation(deps.androidx.activity)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose */
+    api(deps.compose.foundation)
     implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.reorderable)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
@@ -30,44 +36,56 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Domain modules */
-    implementation(projects.domain.account)
-    implementation(projects.domain.card)
-    implementation(projects.domain.feedback)
-    implementation(projects.domain.markets.models)
-    implementation(projects.domain.markets)
-    implementation(projects.domain.manageTokens.models)
-    implementation(projects.domain.manageTokens)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.wallets)
+    api(projects.domain.account)
+    api(projects.domain.common)
+    api(projects.domain.feedback)
+    api(projects.domain.markets)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.demo.models)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.settings)
+    implementation(projects.domain.manageTokens.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.models)
+    implementation(projects.domain.offramp)
+    implementation(projects.domain.walletManager)
+    runtimeOnly(projects.domain.card)
+    runtimeOnly(projects.domain.manageTokens)
 
-    implementation(projects.data.common)
+    /** Data */
+    api(projects.data.common)
 
     /** Other libraries */
+    api(deps.kotlin.immutable.collections)
+    api(deps.kotlin.serialization)
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.haze)
+    implementation(deps.kotlin.coroutines)
 
     /** Core modules */
-    implementation(projects.core.datasource)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
-    implementation(projects.core.navigation)
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.navigation)
+    api(projects.core.ui)
+    api(projects.core.utils)
     implementation(projects.core.pagination)
 
     /** Feature Apis */
-    implementation(projects.features.tester.api)
+    api(projects.features.survey.api)
+    api(projects.features.tester.api)
     implementation(projects.features.pushNotifications.api)
-    implementation(projects.features.survey.api)
 
     /* SDK */
     implementation(tangemDeps.blockchain)
 
     /** Other modules */
-    implementation(projects.common.routing)
+    api(projects.common.routing)
+    api(projects.libs.blockchainSdk)
+    implementation(projects.common)
     implementation(projects.common.ui)
-    implementation(projects.libs.blockchainSdk)
+    implementation(projects.common.uiCharts)
+    implementation(projects.libs.auth)
     implementation(projects.libs.crypto)
-    implementation(deps.kotlin.serialization)
+    implementation(projects.libs.tangemSdkApi)
 }

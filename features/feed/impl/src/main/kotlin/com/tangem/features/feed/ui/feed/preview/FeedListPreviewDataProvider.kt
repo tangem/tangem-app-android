@@ -56,6 +56,7 @@ internal object FeedListPreviewDataProvider {
             earnListUM = EarnListUM.Content(
                 items = createEarnListItemsUM(),
             ),
+            forYouBannerUM = createForYouItem(),
         )
     }
 
@@ -284,5 +285,11 @@ internal object FeedListPreviewDataProvider {
                 onItemClick = {},
             )
         }.toPersistentList()
+    }
+
+    private fun createForYouItem(): ForYouBannerUM {
+        return ForYouBannerUM.Content(
+            onClick = {},
+        )
     }
 }
