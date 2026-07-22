@@ -11,5 +11,7 @@ interface TangemPayReissueCardStore {
 
     suspend fun storeReissueOrderId(cardId: String, orderId: String)
 
+    suspend fun removeReissueOrderId(cardId: String)
+
     suspend fun getOrderId(cardId: String): String?
 }

@@ -5,7 +5,6 @@ import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.res.TangemTheme
@@ -17,9 +16,7 @@ import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal class VirtualAccountMainBlockConverter(
-    private val isRedesignEnabled: Boolean,
-) : Converter<AccountStatus.Virtual, VirtualAccountMainUM> {
+internal class VirtualAccountMainBlockConverter : Converter<AccountStatus.Virtual, VirtualAccountMainUM> {
 
     override fun convert(value: AccountStatus.Virtual): VirtualAccountMainUM {
         return when (val statusValue = value.value) {
@@ -66,21 +63,12 @@ internal class VirtualAccountMainBlockConverter(
 
     private fun getBalanceText(currencyCode: String, balance: BigDecimal): TextReference {
         val currency = getJavaCurrencyByCode(currencyCode)
-        val formattedBalance = if (isRedesignEnabled) {
-            balance.formatStyled {
-                fiat(
-                    fiatCurrencyCode = currency.currencyCode,
-                    fiatCurrencySymbol = currency.symbol,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
-                )
-            }
-        } else {
-            stringReference(
-                balance.format {
-                    fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
-                },
+        return balance.formatStyled {
+            fiat(
+                fiatCurrencyCode = currency.currencyCode,
+                fiatCurrencySymbol = currency.symbol,
+                spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
             )
         }
-        return formattedBalance
     }
 }

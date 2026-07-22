@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
@@ -51,7 +52,9 @@ internal class IssueAdditionalCardUseCaseTest {
 
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { orderRepository.findOrders(any(), any(), any()) }
-        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) {
+            orderRepository.createOrder(any(), any(), any(), any(), any(), any())
+        }
     }
 
     @Test
@@ -77,7 +80,9 @@ internal class IssueAdditionalCardUseCaseTest {
         val result = useCase(userWalletId)
 
         assertThat(result.isRight()).isTrue()
-        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) {
+            orderRepository.createOrder(any(), any(), any(), any(), any(), any())
+        }
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, existing.id) }
     }
 
@@ -148,11 +153,12 @@ internal class IssueAdditionalCardUseCaseTest {
         customerId = "customer",
         type = type,
         status = status,
-        step = null,
+        step = OrderStep.UNKNOWN,
         stepChangeCode = null,
         productInstanceId = null,
         paymentAccountId = null,
         cardId = null,
+        toTariffPlanId = null,
         withdrawTxHash = null,
         createdAt = null,
         updatedAt = null,

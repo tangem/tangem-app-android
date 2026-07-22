@@ -95,14 +95,30 @@ internal class CommonActionsFactoryTest {
         assertThat(buyAction.unavailabilityReason).isEqualTo(ScenarioUnavailabilityReason.None)
     }
 
+    @Test
+    fun `GIVEN region unavailable WHEN create THEN no stake action offered`() = runTest {
+        // Arrange
+        every { cardTypesResolver.isStart2Coin() } returns false
+
+        // Act
+        val actions = createActions(stakingAvailability = StakingAvailability.RegionUnavailable)
+
+        // Assert
+        assertThat(actions.filterIsInstance<ActionState.Stake>()).isEmpty()
+    }
+
     private suspend fun createBuyAction(): ActionState.Buy {
-        val actions = factory.create(
+        val actions = createActions(stakingAvailability = StakingAvailability.Unavailable)
+        return actions.filterIsInstance<ActionState.Buy>().single()
+    }
+
+    private suspend fun createActions(stakingAvailability: StakingAvailability): Set<ActionState> {
+        return factory.create(
             userWallet = userWallet,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            stakingAvailability = StakingAvailability.Unavailable,
+            stakingAvailability = stakingAvailability,
             yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
             shouldShowSwapStories = false,
         )
-        return actions.filterIsInstance<ActionState.Buy>().single()
     }
 }

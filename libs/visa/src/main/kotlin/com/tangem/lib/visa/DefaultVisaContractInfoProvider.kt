@@ -20,6 +20,10 @@ internal class DefaultVisaContractInfoProvider(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaContractInfoProvider {
 
+    // NamedArguments flags the parZip(...) invocation itself (a dispatcher + several positional
+    // supplier lambdas + a result combiner); those positional lambda parameters can't be meaningfully
+    // named, so it is suppressed here. Calls inside the lambdas still use named arguments.
+    @Suppress("NamedArguments")
     override suspend fun getContractInfo(walletAddress: String, paymentAccountAddress: String?): VisaContractInfo {
         return parZip(
             dispatchers.io,
@@ -71,6 +75,7 @@ internal class DefaultVisaContractInfoProvider(
         )
     }
 
+    @Suppress("NamedArguments") // parZip(...) call: positional supplier/combiner lambdas, not meaningfully nameable
     private suspend fun fetchBalancesAndLimits(
         paymentAccount: TangemPaymentAccount,
         paymentToken: PaymentTokenInfo,
@@ -92,6 +97,7 @@ internal class DefaultVisaContractInfoProvider(
         },
     )
 
+    @Suppress("NamedArguments") // parZip(...) call: positional supplier/combiner lambdas, not meaningfully nameable
     private suspend fun fetchToken(paymentAccount: TangemPaymentAccount): Token {
         val paymentTokenContractAddress = paymentAccount.paymentToken().send()
         val paymentTokenContract = ERC20.load(paymentTokenContractAddress, web3j, transactionManager, gasProvider)
@@ -111,6 +117,7 @@ internal class DefaultVisaContractInfoProvider(
         }
     }
 
+    @Suppress("NamedArguments") // parZip(...) call: positional supplier/combiner lambdas, not meaningfully nameable
     private suspend fun fetchBalances(paymentAccount: TangemPaymentAccount, paymentToken: PaymentTokenInfo): Balances {
         return parZip(
             dispatchers.io,
