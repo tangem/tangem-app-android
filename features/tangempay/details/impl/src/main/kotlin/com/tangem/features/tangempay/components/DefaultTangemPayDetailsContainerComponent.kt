@@ -15,7 +15,13 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
+import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
+import com.tangem.features.tangempay.utils.tariffPlan
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -31,7 +37,9 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
+    private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -45,9 +53,21 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         key = "tangemPayDetailsInnerStack",
         source = stackNavigation,
         serializer = TangemPayAccountDetailsInnerRoute.serializer(),
-        initialConfiguration = TangemPayAccountDetailsInnerRoute.AccountDetails,
+        initialConfiguration = resolveInitialConfiguration(),
         childFactory = ::screenChild,
     )
+
+    private fun resolveInitialConfiguration(): TangemPayAccountDetailsInnerRoute {
+        val tariffPlan = params.initialStatus.tariffPlan
+        return when (params.initialRoute) {
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> TangemPayAccountDetailsInnerRoute.AccountDetails
+            TangemPayDetailsInitialRoute.SELECT_PLAN -> if (tariffPlan != null) {
+                TangemPayAccountDetailsInnerRoute.SelectPlan(tariffPlan = tariffPlan)
+            } else {
+                TangemPayAccountDetailsInnerRoute.AccountDetails
+            }
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -68,6 +88,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             expressTransactionsComponentFactory = expressTransactionsComponentFactory,
+            promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
             virtualAccountAddFundsComponentFactory = virtualAccountAddFundsComponentFactory,
         )
         is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
@@ -84,10 +105,30 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 userWalletId = params.initialStatus.userWalletId,
             ),
         )
+        is TangemPayAccountDetailsInnerRoute.CurrentPlan -> TangemPayCurrentPlanComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayCurrentPlanComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+                tariffPlan = config.tariffPlan,
+            ),
+        )
+        is TangemPayAccountDetailsInnerRoute.SelectPlan -> TangemPaySelectPlanComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPaySelectPlanComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+                tariffPlan = config.tariffPlan,
+            ),
+        )
         TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->
             TangemPayVirtualAccountDepositSuccessComponent(
                 appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             )
+        TangemPayAccountDetailsInnerRoute.Cashback -> cashbackComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayCashbackComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+            ),
+        )
     }
 
     private fun onChildBack() {
