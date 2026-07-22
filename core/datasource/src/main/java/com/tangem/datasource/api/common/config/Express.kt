@@ -18,13 +18,13 @@ import com.tangem.utils.info.AppInfoProvider
  * @property expressAuthProvider       express auth provider
  * @property appInfoProvider           app info provider
  */
-internal class Express(
+class Express(
     private val environmentConfig: EnvironmentConfig,
     private val expressAuthProvider: ExpressAuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.Express
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -119,7 +119,7 @@ internal class Express(
     }
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.EXPRESS].
-        const val KEY = ApiConfig.EXPRESS
+        const val KEY = "Express"
+        val ID = ApiConfig.ID(KEY)
     }
 }

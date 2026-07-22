@@ -12,11 +12,11 @@ import com.tangem.utils.ProviderSuspend
 /**
  * P2P.org Ethereum Pooled Staking API configuration
  */
-internal class P2PEthPool(
+class P2PEthPool(
     private val p2pAuthProvider: P2PEthPoolAuthProvider,
 ) : ApiConfig() {
 
-    override val id: ApiConfig.ID = ApiConfig.ID.P2PEthPool
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -64,7 +64,7 @@ internal class P2PEthPool(
     }
 
     companion object {
-        // Same-module id key for Dagger @StringKey; kept in sync with [ApiConfig.P2P_ETH_POOL].
-        const val KEY = ApiConfig.P2P_ETH_POOL
+        const val KEY = "P2PEthPool"
+        val ID = ApiConfig.ID(KEY)
     }
 }
