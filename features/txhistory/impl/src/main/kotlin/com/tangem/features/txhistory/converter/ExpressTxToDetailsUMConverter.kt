@@ -137,7 +137,7 @@ internal class ExpressTxToDetailsUMConverter(
 
     private fun convertExpressOnramp(onramp: ExpressTx.Onramp): TxHistoryDetailsUM.TwoAssets {
         val status = onrampStatusConverter.convert(onramp.tx.status)
-        val toOwner = resolveLeg(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)?.toAssetOwnerUM()
+        val toOwner = resolveLeg(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)?.toOwnerUM()
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_card_20),
@@ -173,9 +173,9 @@ internal class ExpressTxToDetailsUMConverter(
     )
 
     /**
-     * The (from, to) owners shown under the swap legs. A swap settled entirely within one own portfolio has no
-     * counterparty to name, so both legs drop their owner and read "You send" / "You receive"; otherwise each leg keeps
-     * its own account / wallet / external address.
+     * The (from, to) owners shown under the swap legs. A swap settled entirely within one own portfolio names no owner —
+     * both legs read "You send" / "You receive". Otherwise each leg shows its owner via [toOwnerUM], which still drops an
+     * own-wallet leg when the user has a single wallet (nothing to disambiguate).
      */
     private fun ExpressTx.Swap.resolveLegOwners(): LegOwners {
         val from = resolveLeg(tx.fromAddress, tx.fromAsset.cryptoCurrency)
@@ -183,7 +183,7 @@ internal class ExpressTxToDetailsUMConverter(
         return if (isSameOwnPortfolio(from, to)) {
             LegOwners(from = null, to = null)
         } else {
-            LegOwners(from = from?.toAssetOwnerUM(), to = to?.toAssetOwnerUM())
+            LegOwners(from = from?.toOwnerUM(), to = to?.toOwnerUM())
         }
     }
 
@@ -208,6 +208,16 @@ internal class ExpressTxToDetailsUMConverter(
         from is ResolvedOwner.OwnWallet && to is ResolvedOwner.OwnWallet ->
             from.userWalletId == to.userWalletId
         else -> false
+    }
+
+    /**
+     * The owner card for a leg, or `null` when it names nothing worth disambiguating: an own-wallet leg is dropped when
+     * the user has a single wallet (there is no other wallet to tell it apart from), so it reads "You send" / "You
+     * receive". An own account (accounts mode) and an external address are always shown.
+     */
+    private fun ResolvedOwner.toOwnerUM(): TxHistoryDetailsUM.AssetOwnerUM? = when {
+        this is ResolvedOwner.OwnWallet && lookup.walletInfoById.size <= 1 -> null
+        else -> toAssetOwnerUM()
     }
 
     /** Maps a resolved leg owner to the model shown under the amount (own account / own wallet / external address). */
