@@ -17,16 +17,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.res.generated.icons.ic_search_24
+import com.tangem.core.ui.res.generated.icons.ic_sign_plus_20
 import com.tangem.features.addressbook.common.ui.ContactRow
 import com.tangem.features.addressbook.list.ui.preview.AddressBookListPreviewParameterProvider
 import com.tangem.features.addressbook.list.ui.preview.AddressBookListPreviewScenario
@@ -43,7 +47,15 @@ internal fun AddressBookListScreen(
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
-    Column(modifier = modifier.fillMaxSize()) {
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .hazeSourceTangem()
+            .background(color = TangemTheme.colors3.bg.primary),
+    )
+
+    Column(modifier = Modifier.fillMaxSize()) {
         TangemTopNavigation(
             title = resourceReference(R.string.address_book_title),
             contentAlign = TangemTopNavigation.ContentAlign.Center,
