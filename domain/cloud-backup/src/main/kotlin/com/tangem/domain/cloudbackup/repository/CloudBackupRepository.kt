@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Storage of encrypted wallet backup files in the user's cloud (Google Drive), plus a locally
@@ -59,6 +60,9 @@ interface CloudBackupRepository {
      * access, so callers can tell a wallet is backed up without listing the cloud storage.
      */
     suspend fun isBackedUp(walletId: String): Boolean
+
+    /** Reactive variant of [isBackedUp] */
+    fun isBackedUpFlow(walletId: String): Flow<Boolean>
 
     /** Records whether [walletId] has a cloud backup */
     suspend fun setBackedUp(walletId: String, backedUp: Boolean)
