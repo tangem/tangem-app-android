@@ -14,6 +14,7 @@ import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.entity.asSingleForYouGroup
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
@@ -62,7 +63,7 @@ internal class SetPortfolioReviewTransformerTest {
                 tokenList = persistentListOf(listItem(id = "btc"), listItem(id = "eth")),
             )
             val earnOpportunities = contentEarnOpportunities().copy(
-                tokenList = persistentListOf(listItem(id = "account-1")),
+                tokenList = persistentListOf(listItem(id = "account-1")).asSingleForYouGroup(),
             )
             val transformer = createTransformer(
                 portfolioReviewUM = portfolioReview,
@@ -79,7 +80,7 @@ internal class SetPortfolioReviewTransformerTest {
             assertThat(portfolioItems.map { it.tokenRowUM.id to it.isExpanded })
                 .containsExactly("btc" to true, "eth" to false)
                 .inOrder()
-            val earnItems = (result.earnOpportunities as EarnOpportunitiesUM.Content).tokenList
+            val earnItems = (result.earnOpportunities as EarnOpportunitiesUM.Content).tokenList.flatMap { it.items }
             assertThat(earnItems.single().isExpanded).isTrue()
         }
 
