@@ -14,7 +14,9 @@ import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.util.TangemPriceChange
 
 internal sealed interface StoryBookPage
 
@@ -353,6 +355,27 @@ internal data class TangemCheckmarkStory(
     val onEnabledToggle: () -> Unit,
 ) : DsStoryBookPage
 
+internal data class TangemTokenIconStory(
+    val uiState: UiStateVariant,
+    val size: TangemTokenIcon.Size,
+    val hasUrl: Boolean,
+    val isGrayscale: Boolean,
+    val hasIndicator: Boolean,
+    val isIndicatorPurple: Boolean,
+    val hasTopIcon: Boolean,
+    val onUiStateChange: (UiStateVariant) -> Unit,
+    val onSizeChange: (TangemTokenIcon.Size) -> Unit,
+    val onUrlToggle: () -> Unit,
+    val onGrayscaleToggle: () -> Unit,
+    val onIndicatorToggle: () -> Unit,
+    val onIndicatorPurpleToggle: () -> Unit,
+    val onTopIconToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Selects which [TangemTokenIcon.UiState] the high-level overload is rendered with. */
+    enum class UiStateVariant { Token, Shimmer, Error }
+}
+
 internal data class TangemGlowRingStory(
     val variant: TangemGlowRing.Variant,
     val quality: TangemGlowRing.Quality,
@@ -405,6 +428,82 @@ internal data class TangemMessageBannerStory(
         BgInverse("bg.inverse"),
     }
 }
+
+internal data class TextStyleStory(
+    val style: Style,
+    val textScale: Float,
+    val onStyleChange: (Style) -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** DS3 typography3 text styles available in the preview. Labels match the Figma naming. */
+    enum class Style(val label: String) {
+        Display("Display"),
+        HeadM("Head.M"),
+        HeadS("Head.S"),
+        Body("Body"),
+        SubH("Sub.H"),
+        Caption("Caption"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemTokenRowV2Story(
+    val variant: Variant,
+    val direction: TangemPriceChange.Direction,
+    val hasBadge: Boolean,
+    val isBadgeFilled: Boolean,
+    val hasPending: Boolean,
+    val hasQuote: Boolean,
+    val hasPriceChange: Boolean,
+    val hasCryptoBalance: Boolean,
+    val hasContractWarning: Boolean,
+    val hasUpdateWarning: Boolean,
+    val hasMessageBubble: Boolean,
+    val isBalanceHidden: Boolean,
+    val isQuoteFlickering: Boolean,
+    val isBalanceFlickering: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onDirectionChange: (TangemPriceChange.Direction) -> Unit,
+    val onBadgeToggle: () -> Unit,
+    val onBadgeFilledToggle: () -> Unit,
+    val onPendingToggle: () -> Unit,
+    val onQuoteToggle: () -> Unit,
+    val onPriceChangeToggle: () -> Unit,
+    val onCryptoBalanceToggle: () -> Unit,
+    val onContractWarningToggle: () -> Unit,
+    val onUpdateWarningToggle: () -> Unit,
+    val onMessageBubbleToggle: () -> Unit,
+    val onBalanceHiddenToggle: () -> Unit,
+    val onQuoteFlickeringToggle: () -> Unit,
+    val onBalanceFlickeringToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [com.tangem.core.ui.ds2.tokenrow.TangemTokenRow] variant/preset is rendered. */
+    enum class Variant { Default, Organize, Unreachable, NoAddress, Shimmer }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemTokenRowMarketStory(
+    val direction: TangemPriceChange.Direction,
+    val isShimmer: Boolean,
+    val hasTicker: Boolean,
+    val hasPosition: Boolean,
+    val hasCapitalization: Boolean,
+    val hasPrice: Boolean,
+    val hasPriceChange: Boolean,
+    val hasChart: Boolean,
+    val longTitle: Boolean,
+    val onDirectionChange: (TangemPriceChange.Direction) -> Unit,
+    val onShimmerToggle: () -> Unit,
+    val onTickerToggle: () -> Unit,
+    val onPositionToggle: () -> Unit,
+    val onCapitalizationToggle: () -> Unit,
+    val onPriceToggle: () -> Unit,
+    val onPriceChangeToggle: () -> Unit,
+    val onChartToggle: () -> Unit,
+    val onLongTitleToggle: () -> Unit,
+) : DsStoryBookPage
 
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,

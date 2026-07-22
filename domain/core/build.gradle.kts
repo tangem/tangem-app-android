@@ -6,10 +6,9 @@ plugins {
 
 dependencies {
     api(deps.arrow.core)
-    api(deps.arrow.fx)
+    api(deps.arrow.atomic)
     api(deps.kotlin.coroutines)
-
-    implementation(deps.kotlin.serialization)
+    api(deps.kotlin.serialization)
 
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)

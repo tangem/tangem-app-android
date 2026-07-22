@@ -4,7 +4,7 @@ import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM

@@ -13,67 +13,57 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.commonFeatures.api)
-    implementation(projects.features.nft.api)
-    implementation(projects.features.tokenRecieve.api)
+    api(projects.features.commonFeatures.api)
+    api(projects.features.nft.api)
+    api(projects.features.tokenRecieve.api)
 
     /** Core modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.ui)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
-    implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
 
     /** Domain modules */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.card)
-    implementation(projects.domain.feedback)
-    implementation(projects.domain.wallets)
+    api(projects.domain.card)
+    api(projects.domain.feedback)
+    api(projects.domain.account)
+    api(projects.domain.account.status)
+    api(projects.domain.appCurrency)
+    api(projects.domain.nft)
+    api(projects.domain.transaction)
+    api(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.core)
     implementation(projects.domain.models)
-    implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.tokens)
+    runtimeOnly(projects.domain.tokens)
 
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
 
-    /** Tangem libraries */
-    implementation(projects.libs.tangemSdkApi)
-    implementation(projects.libs.crypto)
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
-
     /** AndroidX libraries */
-    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
+    api(deps.compose.animation)
+    api(deps.compose.coil)
+    api(deps.compose.foundation)
+    api(deps.decompose.ext.compose)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
-    implementation(deps.lottie.compose)
-    implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
-    implementation(deps.androidx.datastore)
 
     /** Other libraries */
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.firebase.crashlytics)
 

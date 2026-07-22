@@ -20,7 +20,16 @@ class StartTangemPayOrderPollingUseCase(
      */
     private val activeOrders = ConcurrentHashMap.newKeySet<String>()
 
-    suspend operator fun invoke(order: TangemPayOrderInfo, userWalletId: UserWalletId): Boolean {
+    /**
+     * @param onTerminalReached invoked once the order is terminal, **before** the status refresh. Callers
+     * use it to forget the locally stored order-id hint (issue / reissue / close) so the refresh does not
+     * re-issue a `GET /order/{id}` for the order that was just resolved.
+     */
+    suspend operator fun invoke(
+        order: TangemPayOrderInfo,
+        userWalletId: UserWalletId,
+        onTerminalReached: (suspend () -> Unit)? = null,
+    ): Boolean {
         // A poller for this exact order is already running — `false` only reaches fire-and-forget issue
         // callers (restore / issue-additional); the awaiting freeze caller always polls a fresh order id.
         val key = "${userWalletId.stringValue}:${order.orderId}"
@@ -35,6 +44,7 @@ class StartTangemPayOrderPollingUseCase(
                 }
 
                 if (newOrder != null && newOrder.orderStatus.isTerminal) {
+                    onTerminalReached?.invoke()
                     paymentAccountStatusFetcher.invoke(userWalletId)
                     return newOrder.orderStatus == OrderStatus.COMPLETED
                 }

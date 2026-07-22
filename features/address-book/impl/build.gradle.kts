@@ -13,25 +13,32 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.addressBook.api)
+    api(projects.features.addressBook.api)
+    api(projects.features.commonFeatures.api)
 
     /** Domain */
-    implementation(projects.domain.account)
-    implementation(projects.domain.addressBook)
+    api(projects.domain.account)
+    api(projects.domain.addressBook)
+    api(projects.domain.wallets)
     implementation(projects.domain.models)
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
 
     /** Common */
+    implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Core modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.utils)
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    api(projects.core.utils)
+    implementation(projects.core.navigation)
 
     /** Compose */
+    api(deps.compose.foundation)
+    implementation(deps.compose.animation)
     implementation(deps.compose.runtime)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
@@ -44,7 +51,12 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.kotlin.immutable.collections)
+    api(deps.kotlin.immutable.collections)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
 
     /** Utils */
     implementation(projects.libs.blockchainSdk)

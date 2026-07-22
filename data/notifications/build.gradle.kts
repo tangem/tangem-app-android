@@ -10,13 +10,19 @@ android {
 }
 
 dependencies {
-    // region sdk
-    implementation(tangemDeps.blockchain)
+
+    // region Kotlin
+    api(deps.kotlin.coroutines)
     // endregion
 
-    // region AndroidX libraries
+    // region Other libraries
     implementation(deps.androidx.datastore)
-    implementation(deps.kotlin.coroutines)
+    implementation(deps.arrow.core)
+    implementation(deps.moshi)
+    // endregion
+
+    // region SDK
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region DI
@@ -24,29 +30,23 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Arrow
-    implementation(deps.arrow.core)
-    // endregion
-
     // region Core modules
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    implementation(projects.core.ui)
+    api(projects.core.datasource)
+    api(projects.core.utils)
     implementation(projects.common.ui)
     implementation(projects.libs.blockchainSdk)
     // endregion
 
     // region Domain modules
+    api(projects.domain.notifications)
+    implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.notifications)
     // endregion
 
     // region tests
-    testImplementation(deps.test.junit5)
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.moshi)
-    testImplementation(deps.moshi.kotlin)
+    testImplementation(deps.test.truth)
     // endregion
 }
