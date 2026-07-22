@@ -6,7 +6,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
@@ -35,7 +34,6 @@ internal class DefaultDynamicAddressesRepository(
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val walletManagersFacade: WalletManagersFacade,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
     private val getDerivedXpubUseCase: GetDerivedXpubUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DynamicAddressesRepository {
@@ -107,7 +105,6 @@ internal class DefaultDynamicAddressesRepository(
     }
 
     override fun hasFundsOnAdditionalAddresses(userWalletId: UserWalletId, network: Network): Flow<Boolean> {
-        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return flowOf(false)
         if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(network.id.rawId.value)) return flowOf(false)
 
         return getStatus(userWalletId, network)

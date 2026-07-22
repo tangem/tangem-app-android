@@ -5,5 +5,5 @@ plugins {
 }
 
 dependencies {
-    implementation(deps.kotlin.serialization)
+    api(deps.kotlin.serialization)
 }

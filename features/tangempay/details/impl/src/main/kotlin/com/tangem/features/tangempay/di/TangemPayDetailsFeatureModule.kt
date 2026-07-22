@@ -1,5 +1,7 @@
 package com.tangem.features.tangempay.di
 
+import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
+import com.tangem.features.tangempay.cashback.impl.DefaultTangemPayCashbackComponent
 import com.tangem.features.tangempay.components.DefaultTangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
@@ -31,4 +33,10 @@ internal interface TangemPayDetailsFeatureModule {
     fun bindTangemPayTransactionBottomSheetComponentFactory(
         factory: TangemPayTxHistoryDetailsComponent.Factory,
     ): TangemPayTransactionBottomSheetComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayCashbackComponentFactory(
+        factory: DefaultTangemPayCashbackComponent.Factory,
+    ): TangemPayCashbackComponent.Factory
 }

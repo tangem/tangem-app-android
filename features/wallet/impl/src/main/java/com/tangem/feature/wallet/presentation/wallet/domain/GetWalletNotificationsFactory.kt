@@ -25,7 +25,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
@@ -50,7 +49,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
@@ -59,7 +57,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
 
         val assetsDiscoveryProgressFlow =
-            if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled && userWallet is UserWallet.Hot) {
+            if (userWallet is UserWallet.Hot) {
                 observeAssetsDiscoveryUseCase(userWallet.walletId).distinctUntilChanged()
             } else {
                 flowOf(AssetsDiscoveryProgress.Idle)
@@ -284,6 +282,8 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             is PaymentAccountStatusValue.Error.CardIssueFailed,
             is PaymentAccountStatusValue.Error.ExposedDevice,
             is PaymentAccountStatusValue.IssuingCard,
+            is PaymentAccountStatusValue.AwaitingPlanSelection,
+            is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.UnderReview,
