@@ -89,11 +89,10 @@ internal fun ForYouEarnOpportunities(earnOpportunitiesUM: EarnOpportunitiesUM, m
 
         if (earnOpportunitiesUM is EarnOpportunitiesUM.Content) {
             TangemButton(
-                text = stringReference("Explore all tokens"), // todo FOR YOU lokalize
+                text = resourceReference(R.string.for_you_earn_opportunities_explore),
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X9,
                 isEnabled = true,
-                contentDescription = "Explore all tokens", // todo FOR YOU lokalize
                 onClick = earnOpportunitiesUM.onAllEarnTokensClick,
                 modifier = Modifier
                     .fillMaxWidth()

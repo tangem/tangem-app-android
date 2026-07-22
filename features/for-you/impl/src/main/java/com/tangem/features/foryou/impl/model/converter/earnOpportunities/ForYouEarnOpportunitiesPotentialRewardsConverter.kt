@@ -39,6 +39,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
+    private val isBalanceHidden: Boolean = false,
 ) : Converter<List<EarnOpportunities>, EarnOpportunitiesUM> {
 
     override fun convert(value: List<EarnOpportunities>): EarnOpportunitiesUM {
@@ -51,7 +52,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                         fiatCurrencySymbol = appCurrency.symbol,
                         fiatCurrencyCode = appCurrency.code,
                     )
-                },
+                }.orMaskWithStars(isBalanceHidden),
             ),
         )
 
@@ -63,6 +64,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                     appCurrency = appCurrency,
                     userWalletId = earnData.userWalletId,
                     onTokenClick = onTokenClick,
+                    isBalanceHidden = isBalanceHidden,
                 )
                 if (isAccountsModeEnabled) {
                     listOf(
@@ -119,7 +121,11 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
             ),
             topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
                 text = combinedReference(
-                    stringReference(StringsSigns.PLUS),
+                    if (!isBalanceHidden) {
+                        stringReference(StringsSigns.PLUS)
+                    } else {
+                        TextReference.EMPTY
+                    },
                     resourceReference(
                         R.string.for_you_earn_per_year,
                         wrappedList(
@@ -128,7 +134,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                                     fiatCurrencySymbol = appCurrency.symbol,
                                     fiatCurrencyCode = appCurrency.code,
                                 )
-                            },
+                            }.orMaskWithStars(isBalanceHidden),
                         ),
                     ),
                 ),

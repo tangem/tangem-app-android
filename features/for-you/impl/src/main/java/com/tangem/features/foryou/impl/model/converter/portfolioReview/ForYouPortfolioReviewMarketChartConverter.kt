@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -23,6 +24,7 @@ import java.math.BigDecimal
 internal class ForYouPortfolioReviewMarketChartConverter(
     private val appCurrency: AppCurrency,
     private val topAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>>,
+    private val isBalanceHidden: Boolean = false,
 ) : Converter<TotalFiatBalance?, MarketChartUM> {
     override fun convert(value: TotalFiatBalance?): MarketChartUM {
         val topBalance = topAssets.sumOf { (_, assetBalance) -> assetBalance }
@@ -34,7 +36,7 @@ internal class ForYouPortfolioReviewMarketChartConverter(
                             fiatCurrencySymbol = appCurrency.symbol,
                             fiatCurrencyCode = appCurrency.code,
                         )
-                    },
+                    }.orMaskWithStars(isBalanceHidden),
                     donutSegmentList = topAssets.mapIndexed { index, (currencies, segmentBalance) ->
                         val segmentWeight = segmentBalance.toForYouPercent(value.amount).orZero()
                         DonutSegmentUM(
@@ -46,7 +48,7 @@ internal class ForYouPortfolioReviewMarketChartConverter(
                                     fiatCurrencyCode = appCurrency.code,
                                     fiatCurrencySymbol = appCurrency.symbol,
                                 )
-                            }),
+                            }.orMaskWithStars(isBalanceHidden)),
                         )
                     }.toPersistentList(),
                 ),
