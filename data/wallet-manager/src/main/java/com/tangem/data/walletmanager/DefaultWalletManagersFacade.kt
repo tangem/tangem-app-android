@@ -656,11 +656,23 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         network: Network,
     ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
+        val derivationPath = network.derivationPath.value
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        ) ?: error("Wallet manager not found")
+            derivationPath = derivationPath,
+        )
+
+        if (walletManager == null) {
+            val errorMessage = "Failed to create or retrieve wallet manager: userWalletId=$userWalletId, " +
+                "blockchain=$blockchain, " +
+                "derivationPath=$derivationPath"
+            val error = IllegalStateException(errorMessage)
+
+            TangemLogger.e(errorMessage, error)
+
+            return@withContext Result.Failure(error.toBlockchainSdkError())
+        }
 
         val destination = when (amount.type) {
             is AmountType.TokenYieldSupply -> walletManager.getYieldModuleAddress()
