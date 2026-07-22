@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
@@ -85,7 +86,8 @@ internal fun ForYouPortfolioReview(
             )
         }
 
-        ForYouPortfolioTokenList(tokenList = portfolioReviewUM.tokenList)
+        SpacerH8()
+        ForYouPortfolioTokenList(items = portfolioReviewUM.tokenList)
 
         if (portfolioReviewUM is PortfolioReviewUM.Content && portfolioReviewUM.onAddFundsClick != null) {
             TangemButton(
@@ -93,9 +95,7 @@ internal fun ForYouPortfolioReview(
                 onClick = portfolioReviewUM.onAddFundsClick,
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X9,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
