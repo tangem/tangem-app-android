@@ -1,8 +1,8 @@
 package com.tangem.data.common.wallet
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
 import com.tangem.datasource.api.tangemTech.models.WalletType
