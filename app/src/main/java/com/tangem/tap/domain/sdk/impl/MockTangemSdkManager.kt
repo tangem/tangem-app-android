@@ -47,7 +47,7 @@ class MockTangemSdkManager(
 
     override val canUseBiometry: Boolean = false
 
-    override val needEnrollBiometrics: Boolean = false
+    override val isEnrollBiometricsNeeded: Boolean = false
 
     override val keystoreManager = DummyKeystoreManager()
 
@@ -58,7 +58,7 @@ class MockTangemSdkManager(
 
     override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean = canUseBiometry
 
-    override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean = needEnrollBiometrics
+    override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean = isEnrollBiometricsNeeded
 
     override suspend fun scanProduct(
         cardId: String?,

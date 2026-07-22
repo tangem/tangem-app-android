@@ -39,6 +39,18 @@ internal class DefaultETagsStore(
         appPreferencesStore.editData { it.remove(storeKey) }
     }
 
+    override suspend fun clear(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        appPreferencesStore.editData { preferences ->
+            userWalletIds.forEach { userWalletId ->
+                ETagsStore.Key.entries.forEach { key ->
+                    preferences.remove(getAccountsETagKey(userWalletId = userWalletId, key = key))
+                }
+            }
+        }
+    }
+
     private fun getAccountsETagKey(userWalletId: UserWalletId, key: ETagsStore.Key): Preferences.Key<String> {
         return stringPreferencesKey(name = "etag_${key}_${userWalletId.stringValue}")
     }
