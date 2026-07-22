@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "442ac578743a8b624777711cf49c77e2",
+    "identityHash": "1ddc01e929ea21940e7f1e9e35810691",
     "entities": [
       {
         "tableName": "express_provider",
@@ -81,17 +81,11 @@
       },
       {
         "tableName": "express_exchange",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT NOT NULL, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
         "fields": [
           {
             "fieldPath": "txId",
             "columnName": "tx_id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "ownerAddress",
-            "columnName": "owner_address",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -104,7 +98,8 @@
           {
             "fieldPath": "fromAddress",
             "columnName": "from_address",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "payinAddress",
@@ -264,43 +259,38 @@
         },
         "indices": [
           {
-            "name": "index_express_exchange_owner_address_from_network_from_contract_address_created_at",
+            "name": "index_express_exchange_from_address_from_network_from_contract_address_created_at",
             "unique": false,
             "columnNames": [
-              "owner_address",
+              "from_address",
               "from_network",
               "from_contract_address",
               "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_from_network_from_contract_address_created_at` ON `${TABLE_NAME}` (`owner_address`, `from_network`, `from_contract_address`, `created_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_from_address_from_network_from_contract_address_created_at` ON `${TABLE_NAME}` (`from_address`, `from_network`, `from_contract_address`, `created_at`)"
           },
           {
-            "name": "index_express_exchange_to_network_to_contract_address_created_at",
+            "name": "index_express_exchange_payout_address_to_network_to_contract_address_created_at",
             "unique": false,
             "columnNames": [
+              "payout_address",
               "to_network",
               "to_contract_address",
               "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`to_network`, `to_contract_address`, `created_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_payout_address_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`payout_address`, `to_network`, `to_contract_address`, `created_at`)"
           }
         ]
       },
       {
         "tableName": "express_onramp",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `payout_address` TEXT NOT NULL, `status` TEXT NOT NULL, `fail_reason` TEXT, `external_tx_id` TEXT, `external_tx_url` TEXT, `payout_hash` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `from_currency_code` TEXT NOT NULL, `from_amount` TEXT NOT NULL, `from_precision` INTEGER NOT NULL, `payment_method` TEXT NOT NULL, `country_code` TEXT NOT NULL, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `payout_address` TEXT NOT NULL, `status` TEXT NOT NULL, `fail_reason` TEXT, `external_tx_id` TEXT, `external_tx_url` TEXT, `payout_hash` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `from_currency_code` TEXT NOT NULL, `from_amount` TEXT NOT NULL, `from_precision` INTEGER NOT NULL, `payment_method` TEXT NOT NULL, `country_code` TEXT NOT NULL, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
         "fields": [
           {
             "fieldPath": "txId",
             "columnName": "tx_id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "ownerAddress",
-            "columnName": "owner_address",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -421,16 +411,16 @@
         },
         "indices": [
           {
-            "name": "index_express_onramp_owner_address_to_network_to_contract_address_created_at",
+            "name": "index_express_onramp_payout_address_to_network_to_contract_address_created_at",
             "unique": false,
             "columnNames": [
-              "owner_address",
+              "payout_address",
               "to_network",
               "to_contract_address",
               "created_at"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_owner_address_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`owner_address`, `to_network`, `to_contract_address`, `created_at`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_payout_address_to_network_to_contract_address_created_at` ON `${TABLE_NAME}` (`payout_address`, `to_network`, `to_contract_address`, `created_at`)"
           }
         ]
       },
@@ -474,11 +464,194 @@
             "address"
           ]
         }
+      },
+      {
+        "tableName": "onramp_country",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`code` TEXT NOT NULL, `name` TEXT NOT NULL, `image` TEXT NOT NULL, `alpha3` TEXT NOT NULL, `continent` TEXT NOT NULL, `onramp_available` INTEGER NOT NULL, `currency_name` TEXT NOT NULL, `currency_code` TEXT NOT NULL, `currency_image` TEXT, `currency_precision` INTEGER NOT NULL, `currency_unit` TEXT NOT NULL, PRIMARY KEY(`code`))",
+        "fields": [
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "image",
+            "columnName": "image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alpha3",
+            "columnName": "alpha3",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "continent",
+            "columnName": "continent",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isOnrampAvailable",
+            "columnName": "onramp_available",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.name",
+            "columnName": "currency_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.code",
+            "columnName": "currency_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.image",
+            "columnName": "currency_image",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "defaultCurrency.precision",
+            "columnName": "currency_precision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency.unit",
+            "columnName": "currency_unit",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "code"
+          ]
+        }
+      },
+      {
+        "tableName": "token_info",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`network_id` TEXT NOT NULL, `contract_address` TEXT NOT NULL, `coin_id` TEXT NOT NULL, `name` TEXT NOT NULL, `symbol` TEXT NOT NULL, `decimals` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`network_id`, `contract_address`))",
+        "fields": [
+          {
+            "fieldPath": "networkId",
+            "columnName": "network_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contractAddress",
+            "columnName": "contract_address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "coinId",
+            "columnName": "coin_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symbol",
+            "columnName": "symbol",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "decimals",
+            "columnName": "decimals",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "network_id",
+            "contract_address"
+          ]
+        }
+      },
+      {
+        "tableName": "history_index",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`type` TEXT NOT NULL, `entity_id` TEXT NOT NULL, `address` TEXT NOT NULL, `sort_time_millis` INTEGER NOT NULL, PRIMARY KEY(`type`, `entity_id`, `address`))",
+        "fields": [
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entity_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortTimeMillis",
+            "columnName": "sort_time_millis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "type",
+            "entity_id",
+            "address"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_history_index_address_sort_time_millis_entity_id",
+            "unique": false,
+            "columnNames": [
+              "address",
+              "sort_time_millis",
+              "entity_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_history_index_address_sort_time_millis_entity_id` ON `${TABLE_NAME}` (`address`, `sort_time_millis`, `entity_id`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '442ac578743a8b624777711cf49c77e2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1ddc01e929ea21940e7f1e9e35810691')"
     ]
   }
 }

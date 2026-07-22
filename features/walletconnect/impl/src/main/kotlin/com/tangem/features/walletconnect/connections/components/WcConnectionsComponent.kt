@@ -46,7 +46,7 @@ internal class WcConnectionsComponent(
 
         WcConnectionsContent(modifier = modifier, state = state, snackbarHostState = snackbarHostState)
 
-        EventMessageEffect(messageHandler = messageHandler, snackbarHostState = snackbarHostState)
+        EventMessageEffect(messageHandler = messageHandler)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
