@@ -119,6 +119,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
     implementation(projects.core.res)
+    implementation(projects.core.remote)
     // endregion
 
     // region Domain models
