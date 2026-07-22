@@ -2,6 +2,7 @@ package com.tangem.features.virtualaccount.details.component
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -25,7 +26,7 @@ interface VirtualAccountAddFundsBottomSheetComponent : ComposableBottomSheetComp
     )
 
     data class RequisitesRow(
-        val title: String,
+        val title: TextReference,
         val titleForShare: String,
         val value: String,
     )
