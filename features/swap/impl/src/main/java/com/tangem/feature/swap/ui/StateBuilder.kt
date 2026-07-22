@@ -1324,7 +1324,8 @@ internal class StateBuilder(
 
     private fun formatSwapFeeForSuccess(swapFee: SwapFee): TextReference {
         val feeAmount = swapFee.fee.amount
-        val totalFeeValue = (feeAmount.value ?: BigDecimal.ZERO) + swapFee.otherNativeFee
+        // fee.amount already includes the bridge fee (folded in SwapFeeFactory); no re-add.
+        val totalFeeValue = feeAmount.value ?: BigDecimal.ZERO
         val cryptoFormatted = totalFeeValue.format {
             crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
         }
