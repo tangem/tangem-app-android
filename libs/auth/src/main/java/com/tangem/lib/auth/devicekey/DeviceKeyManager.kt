@@ -15,13 +15,34 @@ interface DeviceKeyManager {
      */
     suspend fun generateIfMissing(): Boolean
 
-    /** Raw uncompressed public key (0x04 || x || y), or [arrow.core.None] if it cannot be read. */
-    suspend fun getPublicKey(): Option<ByteArray>
+    /**
+     * X.509 `SubjectPublicKeyInfo` (DER) encoding of the device public key — the form the auth
+     * service parses via `X509EncodedKeySpec`. Use this for the `devicePublicKey` field of auth
+     * requests (nonce / register / authenticate) and for signed-payload canonicalisation.
+     * @return the SPKI-encoded key, or [arrow.core.None] if it cannot be read.
+     */
+    suspend fun getPublicKeyEncoded(): Option<ByteArray>
 
     /**
-     * Signs [data] with SHA256withECDSA using the device private key.
-     * @return raw 64-byte signature (r || s), each component zero-padded to 32 bytes
+     * Raw uncompressed EC point (0x04 || x || y, 65 bytes) of the device public key. Use this to
+     * build the DPoP proof JWK, where the `x` / `y` coordinates are sliced out directly.
+     * @return the raw point, or [arrow.core.None] if it cannot be read.
+     */
+    suspend fun getPublicKeyRawPoint(): Option<ByteArray>
+
+    /**
+     * Signs [data] with SHA256withECDSA and returns the signature as raw 64-byte `r || s`
+     * (each component zero-padded to 32 bytes) — the form JOSE/JWS (ES256) expects. Use this for
+     * the DPoP proof.
      * @throws DeviceKeySigningException if signing fails
      */
     suspend fun sign(data: ByteArray): ByteArray
+
+    /**
+     * Signs [data] with SHA256withECDSA and returns the signature in ASN.1 **DER** form
+     * (`SEQUENCE { INTEGER r, INTEGER s }`) — the form `java.security.Signature.verify` expects.
+     * Use this for the `/register` and `/authenticate` payload signature the auth service verifies.
+     * @throws DeviceKeySigningException if signing fails
+     */
+    suspend fun signDer(data: ByteArray): ByteArray
 }

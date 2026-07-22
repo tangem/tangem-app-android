@@ -7,7 +7,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.getOrElse
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.managetokens.ValidateDerivationPathUseCase
 import com.tangem.domain.managetokens.model.exceptoin.DerivationPathValidationException
@@ -31,13 +30,11 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
     @Assisted private val params: CustomTokenDerivationInputComponent.Params,
     private val validateDerivationPathUseCase: ValidateDerivationPathUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
 ) : CustomTokenDerivationInputComponent, AppComponentContext by context {
 
     private val cardanoDerivationPathValidator = CardanoDerivationPathValidator()
     private val dynamicAddressesDerivationValidator = DynamicAddressesDerivationValidator(
         dynamicAddressesRepository = dynamicAddressesRepository,
-        dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
     )
 
     private val state: MutableStateFlow<CustomDerivationInputUM> = MutableStateFlow(
