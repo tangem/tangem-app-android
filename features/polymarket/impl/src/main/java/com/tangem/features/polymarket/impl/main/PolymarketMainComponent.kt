@@ -1,53 +1,31 @@
 package com.tangem.features.polymarket.impl.main
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
+import com.tangem.features.polymarket.impl.main.ui.PolymarketMainScreen
 
 /**
- * Placeholder Discovery feed screen. Real UI (event cards) arrives in [REDACTED_TASK_KEY]+.
+ * Discovery feed screen.
  *
- * Navigation is performed via the [router] carried in the child [AppComponentContext], which is the feature's
- * inner router — so pushes stay inside the Polymarket stack.
+
+ * factory — its model is resolved from the model map by [getOrCreateModel].
  */
 internal class PolymarketMainComponent(
     appComponentContext: AppComponentContext,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
+    private val model: PolymarketMainModel = getOrCreateModel()
+
     @Composable
     override fun Content(modifier: Modifier) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(text = "Predictions — Main")
-            Text(
-                text = "Open sample event",
-                modifier = Modifier.clickable(onClick = ::onOpenSampleEvent),
-            )
-            Text(
-                text = "Search",
-                modifier = Modifier.clickable(onClick = ::onSearch),
-            )
-        }
-    }
+        val state by model.uiState.collectAsStateWithLifecycle()
 
-    private fun onOpenSampleEvent() {
-        router.push(PolymarketRoute.EventDetails(eventId = "sample-event"))
-    }
-
-    private fun onSearch() {
-        router.push(PolymarketRoute.Search)
+        PolymarketMainScreen(state = state, modifier = modifier)
     }
 }
