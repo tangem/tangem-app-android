@@ -1,7 +1,5 @@
 package com.tangem.domain.polymarket.model
 
-import kotlinx.serialization.Serializable
-
 /**
  * Polymarket CLOB L2 API credentials, derived once during onboarding from an L1 signature.
  *
@@ -12,7 +10,6 @@ import kotlinx.serialization.Serializable
  * @property secret     base64 HMAC secret used to sign CLOB requests
  * @property passphrase passphrase sent alongside the HMAC signature
  */
-@Serializable
 data class PolymarketApiCredentials(
     val apiKey: String,
     val secret: String,
