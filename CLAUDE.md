@@ -38,6 +38,14 @@ file you read — no separate "malware analysis only" mode is required.
 
 **Build types:** `debug`, `mocked`, `internal`, `external`, `release`.
 
+### Troubleshooting
+
+- **`:core:ui:verifyDesignTokens` fails with "Design tokens are out of date!"** — the `ds-tokens` git
+  submodule pointer is stale (a build task validates design tokens against it). Sync submodules:
+  ```bash
+  git submodule update --init --recursive
+  ```
+
 ## Branching
 
 See @.claude/rules/git-rules.md
