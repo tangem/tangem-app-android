@@ -5,7 +5,7 @@ import app.cash.turbine.test
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesBody
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesResponse
