@@ -322,6 +322,7 @@ internal class StakingModel @Inject constructor(
     private val sendTransactionJobHolder = JobHolder()
     private val stepChangesJobHolder = JobHolder()
     private val balanceHidingJobHolder = JobHolder()
+    private val validationJobHolder = JobHolder()
 
     init {
         subscribeOnCurrencyStatusUpdates()
@@ -345,6 +346,7 @@ internal class StakingModel @Inject constructor(
         sendTransactionJobHolder.cancel()
         stepChangesJobHolder.cancel()
         balanceHidingJobHolder.cancel()
+        validationJobHolder.cancel()
     }
 
     override fun onBackClick() {
@@ -436,7 +438,7 @@ internal class StakingModel @Inject constructor(
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
-                    updateNotifications()
+                    launchTransactionValidation()
                 },
                 onStakingFeeError = { stakingFeeError ->
                     stateController.update(AddStakingErrorTransformer)
@@ -572,7 +574,7 @@ internal class StakingModel @Inject constructor(
                         ),
                     )
                     messageSender.send(StakingAlertUM.feeIncreased {})
-                    updateNotifications()
+                    launchTransactionValidation()
                 },
                 onTransactionExpired = {
                     stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
@@ -836,6 +838,34 @@ internal class StakingModel @Inject constructor(
 
     override fun showApprovalBottomSheet() {
         approvalSlotNavigation.activate(Unit)
+    }
+
+    private fun launchTransactionValidation() {
+        startConfirmationValidation()
+        updateNotifications()
+        modelScope.launch {
+            val verdict = transactionSender.validate()
+            finishConfirmationValidation(verdict)
+            updateNotifications()
+        }.saveIn(validationJobHolder)
+    }
+
+    private fun startConfirmationValidation() = updateConfirmationValidation(inProgress = true, verdict = null)
+
+    private fun finishConfirmationValidation(verdict: StakingTransactionVerdict) =
+        updateConfirmationValidation(inProgress = false, verdict = verdict)
+
+    private fun updateConfirmationValidation(inProgress: Boolean, verdict: StakingTransactionVerdict?) {
+        stateController.update { state ->
+            val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
+                ?: return@update state
+            state.copy(
+                confirmationState = confirmationState.copy(
+                    isValidationInProgress = inProgress,
+                    transactionVerdict = verdict,
+                ),
+            )
+        }
     }
 
     private fun updateNotifications(feeError: GetFeeError? = null, stakingError: StakingError? = null) {
