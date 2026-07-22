@@ -199,14 +199,9 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN single-network token WHEN convert THEN subtitle is the network standard type name`() {
-            // Arrange
-            val currency = createToken(
-                rawCurrencyId = "usdc",
-                symbol = "USDC",
-                networkId = "ethereum",
-                standardTypeName = "ERC20",
-            )
+        fun `GIVEN single-network token WHEN convert THEN subtitle is the network name`() {
+            // Arrange — the fixture's network name mirrors its id, so "ethereum" is the network name here
+            val currency = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
             val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
 
             // Act
@@ -215,7 +210,22 @@ internal class ForYouPortfolioReviewConverterTest {
             // Assert
             val row = result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content
             val subtitle = row.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(stringReference("ERC20"))
+            assertThat(subtitle.text).isEqualTo(stringReference("ethereum"))
+        }
+
+        @Test
+        fun `GIVEN asset row WHEN convert THEN title text is the currency name`() {
+            // Arrange — name differs from symbol so the assertion pins which field the title uses
+            val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin", name = "Bitcoin")
+            val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal("100"))
+
+            // Assert
+            val row = result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content
+            val title = row.titleUM as TangemTokenRowUM.TitleUM.Content
+            assertThat(title.text).isEqualTo(stringReference("Bitcoin"))
         }
 
         @Test
@@ -235,7 +245,9 @@ internal class ForYouPortfolioReviewConverterTest {
             val item = result.tokenList.single()
             val row = item.tokenRowUM as TangemTokenRowUM.Content
             val subtitle = row.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
-            assertThat(subtitle.text).isEqualTo(pluralReference(R.plurals.common_networks_count, count = 2))
+            assertThat(subtitle.text).isEqualTo(
+                pluralReference(R.plurals.common_networks_count, count = 2, formatArgs = wrappedList(2)),
+            )
             assertThat(item.tokenList).hasSize(2)
         }
 
@@ -289,12 +301,16 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN asset row clicked WHEN convert THEN expand callback receives the asset id`() {
-            // Arrange
+        fun `GIVEN single-network asset clicked WHEN convert THEN token callback receives wallet id and currency`() {
+            // Arrange — a single-network asset has nothing to expand, so a click navigates straight to the token
             val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin")
             val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
-            var clickedAssetId: String? = null
-            val converter = createConverter(expandClick = { clickedAssetId = it })
+            var clicked: Pair<UserWalletId, CryptoCurrency>? = null
+            var expanded = false
+            val converter = createConverter(
+                expandClick = { expanded = true },
+                onTokenClick = { id, clickedCurrency -> clicked = id to clickedCurrency },
+            )
 
             // Act
             val result = converter.convert(
@@ -303,7 +319,35 @@ internal class ForYouPortfolioReviewConverterTest {
             (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
 
             // Assert
-            assertThat(clickedAssetId).isEqualTo("bitcoin")
+            assertThat(clicked).isEqualTo(UserWalletId("01") to currency)
+            assertThat(expanded).isFalse()
+        }
+
+        @Test
+        fun `GIVEN multi-network asset clicked WHEN convert THEN expand callback receives the asset id`() {
+            // Arrange — the same asset on two networks: a click expands to reveal the per-network breakdown
+            val onEth = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
+            val onSol = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "solana")
+            val statuses = listOf(
+                createStatus(onEth, loadedValue(BigDecimal.ONE, BigDecimal("100"))),
+                createStatus(onSol, loadedValue(BigDecimal.ONE, BigDecimal("200"))),
+            )
+            var clickedAssetId: String? = null
+            var tokenClicked = false
+            val converter = createConverter(
+                expandClick = { clickedAssetId = it },
+                onTokenClick = { _, _ -> tokenClicked = true },
+            )
+
+            // Act
+            val result = converter.convert(
+                selectedPortfolio(statuses, BigDecimal("300")),
+            ) as PortfolioReviewUM.Content
+            (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
+
+            // Assert
+            assertThat(clickedAssetId).isEqualTo("usdc")
+            assertThat(tokenClicked).isFalse()
         }
     }
 
@@ -779,13 +823,18 @@ internal class ForYouPortfolioReviewConverterTest {
         networkAddress = null,
     )
 
-    private fun createCoin(rawCurrencyId: String, symbol: String, networkId: String): CryptoCurrency.Coin {
+    private fun createCoin(
+        rawCurrencyId: String,
+        symbol: String,
+        networkId: String,
+        name: String = symbol,
+    ): CryptoCurrency.Coin {
         val network = createNetwork(networkId = networkId, standardTypeName = "MAIN")
         val currencyId = createCurrencyId(idValue = "coin-$rawCurrencyId-$networkId", rawCurrencyId = rawCurrencyId)
         return mockk<CryptoCurrency.Coin> {
             every { this@mockk.id } returns currencyId
             every { this@mockk.symbol } returns symbol
-            every { this@mockk.name } returns symbol
+            every { this@mockk.name } returns name
             every { this@mockk.network } returns network
             every { this@mockk.decimals } returns 8
             every { isCustom } returns false

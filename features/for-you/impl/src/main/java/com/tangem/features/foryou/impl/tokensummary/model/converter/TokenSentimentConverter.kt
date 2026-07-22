@@ -1,13 +1,14 @@
 package com.tangem.features.foryou.impl.tokensummary.model.converter
 
-import com.tangem.core.ui.ds.badge.*
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
-import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
+import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.formatAsDateTime
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.findReading
 import com.tangem.domain.markets.totalSentimentScore
@@ -34,26 +35,29 @@ internal class TokenSentimentConverter(
         val readings = IndicatorType.entries.map { indicatorType ->
             indicatorType to value.findReading(indicatorType.toReadingType(), timeframe)
         }
-        val totalScore = value.totalSentimentScore(timeframe)
 
-        return TokenSentimentUM.Content(
-            sentiment = calculateSentiment(totalScore = totalScore),
-            totalScore = totalScore,
-            lastUpdate = buildLastUpdate(readings),
-            indicators = readings
-                .map { (indicatorType, reading) -> buildIndicator(indicatorType, reading) }
-                .toImmutableList(),
-        )
+        return if (readings.all { it.second?.value == null }) {
+            TokenSentimentUM.Empty
+        } else {
+            val totalScore = value.totalSentimentScore(timeframe)
+            TokenSentimentUM.Content(
+                sentiment = calculateSentiment(totalScore = totalScore),
+                totalScore = totalScore,
+                lastUpdate = buildLastUpdate(readings),
+                indicators = readings
+                    .map { (indicatorType, reading) -> buildIndicator(indicatorType, reading) }
+                    .toImmutableList(),
+            )
+        }
     }
 
     private fun buildIndicator(indicatorType: IndicatorType, reading: CoinIndicators.Reading?): TokenIndicatorUM {
-        return if (reading != null) {
+        return if (reading != null && reading.value != null) {
+            val (badgeText, badgeStatus) = reading.signal.toSentimentBadge()
             TokenIndicatorUM.Content(
-                sentimentBadge = reading.signal.toSentimentBadge(),
-                scoreBadge = createBadge(
-                    text = stringReference(reading.value.format { simple(decimals = 2) }),
-                    color = TangemBadgeColor.Gray,
-                ),
+                sentimentBadgeText = badgeText,
+                sentimentBadgeStatus = badgeStatus,
+                scoreBadgeText = stringReference(reading.value.format { simple(decimals = 2) }),
                 indicatorType = indicatorType,
             )
         } else {
@@ -62,38 +66,19 @@ internal class TokenSentimentConverter(
     }
 
     /** `null` for the non-signal states — the indicator row falls back to [TokenIndicatorUM.NoData] */
-    private fun CoinIndicators.Reading.Signal.toSentimentBadge(): TangemBadgeUM {
+    private fun CoinIndicators.Reading.Signal.toSentimentBadge(): Pair<TextReference, TangemBadge.Status> {
         return when (this) {
-            CoinIndicators.Reading.Signal.BULLISH -> createBadge(
-                text = resourceReference(R.string.common_positive),
-                color = TangemBadgeColor.Green,
-            )
-            CoinIndicators.Reading.Signal.BEARISH -> createBadge(
-                text = resourceReference(R.string.common_negative),
-                color = TangemBadgeColor.Red,
-            )
-            CoinIndicators.Reading.Signal.NEUTRAL -> createBadge(
-                text = resourceReference(R.string.common_neutral),
-                color = TangemBadgeColor.Blue,
-            )
+            CoinIndicators.Reading.Signal.BULLISH ->
+                resourceReference(R.string.common_positive) to TangemBadge.Status.Success
+            CoinIndicators.Reading.Signal.BEARISH ->
+                resourceReference(R.string.common_negative) to TangemBadge.Status.Error
+            CoinIndicators.Reading.Signal.NEUTRAL ->
+                resourceReference(R.string.common_neutral) to TangemBadge.Status.Info
             CoinIndicators.Reading.Signal.INSUFFICIENT_DATA,
             CoinIndicators.Reading.Signal.NOT_APPLICABLE,
             CoinIndicators.Reading.Signal.NOT_AVAILABLE,
-            -> createBadge(
-                text = resourceReference(R.string.common_none),
-                color = TangemBadgeColor.Gray,
-            )
+            -> resourceReference(R.string.common_none) to TangemBadge.Status.Neutral
         }
-    }
-
-    private fun createBadge(text: TextReference, color: TangemBadgeColor): TangemBadgeUM {
-        return TangemBadgeUM(
-            text = text,
-            color = color,
-            size = TangemBadgeSize.X6,
-            type = TangemBadgeType.Tinted,
-            shape = TangemBadgeShape.Rounded,
-        )
     }
 
     private fun calculateSentiment(totalScore: Int): TextReference {
@@ -112,7 +97,7 @@ internal class TokenSentimentConverter(
 
         return resourceReference(
             R.string.token_summary_last_update_subtitle,
-            wrappedList(lastUpdatedAt.millis.toDateFormatWithTodayYesterday()),
+            wrappedList(lastUpdatedAt.millis.formatAsDateTime(DateTimeFormatters.dateDDMMYYYY)),
         )
     }
 
