@@ -80,18 +80,8 @@ internal class RetrofitApiBuilder @Inject constructor(
     }
 
     /**
-     * Builds a Retrofit API instance for the specified API configuration ID
-     *
-     * @param apiConfigId             the ID of the API configuration to use
-     * @param applyTimeoutAnnotations whether to apply timeout annotations to the requests. See [ReadTimeout], etc.
-     * @param sessionAuth             when `true`, installs the DPoP `Interceptor` and 401/403
-     *                                `Authenticator` from `libs:auth`. Per-method annotations
-     *                                (`@RequiresDpopProof`, `@RequiresSessionRefresh`,
-     *                                `@RequiresSessionAuth`) gate which methods opt into each hook
-     * @param timeouts                optional timeouts for the requests
-     * @param logsSaving              whether to enable logs saving
-     *
-     * @return an instance [T] of the specified API interface
+     * Builds a Retrofit API instance of [clazz] according to [spec] (see [RetrofitApiSpec] for the
+     * available options). [RetrofitApiSpec.configId] is wrapped back into an [ApiConfig.ID] for lookup.
      */
     override fun <T : Any> create(clazz: Class<T>, spec: RetrofitApiSpec): T = createApi(
         clazz = clazz,
