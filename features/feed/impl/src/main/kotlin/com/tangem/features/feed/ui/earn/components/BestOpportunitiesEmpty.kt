@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -19,20 +20,15 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun BestOpportunitiesEmpty(modifier: Modifier = Modifier) {
-    BestOpportunitiesEmptyV2(modifier)
-}
-
-@Composable
-private fun BestOpportunitiesEmptyV2(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x4)
+            .padding(horizontal = 16.dp)
             .background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(20.dp),
             )
-            .padding(vertical = TangemTheme.dimens2.x8, horizontal = TangemTheme.dimens2.x3),
+            .padding(vertical = 32.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
@@ -40,14 +36,14 @@ private fun BestOpportunitiesEmptyV2(modifier: Modifier = Modifier) {
                 .fillMaxWidth(),
             painter = painterResource(R.drawable.ic_empty_64),
             contentDescription = null,
-            tint = TangemTheme.colors2.graphic.neutral.quaternary,
+            tint = TangemTheme.colors3.icon.tertiary,
         )
-        SpacerH(TangemTheme.dimens2.x5)
+        SpacerH(20.dp)
         Text(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x8),
+            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResourceSafe(R.string.earn_empty),
-            style = TangemTheme.typography2.subheadlineMedium14,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
     }
