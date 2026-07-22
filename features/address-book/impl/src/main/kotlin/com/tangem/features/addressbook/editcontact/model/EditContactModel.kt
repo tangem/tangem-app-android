@@ -243,18 +243,18 @@ internal class EditContactModel @Inject constructor(
     }
 
     private fun observeSaveButton() {
-        // Recompute on input changes and on wallet changes (the wallet type drives the button's Tangem-logo icon).
         combine(
             stateController.uiState
                 .map { state ->
                     SaveButtonInputs(
                         name = state.name,
                         hasNameError = state.nameError != null,
-                        hasAddresses = state.addresses.isNotEmpty(),
+                        colorName = state.colors.selected.name,
+                        addresses = state.addresses.map { it.address to it.networkIds.toSet() },
                     )
                 }
                 .distinctUntilChanged(),
-            selectedWallet.map { it is UserWallet.Cold }.distinctUntilChanged(),
+            selectedWallet.map { it?.walletId to (it is UserWallet.Cold) }.distinctUntilChanged(),
         ) { _, _ -> }
             .onEach { refreshSaveButton() }
             .launchIn(modelScope)
@@ -449,7 +449,11 @@ internal class EditContactModel @Inject constructor(
     private fun refreshSaveButton() {
         val ui = stateController.uiState.value
         val isSaving = saveJob?.isActive == true
-        val isEnabled = ui.name.isNotBlank() && ui.nameError == null && ui.addresses.isNotEmpty() && !isSaving
+        val isEnabled = ui.name.isNotBlank() &&
+            ui.nameError == null &&
+            ui.addresses.isNotEmpty() &&
+            isDirty() &&
+            !isSaving
         stateController.update(
             UpdateSaveButtonTransformer(
                 isEnabled = isEnabled,
@@ -574,7 +578,8 @@ internal class EditContactModel @Inject constructor(
     private data class SaveButtonInputs(
         val name: String,
         val hasNameError: Boolean,
-        val hasAddresses: Boolean,
+        val colorName: String,
+        val addresses: List<Pair<String, Set<String>>>,
     )
 
     private data class EditSnapshot(
