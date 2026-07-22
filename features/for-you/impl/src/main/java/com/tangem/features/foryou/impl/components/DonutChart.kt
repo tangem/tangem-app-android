@@ -168,8 +168,10 @@ internal fun DonutChart(
 
                 // Precompute each slice's [start, sweep] once. Sweeps are the *visual* angles: every
                 // non-zero slice is floored to a minimum share (see [visualSweepAngles]) so tiny holdings
-                // stay visible; larger slices shrink proportionally to make room. On a full ring the last
-                // slice's floor is bumped by the exact width its two lapped-over caps eat (see below).
+                // stay visible; larger slices shrink proportionally to make room. The grey gap (unfilled
+                // remainder) follows the same floor-or-nothing rule — it's either absent or at least the
+                // minimum share. On a full ring (no grey gap) the last slice's floor is bumped by the exact
+                // width its two lapped-over caps eat (see below).
                 val sweeps = visualSweepAngles(
                     weights = segments.map { it.weight.toFloat() },
                     capDeg = lastSegmentOverlapDeg(strokePx, arc.size.width),
