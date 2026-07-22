@@ -4,6 +4,7 @@ import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
@@ -92,20 +93,13 @@ internal class RetrofitApiBuilder @Inject constructor(
      *
      * @return an instance [T] of the specified API interface
      */
-    override fun <T : Any> create(
-        clazz: Class<T>,
-        configId: String,
-        applyTimeoutAnnotations: Boolean,
-        sessionAuth: Boolean,
-        timeouts: Timeouts?,
-        logsSaving: Boolean,
-    ): T = createApi(
+    override fun <T : Any> create(clazz: Class<T>, spec: RetrofitApiSpec): T = createApi(
         clazz = clazz,
-        apiConfigId = ApiConfig.ID(configId),
-        applyTimeoutAnnotations = applyTimeoutAnnotations,
-        sessionAuth = sessionAuth,
-        timeouts = timeouts,
-        logsSaving = logsSaving,
+        apiConfigId = ApiConfig.ID(spec.configId),
+        applyTimeoutAnnotations = spec.applyTimeoutAnnotations,
+        sessionAuth = spec.sessionAuth,
+        timeouts = spec.timeouts,
+        logsSaving = spec.logsSaving,
     )
 
     /**
@@ -120,11 +114,13 @@ internal class RetrofitApiBuilder @Inject constructor(
         logsSaving: Boolean = true,
     ): T = create(
         clazz = T::class.java,
-        configId = apiConfigId.name,
-        applyTimeoutAnnotations = applyTimeoutAnnotations,
-        sessionAuth = sessionAuth,
-        timeouts = timeouts,
-        logsSaving = logsSaving,
+        spec = RetrofitApiSpec(
+            configId = apiConfigId.name,
+            applyTimeoutAnnotations = applyTimeoutAnnotations,
+            sessionAuth = sessionAuth,
+            timeouts = timeouts,
+            logsSaving = logsSaving,
+        ),
     )
 
     private fun <T : Any> createApi(
