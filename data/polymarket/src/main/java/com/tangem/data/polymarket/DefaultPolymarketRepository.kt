@@ -9,7 +9,6 @@ import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
-import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -26,7 +25,6 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import javax.inject.Inject
@@ -45,41 +43,46 @@ internal class DefaultPolymarketRepository @Inject constructor(
 ) : PolymarketRepository {
 
     override suspend fun getEvents(): Either<DataError, List<PolymarketEvent>> = withContext(dispatchers.io) {
-        Either.catch {
-            polymarketApi.getEvents(limit = DEFAULT_LIMIT, cursor = null)
-                .getOrThrow()
-                .events
-                .map(eventConverter::convert)
-        }.mapLeft {
-            // DataError exposes only NoInternetConnection as a network failure.
-            DataError.NetworkError.NoInternetConnection
-        }
+        safeApiCall(
+            call = {
+                polymarketApi.getEvents(limit = DEFAULT_LIMIT, cursor = null).bind().events.map(eventConverter::convert)
+                    .right()
+            },
+            onError = { DataError.NetworkError.NoInternetConnection.left() },
+        )
     }
 
     override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
         withContext(dispatchers.io) {
-            Either.catch {
-                walletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).getOrThrow())
-            }.mapLeft(::resolveError)
+            safeApiCall(
+                call = { walletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right() },
+                onError = { walletErrorResolver.resolve(it).left() },
+            )
         }
 
     override suspend fun deployWallet(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletStatus> =
         withContext(dispatchers.io) {
-            Either.catch {
-                val response = polymarketApi.deployWallet(
-                    PolymarketWalletDeployRequest(ownerAddress = ownerAddress),
-                ).getOrThrow()
-                PolymarketWalletStatus.fromRaw(response.status)
-            }.mapLeft(::resolveError)
+            safeApiCall(
+                call = {
+                    val response = polymarketApi.deployWallet(
+                        PolymarketWalletDeployRequest(ownerAddress = ownerAddress),
+                    ).bind()
+                    PolymarketWalletStatus.fromRaw(response.status).right()
+                },
+                onError = { walletErrorResolver.resolve(it).left() },
+            )
         }
 
     override suspend fun submitApprovals(
         batch: PolymarketApprovalsBatch,
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
-        Either.catch {
-            val response = polymarketApi.submitApprovals(walletConverter.toRequest(batch)).getOrThrow()
-            PolymarketWalletStatus.fromRaw(response.status)
-        }.mapLeft(::resolveError)
+        safeApiCall(
+            call = {
+                val response = polymarketApi.submitApprovals(walletConverter.toRequest(batch)).bind()
+                PolymarketWalletStatus.fromRaw(response.status).right()
+            },
+            onError = { walletErrorResolver.resolve(it).left() },
+        )
     }
 
     override suspend fun checkGeoblock(): Either<DataError, Boolean> = withContext(dispatchers.io) {
@@ -117,15 +120,6 @@ internal class DefaultPolymarketRepository @Inject constructor(
             call = { PolymarketApiKeyConverter.convert(clobApi.createApiKey(headers.toMap()).bind()).right() },
             onError = { authErrorResolver.resolve(it).left() },
         )
-    }
-
-    /**
-     * Re-throws [CancellationException] so coroutine cancellation isn't swallowed by `Either.catch` and
-     * turned into a domain error, then maps any real failure to a typed [PolymarketWalletError].
-     */
-    private fun resolveError(throwable: Throwable): PolymarketWalletError {
-        if (throwable is CancellationException) throw throwable
-        return walletErrorResolver.resolve(throwable)
     }
 
     private companion object {
