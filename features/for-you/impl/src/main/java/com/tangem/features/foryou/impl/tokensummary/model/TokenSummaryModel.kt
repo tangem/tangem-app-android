@@ -28,7 +28,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.tokensummary.entity.*
 import com.tangem.features.foryou.impl.tokensummary.model.transformer.SetTokenSentimentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
