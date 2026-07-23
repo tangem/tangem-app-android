@@ -199,12 +199,15 @@ internal class ForYouModel @Inject constructor(
                 userWalletsListRepository.userWallets,
                 userWalletsListRepository.selectedUserWallet,
             ) { allWallets, selectedUserWallet ->
-                allWallets.orEmpty() to selectedUserWallet
+                val wallets = allWallets.orEmpty()
+                // Build headers here, not in the combine below: they only depend on the wallets list, and
+                // GetWalletIconUseCase does a runBlocking repo read — don't run it on every unrelated emission.
+                val walletHeaders = wallets.associate { it.walletId to walletHeaderConverter.convert(it) }
+                selectedUserWallet to walletHeaders
             },
         ) { selectedPortfolio, yieldAvailability, topEarnTokens, indicatorsPeriodHidden, wallets ->
             val (indicators, period, isBalanceHidden) = indicatorsPeriodHidden
-            val (allWallets, selectedUserWallet) = wallets
-            val walletHeaders = allWallets.associate { it.walletId to walletHeaderConverter.convert(it) }
+            val (selectedUserWallet, walletHeaders) = wallets
 
             val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
                 .groupBy { it.account.userWalletId }

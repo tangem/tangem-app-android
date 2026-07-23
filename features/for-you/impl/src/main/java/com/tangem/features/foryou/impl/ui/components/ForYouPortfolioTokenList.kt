@@ -100,7 +100,7 @@ private fun WalletNameRow(header: ForYouWalletHeaderUM, modifier: Modifier = Mod
     TangemRow(
         modifier = modifier
             .padding(horizontal = 16.dp)
-            .padding(top = 18.dp, bottom = 10.dp),
+            .padding(top = 16.dp, bottom = 8.dp),
         includeInnerPaddings = false,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
