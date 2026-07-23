@@ -12,9 +12,6 @@ object TokenActionMenuTestTags {
 
     private const val PREFIX = "TOKEN_ACTION_MENU_"
 
-    /** Per-action tag for an action with the given [id] (an ActionState subclass simple name). */
-    fun action(id: String): String = "$PREFIX$id"
-
     const val ANALYTICS = "Analytics"
     const val COPY_ADDRESS = "CopyAddress"
     const val RECEIVE = "Receive"
@@ -23,4 +20,7 @@ object TokenActionMenuTestTags {
     const val BUY = "Buy"
     const val SELL = "Sell"
     const val HIDE_TOKEN = "HideToken"
+
+    /** Per-action tag for an action with the given [id] (an ActionState subclass simple name). */
+    fun action(id: String): String = "$PREFIX$id"
 }
