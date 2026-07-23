@@ -125,8 +125,9 @@ internal class AppStartupGateComponent @AssistedInject constructor(
         AppUpdateState.ForceUpdate -> ForceUpdateComponent.Mode.Force
         AppUpdateState.Brick -> ForceUpdateComponent.Mode.Brick
         AppUpdateState.OsTooOld -> ForceUpdateComponent.Mode.OsTooOld
-        AppUpdateState.OptionalUpdate -> ForceUpdateComponent.Mode.Optional
-        AppUpdateState.NoUpdate -> null
+        AppUpdateState.OptionalUpdate,
+        AppUpdateState.NoUpdate,
+        -> null
     }
 
     private sealed interface GateConfig {
