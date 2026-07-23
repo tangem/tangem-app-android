@@ -11,6 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
