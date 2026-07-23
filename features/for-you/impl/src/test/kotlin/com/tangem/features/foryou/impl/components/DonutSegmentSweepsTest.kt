@@ -8,7 +8,7 @@ internal class DonutSegmentSweepsTest {
     @Test
     fun `GIVEN empty weights WHEN visualSweepAngles THEN returns empty`() {
         // Act
-        val actual = visualSweepAngles(emptyList())
+        val actual = visualSweepAngles(emptyList(), capDeg = 0f)
 
         // Assert
         assertThat(actual).isEmpty()
@@ -17,7 +17,7 @@ internal class DonutSegmentSweepsTest {
     @Test
     fun `GIVEN all zero weights WHEN visualSweepAngles THEN all zero and size preserved`() {
         // Act
-        val actual = visualSweepAngles(listOf(0f, 0f, 0f))
+        val actual = visualSweepAngles(listOf(0f, 0f, 0f), capDeg = 0f)
 
         // Assert
         assertThat(actual).containsExactly(0f, 0f, 0f).inOrder()
@@ -29,7 +29,7 @@ internal class DonutSegmentSweepsTest {
         val weights = listOf(0.5f, 0.3f, 0.2f)
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert — untouched: weight * 360.
         assertThat(actual[0]).isWithin(TOLERANCE).of(180f)
@@ -44,7 +44,7 @@ internal class DonutSegmentSweepsTest {
         val weights = listOf(0.8f, 0.15f, 0.05f)
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert — the tiny slice is floored, the rest shrink to keep the sum at 360°.
         assertThat(actual[2]).isWithin(TOLERANCE).of(FLOOR_DEG)
@@ -59,7 +59,7 @@ internal class DonutSegmentSweepsTest {
         val weights = listOf(0.9f, 0f, 0.08f, 0.02f)
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert
         assertThat(actual[1]).isEqualTo(0f)
@@ -73,7 +73,7 @@ internal class DonutSegmentSweepsTest {
         val weights = listOf(0.02f)
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert
         assertThat(actual[0]).isWithin(TOLERANCE).of(FLOOR_DEG)
@@ -86,7 +86,7 @@ internal class DonutSegmentSweepsTest {
         val filledSum = (0.4f + 0.07f + 0.03f) * 360f
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert — small one floored, total filled sweep (track remainder) unchanged.
         assertThat(actual[2]).isWithin(TOLERANCE).of(FLOOR_DEG)
@@ -99,7 +99,7 @@ internal class DonutSegmentSweepsTest {
         val weights = List(25) { 0.04f }
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert
         actual.forEach { assertThat(it).isWithin(TOLERANCE).of(360f / 25f) }
@@ -112,7 +112,7 @@ internal class DonutSegmentSweepsTest {
         val weights = listOf(0.6f, 0.39f)
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert — segments shrink to 360° − floor so the grey gap reads at exactly the floor,
         // and the two segments keep their 0.6 : 0.39 proportion.
@@ -126,7 +126,7 @@ internal class DonutSegmentSweepsTest {
         val weights = listOf(0.6f, 0.4f)
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert — full ring: segments still occupy the whole circle, no 7% grey gap carved out.
         assertThat(actual.sum()).isWithin(TOLERANCE).of(360f)
@@ -139,7 +139,7 @@ internal class DonutSegmentSweepsTest {
         val filledSum = 0.6f * 360f
 
         // Act
-        val actual = visualSweepAngles(weights)
+        val actual = visualSweepAngles(weights, capDeg = 0f)
 
         // Assert — filled sweep (and therefore the grey gap) is left exactly as-is.
         assertThat(actual.sum()).isWithin(TOLERANCE).of(filledSum)
