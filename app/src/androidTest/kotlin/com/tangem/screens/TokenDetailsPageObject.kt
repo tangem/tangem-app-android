@@ -146,6 +146,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasText(getResourceString(R.string.common_receive))
     }
 
+    /** 'Swap' row of the zero-balance actions block; distinct from [swapButton] which is the funded-state action button. */
+    val zeroBalanceSwapButton: KNode = child {
+        hasText(getResourceString(R.string.common_swap))
+    }
+
     fun networkFeeNotificationIcon(feeCurrencyName: String): KNode = child {
         hasAnySibling(withText(getResourceString(R.string.warning_send_blocked_funds_for_fee_title, feeCurrencyName)))
         hasTestTag(NotificationTestTags.ICON)
