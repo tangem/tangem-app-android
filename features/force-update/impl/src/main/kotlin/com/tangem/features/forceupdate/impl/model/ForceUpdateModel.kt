@@ -7,6 +7,8 @@ import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appupdate.model.AppUpdateState
 import com.tangem.domain.appupdate.usecase.GetAppUpdateStateUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.features.forceupdate.ForceUpdateComponent
 import com.tangem.features.forceupdate.ForceUpdateContinuation
 import com.tangem.features.forceupdate.impl.R
@@ -25,6 +27,7 @@ internal class ForceUpdateModel @Inject constructor(
     private val appStoreOpener: AppStoreOpener,
     private val forceUpdateContinuation: ForceUpdateContinuation,
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -43,36 +46,24 @@ internal class ForceUpdateModel @Inject constructor(
             accent = Accent.Red,
             title = resourceReference(R.string.force_update_warning_title),
             description = resourceReference(R.string.force_update_warning_message),
-            isBlocking = true,
             onUpdateClick = ::onUpdateClick,
-            onLaterClick = null,
-        )
-        ForceUpdateComponent.Mode.Optional -> ForceUpdateUM(
-            mode = mode,
-            accent = Accent.Yellow,
-            title = resourceReference(R.string.force_update_warning_title),
-            description = resourceReference(R.string.force_update_warning_message),
-            isBlocking = false,
-            onUpdateClick = ::onUpdateClick,
-            onLaterClick = ::onLaterClick,
+            onSupportClick = ::onSupportClick,
         )
         ForceUpdateComponent.Mode.Brick -> ForceUpdateUM(
             mode = mode,
             accent = Accent.Red,
             title = resourceReference(R.string.force_update_brick_title),
             description = resourceReference(R.string.force_update_brick_description),
-            isBlocking = true,
             onUpdateClick = null,
-            onLaterClick = null,
+            onSupportClick = ::onSupportClick,
         )
         ForceUpdateComponent.Mode.OsTooOld -> ForceUpdateUM(
             mode = mode,
             accent = Accent.Red,
             title = resourceReference(R.string.force_update_os_title),
             description = resourceReference(R.string.force_update_os_description),
-            isBlocking = true,
             onUpdateClick = null,
-            onLaterClick = null,
+            onSupportClick = null,
         )
     }
 
@@ -80,8 +71,10 @@ internal class ForceUpdateModel @Inject constructor(
         appStoreOpener.openStorePage()
     }
 
-    private fun onLaterClick() {
-        forceUpdateContinuation.dismiss()
+    private fun onSupportClick() {
+        modelScope.launch {
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.AppUpdateProblem)
+        }
     }
 
     /**
@@ -105,7 +98,8 @@ internal class ForceUpdateModel @Inject constructor(
         AppUpdateState.ForceUpdate -> ForceUpdateComponent.Mode.Force
         AppUpdateState.Brick -> ForceUpdateComponent.Mode.Brick
         AppUpdateState.OsTooOld -> ForceUpdateComponent.Mode.OsTooOld
-        AppUpdateState.OptionalUpdate -> ForceUpdateComponent.Mode.Optional
-        AppUpdateState.NoUpdate -> null
+        AppUpdateState.OptionalUpdate,
+        AppUpdateState.NoUpdate,
+        -> null
     }
 }
