@@ -49,6 +49,16 @@ fun BaseTestCase.openTangemPayCardPage() {
     }
 }
 
+/** From the card page, taps the 'Show details' row and waits for the revealed card number. */
+fun BaseTestCase.revealCardDetailsFromCardPage() {
+    step("Click on 'Show details' row") {
+        onTangemPayCardPageScreen { showDetailsButton.clickWithAssertion() }
+    }
+    step("Assert revealed card number is displayed") {
+        awaitSuccess { onTangemPayCardPageScreen { numberValue.assertIsDisplayed() } }
+    }
+}
+
 /** Opens the card page and taps the card name to reach the rename screen. */
 fun BaseTestCase.openTangemPayCardRename() {
     openTangemPayCardPage()
