@@ -5,6 +5,8 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.appupdate.model.AppUpdateState
+import com.tangem.domain.appupdate.usecase.GetAppUpdateStateUseCase
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
 import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
@@ -56,6 +58,7 @@ internal class GetWalletNotificationsFactoryTest {
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase = mockk()
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase = mockk()
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase = mockk()
+    private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
@@ -73,6 +76,7 @@ internal class GetWalletNotificationsFactoryTest {
         getAccessCodeSkippedUseCase = getAccessCodeSkippedUseCase,
         hasSingleWalletSignedHashesUseCase = hasSingleWalletSignedHashesUseCase,
         observeAssetsDiscoveryUseCase = observeAssetsDiscoveryUseCase,
+        getAppUpdateStateUseCase = getAppUpdateStateUseCase,
     )
 
     @BeforeEach
@@ -85,6 +89,7 @@ internal class GetWalletNotificationsFactoryTest {
             getAccessCodeSkippedUseCase,
             hasSingleWalletSignedHashesUseCase,
             observeAssetsDiscoveryUseCase,
+            getAppUpdateStateUseCase,
             singleAccountStatusListSupplier,
             clickIntents,
             coldResolver,
@@ -100,6 +105,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isNeedToBackupUseCase(any()) } returns flowOf(false)
         every { getAccessCodeSkippedUseCase(any()) } returns flowOf(true)
         every { observeAssetsDiscoveryUseCase(any()) } returns flowOf(AssetsDiscoveryProgress.Idle)
+        every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.NoUpdate)
         every { hasSingleWalletSignedHashesUseCase(any(), any()) } returns flowOf(false)
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
@@ -646,6 +652,42 @@ internal class GetWalletNotificationsFactoryTest {
         // Assert
         assertThat(result.none { it is WalletNotificationUM.AssetsDiscoveryCompleted }).isTrue()
     }
+    // endregion
+
+    // region SoftUpdate
+    @Test
+    fun `GIVEN optional update WHEN create THEN soft-update banner is shown`() = runTest {
+        // Arrange
+        every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.OptionalUpdate)
+
+        // Act
+        val result = factory.create(coldWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.any { it is WalletNotificationUM.SoftUpdateAvailable }).isTrue()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNonOptionalUpdateStates")
+    fun `GIVEN non-optional update state WHEN create THEN soft-update banner is hidden`(
+        state: AppUpdateState,
+    ) = runTest {
+        // Arrange
+        every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(state)
+
+        // Act
+        val result = factory.create(coldWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.none { it is WalletNotificationUM.SoftUpdateAvailable }).isTrue()
+    }
+
+    private fun provideNonOptionalUpdateStates() = listOf(
+        AppUpdateState.NoUpdate,
+        AppUpdateState.ForceUpdate,
+        AppUpdateState.Brick,
+        AppUpdateState.OsTooOld,
+    )
     // endregion
 
     // region TangemPay warnings

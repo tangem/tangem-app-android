@@ -15,6 +15,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -78,9 +79,9 @@ internal class GetAppUpdateStateUseCaseTest {
     }
 
     @Test
-    fun `GIVEN app at min supported and OS ok WHEN getCached THEN ForceUpdate`() = runTest {
+    fun `GIVEN app below min supported and OS ok WHEN getCached THEN ForceUpdate`() = runTest {
         givenCached(
-            appVersion = "5.0",
+            appVersion = "4.9",
             osVersion = "14",
             info = info(minSupportedVersion = "5.0", minSupportedOSVersion = "10", latestVersion = "5.1"),
         )
@@ -89,9 +90,20 @@ internal class GetAppUpdateStateUseCaseTest {
     }
 
     @Test
-    fun `GIVEN app at min supported and OS too old WHEN getCached THEN OsTooOld`() = runTest {
+    fun `GIVEN app exactly at min supported WHEN getCached THEN not force and optional`() = runTest {
         givenCached(
             appVersion = "5.0",
+            osVersion = "14",
+            info = info(minSupportedVersion = "5.0", minSupportedOSVersion = "10", latestVersion = "5.1"),
+        )
+
+        assertThat(useCase.getCached()).isEqualTo(AppUpdateState.OptionalUpdate)
+    }
+
+    @Test
+    fun `GIVEN app below min supported and OS too old WHEN getCached THEN OsTooOld`() = runTest {
+        givenCached(
+            appVersion = "4.9",
             osVersion = "9",
             info = info(minSupportedVersion = "5.0", minSupportedOSVersion = "10", latestVersion = "5.1"),
         )
@@ -163,6 +175,16 @@ internal class GetAppUpdateStateUseCaseTest {
             OptionalUpdateShown(version = "5.36", shownAtMillis = NOW)
 
         assertThat(useCase.getCached()).isEqualTo(AppUpdateState.OptionalUpdate)
+    }
+
+    @Test
+    fun `GIVEN optional shown recently WHEN getBannerStateFlow THEN OptionalUpdate without throttle`() = runTest {
+        givenCached(appVersion = "5.0", info = info(latestVersion = "5.37"))
+        coEvery { repository.getOptionalUpdateShown() } returns
+            OptionalUpdateShown(version = "5.37", shownAtMillis = NOW)
+
+        assertThat(useCase.getBannerStateFlow().first()).isEqualTo(AppUpdateState.OptionalUpdate)
+        coVerify(exactly = 0) { repository.setOptionalUpdateShown(any()) }
     }
 
     @Test
