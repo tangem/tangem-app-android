@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
@@ -19,6 +20,7 @@ class CreateTariffPlanTransitionOrderUseCase(
     private val customerOrderRepository: CustomerOrderRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(
@@ -57,5 +59,7 @@ class CreateTariffPlanTransitionOrderUseCase(
                 onTerminalReached = { issueCardRepository.removeIssueOrderId(userWalletId, order.id) },
             )
         }
+
+        paymentAccountStatusFetcher.invoke(userWalletId)
     }
 }
