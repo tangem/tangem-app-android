@@ -86,21 +86,21 @@ class TokenListTest : BaseTestCase() {
                     tokensList.size,
                 )
             }
-            step("Assert 'Add & manage' button does not exist)") {
+            step("Assert 'Add & manage' button does not exist") {
                 onMainScreen { addAndManageButtonNode.assertDoesNotExist() }
             }
         }
     }
 
     @AllureId("170")
-    @DisplayName("Token list: List displayed for Nodl multicurrency card")
+    @DisplayName("Token list: List displayed for Nodl card")
     @Test
     fun tokenListDisplayedForNodlCardTest() {
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen(mockContent = NodlMockContent)
             }
-            step("Assert 'Add & manage' button does not exist)") {
+            step("Assert 'Add & manage' button does not exist") {
                 onMainScreen { addAndManageButtonNode.assertDoesNotExist() }
             }
         }
@@ -161,7 +161,7 @@ class TokenListTest : BaseTestCase() {
     @DisplayName("Token list: Empty token list displaying")
     @Test
     fun tokenListEmptyTokenListDisplayingTest() {
-        val userTokensScenario = "user_tokens_api"
+        val userTokensScenario = USER_TOKENS_API_SCENARIO
         val userTokensState = "EmptyTokensList"
 
         setupHooks(
@@ -221,7 +221,7 @@ class TokenListTest : BaseTestCase() {
     @DisplayName("Token list: Custom derivation icons are displaying")
     @Test
     fun tokenListCustomTokenIconsDisplaying() {
-        val userTokensScenario = "user_tokens_api"
+        val userTokensScenario = USER_TOKENS_API_SCENARIO
         val userTokensState = "CustomTokenAdded"
         val customTokenName = "Bitcoin"
 
@@ -242,7 +242,7 @@ class TokenListTest : BaseTestCase() {
             step("Assert custom derivation icon is displayed on 'Main screen'") {
                 onMainScreen { tokenWithCustomDerivationIcon(customTokenName).assertIsDisplayed() }
             }
-            step("Click on $'customTokenName' token with custom derivation icon") {
+            step("Click on '$customTokenName' token with custom derivation icon") {
                 onMainScreen { tokenWithTitleAndAddress(customTokenName).clickWithAssertion() }
             }
             step("Assert custom derivation icon is displayed on 'Token details' screen") {
@@ -405,7 +405,7 @@ class TokenListTest : BaseTestCase() {
                     tokensList.size,
                 )
             }
-            step("Assert 'Add & manage' button does not exist)") {
+            step("Assert 'Add & manage' button does not exist") {
                 onMainScreen { addAndManageButtonNode.assertDoesNotExist() }
             }
         }
@@ -428,7 +428,7 @@ class TokenListTest : BaseTestCase() {
                     tokensList.size,
                 )
             }
-            step("Assert 'Add & manage' button does not exist)") {
+            step("Assert 'Add & manage' button does not exist") {
                 onMainScreen { addAndManageButtonNode.assertDoesNotExist() }
             }
         }
