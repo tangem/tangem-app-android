@@ -221,6 +221,7 @@ private fun PreviewTangemPayAddToWalletScreen() {
                 cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 displayNameState = null,
                 cardImageUrl = null,
+                cardBackgroundImageUrl = null,
             ),
         )
     }
