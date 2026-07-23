@@ -398,12 +398,51 @@ internal interface TangemPayDataModule {
             issueCardRepository: TangemPayIssueCardRepository,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
             appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): CreateTariffPlanTransitionOrderUseCase {
             return CreateTariffPlanTransitionOrderUseCase(
                 customerOrderRepository = customerOrderRepository,
                 issueCardRepository = issueCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideSubmitTariffTransitionUseCase(
+            createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
+            setPendingTransition: SetTariffPlanPendingTransitionUseCase,
+        ): SubmitTariffTransitionUseCase {
+            return SubmitTariffTransitionUseCase(
+                createTransitionOrder = createTransitionOrder,
+                setPendingTransition = setPendingTransition,
+            )
+        }
+
+        @Provides
+        fun provideCancelTariffTransitionUseCase(
+            cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
+            getTariffTransitionUseCase: GetTangemPayTariffPlanTransitionsUseCase,
+            submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
+            getCurrentTariffUseCase: GetCurrentTariffUseCase,
+        ): CancelTariffTransitionUseCase {
+            return CancelTariffTransitionUseCase(
+                cancelTangemPayOrderUseCase = cancelTangemPayOrderUseCase,
+                getTariffTransitionUseCase = getTariffTransitionUseCase,
+                submitTariffTransitionUseCase = submitTariffTransitionUseCase,
+                getCurrentTariffUseCase = getCurrentTariffUseCase,
+            )
+        }
+
+        @Provides
+        fun provideGetCurrentTariffUseCase(
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+        ): GetCurrentTariffUseCase {
+            return GetCurrentTariffUseCase(
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             )
         }
     }
