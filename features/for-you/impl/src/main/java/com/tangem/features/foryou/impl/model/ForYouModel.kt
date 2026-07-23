@@ -45,7 +45,7 @@ import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
-import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.availableAccountIds
