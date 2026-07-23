@@ -40,7 +40,7 @@ internal fun TokenSummaryBlock(state: TokenSummaryBlockUM, modifier: Modifier = 
                 aiInsight = state.aiInsight,
                 modifier = modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(24.dp))
                     .background(TangemTheme.colors3.bg.secondary)
                     .clickableSingle(onClick = state.onClick)
                     .padding(16.dp),

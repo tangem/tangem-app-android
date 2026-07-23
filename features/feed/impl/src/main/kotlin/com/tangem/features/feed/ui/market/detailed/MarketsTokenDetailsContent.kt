@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.currency.icon.CoinIcon
@@ -145,21 +145,13 @@ private fun Content(
                         state = state.chartState,
                     )
                 }
-                item { SpacerH16() }
-
-                if (tokenSummaryBlock != null) {
-                    item("tokenSummaryBlock") {
-                        tokenSummaryBlock(
-                            Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                        )
-                    }
-                    item { SpacerH16() }
-                }
+                item { SpacerH24() }
 
                 tokenMarketDetailsBody(
                     state = state.body,
                     relatedNews = state.relatedNews,
                     marketingBanner = marketingBanner,
+                    tokenSummaryBlock = tokenSummaryBlock,
                 )
 
                 item { SpacerH(bottomSpacing) }
