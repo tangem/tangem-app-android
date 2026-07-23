@@ -60,7 +60,7 @@ internal class TangemPayDetailsNotificationFactory(
                     R.string.tangempay_card_details_awaiting_deposit_cancel_button,
                     wrappedList(orderStep.toPlan.name, orderStep.fromPlan.name),
                 ),
-                onClick = { intents.onCancelPlusTransition(order.orderId) },
+                onClick = { intents.onCancelTariffTransition(order.orderId) },
             ),
         )
     }
