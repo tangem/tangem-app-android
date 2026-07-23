@@ -61,6 +61,7 @@ internal fun MarketsTokenDetailsContent(
     modifier: Modifier = Modifier,
     portfolioFloatingBlock: @Composable ((Modifier) -> Unit)?,
     marketingBanner: @Composable (Modifier) -> Unit,
+    tokenSummaryBlock: @Composable ((Modifier) -> Unit)? = null,
 ) {
     Content(
         contentPadding = contentPadding,
@@ -69,6 +70,7 @@ internal fun MarketsTokenDetailsContent(
         state = state,
         portfolioFloatingBlock = portfolioFloatingBlock,
         marketingBanner = marketingBanner,
+        tokenSummaryBlock = tokenSummaryBlock,
     )
 
     when (state.bottomSheetConfig.content) {
@@ -87,6 +89,7 @@ private fun Content(
     modifier: Modifier = Modifier,
     portfolioFloatingBlock: @Composable ((Modifier) -> Unit)?,
     marketingBanner: @Composable (Modifier) -> Unit,
+    tokenSummaryBlock: @Composable ((Modifier) -> Unit)? = null,
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -143,11 +146,22 @@ private fun Content(
                     )
                 }
                 item { SpacerH16() }
+
+                if (tokenSummaryBlock != null) {
+                    item("tokenSummaryBlock") {
+                        tokenSummaryBlock(
+                            Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                        )
+                    }
+                    item { SpacerH16() }
+                }
+
                 tokenMarketDetailsBody(
                     state = state.body,
                     relatedNews = state.relatedNews,
                     marketingBanner = marketingBanner,
                 )
+
                 item { SpacerH(bottomSpacing) }
             }
         }
