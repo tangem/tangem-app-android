@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
  * Embeddable "Token summary" block (For You).
  *
  * Unlike the full-screen [TokenSummaryComponent], this is an inline [ComposableContentComponent] that is embedded into
- * a parent screen (e.g. the market details screen). A tap on the block is delegated to [Params.onClick], which the
+ * a parent screen (e.g. the market details screen). A tap on the block is delegated to [Callbacks.onClick], which the
  * parent uses to open the full [TokenSummaryComponent].
  */
 interface TokenSummaryBlockComponent : ComposableContentComponent {
@@ -18,13 +18,17 @@ interface TokenSummaryBlockComponent : ComposableContentComponent {
      * @property symbol        coin symbol the summary is built for (used to fetch indicators).
      * @property selectedPeriod reactive token-summary period owned by the parent screen (already capped at month).
      *  The block re-derives the sentiment whenever the parent changes it.
-     * @property onClick       invoked on tap.
+     * @property callbacks     parent callbacks (e.g. tap handling).
      */
     data class Params(
         val symbol: String,
         val selectedPeriod: Flow<ForYouPeriod>,
-        val onClick: () -> Unit,
+        val callbacks: Callbacks,
     )
+
+    interface Callbacks {
+        fun onClick()
+    }
 
     interface Factory : ComponentFactory<Params, TokenSummaryBlockComponent>
 }
