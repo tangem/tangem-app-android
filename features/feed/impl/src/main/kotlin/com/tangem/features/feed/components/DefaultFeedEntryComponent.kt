@@ -58,7 +58,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         popCallback = { onChildBack() },
     )
 
-    private val clickIntents: FeedEntryClickIntents = object : FeedEntryClickIntents {
+    private val clickIntents = object : FeedEntryClickIntents {
         override fun onMarketItemClick(
             token: TokenMarketParams,
             appCurrency: AppCurrency,
@@ -77,25 +77,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             newsId = newsId,
                             source = source,
                         ),
-                        callbacks = object : DefaultMarketsTokenDetailsComponent.Callbacks {
-                            override fun onBackClicked() {
-                                onChildBack()
-                            }
-
-                            override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
-                                clickIntents.onArticleClick(
-                                    articleId = articleId,
-                                    preselectedArticlesId = preselectedArticlesId,
-                                    screenSource = AnalyticsParam.ScreensSources.Token,
-                                )
-                            }
-
-                            override fun onTokenSummaryClick(
-                                userWalletId: UserWalletId,
-                                token: TokenSummaryComponent.Token,
-                                selectedTokenPeriodId: String?,
-                            ) = openTokenSummary(userWalletId, token, selectedTokenPeriodId)
-                        },
+                        callbacks = marketDetailsCallbacks(onBack = { onChildBack() }),
                     ),
                 ),
             )
@@ -264,6 +246,25 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
     }
 
+    private fun marketDetailsCallbacks(onBack: () -> Unit): DefaultMarketsTokenDetailsComponent.Callbacks =
+        object : DefaultMarketsTokenDetailsComponent.Callbacks {
+            override fun onBackClicked() = onBack()
+
+            override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
+                clickIntents.onArticleClick(
+                    articleId = articleId,
+                    preselectedArticlesId = preselectedArticlesId,
+                    screenSource = AnalyticsParam.ScreensSources.Token,
+                )
+            }
+
+            override fun onTokenSummaryClick(
+                userWalletId: UserWalletId,
+                token: TokenSummaryComponent.Token,
+                selectedTokenPeriodId: String?,
+            ) = clickIntents.openTokenSummary(userWalletId, token, selectedTokenPeriodId)
+        }
+
     private fun mapEntryRouteToChild(entryRoute: FeedEntryRoute?): FeedEntryChildFactory.Child {
         return when (entryRoute) {
             is FeedEntryRoute.MarketTokenDetails -> FeedEntryChildFactory.Child.TokenDetails(
@@ -278,26 +279,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             source = params.source,
                         )
                     },
-                    callbacks = object : DefaultMarketsTokenDetailsComponent.Callbacks {
-                        override fun onBackClicked() {
-                            router.pop()
-                        }
-
-                        override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
-                            clickIntents.onArticleClick(
-                                articleId = articleId,
-                                preselectedArticlesId = preselectedArticlesId,
-                                screenSource = AnalyticsParam.ScreensSources.Token,
-                                paginationConfig = null,
-                            )
-                        }
-
-                        override fun onTokenSummaryClick(
-                            userWalletId: UserWalletId,
-                            token: TokenSummaryComponent.Token,
-                            selectedTokenPeriodId: String?,
-                        ) = clickIntents.openTokenSummary(userWalletId, token, selectedTokenPeriodId)
-                    },
+                    callbacks = marketDetailsCallbacks(onBack = { router.pop() }),
                     preselectedSection = entryRoute.preselectedSection,
                     shouldOpenExchanges = entryRoute.shouldOpenExchanges,
                     exchangesCount = entryRoute.exchangesCount,

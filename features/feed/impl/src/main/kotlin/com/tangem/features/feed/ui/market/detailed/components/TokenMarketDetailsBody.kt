@@ -24,11 +24,13 @@ internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
     relatedNews: RelatedNews,
     marketingBanner: @Composable (Modifier) -> Unit,
+    tokenSummaryBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     tokenMarketDetailsBodyBlock(
         state = state,
         relatedNews = relatedNews,
         marketingBanner = marketingBanner,
+        tokenSummaryBlock = tokenSummaryBlock,
     )
 }
 
@@ -37,7 +39,18 @@ private fun LazyListScope.marketingBannerItem(marketingBanner: @Composable (Modi
         marketingBanner(
             Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp)
+                .padding(bottom = 32.dp)
+                .fillMaxWidth(),
+        )
+    }
+}
+
+private fun LazyListScope.tokenSummaryBlockItem(tokenSummaryBlock: @Composable (Modifier) -> Unit) {
+    item(key = "token_summary_block") {
+        tokenSummaryBlock(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp)
                 .fillMaxWidth(),
         )
     }
@@ -53,11 +66,12 @@ private fun LazyListScope.tokenMarketDetailsBodyBlock(
     state: MarketsTokenDetailsUM.Body,
     relatedNews: RelatedNews,
     marketingBanner: @Composable (Modifier) -> Unit,
+    tokenSummaryBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     when (state) {
         MarketsTokenDetailsUM.Body.Loading -> {
             item("description-loading") {
-                DescriptionPlaceholder(modifier = Modifier.blockPaddings())
+                DescriptionPlaceholder(modifier = Modifier.padding(28.dp))
             }
 
             loadingInfoBlocks()
@@ -68,6 +82,10 @@ private fun LazyListScope.tokenMarketDetailsBodyBlock(
             }
 
             marketingBannerItem(marketingBanner)
+
+            if (tokenSummaryBlock != null) {
+                tokenSummaryBlockItem(tokenSummaryBlock)
+            }
 
             infoBlocksList(
                 state = state.infoBlocks,
@@ -103,8 +121,8 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
     item("description") {
         DescriptionItem(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp, top = 4.dp),
             description = description.shortDescription,
             hasFullDescription = description.fullDescription != null,
             onReadMoreClick = description.onReadMoreClick,
@@ -113,20 +131,26 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
 }
 
 internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.InformationBlocks, relatedNews: RelatedNews) {
+    if (relatedNews.articles.isNotEmpty()) {
+        relatedNews(relatedNews)
+    } else {
+        sectionStub(RelatedNews.SECTION_KEY)
+    }
+
     if (state.metrics != null) {
+        if (state.insights != null) {
+            item("insights") {
+                InsightsBlock(
+                    modifier = Modifier.blockPaddings(),
+                    state = state.insights,
+                )
+            }
+        }
+
         item("metrics") {
             MetricsBlock(
                 modifier = Modifier.blockPaddings(),
                 state = state.metrics,
-            )
-        }
-    }
-
-    if (state.insights != null) {
-        item("insights") {
-            InsightsBlock(
-                modifier = Modifier.blockPaddings(),
-                state = state.insights,
             )
         }
     }
@@ -147,12 +171,6 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
         }
     }
 
-    if (relatedNews.articles.isNotEmpty()) {
-        relatedNews(relatedNews)
-    } else {
-        sectionStub(RelatedNews.SECTION_KEY)
-    }
-
     if (state.links != null) {
         item("links") {
             LinksBlock(
@@ -164,12 +182,12 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
 }
 
 private fun LazyListScope.loadingInfoBlocks() {
-    item("metrics-loading") {
-        MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())
-    }
-
     item("insights-loading") {
         InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+
+    item("metrics-loading") {
+        MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
 
     item(key = "listedOn-loading") {
@@ -190,7 +208,7 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 32.dp)
+                .padding(bottom = 32.dp)
                 .onFirstVisible(
                     minFractionVisible = 0.5f,
                     callback = relatedNews.onFirstVisible,
