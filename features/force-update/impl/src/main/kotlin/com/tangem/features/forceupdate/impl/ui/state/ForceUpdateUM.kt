@@ -10,9 +10,8 @@ internal data class ForceUpdateUM(
     val accent: Accent,
     val title: TextReference,
     val description: TextReference,
-    val isBlocking: Boolean,
     val onUpdateClick: (() -> Unit)?,
-    val onLaterClick: (() -> Unit)?,
+    val onSupportClick: (() -> Unit)?,
 ) {
 
     enum class Accent { Red, Yellow }
