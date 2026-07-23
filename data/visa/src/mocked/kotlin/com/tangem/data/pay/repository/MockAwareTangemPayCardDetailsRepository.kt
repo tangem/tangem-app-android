@@ -3,6 +3,7 @@ package com.tangem.data.pay.repository
 import com.tangem.datasource.api.common.config.TangemPay
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.config.ApiEnvironment
@@ -15,6 +16,7 @@ import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.visa.error.VisaApiError
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -40,6 +42,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         cardId: String,
     ): Either<UniversalError, TangemPayCardDetails> {
         if (isMockMode) {
+            if (System.getProperty(UITEST_REVEAL_ERROR_KEY) == "1") return VisaApiError.ServerUnavailable.left()
             return TangemPayCardDetails(
                 pan = MOCK_PAN,
                 cvv = MOCK_CVV,
@@ -108,6 +111,8 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
     ): Either<UniversalError, Unit> = real.updateCardLimit(cardId, userWalletId, limit)
 
     private companion object {
+        // UI-test hook: forces the reveal to fail so the error-toast path can be verified.
+        const val UITEST_REVEAL_ERROR_KEY = "uitest.tangempay.card_details_error"
         const val MOCK_PAN = "4242 4242 4242 4242"
         const val MOCK_CVV = "123"
         const val MOCK_EXPIRATION_YEAR = "2028"
