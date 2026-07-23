@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
@@ -24,11 +25,13 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
     private val customerOrderRepository: CustomerOrderRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk(relaxed = true)
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase = mockk(relaxed = true)
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
 
     private val useCase = CreateTariffPlanTransitionOrderUseCase(
         customerOrderRepository = customerOrderRepository,
         issueCardRepository = issueCardRepository,
         startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         appCoroutineScope = TestAppCoroutineScope(),
     )
 
@@ -48,6 +51,7 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
             customerOrderRepository.createOrder(any(), any(), any(), any(), any(), any())
         }
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
+        coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) }
     }
 
     @Test
@@ -118,6 +122,7 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         // THEN
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(USER_WALLET_ID, newOrder.id) }
+        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }
 
     private fun order(id: String, status: OrderStatus): Order = Order(
