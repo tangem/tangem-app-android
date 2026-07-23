@@ -18,6 +18,11 @@ object TangemPayTestTags {
     const val CARD_DETAILS_COPY_EXPIRATION = "TANGEM_PAY_CARD_DETAILS_COPY_EXPIRATION"
     const val CARD_DETAILS_COPY_CVC = "TANGEM_PAY_CARD_DETAILS_COPY_CVC"
 
+    // Add to Apple/Google Pay guide (entry banner + guide screen)
+    const val ADD_TO_WALLET_BANNER = "TANGEM_PAY_ADD_TO_WALLET_BANNER"
+    const val ADD_TO_WALLET_SCREEN = "TANGEM_PAY_ADD_TO_WALLET_SCREEN"
+    const val ADD_TO_WALLET_CLOSE_BUTTON = "TANGEM_PAY_ADD_TO_WALLET_CLOSE_BUTTON"
+
     // Card management (card page settings)
     const val SHOW_DETAILS_ROW = "TANGEM_PAY_SHOW_DETAILS_ROW"
     const val CHANGE_PIN_ROW = "TANGEM_PAY_CHANGE_PIN_ROW"
