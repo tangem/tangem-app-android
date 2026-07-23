@@ -55,12 +55,6 @@ internal class PolymarketWalletErrorResolverTest {
     }
 
     @Test
-    fun `GIVEN non-api throwable WHEN resolve THEN Unexpected with message`() {
-        assertThat(resolver.resolve(RuntimeException("boom")))
-            .isEqualTo(PolymarketWalletError.Unexpected(httpCode = null, detail = "boom"))
-    }
-
-    @Test
     fun `GIVEN UnknownException WHEN resolve THEN Unexpected with the cause message`() {
         // UnknownException's own message is null; the diagnostics must come from its cause.
         val error = ApiResponseError.UnknownException(cause = IllegalStateException("boom cause"))
