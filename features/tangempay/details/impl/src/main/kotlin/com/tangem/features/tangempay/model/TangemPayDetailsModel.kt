@@ -412,6 +412,13 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
+        val customerId = currentStatus.value.customerId ?: run {
+            TangemLogger.withTag("TangemPayDetailsModel").w(
+                "CustomerId is null, cannot open transaction details. " +
+                    "Status: ${currentStatus.value.value.typeName}",
+            )
+            return
+        }
         val (type, status) = when (item) {
             is TangemPayTxHistoryItem.Collateral -> "collateral" to "unknown"
             is TangemPayTxHistoryItem.Fee -> "fee" to "unknown"
@@ -423,6 +430,8 @@ internal class TangemPayDetailsModel @Inject constructor(
             configuration = TangemPayDetailsNavigation.TransactionDetails(
                 transaction = item,
                 isBalanceHidden = uiState.value.isBalanceHidden,
+                userWalletId = userWalletId,
+                customerId = customerId,
             ),
         )
     }
