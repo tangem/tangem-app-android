@@ -28,6 +28,16 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
     }
 
+    val moreButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.MORE_BUTTON)
+    }
+
+    // Simple/Detailed items live in a dropdown popup; match the clickable row by its title.
+    fun swapModeMenuItem(title: String): KNode = child {
+        hasText(title)
+        useUnmergedTree = true
+    }
+
     val textInput: KNode = child {
         hasParent(withTestTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD))
         useUnmergedTree = true
@@ -79,8 +89,8 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     }
 
     fun providerWithName(name: String): KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK)
-        hasAnyDescendant(withText(name, substring = true))
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK))
+        hasText(name, substring = true)
         useUnmergedTree = true
     }
 
@@ -187,6 +197,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    // PercentPill testTag is the PredefinedPercentAmount enum name: PERCENT_25 / PERCENT_50 / PERCENT_75 / MAX.
+    fun percentButton(id: String): KNode = child {
+        hasTestTag(id)
+        useUnmergedTree = true
+    }
+
     val youSwapBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER)
         hasAnyDescendant(withText(getResourceString(R.string.swapping_from_title_v2)))
@@ -236,6 +252,18 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     val receiveSelectTokenIcon: KNode = child {
         hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
         hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+        useUnmergedTree = true
+    }
+
+    val swapCardTokenSymbol: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+        useUnmergedTree = true
+    }
+
+    val receiveCardTokenSymbol: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
         useUnmergedTree = true
     }
 
