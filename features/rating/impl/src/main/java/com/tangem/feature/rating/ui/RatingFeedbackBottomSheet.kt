@@ -19,6 +19,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
@@ -33,6 +34,7 @@ import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.RatingTestTags
 
 @Composable
 @Suppress("LongMethod")
@@ -97,7 +99,9 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
                 )
                 SpacerH16()
                 PrimaryButton(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(RatingTestTags.FEEDBACK_SUBMIT_BUTTON),
                     text = stringResourceSafe(R.string.swapping_rate_feedback_submit),
                     onClick = content.onSubmit,
                     showProgress = content.isSubmitting,
@@ -139,6 +143,7 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size48)
+            .testTag(RatingTestTags.FEEDBACK_INPUT)
             .focusRequester(focusRequester),
         textStyle = TangemTheme.typography.body1.copy(color = TangemTheme.colors.text.primary1),
         cursorBrush = SolidColor(TangemTheme.colors.icon.primary1),
