@@ -36,6 +36,7 @@ import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
+import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -297,7 +298,7 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
                 .sizeIn(maxWidth = 38.dp, maxHeight = 16.dp)
                 .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
             model = ImageRequest.Builder(context = LocalContext.current)
-                .data(paymentMethod.imageUrl)
+                .data(paymentMethod.themedImageUrl())
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
