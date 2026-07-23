@@ -223,7 +223,7 @@ private fun TangemPayCardBackground(
                 TangemPayCardState.Reissuing,
                 TangemPayCardState.Closing,
                 TangemPayCardState.Issuing,
-                -> painterResource(R.drawable.img_tangem_pay_visa_reissuing)
+                -> painterResource(R.drawable.img_tangem_pay_card_placeholder)
             },
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
