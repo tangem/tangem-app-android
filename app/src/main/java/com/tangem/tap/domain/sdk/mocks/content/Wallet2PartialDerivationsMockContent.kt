@@ -31,7 +31,9 @@ object Wallet2PartialDerivationsMockContent : MockContent by Wallet2WithDerivati
     override val derivationTaskResponse = DerivationTaskResponse(
         entries = Wallet2WithDerivationsMockContent.derivationTaskResponse.entries
             .mapValues { (_, keys) ->
-                ExtendedPublicKeysMap(keys.filterKeys { path -> bitcoinPathPrefixes.any { path.rawPath.startsWith(it) } })
+                ExtendedPublicKeysMap(
+                    keys.filterKeys { path -> bitcoinPathPrefixes.any { path.rawPath.startsWith(it) } },
+                )
             }
             .filterValues { it.isNotEmpty() },
     )
