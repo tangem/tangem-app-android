@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
+import com.tangem.core.ui.test.TokenActionMenuTestTags
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -136,6 +137,7 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                         } else {
                             TangemTheme.colors2.text.neutral.primary
                         },
+                        modifier = Modifier.testTag(TokenActionMenuTestTags.action(item.id)),
                     )
                 }
                 if (item.hasDivider) {
