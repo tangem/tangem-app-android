@@ -12,7 +12,7 @@ import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
-import com.tangem.features.foryou.impl.model.converter.ForYouPeriod
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouPortfolioReviewConverter
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf

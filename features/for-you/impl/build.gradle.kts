@@ -49,7 +49,6 @@ dependencies {
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.markets.models)
 
     /** Compose */
     api(deps.compose.animation)
