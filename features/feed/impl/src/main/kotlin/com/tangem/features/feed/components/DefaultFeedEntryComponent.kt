@@ -35,6 +35,7 @@ import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
+import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -45,6 +46,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted entryRoute: FeedEntryRoute?,
     private val feedEntryChildFactory: FeedEntryChildFactory,
+    private val forYouFeatureToggles: ForYouFeatureToggles,
 ) : FeedEntryComponent, AppComponentContext by context {
 
     private val model: FeedEntryModel = getOrCreateModel()
@@ -56,7 +58,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         popCallback = { onChildBack() },
     )
 
-    private val clickIntents = object : FeedEntryClickIntents {
+    private val clickIntents: FeedEntryClickIntents = object : FeedEntryClickIntents {
         override fun onMarketItemClick(
             token: TokenMarketParams,
             appCurrency: AppCurrency,
@@ -69,18 +71,30 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         token = token,
                         appCurrency = appCurrency,
                         shouldShowPortfolio = true,
+                        isTokenSummaryEnabled = forYouFeatureToggles.isForYouEnabled,
                         analyticsParams = DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                             blockchain = null,
                             newsId = newsId,
                             source = source,
                         ),
-                        onBackClicked = { onChildBack() },
-                        onArticleClick = { articleId, preselectedArticlesId ->
-                            onArticleClick(
-                                articleId = articleId,
-                                preselectedArticlesId = preselectedArticlesId,
-                                screenSource = AnalyticsParam.ScreensSources.Token,
-                            )
+                        callbacks = object : DefaultMarketsTokenDetailsComponent.Callbacks {
+                            override fun onBackClicked() {
+                                onChildBack()
+                            }
+
+                            override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
+                                clickIntents.onArticleClick(
+                                    articleId = articleId,
+                                    preselectedArticlesId = preselectedArticlesId,
+                                    screenSource = AnalyticsParam.ScreensSources.Token,
+                                )
+                            }
+
+                            override fun onTokenSummaryClick(
+                                userWalletId: UserWalletId,
+                                token: TokenSummaryComponent.Token,
+                                selectedTokenPeriodId: String?,
+                            ) = openTokenSummary(userWalletId, token, selectedTokenPeriodId)
                         },
                     ),
                 ),
@@ -151,11 +165,16 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             stackNavigation.bringToFront(FeedEntryChildFactory.Child.ForYou)
         }
 
-        override fun openTokenSummary(userWalletId: UserWalletId, token: TokenSummaryComponent.Token) {
+        override fun openTokenSummary(
+            userWalletId: UserWalletId,
+            token: TokenSummaryComponent.Token,
+            selectedTokenPeriodId: String?,
+        ) {
             innerRouter.push(
                 FeedEntryChildFactory.Child.TokenSummary(
                     userWalletId = userWalletId,
                     token = token,
+                    selectedTokenPeriodId = selectedTokenPeriodId,
                 ),
             )
         }
@@ -252,20 +271,32 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     token = entryRoute.token,
                     appCurrency = entryRoute.appCurrency,
                     shouldShowPortfolio = entryRoute.shouldShowPortfolio,
+                    isTokenSummaryEnabled = forYouFeatureToggles.isForYouEnabled,
                     analyticsParams = entryRoute.analyticsParams?.let { params ->
                         DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                             blockchain = params.blockchain,
                             source = params.source,
                         )
                     },
-                    onBackClicked = { router.pop() },
-                    onArticleClick = { articleId, preselectedArticlesId ->
-                        clickIntents.onArticleClick(
-                            articleId = articleId,
-                            preselectedArticlesId = preselectedArticlesId,
-                            screenSource = AnalyticsParam.ScreensSources.Token,
-                            paginationConfig = null,
-                        )
+                    callbacks = object : DefaultMarketsTokenDetailsComponent.Callbacks {
+                        override fun onBackClicked() {
+                            router.pop()
+                        }
+
+                        override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
+                            clickIntents.onArticleClick(
+                                articleId = articleId,
+                                preselectedArticlesId = preselectedArticlesId,
+                                screenSource = AnalyticsParam.ScreensSources.Token,
+                                paginationConfig = null,
+                            )
+                        }
+
+                        override fun onTokenSummaryClick(
+                            userWalletId: UserWalletId,
+                            token: TokenSummaryComponent.Token,
+                            selectedTokenPeriodId: String?,
+                        ) = clickIntents.openTokenSummary(userWalletId, token, selectedTokenPeriodId)
                     },
                     preselectedSection = entryRoute.preselectedSection,
                     shouldOpenExchanges = entryRoute.shouldOpenExchanges,
