@@ -134,4 +134,25 @@ internal object ApiConfigsModule {
     fun provideAuthConfig(): ApiConfig {
         return Auth()
     }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketWeb.KEY)
+    fun providePolymarketWebConfig(): ApiConfig {
+        return PolymarketWeb()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketRelayer.KEY)
+    fun providePolymarketRelayerConfig(): ApiConfig {
+        return PolymarketRelayer()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketClob.KEY)
+    fun providePolymarketClobConfig(): ApiConfig {
+        return PolymarketClob()
+    }
 }
