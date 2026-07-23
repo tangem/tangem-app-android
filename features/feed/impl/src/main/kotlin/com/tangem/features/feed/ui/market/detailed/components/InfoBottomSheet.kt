@@ -3,7 +3,6 @@ package com.tangem.features.feed.ui.market.detailed.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -21,8 +20,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -41,24 +39,12 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
         type = TangemBottomSheetType.Modal,
         containerColor = TangemTheme.colors3.bg.secondary,
         title = { content ->
-            TangemTopBar(
+            TangemTopNavigation(
                 title = content.title,
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_close_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
-                            .clickableSingle(onClick = config.onDismissRequest)
-                            .padding(TangemTheme.dimens2.x2_5),
-                    )
-                },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                onClose = config.onDismissRequest,
             )
         },
         content = { content ->
