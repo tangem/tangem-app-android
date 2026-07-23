@@ -243,13 +243,18 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class MissingAddresses(
         @DrawableRes val tangemIcon: Int?,
         val missingAddressesCount: Int,
+        val isHotWallet: Boolean,
         val onGenerateClick: () -> Unit,
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "MissingAddressesNotification",
             title = resourceReference(id = R.string.warning_missing_derivation_title),
             subtitle = pluralReference(
-                id = R.plurals.warning_missing_derivation_message,
+                id = if (isHotWallet) {
+                    R.plurals.warning_missing_derivation_no_nfc_message
+                } else {
+                    R.plurals.warning_missing_derivation_message
+                },
                 count = missingAddressesCount,
                 formatArgs = wrappedList(missingAddressesCount),
             ),
