@@ -459,6 +459,7 @@ internal class EditContactModel @Inject constructor(
                 isEnabled = isEnabled,
                 isLoading = isSaving,
                 isColdWallet = selectedWallet.value is UserWallet.Cold,
+                isNewContact = params.contactId == null,
             ),
         )
     }
