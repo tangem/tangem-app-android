@@ -8,6 +8,9 @@ import com.tangem.datasource.api.common.config.News
 import com.tangem.datasource.api.common.config.YieldSupply
 import com.tangem.datasource.api.common.config.TangemPay
 import com.tangem.datasource.api.common.config.BlockAid
+import com.tangem.datasource.api.common.config.PolymarketWeb
+import com.tangem.datasource.api.common.config.PolymarketRelayer
+import com.tangem.datasource.api.common.config.PolymarketClob
 import com.tangem.datasource.api.common.config.MoonPay
 import com.tangem.datasource.api.common.config.GaslessTxService
 import com.tangem.datasource.api.common.config.SurveySparrow
@@ -35,6 +38,9 @@ import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
+import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
+import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
+import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
@@ -51,7 +57,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
@@ -299,6 +305,43 @@ internal object NetworkModule {
                 apiConfigId = TangemTech.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketGeoApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketGeoApi {
+        return retrofitApiBuilder.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketWeb.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketRelayerApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketRelayerApi {
+        return retrofitApiBuilder.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketRelayer.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketClobApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketClobApi {
+        return retrofitApiBuilder.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketClob.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                shouldSaveLogs = false,
             ),
         )
     }
