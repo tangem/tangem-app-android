@@ -486,21 +486,23 @@ internal class SwapModel @Inject constructor(
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }
 
-            uiState = stateBuilder.createInitialReadyState(
-                uiStateHolder = uiState,
-                emptyAmountState = SwapState.EmptyAmountState(
-                    zeroAmountEquivalent = stringReference(
-                        BigDecimal.ZERO.format {
-                            fiat(
-                                fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
-                                fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
-                            )
-                        },
+            withContext(dispatchers.main) {
+                uiState = stateBuilder.createInitialReadyState(
+                    uiStateHolder = uiState,
+                    emptyAmountState = SwapState.EmptyAmountState(
+                        zeroAmountEquivalent = stringReference(
+                            BigDecimal.ZERO.format {
+                                fiat(
+                                    fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
+                                    fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
+                                )
+                            },
+                        ),
                     ),
-                ),
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                toSwapCurrencyStatus = toSwapCurrencyStatus,
-            )
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                )
+            }
 
             // Check swap availability if there is pair
             if (fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null) {
