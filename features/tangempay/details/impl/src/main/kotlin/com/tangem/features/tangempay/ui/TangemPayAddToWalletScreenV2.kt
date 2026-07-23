@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -24,6 +25,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletStepItemUM
@@ -42,6 +44,7 @@ internal fun TangemPayAddToWalletScreenV2(
 
     Column(
         modifier = modifier
+            .testTag(TangemPayTestTags.ADD_TO_WALLET_SCREEN)
             .fillMaxSize()
             .background(color = TangemTheme.colors3.bg.primary)
             .systemBarsPadding(),
@@ -75,6 +78,7 @@ private fun AddToWalletTopBar(onBackClick: () -> Unit, modifier: Modifier = Modi
         modifier = modifier,
         endContent = {
             TangemButton(
+                modifier = Modifier.testTag(TangemPayTestTags.ADD_TO_WALLET_CLOSE_BUTTON),
                 iconStart = TangemIconUM.Icon(imageVector = Icons.ic_cross_20),
                 onClick = onBackClick,
                 size = TangemButton.Size.X11,
