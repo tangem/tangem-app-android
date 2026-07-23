@@ -9,7 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError.RelayerRejected
 import javax.inject.Inject
 
 /**
- * Maps a thrown BFF error into a typed [PolymarketWalletError].
+ * Maps a BFF [ApiResponseError] into a typed [PolymarketWalletError].
  *
  * HTTP status → variant is stable; the `422` sub-variants are matched on the RFC-7807 ProblemDetail
  * `detail` message (the only machine hint the BFF exposes today), with a defensive [RelayerRejected.Other]
@@ -21,15 +21,13 @@ internal class PolymarketWalletErrorResolver @Inject constructor(
 
     private val problemDetailAdapter = moshi.adapter(ProblemDetailResponse::class.java)
 
-    fun resolve(throwable: Throwable): PolymarketWalletError = when (throwable) {
-        is ApiResponseError.HttpException -> resolveHttp(throwable)
+    fun resolve(error: ApiResponseError): PolymarketWalletError = when (error) {
+        is ApiResponseError.HttpException -> resolveHttp(error)
         is ApiResponseError.NetworkException,
         is ApiResponseError.TimeoutException,
         -> PolymarketWalletError.Network
-        // UnknownException's own message is typically null; the real diagnostics live in its (non-null) cause.
         is ApiResponseError.UnknownException ->
-            PolymarketWalletError.Unexpected(httpCode = null, detail = throwable.cause.message ?: throwable.message)
-        else -> PolymarketWalletError.Unexpected(httpCode = null, detail = throwable.message)
+            PolymarketWalletError.Unexpected(httpCode = null, detail = error.cause.message ?: error.message)
     }
 
     private fun resolveHttp(error: ApiResponseError.HttpException): PolymarketWalletError {
