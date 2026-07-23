@@ -279,7 +279,7 @@ private fun PlanCard(imageUrl: String?, modifier: Modifier = Modifier) {
     ) {
         Image(
             modifier = Modifier.matchParentSize(),
-            painter = painterResource(R.drawable.img_tangem_pay_visa_reissuing),
+            painter = painterResource(R.drawable.img_tangem_pay_card_placeholder),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
         )
