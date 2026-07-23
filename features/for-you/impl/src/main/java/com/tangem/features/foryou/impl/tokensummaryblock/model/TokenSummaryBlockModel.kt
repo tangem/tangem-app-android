@@ -63,6 +63,6 @@ internal class TokenSummaryBlockModel @Inject constructor(
     }
 
     private fun onClick() {
-        params.onClick()
+        params.callbacks.onClick()
     }
 }
