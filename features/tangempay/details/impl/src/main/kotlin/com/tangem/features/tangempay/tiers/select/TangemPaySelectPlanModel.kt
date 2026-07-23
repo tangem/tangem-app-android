@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Stable
-import arrow.core.Either
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,11 +13,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
-import com.tangem.domain.pay.usecase.CreateTariffPlanTransitionOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
-import com.tangem.domain.pay.usecase.SetTariffPlanPendingTransitionUseCase
+import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
@@ -41,8 +38,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase,
-    private val createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
-    private val setPendingTransition: SetTariffPlanPendingTransitionUseCase,
+    private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
@@ -140,31 +136,11 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
             analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeUpgradeClicked())
         }
-        when (transition.type) {
-            TangemPayTariffPlanTransition.Type.ACTIVATION,
-            TangemPayTariffPlanTransition.Type.UPGRADE,
-            -> submitTransition {
-                createTransitionOrder(
-                    userWalletId = params.userWalletId,
-                    targetTariffPlanId = transition.plan.id,
-                    transitionType = transition.type,
-                )
-            }
-            TangemPayTariffPlanTransition.Type.DOWNGRADE -> submitTransition {
-                setPendingTransition(
-                    userWalletId = params.userWalletId,
-                    pendingTariffPlanId = transition.plan.id,
-                )
-            }
-            else -> Unit
-        }
-    }
 
-    private fun submitTransition(action: suspend () -> Either<VisaApiError, Unit>) {
         isProcessing = true
         state.update { buildState() }
         modelScope.launch {
-            action().fold(
+            submitTariffTransitionUseCase(params.userWalletId, transition).fold(
                 ifRight = {
                     when (params.source) {
                         TangemPaySelectPlanSource.TIERS_ONBOARDING -> {

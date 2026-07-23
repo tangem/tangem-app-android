@@ -27,6 +27,7 @@ data class CustomerMeResponse(
     @JsonClass(generateAdapter = true)
     data class CustomerTariffPlan(
         @Json(name = "status") val status: String?,
+        @Json(name = "source") val source: String?,
         @Json(name = "next_billing_at") val nextBillingAt: String?,
         @Json(name = "pending_transition_at") val pendingTransitionAt: String?,
         @Json(name = "tariff_plan") val tariffPlan: TariffPlan?,

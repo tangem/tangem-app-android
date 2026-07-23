@@ -9,6 +9,7 @@ import java.util.Locale
  * Customer's current tariff plan.
  *
  * @property status Lifecycle status of the subscription.
+ * @property source Source of tariff plan. Where [Source.DEFAULT] is basic value users with no tariff selection.
  * @property plan The currently active plan ([TangemPayTariffPlan]).
  * @property nextBillingAt When the next plan fee is charged; `null` for free plans.
  * @property pendingPlan Plan the customer will be moved to (scheduled downgrade), or `null`.
@@ -17,6 +18,7 @@ import java.util.Locale
 @Serializable
 data class TangemPayCustomerTariffPlan(
     @SerialName("status") val status: Status,
+    @SerialName("source") val source: Source,
     @SerialName("plan") val plan: TangemPayTariffPlan,
     @SerialName("next_billing_at") val nextBillingAt: SerializedDateTime?,
     @SerialName("pending_plan") val pendingPlan: TangemPayTariffPlan?,
@@ -55,4 +57,28 @@ data class TangemPayCustomerTariffPlan(
             }
         }
     }
+
+    @Serializable
+    enum class Source {
+        @SerialName("DEFAULT")
+        DEFAULT,
+
+        @SerialName("CUSTOMER")
+        CUSTOMER,
+
+        @SerialName("UNKNOWN")
+        UNKNOWN,
+        ;
+
+        companion object {
+            fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
+                "DEFAULT" -> DEFAULT
+                "CUSTOMER" -> CUSTOMER
+                else -> UNKNOWN
+            }
+        }
+    }
 }
+
+val TangemPayCustomerTariffPlan.isDefaultTariff: Boolean
+    get() = source == TangemPayCustomerTariffPlan.Source.DEFAULT && plan.isBasicTier
