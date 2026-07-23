@@ -94,6 +94,11 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val addToWalletBanner: KNode = child {
+        hasTestTag(TangemPayTestTags.ADD_TO_WALLET_BANNER)
+        useUnmergedTree = true
+    }
+
     val dailyLimitChangeButton: KNode = child {
         hasTestTag(TangemPayTestTags.DAILY_LIMIT_CHANGE_BUTTON)
         useUnmergedTree = true
