@@ -35,14 +35,19 @@ private const val GREY_GAP_EPSILON_DEG = 0.01f
  *   ≈100% portfolio still reads as a full ring instead of snapping to a 7% grey gap.
  * - If there are so many segments that even the floor can't fit (`n * floor > 360°`), it falls back to an
  *   equal `360°/n` split.
- * - [capDeg] compensates the round-cap squeeze on the **last segment only** (see [DonutChart] for the
- *   angle), and **only on a full ring** (no grey gap): there slice 0's start cap laps over the last slice's
- *   end (a second seam beyond the one every slice has), so it loses ~[capDeg] more visible width. Once a
- *   grey gap exists the last slice has a free end and is no worse off than a middle slice, so no bump.
+ * - [capDeg] compensates the round-cap squeeze on the **last segment only** (see [lastSegmentOverlapDeg] for
+ *   the angle), and **only on a full ring** (no grey gap): there slice 0's start cap laps over the last
+ *   slice's end (a second seam beyond the one every slice has), so it loses ~[capDeg] more visible width.
+ *   Once a grey gap exists the last slice has a free end and is no worse off than a middle slice, so no bump.
+ *
+ * @param capDeg round-cap overlap width in degrees. It feeds both the last-segment compensation and the grey
+ *   gap padding, so it must match the geometry actually drawn: every caller involved in drawing, hit-testing
+ *   or tooltip anchoring computes it with [lastSegmentOverlapDeg] from the same stroke and arc diameter.
+ *   Pass `0f` only when there is no round cap (e.g. pure-geometry tests).
  *
  * The returned list has the same size and order as [weights].
  */
-internal fun visualSweepAngles(weights: List<Float>, capDeg: Float = 0f): List<Float> {
+internal fun visualSweepAngles(weights: List<Float>, capDeg: Float): List<Float> {
     val base = weights.map { it.coerceIn(0f, 1f) * FULL_CIRCLE_DEG }
     val activeIndices = base.indices.filter { base[it] > 0f }
     val n = activeIndices.size
@@ -102,3 +107,19 @@ internal fun visualSweepAngles(weights: List<Float>, capDeg: Float = 0f): List<F
     }
     return result
 }
+
+/**
+ * Exact extra sweep (degrees) a round cap laps over one arc seam — the `capDeg` [visualSweepAngles] expects.
+ *
+ * A round cap bulges past its arc's angular end by one cap radius (`strokePx / 2`), i.e.
+ * `capAngle = toDegrees((strokePx / 2) / R)` with `R = arcDiameter / 2` → `toDegrees(strokePx / arcDiameter)`.
+ * A middle slice loses one such bulge at its start (covered by the previous slice's end cap) but keeps its
+ * own end cap, so its visible width equals its sweep. The last slice on a full ring additionally has its end
+ * covered by slice 0's start cap at the wrap — a second cap's worth — so it needs `2 × capAngle` back. The
+ * grey gap likewise has both neighbouring caps bulging into it. Both compensations are sized off this value.
+ *
+ * [arcDiameter] is the ring centerline diameter — `min(width, height) − strokePx` in the draw/hit-test/tooltip
+ * passes — so all three produce the same angles from the same stroke.
+ */
+internal fun lastSegmentOverlapDeg(strokePx: Float, arcDiameter: Float): Float =
+    2f * Math.toDegrees((strokePx / arcDiameter).toDouble()).toFloat()
