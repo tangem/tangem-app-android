@@ -14,7 +14,7 @@ internal interface TangemPayDetailIntents {
     fun onClickVisaBenefits()
     fun onClickCashback()
     fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan)
-    fun onCancelPlusTransition(orderId: String)
+    fun onCancelTariffTransition(orderId: String)
     fun onCardClick(cardId: String)
     fun onAddCardClick(tariffState: TangemPayTariffPlanState?)
     fun onRemoveAccount()
