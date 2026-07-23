@@ -2,11 +2,15 @@ package com.tangem.domain.polymarket
 
 import arrow.core.Either
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
+import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import java.math.BigInteger
 
 interface PolymarketRepository {
 
@@ -32,4 +36,31 @@ interface PolymarketRepository {
      * be deployed first (otherwise the BFF responds 409).
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
+
+    /**
+     * Check whether Polymarket is geo-blocked for the caller's region (`GET polymarket.com/api/geoblock`).
+     * Returns `true` when trading is blocked.
+     */
+    suspend fun checkGeoblock(): Either<DataError, Boolean>
+
+    /**
+     * Fetch the relayer nonce for [ownerAddress] (`GET relayer-v2.polymarket.com/nonce?address=&type=WALLET`),
+     * used as the `nonce` field of the approvals `Batch` signed during onboarding.
+     */
+    suspend fun getRelayerNonce(ownerAddress: String): Either<DataError, BigInteger>
+
+    /**
+     * Deterministically re-derive the CLOB L2 API credentials for the signer
+     * (`GET clob.polymarket.com/auth/derive-api-key`). Idempotent; try this before [createApiCredentials].
+     */
+    suspend fun deriveApiCredentials(
+        headers: PolymarketL1Headers,
+    ): Either<PolymarketAuthError, PolymarketApiCredentials>
+
+    /**
+     * Create a fresh set of CLOB L2 API credentials (`POST clob.polymarket.com/auth/api-key`).
+     */
+    suspend fun createApiCredentials(
+        headers: PolymarketL1Headers,
+    ): Either<PolymarketAuthError, PolymarketApiCredentials>
 }
