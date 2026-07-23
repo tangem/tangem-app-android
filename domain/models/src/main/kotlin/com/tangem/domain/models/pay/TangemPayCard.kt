@@ -73,3 +73,6 @@ val TangemPayCard.thumbnailUrl: String?
 
 val TangemPayCard.mainImageUrl: String?
     get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url
+
+val TangemPayCard.backgroundImageUrl: String?
+    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.BACKGROUND }?.url
