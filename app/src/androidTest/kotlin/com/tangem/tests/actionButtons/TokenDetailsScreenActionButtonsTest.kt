@@ -8,6 +8,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -19,6 +20,7 @@ import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendFromTokenDetails
 import com.tangem.scenarios.openSendScreenWithHotWallet
 import com.tangem.scenarios.openSendSuccessScreenViaLongClickOnSendButton
+import com.tangem.scenarios.openSwapFromZeroBalanceToken
 import com.tangem.scenarios.readNetworkFeeAmount
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.scenarios.waitUntilNetworkFeeIsStable
@@ -187,6 +189,46 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             }
             step("Assert token symbol: '$tokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(tokenSymbol).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("9455")
+    @DisplayName("Action buttons (token details screen): 'Swap' for a zero-balance token pre-fills the most funded token as source")
+    @Test
+    fun checkSwapForZeroBalanceTokenTest() {
+        val emptyTokenTitle = "Polygon"
+        val emptyTokenSymbol = "POL"
+        val mostFundedTokenSymbol = "ETH"
+        val mainAccountName = getResourceString(R.string.account_main_account_title)
+        val polygonBalanceScenarioName = "polygon_coin_balance"
+        val zeroBalanceState = "ZeroBalance"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(polygonBalanceScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$polygonBalanceScenarioName' to state: '$zeroBalanceState'") {
+                setWireMockScenarioState(polygonBalanceScenarioName, zeroBalanceState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Swap' from the zero-balance '$emptyTokenTitle' token") {
+                openSwapFromZeroBalanceToken(tokenName = emptyTokenTitle, accountName = mainAccountName)
+            }
+            step("DIAG capture from/to symbols") {
+                var from = "?"
+                var to = "?"
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onSwapTokenScreen { from = swapCardTokenSymbol.extractText() }
+                }
+                onSwapTokenScreen { to = receiveCardTokenSymbol.extractText() }
+                throw AssertionError("DIAG FROM='$from' TO='$to'")
             }
         }
     }
