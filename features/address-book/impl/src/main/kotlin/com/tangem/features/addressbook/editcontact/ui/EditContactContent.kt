@@ -56,6 +56,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modifier) {
+    val density = LocalDensity.current
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -63,8 +64,9 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
     ) {
         var topBarHeightPx by remember { mutableIntStateOf(0) }
         var saveButtonHeightPx by remember { mutableIntStateOf(0) }
-        val topBarHeight = with(LocalDensity.current) { topBarHeightPx.toDp() }
-        val saveButtonHeight = with(LocalDensity.current) { saveButtonHeightPx.toDp() }
+        val topBarHeight = with(density) { topBarHeightPx.toDp() }
+        val saveButtonHeight = with(density) { saveButtonHeightPx.toDp() }
+        val bottomNavHeight = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
 
         Column(
             modifier = Modifier
@@ -74,7 +76,7 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
                 .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
-                .padding(top = topBarHeight + 12.dp, bottom = saveButtonHeight + 12.dp),
+                .padding(top = topBarHeight + 12.dp, bottom = saveButtonHeight + 12.dp + bottomNavHeight),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             ContactSummary(state = state)
