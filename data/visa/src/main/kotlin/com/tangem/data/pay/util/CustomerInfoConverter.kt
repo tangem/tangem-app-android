@@ -57,6 +57,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val plan = tariffPlan?.toDomain() ?: return null
         return TangemPayCustomerTariffPlan(
             status = TangemPayCustomerTariffPlan.Status.fromString(status),
+            source = TangemPayCustomerTariffPlan.Source.fromString(source),
             plan = plan,
             nextBillingAt = nextBillingAt.toDateTimeOrNull(),
             pendingPlan = pendingTariffPlan?.toDomain(),
