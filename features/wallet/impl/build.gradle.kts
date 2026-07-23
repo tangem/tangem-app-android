@@ -80,6 +80,7 @@ dependencies {
     api(projects.domain.analytics)
     api(projects.domain.appCurrency)
     api(projects.domain.appTheme)
+    api(projects.domain.appUpdate)
     api(projects.domain.assetsdiscovery)
     api(projects.domain.balanceHiding)
     api(projects.domain.card)
