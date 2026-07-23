@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.model
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
@@ -11,6 +12,8 @@ import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
@@ -20,6 +23,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -37,6 +41,7 @@ internal class TangemPayDetailsModelTest {
 
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @ParameterizedTest
     @MethodSource("provideMutedCases")
@@ -58,16 +63,37 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideTransactionClickCases")
+    fun `GIVEN status WHEN transaction clicked THEN opens details only when customerId present`(
+        case: TransactionClickCase,
+    ) = runTest {
+        // Arrange
+        val model = createModel(testScope = this, statusValue = case.status)
+        advanceUntilIdle()
+
+        // Act
+        model.onTransactionClick(mockk<TangemPayTxHistoryItem.Payment>(relaxed = true))
+
+        // Assert
+        verify(exactly = if (case.expectedOpened) 1 else 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.TransactionInListClicked>())
+        }
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
-        statusSource: StatusSource,
-        frozenState: TangemPayCardFrozenState,
-        availableForWithdrawal: BigDecimal,
+        statusSource: StatusSource = StatusSource.ACTUAL,
+        frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
+        availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         accountError: PaymentAccountStatusValue.Error? = null,
+        statusValue: PaymentAccountStatusValue? = null,
     ): TangemPayDetailsModel {
         val loaded: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns statusSource
             every { error } returns accountError
+            every { customerId } returns "customer-id"
             every { cards } returns listOf(tangemPayCard())
             every { balance } returns PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
@@ -85,7 +111,7 @@ internal class TangemPayDetailsModelTest {
             )
         }
         val paymentStatus: AccountStatus.Payment = mockk(relaxed = true) {
-            every { value } returns loaded
+            every { value } returns (statusValue ?: loaded)
             every { account } returns mockk(relaxed = true) {
                 every { userWalletId } returns this@TangemPayDetailsModelTest.userWalletId
             }
@@ -103,7 +129,7 @@ internal class TangemPayDetailsModelTest {
             paramsContainer = MutableParamsContainer(params),
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            analytics = mockk(relaxed = true),
+            analytics = analytics,
             router = mockk(relaxed = true),
             urlOpener = mockk(relaxed = true),
             cardDetailsRepository = cardDetailsRepository,
@@ -150,6 +176,14 @@ internal class TangemPayDetailsModelTest {
         val accountError: PaymentAccountStatusValue.Error? = null,
     )
 
+    internal data class TransactionClickCase(
+        val name: String,
+        val status: PaymentAccountStatusValue?,
+        val expectedOpened: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
     private companion object {
         @JvmStatic
         fun provideFreezeCases() = listOf(
@@ -195,5 +229,48 @@ internal class TangemPayDetailsModelTest {
                 expectedMuted = true,
             ),
         )
+
+        @JvmStatic
+        fun provideTransactionClickCases() = listOf(
+            TransactionClickCase(
+                name = "deactivated account (has customerId) -> opens",
+                status = deactivatedStatus(id = "customer-id"),
+                expectedOpened = true,
+            ),
+            TransactionClickCase(
+                name = "loaded account (has customerId) -> opens",
+                status = null,
+                expectedOpened = true,
+            ),
+            TransactionClickCase(
+                name = "loading status (no customerId) -> ignored",
+                status = PaymentAccountStatusValue.Loading,
+                expectedOpened = false,
+            ),
+            TransactionClickCase(
+                name = "not created status (no customerId) -> ignored",
+                status = PaymentAccountStatusValue.NotCreated,
+                expectedOpened = false,
+            ),
+        )
+
+        private fun deactivatedStatus(id: String): PaymentAccountStatusValue.Deactivated = mockk(relaxed = true) {
+            every { source } returns StatusSource.ACTUAL
+            every { customerId } returns id
+            every { balance } returns PaymentAccountStatusValue.Balance(
+                fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                    availableBalance = BigDecimal.ZERO,
+                    currency = "USD",
+                ),
+                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                    id = "id",
+                    chainId = 1L,
+                    depositAddress = "address",
+                    tokenContractAddress = "contract",
+                    balance = BigDecimal.ZERO,
+                ),
+                availableForWithdrawal = BigDecimal.ZERO,
+            )
+        }
     }
 }
