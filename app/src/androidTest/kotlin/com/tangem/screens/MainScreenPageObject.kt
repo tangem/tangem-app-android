@@ -644,10 +644,59 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
+    /**
+     * Asserts the token context menu (opened by a long-tap on a token row) shows every action in
+     * [expectedActionIds]. When [exact] is `true` it additionally asserts the menu shows *no other* actions
+     * (count matches exactly); when `false` it only checks the expected ones are present and tolerates extra
+     * actions.
+     *
+     * The context menu renders inside a separate Popup root, i.e. NOT under [MainScreenTestTags.SCREEN_CONTAINER]
+     * — that's why its rows are absent from `onMainScreen`'s subtree / a plain semantic-tree dump. So nodes are
+     * matched globally via [semanticsProvider] (which spans every root, including popups) with
+     * `useUnmergedTree` (each row merges its label/icon).
+     *
+     * Usage:
+     * - [DERIVED_TOKEN_ACTIONS] with `exact = false` — a fully-derived token always exposes at least this
+     *   stable subset, but the full set (e.g. 'Buy'/'Sell') varies per token/environment, so we assert
+     *   presence only.
+     * - [UNDERIVED_TOKEN_ACTIONS] with `exact = true` — a token without addresses exposes *only* 'Hide token',
+     *   so the exact count matters.
+     */
+    fun assertTokenContextMenuActions(expectedActionIds: List<String>, exact: Boolean = true) {
+        expectedActionIds.forEach { actionId ->
+            semanticsProvider
+                .onNode(withTestTag(TokenActionMenuTestTags.action(actionId)), useUnmergedTree = true)
+                .assertIsDisplayed()
+        }
+        if (exact) {
+            // Exactly the expected actions are shown — no more, no fewer.
+            semanticsProvider
+                .onAllNodes(withTestTag(BaseBottomSheetTestTags.ACTION_BUTTON), useUnmergedTree = true)
+                .assertCountEquals(expectedActionIds.size)
+        }
+    }
+
     private companion object {
         const val WALLET_SWITCH_ATTEMPTS = 4
     }
 }
+
+/**
+ * Context-menu actions a fully-derived token (with a resolved address) always exposes on the mocked
+ * environment. This is a stable subset asserted for presence only (see [assertTokenContextMenuActions] with
+ * `exact = false`) — the full set may additionally include environment-dependent actions like 'Buy'/'Sell'.
+ */
+internal val DERIVED_TOKEN_ACTIONS = listOf(
+    TokenActionMenuTestTags.ANALYTICS,
+    TokenActionMenuTestTags.COPY_ADDRESS,
+    TokenActionMenuTestTags.RECEIVE,
+    TokenActionMenuTestTags.HIDE_TOKEN,
+    TokenActionMenuTestTags.SEND,
+    TokenActionMenuTestTags.SWAP,
+)
+
+/** Context-menu actions expected for an underived token (no address) — only hiding is available. */
+internal val UNDERIVED_TOKEN_ACTIONS = listOf(TokenActionMenuTestTags.HIDE_TOKEN)
 
 internal fun BaseTestCase.onMainScreen(function: MainScreenPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

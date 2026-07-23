@@ -31,7 +31,6 @@ import javax.inject.Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
     private val real: DefaultOnboardingRepository,
     private val apiConfigsManager: ApiConfigsManager,
-    private val cardNameHolder: MockTangemPayCardNameHolder,
 ) : OnboardingRepository {
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
