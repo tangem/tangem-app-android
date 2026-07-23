@@ -114,7 +114,7 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
-    fun `GIVEN cancellation WHEN getWalletStatus THEN rethrows not swallowed into a domain error`() = runTest {
+    fun `GIVEN cancellation WHEN getWalletStatus THEN it propagates and is not mapped to a domain error`() = runTest {
         // Arrange
         coEvery { api.getWalletStatus(OWNER) } throws CancellationException("cancelled")
 
