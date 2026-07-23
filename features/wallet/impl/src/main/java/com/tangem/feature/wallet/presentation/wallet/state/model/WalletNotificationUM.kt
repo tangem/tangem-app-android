@@ -352,6 +352,27 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         ),
         type = WalletNotificationType.Warning,
     )
+
+    data class SoftUpdateAvailable(val onUpdateClick: () -> Unit) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "SoftUpdateAvailableNotification",
+            title = resourceReference(id = CoreResR.string.force_update_banner_title),
+            subtitle = resourceReference(id = CoreResR.string.force_update_banner_message),
+            iconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_attention_default_24,
+                tintReference = { TangemTheme.colors2.graphic.status.attention },
+            ),
+            messageEffect = TangemMessageEffect.Warning,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(id = CoreResR.string.force_update_action),
+                    type = TangemButtonType.Primary,
+                    onClick = onUpdateClick,
+                ),
+            ),
+        ),
+        type = WalletNotificationType.Warning,
+    )
     // endregion
 
     // region Promo
