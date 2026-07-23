@@ -159,4 +159,5 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.domain.core)
+    testImplementation(projects.common.test)
 }
