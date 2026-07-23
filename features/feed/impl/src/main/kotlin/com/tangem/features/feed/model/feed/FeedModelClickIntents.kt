@@ -36,5 +36,9 @@ internal interface FeedModelClickIntents {
 
     fun openForYou()
 
-    fun openTokenSummary(userWalletId: UserWalletId, token: TokenSummaryComponent.Token)
+    fun openTokenSummary(
+        userWalletId: UserWalletId,
+        token: TokenSummaryComponent.Token,
+        selectedTokenPeriodId: String? = null,
+    )
 }
