@@ -14,4 +14,7 @@ data class PolymarketApiCredentials(
     val apiKey: String,
     val secret: String,
     val passphrase: String,
-)
+) {
+
+    override fun toString(): String = "PolymarketApiCredentials(apiKey=REDACTED, secret=REDACTED, passphrase=REDACTED)"
+}
