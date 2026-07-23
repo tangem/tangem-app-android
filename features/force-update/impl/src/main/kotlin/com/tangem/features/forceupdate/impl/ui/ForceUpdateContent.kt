@@ -1,7 +1,6 @@
 package com.tangem.features.forceupdate.impl.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,10 +38,6 @@ import com.tangem.features.forceupdate.impl.ui.state.ForceUpdateUM.Accent
 
 @Composable
 internal fun ForceUpdateContent(state: ForceUpdateUM, modifier: Modifier = Modifier) {
-    BackHandler(enabled = !state.isBlocking) {
-        state.onLaterClick?.invoke()
-    }
-
     val accentColor = when (state.accent) {
         Accent.Red -> TangemTheme.colors3.icon.accent.red
         Accent.Yellow -> TangemTheme.colors3.icon.accent.yellow
@@ -111,19 +106,19 @@ private fun Buttons(state: ForceUpdateUM, modifier: Modifier = Modifier) {
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        state.onSupportClick?.let { onClick ->
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Secondary,
+                text = resourceReference(R.string.common_contact_support),
+                onClick = onClick,
+            )
+        }
         state.onUpdateClick?.let { onClick ->
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
                 variant = TangemButton.Variant.Primary,
                 text = resourceReference(R.string.force_update_action),
-                onClick = onClick,
-            )
-        }
-        state.onLaterClick?.let { onClick ->
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                variant = TangemButton.Variant.Secondary,
-                text = resourceReference(R.string.common_later),
                 onClick = onClick,
             )
         }
@@ -154,9 +149,8 @@ private fun PreviewForce() {
                 accent = Accent.Red,
                 title = TextReference.Str("Update Required"),
                 description = TextReference.Str("Please update the application to the latest version."),
-                isBlocking = true,
                 onUpdateClick = {},
-                onLaterClick = null,
+                onSupportClick = {},
             ),
         )
     }
@@ -165,17 +159,16 @@ private fun PreviewForce() {
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
 @Preview(showBackground = true, widthDp = 360, heightDp = 780, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewOptional() {
+private fun PreviewBrick() {
     TangemThemePreviewRedesign {
         ForceUpdateContent(
             state = ForceUpdateUM(
-                mode = ForceUpdateComponent.Mode.Optional,
-                accent = Accent.Yellow,
-                title = TextReference.Str("Update Required"),
-                description = TextReference.Str("Please update the application to the latest version."),
-                isBlocking = false,
-                onUpdateClick = {},
-                onLaterClick = {},
+                mode = ForceUpdateComponent.Mode.Brick,
+                accent = Accent.Red,
+                title = TextReference.Str("Device not supported"),
+                description = TextReference.Str("This device can't run the OS version Tangem needs."),
+                onUpdateClick = null,
+                onSupportClick = {},
             ),
         )
     }
