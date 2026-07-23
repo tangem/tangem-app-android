@@ -87,6 +87,9 @@ data class TangemPayTariffPlan(
             @SerialName("BANNER")
             BANNER,
 
+            @SerialName("BACKGROUND")
+            BACKGROUND,
+
             @SerialName("UNKNOWN")
             UNKNOWN,
             ;
@@ -96,6 +99,7 @@ data class TangemPayTariffPlan(
                     "THUMBNAIL" -> THUMBNAIL
                     "MAIN" -> MAIN
                     "BANNER" -> BANNER
+                    "BACKGROUND" -> BACKGROUND
                     else -> UNKNOWN
                 }
             }
