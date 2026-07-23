@@ -99,7 +99,9 @@ internal class DefaultMarketsTokenDetailsComponent(
                 params = TokenSummaryBlockComponent.Params(
                     symbol = updatedParams.token.symbol,
                     selectedPeriod = model.selectedTokenSummaryPeriod,
-                    onClick = model::onTokenSummaryBlockClick,
+                    callbacks = object : TokenSummaryBlockComponent.Callbacks {
+                        override fun onClick() = model.onTokenSummaryBlockClick()
+                    },
                 ),
             )
         } else {
