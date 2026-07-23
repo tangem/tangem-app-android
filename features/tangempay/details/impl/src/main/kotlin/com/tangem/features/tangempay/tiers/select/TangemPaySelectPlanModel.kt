@@ -142,13 +142,14 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         modelScope.launch {
             submitTariffTransitionUseCase(params.userWalletId, transition).fold(
                 ifRight = {
-                    when (params.source) {
-                        TangemPaySelectPlanSource.TIERS_ONBOARDING -> {
+                    when {
+                        transition.type == TangemPayTariffPlanTransition.Type.UPGRADE -> {
                             router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
                         }
-                        TangemPaySelectPlanSource.CHANGE_PLAN -> {
-                            router.pop()
+                        params.source == TangemPaySelectPlanSource.TIERS_ONBOARDING -> {
+                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
                         }
+                        else -> router.pop()
                     }
                 },
                 ifLeft = {
