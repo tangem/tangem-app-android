@@ -33,8 +33,8 @@ internal fun ActivateCampaignFooter(footerUM: FooterUM, modifier: Modifier = Mod
         if (terms != null) {
             Text(
                 text = termsAnnotatedString(terms),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
