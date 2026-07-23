@@ -7,17 +7,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,10 +32,9 @@ import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -63,24 +59,12 @@ internal fun ExchangesBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         containerColor = TangemTheme.colors3.bg.primary,
         title = { content ->
-            TangemTopBar(
+            TangemTopNavigation(
                 title = resourceReference(content.titleResId),
-                type = TangemTopBarType.BottomSheet,
-                startContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
-                            .clickableSingle(onClick = config.onDismissRequest)
-                            .padding(TangemTheme.dimens2.x2),
-                    )
-                },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                onBack = config.onDismissRequest,
             )
         },
         content = { content ->
