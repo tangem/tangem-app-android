@@ -8,6 +8,7 @@ import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -96,6 +97,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     val yieldModeConnectedTitle: KNode = child {
         hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK))
         hasText(getResourceString(CoreResR.string.yield_module_transaction_enter))
+        useUnmergedTree = true
+    }
+
+    val customDerivationIcon: KNode = child {
+        hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
         useUnmergedTree = true
     }
 
