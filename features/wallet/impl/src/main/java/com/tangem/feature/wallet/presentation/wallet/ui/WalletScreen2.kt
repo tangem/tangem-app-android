@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -46,7 +47,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
@@ -181,9 +181,6 @@ private fun WalletContent2(
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
-    val density = LocalDensity.current
-    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
-
     var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
     var pullToRefreshConfig by remember {
         mutableStateOf(
@@ -207,10 +204,15 @@ private fun WalletContent2(
             )
         },
     ) { paddingValues, bottomSheetState ->
-        val marketHintApproxHeight = 140.dp
+        val density = LocalDensity.current
+        var marketsHintHeight by remember { mutableStateOf(0.dp) }
+        val collapsedBodyOverhang = with(density) { behavior.state.partialHeightLimit.toDp() }
 
         val contentPadding = PaddingValues(
-            bottom = paddingValues.calculateBottomPadding() + marketHintApproxHeight,
+            bottom = paddingValues.calculateBottomPadding() +
+                marketsHintHeight +
+                collapsedBodyOverhang +
+                TangemTheme.dimens2.x2,
         )
 
         val selectedWalletIndex by rememberUpdatedState(state.selectedWalletIndex)
@@ -235,22 +237,17 @@ private fun WalletContent2(
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
         ) {
-            val backgroundColor = if (LocalIsInDarkTheme.current) {
-                TangemTheme.colors2.surface.level1
-            } else {
-                TangemTheme.colors2.surface.level2
-            }
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(backgroundColor),
+                    .background(TangemTheme.colors3.bg.primary),
             )
             val isSheetExpanded by remember {
                 derivedStateOf { bottomSheetState.targetValue == TangemSheetValue.Expanded }
             }
             if (!isSheetExpanded) {
                 NorthernLightsBackground(
-                    containerColor = backgroundColor,
+                    containerColor = TangemTheme.colors3.bg.primary,
                     modifier = Modifier
                         .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
                         .matchParentSize(),
@@ -262,10 +259,10 @@ private fun WalletContent2(
                 pullToRefreshState = pullToRefreshState,
                 pullToRefreshConfig = pullToRefreshConfig,
                 behavior = behavior,
-                topOffset = subtitleBottom + TangemTheme.dimens2.x2,
+                topOffset = subtitleBottom + 8.dp,
             )
 
-            val overlay = TangemTheme.colors2.overlay.overlayPrimary
+            val overlay = TangemTheme.colors3.material.tint.solid
 
             // Root-coordinates bounds of the "Add & Manage" button per pager page, reported by the
             // button itself, so the markets hint and tooltip can avoid covering it
@@ -376,14 +373,14 @@ private fun WalletContent2(
                             },
                         )
                     }
-
-                    val peekHeight =
-                        bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
                     MarketsHint(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth(fraction = .6f)
-                            .padding(bottom = peekHeight),
+                            .padding(bottom = paddingValues.calculateBottomPadding())
+                            .onSizeChanged { size ->
+                                marketsHintHeight = with(density) { size.height.toDp() }
+                            },
                         isVisible = isShowMarketsHint,
                         obstacleBounds = remember(currentWalletIndex) {
                             { organizeButtonBounds[currentWalletIndex] }
@@ -400,7 +397,7 @@ private fun WalletContent2(
                     .fillMaxWidth(),
                 isVisible = state.showMarketsOnboarding,
                 availableHeight = maxHeight,
-                sheetTopInset = TangemTheme.dimens2.x3,
+                sheetTopInset = 12.dp,
                 bottomSheetState = bottomSheetState,
                 onCloseClick = state.onDismissMarketsTooltip,
                 obstacleBounds = remember(walletsPagerState, organizeButtonBounds) {
@@ -425,15 +422,15 @@ private inline fun BaseScaffoldWithMarkets(
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
-    val peekHeight = bottomSheetHeaderHeightProvider() + TangemTheme.dimens2.x3 + bottomBarHeight
+    val peekHeight = bottomSheetHeaderHeightProvider() + 12.dp + bottomBarHeight
 
     val coroutineScope = rememberCoroutineScope()
 
     val bottomSheetState = rememberTangemStandardBottomSheetState()
     val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
 
-    val expandedBackground = TangemTheme.colors2.surface.level2
-    val collapsedBackground = TangemTheme.colors2.surface.level3
+    val expandedBackground = TangemTheme.colors3.bg.primary
+    val collapsedBackground = TangemTheme.colors3.bg.secondary
     val background by animateColorAsState(
         targetValue = if (bottomSheetState.targetValue == TangemSheetValue.Expanded) {
             expandedBackground
@@ -527,8 +524,8 @@ private fun BottomSheet(
 
     val maxHeight = LocalWindowSize.current.height
     val shape = RoundedCornerShape(
-        topStart = TangemTheme.dimens2.x8,
-        topEnd = TangemTheme.dimens2.x8,
+        topStart = 32.dp,
+        topEnd = 32.dp,
     )
     CustomBottomSheet(
         state = bottomSheetState,
