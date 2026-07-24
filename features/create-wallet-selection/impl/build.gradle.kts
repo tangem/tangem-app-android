@@ -14,63 +14,40 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.createWalletSelection.api)
-    
-    /** Hot Wallet Feature */
-    implementation(projects.features.hotWallet.api)
-
-    /** Project - Domain */
-    implementation(projects.domain.card)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.models)
-    implementation(projects.domain.hotWallet)
 
     /** Core modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
+
+    /** Project - Domain */
+    api(projects.domain.hotWallet)
+    api(projects.domain.wallets)
 
     /** Common */
-    implementation(projects.common.ui)
-    implementation(projects.common.routing)
     implementation(projects.common)
-
-    /** Tangem libraries */
-    implementation(projects.libs.tangemSdkApi)
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
-
-    /** AndroidX libraries */
-    implementation(deps.androidx.core.ktx)
-    implementation(deps.lifecycle.runtime.ktx)
+    implementation(projects.common.routing)
 
     /** Compose libraries */
+    api(deps.compose.animation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
-    implementation(deps.lottie.compose)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.androidx.activity.compose)
-    implementation(deps.androidx.datastore)
 
     /** Other libraries */
-    implementation(deps.arrow.core)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.kotlin.serialization)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
-} 
+}

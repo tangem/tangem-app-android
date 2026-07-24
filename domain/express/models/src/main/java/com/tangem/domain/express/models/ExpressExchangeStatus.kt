@@ -53,6 +53,28 @@ enum class ExpressExchangeStatus(val raw: String) {
             -> false
         }
 
+    val isFinished: Boolean
+        get() = when (this) {
+            Finished,
+            -> true
+            Preview,
+            Expired,
+            Unknown,
+            Refunded,
+            TxFailed,
+            Paused,
+            Created,
+            ExchangeTxSent,
+            Waiting,
+            WaitingTxHash,
+            Confirming,
+            Exchanging,
+            Sending,
+            Failed,
+            Verifying,
+            -> false
+        }
+
     companion object {
         fun fromRaw(raw: String): ExpressExchangeStatus = entries.firstOrNull { it.raw == raw } ?: Unknown
     }

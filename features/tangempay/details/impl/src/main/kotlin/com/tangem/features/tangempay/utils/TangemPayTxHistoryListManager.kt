@@ -23,6 +23,7 @@ internal class TangemPayTxHistoryListManager(
     private val repository: TangemPayTxHistoryRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
+    isCashbackEnabled: Boolean,
 ) {
     private val jobHolder = JobHolder()
     private val actionsFlow: MutableSharedFlow<TangemPayTxHistoryBatchAction> = MutableSharedFlow(
@@ -30,7 +31,11 @@ internal class TangemPayTxHistoryListManager(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     private val state: MutableStateFlow<TangemPayTxHistoryState> = MutableStateFlow(TangemPayTxHistoryState())
-    private val uiManager = TangemPayTxHistoryUiManager(state = state, txHistoryUiActions = txHistoryUiActions)
+    private val uiManager = TangemPayTxHistoryUiManager(
+        state = state,
+        txHistoryUiActions = txHistoryUiActions,
+        isCashbackEnabled = isCashbackEnabled,
+    )
 
     val uiItems: Flow<ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>> = uiManager.items
     val emptyStatus: Flow<Boolean> = state.map { it.isEmpty }.distinctUntilChanged()

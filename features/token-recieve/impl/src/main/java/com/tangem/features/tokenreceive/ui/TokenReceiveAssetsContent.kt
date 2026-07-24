@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,6 +51,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_share_android_24
+import com.tangem.core.ui.test.TokenReceiveAssetsBottomSheetTestTags
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.ui.state.ReceiveAssetsUM
 import kotlinx.collections.immutable.ImmutableList
@@ -175,6 +177,7 @@ private fun PrimaryAddressesItems(
         state = pagerState,
         contentPadding = PaddingValues(horizontal = 16.dp),
         pageSpacing = 16.dp,
+        modifier = Modifier.testTag(TokenReceiveAssetsBottomSheetTestTags.ADDRESSES_PAGER),
     ) { page ->
         val address = addresses[page]
         AddressItem(
