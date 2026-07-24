@@ -45,6 +45,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    implementation(projects.core.local)
     api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.utils)
