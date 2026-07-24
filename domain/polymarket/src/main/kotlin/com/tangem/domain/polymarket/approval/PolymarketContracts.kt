@@ -2,7 +2,8 @@ package com.tangem.domain.polymarket.approval
 
 /**
  * Polygon (chainId 137) contract addresses used by Polymarket onboarding builders (kb/04, kb/07).
- * Single source of truth — addresses are ERC-55 checksummed; calldata lowercases them.
+ * Single source of truth — addresses are stored as published in the Polymarket contract docs; the
+ * calldata encoder lowercases them, so checksum case is not significant here.
  */
 object PolymarketContracts {
 
