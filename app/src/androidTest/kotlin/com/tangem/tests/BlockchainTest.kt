@@ -21,11 +21,13 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
 class BlockchainTest : BaseTestCase() {
 
+    @Ignore("[REDACTED_JIRA]")
     @AllureId("3644")
     @DisplayName("ADA: Checking the min amount/change = 1ADA")
     @Test

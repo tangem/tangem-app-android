@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.utils
 
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -12,11 +13,19 @@ internal val AccountStatus.Payment.cryptoCurrency: CryptoCurrency.Token
     get() = when (val v = value) {
         is PaymentAccountStatusValue.Loaded -> v.cryptoCurrency
         is PaymentAccountStatusValue.Deactivated -> v.cryptoCurrency
+        is PaymentAccountStatusValue.Inactive -> v.cryptoCurrency
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> v.cryptoCurrency
         else -> error("TangemPayDetails opened with unsupported status: $v")
     }
 
-internal val AccountStatus.Payment.isDeactivated: Boolean
-    get() = value is PaymentAccountStatusValue.Deactivated
+internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
+    get() = when (val v = value) {
+        is PaymentAccountStatusValue.Inactive -> v.tariffPlan.tariff
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> v.tariffPlan
+        is PaymentAccountStatusValue.Loaded -> v.tariffPlan?.tariff
+        is PaymentAccountStatusValue.Deactivated -> null
+        else -> error("TangemPayDetails opened with unsupported status: $v")
+    }
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
@@ -39,3 +48,6 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     is PaymentAccountStatusValue.Deactivated -> v.balance
     else -> null
 }
+
+internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
+    get() = availableForWithdrawal.signum() > 0

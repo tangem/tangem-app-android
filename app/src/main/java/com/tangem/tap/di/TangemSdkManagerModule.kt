@@ -13,6 +13,8 @@ import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallenge
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,6 +38,7 @@ internal class TangemSdkManagerModule {
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         analyticsErrorHandler: AnalyticsErrorHandler,
         cardRepository: CardRepository,
+        walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
             MockTangemSdkManager(resources = context.resources)
@@ -50,6 +53,7 @@ internal class TangemSdkManagerModule {
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 analyticsErrorHandler = analyticsErrorHandler,
                 cardRepository = cardRepository,
+                walletRegistrationLauncher = walletRegistrationLauncher,
             )
         }
     }

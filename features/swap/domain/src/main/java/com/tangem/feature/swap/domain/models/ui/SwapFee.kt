@@ -13,10 +13,15 @@ import java.math.BigDecimal
  * full [TransactionFeeResult] (so gasless / token-paid sends can use the same payload), the
  * selected fee token, the optional bridge protocol fee, and the fee tier classifier.
  *
- * @property fee the concrete [Fee] that will be signed and broadcast on-chain. For
- *   `TransactionFee.Single`-shaped responses this is the only choice; for
- *   `TransactionFee.Choosable`-shaped responses it is the bucket selected by the user (or the
- *   default MARKET tier when no selection has been made).
+ * @property fee the concrete [Fee] for the selected tier. For `TransactionFee.Single`-shaped
+ *   responses this is the only choice; for `TransactionFee.Choosable`-shaped responses it is the
+ *   bucket selected by the user (or the default MARKET tier when no selection has been made).
+ *
+ *   For DEX_BRIDGE providers `fee.amount.value` is the **total native network cost =
+ *   gas + bridge protocol fee** — the single source of truth used for display, balance/validation,
+ *   the success screen and the fee-coverage warning (the bridge fee is folded in by
+ *   `SwapFeeFactory`). The gas portion used for signing is unaffected (broadcast uses the on-chain
+ *   `txValue` + gasLimit/gasPrice, not `fee.amount`).
  * @property transactionFeeResult the full transaction-fee payload returned by the underlying
  *   use case. Preserved verbatim so it can be passed through to gasless send flows
  *   (`CreateAndSendGaslessTransactionUseCase` requires the [TransactionFeeResult.LoadedExtended]
@@ -28,6 +33,11 @@ import java.math.BigDecimal
  * @property otherNativeFee bridge protocol fee (e.g. carried by `ExpressTransactionModel.DEX
  *   .otherNativeFeeWei` for DEX_BRIDGE providers). Always [BigDecimal.ZERO] unless the provider
  *   is `DEX_BRIDGE`. Propagated from [com.tangem.feature.swap.domain.fee.DexFeeResult].
+ *
+ *  This is the bridge portion **already included** in [fee].amount (folded by
+ *   `SwapFeeFactory` for native-coin fees). It is **not** additive — do not add it on top of
+ *   `fee.amount` anywhere. It is retained only so the gas-only figure can be recovered
+ *   (`fee.amount.value - otherNativeFee`), e.g. for the "high network fee" check.
  * @property feeBucket tier classifier derived from the parent [TransactionFee] shape (see
  *   [FeeBucket] mapping table). Drives analytics through [FeeBucket.toAnalyticsName].
  */

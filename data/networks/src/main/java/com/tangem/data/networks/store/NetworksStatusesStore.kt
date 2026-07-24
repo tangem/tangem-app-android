@@ -45,6 +45,9 @@ internal interface NetworksStatusesStore {
     /** Clear statuses of [networks] by [userWalletId] */
     suspend fun clear(userWalletId: UserWalletId, networks: Set<Network>)
 
+    /** Remove all statuses of the given [userWalletIds] */
+    suspend fun remove(userWalletIds: List<UserWalletId>)
+
     /** Check if there are statuses for given [userWalletId] */
     suspend fun contains(userWalletId: UserWalletId): Boolean
 }

@@ -1,9 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -14,29 +12,22 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
     private val accountListSubscriberFactory: AccountListSubscriber.Factory,
     private val walletNFTListSubscriberFactory: WalletNFTListSubscriber.Factory,
     private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
-    private val multiWalletWarningsSubscriberFactory: MultiWalletWarningsSubscriber.Factory,
     private val walletNotificationsSubscriberFactory: WalletNotificationsSubscriber.Factory,
     private val multiWalletActionButtonsSubscriberFactory: MultiWalletActionButtonsSubscriber.Factory,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
     private val assetsDiscoverySubscriberFactory: AssetsDiscoverySubscriber.Factory,
     private val tokenListAnalyticsSubscriberFactory: TokenListAnalyticsSubscriber.Factory,
-    private val designFeatureToggles: DesignFeatureToggles,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOfNotNull(
         accountListSubscriberFactory.create(userWallet),
         walletNFTListSubscriberFactory.create(userWallet),
         checkWalletWithFundsSubscriberFactory.create(userWallet),
-        if (designFeatureToggles.isRedesignEnabled) {
-            walletNotificationsSubscriberFactory.create(userWallet)
-        } else {
-            multiWalletWarningsSubscriberFactory.create(userWallet)
-        },
+        walletNotificationsSubscriberFactory.create(userWallet),
         multiWalletActionButtonsSubscriberFactory.create(userWallet),
         tangemPayMainSubscriberFactory.create(userWallet),
         tokenListAnalyticsSubscriberFactory.create(userWallet),
-        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled && userWallet is UserWallet.Hot) {
+        if (userWallet is UserWallet.Hot) {
             assetsDiscoverySubscriberFactory.create(userWallet)
         } else {
             null

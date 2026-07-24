@@ -46,6 +46,7 @@ object TestConstants {
     const val ALLURE_LABEL_VALUE = "Kaspresso"
 
     const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
+    const val COINS_API_SCENARIO = "coins_api"
     const val REFERRAL_API_SCENARIO = "referral_api"
     const val QUOTES_API_SCENARIO = "quotes_api"
     const val CREATE_USER_WALLET_API_SCENARIO = "create_user_wallet_api"
@@ -68,5 +69,7 @@ object TestConstants {
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
     const val TANGEM_PAY_ELIGIBILITY_SCENARIO = "tangem_pay_eligibility"
+    const val TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO = "tangem_pay_eligibility_channels"
+    const val TANGEM_PAY_KYC_STATUS_SCENARIO = "tangem_pay_kyc_status"
     const val TANGEM_PAY_ACCESS_CODE = "517384"
 }

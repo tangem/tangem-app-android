@@ -1,12 +1,11 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
-import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,8 +17,6 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val coroutineScope: AppCoroutineScope,
 ) {
-
-    private val deepLinkDeferred = CompletableDeferred<String?>()
 
     fun handle(params: Map<String?, Any?>) {
         handle(
@@ -35,40 +32,15 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
             deepLinkSub1 = deepLink.getStringValue(DEEP_LINK_SUB_1),
             deepLinkSub2 = deepLink.getStringValue(DEEP_LINK_SUB_2),
         )
-        deepLinkDeferred.complete(deepLink.deepLinkValue)
-    }
-
-    fun handleNoDeeplink() {
-        deepLinkDeferred.complete(null)
-    }
-
-    suspend fun waitForDeeplink(deeplinkSource: AppsFlyerDeeplinkSource): String? {
-        appsFlyerStore.getDeeplink(deeplinkSource)?.let { return it }
-
-        val expectedValue = when (deeplinkSource) {
-            AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding -> TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE
-            AppsFlyerDeeplinkSource.Referral -> REFERRAL_DEEP_LINK_VALUE
-        }
-        val resolvedValue = deepLinkDeferred.await().takeIf { it == expectedValue }
-
-        // The deep link may have been persisted to the store while we were awaiting (e.g. from
-        // conversion-data handling, which stores the deep link but doesn't complete the deferred).
-        return resolvedValue ?: appsFlyerStore.getDeeplink(deeplinkSource)
     }
 
     private fun handle(deepLinkValue: String?, deepLinkSub1: String?, deepLinkSub2: String?) {
         TangemLogger.i("AppsFlyer deeplink received: value=$deepLinkValue")
-        when (deepLinkValue) {
-            REFERRAL_DEEP_LINK_VALUE -> handleReferral(deepLinkSub1, deepLinkSub2)
-            TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE -> handleTangemPayHotWalletOnboarding(deepLinkValue)
-            else -> TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
-        }
-    }
-
-    private fun handleTangemPayHotWalletOnboarding(deepLinkValue: String) {
-        coroutineScope.launch {
-            appsFlyerStore.storeDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding, deepLinkValue)
-            TangemLogger.i("[TangemPay][HWO] Deep link stored")
+        when (AppsFlyerDeeplink.from(deepLinkValue)) {
+            AppsFlyerDeeplink.Referral -> handleReferral(deepLinkSub1, deepLinkSub2)
+            AppsFlyerDeeplink.TangemPayMobileOnboarding ->
+                storeNavigationDeeplink(AppsFlyerDeeplink.TangemPayMobileOnboarding.deepLinkValue)
+            null -> TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
         }
     }
 
@@ -76,9 +48,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         @Suppress("NullableToStringCall")
         TangemLogger.i("refcode=$deepLinkSub1\ncampaign=$deepLinkSub2")
 
-        coroutineScope.launch {
-            appsFlyerStore.storeDeeplink(AppsFlyerDeeplinkSource.Referral, REFERRAL_DEEP_LINK_VALUE)
-        }
+        storeNavigationDeeplink(AppsFlyerDeeplink.Referral.deepLinkValue)
 
         if (!isValidParam(deepLinkSub1)) {
             TangemLogger.e("Deeplink conversion data is invalid")
@@ -97,6 +67,13 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         return value != null && value.isNotBlank() && !value.equals("null", ignoreCase = true)
     }
 
+    private fun storeNavigationDeeplink(deepLinkValue: String) {
+        coroutineScope.launch {
+            appsFlyerStore.storeNavigationDeeplink(deepLinkValue)
+            TangemLogger.i("AppsFlyer navigation deep link stored: $deepLinkValue")
+        }
+    }
+
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
             appsFlyerStore.storeIfAbsent(
@@ -106,9 +83,6 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     private companion object {
-
-        const val REFERRAL_DEEP_LINK_VALUE = "referral"
-        const val TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE = "tpay_mobileonboard"
 
         const val DEEP_LINK_VALUE = "deep_link_value"
         const val DEEP_LINK_SUB_1 = "deep_link_sub1"
