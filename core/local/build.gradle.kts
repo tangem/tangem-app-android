@@ -5,4 +5,6 @@ plugins {
 
 dependencies {
     api(deps.kotlin.coroutines)
+
+    testImplementation(projects.test.core)
 }
