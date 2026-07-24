@@ -71,14 +71,17 @@ class GetAppUpdateStateUseCase(
         val latestVersion = info.latestVersion?.let(AppVersion::parseOrNull)
 
         val criticalVersion = info.criticalVersion?.let(AppVersion::parseOrNull)
-        if (criticalVersion != null && appVersion <= criticalVersion && isEscapable(latestVersion, criticalVersion)) {
+        if (criticalVersion != null &&
+            appVersion <= criticalVersion &&
+            isEscapable(latestVersion, criticalVersion, appVersion)
+        ) {
             return blockingStateFor(info.criticalOSVersion, deviceOsVersion, AppUpdateState.Brick)
         }
 
         val minSupportedVersion = info.minSupportedVersion?.let(AppVersion::parseOrNull)
         if (minSupportedVersion != null &&
             appVersion < minSupportedVersion &&
-            isEscapable(latestVersion, minSupportedVersion)
+            isEscapable(latestVersion, minSupportedVersion, appVersion)
         ) {
             return blockingStateFor(info.minSupportedOSVersion, deviceOsVersion, AppUpdateState.OsTooOld)
         }
@@ -91,12 +94,17 @@ class GetAppUpdateStateUseCase(
     }
 
     /**
-     * A blocking threshold is honored only if the advertised latest version is strictly above it — i.e.
-     * updating actually clears the block. A threshold no installable version can satisfy is a backend
-     * misconfiguration and is ignored.
+     * A blocking threshold is honored only if the user can actually escape it by updating. Normally that
+     * means the advertised latest version is strictly above the threshold. But a latest version reported
+     * below the installed one is stale/misconfigured and must not suppress the block — the store almost
+     * certainly has an installable build, so the threshold is honored. A missing latest version leaves no
+     * installable target, so the threshold is ignored.
      */
-    private fun isEscapable(latestVersion: AppVersion?, threshold: AppVersion): Boolean =
-        latestVersion != null && latestVersion > threshold
+    private fun isEscapable(latestVersion: AppVersion?, threshold: AppVersion, appVersion: AppVersion): Boolean {
+        latestVersion ?: return false
+        if (latestVersion < appVersion) return true
+        return latestVersion > threshold
+    }
 
     private suspend fun resolveOptionalUpdate(latestVersion: String, recordOptionalShown: Boolean): AppUpdateState {
         if (!recordOptionalShown) return AppUpdateState.OptionalUpdate
