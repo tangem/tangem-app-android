@@ -6,7 +6,7 @@ import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse
 import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset
 import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks

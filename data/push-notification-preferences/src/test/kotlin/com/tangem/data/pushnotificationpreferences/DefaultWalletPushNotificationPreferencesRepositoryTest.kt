@@ -9,7 +9,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesBody
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesResponse
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
