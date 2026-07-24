@@ -6,6 +6,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.impl.BuildConfig
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.utils.converter.Converter
 
@@ -42,8 +43,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         menu = menu,
         validatorsByAddress = validatorsByAddress,
         onOpenValidator = onOpenValidator,
-        // Own deposit addresses on the viewed currency's network — drives the on-chain own-vs-external transfer title.
-        ownAddresses = lookup.ownAccountByNetwork[currency.network.id.rawId]?.keys.orEmpty(),
+        lookup = lookup,
     )
 
     private val expressConverter = ExpressTxToDetailsUMConverter(
@@ -55,10 +55,24 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onGoToRefundedTokenClick = onGoToRefundedTokenClick,
     )
 
-    override fun convert(value: TxHistoryInfo): TxHistoryDetailsUM = when (value) {
-        is OnChainTx.BSDK -> onChainConverter.convert(value.txInfo)
-        // todo txHistory: build the details card for standalone TangemPay rows when TangemPay is wired in
-        is OnChainTx.TangemPay -> TODO("TangemPay on-chain details rendering is not implemented yet")
-        is ExpressTx -> expressConverter.convert(value)
+    override fun convert(value: TxHistoryInfo): TxHistoryDetailsUM {
+        var um = when (value) {
+            is OnChainTx.BSDK -> onChainConverter.convert(value.txInfo)
+            // todo txHistory: build the details card for standalone TangemPay rows when TangemPay is wired in
+            is OnChainTx.TangemPay -> TODO("TangemPay on-chain details rendering is not implemented yet")
+            is ExpressTx -> expressConverter.convert(value)
+        }
+        if (isDebugMenuEnabled) {
+            um = when (um) {
+                is TxHistoryDetailsUM.SingleAsset -> um.copy(header = um.header.copy(debugModel = value))
+                is TxHistoryDetailsUM.TwoAssets -> um.copy(header = um.header.copy(debugModel = value))
+            }
+        }
+        return um
+    }
+
+    private companion object {
+        private val isDebugMenuEnabled: Boolean =
+            BuildConfig.BUILD_TYPE == "debug" || BuildConfig.BUILD_TYPE == "internal"
     }
 }

@@ -11,8 +11,14 @@ internal object CashbackPromotionsConverter : Converter<CashbackPromotionsRespon
     override fun convert(value: CashbackPromotionsResponse): CashbackPromotions {
         return CashbackPromotions(
             cardTiers = value.cashbackOnCards?.tiers.orEmpty().map(::convertTier),
+            monthlyCap = value.cashbackOnCards?.toMonthlyCap(),
             additionalCashback = value.additionalCashback.orEmpty().map(::convertAdditional),
         )
+    }
+
+    private fun CashbackPromotionsResponse.CashbackOnCards.toMonthlyCap(): CashbackPromotions.MonthlyCap? {
+        val amount = monthlyCapAmount ?: return null
+        return CashbackPromotions.MonthlyCap(amount = amount, currency = monthlyCapCurrency)
     }
 
     private fun convertTier(tier: CashbackPromotionsResponse.CardTier): CashbackPromotions.CardTier {

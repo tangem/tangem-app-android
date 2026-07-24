@@ -1,7 +1,7 @@
 package com.tangem.data.account.store
 
 import androidx.annotation.VisibleForTesting
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.ArchivedAccount
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull

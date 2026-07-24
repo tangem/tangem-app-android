@@ -8,13 +8,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -26,11 +29,6 @@ import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreUM
 
 @Composable
 internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Modifier) {
-    SecurityScoreBlockV2(state, modifier)
-}
-
-@Composable
-private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Modifier) {
     TokenMarketInformationBlock(
         modifier = modifier.clickable(onClick = state.onInfoClick),
         title = {
@@ -38,8 +36,8 @@ private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Mo
                 Text(
                     modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
                     text = "${state.score}",
-                    color = TangemTheme.colors2.text.neutral.primary,
-                    style = TangemTheme.typography2.headingSemibold20,
+                    color = TangemTheme.colors3.text.primary,
+                    style = TangemTheme.typography3.heading.small,
                 )
 
                 InformationTextBlock(
@@ -52,8 +50,8 @@ private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Mo
                 Text(
                     modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
                     text = state.description.resolveReference(),
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -69,55 +67,56 @@ private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Mo
 
 @Composable
 internal fun SecurityScoreBlockPlaceholder(modifier: Modifier = Modifier) {
-    SecurityScoreBlockPlaceholderV2(modifier)
+    TangemRowContainer(modifier = modifier) {
+        SecurityScoreShimmerLine(
+            style = TangemTheme.typography3.heading.small,
+            width = 114.dp,
+            modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
+        )
+
+        SecurityScoreShimmerLine(
+            style = TangemTheme.typography3.caption.medium,
+            width = 74.dp,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
+        )
+
+        SecurityScoreShimmerLine(
+            style = TangemTheme.typography3.heading.small,
+            width = 116.dp,
+            modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_TOP),
+        )
+
+        SecurityScoreShimmerLine(
+            style = TangemTheme.typography3.caption.medium,
+            width = 96.dp,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
+        )
+    }
 }
 
 @Composable
-private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
-    TangemRowContainer(modifier = modifier) {
-        TextShimmer(
-            modifier = Modifier
-                .width(114.dp)
-                .layoutId(layoutId = TangemRowLayoutId.START_TOP),
-            style = TangemTheme.typography2.headingBold28,
-            radius = TangemTheme.dimens2.x25,
-        )
-
-        TextShimmer(
-            modifier = Modifier
-                .width(74.dp)
-                .padding(top = 8.dp)
-                .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
-            style = TangemTheme.typography2.captionMedium12,
-            radius = TangemTheme.dimens2.x25,
-        )
-
-        TextShimmer(
-            modifier = Modifier
-                .width(116.dp)
-                .layoutId(layoutId = TangemRowLayoutId.END_TOP),
-            style = TangemTheme.typography2.headingBold28,
-            radius = TangemTheme.dimens2.x25,
-        )
-
-        TextShimmer(
-            modifier = Modifier
-                .width(96.dp)
-                .padding(top = 8.dp)
-                .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
-            style = TangemTheme.typography2.captionMedium12,
-            radius = TangemTheme.dimens2.x25,
-        )
-    }
+private fun SecurityScoreShimmerLine(style: TextStyle, width: Dp, modifier: Modifier = Modifier) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .width(width)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
 }
 
 @Preview(widthDp = 328, showBackground = true)
 @Preview(widthDp = 328, showBackground = true, locale = "ru")
 @Preview(widthDp = 328, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ContentPreviewV2() {
+private fun ContentPreview() {
     TangemThemePreviewRedesign {
-        Column(modifier = Modifier.background(TangemTheme.colors2.surface.level2)) {
+        Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
             SecurityScoreBlock(
                 state = SecurityScoreUM(
                     score = 3.5f,

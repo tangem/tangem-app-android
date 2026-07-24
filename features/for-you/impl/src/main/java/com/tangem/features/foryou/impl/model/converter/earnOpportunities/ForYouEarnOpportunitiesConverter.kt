@@ -1,8 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
-import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
@@ -17,6 +15,8 @@ import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
+import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.impl.model.converter.EarnApyInfo
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.features.foryou.impl.model.converter.PERCENT_BASE
@@ -43,34 +43,34 @@ import java.math.RoundingMode
 internal class ForYouEarnOpportunitiesConverter(
     private val appCurrency: AppCurrency,
     private val isAccountsModeEnabled: Boolean,
-    private val expandedAssetIds: Set<String>,
     private val expandClick: (assetId: String) -> Unit,
     private val yieldSupplyAvailability: Map<String, BigDecimal>,
     private val yieldStakingAvailability: Map<CryptoCurrency, StakingAvailability>,
     private val topEarnTokens: EarnTopToken?,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
-) : Converter<AccountStatusList?, EarnOpportunitiesUM> {
+    private val walletHeaders: Map<UserWalletId, ForYouWalletHeaderUM>,
+    private val isBalanceHidden: Boolean = false,
+) : Converter<ForYouSelectedPortfolio, EarnOpportunitiesUM> {
 
-    override fun convert(value: AccountStatusList?): EarnOpportunitiesUM {
-        val data = value?.accountStatuses
-            ?.filterCryptoPortfolio()
-            ?.asSequence()
-            ?.mapNotNull { cryptoAccountStatus ->
-                val tokenList =
-                    cryptoAccountStatus.flattenCurrencies().mapNotNull { cryptoCurrencyStatus ->
-                        val earn = resolveEarnApy(
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                            yieldModuleApyMap = yieldSupplyAvailability,
-                            stakingApyMap = yieldStakingAvailability,
-                        )
+    override fun convert(value: ForYouSelectedPortfolio): EarnOpportunitiesUM {
+        val data = value.accountCryptoCurrencyStatuses
+            .groupBy { it.account }
+            .mapNotNull { (account, accountStatuses) ->
+                val tokenList = accountStatuses.mapNotNull { accountCryptoCurrencyStatus ->
+                    val cryptoCurrencyStatus = accountCryptoCurrencyStatus.status
+                    val earn = resolveEarnApy(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        yieldModuleApyMap = yieldSupplyAvailability,
+                        stakingApyMap = yieldStakingAvailability,
+                    )
 
-                        if (earn == null || cryptoCurrencyStatus.value.fiatAmount.isNullOrZero() && !earn.isActive) {
-                            return@mapNotNull null
-                        }
-
-                        cryptoCurrencyStatus to earn
+                    if (earn == null || cryptoCurrencyStatus.value.fiatAmount.isNullOrZero() && !earn.isActive) {
+                        return@mapNotNull null
                     }
+
+                    cryptoCurrencyStatus to earn
+                }
 
                 if (tokenList.isEmpty()) return@mapNotNull null
 
@@ -79,13 +79,13 @@ internal class ForYouEarnOpportunitiesConverter(
                 }
 
                 EarnOpportunities(
-                    account = cryptoAccountStatus.account,
+                    userWalletId = account.userWalletId,
+                    account = account,
                     earnCurrencies = tokenList.toMap(),
                     accountPotentialReward = accountPotentialReward,
                 )
             }
-            ?.sortedByDescending { it.accountPotentialReward }
-            .orEmpty().toList()
+            .sortedByDescending { it.accountPotentialReward }
 
         return when {
             data.isEmpty() -> {
@@ -105,12 +105,12 @@ internal class ForYouEarnOpportunitiesConverter(
             else -> {
                 ForYouEarnOpportunitiesPotentialRewardsConverter(
                     appCurrency = appCurrency,
-                    userWalletId = value?.userWalletId,
                     isAccountsModeEnabled = isAccountsModeEnabled,
-                    expandedAssetIds = expandedAssetIds,
                     expandClick = expandClick,
                     onTokenClick = onTokenClick,
                     onAllEarnTokensClick = onAllEarnTokensClick,
+                    walletHeaders = walletHeaders,
+                    isBalanceHidden = isBalanceHidden,
                 ).convert(data)
             }
         }
