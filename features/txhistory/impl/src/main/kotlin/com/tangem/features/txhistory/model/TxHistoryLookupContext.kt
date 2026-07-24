@@ -30,7 +30,7 @@ internal data class WalletInfo(val name: String, val deviceIconUM: DeviceIconUM)
  */
 internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
-    data class OwnWallet(val walletInfo: WalletInfo) : ResolvedOwner
+    data class OwnWallet(val userWalletId: UserWalletId, val walletInfo: WalletInfo) : ResolvedOwner
     data class External(val address: String) : ResolvedOwner
 }
 
@@ -45,21 +45,33 @@ internal sealed interface ResolvedOwner {
  */
 internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: Network.RawID?): ResolvedOwner {
     val account = if (networkRawId != null) {
-        ownAccountByNetwork[networkRawId]?.get(address)
+        ownAccountByNetwork[networkRawId]?.getByAddress(address)
     } else {
         ownAccountByNetwork.values
-            .mapNotNull { it[address] }
+            .mapNotNull { it.getByAddress(address) }
             .distinctBy { it.accountId }
             .singleOrNull()
     }
     return when {
         account == null -> ResolvedOwner.External(address)
         isAccountsModeEnabled -> ResolvedOwner.OwnAccount(account)
-        else -> walletInfoById[account.accountId.userWalletId]
-            ?.let { ResolvedOwner.OwnWallet(it) }
-            ?: ResolvedOwner.External(address)
+        else -> {
+            val userWalletId = account.accountId.userWalletId
+            walletInfoById[userWalletId]
+                ?.let { ResolvedOwner.OwnWallet(userWalletId, it) }
+                ?: ResolvedOwner.External(address)
+        }
     }
 }
+
+/**
+
+ * wallet derived it, while a confirmed tx from an indexer may report the same address in a different case (e.g. EIP-55
+ * checksummed vs lowercase EVM). A differing-case variant of another valid address would fail its checksum, so the
+ * case-insensitive fallback cannot mis-attribute an external counterparty.
+ */
+private fun Map<String, Account.CryptoPortfolio>.getByAddress(address: String): Account.CryptoPortfolio? =
+    this[address] ?: entries.firstOrNull { it.key.equals(address, ignoreCase = true) }?.value
 
 /**
  * Flattens every crypto-portfolio account of every wallet into `address -> account` maps keyed by [Network.RawID]

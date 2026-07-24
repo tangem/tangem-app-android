@@ -23,7 +23,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -118,19 +121,19 @@ private fun Content(
                     Header(state = state)
                 }
                 item {
-                    SpacerH(TangemTheme.dimens2.x3)
+                    SpacerH(12.dp)
                 }
                 item("intervalSelector") {
                     IntervalSelector(
                         trendInterval = state.selectedInterval,
                         onIntervalClick = state.onSelectedIntervalChange,
                         modifier = Modifier
-                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .padding(horizontal = 16.dp)
                             .fillMaxWidth(),
                     )
                 }
                 item {
-                    SpacerH(TangemTheme.dimens2.x3)
+                    SpacerH(12.dp)
                 }
                 item("chart") {
                     MarketTokenDetailsChart(
@@ -165,65 +168,53 @@ private fun Content(
 
 @Composable
 private fun Header(state: MarketsTokenDetailsUM) {
-    HeaderV2(
-        modifier = Modifier
-            .padding(TangemTheme.dimens2.x4)
-            .fillMaxWidth(),
-        state = state,
-    )
-}
-
-@Composable
-private fun HeaderV2(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     modifier = Modifier.weight(weight = 1f, fill = false),
                     text = state.tokenName,
-                    style = TangemTheme.typography2.bodySemibold16,
+                    style = TangemTheme.typography3.body.medium,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                     autoSize = TextAutoSize.StepBased(
-                        minFontSize = TangemTheme.typography2.captionSemibold12.fontSize,
-                        maxFontSize = TangemTheme.typography2.bodySemibold16.fontSize,
+                        minFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                        maxFontSize = TangemTheme.typography3.body.medium.fontSize,
                     ),
                 )
                 Text(
                     maxLines = 1,
                     text = state.symbol,
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = TangemTheme.typography2.captionRegular11.fontSize,
-                        maxFontSize = TangemTheme.typography2.captionMedium12.fontSize,
-                    ),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
-            SpacerH(TangemTheme.dimens2.x1)
-            TokenPriceTextV2(
+            SpacerH(4.dp)
+            TokenPriceText(
                 priceAnnotated = state.priceAnnotated,
                 triggerPriceChange = state.triggerPriceChange,
             )
-            SpacerH(TangemTheme.dimens2.x4)
-            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
+            SpacerH(16.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = state.dateTimeText.resolveReference(),
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 if (state.priceChangePercentText != null) {
                     PriceChangeInPercent(
                         valueInPercent = state.priceChangePercentText,
                         type = state.priceChangeType,
-                        textStyle = TangemTheme.typography2.captionMedium12,
+                        textStyle = TangemTheme.typography3.caption.medium,
                     )
                 }
             }
@@ -240,14 +231,14 @@ private fun HeaderV2(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun TokenPriceTextV2(
+private fun TokenPriceText(
     priceAnnotated: TextReference,
     triggerPriceChange: StateEvent<PriceChangeType>,
     modifier: Modifier = Modifier,
 ) {
-    val growColor = TangemTheme.colors2.graphic.status.accent
-    val fallColor = TangemTheme.colors2.graphic.status.warning
-    val generalColor = TangemTheme.colors2.text.neutral.primary
+    val growColor = TangemTheme.colors3.icon.accent.blue
+    val fallColor = TangemTheme.colors3.icon.accent.red
+    val generalColor = TangemTheme.colors3.text.primary
 
     val color = remember(generalColor) { Animatable(generalColor) }
 
@@ -267,9 +258,9 @@ private fun TokenPriceTextV2(
         text = priceAnnotated.resolveAnnotatedReference(),
         modifier = modifier,
         color = color.value,
-        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography2.titleRegular44.fontSize),
+        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography3.display.medium.fontSize),
         maxLines = 1,
-        style = TangemTheme.typography2.titleRegular44,
+        style = TangemTheme.typography3.display.medium,
     )
 }
 

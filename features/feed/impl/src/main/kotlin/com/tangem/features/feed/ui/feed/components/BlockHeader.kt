@@ -9,15 +9,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_right_24
 
 @Composable
 internal fun ColumnScope.Header(
@@ -38,9 +39,15 @@ internal fun ColumnScope.Header(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (animatedState) {
-                RectangleShimmer(
-                    modifier = Modifier.size(width = 130.dp, height = 24.dp),
-                    radius = TangemTheme.dimens2.x25,
+                val lineHeight = with(LocalDensity.current) {
+                    TangemTheme.typography3.heading.small.lineHeight.toDp()
+                }
+                TangemShimmer(
+                    radius = 16.dp,
+                    modifier = Modifier
+                        .width(130.dp)
+                        .height(lineHeight)
+                        .padding(vertical = 2.dp),
                 )
             } else {
                 Box(modifier = Modifier.weight(1f)) {
@@ -56,13 +63,13 @@ internal fun ColumnScope.Header(
                     ) {
                         Text(
                             text = stringResourceSafe(R.string.common_see_all),
-                            color = TangemTheme.colors2.text.neutral.primary,
-                            style = TangemTheme.typography2.bodySemibold16,
+                            color = TangemTheme.colors3.text.primary,
+                            style = TangemTheme.typography3.body.medium,
                         )
                         Icon(
                             modifier = Modifier.size(24.dp),
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
-                            tint = TangemTheme.colors2.markers.iconGray,
+                            imageVector = Icons.ic_chevron_right_24,
+                            tint = TangemTheme.colors3.icon.secondary,
                             contentDescription = null,
                         )
                     }

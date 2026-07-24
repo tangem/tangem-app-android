@@ -3,7 +3,6 @@ package com.tangem.domain.wallets.usecase
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
-import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
@@ -16,7 +15,6 @@ class CreateHotWalletUseCase @Inject constructor(
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
-    private val walletRegistrationTrigger: WalletRegistrationTrigger,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(auth: HotAuth, mnemonicType: MnemonicType): Either<Throwable, UserWallet.Hot> {
@@ -30,10 +28,8 @@ class CreateHotWalletUseCase @Inject constructor(
                 syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
             }
 
-            // Register the wallet with the Auth Service while its unlock context is still fresh.
-            appCoroutineScope.launch {
-                walletRegistrationTrigger.onMobileWalletCreated(userWallet)
-            }
+            // Auth Service registration is triggered centrally by SaveWalletUseCase for every new hot
+            // wallet, so no explicit call is needed here.
 
             userWallet
         }
