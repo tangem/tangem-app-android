@@ -63,7 +63,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
@@ -354,7 +354,16 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickBankTransfer() {
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-        val onramp = loaded.virtualAccount ?: return
+        when (val onramp = loaded.virtualAccount) {
+            null -> return
+            VirtualAccountOnramp.Processing -> showVaPreparing()
+            is VirtualAccountOnramp.Available,
+            VirtualAccountOnramp.Eligible,
+            -> openVirtualAccountDeposit(onramp, loaded)
+        }
+    }
+
+    private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
@@ -366,18 +375,39 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
+    fun showVaBankingDetailsError(productInstanceId: String) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VaBankingDetailsError(
+                userWalletId = userWalletId,
+                productInstanceId = productInstanceId,
+            ),
+        )
+    }
+
+    private fun showVaPreparing() {
+        bottomSheetNavigation.dismiss()
+        uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
+    }
+
+    fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
+        // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
+        // instead of the intro deposit sheet that would need another "Show details" tap.
+        onShowVirtualAccountRequisites(bankCredentials)
+    }
+
     fun onVirtualAccountOrderCreated() {
         analytics.send(TangemPayAnalyticsEvents.VaSuccessScreenActivation())
         bottomSheetNavigation.dismiss()
         router.push(TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess)
     }
 
-    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+    fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,
-                bankCredentials = onramp.bankCredentials,
+                bankCredentials = bankCredentials,
             ),
         )
     }
