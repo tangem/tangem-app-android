@@ -8,11 +8,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,7 +18,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.unit.Dp
@@ -39,16 +37,12 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.badge.TangemBadge
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -57,9 +51,10 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_collapse_20
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.sharedBoundsSafely
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
-import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
@@ -249,29 +244,40 @@ private fun PortfolioSharedAssetIcon(
             is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(size = size)
             else -> currencyIconState
         }
-        TangemCurrencyIcon(
-            state = currencyIconState,
-            shouldDisplayNetwork = false,
-            modifier = modifier
-                .size(size.toBoxSize())
-                // TODO For You replace with DC components
-                .drawWithContent {
-                    drawContent()
-                    if (!isExpandedWrapped) {
-                        val offset = 34.dp.toPx()
-                        drawBadge(
-                            color = Color.Red,
-                            containerColor = itemBackgroundColor,
-                            offset = Offset(
-                                x = offset,
-                                y = offset,
-                            ),
-                            size = 3.dp,
-                            padding = 1.dp,
-                        )
-                    }
-                },
-        )
+        val indicatorColor = listItem.segmentColor?.getColor()
+        val iconModifier = modifier
+            .size(size.toBoxSize())
+            .drawWithContent {
+                drawContent()
+                if (!isExpandedWrapped && indicatorColor != null) {
+                    val offset = 34.dp.toPx()
+                    drawBadge(
+                        color = indicatorColor,
+                        containerColor = itemBackgroundColor,
+                        offset = Offset(
+                            x = offset,
+                            y = offset,
+                        ),
+                        size = 3.dp,
+                        padding = 1.dp,
+                    )
+                }
+            }
+
+        if (currencyIconState is CurrencyIconState.Empty) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_empty_64),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+                modifier = iconModifier,
+            )
+        } else {
+            TangemCurrencyIcon(
+                state = currencyIconState,
+                shouldDisplayNetwork = !isExpandedWrapped && currencyIconState.topBadgeIconResId != null,
+                modifier = iconModifier,
+            )
+        }
     }
 }
 
