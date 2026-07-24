@@ -3,7 +3,7 @@ package com.tangem.datasource.local.promotion
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
