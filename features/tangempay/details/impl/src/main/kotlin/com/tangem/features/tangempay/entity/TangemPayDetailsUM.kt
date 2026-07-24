@@ -52,6 +52,7 @@ internal data class TangemPayCardDetailsUM(
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
     val cardImageUrl: String?,
+    val cardBackgroundImageUrl: String?,
     val isActionsAvailable: Boolean = false,
     val shouldShowCardDetailsButtonOnCard: Boolean = false,
     val cardState: TangemPayCardState = TangemPayCardState.Active,
