@@ -72,6 +72,13 @@ internal class DefaultReissueCardRepository @Inject constructor(
             onFailure = { Either.Left(VisaApiError.Unspecified) },
         )
 
+    override suspend fun removeReissueOrderId(cardId: String): Either<UniversalError, Unit> = runSuspendCatching {
+        tangemPayReissueCardStore.removeReissueOrderId(cardId)
+    }.fold(
+        onSuccess = { Unit.right() },
+        onFailure = { Either.Left(VisaApiError.Unspecified) },
+    )
+
     override suspend fun getReissueOrderId(
         userWalletId: UserWalletId,
         cardId: String,

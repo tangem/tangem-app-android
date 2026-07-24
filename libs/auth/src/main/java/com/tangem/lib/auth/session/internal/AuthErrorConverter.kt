@@ -1,7 +1,7 @@
 package com.tangem.lib.auth.session.internal
 
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.AuthErrorResponse
 import com.tangem.utils.converter.Converter
@@ -35,6 +35,7 @@ internal class AuthErrorConverter @Inject constructor() : Converter<Throwable, A
             Code.UNAUTHORIZED -> AuthError.Unauthorized(problem)
             Code.FORBIDDEN -> AuthError.Forbidden(problem)
             Code.NOT_FOUND -> AuthError.NotFound(problem)
+            Code.CONFLICT -> AuthError.Conflict(problem)
             Code.TOO_MANY_REQUESTS -> AuthError.RateLimited(problem?.retryAfterSeconds, problem)
             else -> if (error.isServerError()) AuthError.ServerUnavailable(problem) else AuthError.Unknown(error)
         }

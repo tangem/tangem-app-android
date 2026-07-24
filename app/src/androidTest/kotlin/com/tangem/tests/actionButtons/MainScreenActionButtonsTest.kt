@@ -1,5 +1,7 @@
 package com.tangem.tests.actionButtons
 
+import com.tangem.datasource.api.common.config.MoonPay
+
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
@@ -12,8 +14,7 @@ import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
@@ -26,7 +27,7 @@ import org.junit.Test
 @HiltAndroidTest
 class MainScreenActionButtonsTest : BaseTestCase() {
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(MoonPay.KEY, ApiEnvironment.PROD))
     @AllureId("79")
     @DisplayName("Action buttons (long tap): validate UI")
     @Test
@@ -294,7 +295,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(MoonPay.KEY, ApiEnvironment.PROD))
     @AllureId("85")
     @DisplayName("Action buttons (long tap): check 'Sell' button")
     @Test
@@ -411,7 +412,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(MoonPay.KEY, ApiEnvironment.PROD))
     @AllureId("4395")
     @DisplayName("Action buttons (main screen): click on buttons with success response")
     @Test
@@ -502,6 +503,9 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             }
             step("Click on 'Swap' button") {
                 onMainScreen { swapButton.performClick() }
+            }
+            step("Skip stories if displayed") {
+                skipSwapStories()
             }
             step("Check 'Action is unavailable' dialog") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {

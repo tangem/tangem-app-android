@@ -8,7 +8,7 @@ import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.catchApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi

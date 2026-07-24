@@ -2,7 +2,10 @@ package com.tangem.features.feed.ui.earn.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,43 +22,28 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 
 @Composable
 internal fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        MostlyUsedCardV2(
-            modifier = modifier,
-            item = item,
-            onClick = onClick,
-        )
-    } else {
-        MostlyUsedCardV1(
-            modifier = modifier,
-            item = item,
-            onClick = onClick,
-        )
-    }
-}
-
-@Composable
-private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .width(178.dp)
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
-            .background(TangemTheme.colors2.surface.level3)
+            .clip(RoundedCornerShape(24.dp))
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(onClick = onClick)
             .padding(12.dp),
     ) {
         CurrencyIcon(
             state = item.currencyIconState,
             shouldDisplayNetwork = true,
-            networkBadgeSize = TangemTheme.dimens2.x4,
-            iconSize = TangemTheme.dimens2.x10,
-            networkBadgeBackground = TangemTheme.colors.background.action,
+            networkBadgeSize = 16.dp,
+            iconSize = 40.dp,
+            networkBadgeBackground = TangemTheme.colors3.bg.secondary,
         )
 
         SpacerH(22.dp)
@@ -66,16 +54,16 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
             Text(
                 modifier = Modifier.weight(weight = 1f, fill = false),
                 text = item.tokenName.resolveReference(),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography2.bodySemibold16,
+                color = TangemTheme.colors3.text.primary,
+                style = TangemTheme.typography3.body.medium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
             SpacerW(4.dp)
             Text(
                 text = item.symbol.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography2.captionMedium12,
+                color = TangemTheme.colors3.text.secondary,
+                style = TangemTheme.typography3.caption.medium,
                 maxLines = 1,
             )
         }
@@ -84,59 +72,8 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
 
         Text(
             text = item.earnValue.resolveReference(),
-            color = TangemTheme.colors2.text.status.positive,
-            style = TangemTheme.typography2.captionMedium12,
-            maxLines = 1,
-        )
-    }
-}
-
-@Composable
-private fun MostlyUsedCardV1(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .width(148.dp)
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-    ) {
-        CurrencyIcon(
-            modifier = Modifier.size(32.dp),
-            state = item.currencyIconState,
-            shouldDisplayNetwork = true,
-            networkBadgeSize = 12.dp,
-            networkBadgeBackground = TangemTheme.colors.background.action,
-        )
-
-        SpacerH(8.dp)
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                modifier = Modifier.weight(weight = 1f, fill = false),
-                text = item.tokenName.resolveReference(),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.subtitle2,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-            SpacerW(4.dp)
-            Text(
-                text = item.symbol.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-                maxLines = 1,
-            )
-        }
-
-        SpacerH(2.dp)
-
-        Text(
-            text = item.earnValue.resolveReference(),
-            color = TangemTheme.colors.text.accent,
-            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors3.text.accent.green,
+            style = TangemTheme.typography3.caption.medium,
             maxLines = 1,
         )
     }
@@ -144,36 +81,9 @@ private fun MostlyUsedCardV1(item: EarnListItemUM, onClick: () -> Unit, modifier
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun EarnListItemPreviewV1() {
-    TangemThemePreview {
-        MostlyUsedCardV1(
-            EarnListItemUM(
-                network = stringReference("Ethereum"),
-                symbol = stringReference("USDT"),
-                tokenName = stringReference("Tether"),
-                currencyIconState = CurrencyIconState.TokenIcon(
-                    url = null,
-                    topBadgeIconResId = R.drawable.img_eth_22,
-                    fallbackTint = TangemColorPalette.Black,
-                    fallbackBackground = TangemColorPalette.Meadow,
-                    isGrayscale = false,
-                    shouldShowCustomBadge = false,
-                ),
-                earnValue = stringReference("APY 6.54%"),
-                earnTypeTitle = stringReference("Yield"),
-                earnType = EarnType.YIELD,
-                onItemClick = {},
-            ),
-            onClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun EarnListItemPreviewV2() {
+private fun EarnListItemPreview() {
     TangemThemePreviewRedesign {
-        MostlyUsedCardV2(
+        MostlyUsedCard(
             EarnListItemUM(
                 network = stringReference("Ethereum"),
                 symbol = stringReference("USDT"),

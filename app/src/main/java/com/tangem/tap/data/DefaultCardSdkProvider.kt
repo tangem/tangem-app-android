@@ -1,5 +1,7 @@
 package com.tangem.tap.data
 
+import com.tangem.datasource.api.common.config.TangemTech
+
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -16,8 +18,7 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.utils.AddHeadersInterceptor
@@ -62,7 +63,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val mutableManager = apiConfigsManager as? MutableApiConfigsManager
 
         mutableManager?.addListener(
-            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = ApiConfig.ID.TangemTech) {
+            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = TangemTech.ID) {
                 override fun onChange(environmentConfig: ApiEnvironmentConfig) {
                     holder?.sdk?.config?.tangemApiBaseUrl = environmentConfig.baseUrl
                 }
@@ -70,7 +71,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         )
 
         val apiEnvironment = Provider {
-            apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemTech).environment
+            apiConfigsManager.getEnvironmentConfig(TangemTech.ID).environment
         }
         val platformHeaders = RequestHeader.AppVersionPlatformHeaders(appInfoProvider)
         val apiKeyHeader = RequestHeader.TangemApiKeyHeader(authProvider, apiEnvironment)
@@ -165,7 +166,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             keystoreManager = keystoreManager,
             wordlist = Wordlist.getWordlist(),
             config = config.apply {
-                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech)
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = TangemTech.ID)
                 tangemApiBaseUrl = apiConfig.baseUrl
             },
         )

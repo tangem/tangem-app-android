@@ -31,6 +31,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.findCardWithId
@@ -44,7 +45,6 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.closure.CloseCardListener
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.ReissueCardListener
@@ -86,7 +86,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener {
 
@@ -115,14 +114,12 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val cryptoCurrency
         get() = currentStatus.value.cryptoCurrency
-    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isMultipleCardsEnabled
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
             TangemPayCardPageUM(
                 onBackClick = router::pop,
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
-                settings = persistentListOf(),
                 settingsV2 = persistentListOf(),
                 menuItems = buildMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
@@ -176,8 +173,6 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
-
     /** Reports the card the user swiped to so per-card UI and reveal target it. */
     fun onCardPageSelected(index: Int) {
         cardControllersState.value.getOrNull(index)?.let { selectedCardId.value = it.cardId }
@@ -190,7 +185,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         val status = state.value
         if (status !is PaymentAccountStatusValue.Loaded || status.source != StatusSource.ACTUAL) return
 
-        val cards = status.cards.let { if (isMultipleCardsEnabled) it else it.take(1) }
+        val cards = status.cards
         val newIds = cards.mapTo(mutableSetOf()) { it.id }
 
         cardControllers.keys.filterNot { it in newIds }.toList().forEach { removedId ->
@@ -229,7 +224,6 @@ internal class TangemPayCardPageModel @Inject constructor(
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
-                    settings = buildSettings(card),
                     settingsV2 = buildSettingsV2(card),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
@@ -245,34 +239,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         return (status as? PaymentAccountStatusValue.Loaded)?.findCardWithId(selectedCardId.value)
     }
 
-    private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
-        if (isRedesignEnabled()) return persistentListOf()
-        return persistentListOf(
-            TangemPayCardPageSetting(
-                title = TextReference.Res(R.string.tangempay_card_details_change_pin),
-                onSettingClick = { onClickChangePIN(card.hasPinCode) },
-                testTag = TangemPayTestTags.CHANGE_PIN_ROW,
-            ),
-            TangemPayCardPageSetting(
-                title = TextReference.Res(
-                    if (card.isFrozen) {
-                        R.string.tangempay_card_details_unfreeze_card
-                    } else {
-                        R.string.tangempay_card_details_freeze_card
-                    },
-                ),
-                onSettingClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
-                testTag = TangemPayTestTags.FREEZE_CARD_ROW,
-            ),
-            TangemPayCardPageSetting(
-                title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
-                onSettingClick = ::onClickReissueCard,
-            ),
-        )
-    }
-
     private suspend fun subscribeOnDetailsState() {
-        if (!isRedesignEnabled()) return
         combine(cardDetailsEventListener.event, selectedCardId) { event, selectedId ->
             event is CardDetailsEvent.Show && event.cardId == selectedId
         }.collect { isDetailsShown ->
@@ -293,7 +260,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun buildSettingsV2(card: TangemPayCard): ImmutableList<TangemPayCardPageSettingV2> {
-        if (!isRedesignEnabled()) return persistentListOf()
         return persistentListOf(
             TangemPayCardPageSettingV2(
                 id = TangemPayCardPageSettingV2.Id.Details,
@@ -339,30 +305,28 @@ internal class TangemPayCardPageModel @Inject constructor(
                     ),
                 ),
             )
-            if (tangemPayFeatureToggles.isCloseCardEnabled) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
-                        onClick = ::onClickCloseCard,
-                        icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_trash_24,
-                            tintReference = {
-                                if (isLastCard) {
-                                    TangemTheme.colors3.icon.tertiary
-                                } else {
-                                    TangemTheme.colors3.icon.primary
-                                }
-                            },
-                        ),
-                        subtitle = if (isLastCard) {
-                            TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
-                        } else {
-                            null
+            add(
+                TangemPayDropDownItemUM(
+                    title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
+                    onClick = ::onClickCloseCard,
+                    icon = TangemIconUM.Icon(
+                        iconRes = CoreUiR.drawable.ic_trash_24,
+                        tintReference = {
+                            if (isLastCard) {
+                                TangemTheme.colors3.icon.tertiary
+                            } else {
+                                TangemTheme.colors3.icon.primary
+                            }
                         },
-                        isEnabled = !isLastCard,
                     ),
-                )
-            }
+                    subtitle = if (isLastCard) {
+                        TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
+                    } else {
+                        null
+                    },
+                    isEnabled = !isLastCard,
+                ),
+            )
         }.toImmutableList()
     }
 
@@ -403,15 +367,9 @@ internal class TangemPayCardPageModel @Inject constructor(
         if (frozenStateJobHolder.isActive) return
 
         val message = if (isFrozen) {
-            TangemPayMessagesFactory.createUnfreezeCardMessage(
-                onUnfreezeClicked = ::unfreezeCard,
-                isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
-            )
+            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard)
         } else {
-            TangemPayMessagesFactory.createFreezeCardMessage(
-                onFreezeClicked = ::freezeCard,
-                isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
-            )
+            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard)
         }
         uiMessageSender.send(message)
     }
@@ -496,11 +454,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         when (val onramp = loaded.virtualAccount) {
             null -> return
             VirtualAccountOnramp.Processing -> showVaPreparing()
-            // BankCredentialsError opens the deposit intro first; the retryable error sheet is shown from
-            // its "Show details" action (see onShowDetailsClick).
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
-            is VirtualAccountOnramp.BankCredentialsError,
             -> openVirtualAccountDeposit(onramp, loaded)
         }
     }
@@ -517,10 +472,13 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    fun showVaBankingDetailsError() {
+    fun showVaBankingDetailsError(productInstanceId: String) {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
-            TangemPayCardNavigation.VaBankingDetailsError(userWalletId = userWalletId),
+            TangemPayCardNavigation.VaBankingDetailsError(
+                userWalletId = userWalletId,
+                productInstanceId = productInstanceId,
+            ),
         )
     }
 
@@ -529,16 +487,10 @@ internal class TangemPayCardPageModel @Inject constructor(
         uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }
 
-    fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
-        when (onramp) {
-            // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
-            // instead of the intro deposit sheet that would need another "Show details" tap.
-            is VirtualAccountOnramp.Available -> onShowVirtualAccountRequisites(onramp)
-            else -> {
-                val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-                openVirtualAccountDeposit(onramp, loaded)
-            }
-        }
+    fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
+        // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
+        // instead of the intro deposit sheet that would need another "Show details" tap.
+        onShowVirtualAccountRequisites(bankCredentials)
     }
 
     fun onContactSupportClicked() {
@@ -560,12 +512,12 @@ internal class TangemPayCardPageModel @Inject constructor(
         router.push(TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess)
     }
 
-    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+    fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,
-                bankCredentials = onramp.bankCredentials,
+                bankCredentials = bankCredentials,
             ),
         )
     }

@@ -28,6 +28,9 @@ class CreateHotWalletUseCase @Inject constructor(
                 syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
             }
 
+            // Auth Service registration is triggered centrally by SaveWalletUseCase for every new hot
+            // wallet, so no explicit call is needed here.
+
             userWallet
         }
     }
