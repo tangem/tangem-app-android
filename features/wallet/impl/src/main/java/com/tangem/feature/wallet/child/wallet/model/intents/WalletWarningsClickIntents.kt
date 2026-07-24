@@ -12,6 +12,7 @@ import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
+import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -73,6 +74,8 @@ internal interface WalletWarningsClickIntents {
 
     fun onSupportClick()
 
+    fun onSoftUpdateClick()
+
     fun onBackupErrorClick()
 
     fun onNoteMigrationButtonClick(url: String)
@@ -111,6 +114,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val appStoreOpener: AppStoreOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
@@ -246,6 +250,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
         }
+    }
+
+    override fun onSoftUpdateClick() {
+        appStoreOpener.openStorePage()
     }
 
     override fun onBackupErrorClick() {

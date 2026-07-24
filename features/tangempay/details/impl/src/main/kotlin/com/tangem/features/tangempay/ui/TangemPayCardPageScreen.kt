@@ -312,6 +312,7 @@ private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDet
         isEditingEnabled = false,
     ),
     cardImageUrl = null,
+    cardBackgroundImageUrl = null,
 )
 
 @Preview

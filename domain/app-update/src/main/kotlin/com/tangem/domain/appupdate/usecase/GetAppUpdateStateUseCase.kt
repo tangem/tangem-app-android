@@ -8,6 +8,8 @@ import com.tangem.domain.appupdate.repository.AppUpdateRepository
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class GetAppUpdateStateUseCase(
     private val repository: AppUpdateRepository,
@@ -17,11 +19,21 @@ class GetAppUpdateStateUseCase(
 
     /**
      * Instant decision computed from the cached thresholds and the current app/OS version. No network.
-     * Records the optional update as shown when it decides to show it (24h throttle). Never throws —
-     * any failure resolves to [AppUpdateState.NoUpdate] so the initial navigation is never blocked.
+     * Records the optional update as shown as it decides to show it (24h throttle) — used by the startup gate.
+     * Never throws — any failure resolves to [AppUpdateState.NoUpdate] so the initial navigation is never blocked.
      */
-    suspend fun getCached(): AppUpdateState = runSuspendCatching {
-        resolve(freshCachedInfoOrNull(), recordOptionalShown = true)
+    suspend fun getCached(): AppUpdateState = getCachedState(recordOptionalShown = true)
+
+    /**
+     * Cache-only update state as a cold [Flow], with the optional-update throttle disabled so a
+     * non-dismissible banner stays visible while the optional update is relevant. No network, no side effects.
+     */
+    fun getBannerStateFlow(): Flow<AppUpdateState> = flow {
+        emit(getCachedState(recordOptionalShown = false))
+    }
+
+    private suspend fun getCachedState(recordOptionalShown: Boolean): AppUpdateState = runSuspendCatching {
+        resolve(freshCachedInfoOrNull(), recordOptionalShown = recordOptionalShown)
     }.getOrElse { error ->
         TangemLogger.e("Unable to resolve cached app update state", error)
         AppUpdateState.NoUpdate
@@ -65,7 +77,7 @@ class GetAppUpdateStateUseCase(
 
         val minSupportedVersion = info.minSupportedVersion?.let(AppVersion::parseOrNull)
         if (minSupportedVersion != null &&
-            appVersion <= minSupportedVersion &&
+            appVersion < minSupportedVersion &&
             isEscapable(latestVersion, minSupportedVersion)
         ) {
             return blockingStateFor(info.minSupportedOSVersion, deviceOsVersion, AppUpdateState.OsTooOld)
