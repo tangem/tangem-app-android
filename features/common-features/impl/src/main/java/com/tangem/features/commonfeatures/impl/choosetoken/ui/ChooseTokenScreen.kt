@@ -740,7 +740,7 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = state.items.lastIndex,
-                        backgroundColor = TangemTheme.colors2.surface.level1,
+                        backgroundColor = TangemTheme.colors.background.primary,
                     )
                     .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
                     .semantics { lazyListItemPosition = index },

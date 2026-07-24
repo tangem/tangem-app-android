@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -32,12 +33,14 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_binoculars_20
 import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
 import com.tangem.features.tangempay.entity.TangemPayEmptyTransactionHistoryStateV2
+import com.tangem.features.tangempay.entity.TangemPayTransactionCashbackUM
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 
@@ -206,7 +209,30 @@ private fun TangemPayTransaction(
         titleSlot = { Title(state = transactionState) },
         subtitleSlot = { Subtitle(state = transactionState) },
         valueSlot = { Amount(state = transactionState, isBalanceHidden = isBalanceHidden) },
-        subvalueSlot = { Timestamp(state = transactionState) },
+        subvalueSlot = {
+            (transactionState as? TangemPayTransactionState.Content.Spend)?.cashback?.let { cashback ->
+                CashbackBadge(cashback = cashback, isBalanceHidden = isBalanceHidden)
+            }
+            Timestamp(state = transactionState)
+        },
+    )
+}
+
+@Composable
+private fun CashbackBadge(
+    cashback: TangemPayTransactionCashbackUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    TangemBadge(
+        text = stringReference(cashback.amount.orMaskWithStars(isBalanceHidden)),
+        modifier = modifier,
+        variant = TangemBadge.Variant.Tinted,
+        status = when (cashback.style) {
+            TangemPayTransactionCashbackUM.Style.Confirmed -> TangemBadge.Status.Info
+            TangemPayTransactionCashbackUM.Style.Estimated -> TangemBadge.Status.Neutral
+        },
+        size = TangemBadge.Size.X4,
     )
 }
 

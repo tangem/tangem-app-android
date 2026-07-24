@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.news
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.news.models.response.NewsCategoriesResponse
 import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
 import com.tangem.datasource.api.news.models.response.NewsListResponse

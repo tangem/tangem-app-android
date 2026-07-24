@@ -2,11 +2,17 @@ package com.tangem.features.tangempay.cashback.impl.model
 
 import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.arrayItemReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
@@ -29,12 +35,18 @@ internal class TangemPayCashbackUmConverterTest {
     fun setup() {
         Locale.setDefault(Locale.US)
         mockkStatic(DateFormat::class)
-        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers {
+            val skeleton = secondArg<String>()
+            if (skeleton == "d MMMM") "MMMM d" else skeleton
+        }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns PAYOUT_WINDOW
     }
 
     @AfterEach
     fun tearDown() {
         unmockkStatic(DateFormat::class)
+        unmockkObject(DateTimeFormatters)
         Locale.setDefault(defaultLocale)
     }
 
@@ -46,8 +58,8 @@ internal class TangemPayCashbackUmConverterTest {
 
         // Assert
         val expected = TangemPayCashbackUM(
-            title = stringReference("Start spending and earn cashback"),
-            subtitle = stringReference("Collected amount will be shown here"),
+            title = resourceReference(R.string.tangempay_cashback_empty_title),
+            subtitle = resourceReference(R.string.tangempay_cashback_empty_subtitle),
             isEmpty = true,
             banner = null,
         )
@@ -64,11 +76,17 @@ internal class TangemPayCashbackUmConverterTest {
 
         // Assert
         val expected = TangemPayCashbackUM(
-            title = stringReference("$22.54 earned in June"),
-            subtitle = stringReference("Will be deposited on July 1–5"),
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("$22.54", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
+            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
             isEmpty = false,
             banner = TangemPayCashbackUM.Banner(
-                text = stringReference("Cashback $22.54 for June will be deposited till July 5"),
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList("$22.54", "June", "July 5"),
+                ),
                 type = TangemPayCashbackUM.Banner.Type.Info,
             ),
         )
@@ -85,38 +103,15 @@ internal class TangemPayCashbackUmConverterTest {
 
         // Assert
         val expected = TangemPayCashbackUM(
-            title = stringReference("-$22.54 earned in June"),
-            subtitle = stringReference("Will be deposited on July 1–5"),
-            isEmpty = false,
-            banner = TangemPayCashbackUM.Banner(
-                text = stringReference(
-                    "We received a refund for a purchase for which cashback had previously been awarded",
-                ),
-                type = TangemPayCashbackUM.Banner.Type.Error,
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("-$22.54", arrayItemReference(R.array.common_month_in, index = 5)),
             ),
-        )
-        assertThat(actual).isEqualTo(expected)
-    }
-
-    @Test
-    fun `GIVEN payout window spanning two months WHEN convert THEN subtitle shows month on both sides`() {
-        // Arrange
-        val cashback = createCashback(
-            payoutStart = DateTime.parse("2026-07-30"),
-            payoutEnd = DateTime.parse("2026-08-02"),
-        )
-
-        // Act
-        val actual = converter.convert(cashback)
-
-        // Assert
-        val expected = TangemPayCashbackUM(
-            title = stringReference("$22.54 earned in June"),
-            subtitle = stringReference("Will be deposited on July 30 – August 2"),
+            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
             isEmpty = false,
             banner = TangemPayCashbackUM.Banner(
-                text = stringReference("Cashback $22.54 for June will be deposited till August 2"),
-                type = TangemPayCashbackUM.Banner.Type.Info,
+                text = resourceReference(R.string.tangempay_cashback_refund_banner),
+                type = TangemPayCashbackUM.Banner.Type.Error,
             ),
         )
         assertThat(actual).isEqualTo(expected)
@@ -147,4 +142,8 @@ internal class TangemPayCashbackUmConverterTest {
             payoutEnd = payoutEnd,
         ),
     )
+
+    private companion object {
+        const val PAYOUT_WINDOW = "July 1 – 5"
+    }
 }

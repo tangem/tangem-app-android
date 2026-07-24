@@ -115,6 +115,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             logger.i("invoke() end ${params.userWalletId}: isRight=${result.isRight()}")
         }
 
+    override suspend fun markVirtualAccountProcessing(userWalletId: UserWalletId) {
+        paymentAccountStatusesStore.markVirtualAccountProcessing(userWalletId)
+    }
+
     private suspend fun proceedHasTangemPayResult(
         account: Account.Payment,
         hasTangemPay: Boolean,
@@ -462,9 +466,16 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     /**
      * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638). Gated by the feature toggle.
-     * If a product instance with [SpecificationDataType.ACCOUNT] exists, eagerly fetches its bank credentials
-     * ([VirtualAccountOnramp.Available]); otherwise surfaces [VirtualAccountOnramp.Eligible] when the wallet has
-     * the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
+     *
+     * Resolution order:
+     * 1. A product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted VA order id
+     *    (idempotent) and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
+     *    fetched on demand by the deposit screen, not here.
+     * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
+     *    NEW/PROCESSING/COMPLETED (or a lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
+     *    clears the persisted id and falls through to eligibility.
+     * 3. Otherwise (or after a CANCELED order) — surfaces [VirtualAccountOnramp.Eligible] when the wallet has
+     *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
     private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
         if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return null
@@ -473,20 +484,37 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             it.specificationDataType == SpecificationDataType.ACCOUNT
         }
         if (accountInstance != null) {
-            return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
+            // Order provisioned into an ACCOUNT product instance — drop the in-flight order hint (idempotent).
+            onboardingRepository.clearVirtualAccountOrderId(userWalletId)
+            return VirtualAccountOnramp.Available(productInstanceId = accountInstance.id)
+        }
+
+        val vaOrderId = onboardingRepository.getVirtualAccountOrderId(userWalletId)
+        if (vaOrderId != null) {
+            return customerOrderRepository.getOrderData(userWalletId = userWalletId, orderId = vaOrderId).fold(
                 ifLeft = { error ->
-                    logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
-                    null
+                    logger.e("getOrderData(va) failed for $vaOrderId: $error")
+                    VirtualAccountOnramp.Processing
                 },
-                ifRight = { credentials ->
-                    VirtualAccountOnramp.Available(
-                        productInstanceId = accountInstance.id,
-                        bankCredentials = credentials,
-                    )
+                ifRight = { orderData ->
+                    when (orderData.status) {
+                        OrderStatus.CANCELED -> {
+                            onboardingRepository.clearVirtualAccountOrderId(userWalletId)
+                            resolveEligibility(userWalletId)
+                        }
+                        OrderStatus.NEW,
+                        OrderStatus.PROCESSING,
+                        OrderStatus.COMPLETED,
+                        -> VirtualAccountOnramp.Processing
+                    }
                 },
             )
         }
 
+        return resolveEligibility(userWalletId)
+    }
+
+    private suspend fun resolveEligibility(userWalletId: UserWalletId): VirtualAccountOnramp? {
         return onboardingRepository.fetchCustomerEligibility(userWalletId).fold(
             ifLeft = { error ->
                 logger.e("fetchCustomerEligibility failed for $userWalletId: $error")

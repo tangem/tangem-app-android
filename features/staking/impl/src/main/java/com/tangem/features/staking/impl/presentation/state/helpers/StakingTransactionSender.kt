@@ -1,11 +1,14 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.transaction.error.SendTransactionError
 
 internal interface StakingTransactionSender {
+
+    suspend fun validate(): StakingTransactionVerdict
 
     suspend fun send(callbacks: Callbacks)
 
