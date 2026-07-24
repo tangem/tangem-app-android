@@ -22,7 +22,7 @@ internal class UpdateSaveButtonTransformer(
                 isLoading = isLoading,
                 tangemIconUM = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24).takeIf { isColdWallet },
                 text = if (isNewContact) {
-                    resourceReference(R.string.address_book_add_address)
+                    resourceReference(R.string.address_book_add_contact)
                 } else {
                     resourceReference(R.string.address_book_save_contact)
                 },
