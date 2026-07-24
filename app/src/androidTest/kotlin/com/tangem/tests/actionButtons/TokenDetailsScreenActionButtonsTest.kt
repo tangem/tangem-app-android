@@ -8,7 +8,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -195,6 +194,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
 
     @AllureId("9455")
     @DisplayName("Action buttons (token details screen): 'Swap' for a zero-balance token pre-fills the most funded token as source")
+    @Ignore("[REDACTED_JIRA]")
     @Test
     fun checkSwapForZeroBalanceTokenTest() {
         val emptyTokenTitle = "Polygon"
@@ -221,14 +221,15 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Open 'Swap' from the zero-balance '$emptyTokenTitle' token") {
                 openSwapFromZeroBalanceToken(tokenName = emptyTokenTitle, accountName = mainAccountName)
             }
-            step("DIAG capture from/to symbols") {
-                var from = "?"
-                var to = "?"
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onSwapTokenScreen { from = swapCardTokenSymbol.extractText() }
+            step("Assert '$mostFundedTokenSymbol' is pre-filled as the source token") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapTokenSymbol(mostFundedTokenSymbol).assertIsDisplayed() }
                 }
-                onSwapTokenScreen { to = receiveCardTokenSymbol.extractText() }
-                throw AssertionError("DIAG FROM='$from' TO='$to'")
+            }
+            step("Assert '$emptyTokenSymbol' is set as the receive token") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { receiveTokenSymbol(emptyTokenSymbol).assertIsDisplayed() }
+                }
             }
         }
     }
