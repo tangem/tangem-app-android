@@ -61,14 +61,14 @@ internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier, obst
     ) {
         Text(
             text = stringResourceSafe(R.string.markets_hint),
-            style = TangemTheme.typography2.bodyRegular15,
-            color = TangemTheme.colors2.text.neutral.tertiary,
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         Icon(
             modifier = Modifier.size(size = 24.dp),
             painter = painterResource(id = R.drawable.ic_chevron_24),
-            tint = TangemTheme.colors2.graphic.neutral.tertiary,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }
