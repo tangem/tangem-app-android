@@ -102,7 +102,7 @@ internal fun WalletBalance(
                 walletBalanceUM = walletBalanceUM,
                 isBalanceHidden = isBalanceHidden,
             )
-            SpacerH(TangemTheme.dimens2.x3)
+            SpacerH(12.dp)
             Box(
                 modifier = Modifier.onGloballyPositioned { coordinates ->
                     val rawBottomPx = coordinates.boundsInRoot().bottom
@@ -113,9 +113,9 @@ internal fun WalletBalance(
                 SubtitleRow(walletBalanceUM = walletBalanceUM)
             }
         }
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(8.dp)
         ActionButtons(buttons = hapticButtons, modifier = Modifier.fillMaxWidth())
-        SpacerH(TangemTheme.dimens2.x6)
+        SpacerH(24.dp)
     }
 }
 
@@ -140,20 +140,20 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
             is WalletAdditionalInfo.Content.SyncProgress -> {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1_5),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
                         text = resourceReference(
                             id = R.string.initial_wallet_sync_restore_progress,
                             formatArgs = wrappedList(content.progressPercent),
                         ).resolveReference(),
-                        style = TangemTheme.typography2.bodyRegular14,
-                        color = TangemTheme.colors2.text.neutral.tertiary,
+                        style = TangemTheme.typography3.subheading.medium,
+                        color = TangemTheme.colors3.text.secondary,
                         modifier = Modifier.testTag(MainScreenTestTags.SYNC_PROGRESS_TEXT),
                     )
                     CircularProgressIndicator(
                         modifier = Modifier.size(19.dp),
-                        color = TangemTheme.colors2.graphic.neutral.primary,
+                        color = TangemTheme.colors3.icon.secondary,
                         strokeWidth = 2.dp,
                     )
                 }
@@ -161,12 +161,12 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
             else -> {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = walletBalanceUM.name,
-                        style = TangemTheme.typography2.bodyRegular14,
-                        color = TangemTheme.colors2.text.neutral.tertiary,
+                        style = TangemTheme.typography3.subheading.medium,
+                        color = TangemTheme.colors3.text.secondary,
                         modifier = Modifier.testTag(MainScreenTestTags.CARD_TITLE),
                     )
                     TangemDeviceIcon(
@@ -194,36 +194,36 @@ private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, 
         when (balanceUM) {
             is WalletBalanceUM.Content -> Text(
                 text = balanceUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                style = TangemTheme.typography2.titleRegular44.applyBladeBrush(
+                style = TangemTheme.typography3.display.medium.applyBladeBrush(
                     isEnabled = balanceUM.isBalanceFlickering,
-                    textColor = TangemTheme.colors2.text.neutral.primary,
+                    textColor = TangemTheme.colors3.text.primary,
                 ),
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 autoSize = TextAutoSize.StepBased(
-                    minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
-                    maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
+                    minFontSize = TangemTheme.typography3.body.medium.fontSize,
+                    maxFontSize = TangemTheme.typography3.display.medium.fontSize,
                 ),
             )
             is WalletBalanceUM.Error -> Text(
                 text = StringsSigns.DASH_SIGN,
-                style = TangemTheme.typography2.titleRegular44,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography3.display.medium,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 autoSize = TextAutoSize.StepBased(
-                    minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
-                    maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
+                    minFontSize = TangemTheme.typography3.body.medium.fontSize,
+                    maxFontSize = TangemTheme.typography3.display.medium.fontSize,
                 ),
             )
             is WalletBalanceUM.Loading -> TextShimmer(
                 text = "123456",
-                style = TangemTheme.typography2.titleRegular44,
-                radius = TangemTheme.dimens2.x25,
+                style = TangemTheme.typography3.display.medium,
+                radius = 100.dp,
             )
             is WalletBalanceUM.Empty -> TextPlaceholder(
-                textStyle = TangemTheme.typography2.titleRegular44,
+                textStyle = TangemTheme.typography3.display.medium,
                 width = 200.dp,
             )
         }
@@ -244,7 +244,7 @@ private fun WalletBalance_Preview(
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
             buttons = params.actionsList,
             isBalanceHidden = false,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }
