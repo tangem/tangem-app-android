@@ -18,6 +18,30 @@ internal val AccountStatus.Payment.cryptoCurrency: CryptoCurrency.Token
         else -> error("TangemPayDetails opened with unsupported status: $v")
     }
 
+internal val AccountStatus.Payment.customerId: String?
+    get() = when (val v = value) {
+        is PaymentAccountStatusValue.Loaded -> v.customerId
+        is PaymentAccountStatusValue.Deactivated -> v.customerId
+        else -> null
+    }
+
+internal val PaymentAccountStatusValue.typeName: String
+    get() = when (this) {
+        PaymentAccountStatusValue.Empty -> "Empty"
+        PaymentAccountStatusValue.Loading -> "Loading"
+        PaymentAccountStatusValue.NotCreated -> "NotCreated"
+        is PaymentAccountStatusValue.UnderReview -> "UnderReview"
+        is PaymentAccountStatusValue.IssuingCard -> "IssuingCard"
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> "AwaitingPlanSelection"
+        is PaymentAccountStatusValue.Inactive -> "Inactive"
+        is PaymentAccountStatusValue.Deactivated -> "Deactivated"
+        is PaymentAccountStatusValue.Loaded -> "Loaded"
+        PaymentAccountStatusValue.Error.ExposedDevice -> "Error.ExposedDevice"
+        PaymentAccountStatusValue.Error.Unavailable -> "Error.Unavailable"
+        PaymentAccountStatusValue.Error.NotSynced -> "Error.NotSynced"
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> "Error.CardIssueFailed"
+    }
+
 internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
     get() = when (val v = value) {
         is PaymentAccountStatusValue.Inactive -> v.tariffPlan.tariff
@@ -29,10 +53,6 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
-
-internal fun AccountStatus.Payment.requireLoaded(): PaymentAccountStatusValue.Loaded =
-    value as? PaymentAccountStatusValue.Loaded
-        ?: error("Card-detail subflow requires Loaded status, got ${value::class.simpleName}")
 
 internal inline fun <T> AccountStatus.Payment.ifLoadedOrNull(call: (PaymentAccountStatusValue.Loaded) -> T): T? {
     val value = value
