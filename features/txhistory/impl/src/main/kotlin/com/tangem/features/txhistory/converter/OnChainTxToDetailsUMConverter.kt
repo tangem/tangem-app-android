@@ -26,6 +26,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
@@ -56,17 +57,22 @@ internal class OnChainTxToDetailsUMConverter(
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val titleConverter = TxHistoryTitleConverter()
 
-    fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset = TxHistoryDetailsUM.SingleAsset(
-        header = value.toHeaderUM(),
-        amountBlock = value.toAmountBlockUM(),
-        counterparty = value.toCounterpartyUM(),
-        // Validator (staking) / protocol (yield-supply), then the network fee from the tx itself; rate is not surfaced.
-        rows = buildList {
-            value.validatorRow()?.let(::add)
-            value.protocolRow()?.let(::add)
-            addAll(value.toInfoRows())
-        }.toImmutableList(),
-    )
+    fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset {
+        // An unrecognized contract call between the user's own portfolios reads as a Transfer, not a raw operation —
+        // mirrors the history list so the two never disagree.
+        val tx = value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
+        return TxHistoryDetailsUM.SingleAsset(
+            header = tx.toHeaderUM(),
+            amountBlock = tx.toAmountBlockUM(),
+            counterparty = tx.toCounterpartyUM(),
+            // Validator (staking) / protocol (yield-supply), then the network fee from the tx; rate is not surfaced.
+            rows = buildList {
+                tx.validatorRow()?.let(::add)
+                tx.protocolRow()?.let(::add)
+                addAll(tx.toInfoRows())
+            }.toImmutableList(),
+        )
+    }
 
     /**
      * Protocol row of a yield-supply tx: the DeFi protocol the funds are supplied to. The yield-supply product is a
@@ -137,12 +143,22 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * The `User` interaction address resolved against the user's portfolios on the viewed currency's network — the
-     * same resolution the history list applies to its row subtitle, so the title and the counterparty card never
-     * disagree with the list. `null` when the counterparty is not a plain `User` address.
+     * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
+     * counterparty card never disagree with the list. [interactionAddressType] already carries the correct counterparty
+     * for every type — including an incoming [TxInfo.TransactionType.Transfer], whose interaction address the mapper
+     * takes from the sender. The one exception is an **incoming** unrecognized call ([TxInfo.TransactionType.Operation]
+     * / [TxInfo.TransactionType.UnknownOperation]): there [interactionAddressType] is the destination — the viewed
+     * wallet itself — so the real sender ([TxInfo.sourceType]) is resolved instead. `null` when there is no single
+     * plain counterparty address.
      */
     private fun TxInfo.resolvedCounterparty(): ResolvedOwner? {
-        val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
+        val isIncomingOperation = !isOutgoing &&
+            (type is TransactionType.Operation || type is TransactionType.UnknownOperation)
+        val address = if (isIncomingOperation) {
+            (sourceType as? TxInfo.SourceType.Single)?.address
+        } else {
+            (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
+        } ?: return null
         return lookup.resolveOwner(address = address, networkRawId = currency.network.id.rawId)
     }
 
