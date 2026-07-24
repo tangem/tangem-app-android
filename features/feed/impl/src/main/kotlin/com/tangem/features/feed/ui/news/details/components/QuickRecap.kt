@@ -2,7 +2,6 @@ package com.tangem.features.feed.ui.news.details.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -11,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -23,58 +21,11 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
 internal fun QuickRecap(content: String, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        QuickRecapV2(content, modifier)
-    } else {
-        QuickRecapV1(content, modifier)
-    }
-}
-
-@Composable
-private fun QuickRecapV1(content: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.height(IntrinsicSize.Min),
-    ) {
-        VerticalDivider(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(start = 8.dp),
-            thickness = 2.dp,
-            color = TangemTheme.colors.stroke.primary,
-        )
-        Column(modifier = Modifier.padding(start = 20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_quick_recap_16),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.accent,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResourceSafe(R.string.news_quick_recap),
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.accent,
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = content,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-            )
-        }
-    }
-}
-
-@Composable
-private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier.height(IntrinsicSize.Min)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
@@ -82,7 +33,7 @@ private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
                 contentDescription = null,
             )
 
-            SpacerW(TangemTheme.dimens2.x1)
+            SpacerW(4.dp)
 
             Text(
                 text = buildAnnotatedString {
@@ -97,27 +48,27 @@ private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
                         append(stringResourceSafe(R.string.news_quick_recap))
                     }
                 },
-                style = TangemTheme.typography2.subheadlineMedium14,
+                style = TangemTheme.typography3.subheading.medium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
         }
 
-        SpacerH(TangemTheme.dimens2.x2_5)
+        SpacerH(10.dp)
 
         Box {
             VerticalDivider(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(start = TangemTheme.dimens2.x2_5),
-                thickness = TangemTheme.dimens2.x0_5,
+                    .padding(start = 10.dp),
+                thickness = 2.dp,
                 color = Color(QUICK_RECAP_DIVIDER_COLOR),
             )
             Text(
-                modifier = Modifier.padding(start = TangemTheme.dimens2.x5),
+                modifier = Modifier.padding(start = 20.dp),
                 text = content,
-                style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
             )
         }
     }
@@ -127,7 +78,7 @@ private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
 @Composable
 private fun QuickRecapPreview() {
     TangemThemePreviewRedesign {
-        QuickRecapV2(
+        QuickRecap(
             content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut" +
                 " labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris " +
                 "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit " +

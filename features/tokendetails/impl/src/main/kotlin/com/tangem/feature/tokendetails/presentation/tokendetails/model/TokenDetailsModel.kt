@@ -7,9 +7,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
@@ -17,6 +14,7 @@ import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.rating.RatingComponent
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -30,7 +28,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
@@ -68,7 +65,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
+import com.tangem.domain.onramp.OnrampGetDefaultCurrencyUseCase
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.staking.FetchStakingOptionsUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
@@ -93,8 +92,6 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
-import com.tangem.feature.swap.domain.SwapFeedbackUseCase
-import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -105,12 +102,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
-import com.tangem.features.rating.RatingComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -143,6 +139,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
+    private val fetchStakingOptionsUseCase: FetchStakingOptionsUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
@@ -182,13 +179,11 @@ internal class TokenDetailsModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val redesignStateController: TokenDetailsStateController,
-    private val swapFeedbackUseCase: SwapFeedbackUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
+    private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -227,6 +222,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
+    val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -344,10 +340,8 @@ internal class TokenDetailsModel @Inject constructor(
                 uiState.value = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = settings.isBalanceHidden,
                 )
-                if (designFeatureToggles.isRedesignEnabled) {
-                    redesignStateController.update { state ->
-                        state.copy(isBalanceHidden = settings.isBalanceHidden)
-                    }
+                redesignStateController.update { state ->
+                    state.copy(isBalanceHidden = settings.isBalanceHidden)
                 }
             }
             .launchIn(modelScope)
@@ -364,38 +358,36 @@ internal class TokenDetailsModel @Inject constructor(
                 latestTokenActions = state.states
                 sendButtonsEvents(state.states)
                 uiState.value = stateFactory.getManageButtonsState(actions = state.states)
-                if (designFeatureToggles.isRedesignEnabled) {
-                    val networkSource = currencyStatus.value.sources.networkSource
-                    redesignStateController.update(
-                        UpdateActionButtonsTransformer(
-                            actions = state.states,
-                            clickIntents = this@TokenDetailsModel,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateAddFundsTransformer(
-                            actions = state.states,
-                            networkSource = networkSource,
-                            clickIntents = this@TokenDetailsModel,
-                            onActionDispatched = bottomSheetNavigation::dismiss,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateTransferTransformer(
-                            actions = state.states,
-                            networkSource = networkSource,
-                            clickIntents = this@TokenDetailsModel,
-                            analyticsEventHandler = analyticsEventsHandler,
-                            onActionDispatched = bottomSheetNavigation::dismiss,
-                        ),
-                    )
-                    redesignStateController.update(
-                        UpdateZeroBalanceActionsTransformer(
-                            actions = state.states,
-                            clickIntents = this@TokenDetailsModel,
-                        ),
-                    )
-                }
+                val networkSource = currencyStatus.value.sources.networkSource
+                redesignStateController.update(
+                    UpdateActionButtonsTransformer(
+                        actions = state.states,
+                        clickIntents = this@TokenDetailsModel,
+                    ),
+                )
+                redesignStateController.update(
+                    UpdateAddFundsTransformer(
+                        actions = state.states,
+                        networkSource = networkSource,
+                        clickIntents = this@TokenDetailsModel,
+                        onActionDispatched = bottomSheetNavigation::dismiss,
+                    ),
+                )
+                redesignStateController.update(
+                    UpdateTransferTransformer(
+                        actions = state.states,
+                        networkSource = networkSource,
+                        clickIntents = this@TokenDetailsModel,
+                        analyticsEventHandler = analyticsEventsHandler,
+                        onActionDispatched = bottomSheetNavigation::dismiss,
+                    ),
+                )
+                redesignStateController.update(
+                    UpdateZeroBalanceActionsTransformer(
+                        actions = state.states,
+                        clickIntents = this@TokenDetailsModel,
+                    ),
+                )
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
@@ -676,6 +668,11 @@ internal class TokenDetailsModel @Inject constructor(
             ),
         )
         router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
+    }
+
+    /** Opens the given currency's Token Details on top of this screen (e.g. the refunded token from the tx details sheet). */
+    fun openTokenDetails(currency: CryptoCurrency) {
+        router.openTokenDetails(userWalletId = userWalletId, currency = currency)
     }
 
     override fun onStakeBannerClick() {
@@ -1032,6 +1029,7 @@ internal class TokenDetailsModel @Inject constructor(
                     updateTxHistory()
                     expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
                 },
+                async { fetchStakingOptionsUseCase() },
             ).awaitAll()
             uiState.value = stateFactory.getRefreshedState()
             redesignStateController.update { state ->
@@ -1217,27 +1215,12 @@ internal class TokenDetailsModel @Inject constructor(
         txExternalUrl: String,
         userWalletIdStringValue: String,
     ) {
-        if (!swapFeatureToggles.isSwapRateExperienceEnabled) return
         ratingSlotNavigation.activate(
             RatingComponent.Params(
-                onLoadRating = {
-                    swapFeedbackUseCase.getExistingRating(txExternalId)
-                        .fold(ifLeft = { null }, ifRight = { it?.rating })
-                },
-                onSubmitRating = { rating, feedback ->
-                    swapFeedbackUseCase.submit(
-                        SwapFeedbackParams(
-                            userWalletIdHash = userWalletIdStringValue.hexToBytes()
-                                .calculateSha256()
-                                .toHexString(),
-                            providerName = providerName,
-                            txUrl = txExternalUrl,
-                            txExternalId = txExternalId,
-                            rating = rating,
-                            feedback = feedback,
-                        ),
-                    ).onLeft { TangemLogger.e("Failed to submit swap feedback: $it") }
-                },
+                txExternalId = txExternalId,
+                providerName = providerName,
+                txExternalUrl = txExternalUrl,
+                userWalletId = UserWalletId(userWalletIdStringValue),
             ),
         )
     }
@@ -1255,6 +1238,10 @@ internal class TokenDetailsModel @Inject constructor(
                 tokenAction = TokenAction.Info,
             ),
         )
+    }
+
+    override fun onStakingRegionUnavailableClick() {
+        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.RegionUnavailable)
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
@@ -1491,7 +1478,6 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun initRedesign() {
-        if (!designFeatureToggles.isRedesignEnabled) return
         initRedesignState()
         observeRedesignBalance()
         updateRedesignTopBarMenu()
@@ -1500,10 +1486,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun observeQuickTopUpBlock() {
-        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+        val statusFlow = getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
             .map { it.status }
             .distinctUntilChanged()
-            .flatMapLatest { status ->
+
+        combine(statusFlow, selectedAppCurrencyFlow) { status, appCurrency -> status to appCurrency }
+            .flatMapLatest { (status, appCurrency) ->
                 flow {
                     val amount = status.value.amount
                     if (amount == null || !amount.isZero()) {
@@ -1517,12 +1505,17 @@ internal class TokenDetailsModel @Inject constructor(
                         ifLeft = { true },
                         ifRight = { it.isEmpty() },
                     )
+                    // Read the saved onramp currency BEFORE checkOnrampAvailabilityUseCase:
+                    // the latter auto-persists the regional currency once the country is confirmed.
+                    val selectedOnrampCurrency = onrampGetDefaultCurrencyUseCase().getOrNull()
                     val availability = checkOnrampAvailabilityUseCase(userWallet)
                     emit(
                         quickTopUpBlockFactory.build(
                             currencyStatus = status,
                             isHistoryEmpty = isHistoryEmpty,
                             onrampAvailability = availability,
+                            selectedOnrampCurrency = selectedOnrampCurrency,
+                            appCurrency = appCurrency,
                             onPresetClick = ::onQuickTopUpClick,
                             onOtherClick = ::onQuickTopUpOtherClick,
                         ),

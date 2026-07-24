@@ -45,8 +45,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
-import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -203,7 +203,6 @@ private fun TokenDetailsBody(
         val balance = tokenDetailsUM.balanceBlockUM
         notifications(
             notifications = tokenDetailsUM.notifications,
-            contentColor = rootBackground,
             modifier = itemModifier,
         )
         tokenDetailsUM.earnBlockState?.let { earnBlock ->
@@ -347,11 +346,6 @@ private val PreviewExpressTransactionsComponent = object : ExpressTransactionsCo
             bottomSheetSlot = null,
         ),
     )
-
-    override fun LazyListScope.expressTransactionsContentLegacy(
-        state: PersistentList<ExpressTransactionStateUM>,
-        modifier: Modifier,
-    ) = Unit
 
     override fun LazyListScope.expressTransactionsContent(
         state: PersistentList<ExpressTransactionStateUM>,

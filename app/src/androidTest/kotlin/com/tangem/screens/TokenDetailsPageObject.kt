@@ -9,6 +9,7 @@ import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -54,12 +55,54 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    val stakingNoRewards: KNode = child {
+        hasText(getResourceString(CoreResR.string.staking_details_no_rewards_to_claim))
+        useUnmergedTree = true
+    }
+
+    val totalBalanceLabel: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_total))
+        useUnmergedTree = true
+    }
+
+    val availableBalanceLabel: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_available))
+        useUnmergedTree = true
+    }
+
     val stakingTitle: KNode = child {
         hasText(getResourceString(R.string.common_staking))
     }
 
     val stakingEnabledTitle: KNode = child {
         hasText(getResourceString(R.string.staking_enabled))
+    }
+
+    val yieldSupplyAvailableBlock: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_AVAILABLE_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val yieldSupplyActiveBlock: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val earnBlockTitleIcon: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.EARN_BLOCK_TITLE_ICON)
+        useUnmergedTree = true
+    }
+
+    val yieldModeConnectedTitle: KNode = child {
+        hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK))
+        hasText(getResourceString(CoreResR.string.yield_module_transaction_enter))
+        useUnmergedTree = true
+    }
+
+    fun yieldModeApy(apy: String): KNode = child {
+        hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK))
+        hasText(getResourceString(CoreResR.string.yield_module_average_apy, apy))
+        useUnmergedTree = true
     }
 
     val title: KNode = child {
@@ -70,6 +113,14 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT))
         addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
         useUnmergedTree = true
+    }
+
+    val totalBalanceSwitcher: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_total))
+    }
+
+    val availableBalanceSwitcher: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_available))
     }
 
     val addFundsButton: KNode = child {
@@ -88,6 +139,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.common_transfer)))
         useUnmergedTree = true
+    }
+
+    /** 'Receive' row of the zero-balance actions block (Buy / Swap / Receive), shown instead of the action buttons. */
+    val receiveButton: KNode = child {
+        hasText(getResourceString(R.string.common_receive))
     }
 
     fun networkFeeNotificationIcon(feeCurrencyName: String): KNode = child {
@@ -111,6 +167,12 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     val topUpYourWalletNotificationIcon: KNode = child {
         hasAnySibling(withText(getResourceString(R.string.warning_no_account_title)))
         hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    fun tokenTitle(name: String): KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
+        hasAnyDescendant(withText(text = name, substring = true))
         useUnmergedTree = true
     }
 
