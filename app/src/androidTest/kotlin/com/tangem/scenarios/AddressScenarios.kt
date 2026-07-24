@@ -1,6 +1,5 @@
 package com.tangem.scenarios
 
-import android.view.KeyEvent
 import androidx.test.core.app.ApplicationProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
@@ -55,31 +54,6 @@ fun BaseTestCase.verifyAddresses(seedPhrase: String, apiAddressesJson: String) {
             apiJson = apiAddressesJson,
         )
     }
-}
-
-private const val TESTER_MENU_MAX_ATTEMPTS = 3
-
-/**
- * Presses 'Volume Down' twice to open tester menu.
- * Retries up to [TESTER_MENU_MAX_ATTEMPTS] times if the menu doesn't appear.
- */
-private fun BaseTestCase.openTesterMenu() {
-    repeat(TESTER_MENU_MAX_ATTEMPTS) { attempt ->
-        waitForIdle()
-        device.uiDevice.pressKeyCode(KeyEvent.KEYCODE_VOLUME_DOWN)
-        device.uiDevice.pressKeyCode(KeyEvent.KEYCODE_VOLUME_DOWN)
-
-        val opened = runCatching {
-            onTesterMenuScreen { addressesInfoButton.assertIsDisplayed() }
-        }.isSuccess
-
-        if (opened) {
-            TangemLogger.i("Tester menu opened on attempt ${attempt + 1}")
-            return
-        }
-        TangemLogger.w("Tester menu not opened on attempt ${attempt + 1}, retrying...")
-    }
-    error("Failed to open tester menu after $TESTER_MENU_MAX_ATTEMPTS attempts")
 }
 
 /**

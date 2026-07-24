@@ -14,17 +14,20 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.WalletSelectorListener
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +48,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(), WalletSelectorListener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -64,7 +68,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
             when (params) {
                 is TangemPayOnboardingComponent.Params.Deeplink -> {
                     repository.validateDeeplink(params.deeplink)
-                        .onRight { isValid -> if (isValid) showOnboarding() else back() }
+                        .onRight { isValid -> if (isValid) checkEligibilityAndShow() else back() }
                         .onLeft { back() }
                 }
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
@@ -73,8 +77,10 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 is TangemPayOnboardingComponent.Params.HotWalletOnboarding -> {
                     startOnboarding(userWalletId = params.userWalletId)
                 }
+                // FromBanner* and mobile-onboard skip the backend validation that Params.Deeplink performs.
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
+                is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
                 -> showOnboarding()
             }
         }
@@ -93,6 +99,21 @@ internal class TangemPayOnboardingModel @Inject constructor(
         }
     }
 
+    private suspend fun checkEligibilityAndShow() {
+        runSuspendCatching {
+            eligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DEEPLINK)
+        }
+            .onSuccess { isAvailable -> if (isAvailable) showOnboarding() else showNotAvailable() }
+            .onFailure { error ->
+                TangemLogger.e(messageString = "TangemPayOnboarding: eligibility check failed", throwable = error)
+                back()
+            }
+    }
+
+    private fun showNotAvailable() {
+        uiState.update { state -> TangemPayOnboardingScreenState.NotAvailable(onBack = state.onBack) }
+    }
+
     private fun checkCustomerInfo(userWalletId: UserWalletId) {
         modelScope.launch {
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
@@ -100,7 +121,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 .onRight { customerInfo ->
                     when {
                         customerInfo.kycStatus != KycStatus.APPROVED -> {
-                            if (customerInfo.productInstance == null) {
+                            if (shouldCreateOrderBeforeKyc(customerInfo)) {
                                 repository.createOrder(userWalletId)
                                     .onLeft { error ->
                                         TangemLogger.e("Error creating order before KYC: $error")
@@ -128,7 +149,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
-        if (params is TangemPayOnboardingComponent.Params.Deeplink) {
+        if (params is TangemPayOnboardingComponent.Params.Deeplink ||
+            params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
+        ) {
             modelScope.launch {
                 openWalletSelectorIfNeeds(
                     walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
@@ -189,7 +212,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         if (customerInfo.kycStatus == KycStatus.APPROVED) {
                             back()
                         } else {
-                            if (customerInfo.productInstance == null) {
+                            if (shouldCreateOrderBeforeKyc(customerInfo)) {
                                 repository.createOrder(userWalletId)
                                     .onLeft { error ->
                                         TangemLogger.e("Error creating order before KYC: $error")
@@ -201,6 +224,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 )
         }
     }
+
+    private fun shouldCreateOrderBeforeKyc(customerInfo: CustomerInfo): Boolean =
+        !tangemPayFeatureToggles.isTiersPlusPlanEnabled && customerInfo.productInstance == null
 
     private fun openKyc(userWalletId: UserWalletId) {
         router.replaceAll(
@@ -233,6 +259,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         is TangemPayOnboardingComponent.Params.Deeplink,
         is TangemPayOnboardingComponent.Params.ContinueOnboarding,
         is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
+        is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
         -> null
     }
 }

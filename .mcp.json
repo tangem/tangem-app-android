@@ -5,15 +5,14 @@
       "command": "npx",
       "args": ["-y", "firebase-tools@latest", "mcp"]
     },
-    "atlassian": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"]
-    },
     "notion": {
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+    },
+    "lokalise_sd": {
+      "type": "http",
+      "url": "https://mcp.lokalise.com/mcp/software-development"
     }
   }
 }

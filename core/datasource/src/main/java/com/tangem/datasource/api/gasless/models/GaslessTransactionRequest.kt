@@ -45,6 +45,9 @@ data class TransactionData(
     @Json(name = "value")
     val value: String,
 
+    @Json(name = "gasLimit")
+    val gasLimit: String? = null,
+
     @Json(name = "data")
     val data: String,
 )

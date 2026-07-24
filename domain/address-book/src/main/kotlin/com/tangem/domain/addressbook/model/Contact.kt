@@ -1,6 +1,9 @@
 package com.tangem.domain.addressbook.model
 
+import com.tangem.domain.addressbook.model.serialization.ContactNameAsStringSerializer
+import com.tangem.domain.addressbook.model.serialization.UserWalletIdAsStringSerializer
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,10 +15,22 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Contact(
+    @SerialName("id")
     val id: ContactId,
+    @SerialName("walletId")
+    @Serializable(with = UserWalletIdAsStringSerializer::class)
     val walletId: UserWalletId,
+    @SerialName("name")
+    @Serializable(with = ContactNameAsStringSerializer::class)
     val name: ContactName,
+    @SerialName("icon")
+    val icon: String,
+    @SerialName("iconColor")
+    val iconColor: String,
+    @SerialName("createdAt")
     val createdAt: String,
+    @SerialName("updatedAt")
     val updatedAt: String,
-    val addressEntries: List<AddressEntry>,
+    @SerialName("addresses")
+    val addresses: List<AddressEntry>,
 )

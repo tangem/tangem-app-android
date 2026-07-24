@@ -157,9 +157,7 @@ interface SwapInteractor {
      * `LIMITED`), loads its [com.tangem.blockchain.common.transaction.TransactionFee] and returns
      * both as [IntegratedApprovalData].
      *
-     * Used by the integrated approve+swap flow when
-     * `SwapFeatureToggles.isSwapIntegratedApproveEnabled` is ON and the quote requires an
-     * allowance bump.
+     * Used by the integrated approve+swap flow when the quote requires an allowance bump.
      *
      * @param approvalAmount LIMITED-mode swap amount (the user-input amount). Used when
      *   [approveType] is `LIMITED`; ignored for `UNLIMITED`.

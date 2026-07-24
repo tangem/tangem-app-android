@@ -467,7 +467,6 @@ private fun DescriptionWithMoreBlock(
             .padding(horizontal = 12.dp),
         description = model.text,
         hasFullDescription = true,
-        textStyle = TangemTheme.typography.caption2,
         onReadMoreClick = onDescriptionClick,
     )
 }
