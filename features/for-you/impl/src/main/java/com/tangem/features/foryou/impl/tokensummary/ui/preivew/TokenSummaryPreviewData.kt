@@ -50,6 +50,7 @@ internal val previewContentSentiment = TokenSentimentUM.Content(
     sentiment = stringReference("Negative outlook"),
     lastUpdate = stringReference("Updated Jan 20 2026, 9:24 PM"),
     totalScore = -4,
+    scaleMax = 5,
     indicators = persistentListOf(
         TokenIndicatorUM.Content(
             sentimentBadgeText = resourceReference(R.string.common_neutral),
