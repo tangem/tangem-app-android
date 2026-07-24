@@ -13,7 +13,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -37,6 +36,7 @@ import com.tangem.features.feed.model.feed.state.transformers.*
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.*
+import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
@@ -59,8 +59,8 @@ internal class FeedComponentModel @Inject constructor(
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val appRouter: AppRouter,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val forYouFeatureToggles: ForYouFeatureToggles,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -227,19 +227,11 @@ internal class FeedComponentModel @Inject constructor(
             currentDate = getCurrentDate(),
             feedListSearchBar = FeedListSearchBar(
                 placeholderText = resourceReference(
-                    id = if (designFeatureToggles.isRedesignEnabled) {
-                        R.string.markets_search_title_placeholder
-                    } else {
-                        R.string.markets_search_header_title
-                    },
+                    id = R.string.markets_search_title_placeholder,
                 ),
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
-                    if (designFeatureToggles.isRedesignEnabled) {
-                        params.feedClickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
-                    } else {
-                        params.feedClickIntents.onMarketOpenClick(null)
-                    }
+                    params.feedClickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
                 },
             ),
             feedListCallbacks = FeedListCallbacks(
@@ -273,6 +265,11 @@ internal class FeedComponentModel @Inject constructor(
             ),
             globalState = GlobalFeedState.Loading,
             earnListUM = EarnListUM.Loading,
+            forYouBannerUM = if (forYouFeatureToggles.isForYouEnabled) {
+                ForYouBannerUM.Content(onClick = params.feedClickIntents::openForYou)
+            } else {
+                ForYouBannerUM.Empty
+            },
         )
     }
 

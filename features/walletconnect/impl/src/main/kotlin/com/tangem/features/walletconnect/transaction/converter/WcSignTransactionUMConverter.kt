@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.converter
 
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
@@ -37,6 +38,7 @@ internal class WcSignTransactionUMConverter @Inject constructor(
             address = WcAddressConverter.convert(value.context.derivationState),
             walletInteractionIcon = walletInterationIcon(value.context.session.wallet),
             isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
+            validationResult = value.validationResult,
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
             requestBlockUMConverter.convert(
@@ -52,5 +54,6 @@ internal class WcSignTransactionUMConverter @Inject constructor(
         val signModel: WcMessageSignUseCase.SignModel,
         val actions: WcTransactionActionsUM,
         val portfolioName: AccountTitleUM?,
+        val validationResult: ValidationResult?,
     )
 }

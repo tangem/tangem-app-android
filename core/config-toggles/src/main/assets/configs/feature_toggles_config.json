@@ -1,5 +1,13 @@
 [
     {
+        "name": "AND_15901_STORIES_CONTAINER_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1322_FORCE_UPDATE_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "NEW_CARD_SCANNING_ENABLED",
         "version": "undefined"
     },
@@ -8,48 +16,16 @@
         "version": "undefined"
     },
     {
-        "name": "STAKING_ETH_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "USEDESK_ENABLED",
+        "name": "TWI_1602_STAKING_TRANSACTION_VALIDATION",
         "version": "undefined"
     },
     {
-        "name": "APP_REDESIGN_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "GASLESS_APPROVAL_ENABLED",
-        "version": "5.37"
-    },
-    {
-        "name": "DYNAMIC_ADDRESSES_ENABLED",
-        "version": "5.39"
+        "name": "TWI_485_USEDESK_ENABLED",
+        "version": "6.1"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "ASSETS_DISCOVERY_ENABLED",
-        "version": "5.38"
-    },
-    {
-        "name": "SOLANA_TX_HISTORY_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "HEDERA_ERC20_ENABLED",
-        "version": "5.37"
-    },
-    {
-        "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
-        "version": "5.38"
     },
     {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
@@ -64,60 +40,12 @@
         "version": "undefined"
     },
     {
-        "name": "AND_15207_SWAP_SWITCH_TO_TRANSFER_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15120_SWAP_INTEGRATED_APPROVE",
-        "version": "6.0"
-    },
-    {
-        "name": "SWAP_AB_ENABLED",
-        "version": "5.39"
-    },
-    {
         "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
-        "name": "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15310_ADD_FUNDS_STAGE1",
-        "version": "5.39"
-    },
-    {
-        "name": "TWI_1377_MANAGE_FUNDS",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED",
-        "version": "5.39"
-    },
-    {
-        "name": "AND_15154_YIELD_PROMO_ENABLED",
-        "version": "5.39.2"
-    },
-    {
-        "name": "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED",
-        "version": "5.39"
+        "name": "TWI_1403_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
+        "version": "6.1"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
@@ -125,39 +53,23 @@
     },
     {
         "name": "AND_15482_SURVEYSPARROW_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "AND_15258_QUICK_TOP_UP_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15368_VISA_PAY_REDESIGN",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15364_VISA_PAY_CARD_CLOSE",
-        "version": "6.0"
+        "version": "6.1"
     },
     {
         "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
         "version": "undefined"
     },
     {
+        "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
+        "version": "6.1"
+    },
+    {
         "name": "TWI_83_ADDRESS_BOOK_ENABLED",
+        "version": "6.1"
+    },
+    {
+        "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15235_VISA_MULTIPLE_CARDS",
-        "version": "6.0"
-    },
-    {
-        "name": "AND_15715_SWAP_BEST_DEX_RATE_ENABLED",
-        "version": "6.0"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
@@ -168,19 +80,39 @@
         "version": "undefined"
     },
     {
-        "name": "AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED",
-        "version": "6.0"
+        "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1469_FOR_YOU_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1367_HIGH_FEE_WARNING_ENABLED",
+        "version": "6.1"
     },
     {
         "name": "TWI_1638_VA_MVP0_ENABLED",
-        "version": "6.0.1"
+        "version": "6.1"
     },
     {
         "name": "TWI_1637_CASHBACK_AND_REACTIVATION_CAMPAIGNS_ENABLED",
-        "version": "6.0.1"
+        "version": "undefined"
     },
     {
-        "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
-        "version": "6.0.1"
+        "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED",
+        "version": "6.1"
+    },
+    {
+        "name": "AND_16204_POLYMARKET_ENABLED",
+        "version": "undefined"
     }
 ]

@@ -302,7 +302,7 @@ private fun TangemModalBottomSheetWithFooter_Preview() {
                     )
                     SpacerH8()
                     Text(
-                        text = "Tangem does not currently support a required network by React App.",
+                        text = "Tangem does not currently support a required network by React App.",
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.secondary,
                         textAlign = TextAlign.Center,

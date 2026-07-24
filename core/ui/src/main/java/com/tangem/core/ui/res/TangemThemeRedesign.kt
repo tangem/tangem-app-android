@@ -37,7 +37,6 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
         colorScheme = tangemColorScheme(colors = rememberedColors),
     ) {
         CompositionLocalProvider(
-            LocalRedesignEnabled provides true,
             LocalTangemColors provides rememberedColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
             LocalTangemColors3 provides rememberedColors3,

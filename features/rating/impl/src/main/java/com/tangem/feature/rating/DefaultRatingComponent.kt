@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.feature.rating.model.RatingModel
 import com.tangem.feature.rating.ui.RatingBlock
+import com.tangem.feature.rating.ui.redesign.RatingBlockRedesign
 import com.tangem.features.rating.RatingComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -23,7 +24,11 @@ internal class DefaultRatingComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-        RatingBlock(state = state, modifier = modifier)
+        if (params.isRedesign) {
+            RatingBlockRedesign(state = state, modifier = modifier)
+        } else {
+            RatingBlock(state = state, modifier = modifier)
+        }
     }
 
     @AssistedFactory

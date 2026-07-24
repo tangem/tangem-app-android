@@ -5,7 +5,6 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -18,38 +17,29 @@ dependencies {
     implementation(deps.androidx.datastore)
 
     /** Project*/
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    implementation(projects.features.swap.domain)
-    implementation(projects.features.swap.domain.models)
-    implementation(projects.features.swap.domain.api)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    api(projects.features.swap.domain)
+    implementation(projects.domain.express.models)
 
     /** Network */
-    implementation(deps.retrofit)
-    implementation(deps.retrofit.moshi)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
+    api(deps.moshi)
     implementation(deps.arrow.core)
-    ksp(deps.moshi.kotlin.codegen)
+    implementation(deps.kotlin.coroutines)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Domain */
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.txhistory)
+    api(projects.domain.account)
+    api(projects.domain.models)
+    api(projects.domain.txhistory)
+    runtimeOnly(projects.domain.account.status)
+    runtimeOnly(projects.domain.wallets)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
 
     /** Data */
-    implementation(projects.data.common)
+    api(projects.data.common)
 
     /** Tangem SDKs */
     implementation(tangemDeps.blockchain)

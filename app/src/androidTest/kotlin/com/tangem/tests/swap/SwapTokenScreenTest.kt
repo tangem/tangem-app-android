@@ -1,5 +1,7 @@
 package com.tangem.tests.swap
 
+import com.tangem.datasource.api.common.config.Express
+
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
@@ -11,8 +13,7 @@ import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -25,7 +26,7 @@ import org.junit.Test
 class SwapTokenScreenTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("3546")
     @DisplayName("Swap: network fee")
@@ -115,7 +116,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("3549")
     @DisplayName("Swap: network error test")
@@ -177,7 +178,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("3547")
     @DisplayName("Swap: change network fee")
@@ -280,7 +281,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("2828")
     @DisplayName("Swap: go to token swap")
@@ -333,7 +334,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("575")
     @DisplayName("Swap: check UI")
@@ -428,7 +429,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("5162")
     @DisplayName("Swap: check swap tokens switch")
@@ -535,7 +536,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("583")
     @DisplayName("Swap: check switch fee type (enable to cover 'Market' and 'Fast' fee)")

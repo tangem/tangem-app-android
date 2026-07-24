@@ -1,13 +1,14 @@
 package com.tangem.data.staking
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolNetworkDTO
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultDTO
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.P2PVaultLimitsStore
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -37,6 +38,7 @@ internal class P2PEthPoolVaultFilterTest {
     private val featureToggles = mockk<StakingFeatureToggles> {
         every { isIntegrationEnabled(StakingIntegrationID.P2PEthPool) } returns true
     }
+    private val regionBlockedStore = mockk<P2PEthPoolRegionBlockedStore>(relaxed = true)
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
         p2pEthPoolVaultsStore = store,
@@ -44,6 +46,7 @@ internal class P2PEthPoolVaultFilterTest {
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
+        p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
     private fun buildVaultDTO(address: String) = P2PEthPoolVaultDTO(

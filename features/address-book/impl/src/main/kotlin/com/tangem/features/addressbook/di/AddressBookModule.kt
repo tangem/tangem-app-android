@@ -2,7 +2,7 @@ package com.tangem.features.addressbook.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.addressbook.AddressBookFeatureToggles
-import com.tangem.features.addressbook.DefaultAddressBookFeatureToggles
+import com.tangem.features.addressbook.common.DefaultAddressBookFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
