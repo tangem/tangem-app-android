@@ -2,10 +2,15 @@ package com.tangem.features.promobanners.impl.model
 
 import androidx.core.net.toUri
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.impl.analytics.PromoBannerAnalyticsEvent
@@ -26,6 +31,7 @@ import javax.inject.Inject
 
 private typealias ShownBannerKey = Pair<String, Int>
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class PromoBannersBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -34,6 +40,7 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val deeplinkLauncher: DeeplinkLauncher,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletsListRepository: UserWalletsListRepository,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<PromoBannersBlockComponent.Params>()
@@ -206,7 +213,12 @@ internal class PromoBannersBlockModel @Inject constructor(
 
     private fun onButtonClick(displayId: Int, deeplink: String?) {
         analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
-        deeplink?.let { deeplinkLauncher.launch(appendSurveyDisplayId(it, displayId)) }
+
+        if (deeplink.isNullOrBlank()) {
+            uiMessageSender.send(ToastMessage(message = resourceReference(R.string.common_something_went_wrong)))
+        } else {
+            deeplinkLauncher.launch(appendSurveyDisplayId(deeplink, displayId))
+        }
     }
 
     private fun appendSurveyDisplayId(deeplink: String, displayId: Int): String {

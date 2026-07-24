@@ -1,6 +1,9 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.arrayItemReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
@@ -13,12 +16,11 @@ internal class TangemPayCashbackUmConverter(
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
 ) : Converter<TangemPayCashback?, TangemPayCashbackUM> {
 
-    // TODO([REDACTED_TASK_KEY]): move hardcoded strings to string resources
     override fun convert(value: TangemPayCashback?): TangemPayCashbackUM {
         if (value == null || value.confirmedAmount.signum() == 0) {
             return TangemPayCashbackUM(
-                title = stringReference("Start spending and earn cashback"),
-                subtitle = stringReference("Collected amount will be shown here"),
+                title = resourceReference(R.string.tangempay_cashback_empty_title),
+                subtitle = resourceReference(R.string.tangempay_cashback_empty_subtitle),
                 isEmpty = true,
                 banner = null,
             )
@@ -26,24 +28,26 @@ internal class TangemPayCashbackUmConverter(
         val currency = getJavaCurrencyByCode(value.currency)
         val earned = value.confirmedAmount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         val month = dateFormatter.formatMonth(value.period.year, value.period.month)
+        val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val payoutWindow = dateFormatter.formatWindow(value.period.payoutStart, value.period.payoutEnd)
         val payoutEnd = dateFormatter.formatMonthDay(value.period.payoutEnd)
         val banner = if (value.confirmedAmount.signum() < 0) {
             TangemPayCashbackUM.Banner(
-                text = stringReference(
-                    "We received a refund for a purchase for which cashback had previously been awarded",
-                ),
+                text = resourceReference(R.string.tangempay_cashback_refund_banner),
                 type = TangemPayCashbackUM.Banner.Type.Error,
             )
         } else {
             TangemPayCashbackUM.Banner(
-                text = stringReference("Cashback $earned for $month will be deposited till $payoutEnd"),
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList(earned, month, payoutEnd),
+                ),
                 type = TangemPayCashbackUM.Banner.Type.Info,
             )
         }
         return TangemPayCashbackUM(
-            title = stringReference("$earned earned in $month"),
-            subtitle = stringReference("Will be deposited on $payoutWindow"),
+            title = resourceReference(R.string.tangempay_cashback_earned_title, wrappedList(earned, monthIn)),
+            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(payoutWindow)),
             isEmpty = false,
             banner = banner,
         )

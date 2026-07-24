@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.visa.error.VisaApiError

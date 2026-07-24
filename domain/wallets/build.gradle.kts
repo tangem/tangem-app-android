@@ -36,6 +36,7 @@ dependencies {
     // region Domain
     api(projects.domain.account)
     api(projects.domain.card)
+    api(projects.domain.cloudBackup)
     api(projects.domain.common)
     api(projects.domain.hotWallet)
     api(projects.domain.walletManager)
