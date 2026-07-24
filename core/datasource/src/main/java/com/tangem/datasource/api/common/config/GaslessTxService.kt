@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
@@ -10,10 +14,12 @@ import com.tangem.utils.info.AppInfoProvider
 /**
  * Gasless transactions [ApiConfig]
  */
-internal class GaslessTxService(
+class GaslessTxService(
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -65,7 +71,11 @@ internal class GaslessTxService(
         )
     }
 
-    private companion object {
+    companion object {
+
+        const val KEY = "GaslessTxService"
+        val ID = ApiConfig.ID(KEY)
+
         private const val PROD_BASE_URL = "https://gasless.tangem.org/"
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
         private const val MOCK_BASE_URL = "[REDACTED_ENV_URL]"

@@ -2,27 +2,12 @@ package com.tangem.features.foryou.impl.tokensummary.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
@@ -32,35 +17,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.ds.badge.TangemBadge
-import com.tangem.core.ui.ds.badge.TangemBadgeColor
-import com.tangem.core.ui.ds.badge.TangemBadgeShape
-import com.tangem.core.ui.ds.badge.TangemBadgeSize
-import com.tangem.core.ui.ds.badge.TangemBadgeType
-import com.tangem.core.ui.ds.badge.TangemBadgeUM
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
-import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenIndicatorUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
+import com.tangem.features.foryou.impl.tokensummary.entity.*
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewContentSentiment
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewTokenSummary
 import com.tangem.features.foryou.impl.ui.components.AiInsightContent
@@ -289,8 +258,18 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
         valueSlot = {
             when (indicator) {
                 is TokenIndicatorUM.Content -> {
-                    TangemBadge(badgeUM = indicator.scoreBadge)
-                    TangemBadge(badgeUM = indicator.sentimentBadge)
+                    TangemBadge(
+                        text = indicator.scoreBadgeText,
+                        status = TangemBadge.Status.Neutral,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
+                    )
+                    TangemBadge(
+                        text = indicator.sentimentBadgeText,
+                        status = indicator.sentimentBadgeStatus,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
+                    )
                 }
                 is TokenIndicatorUM.Loading -> {
                     RectangleShimmer(
@@ -300,13 +279,10 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
                 }
                 is TokenIndicatorUM.NoData -> {
                     TangemBadge(
-                        badgeUM = TangemBadgeUM(
-                            text = stringReference("None"), // TODO For You localization
-                            size = TangemBadgeSize.X6,
-                            color = TangemBadgeColor.Gray,
-                            type = TangemBadgeType.Tinted,
-                            shape = TangemBadgeShape.Rounded,
-                        ),
+                        text = resourceReference(R.string.common_none),
+                        status = TangemBadge.Status.Neutral,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
                     )
                 }
             }

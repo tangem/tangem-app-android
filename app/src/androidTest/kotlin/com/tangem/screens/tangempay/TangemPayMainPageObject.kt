@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -59,6 +60,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     fun transactionRowWithText(text: String): KNode = child {
         hasText(text)
+        useUnmergedTree = true
+    }
+
+    val pendingExpressTransaction: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM)
         useUnmergedTree = true
     }
 
