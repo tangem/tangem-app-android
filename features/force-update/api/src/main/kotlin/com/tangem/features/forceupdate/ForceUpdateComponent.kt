@@ -9,5 +9,5 @@ interface ForceUpdateComponent : ComposableContentComponent {
 
     data class Params(val mode: Mode)
 
-    enum class Mode { Force, Brick, OsTooOld, Optional }
+    enum class Mode { Force, Brick, OsTooOld }
 }
