@@ -9,21 +9,19 @@ android {
 }
 
 dependencies {
-    /** AndroidX */
-    implementation(deps.androidx.fragment.ktx)
-
     /** Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.visa.models)
+    api(projects.domain.models)
+    api(projects.domain.visa.models)
 
     /** Tangem libraries */
-    implementation(tangemDeps.card.core)
+    api(tangemDeps.card.core)
 
     /** Core */
-    implementation(projects.core.ui)
-    implementation(projects.core.decompose)
-    implementation(projects.common.ui)
+    api(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.common.ui)
 
     /** Other */
+    api(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
 }

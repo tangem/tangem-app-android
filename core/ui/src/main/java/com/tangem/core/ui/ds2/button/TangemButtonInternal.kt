@@ -216,7 +216,7 @@ private val SlotExitTransition: ExitTransition =
 private fun TangemIconUM.resolveTint(colorTokens: ColorTokens, isEnabled: Boolean): TangemIconUM {
     return when (this) {
         is TangemIconUM.Icon -> copy(
-            tint = ColorReference2 {
+            tint = tint ?: ColorReference2 {
                 if (isEnabled) colorTokens.iconTint else colorTokens.disabledIconTint
             },
         )

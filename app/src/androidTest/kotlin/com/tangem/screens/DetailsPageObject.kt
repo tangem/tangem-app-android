@@ -10,9 +10,14 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.res.R as CoreResR
 
 class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DetailsPageObject>(semanticsProvider = semanticsProvider) {
+
+    val screenContainer: KNode = child {
+        hasTestTag(DetailsScreenTestTags.SCREEN_CONTAINER)
+    }
 
     val topAppBarBackButton: KNode = child {
         hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
@@ -59,6 +64,12 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     fun walletNameValue(name: String): KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
         hasAnyDescendant(withText(name))
+        useUnmergedTree = true
+    }
+
+    val getTangemPayRow: KNode = child {
+        hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_get_tangem_pay)))
         useUnmergedTree = true
     }
 }

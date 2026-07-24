@@ -1,6 +1,5 @@
 package com.tangem.features.send.api.subcomponents.notifications
 
-import com.tangem.features.send.api.SendNotificationsComponent
 import kotlinx.coroutines.flow.Flow
 
 interface SendNotificationsUpdateListener {

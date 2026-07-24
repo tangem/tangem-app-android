@@ -12,13 +12,16 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -28,8 +31,10 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.TestAppCoroutineScope
@@ -59,6 +64,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
     private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -74,20 +81,12 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
         virtualAccountFeatureToggles = virtualAccountFeatureToggles,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
+        getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
     )
 
     private val userWalletId = UserWalletId("011")
     private val params = PaymentAccountStatusFetcher.Params(userWalletId)
-
-    private val bankCredentialsFixture = BankCredentials(
-        type = "ACH",
-        beneficiaryName = "Test Beneficiary",
-        beneficiaryAddress = "123 Main St",
-        beneficiaryBankName = "Test Bank",
-        beneficiaryBankAddress = "456 Bank Ave",
-        accountNumber = "1234567890",
-        routingNumber = "021000021",
-    )
 
     private val cardProductInstance = CustomerInfo.ProductInstance(
         id = "pi_card",
@@ -116,28 +115,54 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardStatus = TangemPayCard.Status.ACTIVE,
         lastFourDigits = "1234",
         isPinSet = true,
+        images = emptyList(),
     )
 
-    private fun buildCustomerInfo(productInstances: List<CustomerInfo.ProductInstance> = listOf(cardProductInstance)) =
-        CustomerInfo(
-            customerId = "cust_1",
-            kycStatus = KycStatus.APPROVED,
-            state = CustomerInfo.State.ACTIVE,
-            fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                availableBalance = BigDecimal.TEN,
-                currency = "USD",
-            ),
-            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                id = "usdc",
-                chainId = 137L,
-                depositAddress = "0xdeposit",
-                tokenContractAddress = "0xcontract",
-                balance = BigDecimal.TEN,
-            ),
-            availableForWithdrawal = BigDecimal.TEN,
-            cards = listOf(cardInfo),
-            productInstances = productInstances,
-        )
+    private val basicPlan = TangemPayTariffPlan(
+        id = "plan_basic",
+        tierId = "BASIC",
+        isBasicTier = true,
+        name = "Basic",
+        programName = "program_basic",
+        descriptionItems = emptyList(),
+        images = emptyList(),
+        fees = emptyList(),
+    )
+
+    private val customerTariffPlan = TangemPayCustomerTariffPlan(
+        status = TangemPayCustomerTariffPlan.Status.ACTIVE,
+        source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
+        plan = basicPlan,
+        nextBillingAt = null,
+        pendingPlan = null,
+        pendingTransitionAt = null,
+    )
+
+    private fun buildCustomerInfo(
+        productInstances: List<CustomerInfo.ProductInstance> = listOf(cardProductInstance),
+        fiatBalance: PaymentAccountStatusValue.FiatBalance? = PaymentAccountStatusValue.FiatBalance(
+            availableBalance = BigDecimal.TEN,
+            currency = "USD",
+        ),
+        cryptoBalance: PaymentAccountStatusValue.CryptoBalance? = PaymentAccountStatusValue.CryptoBalance(
+            id = "usdc",
+            chainId = 137L,
+            depositAddress = "0xdeposit",
+            tokenContractAddress = "0xcontract",
+            balance = BigDecimal.TEN,
+        ),
+        tariffPlan: TangemPayCustomerTariffPlan? = null,
+    ) = CustomerInfo(
+        customerId = "cust_1",
+        kycStatus = KycStatus.APPROVED,
+        state = CustomerInfo.State.ACTIVE,
+        fiatBalance = fiatBalance,
+        cryptoBalance = cryptoBalance,
+        availableForWithdrawal = BigDecimal.TEN,
+        cards = listOf(cardInfo),
+        productInstances = productInstances,
+        tariffPlan = tariffPlan,
+    )
 
     @BeforeEach
     fun setUp() {
@@ -151,10 +176,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository,
             issueCardRepository,
             virtualAccountFeatureToggles,
+            tangemPayFeatureToggles,
+            getTangemPayTariffPlanStateUseCase,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
+        // Tiers off by default — legacy auto-order-creation behavior. Individual tests override.
+        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
     }
 
     /**
@@ -228,6 +257,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             fiatRate = null,
             error = null,
             virtualAccount = virtualAccount,
+            tariffPlan = null,
         )
     }
 
@@ -252,7 +282,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN toggle on and ACCOUNT instance with bank credentials WHEN invoke THEN virtualAccount is Available`() =
+        fun `GIVEN toggle on and ACCOUNT instance WHEN invoke THEN virtualAccount is Available without fetching credentials`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -261,9 +291,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 stubHappyPath(customerInfo)
                 every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
-                coEvery {
-                    onboardingRepository.getBankCredentials(userWalletId, "pi_account")
-                } returns Either.Right(bankCredentialsFixture)
                 val storedStatuses = captureStoredStatuses()
 
                 // Act
@@ -272,36 +299,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.virtualAccount).isEqualTo(
-                    VirtualAccountOnramp.Available(
-                        productInstanceId = "pi_account",
-                        bankCredentials = bankCredentialsFixture,
-                    ),
+                    VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
                 )
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
-            }
-
-        @Test
-        fun `GIVEN toggle on and ACCOUNT instance but bank credentials fetch fails WHEN invoke THEN virtualAccount is Error`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(
-                    productInstances = listOf(cardProductInstance, accountProductInstance),
-                )
-                stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
-                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
-                coEvery {
-                    onboardingRepository.getBankCredentials(userWalletId, "pi_account")
-                } returns VisaApiError.UnknownWithoutCode.left()
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                val loaded = storedStatuses.lastLoaded()
-                assertThat(loaded.virtualAccount).isEqualTo(VirtualAccountOnramp.BankCredentialsError)
-                coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+                coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
             }
 
         @Test
@@ -466,6 +467,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
             virtualAccountFeatureToggles = virtualAccountFeatureToggles,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
+            getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
         )
 
         private val account = Account.Payment(userWalletId = userWalletId)
@@ -505,5 +508,143 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(issuingCard)
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TiersPlanSelection {
+
+        @Test
+        fun `GIVEN tiers on and KYC approved and no plan order WHEN invoke THEN stores AwaitingPlanSelection`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                    tariffPlan = customerTariffPlan,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns emptyList()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.last().value)
+                    .isInstanceOf(PaymentAccountStatusValue.AwaitingPlanSelection::class.java)
+                coVerify(exactly = 0) { onboardingRepository.createOrder(userWalletId) }
+            }
+
+        @Test
+        fun `GIVEN tiers on and fallback plan is missing WHEN invoke THEN stores IssuingCard without order`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                    tariffPlan = null,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.last().value)
+                    .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+                coVerify(exactly = 0) { onboardingRepository.createOrder(userWalletId) }
+            }
+
+        @Test
+        fun `GIVEN tiers on and plan selected but no balance yet WHEN invoke THEN stores Inactive`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = emptyList(),
+                fiatBalance = null,
+                cryptoBalance = null,
+                tariffPlan = customerTariffPlan,
+            )
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
+            coEvery {
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value)
+                .isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
+            coVerify(exactly = 0) { onboardingRepository.createOrder(userWalletId) }
+        }
+
+        @Test
+        fun `GIVEN tiers off and KYC approved without card WHEN invoke THEN creates order and stays issuing`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = emptyList())
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
+            coEvery { onboardingRepository.createOrder(userWalletId) } returns Either.Right("order_1")
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value)
+                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            coVerify(exactly = 1) { onboardingRepository.createOrder(userWalletId) }
+        }
+
+        @Test
+        fun `GIVEN tiers off and balance without instances but local issue order WHEN invoke THEN stores IssuingCard`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = emptyList())
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
+                coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
+                coEvery { onboardingRepository.createOrder(userWalletId) } returns Either.Right("order_1")
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.last().value)
+                    .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            }
+
+        @Test
+        fun `GIVEN tiers on and balance without instances but local issue order WHEN invoke THEN stores Loaded with placeholder`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = emptyList())
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
+                coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
+                coEvery {
+                    cardDetailsRepository.getOrderInfo(userWalletId, "order_1")
+                } returns VisaApiError.UnknownWithoutCode.left()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                val loaded = storedStatuses.lastLoaded()
+                assertThat(loaded.cards).hasSize(1)
+                assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
+            }
     }
 }

@@ -101,9 +101,9 @@ internal object GeneratedEnvironmentConfigConverter {
                 apiKey = GeneratedEnvironmentConfig.quiknodeMonadApiKey,
                 subdomain = GeneratedEnvironmentConfig.quiknodeMonadSubdomain,
             ),
-            quickNodeHederaCredentials = QuickNodeCredentials(
-                apiKey = GeneratedEnvironmentConfig.quiknodeHederaApiKey,
-                subdomain = GeneratedEnvironmentConfig.quiknodeHederaSubdomain,
+            quickNodeRobinhoodCredentials = QuickNodeCredentials(
+                apiKey = GeneratedEnvironmentConfig.quiknodeRobinhoodApiKey,
+                subdomain = GeneratedEnvironmentConfig.quiknodeRobinhoodSubdomain,
             ),
             infuraProjectId = GeneratedEnvironmentConfig.infuraProjectId,
             tronGridApiKey = GeneratedEnvironmentConfig.tronGridApiKey,

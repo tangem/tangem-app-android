@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
@@ -20,6 +21,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
@@ -100,9 +102,19 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/details/security")
 
+    /**
+     * Support chat (Usedesk) screen.
+     *
+     * @property walletMetaInfo   wallet meta info; its user wallet id is sent to Usedesk as the client email
+     * @property source           source of the chat opening (Settings by default, Swap for FR-02). Drives both
+     *                            analytics and the Usedesk additional fields mapped by the component.
+     * @property prefilledMessage optional message sent to the chat on behalf of the user right after init
+     */
     @Serializable
     data class Usedesk(
         val walletMetaInfo: WalletMetaInfo,
+        val source: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.Settings,
+        val prefilledMessage: String? = null,
     ) : AppRoute(path = "/usedesk/${walletMetaInfo.userWalletId}")
 
     @Serializable
@@ -175,8 +187,15 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class AddressBook(
-        val predefinedAddress: String? = null,
-    ) : AppRoute(path = "/address_book/predefinedAddress/$predefinedAddress")
+        val addressBookOpenMode: AddressBookOpenMode = AddressBookOpenMode.Default,
+    ) : AppRoute(
+        path = when (addressBookOpenMode) {
+            is AddressBookOpenMode.WithContactCreation ->
+                "/address_book/${addressBookOpenMode.address}-${addressBookOpenMode.networkId}"
+            is AddressBookOpenMode.ContactSelection -> "/address_book/select/${addressBookOpenMode.networkId}"
+            AddressBookOpenMode.Default -> "/address_book"
+        },
+    )
 
     @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
@@ -188,6 +207,7 @@ sealed class AppRoute(val path: String) : Route {
                     is Send -> "/$networkName"
                     WalletConnect -> ""
                     MainScreen -> ""
+                    AddressBook -> ""
                 }
 
             data class Send(val networkName: String) : Source()
@@ -195,6 +215,8 @@ sealed class AppRoute(val path: String) : Route {
             data object WalletConnect : Source()
 
             data object MainScreen : Source()
+
+            data object AddressBook : Source()
         }
     }
 
@@ -324,11 +346,6 @@ sealed class AppRoute(val path: String) : Route {
     data class SellCrypto(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/sell_crypto/${userWalletId.stringValue}")
-
-    @Serializable
-    data class SwapCrypto(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
 
     /**
      * Onboarding V2
@@ -471,6 +488,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class TangemPayDetails(
         val status: AccountStatus.Payment,
+        val initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
     ) : AppRoute(path = "/tangem_pay_details/${status.account}")
 
     @Serializable
@@ -503,6 +521,9 @@ sealed class AppRoute(val path: String) : Route {
 
             @Serializable
             data object FromBannerInSettings : Mode()
+
+            @Serializable
+            data object MobileOnboardingDeeplink : Mode()
         }
     }
 
@@ -536,6 +557,11 @@ sealed class AppRoute(val path: String) : Route {
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
     ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+
+    @Serializable
+    data class Polymarket(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/polymarket/${userWalletId.stringValue}")
 
     @Serializable
     data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")

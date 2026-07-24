@@ -1,8 +1,8 @@
 package com.tangem.features.send.feeselector.model.transformers
 
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.send.api.entity.FeeItem
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 

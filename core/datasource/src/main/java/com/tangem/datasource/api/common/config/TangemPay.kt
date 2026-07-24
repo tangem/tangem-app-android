@@ -1,11 +1,16 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 
-internal sealed class TangemPay(
+sealed class TangemPay(
     private val environmentConfig: EnvironmentConfig,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
@@ -55,6 +60,8 @@ internal sealed class TangemPay(
         "version" to ProviderSuspend { appInfoProvider.appVersion },
         "platform" to ProviderSuspend { "Android" },
         "X-API-KEY" to ProviderSuspend { getBffStaticToken(apiEnvironment) },
+        "X-Device-Scale" to ProviderSuspend { appInfoProvider.deviceScale.toString() },
+        "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
     )
 
     private fun getBffStaticToken(apiEnvironment: ApiEnvironment): String {
@@ -76,6 +83,9 @@ internal sealed class TangemPay(
         environmentConfig: EnvironmentConfig,
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
+
+        override val id: ApiConfig.ID get() = ID
+
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/bff-v2/"
@@ -89,12 +99,20 @@ internal sealed class TangemPay(
                 -> error("Unknown environment: $apiEnvironment")
             }
         }
+
+        companion object {
+            const val KEY = "TangemPay"
+            val ID = ApiConfig.ID(KEY)
+        }
     }
 
     class Auth(
         environmentConfig: EnvironmentConfig,
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
+
+        override val id: ApiConfig.ID get() = ID
+
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/"
@@ -107,6 +125,11 @@ internal sealed class TangemPay(
                 ApiEnvironment.STAGE_3,
                 -> error("Unknown environment: $apiEnvironment")
             }
+        }
+
+        companion object {
+            const val KEY = "TangemPayAuth"
+            val ID = ApiConfig.ID(KEY)
         }
     }
 }

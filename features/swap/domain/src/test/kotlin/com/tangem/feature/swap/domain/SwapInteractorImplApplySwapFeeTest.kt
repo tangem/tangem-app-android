@@ -150,6 +150,27 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
     }
 
     @Test
+    fun `applySwapFee — folded fee — otherNativeFee is not double counted`() = runTest {
+        // Discriminating case: folded fee.amount = 0.002, otherNativeFee = 0.001, balance = 0.0025.
+        // Using fee.amount alone (0.002 <= 0.0025) → Sufficient. If otherNativeFee were re-added
+        // (0.002 + 0.001 = 0.003 > 0.0025) it would flip to InsufficientFee. Asserting Sufficient
+        // proves the bridge fee is counted exactly once.
+        coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
+        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0025")
+
+        val state = buildQuotesLoadedState(
+            fromAmount = SwapAmount(BigDecimal("1"), 18),
+            isCoin = false,
+            fromBalance = BigDecimal("10"),
+        )
+        val swapFee = buildSwapFee(feeValue = BigDecimal("0.001"), otherNativeFee = BigDecimal("0.001"))
+
+        val patched = sut.applySwapFee(state, swapFee, lastReducedBalanceBy)
+
+        assertThat(patched.preparedSwapConfigState.balanceStatus).isInstanceOf(SwapBalanceStatus.Sufficient::class.java)
+    }
+
+    @Test
     fun `applySwapFee — FeeResource branch flips to Sufficient on isFeeResourceEnough`() = runTest {
         coEvery {
             currenciesRepository.getFeePaidCurrency(any(), any())
@@ -235,8 +256,11 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
     }
 
     private fun buildSwapFee(feeValue: BigDecimal, otherNativeFee: BigDecimal = BigDecimal.ZERO): SwapFee {
+        // [REDACTED_TASK_KEY]: production folds otherNativeFee into fee.amount (SwapFeeFactory), so the fee
+        // handed to applySwapFee is already the gas+bridge total. Simulate that folded input here;
+        // otherNativeFee is still carried as the included portion but is NOT re-added by applySwapFee.
         val amount = mockk<Amount>(relaxed = true) {
-            every { value } returns feeValue
+            every { value } returns feeValue + otherNativeFee
         }
         val fee = mockk<Fee.Common>(relaxed = true) {
             every { this@mockk.amount } returns amount
