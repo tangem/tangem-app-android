@@ -4,6 +4,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
@@ -141,7 +142,10 @@ internal class ForYouEarnOpportunitiesConverter(
                     isActive = isActive,
                     potentialRewards = cryptoCurrencyStatus.value.fiatAmount?.multiply(apy),
                     apy = apy,
-                    type = ForYouEarnOpportunitiesType.YieldSupply(yieldSupplyApy.toPlainString()),
+                    type = ForYouEarnOpportunitiesType.YieldSupply(
+                        apy = yieldSupplyApy.toPlainString(),
+                        rewardType = EarnRewardType.APY,
+                    ),
                 )
             }
         }
@@ -156,7 +160,14 @@ internal class ForYouEarnOpportunitiesConverter(
                     isActive = stakingInfo.isActive,
                     apy = stakingInfo.rate,
                     potentialRewards = cryptoCurrencyStatus.value.fiatAmount?.multiply(stakingInfo.rate),
-                    type = ForYouEarnOpportunitiesType.Staking(integrationID = stakingInfo.integrationId),
+                    type = ForYouEarnOpportunitiesType.Staking(
+                        integrationID = stakingInfo.integrationId,
+                        rewardType = when (stakingInfo.rewardType) {
+                            RewardType.APY -> EarnRewardType.APY
+                            RewardType.APR -> EarnRewardType.APR
+                            RewardType.UNKNOWN -> EarnRewardType.APY
+                        },
+                    ),
                 )
             }
         }
