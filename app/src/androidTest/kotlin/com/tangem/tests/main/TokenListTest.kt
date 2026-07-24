@@ -49,22 +49,12 @@ class TokenListTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            val tokensList = getMainScreenTokensOrder()
-            val organizeButtonExpected = tokensList.size > 1
-
             step("Open 'Add & manage' bottom sheet") {
                 onMainScreen { addAndManageButton().assertIsDisplayed() }
                 onMainScreen { addAndManageButton().clickWithAssertion() }
             }
-
-            if (organizeButtonExpected) {
-                step("Token count = ${tokensList.size} (> 1) -> assert 'Organize tokens' button IS displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
-                }
-            } else {
-                step("Token count = ${tokensList.size} (<= 1) -> assert 'Organize tokens' button is NOT displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
-                }
+            step("Assert 'Organize tokens' button is displayed") {
+                onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
             }
         }
     }
@@ -312,22 +302,12 @@ class TokenListTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            val tokensList = getMainScreenTokensOrder()
-            val organizeButtonExpected = tokensList.size > 1
-
             step("Open 'Add & manage' bottom sheet") {
                 onMainScreen { addAndManageButton().assertIsDisplayed() }
                 onMainScreen { addAndManageButton().clickWithAssertion() }
             }
-
-            if (organizeButtonExpected) {
-                step("Token count = ${tokensList.size} (> 1) -> assert 'Organize tokens' button IS displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
-                }
-            } else {
-                step("Token count = ${tokensList.size} (<= 1) -> assert 'Organize tokens' button is NOT displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
-                }
+            step("Assert 'Organize tokens' button is displayed") {
+                onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
             }
         }
     }
@@ -340,22 +320,12 @@ class TokenListTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen(mockContent = V3MockContent)
             }
-            val tokensList = getMainScreenTokensOrder()
-            val organizeButtonExpected = tokensList.size > 1
-
             step("Open 'Add & manage' bottom sheet") {
                 onMainScreen { addAndManageButton().assertIsDisplayed() }
                 onMainScreen { addAndManageButton().clickWithAssertion() }
             }
-
-            if (organizeButtonExpected) {
-                step("Token count = ${tokensList.size} (> 1) -> assert 'Organize tokens' button IS displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
-                }
-            } else {
-                step("Token count = ${tokensList.size} (<= 1) -> assert 'Organize tokens' button is NOT displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
-                }
+            step("Assert 'Organize tokens' button is displayed") {
+                onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
             }
         }
     }
@@ -368,22 +338,12 @@ class TokenListTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen(mockContent = Firmware412MockContent)
             }
-            val tokensList = getMainScreenTokensOrder()
-            val organizeButtonExpected = tokensList.size > 1
-
             step("Open 'Add & manage' bottom sheet") {
                 onMainScreen { addAndManageButton().assertIsDisplayed() }
                 onMainScreen { addAndManageButton().clickWithAssertion() }
             }
-
-            if (organizeButtonExpected) {
-                step("Token count = ${tokensList.size} (> 1) -> assert 'Organize tokens' button IS displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
-                }
-            } else {
-                step("Token count = ${tokensList.size} (<= 1) -> assert 'Organize tokens' button is NOT displayed") {
-                    onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
-                }
+            step("Assert 'Organize tokens' button is displayed") {
+                onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
             }
         }
     }
