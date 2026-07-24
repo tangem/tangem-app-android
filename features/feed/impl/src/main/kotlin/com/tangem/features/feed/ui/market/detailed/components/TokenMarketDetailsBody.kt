@@ -137,16 +137,16 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
         sectionStub(RelatedNews.SECTION_KEY)
     }
 
-    if (state.metrics != null) {
-        if (state.insights != null) {
-            item("insights") {
-                InsightsBlock(
-                    modifier = Modifier.blockPaddings(),
-                    state = state.insights,
-                )
-            }
+    if (state.insights != null) {
+        item("insights") {
+            InsightsBlock(
+                modifier = Modifier.blockPaddings(),
+                state = state.insights,
+            )
         }
+    }
 
+    if (state.metrics != null) {
         item("metrics") {
             MetricsBlock(
                 modifier = Modifier.blockPaddings(),
