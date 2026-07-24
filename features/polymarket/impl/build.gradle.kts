@@ -20,11 +20,18 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
 
+    /** Domain */
+    implementation(projects.domain.models)
+
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.runtime)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
+
+    /** Decompose */
+    implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
 
     /** DI */
     implementation(deps.hilt.android)

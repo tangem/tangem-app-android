@@ -95,6 +95,11 @@ private fun PreviewBanner(state: TangemMessageBannerStory) {
         variant = state.variant,
         contentAlign = state.contentAlign,
         showGlowRing = state.hasGlowRing,
+        onClick = if (state.isClickable) {
+            {}
+        } else {
+            null
+        },
         title = stringReference("Would you predict?"),
         description = if (state.hasDescription) {
             stringReference("France will win FIFA 2026")
@@ -233,6 +238,11 @@ private fun Toggles(state: TangemMessageBannerStory) {
             ToggleRow(label = "slotStart", checked = state.hasSlotStart, onToggle = state.onSlotStartToggle)
             ToggleRow(label = "slotEnd", checked = state.hasSlotEnd, onToggle = state.onSlotEndToggle)
             ToggleRow(label = "extraContent", checked = state.hasExtraContent, onToggle = state.onExtraContentToggle)
+            ToggleRow(
+                label = "clickable (no buttons only)",
+                checked = state.isClickable,
+                onToggle = state.onClickableToggle,
+            )
         }
     }
 }
