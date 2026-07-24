@@ -11,11 +11,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
+import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -65,6 +67,7 @@ internal fun StakingConfirmationContent(
             isClickDisabled = !state.isAmountEditable || isTransactionSent || isTransactionInProgress,
             isEditingDisabled = !state.isAmountEditable && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
+            modifier = Modifier.testTag(StakingSendDetailsScreenTestTags.AMOUNT_BLOCK),
         )
         ValidatorBlock(
             validatorState = validatorState,

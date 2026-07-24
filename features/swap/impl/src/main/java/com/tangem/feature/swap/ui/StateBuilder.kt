@@ -595,7 +595,8 @@ internal class StateBuilder(
             isInsufficientFunds -> AccountTitleUM.Text(TextReference.Res(R.string.swapping_insufficient_funds))
             else -> getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true)
         }
-        val sendCardType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
+        val sendCardType = uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable
+            ?: return uiStateHolder
         val sendInput = when (sendCardType.inputError) {
             is TransactionCardType.InputError.WrongAmount,
             -> sendCardType

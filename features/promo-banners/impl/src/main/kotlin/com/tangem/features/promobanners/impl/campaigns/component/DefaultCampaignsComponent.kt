@@ -2,23 +2,31 @@ package com.tangem.features.promobanners.impl.campaigns.component
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.SpacerH32
+import com.tangem.core.ui.components.bottomsheets.LocalBottomSheetContentScrollable
+import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.DEFAULT_FOOTER_HEIGHT
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.res.TangemTheme
@@ -52,31 +60,44 @@ internal class DefaultCampaignsComponent @AssistedInject constructor(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val activeChild = bottomSheet.child?.instance
         val displayedChild = rememberLastNonNull(activeChild)
-        val footerExtraHeight by model.footerExtraHeightState.collectAsStateWithLifecycle()
 
-        TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+        TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
             config = TangemBottomSheetConfig(
                 isShown = activeChild != null,
                 onDismissRequest = model::onDismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             ),
-            containerColor = TangemTheme.colors3.bg.primary,
-            footerHeight = DEFAULT_FOOTER_HEIGHT + footerExtraHeight,
+            containerColor = TangemTheme.colors3.bg.secondary,
+            type = TangemBottomSheetType.Modal,
             onBack = model::onDismiss,
             title = {
                 displayedChild?.Title()
             },
             content = {
-                Box(modifier = Modifier.animateContentSize()) {
-                    displayedChild?.Content(modifier = Modifier)
+                val bottomInset = LocalTangemBottomSheetContentBottomInset.current
+                val bottomReserve = if (bottomInset > 0.dp) bottomInset else 16.dp
+                val scrollState = rememberScrollState()
+                val scrollableSignal = LocalBottomSheetContentScrollable.current
+
+                if (scrollableSignal != null) {
+                    LaunchedEffect(scrollState) {
+                        snapshotFlow { scrollState.canScrollForward || scrollState.canScrollBackward }
+                            .collect { canScroll -> scrollableSignal.value = canScroll }
+                    }
+                }
+
+                Column(modifier = Modifier.verticalScroll(state = scrollState)) {
+                    Box(modifier = Modifier.animateContentSize()) {
+                        displayedChild?.Content(modifier = Modifier)
+                    }
+
+                    if (scrollableSignal?.value != true) SpacerH32()
+
+                    Spacer(modifier = Modifier.height(bottomReserve))
                 }
             },
             footer = {
-                Box(
-                    modifier = Modifier
-                        .navigationBarsPadding()
-                        .padding(12.dp),
-                ) {
+                Box(modifier = Modifier.padding(12.dp)) {
                     displayedChild?.Footer()
                 }
             },
@@ -102,7 +123,6 @@ internal class DefaultCampaignsComponent @AssistedInject constructor(
                 appComponentContext = context,
                 chooseTokenComponentFactory = chooseTokenComponentFactory,
                 onDismiss = model::onDismiss,
-                onFooterExtraHeightReady = model::onFooterExtraHeightReady,
                 params = ActivateCampaignBottomSheetComponent.Params(
                     campaignType = config.campaignType,
                     userWalletId = config.userWalletId,
