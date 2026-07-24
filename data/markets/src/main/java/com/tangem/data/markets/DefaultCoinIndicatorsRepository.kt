@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.data.markets.converters.CoinIndicatorsConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
