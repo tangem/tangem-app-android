@@ -532,16 +532,21 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private fun List<ExpressProvider>.filterYieldSupplyProvider(
         cryptoCurrencyStatus: CryptoCurrencyStatus?,
     ): List<ExpressProvider> {
+        val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        if (!isYieldSupplyActive) return this
+
         return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED)) {
-            this
-        } else {
             filter { provider ->
-                if (cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true) {
-                    provider.type == ExpressProviderType.CEX
-                } else {
-                    true
+                when (provider.type) {
+                    ExpressProviderType.CEX -> true
+                    ExpressProviderType.DEX,
+                    ExpressProviderType.DEX_BRIDGE,
+                    -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
+                    ExpressProviderType.ONRAMP -> false
                 }
             }
+        } else {
+            filter { it.type == ExpressProviderType.CEX }
         }
     }
 }
@@ -550,6 +555,17 @@ private val MEMO_RESTRICTED_NETWORKS = setOf(
     Blockchain.InternetComputer.toNetworkId(),
     Blockchain.Casper.toNetworkId(),
     Blockchain.Algorand.toNetworkId(),
+)
+
+/**
+ * DEX providers allowed for token swaps in yield mode.
+ * Mirrors iOS ExpressConstants.yieldModuleDEXProviderIds (PR #4998).
+ */
+private val YIELD_ALLOWED_DEX_PROVIDER_IDS = setOf(
+    "1inch",
+    "li-fi",
+    "okx-cross-chain",
+    "okx-on-chain",
 )
 
 private suspend fun ExpressRepository.getFilteredProviders(

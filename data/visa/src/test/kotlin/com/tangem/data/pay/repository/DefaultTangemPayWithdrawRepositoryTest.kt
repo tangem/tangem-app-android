@@ -4,13 +4,13 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.common.quote.QuotesFetcher
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.WithdrawDataResponse
 import com.tangem.datasource.api.pay.models.response.WithdrawResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
-import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
