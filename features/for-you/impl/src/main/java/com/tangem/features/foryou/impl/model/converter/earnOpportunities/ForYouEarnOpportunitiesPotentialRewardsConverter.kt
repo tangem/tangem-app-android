@@ -98,6 +98,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                         .toPersistentList(),
                     isExpanded = false,
                     isExpandable = true,
+                    segmentColor = null,
                 ),
             )
         } else {
@@ -107,6 +108,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
                     tokenList = persistentListOf(),
                     isExpanded = false,
                     isExpandable = false,
+                    segmentColor = null,
                 )
             }
         }
@@ -136,7 +138,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
             topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
                 text = combinedReference(
                     if (!isBalanceHidden) {
-                        stringReference(StringsSigns.PLUS)
+                        stringReference(StringsSigns.PLUS + StringsSigns.WHITE_SPACE)
                     } else {
                         TextReference.EMPTY
                     },
