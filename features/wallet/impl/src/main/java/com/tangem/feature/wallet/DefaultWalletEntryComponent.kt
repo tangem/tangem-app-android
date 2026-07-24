@@ -8,13 +8,11 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponentLegacy
 import com.tangem.feature.wallet.child.wallet.WalletComponent
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.features.wallet.WalletEntryComponent
@@ -24,7 +22,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultWalletEntryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: Unit,
+    @Assisted val params: Unit,
     walletComponentFactory: WalletComponent.Factory,
 ) : WalletEntryComponent, AppComponentContext by appComponentContext {
 
@@ -39,11 +37,6 @@ internal class DefaultWalletEntryComponent @AssistedInject constructor(
                 WalletRoute.Wallet -> walletComponentFactory.create(
                     appComponentContext = childByContext(context),
                     navigate = { navigation.pushNew(it) },
-                )
-                is WalletRoute.OrganizeTokens -> OrganizeTokensComponentLegacy(
-                    appComponentContext = childByContext(context),
-                    params = OrganizeTokensComponentLegacy.Params(route.userWalletId),
-                    onBack = { navigation.pop() },
                 )
             }
         },

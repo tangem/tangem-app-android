@@ -19,6 +19,4 @@ interface UiDependencies {
     val globalTopSnackbarHostState: TangemTopSnackbarHostState
 
     val eventMessageHandler: EventMessageHandler
-
-    val designFeatureToggles: DesignFeatureToggles
 }
