@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
@@ -11,9 +15,11 @@ import com.tangem.utils.ProviderSuspend
  *
 [REDACTED_AUTHOR]
  */
-internal class StakeKit(
+class StakeKit(
     private val stakeKitAuthProvider: StakeKitAuthProvider,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -54,5 +60,10 @@ internal class StakeKit(
     private fun createHeaders() = buildMap {
         put(key = "X-API-KEY", value = ProviderSuspend(stakeKitAuthProvider::getApiKey))
         put(key = "accept", value = ProviderSuspend { "application/json" })
+    }
+
+    companion object {
+        const val KEY = "StakeKit"
+        val ID = ApiConfig.ID(KEY)
     }
 }

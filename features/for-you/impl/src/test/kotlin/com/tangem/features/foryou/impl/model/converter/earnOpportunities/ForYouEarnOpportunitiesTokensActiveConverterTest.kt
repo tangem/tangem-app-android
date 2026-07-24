@@ -32,7 +32,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
         val result = converter.convert(listOf(activePortfolio)) as EarnOpportunitiesUM.Content
 
         // Assert
-        assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("solana-SOL")
+        assertThat(result.items.map { it.tokenRowUM.id }).containsExactly("solana-SOL")
     }
 
     @Test
@@ -55,7 +55,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
         val result = converter.convert(listOf(activePortfolio)) as EarnOpportunitiesUM.Content
 
         // Assert
-        assertThat(result.tokenList.map { it.tokenRowUM.id })
+        assertThat(result.items.map { it.tokenRowUM.id })
             .containsExactly("token-2-NET", "token-3-NET", "token-4-NET", "token-5-NET", "token-6-NET")
             .inOrder()
     }
@@ -81,7 +81,7 @@ internal class ForYouEarnOpportunitiesTokensActiveConverterTest {
         val result = converter.convert(listOf(activePortfolio)) as EarnOpportunitiesUM.Content
 
         // Assert
-        assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("usd-coin-SOL")
+        assertThat(result.items.map { it.tokenRowUM.id }).containsExactly("usd-coin-SOL")
     }
 
     @Test
