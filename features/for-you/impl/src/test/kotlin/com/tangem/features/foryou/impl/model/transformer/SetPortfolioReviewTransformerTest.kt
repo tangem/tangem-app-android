@@ -317,6 +317,7 @@ internal class SetPortfolioReviewTransformerTest {
         tokenList = persistentListOf(),
         isExpanded = false,
         isExpandable = isExpandable,
+        segmentColor = null,
     )
 
     private fun loaded(amount: BigDecimal, source: StatusSource = StatusSource.ACTUAL): TotalFiatBalance.Loaded =
