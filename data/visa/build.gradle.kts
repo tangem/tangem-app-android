@@ -56,6 +56,7 @@ dependencies {
 
     // region Project - Core
     api(projects.core.analytics)
+    implementation(projects.core.local)
     api(projects.core.datasource)
     api(projects.core.security)
     api(projects.core.utils)

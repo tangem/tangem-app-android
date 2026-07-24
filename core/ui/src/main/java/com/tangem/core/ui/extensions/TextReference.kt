@@ -2,6 +2,7 @@ package com.tangem.core.ui.extensions
 
 import android.content.res.Configuration
 import android.content.res.Resources
+import androidx.annotation.ArrayRes
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -21,6 +22,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.getPluralStringSafe
+import com.tangem.core.res.getStringArraySafe
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
@@ -61,6 +63,14 @@ sealed interface TextReference {
      *                      unstable.
      */
     data class PluralRes(@PluralsRes val id: Int, val count: Int, val formatArgs: WrappedList<Any>) : TextReference
+
+    /**
+     * Element of a string-array resource.
+     *
+     * @property id    string-array resource id
+     * @property index index of the element within the array
+     */
+    data class ArrayItemRes(@ArrayRes val id: Int, val index: Int) : TextReference
 
     /**
      * Text string
@@ -133,6 +143,17 @@ fun resourceReference(
     decapitalize: Boolean = false,
 ): TextReference {
     return TextReference.Res(id, formatArgs, decapitalize)
+}
+
+/**
+ * Creates a [TextReference] pointing at a single element of a string-array resource.
+ *
+ * @param id The resource ID of the string-array.
+ * @param index The index of the element within the array.
+ * @return A [TextReference] representing the element at [index] of the string-array resource.
+ */
+fun arrayItemReference(@ArrayRes id: Int, index: Int): TextReference {
+    return TextReference.ArrayItemRes(id, index)
 }
 
 /**
@@ -255,6 +276,7 @@ fun TextReference.resolveReference(): String {
             }
         }
         is TextReference.PluralRes -> pluralStringResourceSafe(id, count, *formatArgs.toTypedArray())
+        is TextReference.ArrayItemRes -> stringArrayResourceSafe(id).getOrElse(index) { "" }
         is TextReference.Str -> value
         is TextReference.Annotated -> value.text
         is TextReference.Combined -> {
@@ -282,6 +304,7 @@ fun TextReference.resolveReference(resources: Resources): String {
             resources.getStringSafe(id, *args)
         }
         is TextReference.PluralRes -> resources.getPluralStringSafe(id, count, *formatArgs.toTypedArray())
+        is TextReference.ArrayItemRes -> resources.getStringArraySafe(id).getOrElse(index) { "" }
         is TextReference.Str -> value
         is TextReference.Annotated -> value.text
         is TextReference.Combined -> {
@@ -322,6 +345,7 @@ fun TextReference.resolveAnnotatedReference(): AnnotatedString {
                 pluralStringResourceSafe(id, count, *formatArgs.toTypedArray()),
             )
         }
+        is TextReference.ArrayItemRes -> formatAnnotated(stringArrayResourceSafe(id).getOrElse(index) { "" })
         is TextReference.Str -> formatAnnotated(value)
         is TextReference.Annotated -> value
         is TextReference.Combined -> buildAnnotatedString {
@@ -352,6 +376,7 @@ operator fun TextReference.plus(ref: TextReference): TextReference {
     return when (this) {
         is TextReference.Combined -> copy(refs = (refs.data + ref).toWrappedList())
         is TextReference.PluralRes,
+        is TextReference.ArrayItemRes,
         is TextReference.Res,
         is TextReference.Str,
         is TextReference.Annotated,

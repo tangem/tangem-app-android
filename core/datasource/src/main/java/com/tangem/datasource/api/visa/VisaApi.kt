@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.visa
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardIdRequest
 import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardWalletRequest
 import com.tangem.datasource.api.pay.models.request.SetPinCodeRequest
