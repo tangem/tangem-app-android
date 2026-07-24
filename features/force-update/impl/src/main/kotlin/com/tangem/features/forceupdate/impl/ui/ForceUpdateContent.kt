@@ -1,6 +1,7 @@
 package com.tangem.features.forceupdate.impl.ui
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,10 @@ import com.tangem.features.forceupdate.impl.ui.state.ForceUpdateUM.Accent
 
 @Composable
 internal fun ForceUpdateContent(state: ForceUpdateUM, modifier: Modifier = Modifier) {
+    BackHandler(enabled = state.onLaterClick != null) {
+        state.onLaterClick?.invoke()
+    }
+
     val accentColor = when (state.accent) {
         Accent.Red -> TangemTheme.colors3.icon.accent.red
         Accent.Yellow -> TangemTheme.colors3.icon.accent.yellow
@@ -114,6 +119,14 @@ private fun Buttons(state: ForceUpdateUM, modifier: Modifier = Modifier) {
                 onClick = onClick,
             )
         }
+        state.onLaterClick?.let { onClick ->
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Secondary,
+                text = resourceReference(R.string.common_later),
+                onClick = onClick,
+            )
+        }
         state.onUpdateClick?.let { onClick ->
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -150,6 +163,7 @@ private fun PreviewForce() {
                 title = TextReference.Str("Update Required"),
                 description = TextReference.Str("Please update the application to the latest version."),
                 onUpdateClick = {},
+                onLaterClick = null,
                 onSupportClick = {},
             ),
         )
@@ -168,7 +182,27 @@ private fun PreviewBrick() {
                 title = TextReference.Str("Device not supported"),
                 description = TextReference.Str("This device can't run the OS version Tangem needs."),
                 onUpdateClick = null,
+                onLaterClick = null,
                 onSupportClick = {},
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 780)
+@Preview(showBackground = true, widthDp = 360, heightDp = 780, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewOsTooOld() {
+    TangemThemePreviewRedesign {
+        ForceUpdateContent(
+            state = ForceUpdateUM(
+                mode = ForceUpdateComponent.Mode.OsTooOld,
+                accent = Accent.Yellow,
+                title = TextReference.Str("Update OS"),
+                description = TextReference.Str("Your OS is too old to run Tangem. Update it in Settings."),
+                onUpdateClick = null,
+                onLaterClick = {},
+                onSupportClick = null,
             ),
         )
     }
