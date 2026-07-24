@@ -9,6 +9,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.Settings
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.repository.WalletsRepository
 
 /**
@@ -20,6 +21,7 @@ class SaveWalletUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletsRepository: WalletsRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val walletRegistrationTrigger: WalletRegistrationTrigger,
 ) {
 
     suspend operator fun invoke(
@@ -57,6 +59,12 @@ class SaveWalletUseCase(
                 }.map {
                     userWalletsListRepository.select(userWallet.walletId)
                 }.bind()
+            }
+
+            if (newUserWallet && userWallet is UserWallet.Hot) {
+                // A newly added hot wallet is registered with the Tangem Auth Service right away,
+                // while its unlock context is fresh (fire-and-forget, idempotent per walletId).
+                walletRegistrationTrigger.onMobileWalletCreated(userWallet)
             }
         }
     }

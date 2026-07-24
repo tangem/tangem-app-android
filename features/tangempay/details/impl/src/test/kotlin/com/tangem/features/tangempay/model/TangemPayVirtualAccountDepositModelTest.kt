@@ -13,6 +13,7 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
+import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.components.TangemPayVirtualAccountDepositComponent
@@ -35,34 +36,64 @@ internal class TangemPayVirtualAccountDepositModelTest {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val paymentAccountAddress = "0xcollateral"
+    private val productInstanceId = "pi_1"
 
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase = mockk()
-    private val onShowDetails: (VirtualAccountOnramp.Available) -> Unit = mockk(relaxed = true)
+    private val onShowDetails: (BankCredentials) -> Unit = mockk(relaxed = true)
+    private val onShowBankingDetailsError: (String) -> Unit = mockk(relaxed = true)
     private val onOrderCreated: () -> Unit = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(createVirtualAccountOrderUseCase, onShowDetails, onOrderCreated, uiMessageSender, analytics)
+        clearMocks(
+            getBankCredentialsUseCase,
+            createVirtualAccountOrderUseCase,
+            onShowDetails,
+            onShowBankingDetailsError,
+            onOrderCreated,
+            uiMessageSender,
+            analytics,
+        )
     }
 
     @Test
-    fun `GIVEN available WHEN show details THEN opens requisites and does not create order`() = runTest {
+    fun `GIVEN available and fetch succeeds WHEN show details THEN opens requisites`() = runTest {
         // Arrange
-        val onramp = VirtualAccountOnramp.Available(productInstanceId = "pi_1", bankCredentials = bankCredentials())
-        val model = createModel(onramp)
+        val credentials = bankCredentials()
+        coEvery { getBankCredentialsUseCase(userWalletId, productInstanceId) } returns credentials.right()
+        val model = createModel(VirtualAccountOnramp.Available(productInstanceId = productInstanceId))
 
         // Act
         model.uiState.value.onShowDetailsClick()
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { onShowDetails(onramp) }
+        verify(exactly = 1) { onShowDetails(credentials) }
         coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaConditionsPopupShowed>()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShowDetailsClicked>()) }
+    }
+
+    @Test
+    fun `GIVEN available and fetch fails WHEN show details THEN banking details error shown`() = runTest {
+        // Arrange
+        coEvery {
+            getBankCredentialsUseCase(userWalletId, productInstanceId)
+        } returns VisaApiError.Unspecified.left()
+        val model = createModel(VirtualAccountOnramp.Available(productInstanceId = productInstanceId))
+
+        // Act
+        model.uiState.value.onShowDetailsClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { onShowBankingDetailsError(productInstanceId) }
+        verify(exactly = 0) { onShowDetails(any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
     }
 
     @Test
@@ -130,12 +161,14 @@ internal class TangemPayVirtualAccountDepositModelTest {
                 paymentAccountAddress = paymentAccountAddress,
                 onDismiss = {},
                 onShowDetails = onShowDetails,
+                onShowBankingDetailsError = onShowBankingDetailsError,
                 onOrderCreated = onOrderCreated,
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),
         urlOpener = urlOpener,
         uiMessageSender = uiMessageSender,
+        getBankCredentialsUseCase = getBankCredentialsUseCase,
         createVirtualAccountOrderUseCase = createVirtualAccountOrderUseCase,
         analytics = analytics,
     )

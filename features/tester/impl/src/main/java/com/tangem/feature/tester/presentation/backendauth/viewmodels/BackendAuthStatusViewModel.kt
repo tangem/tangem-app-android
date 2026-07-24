@@ -1,12 +1,13 @@
 package com.tangem.feature.tester.presentation.backendauth.viewmodels
 
+import com.tangem.datasource.api.common.config.Auth
+
 import android.content.Context
 import android.util.Base64
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -90,7 +91,7 @@ internal class BackendAuthStatusViewModel @Inject constructor(
         } ?: StatusRow("Device public key (SPKI)", "absent")
 
         val environmentValue = runCatching {
-            val authEnv = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.Auth)
+            val authEnv = apiConfigsManager.getEnvironmentConfig(Auth.ID)
             "${authEnv.environment.name} (${authEnv.baseUrl})"
         }.getOrDefault("unavailable")
         val isRegistered = appPreferencesStore.getSyncOrDefault(

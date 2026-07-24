@@ -3,9 +3,11 @@ package com.tangem.data.pay.di
 import com.tangem.data.pay.repository.MockAwareCashbackRepository
 import com.tangem.data.pay.repository.MockAwareOnboardingRepository
 import com.tangem.data.pay.repository.MockAwareTangemPayCardDetailsRepository
+import com.tangem.data.pay.repository.MockAwareTangemPayTxHistoryRepository
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,4 +29,8 @@ internal interface TangemPayDataMockedModule {
     @Binds
     @Singleton
     fun bindCashbackRepository(repository: MockAwareCashbackRepository): CashbackRepository
+
+    @Binds
+    @Singleton
+    fun bindTxHistoryRepository(repository: MockAwareTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
 }

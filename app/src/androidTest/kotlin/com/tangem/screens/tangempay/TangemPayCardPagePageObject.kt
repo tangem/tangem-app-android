@@ -17,6 +17,10 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val cardNameEditButton: KNode = child {
+        hasTestTag(TangemPayTestTags.CARD_NAME_EDIT_BUTTON)
+    }
+
     val replaceCardMenuItem: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_card_details_reissue_card))
         useUnmergedTree = true

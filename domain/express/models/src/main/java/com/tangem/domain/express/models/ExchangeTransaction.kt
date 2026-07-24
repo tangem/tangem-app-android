@@ -21,6 +21,7 @@ import java.math.BigDecimal
  * @property toAsset The asset received.
  * @property externalTxUrl The provider's page for this deal (tracking / refund / KYC); `null` when the provider
  *  supplies none (CEX only).
+ * @property externalTxId The provider-side id of this deal; `null` when the provider supplies none.
  * @property payinAddress Provider deposit address the pay-in was sent to — the per-deal discriminator for the
  *  heuristic on-chain match of the outgoing (pay-in) leg.
  * @property updatedAtMillis Last status-update timestamp (ms since epoch). Bounds the refund heuristic time
@@ -38,6 +39,7 @@ data class ExchangeTransaction(
     val fromAsset: ExpressTransactionAsset,
     val toAsset: ExpressTransactionAsset,
     val externalTxUrl: String?,
+    val externalTxId: String?,
     val payinAddress: String,
     val updatedAtMillis: Long,
     val refundAssetId: ExpressAsset.ID?,

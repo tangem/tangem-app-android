@@ -145,7 +145,8 @@ fun BigDecimalCryptoFormatStyled.defaultAmount(spanStyleReference: SpanStyleRefe
             val formattedAmount = formatter.format(value)
 
             val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
-            val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+            val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it).takeIf { i -> i >= 0 } }
+                ?: formattedAmount.length
 
             combinedReference(
                 stringReference(formattedAmount.take(separatorIndex)),
@@ -167,8 +168,9 @@ fun BigDecimalCryptoFormatStyled.defaultAmount(spanStyleReference: SpanStyleRefe
                     cryptoCurrencySymbol = symbol,
                 )
 
-            val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
-            val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+            val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.monetaryDecimalSeparator
+            val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it).takeIf { i -> i >= 0 } }
+                ?: formattedAmount.length
 
             combinedReference(
                 stringReference(formattedAmount.take(separatorIndex)),

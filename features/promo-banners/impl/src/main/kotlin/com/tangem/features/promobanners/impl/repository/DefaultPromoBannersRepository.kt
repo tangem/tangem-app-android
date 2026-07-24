@@ -3,7 +3,7 @@ package com.tangem.features.promobanners.impl.repository
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayDTOConverter
 import com.tangem.features.promobanners.impl.model.PromoBannerDisplay

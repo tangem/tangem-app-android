@@ -5,8 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,6 +75,7 @@ private fun DepositContent(state: TangemPayVirtualAccountDepositUM, modifier: Mo
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = TangemTheme.dimens2.x4)
             .padding(bottom = TangemTheme.dimens2.x4),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -255,10 +258,10 @@ private fun UsdcIcon(modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens2.x4),
+                modifier = Modifier.size(TangemTheme.dimens2.x6),
                 painter = painterResource(CoreUiR.drawable.ic_polygon_22),
                 contentDescription = null,
-                tint = TangemTheme.colors3.icon.inverse,
+                tint = TangemTheme.colors3.icon.staticDark,
             )
         }
     }

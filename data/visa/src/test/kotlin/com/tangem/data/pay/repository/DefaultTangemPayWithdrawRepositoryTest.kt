@@ -4,8 +4,8 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.common.quote.QuotesFetcher
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.WithdrawDataResponse
 import com.tangem.datasource.api.pay.models.response.WithdrawResponse

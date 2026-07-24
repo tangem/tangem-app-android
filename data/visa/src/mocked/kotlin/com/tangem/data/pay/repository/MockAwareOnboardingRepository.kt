@@ -1,10 +1,11 @@
 package com.tangem.data.pay.repository
 
+import com.tangem.datasource.api.common.config.TangemPay
+
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
@@ -30,6 +31,7 @@ import javax.inject.Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
     private val real: DefaultOnboardingRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val cardNameHolder: MockTangemPayCardNameHolder,
 ) : OnboardingRepository {
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
@@ -37,7 +39,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
-            .getEnvironmentConfig(ApiConfig.ID.TangemPay)
+            .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> {
@@ -111,6 +113,14 @@ internal class MockAwareOnboardingRepository @Inject constructor(
             return
         }
         real.storeVirtualAccountOrderId(userWalletId, vaOrderId)
+    }
+
+    override suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId) {
+        if (isMockMode) {
+            mockVaOrderIds.remove(userWalletId)
+            return
+        }
+        real.clearVirtualAccountOrderId(userWalletId)
     }
 
     // The "existing Tangem Pay customer" gate (decides whether an active Payment account — and accounts mode —

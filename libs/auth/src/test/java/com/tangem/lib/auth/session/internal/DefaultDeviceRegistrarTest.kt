@@ -12,8 +12,8 @@ import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.lib.auth.devicekey.DeviceKeyManager

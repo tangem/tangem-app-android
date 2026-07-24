@@ -36,6 +36,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverter(
     private val appCurrency: AppCurrency,
     private val userWalletId: UserWalletId?,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
+    private val isBalanceHidden: Boolean = false,
 ) : Converter<Pair<CryptoCurrencyStatus, EarnApyInfo>, TangemTokenRowUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -86,11 +87,15 @@ internal class ForYouEarnOpportunitiesTokenRowConverter(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
                 )
-            }
+            }.orMaskWithStars(isBalanceHidden)
 
             TangemTokenRowUM.EndContentUM.Content(
                 text = combinedReference(
-                    stringReference(StringsSigns.PLUS),
+                    if (!isBalanceHidden) {
+                        stringReference(StringsSigns.PLUS)
+                    } else {
+                        TextReference.EMPTY
+                    },
                     resourceReference(
                         R.string.for_you_earn_per_year,
                         wrappedList(possibleEarn),

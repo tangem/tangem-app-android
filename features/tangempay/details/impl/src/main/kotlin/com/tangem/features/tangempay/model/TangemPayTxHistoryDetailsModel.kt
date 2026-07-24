@@ -12,9 +12,11 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
 import com.tangem.features.tangempay.entity.TransactionLoadState
@@ -35,6 +37,8 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     private val tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
+    private val cashbackRepository: CashbackRepository,
+    private val featureToggles: TangemPayFeatureToggles,
     private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -45,12 +49,30 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private val transactionLoadState = MutableStateFlow(TransactionLoadState.Loading)
     private var loadTransactionJob: Job? = null
 
+    private val cashbackDetail = MutableStateFlow<TangemPayTxHistoryItem.Cashback?>(null)
+    private val cashbackLoadState = MutableStateFlow(TransactionLoadState.Loading)
+    private var loadCashbackJob: Job? = null
+
+    private val cardState = combine(transaction, transactionLoadState) { tx, loadState ->
+        tx to loadState
+    }
+
+    private val cashbackState = combine(cashbackDetail, cashbackLoadState) { detail, loadState ->
+        detail to loadState
+    }
+
     val uiState: StateFlow<TangemPayTxHistoryDetailsUMV2> = combine(
         balanceHidingSettings.isBalanceHidden(),
-        transaction,
-        transactionLoadState,
-    ) { isBalanceHidden, transaction, transactionLoadState ->
-        buildUiState(isBalanceHidden, transaction, transactionLoadState)
+        cardState,
+        cashbackState,
+    ) { isBalanceHidden, (transaction, transactionLoadState), (cashbackDetail, cashbackLoadState) ->
+        buildUiState(
+            isBalanceHidden = isBalanceHidden,
+            transaction = transaction,
+            transactionLoadState = transactionLoadState,
+            cashbackDetail = cashbackDetail,
+            cashbackLoadState = cashbackLoadState,
+        )
     }.stateIn(
         scope = modelScope,
         started = SharingStarted.Eagerly,
@@ -58,11 +80,14 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
             isBalanceHidden = params.isBalanceHidden,
             transaction = params.transaction,
             transactionLoadState = transactionLoadState.value,
+            cashbackDetail = cashbackDetail.value,
+            cashbackLoadState = cashbackLoadState.value,
         ),
     )
 
     init {
         loadTransaction()
+        loadCashbackDetails()
     }
 
     fun dismiss() {
@@ -87,19 +112,44 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
         }
     }
 
+    private fun loadCashbackDetails() {
+        if (!featureToggles.isCashbackEnabled) return
+        val current = params.transaction
+        if (current !is TangemPayTxHistoryItem.Spend) return
+        if (loadCashbackJob?.isActive == true) return
+        loadCashbackJob = modelScope.launch {
+            cashbackLoadState.value = TransactionLoadState.Loading
+            cashbackRepository.getCashbackDetails(
+                userWalletId = params.userWalletId,
+                transactionId = current.id,
+            ).onRight { details ->
+                cashbackDetail.value = details
+                cashbackLoadState.value = TransactionLoadState.Loaded
+            }.onLeft {
+                cashbackLoadState.value = TransactionLoadState.Error
+            }
+        }
+    }
+
     private fun buildUiState(
         isBalanceHidden: Boolean,
         transaction: TangemPayTxHistoryItem,
         transactionLoadState: TransactionLoadState,
+        cashbackDetail: TangemPayTxHistoryItem.Cashback?,
+        cashbackLoadState: TransactionLoadState,
     ): TangemPayTxHistoryDetailsUMV2 {
         return TangemPayTxHistoryDetailsConverterV2.convert(
             value = TangemPayTxHistoryDetailsConverterV2.Input(
                 item = transaction,
                 isBalanceHidden = isBalanceHidden,
                 transactionLoadState = transactionLoadState,
+                cashbackDetails = cashbackDetail,
+                cashbackLoadState = cashbackLoadState,
+                isCashbackEnabled = featureToggles.isCashbackEnabled,
                 onExplorerClick = ::openExplorer,
                 onDisputeClick = { dispute(customerId = params.customerId) },
                 onCardRefreshClick = ::loadTransaction,
+                onCashbackRefreshClick = ::loadCashbackDetails,
                 onDismiss = ::dismiss,
             ),
         )

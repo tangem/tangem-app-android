@@ -2,8 +2,8 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.hilt.android)
     alias(deps.plugins.kotlin.serialization)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -40,12 +40,16 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.wallets)
     api(projects.domain.earn)
+    api(projects.domain.markets)
     api(projects.domain.yieldSupply)
     implementation(projects.domain.account)
+    api(projects.domain.balanceHiding)
     implementation(projects.domain.models)
 
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.markets.models)
 
     /** Compose */
     api(deps.compose.animation)
@@ -63,6 +67,7 @@ dependencies {
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization)
     implementation(deps.lifecycle.compose)
 
     /** DI */

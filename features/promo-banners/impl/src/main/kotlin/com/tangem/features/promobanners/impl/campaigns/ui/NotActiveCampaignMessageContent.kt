@@ -65,7 +65,5 @@ fun NotActiveCampaignMessageContent(modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        SpacerH32()
     }
 }

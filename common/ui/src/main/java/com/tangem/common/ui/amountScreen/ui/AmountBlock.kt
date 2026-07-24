@@ -29,7 +29,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDisabled: Boolean, onClick: () -> Unit) {
+fun AmountBlock(
+    amountState: AmountState,
+    isClickDisabled: Boolean,
+    isEditingDisabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     if (amountState !is AmountState.Data) return
     val amount = amountState.amountTextField
 
@@ -54,7 +60,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)

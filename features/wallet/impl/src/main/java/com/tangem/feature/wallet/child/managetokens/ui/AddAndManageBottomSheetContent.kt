@@ -21,10 +21,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
-import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -49,17 +46,12 @@ internal fun AddAndManageBottomSheetContent(
         type = TangemBottomSheetType.Modal,
         containerColor = TangemTheme.colors2.surface.level2,
         title = {
-            TangemTopBar(
+            TangemTopNavigation(
                 title = resourceReference(R.string.main_add_and_manage_tokens),
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    TangemButton(
-                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
-                        onClick = onDismiss,
-                        size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
-                    )
-                },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                onClose = onDismiss,
             )
         },
         content = {

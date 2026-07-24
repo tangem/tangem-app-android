@@ -168,8 +168,10 @@ internal fun DonutChart(
 
                 // Precompute each slice's [start, sweep] once. Sweeps are the *visual* angles: every
                 // non-zero slice is floored to a minimum share (see [visualSweepAngles]) so tiny holdings
-                // stay visible; larger slices shrink proportionally to make room. On a full ring the last
-                // slice's floor is bumped by the exact width its two lapped-over caps eat (see below).
+                // stay visible; larger slices shrink proportionally to make room. The grey gap (unfilled
+                // remainder) follows the same floor-or-nothing rule — it's either absent or at least the
+                // minimum share. On a full ring (no grey gap) the last slice's floor is bumped by the exact
+                // width its two lapped-over caps eat (see below).
                 val sweeps = visualSweepAngles(
                     weights = segments.map { it.weight.toFloat() },
                     capDeg = lastSegmentOverlapDeg(strokePx, arc.size.width),
@@ -271,19 +273,6 @@ private fun segmentIndexAt(
     }
     return null
 }
-
-/**
- * Exact extra sweep (degrees) the last slice needs on a full ring to read the same visible width as a
- * middle slice (see [visualSweepAngles]).
- *
- * A round cap bulges past its arc's angular end by one cap radius (`strokePx / 2`), i.e.
- * `capAngle = toDegrees((strokePx / 2) / R)` with `R = arcDiameter / 2` → `toDegrees(strokePx / arcDiameter)`.
- * A middle slice loses one such bulge at its start (covered by the previous slice's end cap) but keeps its
- * own end cap, so its visible width equals its sweep. The last slice additionally has its end covered by
- * slice 0's start cap at the wrap — a second cap's worth — so it needs `2 × capAngle` back.
- */
-private fun lastSegmentOverlapDeg(strokePx: Float, arcDiameter: Float): Float =
-    2f * Math.toDegrees((strokePx / arcDiameter).toDouble()).toFloat()
 
 /** Square arc bounds, centered in this [DrawScope], inset by half the stroke so the ring fits inside. */
 private fun DrawScope.arcRect(strokePx: Float): ArcRect {

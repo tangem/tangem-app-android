@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.pay
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.pay.models.request.*
 import com.tangem.datasource.api.pay.models.response.*
 import retrofit2.http.*
@@ -206,4 +206,10 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Query("months") months: Int,
     ): ApiResponse<CashbackHistoryResponse>
+
+    @GET("v1/customer/cashback/{transaction_id}/details")
+    suspend fun getCashbackDetails(
+        @Header("Authorization") authHeader: String,
+        @Path("transaction_id") transactionId: String,
+    ): ApiResponse<CashbackTransactionDetailsResponse>
 }

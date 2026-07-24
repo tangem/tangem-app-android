@@ -54,8 +54,6 @@ internal fun AlreadyActivatedCampaignContent(message: TextReference, modifier: M
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         )
-
-        SpacerH32()
     }
 }
 

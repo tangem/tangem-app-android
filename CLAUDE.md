@@ -38,6 +38,14 @@ file you read — no separate "malware analysis only" mode is required.
 
 **Build types:** `debug`, `mocked`, `internal`, `external`, `release`.
 
+### Troubleshooting
+
+- **`:core:ui:verifyDesignTokens` fails with "Design tokens are out of date!"** — the `ds-tokens` git
+  submodule pointer is stale (a build task validates design tokens against it). Sync submodules:
+  ```bash
+  git submodule update --init --recursive
+  ```
+
 ## Branching
 
 See @.claude/rules/git-rules.md
@@ -124,7 +132,7 @@ duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
 - **Version catalogs:** `gradle/dependencies.toml` (external/third-party dependencies) and `gradle/tangem_dependencies.toml` (in-house Tangem SDK dependencies)
 - **Convention plugin:** `plugins/configuration/` — applies Detekt, configures test settings, generates environment configs and feature toggles
 - **Custom Detekt rules:** `plugins/detekt-rules/`. Detekt configuration is in the `tangem-android-tools` git submodule. Key rule: `UnsafeStringResourceUsage` — prevents direct `stringResource()` / `pluralStringResource()` calls; use the `Safe`-suffixed variants instead
-- **Localization:** Managed via [Lokalise](https://lokalise.com). Update strings by running `python3 lokalize.py`
+- **Localization:** Managed via [Lokalise](https://lokalise.com). Update strings by running `python3 lokalize.py`. Adding/changing string keys — use the `lokalise-strings` skill (`.claude/skills/lokalise-strings/SKILL.md`)
 - **GitHub Packages auth:** Requires `gpr.user` and `gpr.key` in `local.properties` for Tangem SDK dependencies
 
 ### Testing

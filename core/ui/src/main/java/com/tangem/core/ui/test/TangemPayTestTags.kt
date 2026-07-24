@@ -27,6 +27,12 @@ object TangemPayTestTags {
     // Card page top bar more-actions menu (redesign)
     const val CARD_PAGE_MORE_BUTTON = "TANGEM_PAY_CARD_PAGE_MORE_BUTTON"
 
+    // Card rename
+    const val CARD_NAME_EDIT_BUTTON = "TANGEM_PAY_CARD_NAME_EDIT_BUTTON"
+    const val CARD_NAME_TEXT_FIELD = "TANGEM_PAY_CARD_NAME_TEXT_FIELD"
+    const val CARD_RENAME_DONE_BUTTON = "TANGEM_PAY_CARD_RENAME_DONE_BUTTON"
+    const val CARD_RENAME_CLOSE_BUTTON = "TANGEM_PAY_CARD_RENAME_CLOSE_BUTTON"
+
     // Masked card number shown on the card face (e.g. "*4242")
     const val CARD_NUMBER_SHORT = "TANGEM_PAY_CARD_NUMBER_SHORT"
 
