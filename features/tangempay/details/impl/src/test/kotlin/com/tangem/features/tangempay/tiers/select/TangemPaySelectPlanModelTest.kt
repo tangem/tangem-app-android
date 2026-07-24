@@ -258,7 +258,23 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
-    fun `GIVEN confirm AND submit succeeds WHEN onConfirmClick THEN router pops`() {
+    fun `GIVEN change plan non-upgrade AND submit succeeds WHEN onConfirmClick THEN router pops`() {
+        // GIVEN
+        coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
+        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        model.state.value.onPlanSelected(ACTIVATION_INDEX)
+        selectContent(model).onSelectClick()
+
+        // WHEN
+        confirmContent(model).onConfirmClick()
+
+        // THEN
+        verify(exactly = 1) { router.pop() }
+        verify(exactly = 0) { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) }
+    }
+
+    @Test
+    fun `GIVEN change plan upgrade AND submit succeeds WHEN onConfirmClick THEN replaces to account details`() {
         // GIVEN
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
         val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
@@ -268,7 +284,9 @@ internal class TangemPaySelectPlanModelTest {
         confirmContent(model).onConfirmClick()
 
         // THEN
-        verify(exactly = 1) { router.pop() }
+        coVerify(exactly = 1) { submitTariffTransitionUseCase(USER_WALLET_ID, UPGRADE_TRANSITION) }
+        verify(exactly = 1) { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) }
+        verify(exactly = 0) { router.pop() }
     }
 
     @Test
@@ -309,6 +327,7 @@ internal class TangemPaySelectPlanModelTest {
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
 
+        const val ACTIVATION_INDEX = 2
         val UPGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.UPGRADE, "PLUS", isBasic = false)
         val DOWNGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.DOWNGRADE, "BASIC", isBasic = true)
         val ACTIVATION_TRANSITION = transition(TangemPayTariffPlanTransition.Type.ACTIVATION, "PLUS", isBasic = false)

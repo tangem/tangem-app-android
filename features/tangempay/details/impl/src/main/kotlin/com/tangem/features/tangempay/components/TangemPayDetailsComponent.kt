@@ -24,7 +24,6 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreenV2
 import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
-import com.tangem.features.tangempay.utils.requireLoaded
 import com.tangem.features.tangempay.utils.toRequisitesRows
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
@@ -125,8 +124,8 @@ internal class TangemPayDetailsComponent(
                 params = TangemPayTransactionBottomSheetComponent.Params(
                     transaction = navigation.transaction,
                     isBalanceHidden = navigation.isBalanceHidden,
-                    userWalletId = params.initialStatus.userWalletId,
-                    customerId = params.initialStatus.requireLoaded().customerId,
+                    userWalletId = navigation.userWalletId,
+                    customerId = navigation.customerId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )

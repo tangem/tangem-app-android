@@ -46,7 +46,7 @@ import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import coil.compose.SubcomposeAsyncImage
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerWMax
@@ -58,7 +58,10 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -96,6 +99,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
         rotateCardY = rotateCardY,
         zAxisDistance = zAxisDistance,
         shouldShowDetails = shouldShowDetails,
+        backgroundImageUrl = state.cardBackgroundImageUrl,
         modifier = modifier,
         front = { TangemPayCardDetailsHiddenBlock(state = state) },
         back = {
@@ -215,32 +219,18 @@ private fun TangemPayCardBackground(
     )
 
     Box(modifier = modifier.fillMaxSize()) {
-        Image(
+        AsyncImage(
             modifier = Modifier.matchParentSize(),
-            painter = when (cardState) {
-                TangemPayCardState.Active,
-                -> painterResource(R.drawable.img_tangem_pay_visa)
-                TangemPayCardState.Reissuing,
-                TangemPayCardState.Closing,
-                TangemPayCardState.Issuing,
-                -> painterResource(R.drawable.img_tangem_pay_visa_reissuing)
-            },
-            contentDescription = null,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(cardImageUrl.takeIf { cardState == TangemPayCardState.Active })
+                .crossfade(true)
+                .build(),
+            placeholder = painterResource(R.drawable.img_tangem_pay_card_placeholder),
+            error = painterResource(R.drawable.img_tangem_pay_card_placeholder),
+            fallback = painterResource(R.drawable.img_tangem_pay_card_placeholder),
             contentScale = ContentScale.FillBounds,
+            contentDescription = null,
         )
-        if (cardImageUrl != null && cardState == TangemPayCardState.Active) {
-            SubcomposeAsyncImage(
-                modifier = Modifier.matchParentSize(),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(cardImageUrl)
-                    .crossfade(true)
-                    .build(),
-                loading = {},
-                error = {},
-                contentScale = ContentScale.FillBounds,
-                contentDescription = null,
-            )
-        }
         if (isFrozen || freezeProgress > 0f) {
             Image(
                 modifier = Modifier
@@ -254,17 +244,17 @@ private fun TangemPayCardBackground(
     }
 }
 
-@Suppress("MagicNumber", "LongMethod")
+@Suppress("MagicNumber", "LongMethod", "LongParameterList")
 @Composable
 private fun CardBgWrapper(
     rotateCardY: Float,
     zAxisDistance: Float,
     shouldShowDetails: Boolean,
+    backgroundImageUrl: String?,
     modifier: Modifier = Modifier,
     back: @Composable () -> Unit,
     front: @Composable () -> Unit,
 ) {
-    val shouldShowDetailsBg = shouldShowDetails
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -296,19 +286,20 @@ private fun CardBgWrapper(
                         .fillMaxSize()
                         .graphicsLayer { alpha = if (shouldShowDetails) 1f else 0f },
                 ) {
-                    if (shouldShowDetailsBg) {
-                        Image(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .graphicsLayer {
-                                    rotationY = rotateCardY
-                                    cameraDistance = zAxisDistance
-                                },
-                            painter = painterResource(R.drawable.img_bg_card_details),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
+                    AsyncImage(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .graphicsLayer { rotationY = 180f },
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(backgroundImageUrl)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                        error = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                        fallback = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                    )
                     back()
                 }
             },
@@ -658,6 +649,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
             onCopy = { _, _ -> },
             cardImageUrl = null,
+            cardBackgroundImageUrl = null,
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Frozen,
             displayNameState = DisplayNameState.Editing(
@@ -679,6 +671,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
             onCopy = { _, _ -> },
             cardImageUrl = null,
+            cardBackgroundImageUrl = null,
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
             displayNameState = DisplayNameState.Editing(
@@ -700,6 +693,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
             onCopy = { _, _ -> },
             cardImageUrl = null,
+            cardBackgroundImageUrl = null,
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Pending,
             displayNameState = DisplayNameState.Display(
@@ -714,6 +708,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             buttonText = resourceReference(R.string.tangempay_card_details_hide_details),
             onCopy = { _, _ -> },
             cardImageUrl = null,
+            cardBackgroundImageUrl = null,
             isHidden = false,
             number = "1234 5678 9012 3456",
             numberShort = "*3456",
