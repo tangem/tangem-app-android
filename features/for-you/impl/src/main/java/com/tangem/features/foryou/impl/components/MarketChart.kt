@@ -301,7 +301,7 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
             donutSegmentList = persistentListOf(
                 DonutSegmentUM(
                     weight = BigDecimal(0.55),
-                    color = DonutSegmentColor.Brand,
+                    color = DonutSegmentColor.Blue,
                     title = stringReference("Ethereum"),
                     fiatValue = stringReference("$5,720.22"),
                 ),
@@ -327,7 +327,7 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
     donutSegmentList = persistentListOf(
         DonutSegmentUM(
             weight = BigDecimal(0.90),
-            color = DonutSegmentColor.Brand,
+            color = DonutSegmentColor.Blue,
             title = stringReference("Ethereum"),
             fiatValue = stringReference("$5,720.22"),
         ),

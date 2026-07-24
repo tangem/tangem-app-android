@@ -11,6 +11,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.formatAsDateTime
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.findReading
+import com.tangem.domain.markets.sentimentScaleMax
 import com.tangem.domain.markets.totalSentimentScore
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
@@ -37,12 +38,13 @@ internal class TokenSentimentConverter(
         }
 
         return if (readings.all { it.second?.value == null }) {
-            TokenSentimentUM.Empty
+            TokenSentimentUM.Empty(resourceReference(R.string.token_summary_outlook_is_not_available))
         } else {
             val totalScore = value.totalSentimentScore(timeframe)
             TokenSentimentUM.Content(
                 sentiment = calculateSentiment(totalScore = totalScore),
                 totalScore = totalScore,
+                scaleMax = value.sentimentScaleMax(timeframe),
                 lastUpdate = buildLastUpdate(readings),
                 indicators = readings
                     .map { (indicatorType, reading) -> buildIndicator(indicatorType, reading) }
