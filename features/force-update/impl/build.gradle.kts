@@ -33,6 +33,8 @@ dependencies {
 
     /** Domain modules */
     implementation(projects.domain.appUpdate)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
 
     /** DI */
     implementation(deps.hilt.android)
