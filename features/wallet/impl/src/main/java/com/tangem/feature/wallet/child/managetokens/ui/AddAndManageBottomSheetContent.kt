@@ -144,13 +144,13 @@ private fun AddAndManageRow(
         ) {
             Text(
                 text = stringResourceSafe(id = title),
-                style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = stringResourceSafe(id = subtitle),
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         SpacerW(8.dp)

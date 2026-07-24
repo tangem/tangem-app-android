@@ -97,9 +97,11 @@ fun TangemPagerIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            modifier = Modifier.offset {
-                IntOffset(animState.slideOffset.value.roundToInt(), 0)
-            },
+            modifier = Modifier
+                .wrapContentWidth(unbounded = true)
+                .offset {
+                    IntOffset(animState.slideOffset.value.roundToInt(), 0)
+                },
             horizontalArrangement = Arrangement.spacedBy(SPACING),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -367,8 +369,8 @@ val TangemPagerIndicatorColors: PagerIndicatorColors
     @Composable
     @ReadOnlyComposable
     get() = PagerIndicatorColors(
-        active = TangemTheme.colors2.graphic.neutral.primary,
-        inactive = TangemTheme.colors2.graphic.neutral.tertiary,
+        active = TangemTheme.colors3.bg.inverse,
+        inactive = TangemTheme.colors3.bg.opaque.secondary,
         overlay = null,
     )
 
@@ -413,6 +415,7 @@ private class TangemPagerIndicatorPreviewProvider : PreviewParameterProvider<Int
             1,
             2,
             3,
+            4,
             5,
             6,
             7,
