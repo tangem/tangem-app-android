@@ -7,7 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConverter
 import arrow.core.Either
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CryptoNetworkResponse
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
@@ -15,7 +15,7 @@ import com.tangem.datasource.api.tangemTech.models.NotificationApplicationIdResp
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider

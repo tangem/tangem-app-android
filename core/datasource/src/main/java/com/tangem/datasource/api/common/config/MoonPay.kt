@@ -1,11 +1,17 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 
 /**
  * MoonPay [ApiConfig]
  */
-internal class MoonPay : ApiConfig() {
+class MoonPay : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -39,5 +45,10 @@ internal class MoonPay : ApiConfig() {
             environment = ApiEnvironment.MOCK,
             baseUrl = "[REDACTED_ENV_URL]",
         )
+    }
+
+    companion object {
+        const val KEY = "MoonPay"
+        val ID = ApiConfig.ID(KEY)
     }
 }
