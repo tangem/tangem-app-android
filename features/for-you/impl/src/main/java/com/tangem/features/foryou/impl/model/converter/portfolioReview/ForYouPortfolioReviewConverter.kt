@@ -17,6 +17,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
@@ -80,6 +81,7 @@ internal class ForYouPortfolioReviewConverter(
                             assetId = assetId,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                             totalFiatBalance = totalFiatBalanceAmount,
+                            index = null,
                         )
                     }.toPersistentList(),
                 marketChartUM = MarketChartUM.NoData(
@@ -110,11 +112,13 @@ internal class ForYouPortfolioReviewConverter(
 
         val assetItems = topCurrencies
             .groupBy { it.status.forYouGroupKey() }
-            .map { (assetId, group) ->
+            .entries
+            .mapIndexed { index, (assetId, group) ->
                 createListItem(
                     assetId = assetId,
                     cryptoCurrencyStatus = group,
                     totalFiatBalance = totalFiatBalanceAmount,
+                    index = index,
                 )
             }
 
@@ -142,6 +146,7 @@ internal class ForYouPortfolioReviewConverter(
         assetId: String,
         cryptoCurrencyStatus: List<AccountCryptoCurrencyStatus>,
         totalFiatBalance: BigDecimal,
+        index: Int?,
     ): ForYouTokenListItemUM {
         // Group the asset's holdings by blockchain (network.id.rawId, derivation-independent) so each
         // network appears once even when the asset is held across several accounts/derivations on it,
@@ -189,6 +194,7 @@ internal class ForYouPortfolioReviewConverter(
             }.toPersistentList(),
             isExpanded = false,
             isExpandable = true,
+            segmentColor = index?.let { DonutSegmentColor.entries.getOrNull(index) ?: DonutSegmentColor.Blue },
         )
     }
 
@@ -293,6 +299,7 @@ internal class ForYouPortfolioReviewConverter(
             tokenList = persistentListOf(),
             isExpanded = false,
             isExpandable = false,
+            segmentColor = DonutSegmentColor.Grey,
         )
     }
 
