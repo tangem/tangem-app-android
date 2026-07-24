@@ -28,7 +28,7 @@ class SwapUiModeTest : BaseTestCase() {
     private val assetsExchangeEnabledState = "BitcoinExchangeEnabled"
 
     @AllureId("9984")
-    @DisplayName("Swap: switching to 'Detailed' mode via the menu shows the detailed (basic) layout")
+    @DisplayName("Swap: toggling the swap mode switches the provider block between the detailed and simple layouts")
     @Test
     fun checkTurnOnDetailedModeTest() {
         val simpleMode = getResourceString(R.string.swap_simple_mode)
@@ -58,7 +58,7 @@ class SwapUiModeTest : BaseTestCase() {
                     amount = inputAmount,
                 )
             }
-            step("Assert the detailed 'Providers' block is displayed by default") {
+            step("Assert the detailed provider block is displayed by default") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
                 }
@@ -66,7 +66,12 @@ class SwapUiModeTest : BaseTestCase() {
             step("Switch the swap mode to '$simpleMode'") {
                 switchSwapMode(simpleMode)
             }
-            step("Assert the 'Simple' layout: the detailed 'Providers' block is not displayed") {
+            step("Assert the simple provider block is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { simpleProvidersBlock.assertIsDisplayed() }
+                }
+            }
+            step("Assert the detailed provider block is not displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertDoesNotExist() }
                 }
@@ -74,55 +79,14 @@ class SwapUiModeTest : BaseTestCase() {
             step("Switch the swap mode to '$detailedMode'") {
                 switchSwapMode(detailedMode)
             }
-            step("Assert the 'Detailed' layout: the 'Providers' block is displayed again") {
+            step("Assert the detailed provider block is displayed again") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
                 }
             }
-        }
-    }
-
-    @AllureId("9983")
-    @DisplayName("Swap: switching to 'Simple' mode via the menu changes the provider tab to the simple one")
-    @Test
-    fun checkTurnOnSimpleModeTest() {
-        val simpleMode = getResourceString(R.string.swap_simple_mode)
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
-            step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
-                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
-            }
-            step("Set WireMock scenario '$QUOTES_API_SCENARIO' to '$quotesState'") {
-                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesState)
-            }
-            step("Set WireMock scenario '$assetsScenarioName' to '$assetsExchangeEnabledState'") {
-                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsExchangeEnabledState)
-            }
-
-            step("Open the swap amount screen for '$fromTokenName' -> '$receiveTokenName'") {
-                openSwapAmountScreen(
-                    fromTokenName = fromTokenName,
-                    receiveTokenName = receiveTokenName,
-                    amount = inputAmount,
-                )
-            }
-            step("Assert the detailed 'Providers' block is displayed by default") {
+            step("Assert the simple provider block is not displayed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
-                }
-            }
-            step("Switch the swap mode to '$simpleMode'") {
-                switchSwapMode(simpleMode)
-            }
-            step("Assert the 'Simple' layout: the detailed 'Providers' block is not displayed") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertDoesNotExist() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { simpleProvidersBlock.assertDoesNotExist() }
                 }
             }
         }

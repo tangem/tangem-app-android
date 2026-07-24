@@ -88,6 +88,11 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    val simpleProvidersBlock: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK_SIMPLE)
+        useUnmergedTree = true
+    }
+
     fun providerWithName(name: String): KNode = child {
         hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK))
         hasText(name, substring = true)
