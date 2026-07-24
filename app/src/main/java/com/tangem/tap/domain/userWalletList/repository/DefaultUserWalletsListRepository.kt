@@ -21,6 +21,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.wallets.R
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -126,6 +128,8 @@ internal class DefaultUserWalletsListRepository(
         canOverride: Boolean,
     ): Either<SaveWalletError, UserWallet> = either {
         if (canOverride.not() && userWallets.value?.any { it.walletId == userWallet.walletId } == true) {
+            // the wallet was rebuilt from a fresh scan — reconcile the stored card state before rejecting
+            (userWallet as? UserWallet.Cold)?.let { refreshStoredCardState(scanResponse = it.scanResponse) }
             raise(SaveWalletError.WalletAlreadySaved(messageId = R.string.user_wallet_list_error_wallet_already_saved))
         }
 
@@ -321,6 +325,8 @@ internal class DefaultUserWalletsListRepository(
                     raise(UnlockWalletError.ScannedCardWalletNotMatched)
                 }
 
+                refreshStoredCardState(scanResponse)
+
                 val encryptionKey = UserWalletEncryptionKey(
                     walletId = userWallet.walletId,
                     encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock.Empty),
@@ -445,6 +451,49 @@ internal class DefaultUserWalletsListRepository(
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Refreshes the persisted card state of an already saved wallet from a freshly scanned card.
+     *
+     * Heals a stale backup status — e.g. when backup was finalized on another device or the app was
+     * terminated before the post-backup update was persisted. A scan of the same physical card is
+     * the ground truth and is applied as is. A scan of another card of the same wallet refreshes the
+     * state too, except when the stored card is [CardDTO.BackupStatus.CardLinked] — its backup is in
+     * progress, so the status is preserved until the same card is scanned again.
+     */
+    private suspend fun refreshStoredCardState(scanResponse: ScanResponse) {
+        val walletId = UserWalletIdBuilder.scanResponse(scanResponse).build() ?: return
+        val storedWallet = userWallets.value?.find { it.walletId == walletId } as? UserWallet.Cold ?: return
+
+        val storedCard = storedWallet.scanResponse.card
+        val scannedCard = scanResponse.card
+
+        val isUpToDate = storedCard.backupStatus == scannedCard.backupStatus &&
+            storedCard.isAccessCodeSet == scannedCard.isAccessCodeSet
+        if (isUpToDate) return
+
+        // another card of the wallet must not override the stored card's in-progress backup state
+        val isAnotherCard = storedCard.cardId != scannedCard.cardId
+        val isBackupInProgress = storedCard.backupStatus is CardDTO.BackupStatus.CardLinked
+        if (isAnotherCard && isBackupInProgress) return
+
+        val updatedWallet = storedWallet.copy(
+            scanResponse = storedWallet.scanResponse.copy(
+                card = storedCard.copy(
+                    backupStatus = scannedCard.backupStatus,
+                    isAccessCodeSet = scannedCard.isAccessCodeSet,
+                ),
+            ),
+        )
+
+        if (savePersistentInformation()) {
+            publicInformationRepository.save(updatedWallet, canOverride = true)
+        }
+
+        updateWallets { wallets ->
+            wallets?.addOrReplace(updatedWallet) { it.walletId == walletId }
         }
     }
 
