@@ -360,17 +360,25 @@ fun BaseTestCase.openSwapFromZeroBalanceToken(tokenName: String, accountName: St
     step("Collapse balance header") {
         onMainScreen { collapseHeader() }
     }
-    step("Scroll '$accountName' into view") {
-        onMainScreen { scrollToAccount(accountName) }
+    // Multi-account wallets group the token under a collapsed account section; a single-account
+    // wallet has none, so only scroll/expand when that section is actually present.
+    var hasAccountSection = false
+    step("Check whether the '$accountName' account section is present") {
+        onMainScreen { hasAccountSection = findAccountSectionByName(accountName).isDisplayedSafely() }
     }
-    step("Expand '$accountName' and reveal token '$tokenName'") {
-        onMainScreen {
-            findAccountSectionByName(accountName).clickAndWaitFor(
-                rule = composeTestRule,
-                expectedCondition = {
-                    onMainScreen { findTokenInAnyAccountByName(tokenName).assertIsDisplayed() }
-                },
-            )
+    if (hasAccountSection) {
+        step("Scroll '$accountName' into view") {
+            onMainScreen { scrollToAccount(accountName) }
+        }
+        step("Expand '$accountName' and reveal token '$tokenName'") {
+            onMainScreen {
+                findAccountSectionByName(accountName).clickAndWaitFor(
+                    rule = composeTestRule,
+                    expectedCondition = {
+                        onMainScreen { findTokenInAnyAccountByName(tokenName).assertIsDisplayed() }
+                    },
+                )
+            }
         }
     }
     step("Click on token with name: '$tokenName'") {
