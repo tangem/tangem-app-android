@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.approval
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
