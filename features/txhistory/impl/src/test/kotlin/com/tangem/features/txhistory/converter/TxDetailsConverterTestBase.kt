@@ -102,13 +102,14 @@ internal open class TxDetailsConverterTestBase {
         interactionAddressType: TxInfo.InteractionAddressType? = null,
         destinationType: TxInfo.DestinationType =
             TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(USER_ADDRESS)),
+        sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
         fee: SdkAmount? = null,
     ): TxInfo = TxInfo(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,
         destinationType = destinationType,
-        sourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
+        sourceType = sourceType,
         interactionAddressType = interactionAddressType,
         status = status,
         type = type,
