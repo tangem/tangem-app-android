@@ -22,6 +22,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.pagination)
 
     /** Domain */
@@ -44,6 +45,7 @@ dependencies {
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
 
     /** Common */
     api(projects.common.routing)

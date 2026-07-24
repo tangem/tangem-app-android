@@ -5,7 +5,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -16,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerHMax
+import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -25,6 +25,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_success_24
 import com.tangem.features.tangempay.details.impl.R
+import dev.chrisbanes.haze.HazeStyle
 
 private const val DEFAULT_FADE_COLOR = 0xFF9FC824
 private val BlurRadius = 192.dp
@@ -46,7 +47,7 @@ internal fun TangemPaySuccessScreenWrapper(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .blur(BlurRadius)
+                .hazeForegroundEffectTangem(style = HazeStyle(blurRadius = BlurRadius, tint = null))
                 .drawBehind {
                     val w = size.width
                     drawRect(

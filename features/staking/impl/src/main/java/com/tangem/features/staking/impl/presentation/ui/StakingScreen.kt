@@ -167,6 +167,9 @@ private fun StakingScreenContent(
                     amountState = uiState.amountState,
                     clickIntents = uiState.clickIntents,
                     modifier = Modifier.background(TangemTheme.colors.background.secondary),
+                    extraContent = {
+                        marketingBannerComponent.Content(Modifier.fillMaxWidth())
+                    },
                 )
                 StakingStep.Confirmation -> StakingConfirmationContent(
                     amountState = uiState.amountState,
