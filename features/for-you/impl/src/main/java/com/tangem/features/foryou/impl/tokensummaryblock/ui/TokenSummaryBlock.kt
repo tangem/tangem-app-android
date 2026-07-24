@@ -16,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -70,7 +69,7 @@ private fun SentimentsContent(
             overflow = TextOverflow.Ellipsis,
         )
 
-        SpacerH4()
+        SpacerH(4.dp)
 
         Text(
             text = tokenSentiment.sentiment.resolveReference(),
