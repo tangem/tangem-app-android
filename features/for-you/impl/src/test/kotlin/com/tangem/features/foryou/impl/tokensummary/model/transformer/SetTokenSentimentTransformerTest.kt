@@ -27,7 +27,7 @@ internal class SetTokenSentimentTransformerTest {
 
         // Assert — value-less indicators disable the picker and collapse the sentiment section
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Empty)
-        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty)
+        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty::class.java)
     }
 
     @Test
@@ -52,7 +52,7 @@ internal class SetTokenSentimentTransformerTest {
 
         // Assert — absent indicators must not touch the picker, but the sentiment section is Empty
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Loading)
-        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty)
+        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty::class.java)
     }
 
     @Test
@@ -65,7 +65,7 @@ internal class SetTokenSentimentTransformerTest {
 
         // Assert
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Empty)
-        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty)
+        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty::class.java)
     }
 
     private fun transform(coinIndicators: CoinIndicators?, prevPeriodPicker: PeriodPickerUM): TokenSummaryUm {

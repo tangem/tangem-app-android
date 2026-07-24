@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.StakingBalance
@@ -232,7 +233,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
             // Assert — the staked token's row shows the 4% of the validator actually staked with
             assertThat((result as EarnOpportunitiesUM.Content).rateOfRow("coin-staked"))
-                .isEqualTo(BigDecimal("0.04").format { percent() })
+                .isEqualTo("APY " + BigDecimal("0.04").format { percent() })
         }
 
         @Test
@@ -263,7 +264,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
             // Assert — the best *preferred* rate (12%) is used; the non-preferred 50% is ignored
             assertThat((result as EarnOpportunitiesUM.Content).rateOfRow("coin-staked"))
-                .isEqualTo(BigDecimal("0.12").format { percent() })
+                .isEqualTo("APY " + BigDecimal("0.12").format { percent() })
         }
 
         /** Extracts the rendered rate (the styled bottom-end text) of the row with the given [id]. */
@@ -332,7 +333,12 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
             // Assert — the id comes from the resolved staking option
             val option = (availability as StakingAvailability.Available).option
-            assertThat(clickedType).isEqualTo(ForYouEarnOpportunitiesType.Staking(integrationID = option.integrationId))
+            assertThat(clickedType).isEqualTo(
+                ForYouEarnOpportunitiesType.Staking(
+                    integrationID = option.integrationId,
+                    rewardType = EarnRewardType.APY,
+                ),
+            )
         }
 
         private fun EarnOpportunitiesUM.clickFirstRow() {
