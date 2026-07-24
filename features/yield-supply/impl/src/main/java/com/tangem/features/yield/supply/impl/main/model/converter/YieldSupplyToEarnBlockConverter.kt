@@ -78,7 +78,6 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
                 text = resourceReference(CoreResR.string.yield_module_transaction_enter),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
-                iconUM = buildTitleIcon(value),
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = combinedReference(
@@ -89,18 +88,19 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
                 style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
             ),
-            trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = resourceReference(CoreResR.string.details_title),
-                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
-            ),
+            trailingUM = buildTrailing(value),
             onClick = value.onClick,
         )
     }
 
-    private fun buildTitleIcon(value: YieldSupplyUM.Content): EarnBlockUM.TitleUM.IconUM? = when {
-        value.shouldShowWarningIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning)
-        value.shouldShowInfoIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info)
-        else -> null
+    private fun buildTrailing(value: YieldSupplyUM.Content): EarnBlockUM.TrailingUM = when {
+        value.shouldShowWarningIcon -> EarnBlockUM.TrailingUM.StatusIcon(
+            tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning,
+        )
+        value.shouldShowInfoIcon -> EarnBlockUM.TrailingUM.StatusIcon(
+            tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Info,
+        )
+        else -> EarnBlockUM.TrailingUM.Chevron
     }
 
     private fun buildProcessingEnter(): EarnBlockUM.Content {
@@ -109,17 +109,18 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_yield_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.common_yield_mode),
+                text = combinedReference(
+                    resourceReference(CoreResR.string.common_yield_mode),
+                    stringReference(StringsSigns.WHITE_SPACE),
+                    resourceReference(CoreResR.string.common_enabling),
+                ),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = resourceReference(CoreResR.string.common_enabling),
-                style = EarnBlockUM.SubtitleUM.Style.Small,
-                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
-                loader = EarnBlockUM.SubtitleUM.Loader(tone = EarnBlockUM.SubtitleUM.LoaderTone.Positive),
+            subtitleUM = null,
+            trailingUM = EarnBlockUM.TrailingUM.Loader(
+                tone = EarnBlockUM.TrailingUM.Loader.LoaderTone.Positive,
             ),
-            trailingUM = null,
         )
     }
 
@@ -127,19 +128,23 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
         return EarnBlockUM.Content(
             type = EarnBlockUM.Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
-            iconUM = EarnBlockUM.IconUM.Plain(iconRes = CoreUiR.drawable.ic_yield_disabling_40),
+            iconUM = EarnBlockUM.IconUM.Glowing(
+                iconRes = CoreUiR.drawable.ic_yield_40,
+                tone = EarnBlockUM.IconUM.Tone.Warning,
+            ),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.common_yield_mode),
+                text = combinedReference(
+                    resourceReference(CoreResR.string.common_yield_mode),
+                    stringReference(StringsSigns.WHITE_SPACE),
+                    resourceReference(CoreResR.string.common_disabling),
+                ),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = resourceReference(CoreResR.string.common_disabling),
-                style = EarnBlockUM.SubtitleUM.Style.Small,
-                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
-                loader = EarnBlockUM.SubtitleUM.Loader(tone = EarnBlockUM.SubtitleUM.LoaderTone.Muted),
+            subtitleUM = null,
+            trailingUM = EarnBlockUM.TrailingUM.Loader(
+                tone = EarnBlockUM.TrailingUM.Loader.LoaderTone.Muted,
             ),
-            trailingUM = null,
         )
     }
 }

@@ -46,10 +46,10 @@ internal fun WalletListContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     walletId: String? = null,
 ) {
-    val containerColor = TangemTheme.colors2.surface.level1
+    val containerColor = TangemTheme.colors3.bg.primary
 
-    val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
-    val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
+    val movableItemModifier = Modifier.padding(horizontal = 12.dp)
+    val itemModifier = movableItemModifier.padding(top = 12.dp)
 
     LazyColumn(
         modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
@@ -73,7 +73,7 @@ internal fun WalletListContent(
             item(key = "PromoBannersBlock") {
                 component.ContentWithPadding(
                     horizontalItemPadding = 12.dp,
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x3),
+                    modifier = Modifier.padding(top = 12.dp),
                     walletId = walletId,
                 )
             }

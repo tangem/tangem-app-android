@@ -3,11 +3,7 @@ package com.tangem.features.markets.token.block.impl.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,12 +34,12 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenMarketBlockTestTags
-import com.tangem.core.ui.R as CoreR
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.token.block.impl.model.formatter.toChartType
 import com.tangem.features.markets.token.block.impl.ui.state.TokenMarketBlockUM
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.random.Random
+import com.tangem.core.ui.R as CoreR
 
 private val ChartWidth: Dp = 52.dp
 private val ChartHeight: Dp = 32.dp
@@ -115,7 +111,7 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
             withHazeEffect = false,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.TAIL)
-                .padding(start = TangemTheme.dimens2.x10),
+                .padding(start = 12.dp),
         )
     }
 }
