@@ -80,6 +80,7 @@ internal fun TokenSummaryContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 is TokenSentimentUM.Empty -> EmptySentimentContent(
+                    text = tokenSentiment.text,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 is TokenSentimentUM.Loading -> LoadingSentimentContent(
@@ -127,13 +128,13 @@ private fun BottomButton(bottomButton: BottomButtonUM, modifier: Modifier = Modi
 }
 
 @Composable
-private fun EmptySentimentContent(modifier: Modifier = Modifier) {
+private fun EmptySentimentContent(text: TextReference, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResourceSafe(R.string.token_summary_can_not_load_token),
+            text = text.resolveReference(),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.heading.small,
         )
@@ -213,7 +214,10 @@ private fun SentimentsContent(
         )
 
         GradientScaleBar(
-            state = GradientScaleBarState.Content(value = tokenSentiment.totalScore),
+            state = GradientScaleBarState.Content(
+                value = tokenSentiment.totalScore,
+                range = -tokenSentiment.scaleMax..tokenSentiment.scaleMax,
+            ),
             modifier = Modifier.padding(vertical = 40.dp),
         )
 
@@ -364,7 +368,9 @@ private fun TokenSummaryContentEmptyPreview() {
         TokenSummaryContent(
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Empty,
-                tokenSentiment = TokenSentimentUM.Empty,
+                tokenSentiment = TokenSentimentUM.Empty(
+                    resourceReference(R.string.token_summary_can_not_load_token),
+                ),
                 bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
             ),
             contentPadding = PaddingValues.Zero,
