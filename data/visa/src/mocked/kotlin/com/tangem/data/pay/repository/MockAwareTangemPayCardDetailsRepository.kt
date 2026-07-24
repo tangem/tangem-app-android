@@ -1,10 +1,11 @@
 package com.tangem.data.pay.repository
 
+import com.tangem.datasource.api.common.config.TangemPay
+
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -23,11 +24,12 @@ import javax.inject.Singleton
 internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
     private val real: DefaultTangemPayCardDetailsRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val cardNameHolder: MockTangemPayCardNameHolder,
 ) : TangemPayCardDetailsRepository {
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
-            .getEnvironmentConfig(ApiConfig.ID.TangemPay)
+            .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
     override suspend fun getCardBalance(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardBalance> =
@@ -97,6 +99,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         userWalletId: UserWalletId,
         displayName: CardDisplayName,
     ): Either<UniversalError, Unit> = real.updateCardDisplayName(cardId, userWalletId, displayName)
+        .onRight { if (isMockMode) cardNameHolder.displayName = displayName }
 
     override suspend fun updateCardLimit(
         cardId: String,

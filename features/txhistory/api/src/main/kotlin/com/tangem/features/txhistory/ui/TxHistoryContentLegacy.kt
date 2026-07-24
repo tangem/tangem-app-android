@@ -72,12 +72,12 @@ private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, mod
 private fun LazyListScope.loadingItems(state: TxHistoryUM.Loading) {
     itemsIndexed(
         items = state.items,
-        key = { _, item ->
+        key = { index, item ->
             when (item) {
-                is TxHistoryUM.TxHistoryItemUM.GroupTitle -> item.itemKey
-                is TxHistoryUM.TxHistoryItemUM.Title -> item.onExploreClick.hashCode()
+                is TxHistoryUM.TxHistoryItemUM.GroupTitle -> "$index-${item.itemKey}"
+                is TxHistoryUM.TxHistoryItemUM.Title -> "$index-${item.onExploreClick.hashCode()}"
                 is TxHistoryUM.TxHistoryItemUM.Transaction ->
-                    item.state.txHash + (item.state as? TransactionState.Content)?.hashCode()
+                    "$index-${item.state.txHash}${(item.state as? TransactionState.Content)?.hashCode()}"
             }
         },
         contentType = { _, item -> item::class.java },
@@ -97,12 +97,12 @@ private fun LazyListScope.loadingItems(state: TxHistoryUM.Loading) {
 private fun LazyListScope.contentItems(listState: LazyListState, state: TxHistoryUM.Content) {
     itemsIndexed(
         items = state.items,
-        key = { _, item ->
+        key = { index, item ->
             when (item) {
-                is TxHistoryUM.TxHistoryItemUM.GroupTitle -> item.itemKey
-                is TxHistoryUM.TxHistoryItemUM.Title -> item.onExploreClick.hashCode()
+                is TxHistoryUM.TxHistoryItemUM.GroupTitle -> "$index-${item.itemKey}"
+                is TxHistoryUM.TxHistoryItemUM.Title -> "$index-${item.onExploreClick.hashCode()}"
                 is TxHistoryUM.TxHistoryItemUM.Transaction ->
-                    item.state.txHash + (item.state as? TransactionState.Content)?.hashCode()
+                    "$index-${item.state.txHash}${(item.state as? TransactionState.Content)?.hashCode()}"
             }
         },
         contentType = { _, item -> item::class.java },

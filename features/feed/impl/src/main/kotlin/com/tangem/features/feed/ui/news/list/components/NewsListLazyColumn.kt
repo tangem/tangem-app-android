@@ -19,9 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.list.InfiniteListHandler
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.feed.components.articles.DefaultLoadingArticle
@@ -121,7 +119,6 @@ private fun Content(
                 modifier = Modifier
                     .heightIn(min = 152.dp)
                     .fillMaxWidth(),
-                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 articleConfigUM = article,
                 onArticleClick = {
                     onArticleClick(article.id)

@@ -21,13 +21,11 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IsDynamicAddressesAvailableUseCaseTest {
 
-    private val featureToggles: DynamicAddressesFeatureToggles = mockk()
-    private val useCase = IsDynamicAddressesAvailableUseCase(featureToggles)
+    private val useCase = IsDynamicAddressesAvailableUseCase()
 
     @BeforeAll
     fun setup() {
         mockkStatic("com.tangem.domain.wallets.derivations.DerivationStyleProviderExtKt")
-        every { featureToggles.isDynamicAddressesEnabled } returns true
     }
 
     @AfterAll
@@ -36,17 +34,6 @@ class IsDynamicAddressesAvailableUseCaseTest {
     }
 
     // region Gating
-
-    @Test
-    fun `feature toggle off returns false`() {
-        every { featureToggles.isDynamicAddressesEnabled } returns false
-
-        val coin = coin(Blockchain.Bitcoin, "m/84'/0'/0'/0/0")
-        val result = useCase(walletWithStyle(DerivationStyle.V3), coin)
-
-        assertThat(result).isFalse()
-        every { featureToggles.isDynamicAddressesEnabled } returns true // restore
-    }
 
     @Test
     fun `token currency returns false`() {
