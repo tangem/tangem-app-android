@@ -10,8 +10,8 @@ import androidx.room.*
 @Entity(
     tableName = "express_onramp",
     indices = [
-        // Incoming onramp lookup (observeIncomingOnramps): owner + to-asset equality, created_at range/sort.
-        Index(value = ["owner_address", "to_network", "to_contract_address", "created_at"]),
+        // Incoming onramp lookup (observeIncomingOnramps): payout-address + to-asset equality, created_at range/sort.
+        Index(value = ["payout_address", "to_network", "to_contract_address", "created_at"]),
     ],
 )
 data class ExpressOnrampEntity(
@@ -20,16 +20,10 @@ data class ExpressOnrampEntity(
     @ColumnInfo(name = "tx_id")
     val txId: String,
 
-    /**
-     * Address used to query the history. For onramp it matches [payoutAddress].
-     */
-    @ColumnInfo(name = "owner_address")
-    val ownerAddress: String,
-
     @ColumnInfo(name = "provider_id")
     val providerId: String,
 
-    /** Address that received the target assets */
+    /** Address that received the target assets — the key incoming onramps are looked up by. */
     @ColumnInfo(name = "payout_address")
     val payoutAddress: String,
 

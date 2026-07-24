@@ -15,45 +15,53 @@ android {
 
 dependencies {
 
-    // region Core modules
-    implementation(projects.core.datasource)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.utils)
-    implementation(projects.core.analytics)
-    // endregion
-
-    api(projects.domain.models)
-
-    // region AndroidX libraries
-    implementation(deps.androidx.datastore)
-    // endregion
-
-    // region DI libraries
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region AndroidX
+    implementation(deps.androidx.core)
+    implementation(deps.androidx.datastore)
+    // endregion
+
     // region Other libraries
-    implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
-    // region Firebase libraries
+    // region Firebase
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     // endregion
 
-    // region Tangem libraries
-    implementation(tangemDeps.blockchain) { exclude(module = "joda-time") }
+    // region Tangem
+    api(tangemDeps.blockchain) { exclude(module = "joda-time") }
     implementation(tangemDeps.card.core)
     // endregion
 
+    // region Core modules
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    implementation(projects.core.utils)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    // endregion
 }
