@@ -6,7 +6,10 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.features.tangempay.addFundsButton
+import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
+import com.tangem.features.tangempay.withdrawButton
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -14,45 +17,25 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 internal class TangemPayDetailsStateFactoryTest {
 
     private val intents: TangemPayDetailIntents = mockk(relaxed = true)
 
-    @BeforeEach
-    fun resetMocks() {
-        clearMocks(intents)
-    }
+    private val activeUnfrozenCard = tangemPayCard()
 
-    private val activeUnfrozenCard = TangemPayCard(
-        id = "card_1",
-        productInstanceId = "pi_card_1",
-        cardStatus = TangemPayCard.Status.ACTIVE,
-        hasPinCode = false,
-        displayName = null,
-        frozenState = TangemPayCardFrozenState.Unfrozen,
-        lastDigits = "1234",
-        limit = null,
-        state = TangemPayCardState.Active,
-    )
-
-    private fun createFactory() = TangemPayDetailsStateFactory(
+    private val factory = TangemPayDetailsStateFactory(
         onBack = {},
         onOpenMenu = {},
         intents = intents,
-        isRedesignEnabled = true,
         isRemoveAccountEnabled = true,
-        isMultipleCardsEnabled = true,
+        isTiersPlusPlanEnabled = true,
     )
 
-    private fun loadedStatus(
-        statusSource: StatusSource,
-        statusError: PaymentAccountStatusValue.Error?,
-        statusCards: List<TangemPayCard> = listOf(activeUnfrozenCard),
-    ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
-        every { source } returns statusSource
-        every { error } returns statusError
-        every { cards } returns statusCards
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(intents)
     }
 
     @ParameterizedTest
@@ -61,14 +44,13 @@ internal class TangemPayDetailsStateFactoryTest {
         case: ButtonStateCase,
     ) {
         // Arrange
-        val factory = createFactory()
         val status = loadedStatus(statusSource = case.source, statusError = case.error)
 
         // Act
         val state = factory.getLoadedState(status)
 
         // Assert
-        val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.isEnabled }
+        val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.config.isEnabled }
         assertThat(actionButtonsEnabled).containsExactly(case.expectedEnabled, case.expectedEnabled)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isEqualTo(case.expectedEnabled)
         // The card tile is intentionally NOT source-gated: it stays clickable on stale data as long as
@@ -80,7 +62,6 @@ internal class TangemPayDetailsStateFactoryTest {
     @Test
     fun `GIVEN actual status with only frozen card WHEN getLoadedState THEN action buttons disabled`() {
         // Arrange
-        val factory = createFactory()
         val frozenCard = activeUnfrozenCard.copy(frozenState = TangemPayCardFrozenState.Frozen)
         val status = loadedStatus(
             statusSource = StatusSource.ACTUAL,
@@ -92,31 +73,13 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getLoadedState(status)
 
         // Assert
-        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isTrue()
-    }
-
-    @Test
-    fun `GIVEN actual status with frozen first card but unfrozen second card WHEN getLoadedState THEN action buttons enabled`() {
-        val factory = createFactory()
-        val frozenFirstCard = activeUnfrozenCard.copy(id = "card_frozen", frozenState = TangemPayCardFrozenState.Frozen)
-        val status = loadedStatus(
-            statusSource = StatusSource.ACTUAL,
-            statusError = null,
-            statusCards = listOf(frozenFirstCard, activeUnfrozenCard),
-        )
-
-        // Act
-        val state = factory.getLoadedState(status)
-
-        // Assert
-        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(true, true)
     }
 
     @Test
     fun `GIVEN actual status with issuing card WHEN getLoadedState THEN add card disabled`() {
         // Arrange
-        val factory = createFactory()
         val issuingCard = activeUnfrozenCard.copy(state = TangemPayCardState.Issuing)
         val status = loadedStatus(
             statusSource = StatusSource.ACTUAL,
@@ -131,6 +94,95 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isFalse()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideBalanceCases")
+    fun `GIVEN fresh status WHEN getLoadedState THEN withdraw gated by balance but add funds enabled`(
+        case: BalanceCase,
+    ) {
+        // Arrange
+        val status = loadedStatus(availableForWithdrawal = case.availableForWithdrawal)
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isTrue()
+        assertThat(state.withdrawButton.isEnabled).isEqualTo(case.expectedWithdrawEnabled)
+    }
+
+    @Test
+    fun `GIVEN deactivated with positive balance WHEN getDeactivatedState THEN withdraw enabled`() {
+        // Act
+        val state = factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.TEN))
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isTrue()
+        assertThat(state.withdrawButton.isEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN deactivated with zero balance WHEN getDeactivatedState THEN withdraw disabled`() {
+        // Act
+        val state = factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO))
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isTrue()
+        assertThat(state.withdrawButton.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN withdraw disabled WHEN getActionButtonsConfig THEN withdraw disabled and add funds enabled`() {
+        // Act
+        val buttons = factory.getActionButtonsConfig(isAddFundsEnabled = true, isWithdrawEnabled = false)
+
+        // Assert
+        assertThat(buttons.addFundsButton.isEnabled).isTrue()
+        assertThat(buttons.withdrawButton.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN both enabled WHEN getActionButtonsConfig THEN both buttons enabled`() {
+        // Act
+        val buttons = factory.getActionButtonsConfig(isAddFundsEnabled = true, isWithdrawEnabled = true)
+
+        // Assert
+        assertThat(buttons.addFundsButton.isEnabled).isTrue()
+        assertThat(buttons.withdrawButton.isEnabled).isTrue()
+    }
+
+    private fun loadedStatus(
+        statusSource: StatusSource = StatusSource.ACTUAL,
+        statusError: PaymentAccountStatusValue.Error? = null,
+        statusCards: List<TangemPayCard> = listOf(activeUnfrozenCard),
+        availableForWithdrawal: BigDecimal = BigDecimal.TEN,
+    ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
+        every { source } returns statusSource
+        every { error } returns statusError
+        every { cards } returns statusCards
+        every { balance } returns balance(availableForWithdrawal)
+    }
+
+    private fun deactivatedStatus(availableForWithdrawal: BigDecimal): PaymentAccountStatusValue.Deactivated =
+        mockk(relaxed = true) {
+            every { source } returns StatusSource.ACTUAL
+            every { balance } returns balance(availableForWithdrawal)
+        }
+
+    private fun balance(availableForWithdrawal: BigDecimal) = PaymentAccountStatusValue.Balance(
+        fiatBalance = PaymentAccountStatusValue.FiatBalance(
+            availableBalance = BigDecimal.ZERO,
+            currency = "USD",
+        ),
+        cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+            id = "id",
+            chainId = 1L,
+            depositAddress = "address",
+            tokenContractAddress = "contract",
+            balance = BigDecimal.ZERO,
+        ),
+        availableForWithdrawal = availableForWithdrawal,
+    )
+
     internal data class ButtonStateCase(
         val source: StatusSource,
         val error: PaymentAccountStatusValue.Error?,
@@ -138,7 +190,19 @@ internal class TangemPayDetailsStateFactoryTest {
         val expectedCardEnabled: Boolean,
     )
 
+    internal data class BalanceCase(
+        val availableForWithdrawal: BigDecimal,
+        val expectedWithdrawEnabled: Boolean,
+    )
+
     private companion object {
+        @JvmStatic
+        fun provideBalanceCases() = listOf(
+            BalanceCase(availableForWithdrawal = BigDecimal.ZERO, expectedWithdrawEnabled = false),
+            BalanceCase(availableForWithdrawal = BigDecimal.TEN, expectedWithdrawEnabled = true),
+            BalanceCase(availableForWithdrawal = BigDecimal("-1"), expectedWithdrawEnabled = false),
+        )
+
         @JvmStatic
         fun provideButtonStateCases() = listOf(
             // Fresh data from the network -> actions allowed, card tile clickable.

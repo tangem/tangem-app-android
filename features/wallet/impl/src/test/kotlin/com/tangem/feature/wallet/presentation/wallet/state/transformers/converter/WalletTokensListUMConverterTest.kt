@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.CardTypesResolver
@@ -20,12 +22,17 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -59,16 +66,65 @@ internal class WalletTokensListUMConverterTest {
         assertThat(result.organizeButtonUM != null).isEqualTo(model.expectedButtonShown)
     }
 
-    private fun createConverter(selectedWallet: UserWallet): WalletTokensListUMConverter = WalletTokensListUMConverter(
+    @Test
+    fun `GIVEN polymarket enabled WHEN convert THEN prediction row is first with expected content and click`() {
+        // Arrange
+        val clickIntents = mockk<WalletClickIntents>(relaxed = true)
+        val selectedWallet = mockColdWallet(isSingleCurrency = false, isSingleWalletWithToken = false)
+        every { selectedWallet.walletId } returns userWalletId
+        val converter = createConverter(
+            selectedWallet = selectedWallet,
+            isPolymarketEnabled = true,
+            clickIntents = clickIntents,
+        )
+
+        // Act
+        val result = converter.convert(value = nonEmptyAccountList()) as WalletTokensListUM.Content
+        val firstItem = result.tokenList.first()
+
+        // Assert
+        assertThat(firstItem).isInstanceOf(TokensListItemUM2.Prediction::class.java)
+        val row = (firstItem as TokensListItemUM2.Prediction).tokenRowUM as TangemTokenRowUM.Content
+        assertThat(row.id).isEqualTo("polymarket_prediction_account")
+        assertThat(row.titleUM).isEqualTo(
+            TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.prediction_account_title)),
+        )
+        assertThat(row.subtitleUM).isEqualTo(
+            TangemTokenRowUM.SubtitleUM.Content(text = resourceReference(R.string.prediction_account_subtitle)),
+        )
+        row.onItemClick?.invoke()
+        verify(exactly = 1) { clickIntents.onPredictionAccountClick(userWalletId) }
+    }
+
+    @Test
+    fun `GIVEN polymarket disabled WHEN convert THEN no prediction row present`() {
+        // Arrange
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(isSingleCurrency = false, isSingleWalletWithToken = false),
+            isPolymarketEnabled = false,
+        )
+
+        // Act
+        val result = converter.convert(value = nonEmptyAccountList()) as WalletTokensListUM.Content
+
+        // Assert
+        assertThat(result.tokenList.filterIsInstance<TokensListItemUM2.Prediction>()).isEmpty()
+    }
+
+    private fun createConverter(
+        selectedWallet: UserWallet,
+        isPolymarketEnabled: Boolean = false,
+        clickIntents: WalletClickIntents = mockk(relaxed = true),
+    ): WalletTokensListUMConverter = WalletTokensListUMConverter(
         appCurrency = AppCurrency.Default,
         selectedWallet = selectedWallet,
-        clickIntents = mockk(relaxed = true),
+        clickIntents = clickIntents,
         yieldModuleApyMap = emptyMap(),
         isAccountsModeEnabled = false,
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
-        isAddAndManageTokensEnabled = true,
         shouldShowMainPromo = false,
+        isPolymarketEnabled = isPolymarketEnabled,
     )
 
     private fun mockColdWallet(isSingleCurrency: Boolean, isSingleWalletWithToken: Boolean): UserWallet.Cold {

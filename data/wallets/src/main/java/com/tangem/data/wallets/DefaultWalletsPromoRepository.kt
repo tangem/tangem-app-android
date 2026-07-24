@@ -3,7 +3,7 @@ package com.tangem.data.wallets
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.BindWalletsByReferralCodeBody
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
@@ -80,7 +80,7 @@ internal class DefaultWalletsPromoRepository(
     }
 
     @JsonClass(generateAdapter = true)
-    private data class ReferralWalletsBindingData(
+    internal data class ReferralWalletsBindingData(
         @Json(name = "refcode") val refcode: String,
         @Json(name = "campaign") val campaign: String?,
         @Json(name = "done") val isDone: Boolean,

@@ -8,13 +8,13 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -36,7 +36,6 @@ import javax.inject.Inject
 internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
-    private val designFeatureToggles: DesignFeatureToggles,
 ) : InnerWalletRouter {
 
     override val dialogNavigation: SlotNavigation<WalletDialogConfig> = SlotNavigation()
@@ -50,13 +49,9 @@ internal class DefaultWalletRouter @Inject constructor(
         get() = OrganizeCallbacks()
 
     override fun openOrganizeTokensScreen(userWalletId: UserWalletId) {
-        if (designFeatureToggles.isRedesignEnabled) {
-            dialogNavigation.activate(
-                configuration = WalletDialogConfig.OrganizeTokens(userWalletId),
-            )
-        } else {
-            navigateToFlow.tryEmit(WalletRoute.OrganizeTokens(userWalletId))
-        }
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.OrganizeTokens(userWalletId),
+        )
     }
 
     override fun openDetailsScreen(selectedWalletId: UserWalletId) {
@@ -131,6 +126,10 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
+    override fun openPolymarket(userWalletId: UserWalletId) {
+        router.push(AppRoute.Polymarket(userWalletId = userWalletId))
+    }
+
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
@@ -156,6 +155,14 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openTangemPayDetails(status: AccountStatus.Payment) {
         router.push(AppRoute.TangemPayDetails(status = status))
+    }
+
+    override fun openTangemPaySelectPlan(status: AccountStatus.Payment) {
+        val route = AppRoute.TangemPayDetails(
+            status = status,
+            initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
+        )
+        router.push(route)
     }
 
     override fun openYieldSupplyBottomSheet(
