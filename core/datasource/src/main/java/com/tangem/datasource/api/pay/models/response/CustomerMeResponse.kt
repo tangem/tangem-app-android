@@ -21,6 +21,51 @@ data class CustomerMeResponse(
         @Json(name = "balance") val balance: BalanceResponse?,
         @Json(name = "product_instances") val productInstances: List<ProductInstance>,
         @Json(name = "cards") val cards: List<Card>,
+        @Json(name = "customer_tariff_plan") val customerTariffPlan: CustomerTariffPlan? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class CustomerTariffPlan(
+        @Json(name = "status") val status: String?,
+        @Json(name = "source") val source: String?,
+        @Json(name = "next_billing_at") val nextBillingAt: String?,
+        @Json(name = "pending_transition_at") val pendingTransitionAt: String?,
+        @Json(name = "tariff_plan") val tariffPlan: TariffPlan?,
+        @Json(name = "pending_tariff_plan") val pendingTariffPlan: TariffPlan?,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class TariffPlan(
+        @Json(name = "id") val id: String?,
+        @Json(name = "type") val type: String?,
+        @Json(name = "name") val name: String?,
+        @Json(name = "program_name") val programName: String?,
+        @Json(name = "description_items") val descriptionItems: List<DescriptionItem>?,
+        @Json(name = "images") val images: List<Image>? = null,
+        @Json(name = "fees") val fees: List<Fee>? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Fee(
+        @Json(name = "type") val type: String?,
+        @Json(name = "amount") val amount: BigDecimal?,
+        @Json(name = "currency") val currency: String?,
+        @Json(name = "description") val description: String?,
+        @Json(name = "period") val period: String?,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Image(
+        @Json(name = "type") val type: String?,
+        @Json(name = "url") val url: String?,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class DescriptionItem(
+        @Json(name = "type") val type: String?,
+        @Json(name = "order") val order: Int?,
+        @Json(name = "title") val title: String?,
+        @Json(name = "body") val body: String?,
     )
 
     @JsonClass(generateAdapter = true)
@@ -122,5 +167,6 @@ data class CustomerMeResponse(
         @Json(name = "card_status") val cardStatus: String,
         @Json(name = "card_number_end") val cardNumberEnd: String,
         @Json(name = "is_pin_set") val isPinSet: Boolean?,
+        @Json(name = "images") val images: List<Image>?,
     )
 }

@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.onramp
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.onramp.models.request.OnrampPairsRequest
 import com.tangem.datasource.api.onramp.models.response.OnrampDataResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse

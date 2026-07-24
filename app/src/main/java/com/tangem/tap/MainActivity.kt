@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -28,9 +29,11 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
+import com.appsflyer.AppsFlyerLib
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
+import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
@@ -215,6 +218,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         if (BuildConfig.TESTER_MENU_ENABLED) {
             lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
+            testerMenuLauncher.registerTesterMenuShortcut()
         }
 
         if (intent != null) {
@@ -367,6 +371,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         super.onNewIntent(intent)
         TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
 
+        // Warm start: let the AppsFlyer SDK resolve a OneLink delivered while the app is already running.
+        AppsFlyerLib.getInstance().performOnDeepLinking(intent, this)
+
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
             analyticsEventsHandler.send(Push.PushNotificationOpened())
@@ -410,23 +417,31 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
-        val deepLinkExtras = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
+        val externalDeepLink = intent.data
+        val extrasDeepLink = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
         val webLink = intent.getStringExtra(WEBLINK_KEY)
 
-        val receivedDeepLink = intent.data ?: deepLinkExtras
-
         when {
-            receivedDeepLink != null -> {
-                deeplinkFactory.handleDeeplink(
-                    deeplinkUri = receivedDeepLink,
-                    coroutineScope = lifecycleScope,
-                    isFromOnNewIntent = isFromOnNewIntent,
-                )
-            }
+            // External deep links (browser / universal links) arrive via intent.data — never gated.
+            externalDeepLink != null -> launchDeepLink(externalDeepLink, isFromOnNewIntent)
+            // A deep link reconstructed from a notification payload must pass the push policy. If it is
+            // present but blocked, stop — do not fall back to another payload-supplied field (e.g. webLink).
+            extrasDeepLink != null ->
+                if (PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)) {
+                    launchDeepLink(extrasDeepLink, isFromOnNewIntent)
+                }
             webLink?.uriValidate() == true -> {
                 urlOpener.openUrl(webLink)
             }
         }
+    }
+
+    private fun launchDeepLink(deeplinkUri: Uri, isFromOnNewIntent: Boolean) {
+        deeplinkFactory.handleDeeplink(
+            deeplinkUri = deeplinkUri,
+            coroutineScope = lifecycleScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+        )
     }
 
     private fun sendStakingUnsubmittedHashes() {

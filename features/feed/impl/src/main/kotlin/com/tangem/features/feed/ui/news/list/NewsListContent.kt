@@ -13,16 +13,13 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TopFade
-import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
@@ -36,68 +33,13 @@ import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
 internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        NewsListContentV2(
-            contentPadding = contentPadding,
-            state = state,
-            modifier = modifier,
-        )
-    } else {
-        NewsListContentV1(
-            contentPadding = contentPadding,
-            state = state,
-            modifier = modifier,
-        )
-    }
-}
-
-@Composable
-internal fun NewsListContentV1(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
-    val background = LocalMainBottomSheetColor.current.value
-    val lazyListState = rememberLazyListState()
-    val chipsListState = rememberLazyListState()
-
-    ScrollChipsToSelected(state = state, chipsListState = chipsListState)
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(background),
-    ) {
-        SpacerH(contentPadding.calculateTopPadding())
-        LazyRow(
-            state = chipsListState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(
-                items = state.filters,
-                key = { it.id },
-            ) { filter ->
-                Chip(state = filter)
-            }
-        }
-
-        SpacerH(16.dp)
-
-        NewsListLazyColumn(
-            newsListState = state.newsListState,
-            listOfArticles = state.listOfArticles,
-            lazyListState = lazyListState,
-            onArticleClick = state.onArticleClick,
-        )
-    }
-}
-
-@Composable
-internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val lazyListState = rememberLazyListState()
     val chipsListState = rememberLazyListState()
     var chipsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
     val topPadding = contentPadding.calculateTopPadding()
-    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
+    val fadeColor = TangemTheme.colors3.bg.primary.copy(BASE_FADE_LEVEL)
 
     ScrollChipsToSelected(state = state, chipsListState = chipsListState)
 
@@ -107,7 +49,7 @@ internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM,
             .background(background),
     ) {
         NewsListLazyColumn(
-            topContentPadding = topPadding + TangemTheme.dimens2.x4 + chipsHeight,
+            topContentPadding = topPadding + 16.dp + chipsHeight,
             modifier = Modifier.align(Alignment.TopStart),
             newsListState = state.newsListState,
             listOfArticles = state.listOfArticles,
@@ -118,14 +60,14 @@ internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM,
         TopFade(
             modifier = Modifier.padding(top = topPadding),
             colorStops = feedTopFadeColorStops(fadeColor),
-            height = TangemTheme.dimens2.x4 + chipsHeight,
+            height = 16.dp + chipsHeight,
         )
 
         LazyRow(
             state = chipsListState,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top = topPadding, bottom = TangemTheme.dimens2.x4)
+                .padding(top = topPadding, bottom = 16.dp)
                 .onGloballyPositioned { coordinates ->
                     if (coordinates.size.height > 0) {
                         with(density) {

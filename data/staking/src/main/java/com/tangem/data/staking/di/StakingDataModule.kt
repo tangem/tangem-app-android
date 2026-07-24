@@ -9,12 +9,15 @@ import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
+import com.tangem.data.staking.verification.DefaultStakingBlockAidRequestFactory
+import com.tangem.data.staking.verification.DefaultStakingTransactionRecognizer
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.P2PVaultLimitsStore
 import com.tangem.datasource.local.token.StakingActionsStore
@@ -23,6 +26,8 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
+import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
+import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -83,6 +88,7 @@ internal object StakingDataModule {
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
         stakingFeatureToggles: StakingFeatureToggles,
+        p2pEthPoolRegionBlockedStore: P2PEthPoolRegionBlockedStore,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
             p2pEthPoolApi = p2pEthPoolApi,
@@ -91,6 +97,7 @@ internal object StakingDataModule {
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
             stakingFeatureToggles = stakingFeatureToggles,
+            p2pEthPoolRegionBlockedStore = p2pEthPoolRegionBlockedStore,
         )
     }
 
@@ -154,4 +161,12 @@ internal object StakingDataModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideStakingTransactionRecognizer(): StakingTransactionRecognizer = DefaultStakingTransactionRecognizer()
+
+    @Provides
+    @Singleton
+    fun provideStakingBlockAidRequestFactory(): StakingBlockAidRequestFactory = DefaultStakingBlockAidRequestFactory()
 }

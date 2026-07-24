@@ -143,6 +143,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     private fun TangemPayEntryPoint.toEligibilityType(): TangemPayEligibilityType = when (this) {
         TangemPayEntryPoint.BANNER -> TangemPayEligibilityType.BANNER
         TangemPayEntryPoint.DETAILS -> TangemPayEligibilityType.DETAILS
+        TangemPayEntryPoint.DEEPLINK -> TangemPayEligibilityType.DEEPLINK
     }
 
     private data class UserWalletData(

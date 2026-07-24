@@ -167,4 +167,5 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         SeiEvm, SeiEvmTestnet -> null
         Monad, MonadTestnet -> null
         Gonka -> null
+        Robinhood, RobinhoodTestnet -> null
     }

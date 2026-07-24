@@ -8,7 +8,6 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.wallets.derivations.MissedDerivationsFinder
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -29,7 +28,6 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
     private val networkFactory: NetworkFactory,
     private val hotWalletAccessor: HotWalletAccessor,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
 ) : HotMapDerivationsRepository {
 
     override suspend fun derivePublicKeys(
@@ -61,7 +59,7 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         userWallet: UserWallet.Hot,
         networks: List<Network>,
     ): UserWallet.Hot = withContext(dispatchers.default) {
-        val derivations = MissedDerivationsFinder(userWallet, dynamicAddressesFeatureToggles.isDynamicAddressesEnabled)
+        val derivations = MissedDerivationsFinder(userWallet, isDynamicAddressesEnabled = true)
             .findByNetworks(networks)
             .ifEmpty {
                 TangemLogger.d("Nothing to derive")
@@ -110,7 +108,7 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         userWallet: UserWallet.Hot,
         networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean = withContext(dispatchers.default) {
-        val derivations = MissedDerivationsFinder(userWallet, dynamicAddressesFeatureToggles.isDynamicAddressesEnabled)
+        val derivations = MissedDerivationsFinder(userWallet, isDynamicAddressesEnabled = true)
             .findByNetworks(
                 networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
                     networkFactory.create(

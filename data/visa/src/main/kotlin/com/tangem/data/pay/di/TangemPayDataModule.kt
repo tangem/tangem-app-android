@@ -6,6 +6,7 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
+import com.tangem.data.pay.TangemPayUserWalletDataCleaner
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.entity.DefaultTangemPayCurrencyFactory
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
@@ -21,6 +22,7 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -32,7 +34,6 @@ import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
-import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -41,6 +42,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -50,10 +52,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindKycRepository(repository: DefaultKycRepository): KycRepository
-
-    @Binds
-    @Singleton
-    fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
 
     @Binds
     @Singleton
@@ -117,7 +115,58 @@ internal interface TangemPayDataModule {
     @Singleton
     fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
 
+    @Binds
+    @IntoSet
+    fun bindTangemPayUserWalletDataCleaner(impl: TangemPayUserWalletDataCleaner): UserWalletDataCleaner
+
+    @Binds
+    @Singleton
+    fun bindTariffPlanTransitionsRepository(
+        repository: DefaultTariffPlanTransitionsRepository,
+    ): TangemPayTariffPlanTransitionsRepository
+
+    @Suppress("TooManyFunctions")
     companion object {
+
+        @Provides
+        fun provideGetTangemPayTariffPlanTransitionsUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+        ): GetTangemPayTariffPlanTransitionsUseCase {
+            return GetTangemPayTariffPlanTransitionsUseCase(repository)
+        }
+
+        @Provides
+        fun provideSetTariffPlanPendingTransitionUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): SetTariffPlanPendingTransitionUseCase {
+            return SetTariffPlanPendingTransitionUseCase(
+                repository = repository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
+        fun provideCancelTariffPlanPendingTransitionUseCase(
+            repository: TangemPayTariffPlanTransitionsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): CancelTariffPlanPendingTransitionUseCase {
+            return CancelTariffPlanPendingTransitionUseCase(
+                repository = repository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
+        fun provideGetTangemPayTariffPlanStateUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            getTangemPayTariffPlanTransitionsUseCase: GetTangemPayTariffPlanTransitionsUseCase,
+        ): GetTangemPayTariffPlanStateUseCase {
+            return GetTangemPayTariffPlanStateUseCase(
+                customerOrderRepository = customerOrderRepository,
+                getTariffPlanTransitions = getTangemPayTariffPlanTransitionsUseCase,
+            )
+        }
 
         @Provides
         @Singleton
@@ -248,6 +297,25 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetCashbackSummaryUseCase(cashbackRepository: CashbackRepository): GetCashbackSummaryUseCase {
+            return GetCashbackSummaryUseCase(cashbackRepository)
+        }
+
+        @Provides
+        fun provideGetCashbackDeactivationDismissedUseCase(
+            cashbackRepository: CashbackRepository,
+        ): GetCashbackDeactivationDismissedUseCase {
+            return GetCashbackDeactivationDismissedUseCase(cashbackRepository)
+        }
+
+        @Provides
+        fun provideSetCashbackDeactivationDismissedUseCase(
+            cashbackRepository: CashbackRepository,
+        ): SetCashbackDeactivationDismissedUseCase {
+            return SetCashbackDeactivationDismissedUseCase(cashbackRepository)
+        }
+
+        @Provides
         fun provideCheckOrderConflictUseCase(
             customerOrderRepository: CustomerOrderRepository,
         ): CheckOrderConflictUseCase {
@@ -306,6 +374,79 @@ internal interface TangemPayDataModule {
                 pollingUseCase = pollingUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideGetBankCredentialsUseCase(onboardingRepository: OnboardingRepository): GetBankCredentialsUseCase {
+            return GetBankCredentialsUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
+        fun provideCancelTangemPayOrderUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+        ): CancelTangemPayOrderUseCase {
+            return CancelTangemPayOrderUseCase(
+                customerOrderRepository = customerOrderRepository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+            )
+        }
+
+        @Provides
+        fun provideCreateTariffPlanTransitionOrderUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): CreateTariffPlanTransitionOrderUseCase {
+            return CreateTariffPlanTransitionOrderUseCase(
+                customerOrderRepository = customerOrderRepository,
+                issueCardRepository = issueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideSubmitTariffTransitionUseCase(
+            createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
+            setPendingTransition: SetTariffPlanPendingTransitionUseCase,
+        ): SubmitTariffTransitionUseCase {
+            return SubmitTariffTransitionUseCase(
+                createTransitionOrder = createTransitionOrder,
+                setPendingTransition = setPendingTransition,
+            )
+        }
+
+        @Provides
+        fun provideCancelTariffTransitionUseCase(
+            cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
+            getTariffTransitionUseCase: GetTangemPayTariffPlanTransitionsUseCase,
+            submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
+            getCurrentTariffUseCase: GetCurrentTariffUseCase,
+        ): CancelTariffTransitionUseCase {
+            return CancelTariffTransitionUseCase(
+                cancelTangemPayOrderUseCase = cancelTangemPayOrderUseCase,
+                getTariffTransitionUseCase = getTariffTransitionUseCase,
+                submitTariffTransitionUseCase = submitTariffTransitionUseCase,
+                getCurrentTariffUseCase = getCurrentTariffUseCase,
+            )
+        }
+
+        @Provides
+        fun provideGetCurrentTariffUseCase(
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+        ): GetCurrentTariffUseCase {
+            return GetCurrentTariffUseCase(
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             )
         }
     }

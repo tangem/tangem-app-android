@@ -19,7 +19,6 @@ import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import io.qameta.allure.kotlin.Allure.step
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Ignore

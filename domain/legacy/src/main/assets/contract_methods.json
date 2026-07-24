@@ -251,5 +251,15 @@
         "info": "GaslessTransactions",
         "source": "https://github.com/tangem-developments/tangem-gasless-service",
         "name": "gaslessTransaction"
+    },
+    "0x4b072692": {
+        "info": "GaslessTransactions",
+        "source": "https://github.com/tangem-developments/tangem-gasless-service",
+        "name": "gaslessTransaction"
+    },
+    "0xf9b181bf": {
+        "info": "GaslessTransactions",
+        "source": "https://github.com/tangem-developments/tangem-gasless-service",
+        "name": "gaslessTransaction"
     }
 }

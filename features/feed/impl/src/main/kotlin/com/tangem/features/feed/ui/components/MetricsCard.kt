@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,16 +23,14 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 internal fun MetricsCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    cardColor: Color = TangemTheme.colors2.surface.level3,
+    cardColor: Color = TangemTheme.colors3.bg.secondary,
     title: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
     Column(
         modifier = modifier
-            .background(
-                color = cardColor,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x6),
-            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(color = cardColor)
             .conditional(
                 condition = onClick != null,
                 modifier = {
@@ -42,7 +41,7 @@ internal fun MetricsCard(
                     }
                 },
             )
-            .padding(TangemTheme.dimens2.x4),
+            .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         title()
@@ -60,15 +59,15 @@ private fun MetricsCardPreview() {
             title = {
                 Text(
                     text = "$ 22.4 M",
-                    style = TangemTheme.typography2.headingBold22,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.heading.medium,
+                    color = TangemTheme.colors3.text.primary,
                 )
             },
             content = {
                 Text(
                     text = "Market cap",
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             },
             onClick = {},

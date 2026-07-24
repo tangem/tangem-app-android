@@ -1,13 +1,10 @@
 package com.tangem.data.dynamicaddresses.di
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.dynamicaddresses.DefaultConsolidationRepository
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.data.dynamicaddresses.DefaultDynamicAddressesFeatureToggles
 import com.tangem.data.dynamicaddresses.DefaultDynamicAddressesRepository
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.repository.ConsolidationRepository
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
@@ -30,7 +27,6 @@ internal object DynamicAddressesDataModule {
         walletAccountsSaver: WalletAccountsSaver,
         accountsCRUDRepository: AccountsCRUDRepository,
         walletManagersFacade: WalletManagersFacade,
-        dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
         getDerivedXpubUseCase: GetDerivedXpubUseCase,
         dispatchers: CoroutineDispatcherProvider,
     ): DynamicAddressesRepository {
@@ -39,18 +35,9 @@ internal object DynamicAddressesDataModule {
             walletAccountsSaver = walletAccountsSaver,
             accountsCRUDRepository = accountsCRUDRepository,
             walletManagersFacade = walletManagersFacade,
-            dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
             getDerivedXpubUseCase = getDerivedXpubUseCase,
             dispatchers = dispatchers,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideDynamicAddressesFeatureToggles(
-        featureTogglesManager: FeatureTogglesManager,
-    ): DynamicAddressesFeatureToggles {
-        return DefaultDynamicAddressesFeatureToggles(featureTogglesManager = featureTogglesManager)
     }
 
     @Provides

@@ -3,7 +3,7 @@ package com.tangem.features.feed.model.feed.state.transformers
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.FeedListUM

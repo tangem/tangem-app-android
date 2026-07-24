@@ -27,15 +27,15 @@ internal class DefaultDpopProofFactory(
 
     override suspend fun create(httpMethod: String, httpUri: String, accessToken: String?): Option<String> =
         withContext(dispatchers.default) {
-            val publicKey = deviceKeyManager.getPublicKey().getOrNull()
+            val publicKey = deviceKeyManager.getPublicKeyRawPoint().getOrNull()
 
             if (publicKey == null) {
                 TangemLogger.e("DPoP proof skipped: device key unavailable")
                 return@withContext None
             }
 
-            // DeviceKeyManager.getPublicKey() guarantees an uncompressed P-256 point
-            // (0x04 || X(32) || Y(32)) — see DefaultDeviceKeyManager.getPublicKeyBytes.
+            // getPublicKeyRawPoint() guarantees an uncompressed P-256 point
+            // (0x04 || X(32) || Y(32)) — see DefaultDeviceKeyManager.getPublicKeyRawPointBytes.
             val x = publicKey.copyOfRange(fromIndex = 1, toIndex = 1 + COORDINATE_SIZE)
             val y = publicKey.copyOfRange(fromIndex = 1 + COORDINATE_SIZE, toIndex = 1 + 2 * COORDINATE_SIZE)
 

@@ -15,7 +15,6 @@ import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.ds.badge.TangemBadgeIconPosition
 import com.tangem.core.ui.ds.badge.TangemBadgeShape
@@ -41,7 +40,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class TokenActionsUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
@@ -55,51 +53,12 @@ internal class TokenActionsUiBuilder @Inject constructor(
         isBalanceHidden: Boolean,
         bottomAction: BottomAction,
     ): TokenActionsUM {
-        return if (designFeatureToggles.isRedesignEnabled || params.isRedesignForced) {
-            buildV2(
-                cryptoCurrencyData = cryptoCurrencyData,
-                tokenActionsHandler = tokenActionsHandler,
-                appCurrency = appCurrency,
-                isBalanceHidden = isBalanceHidden,
-                bottomAction = bottomAction,
-            )
-        } else {
-            buildV1(
-                cryptoCurrencyData = cryptoCurrencyData,
-                tokenActionsHandler = tokenActionsHandler,
-                bottomAction = bottomAction,
-            )
-        }
-    }
-
-    private fun buildV1(
-        cryptoCurrencyData: CryptoCurrencyData,
-        tokenActionsHandler: TokenActionsHandler,
-        bottomAction: BottomAction,
-    ): TokenActionsUM {
-        val status = cryptoCurrencyData.status
-        val tokenUM = TokenItemState.Content(
-            id = status.currency.id.value,
-            iconState = CryptoCurrencyToIconStateConverter().convert(status.currency),
-            titleState = TokenItemState.TitleState.Content(stringReference(status.currency.name)),
-            fiatAmountState = null,
-            subtitle2State = null,
-            subtitleState = TokenItemState.SubtitleState.TextContent(stringReference(status.currency.symbol)),
-            onItemClick = null,
-            onItemLongClick = null,
-        )
-        return TokenActionsUM(
-            token = tokenUM,
-            quickActions = quickActions(
-                cryptoData = cryptoCurrencyData,
-                tokenActionsHandler = tokenActionsHandler,
-                isRedesignEnabled = false,
-                context = params.context,
-            ),
-            bottomActionText = bottomActionText(bottomAction),
-            onBottomActionClick = {
-                params.callbacks.onBottomActionClick(bottomAction)
-            },
+        return buildV2(
+            cryptoCurrencyData = cryptoCurrencyData,
+            tokenActionsHandler = tokenActionsHandler,
+            appCurrency = appCurrency,
+            isBalanceHidden = isBalanceHidden,
+            bottomAction = bottomAction,
         )
     }
 
@@ -126,7 +85,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
             quickActions = quickActions(
                 cryptoData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
-                isRedesignEnabled = true,
                 context = params.context,
             ),
             bottomActionText = bottomActionText(bottomAction),
