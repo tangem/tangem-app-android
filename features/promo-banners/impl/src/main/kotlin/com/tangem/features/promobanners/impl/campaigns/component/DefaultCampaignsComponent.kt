@@ -67,7 +67,7 @@ internal class DefaultCampaignsComponent @AssistedInject constructor(
                 onDismissRequest = model::onDismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             ),
-            containerColor = TangemTheme.colors3.bg.primary,
+            containerColor = TangemTheme.colors3.bg.secondary,
             type = TangemBottomSheetType.Modal,
             onBack = model::onDismiss,
             title = {
