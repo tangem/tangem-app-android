@@ -13,7 +13,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultAllOffersComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: AllOffersComponent.Params,
+    @Assisted private val params: AllOffersComponent.Params,
 ) : AllOffersComponent, AppComponentContext by context {
 
     private val model: AllOffersModel = getOrCreateModel(params)
@@ -27,6 +27,8 @@ internal class DefaultAllOffersComponent @AssistedInject constructor(
         val state by model.state.collectAsState()
         AllOffersContentSheet(
             state = state,
+            marketingBannerComponent = params.marketingBannerComponent,
+            linkedMarketingBannerComponent = params.linkedMarketingBannerComponent,
             onCloseClick = { dismiss() },
         )
     }
