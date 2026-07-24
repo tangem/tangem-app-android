@@ -182,13 +182,13 @@ private fun SingleUserAssetItemPreviewHost(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(8.dp),
     ) {
         Box(
             modifier = Modifier.background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(20.dp),
             ),
         ) {
             SingleUserAssetItem(item = scenario.item, shouldUsePriceBlock = true)
@@ -204,7 +204,7 @@ private fun GroupedUserAssetItemPreviewHost(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(8.dp),
     ) {
         GroupedUserAssetItem(item = scenario.item)

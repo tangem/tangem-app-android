@@ -180,6 +180,8 @@ class Wallet2CardConfigTest {
         Blockchain.SeiEvmTestnet to EllipticCurve.Secp256k1,
         Blockchain.Monad to EllipticCurve.Secp256k1,
         Blockchain.MonadTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Robinhood to EllipticCurve.Secp256k1,
+        Blockchain.RobinhoodTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test

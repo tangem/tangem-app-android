@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,7 +14,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.features.tangempay.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.entity.TangemPayCardNavigation
 import com.tangem.features.tangempay.model.TangemPayCardPageModel
@@ -50,17 +48,15 @@ internal class TangemPayCardPageScreenComponent(
         val selectedCardId by model.selectedCardIdState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
-            NavigationBar3ButtonsScrim()
-            TangemPayCardPageScreen(
-                state = state,
-                cardControllers = cardControllers,
-                selectedCardId = selectedCardId,
-                onCardSelect = model::onCardPageSelected,
-                modifier = modifier,
-            )
-            bottomSheet.child?.instance?.BottomSheet()
-        }
+        NavigationBar3ButtonsScrim()
+        TangemPayCardPageScreen(
+            state = state,
+            cardControllers = cardControllers,
+            selectedCardId = selectedCardId,
+            onCardSelect = model::onCardPageSelected,
+            modifier = modifier,
+        )
+        bottomSheet.child?.instance?.BottomSheet()
     }
 
     @Suppress("LongMethod")
@@ -135,6 +131,7 @@ internal class TangemPayCardPageScreenComponent(
                 appComponentContext = context,
                 params = TangemPayVaBankingDetailsErrorComponent.Params(
                     userWalletId = navigation.userWalletId,
+                    productInstanceId = navigation.productInstanceId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
                     onResolved = model::onVaBankingDetailsResolved,

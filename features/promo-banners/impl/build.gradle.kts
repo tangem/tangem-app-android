@@ -25,11 +25,9 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
-    implementation(projects.domain.markets.models)
 
     /** Data */
     implementation(projects.data.common)
-    implementation(tangemDeps.blockchain)
 
     /** Core */
     api(projects.core.configToggles)
@@ -54,7 +52,6 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */

@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
@@ -13,21 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import com.tangem.core.ui.test.TokenDetailsScreenTestTags
-import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -43,18 +33,19 @@ import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.haze.ProvideHaze
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
@@ -63,31 +54,29 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: Modifier = Modifier) {
-    val actionModifier = Modifier
-        .clip(CircleShape)
-        .hazeEffectTangem { blurRadius = ACTION_BLUR_RADIUS }
-    TangemTopBar(
-        modifier = modifier
-            .statusBarsPadding(),
-        startContent = {
-            TangemTopBarActionContent(
-                modifier = actionModifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
-                actionUM = TangemTopBarActionUM(
-                    iconRes = R.drawable.ic_arrow_back_28,
-                    onClick = topAppBarUM.onBackClick,
-                ),
+    TangemTopNavigation(
+        modifier = modifier,
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        blurBackground = false,
+        startButton = {
+            TangemButton(
+                modifier = Modifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
+                variant = TangemButton.Variant.Material,
+                size = TangemButton.Size.X11,
+                iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
+                onClick = topAppBarUM.onBackClick,
             )
         },
-        endContent = if (topAppBarUM.menuItems.isNotEmpty()) {
+        endButton = if (topAppBarUM.menuItems.isNotEmpty()) {
             {
                 var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
                 Box {
-                    TangemTopBarActionContent(
-                        modifier = actionModifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
-                        actionUM = TangemTopBarActionUM(
-                            iconRes = CoreUiR.drawable.ic_more_default_24,
-                            onClick = { isDropdownMenuShown = true },
-                        ),
+                    TangemButton(
+                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
+                        variant = TangemButton.Variant.Material,
+                        size = TangemButton.Size.X11,
+                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
+                        onClick = { isDropdownMenuShown = true },
                     )
                     TangemDropdownMenu(
                         expanded = isDropdownMenuShown,
@@ -107,26 +96,19 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
         } else {
             null
         },
-        content = {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = TangemTheme.dimens2.x1),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
-            ) {
-                Box(modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE)) {
-                    TokenDetailsTitle(titleState = topAppBarUM.titleState)
-                }
-                Text(
-                    text = topAppBarUM.subtitle.resolveAnnotatedReference(),
-                    color = TangemTheme.colors2.text.neutral.tertiary,
-                    style = TangemTheme.typography2.captionSemibold12,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+        contentColumn = {
+            Box(modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE)) {
+                TokenDetailsTitle(titleState = topAppBarUM.titleState)
             }
+            Spacer(modifier = Modifier.height(TangemTheme.dimens2.x0_5))
+            Text(
+                text = topAppBarUM.subtitle.resolveAnnotatedReference(),
+                color = TangemTheme.colors2.text.neutral.tertiary,
+                style = TangemTheme.typography2.captionSemibold12,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         },
     )
 }
@@ -430,7 +412,6 @@ private val MARKERS: List<Pair<String, TitleSegment>> = listOf(
     SECONDARY_MARKER to TitleSegment.Secondary,
 )
 
-private val ACTION_BLUR_RADIUS = 8.dp
 private val MIN_TITLE_FONT_SIZE = 12.sp
 private val MAX_TITLE_FONT_SIZE = 16.sp
 private val MIN_SECONDARY_NAME_WIDTH = 48.dp

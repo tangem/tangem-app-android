@@ -3,8 +3,8 @@ package com.tangem.data.pay.repository
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.response.CustomerOffersResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -57,7 +57,7 @@ internal class DefaultCustomerOffersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN offers fetched once WHEN getOffers called twice THEN backend is hit only once`() = runTest {
+    fun `GIVEN offers response WHEN getOffers called twice THEN backend is hit each time`() = runTest {
         // Arrange
         val repository = createRepository()
 
@@ -68,11 +68,11 @@ internal class DefaultCustomerOffersRepositoryTest {
         // Assert
         assertThat(first.isRight()).isTrue()
         assertThat(second).isEqualTo(first)
-        coVerify(exactly = 1) { tangemPayApi.getCustomerOffers(any()) }
+        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any()) }
     }
 
     @Test
-    fun `GIVEN backend error WHEN getOffers called again THEN error is not cached and backend is hit again`() = runTest {
+    fun `GIVEN backend error WHEN getOffers called again THEN backend is hit again`() = runTest {
         // Arrange
         coEvery { tangemPayApi.getCustomerOffers(any()) } returnsMany listOf(
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerOffersResponse>,

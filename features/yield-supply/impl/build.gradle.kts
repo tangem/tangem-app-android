@@ -61,7 +61,6 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.marketing.models)
-    implementation(projects.domain.onramp.models)
     implementation(projects.libs.crypto)
 
     /** Compose */
