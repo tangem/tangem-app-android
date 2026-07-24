@@ -3,7 +3,6 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -13,26 +12,35 @@ android {
 
 dependencies {
 
-    /** Core */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /** Data */
-    implementation(projects.data.common)
+    // region Other libraries
+    api(deps.moshi)
+    implementation(deps.arrow.core)
+    // endregion
 
-    /** Domain */
-    implementation(projects.domain.common)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.express)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.txhistory)
-    api(projects.domain.models)
-
-    /** Other */
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-
-    /** DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Core
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
+
+    // region Data
+    implementation(projects.data.common)
+    // endregion
+
+    // region Domain
+    api(projects.domain.common)
+    api(projects.domain.express)
+    api(projects.domain.express.models)
+    api(projects.domain.txhistory)
+    implementation(projects.domain.core)
+    implementation(projects.domain.models)
+    // endregion
 }

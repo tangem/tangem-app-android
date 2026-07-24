@@ -5,8 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.common.response.isNetworkError

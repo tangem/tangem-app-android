@@ -5,38 +5,40 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.data.settings"
 }
+
 dependencies {
 
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.settings)
-
+    // region Others dependencies
+    implementation(deps.androidx.core)
     implementation(deps.androidx.datastore)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // endregion
 
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Test
-    testImplementation(projects.test.core)
+    // region Core modules
+    api(projects.core.datasource)
+    api(projects.core.utils)
     // endregion
 
-    // region Others dependencies
-    implementation(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    ksp(deps.moshi.kotlin.codegen)
-    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    // region Domain
+    api(projects.domain.settings)
+    // endregion
+
+    // region Test
+    testImplementation(projects.test.core)
     // endregion
 }
