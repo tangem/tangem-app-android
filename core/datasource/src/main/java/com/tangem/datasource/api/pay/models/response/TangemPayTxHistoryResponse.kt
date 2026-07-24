@@ -22,6 +22,7 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "collateral") val collateral: Collateral? = null,
         @Json(name = "payment") val payment: Payment? = null,
         @Json(name = "fee") val fee: Fee? = null,
+        @Json(name = "cashback") val cashback: TransactionCashbackResponse? = null,
     )
 
     @JsonClass(generateAdapter = true)

@@ -87,6 +87,8 @@ internal fun ForYouContent(
             portfolioReviewUM = forYouUM.portfolioReviewUM,
             periodPickerUM = forYouUM.periodPickerUM,
             onPeriodClick = forYouUM.onPeriodClick,
+            portfolioSelectorLabel = forYouUM.portfolioSelectorLabel,
+            onSelectPortfolioClick = forYouUM.onSelectPortfolioClick,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 
@@ -141,6 +143,8 @@ private class ForYouContentPreviewProvider : PreviewParameterProvider<ForYouUM> 
                     isAltSurface = true,
                 ),
                 onPeriodClick = {},
+                portfolioSelectorLabel = stringReference("All accounts"),
+                onSelectPortfolioClick = {},
             ),
         )
 }

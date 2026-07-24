@@ -49,5 +49,11 @@ internal sealed class TangemPayCardNavigation {
     ) : TangemPayCardNavigation()
 
     @Serializable
+    data class VaBankingDetailsError(
+        val userWalletId: UserWalletId,
+        val productInstanceId: String,
+    ) : TangemPayCardNavigation()
+
+    @Serializable
     data class Receive(val config: TokenReceiveConfig) : TangemPayCardNavigation()
 }

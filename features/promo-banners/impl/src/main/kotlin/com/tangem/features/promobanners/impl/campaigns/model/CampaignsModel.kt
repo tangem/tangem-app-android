@@ -1,7 +1,5 @@
 package com.tangem.features.promobanners.impl.campaigns.model
 
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -24,8 +22,6 @@ import com.tangem.features.promobanners.impl.campaigns.entity.toPromoCampaignId
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -42,9 +38,6 @@ internal class CampaignsModel @Inject constructor(
 ) : Model() {
 
     val bottomSheetNavigation: SlotNavigation<CampaignsBottomSheetConfig> = SlotNavigation()
-
-    val footerExtraHeightState: StateFlow<Dp>
-        field = MutableStateFlow(0.dp)
 
     init {
         campaignsService.campaignFlow
@@ -89,22 +82,16 @@ internal class CampaignsModel @Inject constructor(
         },
     )
 
-    fun onFooterExtraHeightReady(height: Dp) {
-        footerExtraHeightState.value = height
-    }
-
     fun onDismiss() {
         bottomSheetNavigation.dismiss()
     }
 
     fun onActivated(campaignType: CampaignType) {
-        footerExtraHeightState.value = 0.dp
         bottomSheetNavigation.activate(CampaignsBottomSheetConfig.Enrolled(campaignType))
     }
 
     fun onAlreadyActivated(campaignType: CampaignType) {
         analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
-        footerExtraHeightState.value = 0.dp
         bottomSheetNavigation.activate(CampaignsBottomSheetConfig.AlreadyActivated(campaignType = campaignType))
     }
 }

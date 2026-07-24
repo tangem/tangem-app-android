@@ -1,6 +1,7 @@
 package com.tangem.core.res
 
 import android.content.res.Resources
+import androidx.annotation.ArrayRes
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -62,6 +63,19 @@ fun Resources.getPluralStringSafe(@PluralsRes id: Int, count: Int): String {
 fun Resources.getPluralStringSafe(@PluralsRes id: Int, count: Int, vararg formatArgs: Any): String {
     return runCatching { getQuantityString(id, count, *formatArgs) }
         .getOrResourceName(resources = this, id, *formatArgs)
+}
+
+/**
+ * Get a string-array resource safely or an empty list if an exception is thrown.
+ *
+ * @param id resource id
+ */
+fun Resources.getStringArraySafe(@ArrayRes id: Int): List<String> {
+    return runCatching { getStringArray(id).toList() }
+        .getOrElse { throwable ->
+            reportIssue(throwable = throwable, resources = this, id = id)
+            emptyList()
+        }
 }
 
 private fun Result<String>.getOrResourceName(resources: Resources, id: Int, vararg formatArgs: Any): String {

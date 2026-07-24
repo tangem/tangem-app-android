@@ -3,24 +3,12 @@ package com.tangem.features.txhistory.ui
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,13 +29,12 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
-import com.tangem.core.ui.res.generated.icons.ic_copy_24
-import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
-import com.tangem.core.ui.res.generated.icons.ic_info_24
+import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -79,8 +66,8 @@ internal fun TxHistoryDetailsTopNavigation(
         blurBackground = false,
         startButton = { StatusActionIcon(icon = header.icon, status = header.status) },
         endButtonsGroup = {
-            if (header.menu.isNotEmpty()) {
-                TxHistoryDetailsOverflowMenu(menu = header.menu)
+            if (header.menu.isNotEmpty() || header.debugModel != null) {
+                TxHistoryDetailsOverflowMenu(menu = header.menu, debugModel = header.debugModel)
             }
         },
         endButton = { TangemButton.Close(onClick = onCloseClick) },
@@ -108,9 +95,12 @@ internal fun TxHistoryDetailsTopNavigation(
 @Composable
 private fun TxHistoryDetailsOverflowMenu(
     menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
+    debugModel: TxHistoryInfo?,
     modifier: Modifier = Modifier,
 ) {
+    val hapticManager = LocalHapticManager.current
     var isMenuExpanded by remember { mutableStateOf(false) }
+    var isDebugViewShown by remember { mutableStateOf(false) }
     Box(modifier = modifier) {
         TangemButton(
             variant = TangemButton.Variant.Ghost,
@@ -132,12 +122,31 @@ private fun TxHistoryDetailsOverflowMenu(
                 TxHistoryDetailsMenuItem(
                     item = item,
                     onClick = {
+                        hapticManager.perform(TangemHapticEffect.OneTime.Click)
                         isMenuExpanded = false
                         item.onClick()
                     },
                 )
             }
+            if (debugModel != null) {
+                TxHistoryDetailsMenuItem(
+                    item = TxHistoryDetailsUM.MenuItemUM(
+                        icon = Icons.ic_document_24,
+                        title = stringReference("Debug"),
+                        onClick = {},
+                    ),
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.OneTime.Click)
+                        isMenuExpanded = false
+                        isDebugViewShown = true
+                    },
+                )
+            }
         }
+    }
+
+    if (debugModel != null && isDebugViewShown) {
+        TxHistoryDebugView(model = debugModel, onDismiss = { isDebugViewShown = false })
     }
 }
 

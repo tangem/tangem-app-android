@@ -18,7 +18,7 @@ import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -34,7 +34,6 @@ import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
-import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -53,10 +52,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindKycRepository(repository: DefaultKycRepository): KycRepository
-
-    @Binds
-    @Singleton
-    fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
 
     @Binds
     @Singleton
@@ -371,11 +366,20 @@ internal interface TangemPayDataModule {
         fun provideCreateVirtualAccountOrderUseCase(
             onboardingRepository: OnboardingRepository,
             pollingUseCase: StartTangemPayOrderPollingUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
         ): CreateVirtualAccountOrderUseCase {
             return CreateVirtualAccountOrderUseCase(
                 onboardingRepository = onboardingRepository,
                 pollingUseCase = pollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                appCoroutineScope = appCoroutineScope,
             )
+        }
+
+        @Provides
+        fun provideGetBankCredentialsUseCase(onboardingRepository: OnboardingRepository): GetBankCredentialsUseCase {
+            return GetBankCredentialsUseCase(onboardingRepository = onboardingRepository)
         }
 
         @Provides
