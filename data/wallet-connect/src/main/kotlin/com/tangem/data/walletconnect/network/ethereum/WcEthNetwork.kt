@@ -7,6 +7,8 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
@@ -19,12 +21,15 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 import jakarta.inject.Inject
+import org.json.JSONArray
+import org.json.JSONException
 
 internal class WcEthNetwork(
     private val moshi: Moshi,
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
     private val networksConverter: WcNetworksConverter,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
@@ -99,7 +104,7 @@ internal class WcEthNetwork(
             -> parseMessageSign(rawParams)
             WcEthMethodName.SignTypeData,
             WcEthMethodName.SignTypeDataV4,
-            -> parseTypeData(rawParams)
+            -> parseTypeData(request)
             WcEthMethodName.SignTransaction,
             WcEthMethodName.SendTransaction,
             -> moshi.fromJson<List<WcEthTransactionParams>>(rawParams)
@@ -141,13 +146,38 @@ internal class WcEthNetwork(
         return WcEthMethod.MessageSign(account = account, rawMessage = message, humanMsg = humanMsg).right()
     }
 
-    private fun parseTypeData(params: String): Either<Throwable, WcEthMethod.SignTypedData?> {
-        val account = params.substring(params.indexOf("\"") + 1, params.indexOf("\"", startIndex = 2))
-        val data = params.substring(params.indexOfFirst { it == '{' }, params.indexOfLast { it == '}' } + 1)
+    private fun parseTypeData(request: WcSdkSessionRequest): Either<Throwable, WcEthMethod.SignTypedData?> {
+        // Params come as a JSON array [account, typedData]. `typedData` may be either a stringified JSON
+        // or a raw JSON object, so we read it as a generic element and serialize it back to a JSON string.
+        val account: String
+        val data: String
+        try {
+            val paramsArray = JSONArray(request.request.params)
+            account = paramsArray.getString(ACCOUNT_INDEX)
+            data = paramsArray.get(TYPED_DATA_INDEX).toString()
+        } catch (e: JSONException) {
+            sendTypedDataParseException(request, e)
+            return IllegalArgumentException("Failed to parse typed data params", e).left()
+        }
         val parsedParams = moshi.fromJson<WcEthSignTypedDataParams>(data)
             .getOrElse { return it.left() }
             ?: return null.right()
         return WcEthMethod.SignTypedData(params = parsedParams, account = account, dataForSign = data).right()
+    }
+
+    /** Reports a malformed `eth_signTypedData` payload to Crashlytics for future analysis. */
+    private fun sendTypedDataParseException(request: WcSdkSessionRequest, error: Throwable) {
+        analyticsExceptionHandler.sendException(
+            ExceptionAnalyticsEvent(
+                exception = error,
+                params = mapOf(
+                    "method" to request.request.method,
+                    "dApp_name" to request.dAppMetaData.name,
+                    "dApp_url" to request.dAppMetaData.url,
+                    "params" to request.request.params.take(PARAMS_LOG_LIMIT),
+                ),
+            ),
+        )
     }
 
     internal class NamespaceConverter(
@@ -175,4 +205,10 @@ internal class WcEthNetwork(
         val addNetwork: WcEthAddNetworkUseCase.Factory,
         val switchNetwork: WcEthSwitchNetworkUseCase.Factory,
     )
+
+    private companion object {
+        const val ACCOUNT_INDEX = 0
+        const val TYPED_DATA_INDEX = 1
+        const val PARAMS_LOG_LIMIT = 1000
+    }
 }
