@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -364,12 +365,33 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     // region Counterparty
 
     @Test
-    fun `GIVEN no interaction address WHEN convert THEN counterparty is null`() {
-        // Arrange
-        val tx = txInfo(type = TransactionType.Transfer, interactionAddressType = null)
+    fun `GIVEN outgoing tx with no interaction address WHEN convert THEN counterparty is null`() {
+        // Arrange — outgoing, so the counterparty is the (absent) interaction/destination address, not the source.
+        val tx = txInfo(type = TransactionType.Transfer, isOutgoing = true, interactionAddressType = null)
 
         // Act
         val counterparty = converter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty).isNull()
+    }
+
+    @Test
+    fun `GIVEN incoming Swap whose source is own WHEN convert THEN no counterparty card`() {
+        // Only an incoming unrecognized call reads the sender from source; every other type (Swap here) keeps its
+        // interaction-address counterparty, which a swap does not carry, so no card is shown.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Swap,
+            isOutgoing = false,
+            interactionAddressType = null,
+            sourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
         assertThat(counterparty).isNull()
@@ -429,6 +451,28 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+    }
+
+    @Test
+    fun `GIVEN incoming operation from external sender WHEN convert THEN counterparty is the sender not own destination`() {
+        // Arrange — the trap: an incoming operation's interaction address is always the viewed (own) destination, so
+        // resolving it would wrongly show "From <own account>". The counterparty must come from the real sender (source).
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            sourceType = TxInfo.SourceType.Single(address = EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(EXTERNAL_ADDRESS))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from))
     }
 
     @Test
@@ -525,6 +569,57 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
         assertThat(counterparty?.onCopyClick).isNotNull()
+    }
+
+    // endregion
+
+    // region Operation / UnknownOperation reclassified as own transfer
+
+    @Test
+    fun `GIVEN incoming Operation from own address WHEN convert THEN transferred header and own account counterparty`() {
+        // Arrange — an unrecognized call whose sender resolves to the user's own account reads as a transfer.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(type = TransactionType.Operation(name = "Mint NFT"), isOutgoing = false)
+
+        // Act
+        val result = ownConverter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.counterparty).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyUM(
+                label = resourceReference(R.string.common_from),
+                title = stringReference("Family"),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                    iconResId = ownAccount.icon.value.getResId(),
+                    backgroundColor = ownAccount.icon.color.getUiColor(),
+                ),
+                onCopyClick = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN outgoing Operation whose recipient is external WHEN convert THEN stays Operation`() {
+        // The trap: for an outgoing tx the counterparty is the recipient; an own sender must not trigger reclassification.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = true,
+            destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(EXTERNAL_ADDRESS)),
+        )
+
+        // Act
+        val header = ownConverter.convert(tx).header
+
+        // Assert
+        assertThat(header.title).isEqualTo(stringReference("Mint NFT"))
+        assertThat(header.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
     }
 
     // endregion

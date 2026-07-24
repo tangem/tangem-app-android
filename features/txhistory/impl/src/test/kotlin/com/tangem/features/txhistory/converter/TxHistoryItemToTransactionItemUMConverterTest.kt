@@ -132,6 +132,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     fun `GIVEN UnknownOperation WHEN convert THEN Content with operation title`() {
         val tx = txInfo(
             type = TransactionType.UnknownOperation,
+            isOutgoing = true,
             interactionAddressType = null,
         )
 
@@ -362,6 +363,73 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
     // endregion
 
+    // region Content — Operation / UnknownOperation reclassified as own transfer
+
+    @Test
+    fun `GIVEN incoming Operation whose sender is own WHEN convert THEN rendered as own transfer`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = false,
+            sourceAddress = USER_ADDRESS,
+            destinationAddress = EXTERNAL_ADDRESS,
+        )
+
+        val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        val subtitle = result.subtitle as ContentSubtitle.OwnAccount
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
+    }
+
+    @Test
+    fun `GIVEN outgoing UnknownOperation whose recipient is own WHEN convert THEN rendered as own transfer`() {
+        val tx = txInfo(
+            type = TransactionType.UnknownOperation,
+            isOutgoing = true,
+            sourceAddress = EXTERNAL_ADDRESS,
+            destinationAddress = USER_ADDRESS,
+        )
+
+        val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
+        val subtitle = result.subtitle as ContentSubtitle.OwnAccount
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+    }
+
+    @Test
+    fun `GIVEN incoming Operation own only on destination side WHEN convert THEN stays Operation`() {
+        // The trap: for an incoming tx the counterparty is the sender; the own destination must not trigger reclassification.
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = false,
+            sourceAddress = EXTERNAL_ADDRESS,
+            destinationAddress = USER_ADDRESS,
+        )
+
+        val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(TextReference.Str("Mint"))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+    }
+
+    @Test
+    fun `GIVEN Operation with own counterparty but no lookup context WHEN convert THEN stays Operation`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = true,
+            destinationAddress = USER_ADDRESS,
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(TextReference.Str("Mint"))
+    }
+
+    // endregion
+
     // region Content — YieldSupply
 
     @Test
@@ -573,9 +641,10 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     // region Address subtitle resolution
 
     @Test
-    fun `GIVEN Operation with Contract interaction WHEN convert THEN contract address subtitle`() {
+    fun `GIVEN outgoing Operation with Contract interaction WHEN convert THEN contract address subtitle`() {
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = true,
             interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
         )
 
@@ -604,26 +673,50 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Operation with Multiple interaction incoming WHEN convert THEN from-address subtitle`() {
+    fun `GIVEN incoming Operation WHEN convert THEN subtitle shows the real sender from source`() {
+        // interactionAddressType is the own destination on an incoming call; the subtitle must show the actual sender.
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
             isOutgoing = false,
-            interactionAddressType = TxInfo.InteractionAddressType.Multiple(
-                addresses = listOf(USER_ADDRESS),
-            ),
+            sourceAddress = EXTERNAL_ADDRESS,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
         )
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
-        val res = subtitle.text as TextReference.Res
-        assertThat(res.id).isEqualTo(R.string.transaction_history_transaction_from_address)
+        val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
+        assertThat(subtitle.rawAddress).isEqualTo(EXTERNAL_ADDRESS)
     }
 
     @Test
-    fun `GIVEN Operation with Validator interaction WHEN convert THEN validator subtitle`() {
+    fun `GIVEN incoming Operation with multiple senders WHEN convert THEN from-multiple-addresses subtitle`() {
+        // interactionAddressType is the own destination on an incoming call, so a Multiple source must render
+        // "from multiple addresses" instead of falling back to the own destination address.
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = false,
+            sourceType = TxInfo.SourceType.Multiple(addresses = listOf(EXTERNAL_ADDRESS, USER_ADDRESS)),
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(
+                resRef(
+                    R.string.transaction_history_transaction_from_address,
+                    listOf(resRef(R.string.transaction_history_multiple_addresses)),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN outgoing Operation with Validator interaction WHEN convert THEN validator subtitle`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = true,
             interactionAddressType = TxInfo.InteractionAddressType.Validator(USER_ADDRESS),
         )
 
@@ -635,9 +728,10 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Operation with null interaction WHEN convert THEN empty subtitle`() {
+    fun `GIVEN outgoing Operation with null interaction WHEN convert THEN empty subtitle`() {
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
+            isOutgoing = true,
             interactionAddressType = null,
         )
 
@@ -700,17 +794,31 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         isOutgoing: Boolean = false,
         amount: BigDecimal = BigDecimal.ONE,
         interactionAddressType: TxInfo.InteractionAddressType? = null,
+        sourceAddress: String = USER_ADDRESS,
+        destinationAddress: String = USER_ADDRESS,
+        sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = sourceAddress),
     ): TxInfo = TxInfo(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,
-        destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(USER_ADDRESS)),
-        sourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
+        destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(destinationAddress)),
+        sourceType = sourceType,
         interactionAddressType = interactionAddressType,
         status = status,
         type = type,
         amount = amount,
     )
+
+    private fun ownAccountConverter(ownAddress: String): TxHistoryItemToTransactionItemUMConverter =
+        TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            lookupContext = TxHistoryLookupContext(
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(ownAddress to createMainAccount(OWN_WALLET_ID))),
+                isAccountsModeEnabled = true,
+                walletInfoById = emptyMap(),
+            ),
+        )
 
     private fun resRef(id: Int): TextReference = TextReference.Res(id = id)
 
@@ -766,7 +874,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         const val TIMESTAMP = 1_700_000_000_000L
         const val USER_ADDRESS = "0x1234567890abcdef1234"
         const val USER_ADDRESS_BRIEF = "0x1234...1234"
+        const val EXTERNAL_ADDRESS = "0xExternalAddress5678"
         const val TOKEN_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        val OWN_WALLET_ID = UserWalletId(stringValue = "00")
     }
 
     // endregion
