@@ -2,7 +2,7 @@ package com.tangem.data.pay.store
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
