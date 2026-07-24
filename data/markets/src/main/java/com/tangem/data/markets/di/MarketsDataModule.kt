@@ -8,7 +8,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.markets.DefaultCoinIndicatorsRepository
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
