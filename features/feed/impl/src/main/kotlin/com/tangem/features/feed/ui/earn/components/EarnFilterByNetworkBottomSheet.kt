@@ -23,7 +23,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.earn.state.EarnFilterByNetworkBottomSheetContentUM
@@ -36,12 +35,12 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun EarnFilterByNetworkBottomSheet(config: TangemBottomSheetConfig) {
     EarnFilterBottomSheet<EarnFilterByNetworkBottomSheetContentUM>(
         config = config,
-        content = { ContentV2(it) },
+        content = { Content(it) },
     )
 }
 
 @Composable
-private fun ContentV2(content: EarnFilterByNetworkBottomSheetContentUM) {
+private fun Content(content: EarnFilterByNetworkBottomSheetContentUM) {
     val allMyNetworks = remember(content) {
         (content.networks.filterIsInstance<EarnFilterNetworkUM.AllNetworks>() +
             content.networks.filterIsInstance<EarnFilterNetworkUM.MyNetworks>()).toImmutableList()
@@ -55,10 +54,10 @@ private fun ContentV2(content: EarnFilterByNetworkBottomSheetContentUM) {
 
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(bottom = TangemTheme.dimens2.x4)
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         NetworksTypesBlock(
             allMyNetworks = allMyNetworks,
@@ -88,13 +87,13 @@ private fun NetworksTypesBlock(
                     )
                     .clickable { onOptionClick(item) },
                 contentPadding = PaddingValues(
-                    start = TangemTheme.dimens2.x3,
-                    end = TangemTheme.dimens2.x3,
-                    top = if (index == 0) 18.dp else TangemTheme.dimens2.x3,
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = if (index == 0) 18.dp else 12.dp,
                     bottom = if (index == allMyNetworks.lastIndex) {
                         18.dp
                     } else {
-                        TangemTheme.dimens2.x3
+                        12.dp
                     },
                 ),
             ) {
@@ -105,8 +104,8 @@ private fun NetworksTypesBlock(
                         is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
                         is EarnFilterNetworkUM.Network -> TextReference.Str(item.text)
                     }.resolveReference(),
-                    style = TangemTheme.typography2.bodySemibold16,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -137,8 +136,8 @@ private fun SpecificNetworksBlock(
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp, bottom = 8.dp),
                 text = stringResourceSafe(id = R.string.earn_filter_networks),
-                style = TangemTheme.typography2.subheadlineMedium14,
-                color = TangemTheme.colors2.text.neutral.tertiary,
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -165,8 +164,8 @@ private fun SpecificNetworksBlock(
                             .padding(start = 8.dp)
                             .layoutId(layoutId = TangemRowLayoutId.START_TOP),
                         text = item.text,
-                        style = TangemTheme.typography2.bodySemibold16,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.body.medium,
+                        color = TangemTheme.colors3.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -182,45 +181,6 @@ private fun SpecificNetworksBlock(
                     }
                 }
             }
-        }
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 800)
-@Preview(widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun PreviewV1() {
-    TangemThemePreview(
-        alwaysShowBottomSheets = true,
-    ) {
-        Box(Modifier.background(TangemTheme.colors.background.secondary)) {
-            EarnFilterByNetworkBottomSheet(
-                TangemBottomSheetConfig(
-                    isShown = true,
-                    onDismissRequest = {},
-                    content = EarnFilterByNetworkBottomSheetContentUM(
-                        networks = persistentListOf(
-                            EarnFilterNetworkUM.AllNetworks(isSelected = true),
-                            EarnFilterNetworkUM.MyNetworks(isSelected = false),
-                            EarnFilterNetworkUM.Network(
-                                id = "ethereum",
-                                text = "Ethereum",
-                                symbol = "ETH",
-                                iconRes = R.drawable.img_btc_22,
-                                isSelected = false,
-                            ),
-                            EarnFilterNetworkUM.Network(
-                                id = "polygon",
-                                text = "Polygon",
-                                symbol = "MATIC",
-                                iconRes = R.drawable.img_btc_22,
-                                isSelected = false,
-                            ),
-                        ),
-                        onOptionClick = {},
-                    ),
-                ),
-            )
         }
     }
 }

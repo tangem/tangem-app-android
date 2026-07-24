@@ -67,7 +67,7 @@ internal class DefaultTokenSummaryComponent @AssistedInject constructor(
                 InfoBottomSheet(
                     infoBottomSheetContent = InfoBottomSheetContent(
                         title = stringReference(config.indicatorType.title),
-                        body = stringReference("helps to estimate the token's momentum and market sentiment."),
+                        body = config.indicatorType.description,
                     ),
                     onDismiss = ::dismiss,
                 )

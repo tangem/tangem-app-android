@@ -32,7 +32,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.price
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
@@ -842,8 +842,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     ExchangesBottomSheetContent.Error(onRetryClick = { onListedOnClick(exchangesCount) })
                 },
                 ifRight = { list ->
-                    ExchangesBottomSheetContent.ContentV2(
-                        exchangeItemsV2 = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
+                    ExchangesBottomSheetContent.Content(
+                        exchangeItems = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
                     )
                 },
             )

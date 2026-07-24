@@ -36,6 +36,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButton
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
@@ -43,10 +44,7 @@ import com.tangem.core.ui.ds.row.internal.TangemRowTail
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowEndContent
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -65,6 +63,7 @@ import org.burnoutcrew.reorderable.ItemPosition
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import com.tangem.core.ui.ds2.button.TangemButton as TangemButtonDs3
 
 @Composable
 internal fun OrganizeTokensContent(
@@ -84,28 +83,29 @@ internal fun OrganizeTokensContent(
         ),
         containerColor = TangemTheme.colors2.surface.level2,
         title = {
-            TangemTopBar(
+            TangemTopNavigation(
                 title = resourceReference(R.string.organize_tokens_title),
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    TangemTopBarActionContent(
-                        actionUM = TangemTopBarActionUM(
-                            iconRes = R.drawable.ic_exchange_mini_24,
-                            isActionable = true,
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                endButton = {
+                    Box {
+                        TangemButtonDs3(
+                            modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
+                            variant = TangemButtonDs3.Variant.Material,
+                            size = TangemButtonDs3.Size.X11,
+                            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_mini_24),
                             onClick = { isShowDropdownMenu = true },
-                            ghostModeProgress = 0f,
-                        ),
-                        modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
-                        type = TangemTopBarType.BottomSheet,
-                    )
-                    OrganizeDropDownMenu(
-                        organizeMenuUM = organizeTokensUM.organizeMenuUM,
-                        showDropdownMenu = isShowDropdownMenu,
-                        onDropdownDismiss = { isShowDropdownMenu = false },
-                        modifier = Modifier.hazeEffectTangem(hazeState) {
-                            blurRadius = 6.dp
-                        },
-                    )
+                        )
+                        OrganizeDropDownMenu(
+                            organizeMenuUM = organizeTokensUM.organizeMenuUM,
+                            showDropdownMenu = isShowDropdownMenu,
+                            onDropdownDismiss = { isShowDropdownMenu = false },
+                            modifier = Modifier.hazeEffectTangem(hazeState) {
+                                blurRadius = 6.dp
+                            },
+                        )
+                    }
                 },
             )
         },
