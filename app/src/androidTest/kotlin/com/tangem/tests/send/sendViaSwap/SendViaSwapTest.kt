@@ -948,6 +948,7 @@ class SendViaSwapTest : BaseTestCase() {
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
         val userTokensScenarioState = "Wallet2"
+        // swap-v2 raises the "High price impact" banner already at the MEDIUM threshold — hence the Medium mock.
         val quotesScenarioState = "MediumPriceImpact"
         val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
