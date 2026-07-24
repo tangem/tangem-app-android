@@ -351,6 +351,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val swapTokenName = "Polygon"
         val receiveTokenName = "Ethereum"
         val inputAmount = "300"
+        // swap-v2 raises the "High price impact" banner already at the MEDIUM threshold — hence the Medium mock.
         val quotesScenarioState = "MediumPriceImpactMain"
         val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
