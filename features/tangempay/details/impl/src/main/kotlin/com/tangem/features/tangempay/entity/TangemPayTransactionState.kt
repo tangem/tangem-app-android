@@ -37,6 +37,8 @@ internal sealed interface TangemPayTransactionState {
             override val icon: ImageReference,
             override val iconV2: TangemIconUM,
             override val time: String,
+            /** Inline cashback badge shown next to [time] (redesign only). `null` hides it. */
+            val cashback: TangemPayTransactionCashbackUM? = null,
         ) : Content
 
         data class Payment(
@@ -77,5 +79,23 @@ internal sealed interface TangemPayTransactionState {
             override val iconV2: TangemIconUM,
             override val time: String,
         ) : Content
+    }
+}
+
+/**
+ * Inline cashback badge on a transaction row. [amount] is the pre-formatted, signed value
+ * (e.g. `+$5.00`); [style] drives the badge color scheme.
+ */
+@Immutable
+internal data class TangemPayTransactionCashbackUM(
+    val amount: String,
+    val style: Style,
+) {
+    enum class Style {
+        /** Confirmed cashback — highlighted (blue / info) badge. */
+        Confirmed,
+
+        /** Estimated (pending) cashback — neutral (grey) badge. */
+        Estimated,
     }
 }

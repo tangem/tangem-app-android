@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.features.commonfeatures.api.R
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.choosetoken.*
@@ -20,6 +22,7 @@ import com.tangem.features.commonfeatures.impl.choosetoken.ui.ChooseTokenFullUM
 import com.tangem.features.commonfeatures.impl.choosetoken.ui.ChooseTokenInitialUM
 import com.tangem.features.commonfeatures.impl.choosetoken.ui.state.ChooserBlockUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -32,6 +35,7 @@ internal class ChooseTokenModel @Inject constructor(
     marketBlockDelegateFactory: MarketBlockDelegate.Factory,
     predefinedTokensBlockDelegateFactory: PredefinedTokensBlockDelegate.Factory,
     addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -62,6 +66,13 @@ internal class ChooseTokenModel @Inject constructor(
         )
     }
 
+    /** Tokens the user already holds in the selected wallet — subtracted from the predefined "Other eligible" block. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val portfolioTokenKeysFlow: Flow<Set<Pair<String, String>>> = bridge.selectedWalletFlow
+        .flatMapLatest { wallet -> singleAccountStatusListSupplier(wallet.walletId) }
+        .map { accountStatusList -> accountStatusList.toTokenKeys() }
+        .onStart { emit(emptySet()) }
+
     private val predefinedTokensBlockDelegate: PredefinedTokensBlockDelegate by lazy {
         val block = bridge.settings.chooserBlock as ChooserBlock.Predefined
         predefinedTokensBlockDelegateFactory.create(
@@ -71,6 +82,7 @@ internal class ChooseTokenModel @Inject constructor(
             addToPortfolioSlot = bottomSheetNavigation,
             modelScope = modelScope,
             tokenFilter = bridge.tokenFilter,
+            portfolioTokenKeys = portfolioTokenKeysFlow,
         )
     }
 
@@ -123,6 +135,12 @@ internal class ChooseTokenModel @Inject constructor(
             .onEach { notifyCurrencyChosen(it, isMarketTokenSelected = false) }
             .launchIn(modelScope)
     }
+
+    private fun AccountStatusList.toTokenKeys(): Set<Pair<String, String>> =
+        flattenCurrencies().mapNotNullTo(hashSetOf()) { status ->
+            val rawId = status.currency.id.rawCurrencyId?.value ?: return@mapNotNullTo null
+            rawId to status.currency.network.rawId
+        }
 
     fun onBackClicked() {
         bridge.onClose()
