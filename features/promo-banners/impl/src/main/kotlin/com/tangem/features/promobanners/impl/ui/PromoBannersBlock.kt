@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.pager.PagerIndicator
+import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -134,10 +134,7 @@ private fun BannersCarousel(
 
         SpacerH8()
 
-        PagerIndicator(
-            pagerState = pagerState,
-            hasBackground = false,
-        )
+        TangemPagerIndicator(pagerState = pagerState)
     }
 }
 

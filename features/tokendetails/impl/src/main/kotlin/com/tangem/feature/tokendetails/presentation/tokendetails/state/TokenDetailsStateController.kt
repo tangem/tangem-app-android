@@ -9,7 +9,6 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
@@ -54,10 +53,7 @@ internal class TokenDetailsStateController @Inject constructor() {
                 ),
                 swapButton = TangemButtonUM(
                     text = resourceReference(R.string.actionbutton_swap_title),
-                    tangemIconUM = TangemIconUM.Icon(
-                        iconRes = R.drawable.ic_exchange_default_24,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.quaternary },
-                    ),
+                    tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_default_24),
                     onClick = { },
                     isEnabled = false,
                     type = TangemButtonType.Secondary,
