@@ -66,7 +66,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
         val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
         assertThat(topEnd.text).isEqualTo(
             combinedReference(
-                stringReference(StringsSigns.PLUS),
+                stringReference(StringsSigns.PLUS + StringsSigns.WHITE_SPACE),
                 resourceReference(R.string.for_you_earn_per_year, wrappedList(expectedEarn)),
             ),
         )
@@ -84,7 +84,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
         // Assert
         val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
         val styled = bottomEnd.text as TextReference.StyledStr
-        assertThat(styled.value).isEqualTo(BigDecimal("0.05").format { percent() })
+        assertThat(styled.value).isEqualTo("APY " + BigDecimal("0.05").format { percent() })
     }
 
     @Test
@@ -146,7 +146,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
             ),
         )
         val styled = bottomEnd.text as TextReference.StyledStr
-        assertThat(styled.value).isEqualTo(BigDecimal("0.05").format { percent() })
+        assertThat(styled.value).isEqualTo("APY " + BigDecimal("0.05").format { percent() })
     }
 
     @Test

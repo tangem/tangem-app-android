@@ -195,6 +195,7 @@ internal class ApplyExpandedAssetsTransformerTest {
         tokenList = persistentListOf(),
         isExpanded = isExpanded,
         isExpandable = isExpandable,
+        segmentColor = null,
     )
 
     private fun state(

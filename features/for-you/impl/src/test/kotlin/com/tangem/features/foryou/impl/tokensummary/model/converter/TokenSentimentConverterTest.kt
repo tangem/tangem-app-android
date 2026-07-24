@@ -82,6 +82,8 @@ internal class TokenSentimentConverterTest {
         val content = actual as TokenSentimentUM.Content
         assertThat(content.sentiment).isEqualTo(resourceReference(R.string.token_summary_positive_outlook_title))
         assertThat(content.totalScore).isEqualTo(2)
+        // All five indicators loaded (BULLISH/BEARISH/NEUTRAL), so the scale spans the full -5..5.
+        assertThat(content.scaleMax).isEqualTo(5)
         assertThat(content.lastUpdate).isEqualTo(expectedLastUpdate(DateTime(2026, 1, 20, 21, 24, DateTimeZone.UTC)))
         assertThat(content.indicators.map(::projection))
             .containsExactly(
@@ -93,6 +95,28 @@ internal class TokenSentimentConverterTest {
                 RowProjection(IndicatorType.MA_CROSS, sentiment = null, status = null, score = null),
             )
             .inOrder()
+    }
+
+    @Test
+    fun `GIVEN one indicator that can't load WHEN convert THEN scaleMax drops by one`() {
+        // Arrange — SENTIMENT is unavailable (can't load), so the scale shrinks from -5..5 to -4..4.
+        val coinIndicators = createCoinIndicators(
+            readings = listOf(
+                createReading(type = Type.GALAXY_SCORE, timeframe = null, value = BigDecimal("68"), signal = Signal.BULLISH),
+                createReading(type = Type.SENTIMENT, timeframe = null, value = null, signal = Signal.NOT_AVAILABLE),
+                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("58.4"), signal = Signal.BULLISH),
+                createReading(type = Type.MACD, timeframe = Timeframe.DAY, value = BigDecimal("12.34"), signal = Signal.BEARISH),
+                createReading(type = Type.MA_CROSS, timeframe = null, value = null, signal = Signal.NEUTRAL),
+            ),
+        )
+
+        // Act
+        val content = TokenSentimentConverter(timeframe = Timeframe.DAY)
+            .convert(coinIndicators) as TokenSentimentUM.Content
+
+        // Assert — 4 loaded indicators (SENTIMENT excluded); score unchanged (2 bullish - 1 bearish).
+        assertThat(content.scaleMax).isEqualTo(4)
+        assertThat(content.totalScore).isEqualTo(1)
     }
 
     @Test
@@ -214,7 +238,7 @@ internal class TokenSentimentConverterTest {
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
         // Assert — no data at all collapses to the Empty state, whose rows still follow the indicator order
-        assertThat(actual).isEqualTo(TokenSentimentUM.Empty)
+        assertThat(actual).isInstanceOf(TokenSentimentUM.Empty::class.java)
         assertThat(actual.indicators.map(TokenIndicatorUM::indicatorType))
             .containsExactlyElementsIn(IndicatorType.entries)
             .inOrder()
@@ -234,7 +258,7 @@ internal class TokenSentimentConverterTest {
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
         // Assert
-        assertThat(actual).isEqualTo(TokenSentimentUM.Empty)
+        assertThat(actual).isInstanceOf(TokenSentimentUM.Empty::class.java)
     }
 
     @Test
