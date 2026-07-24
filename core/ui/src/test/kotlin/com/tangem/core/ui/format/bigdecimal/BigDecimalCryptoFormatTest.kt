@@ -1,8 +1,13 @@
 package com.tangem.core.ui.format.bigdecimal
 
+import androidx.compose.ui.text.SpanStyle
 import com.google.common.truth.Truth
+import com.tangem.core.ui.extensions.SpanStyleReference
+import com.tangem.core.ui.extensions.TextReference
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.util.Locale
 
 internal class BigDecimalCryptoFormatTest {
@@ -10,6 +15,7 @@ internal class BigDecimalCryptoFormatTest {
     private val testLocale = Locale.US
     private val testLocale2 = Locale.GERMANY
     private val symbol = "BTC"
+    private val spanStyleStub = SpanStyleReference { SpanStyle() }
 
     // === defaultAmount() ===
 
@@ -123,6 +129,39 @@ internal class BigDecimalCryptoFormatTest {
 
         Truth.assertThat(formatted)
             .isEqualTo("12,345,678.11".addSymbolWithSpaceLeft(symbol))
+    }
+
+    // === defaultAmount() styled ===
+
+    @Test
+    fun `GIVEN locale with distinct monetary separator WHEN styled defaultAmount THEN fraction split without crash`() {
+        // Arrange
+        // Regression: fr_CH plain separator is ',' but currency output uses '.' — indexOf(',') returned -1,
+        // and formattedAmount.take(-1) threw IllegalArgumentException
+        val swissLocale = Locale("fr", "CH")
+        val symbols = (NumberFormat.getCurrencyInstance(swissLocale) as DecimalFormat).decimalFormatSymbols
+        Truth.assertThat(symbols.monetaryDecimalSeparator).isNotEqualTo(symbols.decimalSeparator)
+
+        val testValue = BigDecimal("12.34")
+
+        // Act
+        val formatted = testValue.formatStyled {
+            cryptoStyled(
+                symbol = symbol,
+                decimals = 8,
+                spanStyleReference = spanStyleStub,
+                locale = swissLocale,
+            )
+        }
+
+        // Assert
+        val refs = (formatted as TextReference.Combined).refs.data
+        Truth.assertThat(refs).hasSize(2)
+        Truth.assertThat((refs[0] as TextReference.Str).value).isEqualTo("12")
+
+        val fraction = refs[1] as TextReference.StyledStr
+        Truth.assertThat(fraction.value).startsWith("${symbols.monetaryDecimalSeparator}34")
+        Truth.assertThat(fraction.value).endsWith(symbol)
     }
 
     // === shorted() ===
