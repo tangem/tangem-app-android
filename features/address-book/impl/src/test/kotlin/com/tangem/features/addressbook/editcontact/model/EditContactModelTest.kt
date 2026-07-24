@@ -639,6 +639,40 @@ internal class EditContactModelTest {
     }
 
     @Test
+    fun `GIVEN existing contact WHEN model created AND nothing changed THEN save button disabled`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+
+        // Act
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Assert — a valid contact that was only opened (not edited) must not be saveable.
+        assertThat(model.state.value.saveButton.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN existing contact WHEN name changed THEN save button enabled`() = runTest {
+        // Arrange
+        val walletA = createWallet(id = "aa", name = "Wallet A")
+        setupWallets(wallets = listOf(walletA), selected = walletA)
+        val contact = existingContact(walletId = "aa", name = "Alice", address = "0xABC")
+        every { getContactByIdUseCase(ContactId("c-1")) } returns MutableStateFlow(contact)
+        val model = createModel(testScope = this, params = createParams(contactId = ContactId("c-1")))
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onNameChange("Alice edited")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.saveButton.isEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN existing contact WHEN save clicked THEN updateContact called instead of create`() = runTest {
         // Arrange
         val walletA = createWallet(id = "aa", name = "Wallet A")
