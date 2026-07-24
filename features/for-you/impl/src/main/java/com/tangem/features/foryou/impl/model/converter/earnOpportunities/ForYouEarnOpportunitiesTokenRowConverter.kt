@@ -60,7 +60,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverter(
                 ),
             ),
             topEndContentUM = toRowTopEnd(cryptoCurrencyStatus, possibleEarnAmount),
-            bottomEndContentUM = toRowBottomEnd(cryptoCurrencyStatus, earnApyInfo.apy.orZero()),
+            bottomEndContentUM = toRowBottomEnd(cryptoCurrencyStatus, earnApyInfo),
             onItemClick = {
                 onTokenClick(
                     userWalletId,
@@ -92,7 +92,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverter(
             TangemTokenRowUM.EndContentUM.Content(
                 text = combinedReference(
                     if (!isBalanceHidden) {
-                        stringReference(StringsSigns.PLUS)
+                        stringReference(StringsSigns.PLUS + StringsSigns.WHITE_SPACE)
                     } else {
                         TextReference.EMPTY
                     },
@@ -124,16 +124,18 @@ internal class ForYouEarnOpportunitiesTokenRowConverter(
     /** Bottom-end: percentage share for resolved states, no-address / unreachable treatment otherwise. */
     private fun toRowBottomEnd(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        earnRate: BigDecimal,
+        earnInfo: EarnApyInfo,
     ): TangemTokenRowUM.EndContentUM = when (cryptoCurrencyStatus.value) {
         CryptoCurrencyStatus.Loading -> TangemTokenRowUM.EndContentUM.Loading
         is CryptoCurrencyStatus.Custom,
         is CryptoCurrencyStatus.Loaded,
         is CryptoCurrencyStatus.NoAccount,
         -> {
+            val type = earnInfo.type.rewardType.name
+            val value = earnInfo.apy.format { percent() }
             TangemTokenRowUM.EndContentUM.Content(
                 text = styledStringReference(
-                    value = earnRate.format { percent() },
+                    value = "$type $value",
                     spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.status.success) },
                 ),
                 isFlickering = cryptoCurrencyStatus.value.isFlickering(),
