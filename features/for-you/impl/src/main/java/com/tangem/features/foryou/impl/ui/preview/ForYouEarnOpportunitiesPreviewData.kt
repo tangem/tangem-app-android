@@ -117,6 +117,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
                 tokenList = persistentListOf(),
                 isExpanded = false,
                 isExpandable = false,
+                segmentColor = null,
             )
         }.toPersistentList().asSingleForYouGroup(),
     )
@@ -148,6 +149,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
             tokenList = persistentListOf(),
             isExpanded = false,
             isExpandable = false,
+            segmentColor = null,
         )
     }
 }

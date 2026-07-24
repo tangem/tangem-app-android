@@ -30,7 +30,7 @@ internal object ForYouPortfolioReviewPreviewData {
                 // Colours are assigned in segment order (rank), matching the transformer's palette-by-index.
                 donutSegmentList = persistentListOf(
                     DonutSegmentUM(
-                        color = DonutSegmentColor.Brand,
+                        color = DonutSegmentColor.Blue,
                         weight = BigDecimal("0.55"),
                         title = stringReference("Ethereum"),
                         fiatValue = stringReference("\$5,720.22"),
@@ -123,6 +123,7 @@ internal object ForYouPortfolioReviewPreviewData {
                 ),
                 isExpanded = true,
                 isExpandable = true,
+                segmentColor = null,
             ),
             ForYouTokenListItemUM(
                 tokenRowUM = TangemTokenRowUM.Content(
@@ -152,6 +153,7 @@ internal object ForYouPortfolioReviewPreviewData {
                 tokenList = persistentListOf(),
                 isExpanded = false,
                 isExpandable = false,
+                segmentColor = null,
             ),
         ),
         onAddFundsClick = null,
@@ -172,6 +174,7 @@ internal object ForYouPortfolioReviewPreviewData {
                         tokenList = persistentListOf(),
                         isExpanded = false,
                         isExpandable = false,
+                        segmentColor = null,
                     ),
                 )
             }
@@ -214,6 +217,7 @@ internal object ForYouPortfolioReviewPreviewData {
                         tokenList = persistentListOf(),
                         isExpanded = false,
                         isExpandable = false,
+                        segmentColor = null,
                     ),
                 )
             }

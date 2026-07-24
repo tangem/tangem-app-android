@@ -8,6 +8,7 @@ import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -96,6 +97,7 @@ internal data class ForYouTokenListItemUM(
     val tokenList: ImmutableList<TangemTokenRowUM>,
     val isExpanded: Boolean,
     val isExpandable: Boolean,
+    val segmentColor: DonutSegmentColor?,
 )
 
 /**

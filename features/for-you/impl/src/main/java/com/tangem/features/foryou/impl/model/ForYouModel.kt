@@ -150,6 +150,7 @@ internal class ForYouModel @Inject constructor(
                                     tokenList = persistentListOf(),
                                     isExpanded = false,
                                     isExpandable = false,
+                                    segmentColor = null,
                                 ),
                             )
                         }
@@ -172,6 +173,7 @@ internal class ForYouModel @Inject constructor(
                                     tokenList = persistentListOf(),
                                     isExpanded = false,
                                     isExpandable = false,
+                                    segmentColor = null,
                                 ),
                             )
                         }
