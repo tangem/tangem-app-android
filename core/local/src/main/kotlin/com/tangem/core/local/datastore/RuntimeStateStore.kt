@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.datastore
+package com.tangem.core.local.datastore
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

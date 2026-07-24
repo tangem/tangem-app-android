@@ -9,7 +9,7 @@ import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
 import com.tangem.datasource.local.config.providers.DefaultBlockchainProvidersStorage
 import com.tangem.datasource.local.config.testnet.DefaultTestnetTokensStorage
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -8,7 +8,7 @@ import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.WalletIdWithPaymentStatus
 import com.tangem.data.pay.store.WalletIdWithPaymentStatusDM
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
