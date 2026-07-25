@@ -214,13 +214,29 @@ internal class DefaultPolymarketEoaDeriverTest {
         coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
             ExtendedPublicKeysMap(emptyMap())
         coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
-            TangemSdkError.WalletNotFound().left()
+            TangemSdkError.MissingPreflightRead().left()
 
         // Act
         val result = deriver.deriveOwnerEoa(userWalletId)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketDerivationError.CardError.left())
+    }
+
+    @Test
+    fun `GIVEN card task WalletNotFound WHEN deriveOwnerEoa THEN returns MissingWallet`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+            ExtendedPublicKeysMap(emptyMap())
+        coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
+            TangemSdkError.WalletNotFound().left()
+
+        // Act
+        val result = deriver.deriveOwnerEoa(userWalletId)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketDerivationError.MissingWallet.left())
     }
 
     @Test
