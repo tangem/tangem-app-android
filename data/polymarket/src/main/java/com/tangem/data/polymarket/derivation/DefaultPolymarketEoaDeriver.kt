@@ -98,6 +98,7 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
 
     private fun Throwable.toDerivationError(): PolymarketDerivationError = when (this) {
         is TangemSdkError.UserCancelled -> PolymarketDerivationError.UserCancelled
+        is TangemSdkError.WalletNotFound -> PolymarketDerivationError.MissingWallet
         is TangemSdkError -> PolymarketDerivationError.CardError
         else -> PolymarketDerivationError.Unknown
     }
