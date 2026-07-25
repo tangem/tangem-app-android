@@ -27,7 +27,6 @@ dependencies {
     }
     // Blockchain SDK — Blockchain.Polygon.makeAddressesFromExtendedPublicKey (ERC-55 address).
     implementation(tangemDeps.blockchain)
-    implementation(projects.libs.blockchainSdk)
     // TangemSdkManager + PolymarketOwnerKeyData (Cold owner-key card session).
     implementation(projects.libs.tangemSdkApi)
     // endregion
@@ -52,7 +51,6 @@ dependencies {
 
     // region tests
     testImplementation(projects.test.core)
-    testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
