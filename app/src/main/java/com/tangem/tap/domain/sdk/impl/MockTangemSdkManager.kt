@@ -32,6 +32,7 @@ import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.api.polymarket.PolymarketOwnerKeyData
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
@@ -245,6 +246,12 @@ class MockTangemSdkManager(
     override suspend fun tangemPayProduceVirtualAccountData(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, VirtualAccountActivationData> {
+        error("Not implemented")
+    }
+
+    override suspend fun polymarketProduceOwnerKeyData(
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, PolymarketOwnerKeyData> {
         error("Not implemented")
     }
 
