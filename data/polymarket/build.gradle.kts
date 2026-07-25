@@ -25,8 +25,11 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
-    // Blockchain SDK — EthereumUtils.toKeccak for CREATE2 deposit-wallet derivation.
+    // Blockchain SDK — Blockchain.Polygon.makeAddressesFromExtendedPublicKey (ERC-55 address).
     implementation(tangemDeps.blockchain)
+    implementation(projects.libs.blockchainSdk)
+    // TangemSdkManager + PolymarketOwnerKeyData (Cold owner-key card session).
+    implementation(projects.libs.tangemSdkApi)
     // endregion
 
     // region DI
@@ -42,10 +45,14 @@ dependencies {
 
     // region Domain
     api(projects.domain.polymarket)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.common)
+    implementation(projects.data.wallets)
     // endregion
 
     // region tests
     testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
