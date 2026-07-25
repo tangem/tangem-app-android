@@ -27,6 +27,7 @@ import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.sdk.api.polymarket.PolymarketOwnerKeyData
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 
@@ -179,6 +180,15 @@ interface TangemSdkManager {
     suspend fun tangemPayProduceVirtualAccountData(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, VirtualAccountActivationData>
+
+    /**
+     * Runs the Polymarket owner-EOA card session: derives secp256k1 on
+     * `m/44'/60'/999997'/0/0` and returns the ERC-55 address + derived key for persistence.
+     * Not a generic task-runner (see the @Deprecated note on runTaskAsync) — a dedicated named method.
+     */
+    suspend fun polymarketProduceOwnerKeyData(
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, PolymarketOwnerKeyData>
 
     suspend fun getWithdrawalSignature(
         hash: String,
