@@ -12,7 +12,6 @@ import com.tangem.screens.onBuyTokenDetailsScreen
 import com.tangem.screens.onMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
-import io.qameta.allure.kotlin.Issue
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Ignore
 import org.junit.Test
