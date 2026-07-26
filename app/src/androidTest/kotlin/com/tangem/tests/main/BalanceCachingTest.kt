@@ -121,7 +121,7 @@ class BalanceCachingTest : BaseTestCase() {
     @Test
     fun balanceCachingCorrectBalanceDisplayingWithStakingTest() {
         val tokenName = "POL (ex-MATIC)"
-        val stakingEthScenario = "staking_eth_pol_balances_android"
+        val stakingEthScenario = "staking_eth_pol_balances"
         val stakingEthState = "Staked"
         var totalBalance = BigDecimal.ZERO
         var stakedAmount = BigDecimal.ZERO
@@ -162,8 +162,8 @@ class BalanceCachingTest : BaseTestCase() {
             }
             step("Assert Total balance != Staked amount") {
                 assertTrue(
-                    "Total balance and Staked amount should not be equal",
-                    totalBalance != stakedAmount
+                    "Total balance $totalBalance and Staked amount $stakedAmount should not be equal",
+                    totalBalance.compareTo(stakedAmount) != 0
                 )
             }
         }
