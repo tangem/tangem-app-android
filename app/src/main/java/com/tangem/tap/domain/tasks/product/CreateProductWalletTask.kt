@@ -9,6 +9,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.crypto.hdWallet.DerivationNode
+import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
 import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.configs.CardConfig
@@ -24,6 +26,9 @@ import com.tangem.operations.read.ReadWalletsListCommand
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.operations.wallet.CreateWalletResponse as SdkCreateWalletResponse
+
+/** BIP-85 root derivation node index: m/83696968' */
+private const val BIP85_ROOT_NODE_INDEX = 83696968L
 
 private data class CreateWalletResponse(
     val cardId: String,
@@ -244,7 +249,19 @@ private class CreateWalletTangemWallet(
         createWalletsResponse: CreateWalletsResponse,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        CreateMasterSecretCommand().run(session) { result ->
+        // when importing a wallet from a mnemonic, the master secret must be deterministic:
+        // the BIP-85 root key (m/83696968') derived from the mnemonic + passphrase
+        val bip85MasterKey = runCatching {
+            mnemonic?.let {
+                AnyMasterKeyFactory(mnemonic = it, passphrase = passphrase.orEmpty())
+                    .makeMasterKey(EllipticCurve.Secp256k1)
+                    .derivePrivateKey(node = DerivationNode.Hardened(BIP85_ROOT_NODE_INDEX))
+            }
+        }.getOrElse { error ->
+            callback(CompletionResult.Failure(TangemSdkError.ExceptionError(error)))
+            return
+        }
+        CreateMasterSecretCommand(privateKey = bip85MasterKey).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     // save the card with derived wallets and a master secret
