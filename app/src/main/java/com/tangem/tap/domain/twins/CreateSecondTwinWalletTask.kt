@@ -30,32 +30,33 @@ class CreateSecondTwinWalletTask(
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
         }
-        val walletIndex = card.wallets.firstOrNull()?.index ?: run {
-            callback(CompletionResult.Failure(TangemSdkError.WalletNotFound()))
-            return
-        }
-        val currentTwinCardNumber = TwinsHelper.getTwinCardNumber(card.cardId)
-        if (TwinsHelper.getTwinCardNumber(firstCardId) == currentTwinCardNumber) {
-            currentTwinCardNumber?.pairNumber()?.let {
-                callback(CompletionResult.Failure(WrongTwinCard(it)))
-            }
-            return
-        }
-
-        if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
-            callback(CompletionResult.Failure(IncompatibleTwinCard()))
-            return
-        }
-
-        session.setMessage(preparingMessage)
-        PurgeWalletCommand(walletIndex).run(session) { response ->
-            when (response) {
-                is CompletionResult.Success -> {
-                    session.environment.card = session.environment.card?.setWallets(emptyList())
-                    finishTask(session, callback)
+        val walletIndex = card.wallets.firstOrNull()?.index
+        if (walletIndex != null) {
+            val currentTwinCardNumber = TwinsHelper.getTwinCardNumber(card.cardId)
+            if (TwinsHelper.getTwinCardNumber(firstCardId) == currentTwinCardNumber) {
+                currentTwinCardNumber?.pairNumber()?.let {
+                    callback(CompletionResult.Failure(WrongTwinCard(it)))
                 }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+                return
             }
+
+            if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
+                callback(CompletionResult.Failure(IncompatibleTwinCard()))
+                return
+            }
+
+            session.setMessage(preparingMessage)
+            PurgeWalletCommand(walletIndex).run(session) { response ->
+                when (response) {
+                    is CompletionResult.Success -> {
+                        session.environment.card = session.environment.card?.setWallets(emptyList())
+                        finishTask(session, callback)
+                    }
+                    is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+                }
+            }
+        } else {
+            finishTask(session, callback)
         }
     }
 
