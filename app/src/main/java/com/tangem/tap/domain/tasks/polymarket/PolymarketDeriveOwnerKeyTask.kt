@@ -10,7 +10,6 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.domain.polymarket.derivation.OWNER_DERIVATION_PATH
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -24,12 +23,11 @@ import kotlinx.coroutines.launch
 
 /**
  * Cold-card session for APP-7a: derives the secp256k1 owner key on [OWNER_DERIVATION_PATH] and returns
- * the ERC-55 address + derived key (for the caller to persist). Mirrors Pay's
+ * the derived key (for the caller to persist and to compute the address from). Mirrors Pay's
  * TangemPayGenerateVirtualAccountAddressTask; imports nothing from Pay/Visa.
  */
 class PolymarketDeriveOwnerKeyTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
-    private val addressFactory: PolymarketAddressFactory,
 ) : CardSessionRunnable<PolymarketOwnerKeyData> {
 
     override fun run(session: CardSession, callback: CompletionCallback<PolymarketOwnerKeyData>) {
@@ -48,12 +46,11 @@ class PolymarketDeriveOwnerKeyTask @AssistedInject constructor(
             is CompletionResult.Success<ExtendedPublicKey> -> result.data
         }
 
-        val address = addressFactory.createAddress(extendedPublicKey)
         val derivedKeys = mapOf(
             wallet.publicKey.toMapKey() to ExtendedPublicKeysMap(mapOf(path to extendedPublicKey)),
         )
         return CompletionResult.Success(
-            PolymarketOwnerKeyData(address = address, derivedKeys = derivedKeys),
+            PolymarketOwnerKeyData(derivedKeys = derivedKeys),
         )
     }
 

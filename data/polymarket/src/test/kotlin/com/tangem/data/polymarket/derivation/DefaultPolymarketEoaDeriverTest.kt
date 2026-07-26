@@ -133,7 +133,7 @@ internal class DefaultPolymarketEoaDeriverTest {
             coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
                 ExtendedPublicKeysMap(emptyMap())
             coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
-                PolymarketOwnerKeyData(address = knownAddress, derivedKeys = derivedKeys).right()
+                PolymarketOwnerKeyData(derivedKeys = derivedKeys).right()
             coEvery { derivationsRepository.storeDerivedKeys(userWalletId, derivedKeys) } returns Unit
 
             // Act
