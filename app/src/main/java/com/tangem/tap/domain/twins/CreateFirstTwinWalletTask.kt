@@ -21,26 +21,27 @@ class CreateFirstTwinWalletTask(private val firstCardId: String) : CardSessionRu
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
         }
-        val walletIndex = card.wallets.firstOrNull()?.index ?: run {
-            callback(CompletionResult.Failure(TangemSdkError.WalletNotFound()))
-            return
-        }
-        val requiredTwinCardNumber = TwinsHelper.getTwinCardNumber(firstCardId)
-        if (requiredTwinCardNumber != TwinsHelper.getTwinCardNumber(card.cardId)) {
-            requiredTwinCardNumber?.let {
-                callback(CompletionResult.Failure(WrongTwinCard(it)))
-            }
-            return
-        }
-
-        PurgeWalletCommand(walletIndex).run(session) { response ->
-            when (response) {
-                is CompletionResult.Success -> {
-                    session.environment.card = session.environment.card?.setWallets(emptyList())
-                    createWallet(session, callback)
+        val walletIndex = card.wallets.firstOrNull()?.index
+        if (walletIndex != null) {
+            val requiredTwinCardNumber = TwinsHelper.getTwinCardNumber(firstCardId)
+            if (requiredTwinCardNumber != TwinsHelper.getTwinCardNumber(card.cardId)) {
+                requiredTwinCardNumber?.let {
+                    callback(CompletionResult.Failure(WrongTwinCard(it)))
                 }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+                return
             }
+
+            PurgeWalletCommand(walletIndex).run(session) { response ->
+                when (response) {
+                    is CompletionResult.Success -> {
+                        session.environment.card = session.environment.card?.setWallets(emptyList())
+                        createWallet(session, callback)
+                    }
+                    is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+                }
+            }
+        } else {
+            createWallet(session, callback)
         }
     }
 
