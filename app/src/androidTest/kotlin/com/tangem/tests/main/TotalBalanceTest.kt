@@ -133,7 +133,7 @@ class TotalBalanceTest : BaseTestCase() {
     @Test
     fun totalBalanceStakedAmountsIncluded() {
         val tokenName = "POL (ex-MATIC)"
-        val stakingEthScenario = "staking_eth_pol_balances_android"
+        val stakingEthScenario = "staking_eth_pol_balances"
         val stakingEthState = "Staked"
         var totalBalance = BigDecimal.ZERO
         var stakedAmount = BigDecimal.ZERO
