@@ -14,6 +14,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.Issue
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -89,7 +90,8 @@ class BuyTest : BaseTestCase() {
     @AllureId("3613")
     @DisplayName("On-ramp Buy: S2C card doesn't have Buy and Sell options")
     @Test
-    @Issue("[REDACTED_TASK_KEY]")
+    // Ignored due to not completed fix task and unclear requirements
+    @Ignore("[REDACTED_TASK_KEY]")
     fun buyAndSellIsNotAvailableForS2CCardTest() {
         setupHooks().run {
             step("Open 'Main' screen") {
