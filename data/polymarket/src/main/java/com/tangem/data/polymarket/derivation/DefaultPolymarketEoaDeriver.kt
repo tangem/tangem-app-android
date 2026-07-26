@@ -48,7 +48,7 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
             cachedAddress(userWalletId, seedKey, path)?.let { return@withContext it.right() }
 
             when (userWallet) {
-                is UserWallet.Cold -> deriveCold(userWalletId)
+                is UserWallet.Cold -> deriveCold(userWalletId, seedKey, path)
                 is UserWallet.Hot -> deriveHot(userWalletId, seedKey, path)
             }
         }
@@ -59,14 +59,21 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
         return addressFactory.createAddress(extendedPublicKey)
     }
 
-    private suspend fun deriveCold(userWalletId: UserWalletId): Either<PolymarketDerivationError, String> {
+    private suspend fun deriveCold(
+        userWalletId: UserWalletId,
+        seedKey: ByteArray,
+        path: DerivationPath,
+    ): Either<PolymarketDerivationError, String> {
         return tangemSdkManager
             .polymarketProduceOwnerKeyData(UserWalletIdPreflightReadFilter(userWalletId))
             .fold(
                 ifLeft = { it.toDerivationError().left() },
                 ifRight = { keyData ->
                     derivationsRepository.storeDerivedKeys(userWalletId, keyData.derivedKeys)
-                    keyData.address.right()
+                    val extendedPublicKey = keyData.derivedKeys[ByteArrayKey(seedKey)]?.get(path)
+                    extendedPublicKey
+                        ?.let { addressFactory.createAddress(it).right() }
+                        ?: PolymarketDerivationError.Unknown.left()
                 },
             )
     }
