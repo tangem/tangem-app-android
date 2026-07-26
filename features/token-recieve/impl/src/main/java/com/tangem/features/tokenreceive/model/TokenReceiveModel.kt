@@ -2,6 +2,7 @@ package com.tangem.features.tokenreceive.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -93,7 +94,7 @@ internal class TokenReceiveModel @Inject constructor(
                     Asset.NFT -> asset.name
                 },
             )
-            stackNavigation.push(configuration = TokenReceiveRoutes.ReceiveAssets)
+            stackNavigation.pushNew(configuration = TokenReceiveRoutes.ReceiveAssets)
         }
     }
 
