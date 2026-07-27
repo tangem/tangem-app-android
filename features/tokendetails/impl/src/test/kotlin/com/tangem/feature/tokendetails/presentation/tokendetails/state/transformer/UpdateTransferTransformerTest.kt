@@ -232,7 +232,7 @@ class UpdateTransferTransformerTest {
         verifyOrder {
             analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSwap>())
             onActionDispatched.invoke()
-            clickIntents.onSwapFromClick(ScenarioUnavailabilityReason.None)
+            clickIntents.onSwapClick(ScenarioUnavailabilityReason.None)
         }
     }
 
