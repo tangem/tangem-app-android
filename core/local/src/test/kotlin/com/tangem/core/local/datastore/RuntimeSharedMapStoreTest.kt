@@ -2,6 +2,8 @@ package com.tangem.core.local.datastore
 
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -95,5 +97,47 @@ internal class RuntimeSharedMapStoreTest {
 
         assertThat(store.getSyncOrNull(key = "a")).isNull()
         assertThat(store.getAllSyncOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN absent key WHEN update THEN transform receives default`() = runTest {
+        store.update(key = "a", default = 10) { it + 1 }
+
+        assertThat(store.getSyncOrNull(key = "a")).isEqualTo(11)
+    }
+
+    @Test
+    fun `GIVEN stored key WHEN update THEN transform receives current value`() = runTest {
+        store.store(key = "a", value = 5)
+
+        store.update(key = "a", default = 10) { it + 1 }
+
+        assertThat(store.getSyncOrNull(key = "a")).isEqualTo(6)
+    }
+
+    @Test
+    fun `GIVEN concurrent updates of same key WHEN all complete THEN none are lost`() = runTest {
+        val count = 100
+
+        (1..count).map { launch { store.update(key = "a", default = 0) { it + 1 } } }.joinAll()
+
+        assertThat(store.getSyncOrNull(key = "a")).isEqualTo(count)
+    }
+
+    @Test
+    fun `GIVEN absent key WHEN updateIfPresent THEN it is a no-op and no entry is created`() = runTest {
+        store.updateIfPresent(key = "a") { it + 1 }
+
+        assertThat(store.getSyncOrNull(key = "a")).isNull()
+        assertThat(store.contains(key = "a")).isFalse()
+    }
+
+    @Test
+    fun `GIVEN stored key WHEN updateIfPresent THEN value is transformed`() = runTest {
+        store.store(key = "a", value = 5)
+
+        store.updateIfPresent(key = "a") { it + 1 }
+
+        assertThat(store.getSyncOrNull(key = "a")).isEqualTo(6)
     }
 }
