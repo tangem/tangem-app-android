@@ -1,7 +1,9 @@
 package com.tangem.data.polymarket.di
 
 import com.tangem.data.polymarket.DefaultPolymarketRepository
+import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,4 +17,8 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketRepository(impl: DefaultPolymarketRepository): PolymarketRepository
+
+    @Binds
+    @Singleton
+    fun bindPolymarketDepositWalletDeriver(impl: DefaultPolymarketDepositWalletDeriver): PolymarketDepositWalletDeriver
 }
