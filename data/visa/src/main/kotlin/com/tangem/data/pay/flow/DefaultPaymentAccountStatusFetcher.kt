@@ -216,7 +216,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return if (hasActiveIssueOrder) {
             PaymentAccountStatusValue.Inactive(
                 source = StatusSource.ACTUAL,
-                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                 tariffPlan = getTangemPayTariffPlanStateUseCase(
                     userWalletId = userWalletId,
                     tariff = tariffPlan,
@@ -229,7 +228,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         } else {
             PaymentAccountStatusValue.AwaitingPlanSelection(
                 source = StatusSource.ACTUAL,
-                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                 tariffPlan = tariffPlan,
             )
         }
