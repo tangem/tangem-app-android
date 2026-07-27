@@ -14,4 +14,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isCashbackEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1192_TANGEM_PAY_CASHBACK_ENABLED)
+
+    override val isPlasticCardOrderEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1157_PLASTIC_CARD_ORDER_ENABLED)
 }
