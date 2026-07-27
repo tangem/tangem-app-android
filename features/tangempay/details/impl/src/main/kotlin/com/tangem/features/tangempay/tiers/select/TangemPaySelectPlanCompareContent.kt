@@ -133,7 +133,11 @@ private fun CompareRow(name: TextReference, value: TextReference, divider: Boole
             )
         },
         valueSlot = {
-            TangemRowText(text = value, role = TangemRowTextRole.Value)
+            TangemRowText(
+                text = value,
+                role = TangemRowTextRole.Value,
+                maxLines = Int.MAX_VALUE,
+            )
         },
     )
 }
@@ -165,7 +169,7 @@ private fun previewCompare() = TangemPaySelectPlanUM.ComparePlans(
         TangemPaySelectPlanUM.ComparePlans.Plan(
             name = stringReference("Basic"),
             values = persistentListOf(
-                stringReference("Virtual, up to 3 cards"),
+                stringReference("Very Very Very Very Very Very Very Very Very Very Very Long Text"),
                 stringReference("Platinum"),
                 stringReference("$0"),
                 stringReference("1%"),
@@ -178,7 +182,7 @@ private fun previewCompare() = TangemPaySelectPlanUM.ComparePlans(
                 stringReference("Virtual, up to 5 cards"),
                 stringReference("Signature"),
                 stringReference("$29.99/month"),
-                stringReference("1%"),
+                stringReference("1%\n2%\n3%"),
                 stringReference("$50,000"),
             ),
         ),
