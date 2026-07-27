@@ -5,8 +5,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 
 /**
- * The Polymarket owner-EOA derivation path (D2 slot), approved 2026-07-21.
- * MUST match iOS/SDK byte-for-byte — pinned by a unit test. See APP-7a spec.
+ * The Polymarket owner-EOA derivation path. Must match iOS/SDK byte-for-byte — pinned by a unit test.
  */
 const val OWNER_DERIVATION_PATH: String = "m/44'/60'/999997'/0/0"
 
