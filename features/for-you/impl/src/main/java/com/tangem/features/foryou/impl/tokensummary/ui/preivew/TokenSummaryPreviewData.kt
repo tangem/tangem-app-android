@@ -4,6 +4,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
@@ -11,7 +12,16 @@ import com.tangem.features.foryou.impl.components.state.AiInsightUM
 import com.tangem.features.foryou.impl.tokensummary.entity.*
 import kotlinx.collections.immutable.persistentListOf
 
-internal fun previewTokenSummary(periodPickerUm: PeriodPickerUM, tokenSentiment: TokenSentimentUM) = TokenSummaryUm(
+internal fun previewBottomButton(
+    text: TextReference = resourceReference(R.string.token_summary_go_to_swap_button),
+    isEnabled: Boolean = true,
+) = BottomButtonUM.Content(text = text, isEnabled = isEnabled, onClick = {})
+
+internal fun previewTokenSummary(
+    periodPickerUm: PeriodPickerUM,
+    tokenSentiment: TokenSentimentUM,
+    bottomButton: BottomButtonUM = previewBottomButton(),
+) = TokenSummaryUm(
     header = TokenSummaryHeaderUM(
         tangemIconUM = TangemIconUM.Currency(
             CurrencyIconState.CustomTokenIcon(
@@ -30,9 +40,9 @@ internal fun previewTokenSummary(periodPickerUm: PeriodPickerUM, tokenSentiment:
         "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
             "buffer. Consider trimming concentration for a smoother ride",
     ),
+    bottomButton = bottomButton,
     onPeriodClick = {},
     onCloseClick = {},
-    onSwapClick = {},
     onInfoClick = {},
 )
 
