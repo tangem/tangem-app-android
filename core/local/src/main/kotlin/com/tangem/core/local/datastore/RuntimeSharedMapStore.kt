@@ -37,6 +37,23 @@ interface RuntimeSharedMapStore<K : Any, V : Any> {
     /** Store all [values] */
     suspend fun store(values: Map<K, V>)
 
+    /**
+     * Atomically update the value associated with [key].
+     *
+     * The read-modify-write runs under the store's mutex, so concurrent updates of the same [key]
+     * cannot lose each other's changes. [transform] receives the current value, or [default] when the
+     * key is absent.
+     */
+    suspend fun update(key: K, default: V, transform: (V) -> V)
+
+    /**
+     * Atomically update the value under [key] only if it is already present.
+     *
+
+     * race with concurrent updates of the same [key].
+     */
+    suspend fun updateIfPresent(key: K, transform: (V) -> V)
+
     /** Remove value associated with [key] */
     suspend fun remove(key: K)
 
@@ -69,6 +86,19 @@ interface RuntimeSharedMapStore<K : Any, V : Any> {
 
             override suspend fun store(values: Map<K, V>) {
                 store.update(default = emptyMap()) { it + values }
+            }
+
+            override suspend fun update(key: K, default: V, transform: (V) -> V) {
+                store.update(default = emptyMap()) { map ->
+                    map + (key to transform(map[key] ?: default))
+                }
+            }
+
+            override suspend fun updateIfPresent(key: K, transform: (V) -> V) {
+                store.update(default = emptyMap()) { map ->
+                    val current = map[key] ?: return@update map
+                    map + (key to transform(current))
+                }
             }
 
             override suspend fun remove(key: K) {
