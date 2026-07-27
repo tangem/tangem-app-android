@@ -1,7 +1,7 @@
 package com.tangem.domain.polymarket.model
 
 /**
- * Typed failure surface of Polymarket owner-EOA derivation (APP-7a).
+ * Typed failure surface of Polymarket owner-EOA derivation.
  */
 sealed interface PolymarketDerivationError {
 
