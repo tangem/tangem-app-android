@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.CoinIndicators.Reading.Signal
 import com.tangem.domain.markets.CoinIndicators.Reading.Type
+import com.tangem.features.foryou.impl.tokensummary.entity.BottomButtonUM
 import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
@@ -77,7 +78,7 @@ internal class SetTokenSentimentTransformerTest {
         periodPicker = periodPicker,
         aiInsight = mockk(),
         tokenSentiment = TokenSentimentUM.Loading,
-        onSwapClick = {},
+        bottomButton = BottomButtonUM.Loading,
         onPeriodClick = {},
         onInfoClick = {},
         onCloseClick = {},
