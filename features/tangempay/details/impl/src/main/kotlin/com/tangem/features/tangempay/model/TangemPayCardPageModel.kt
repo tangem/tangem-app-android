@@ -34,6 +34,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -81,6 +82,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
+    tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -106,8 +108,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         MutableStateFlow(persistentListOf())
     val cardControllersState: StateFlow<ImmutableList<TangemPayCardDetailsController>> = _cardControllersState
 
-    private val cryptoCurrency
-        get() = currentStatus.value.cryptoCurrency
+    private val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
