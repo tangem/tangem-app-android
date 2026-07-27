@@ -148,6 +148,7 @@ internal class TangemPayDetailsModelTest {
             getCashbackSummaryUseCase = mockk(relaxed = true),
             getCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             setCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
+            tangemPayCurrencyFactory = mockk(relaxed = true),
         )
     }
 
