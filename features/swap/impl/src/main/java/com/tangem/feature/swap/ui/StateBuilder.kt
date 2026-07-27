@@ -76,11 +76,11 @@ internal class StateBuilder(
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
-    private val amountScreenClickIntents by lazy(LazyThreadSafetyMode.NONE) {
+    private val amountScreenClickIntents by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         SwapAmountScreenClickIntents(actions)
     }
 
-    private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
+    private val notificationsFactory by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         SwapNotificationsFactory(
             actions = actions,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
