@@ -147,14 +147,9 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             stackNavigation.bringToFront(FeedEntryChildFactory.Child.ForYou)
         }
 
-        override fun openTokenSummary(
-            userWalletId: UserWalletId,
-            token: TokenSummaryComponent.Token,
-            selectedTokenPeriodId: String?,
-        ) {
+        override fun openTokenSummary(token: TokenSummaryComponent.Token, selectedTokenPeriodId: String?) {
             innerRouter.push(
                 FeedEntryChildFactory.Child.TokenSummary(
-                    userWalletId = userWalletId,
                     token = token,
                     selectedTokenPeriodId = selectedTokenPeriodId,
                 ),
@@ -262,7 +257,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 userWalletId: UserWalletId,
                 token: TokenSummaryComponent.Token,
                 selectedTokenPeriodId: String?,
-            ) = clickIntents.openTokenSummary(userWalletId, token, selectedTokenPeriodId)
+            ) = clickIntents.openTokenSummary(token, selectedTokenPeriodId)
         }
 
     private fun mapEntryRouteToChild(entryRoute: FeedEntryRoute?): FeedEntryChildFactory.Child {
