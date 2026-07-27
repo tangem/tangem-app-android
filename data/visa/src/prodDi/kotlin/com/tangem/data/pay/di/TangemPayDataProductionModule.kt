@@ -1,9 +1,11 @@
 package com.tangem.data.pay.di
 
+import com.tangem.data.pay.repository.DefaultCardDeliveryQuoteRepository
 import com.tangem.data.pay.repository.DefaultCashbackRepository
 import com.tangem.data.pay.repository.DefaultOnboardingRepository
 import com.tangem.data.pay.repository.DefaultTangemPayCardDetailsRepository
 import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
+import com.tangem.domain.pay.repository.CardDeliveryQuoteRepository
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -33,4 +35,8 @@ internal interface TangemPayDataProductionModule {
     @Binds
     @Singleton
     fun bindTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
+
+    @Binds
+    @Singleton
+    fun bindCardDeliveryQuoteRepository(repository: DefaultCardDeliveryQuoteRepository): CardDeliveryQuoteRepository
 }
