@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -394,6 +395,7 @@ private fun BalanceValue(state: TangemPayDetailsBalanceBlockState, isBalanceHidd
     when (state) {
         is TangemPayDetailsBalanceBlockState.Loading -> TangemShimmer(
             style = TangemTheme.typography3.heading.medium,
+            textAlign = TextAlign.Center,
         )
         is TangemPayDetailsBalanceBlockState.Content -> {
             val balanceColor = when {
