@@ -19,6 +19,8 @@ data class PolymarketWalletStatusResponse(
 @JsonClass(generateAdapter = true)
 data class PolymarketWalletDeployRequest(
     @Json(name = "ownerAddress") val ownerAddress: String,
+    @Json(name = "walletId") val walletId: String,
+    @Json(name = "depositWalletAddress") val depositWalletAddress: String,
 )
 
 /** Body of `POST /api/predictions/v1/wallet/approvals` (BFF `ApprovalsRequest`) — the fully-signed batch. */

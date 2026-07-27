@@ -17,11 +17,13 @@ import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
+import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusResponse
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceResponse
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
@@ -128,14 +130,22 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN accepted WHEN deployWallet THEN maps operation status`() = runTest {
         // Arrange
-        coEvery { api.deployWallet(any()) } returns
+        val request = slot<PolymarketWalletDeployRequest>()
+        coEvery { api.deployWallet(capture(request)) } returns
             ApiResponse.Success(PolymarketWalletOperationResponse(status = "DEPLOYMENT_IN_PROGRESS"))
 
         // Act
-        val result = repository.deployWallet(ownerAddress = OWNER)
+        val result = repository.deployWallet(
+            ownerAddress = OWNER,
+            userWalletId = UserWalletId("0011"),
+            depositWalletAddress = "0xDeF0000000000000000000000000000000000002",
+        )
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS.right())
+        assertThat(request.captured.ownerAddress).isEqualTo(OWNER)
+        assertThat(request.captured.walletId).isEqualTo("0011")
+        assertThat(request.captured.depositWalletAddress).isEqualTo("0xDeF0000000000000000000000000000000000002")
     }
 
     @Test
