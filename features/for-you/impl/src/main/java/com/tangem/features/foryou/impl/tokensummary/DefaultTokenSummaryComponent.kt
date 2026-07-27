@@ -16,11 +16,12 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.foryou.impl.tokensummary.entity.InfoBottomSheetContent
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryBottomSheetConfig
 import com.tangem.features.foryou.impl.tokensummary.model.TokenSummaryModel
+import com.tangem.features.foryou.impl.tokensummary.swapchooser.SwapTokenChooserComponent
 import com.tangem.features.foryou.impl.tokensummary.ui.TokenSummaryContent
 import com.tangem.features.foryou.impl.tokensummary.ui.components.InfoBottomSheet
 import com.tangem.features.foryou.impl.tokensummary.ui.components.TokenSummaryTopNavigation
@@ -31,32 +32,46 @@ import dagger.assisted.AssistedInject
 internal class DefaultTokenSummaryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: TokenSummaryComponent.Params,
-    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val swapTokenChooserComponentFactory: SwapTokenChooserComponent.Factory,
+    private val manageFundsComponentFactory: ManageFundsComponent.Factory,
 ) : TokenSummaryComponent, AppComponentContext by context {
 
     private val model: TokenSummaryModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = TokenSummaryBottomSheetConfig.serializer(),
+        // Sheets are not restored after process death: the chooser renders holdings the model resolves anew, and a
+        // sheet brought back before they arrive would sit there active and empty. The summary itself is enough.
+        serializer = null,
         handleBackButton = false,
         childFactory = { config, componentContext ->
             when (config) {
-                TokenSummaryBottomSheetConfig.PortfolioSelector -> portfolioSelectorChild(componentContext)
+                is TokenSummaryBottomSheetConfig.SwapChooser -> swapChooserChild(componentContext)
+                is TokenSummaryBottomSheetConfig.ManageFunds -> manageFundsChild(config, componentContext)
                 is TokenSummaryBottomSheetConfig.Info -> infoChild(config)
             }
         },
     )
 
-    private fun portfolioSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
-        portfolioSelectorComponentFactory.create(
+    private fun swapChooserChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
+        swapTokenChooserComponentFactory.create(
             context = childByContext(componentContext),
-            params = PortfolioSelectorComponent.Params(
-                portfolioFetcher = model.portfolioFetcher,
-                controller = model.portfolioSelectorController,
-                bsCallback = model.portfolioSelectorCallback,
+            params = SwapTokenChooserComponent.Params(
+                entries = model.swapEntries,
+                callbacks = model.swapChooserCallbacks,
             ),
         )
+
+    private fun manageFundsChild(
+        config: TokenSummaryBottomSheetConfig.ManageFunds,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent = manageFundsComponentFactory.create(
+        context = childByContext(componentContext),
+        params = ManageFundsComponent.Params(
+            launchMode = ManageFundsComponent.LaunchMode.FilteredByRawId(config.rawCurrencyId),
+            onDismiss = { model.bottomSheetNavigation.dismiss() },
+        ),
+    )
 
     private fun infoChild(config: TokenSummaryBottomSheetConfig.Info): ComposableBottomSheetComponent =
         object : ComposableBottomSheetComponent {

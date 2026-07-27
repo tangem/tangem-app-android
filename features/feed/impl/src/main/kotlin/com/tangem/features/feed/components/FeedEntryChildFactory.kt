@@ -80,7 +80,6 @@ internal class FeedEntryChildFactory @Inject constructor(
         @Serializable
         @Immutable
         data class TokenSummary(
-            val userWalletId: UserWalletId,
             val token: TokenSummaryComponent.Token,
             val selectedTokenPeriodId: String? = null,
         ) : Child
@@ -171,7 +170,6 @@ internal class FeedEntryChildFactory @Inject constructor(
                     callbacks = object : ForYouComponent.ForYouModelCallbacks {
                         override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) {
                             feedEntryClickIntents.openTokenSummary(
-                                userWalletId = userWalletId,
                                 token = TokenSummaryComponent.Token.Portfolio(currency),
                             )
                         }
@@ -185,7 +183,6 @@ internal class FeedEntryChildFactory @Inject constructor(
             is Child.TokenSummary -> tokenSummaryComponentFactory.create(
                 context = appComponentContext,
                 params = TokenSummaryComponent.Params(
-                    userWalletId = child.userWalletId,
                     token = child.token,
                     selectedTokenPeriodId = child.selectedTokenPeriodId,
                     callbacks = object : TokenSummaryComponent.TokenSummaryModelCallbacks {
