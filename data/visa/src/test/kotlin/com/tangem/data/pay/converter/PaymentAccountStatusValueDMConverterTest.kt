@@ -108,7 +108,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
             // GIVEN
             val domain = PaymentAccountStatusValue.AwaitingPlanSelection(
                 source = StatusSource.ACTUAL,
-                cryptoCurrency = cryptoCurrency,
                 tariffPlan = mockk(),
             )
 
@@ -128,7 +127,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     availableBalance = BigDecimal("100"),
                     currency = "USD",
                 ),
-                cryptoCurrency = cryptoCurrency,
                 tariffPlan = mockk(),
             )
 
