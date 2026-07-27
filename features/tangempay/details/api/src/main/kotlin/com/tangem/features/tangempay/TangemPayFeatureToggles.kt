@@ -4,4 +4,5 @@ interface TangemPayFeatureToggles {
     val isRemoveAccountEnabled: Boolean
     val isTiersPlusPlanEnabled: Boolean
     val isCashbackEnabled: Boolean
+    val isPlasticCardOrderEnabled: Boolean
 }
