@@ -126,5 +126,9 @@
     {
         "name": "TWI_1684_ACCOUNT_MULTICHAIN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
+        "version": "undefined"
     }
 ]
