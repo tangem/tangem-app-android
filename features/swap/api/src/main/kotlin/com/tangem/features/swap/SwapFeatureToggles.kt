@@ -4,4 +4,5 @@ interface SwapFeatureToggles {
     val isYieldSwapEnabled: Boolean
     val isHighFeeWarningEnabled: Boolean
     val isTronDexSwapEnabled: Boolean
+    val isChooseTokenPulseEnabled: Boolean
 }
