@@ -6,7 +6,6 @@ import javax.inject.Inject
 
 /**
  * Converts a secp256k1 [ExtendedPublicKey] into a Polygon ERC-55 checksummed address.
- * Standalone (no Pay/Visa dependency) per the Polymarket epic ground rule.
  */
 class PolymarketAddressFactory @Inject constructor() {
 
