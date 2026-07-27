@@ -32,6 +32,7 @@ dependencies {
 
     /** Project - Common */
     api(projects.common.ui)
+    implementation(projects.common.uiMarkets)
     implementation(projects.common.routing)
 
     /** Project - Domain */
@@ -45,6 +46,7 @@ dependencies {
     implementation(projects.domain.account)
     api(projects.domain.balanceHiding)
     implementation(projects.domain.models)
+    implementation(projects.domain.tokens)
 
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
