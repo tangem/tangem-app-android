@@ -3,13 +3,11 @@ package com.tangem.features.foryou
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 interface TokenSummaryComponent : ComposableModularBottomSheetContentComponent {
 
     data class Params(
-        val userWalletId: UserWalletId,
         val token: Token,
         val selectedTokenPeriodId: String? = null,
         val callbacks: TokenSummaryModelCallbacks,
