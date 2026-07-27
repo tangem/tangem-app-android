@@ -39,7 +39,7 @@ internal class UpdateAddFundsTransformer(
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
                     onActionDispatched()
-                    clickIntents.onSwapToClick(action.unavailabilityReason)
+                    clickIntents.onSwapClick(action.unavailabilityReason)
                 },
             )
         }
