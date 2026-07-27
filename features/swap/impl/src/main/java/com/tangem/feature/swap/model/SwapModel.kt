@@ -217,6 +217,7 @@ internal class SwapModel @Inject constructor(
         isAccountsModeProvider = Provider { isAccountsMode },
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appRouter = appRouter,
+        isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
     )
 
     private val amountDebouncer = Debouncer()
