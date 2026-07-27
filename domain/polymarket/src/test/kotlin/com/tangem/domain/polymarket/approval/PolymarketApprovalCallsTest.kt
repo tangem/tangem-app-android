@@ -42,6 +42,17 @@ internal class PolymarketApprovalCallsTest {
         assertThat(call.data).isEqualTo(model.data)
     }
 
+    @Test
+    fun `GIVEN CREATE2 constants WHEN read THEN equal the Polymarket reference values`() {
+        // Assert
+        assertThat(PolymarketContracts.DW_FACTORY).isEqualTo("0x00000000000Fb5C9ADea0298D729A0CB3823Cc07")
+        assertThat(PolymarketContracts.DW_IMPLEMENTATION).isEqualTo("0x58CA52ebe0DadfdF531Cde7062e76746de4Db1eB")
+        assertThat(PolymarketContracts.UUPS_INIT_CONST1)
+            .isEqualTo("0xcc3735a920a3ca505d382bbc545af43d6000803e6038573d6000fd5b3d6000f3")
+        assertThat(PolymarketContracts.UUPS_INIT_CONST2)
+            .isEqualTo("0x5155f3363d3d373d3d363d7f360894a13ba1a3210667c828492db98dca3e2076")
+    }
+
     internal data class CallModel(val index: Int, val target: String, val data: String)
 
     private fun provideTestModels() = listOf(
