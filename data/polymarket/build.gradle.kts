@@ -25,6 +25,8 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
+    // Blockchain SDK — EthereumUtils.toKeccak for CREATE2 deposit-wallet derivation.
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region DI
