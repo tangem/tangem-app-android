@@ -114,6 +114,12 @@ interface TangemPayApi {
     @GET("v1/customer/offers")
     suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>
 
+    @GET("v1/customer/card-delivery/quote")
+    suspend fun getCardDeliveryQuote(
+        @Header("Authorization") authHeader: String,
+        @Query("context") context: String,
+    ): ApiResponse<CardDeliveryQuoteResponse>
+
     @GET("v1/customer/balance")
     suspend fun getCardBalance(@Header("Authorization") authHeader: String): ApiResponse<CardBalanceResponse>
 
