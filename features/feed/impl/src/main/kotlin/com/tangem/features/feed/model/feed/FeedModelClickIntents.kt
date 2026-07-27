@@ -3,7 +3,6 @@ package com.tangem.features.feed.model.feed
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.foryou.TokenSummaryComponent
@@ -36,9 +35,5 @@ internal interface FeedModelClickIntents {
 
     fun openForYou()
 
-    fun openTokenSummary(
-        userWalletId: UserWalletId,
-        token: TokenSummaryComponent.Token,
-        selectedTokenPeriodId: String? = null,
-    )
+    fun openTokenSummary(token: TokenSummaryComponent.Token, selectedTokenPeriodId: String? = null)
 }
