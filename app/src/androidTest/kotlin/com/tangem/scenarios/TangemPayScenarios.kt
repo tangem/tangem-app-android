@@ -89,6 +89,32 @@ fun BaseTestCase.openTangemPayDailyLimitSetup() {
     }
 }
 
+/** From the card page (card active), taps the Freeze row and confirms via the confirmation sheet. */
+fun BaseTestCase.freezeCardFromCardPage() {
+    step("Click on 'Freeze' card row") {
+        onTangemPayCardPageScreen { freezeCardRowActive.clickWithAssertion() }
+    }
+    step("Assert freeze confirmation sheet is displayed") {
+        awaitSuccess { onTangemPayFreezeConfirmation { freezeTitle.assertIsDisplayed() } }
+    }
+    step("Click on 'Submit' button (confirm freeze)") {
+        onTangemPayFreezeConfirmation { submitButton.clickWithAssertion() }
+    }
+}
+
+/** From the card page (card frozen), taps the Unfreeze row and confirms via the confirmation sheet. */
+fun BaseTestCase.unfreezeCardFromCardPage() {
+    step("Click on 'Unfreeze' card row") {
+        onTangemPayCardPageScreen { unfreezeCardRow.clickWithAssertion() }
+    }
+    step("Assert unfreeze confirmation sheet is displayed") {
+        awaitSuccess { onTangemPayFreezeConfirmation { unfreezeTitle.assertIsDisplayed() } }
+    }
+    step("Click on 'Submit' button (confirm unfreeze)") {
+        onTangemPayFreezeConfirmation { submitButton.clickWithAssertion() }
+    }
+}
+
 /** From the card page, opens the 'Replace card' reissue bottom sheet via the 'More' menu. */
 fun BaseTestCase.openReissueSheet() {
     step("Click on 'More' button") {
