@@ -76,17 +76,13 @@ internal class StateBuilder(
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
-    private val amountScreenClickIntents by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        SwapAmountScreenClickIntents(actions)
-    }
+    private val amountScreenClickIntents = SwapAmountScreenClickIntents(actions)
 
-    private val notificationsFactory by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        SwapNotificationsFactory(
-            actions = actions,
-            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-            appCurrencyProvider = appCurrencyProvider,
-        )
-    }
+    private val notificationsFactory = SwapNotificationsFactory(
+        actions = actions,
+        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        appCurrencyProvider = appCurrencyProvider,
+    )
 
     fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
         return SwapStateHolder(
