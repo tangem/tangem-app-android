@@ -22,9 +22,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Cold-card session for APP-7a: derives the secp256k1 owner key on [OWNER_DERIVATION_PATH] and returns
- * the derived key (for the caller to persist and to compute the address from). Mirrors Pay's
- * TangemPayGenerateVirtualAccountAddressTask; imports nothing from Pay/Visa.
+ * Cold-card session that derives the secp256k1 Polymarket owner key on [OWNER_DERIVATION_PATH] and
+ * returns the derived key for the caller to persist and to compute the address from.
  */
 class PolymarketDeriveOwnerKeyTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
