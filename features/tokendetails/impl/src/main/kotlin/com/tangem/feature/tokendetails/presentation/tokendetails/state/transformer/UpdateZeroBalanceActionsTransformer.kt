@@ -23,7 +23,7 @@ internal class UpdateZeroBalanceActionsTransformer(
         return prevState.copy(
             zeroBalanceActionsUM = ZeroBalanceActionsUM.Content(
                 buy = buyAction?.toRow(onClick = clickIntents::onBuyClick),
-                swap = swapAction?.toRow(onClick = clickIntents::onSwapToClick),
+                swap = swapAction?.toRow(onClick = clickIntents::onSwapClick),
                 receive = receiveAction?.toRow(
                     onClick = clickIntents::onReceiveClick,
                     onLongClick = { clickIntents.onCopyAddress() },
