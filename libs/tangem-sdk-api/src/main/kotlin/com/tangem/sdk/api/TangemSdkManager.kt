@@ -182,8 +182,8 @@ interface TangemSdkManager {
     ): Either<Throwable, VirtualAccountActivationData>
 
     /**
-     * Runs the Polymarket owner-EOA card session: derives secp256k1 on
-     * `m/44'/60'/999997'/0/0` and returns the ERC-55 address + derived key for persistence.
+     * Runs the Polymarket owner-key card session: derives secp256k1 on `m/44'/60'/999997'/0/0` and
+     * returns the derived key(s) for the caller to persist and to compute the owner address from.
      * Not a generic task-runner (see the @Deprecated note on runTaskAsync) — a dedicated named method.
      */
     suspend fun polymarketProduceOwnerKeyData(
