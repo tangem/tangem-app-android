@@ -30,6 +30,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
 import com.tangem.features.foryou.impl.tokensummary.entity.*
+import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewBottomButton
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewContentSentiment
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewTokenSummary
 import com.tangem.features.foryou.impl.ui.components.AiInsightContent
@@ -97,15 +98,30 @@ internal fun TokenSummaryContent(
             Spacer(modifier = Modifier.height(buttonHeight))
         }
 
-        PrimaryButton(
-            text = stringResourceSafe(R.string.token_summary_go_to_swap_button),
+        BottomButton(
+            bottomButton = tokenSummary.bottomButton,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .onSizeChanged { buttonHeight = with(density) { it.height.toDp() } }
                 .navigationBarsPadding()
                 .padding(16.dp),
-            onClick = tokenSummary.onSwapClick,
+        )
+    }
+}
+
+@Composable
+private fun BottomButton(bottomButton: BottomButtonUM, modifier: Modifier = Modifier) {
+    when (bottomButton) {
+        BottomButtonUM.Loading -> RectangleShimmer(
+            modifier = modifier.height(48.dp),
+            radius = 12.dp,
+        )
+        is BottomButtonUM.Content -> PrimaryButton(
+            text = bottomButton.text.resolveReference(),
+            modifier = modifier,
+            enabled = bottomButton.isEnabled,
+            onClick = bottomButton.onClick,
         )
     }
 }
@@ -330,6 +346,7 @@ private fun TokenSummaryContentLoadingPreview() {
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Loading,
                 tokenSentiment = TokenSentimentUM.Loading,
+                bottomButton = BottomButtonUM.Loading,
             ),
             contentPadding = PaddingValues.Zero,
             modifier = Modifier
@@ -348,6 +365,26 @@ private fun TokenSummaryContentEmptyPreview() {
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Empty,
                 tokenSentiment = TokenSentimentUM.Empty,
+                bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
+            ),
+            contentPadding = PaddingValues.Zero,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors3.bg.primary),
+        )
+    }
+}
+
+@Preview(name = "Swap unavailable · Light", showBackground = true, widthDp = 360)
+@Preview(name = "Swap unavailable · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
+@Composable
+private fun TokenSummaryContentSwapUnavailablePreview() {
+    TangemThemePreviewRedesign {
+        TokenSummaryContent(
+            tokenSummary = previewTokenSummary(
+                periodPickerUm = PeriodPickerUM.Empty,
+                tokenSentiment = previewContentSentiment,
+                bottomButton = previewBottomButton(isEnabled = false),
             ),
             contentPadding = PaddingValues.Zero,
             modifier = Modifier
