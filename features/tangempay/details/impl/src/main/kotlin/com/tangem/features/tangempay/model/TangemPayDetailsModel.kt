@@ -26,6 +26,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -84,6 +85,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
+    tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -97,8 +99,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val userWalletId
         get() = currentStatus.value.userWalletId
 
-    val cryptoCurrency
-        get() = currentStatus.value.cryptoCurrency
+    val cryptoCurrency: CryptoCurrency.Token = tangemPayCurrencyFactory.create(userWalletId)
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
