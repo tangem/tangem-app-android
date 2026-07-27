@@ -2,9 +2,9 @@ package com.tangem.domain.polymarket.approval
 
 /**
  * Polygon (chainId 137) Polymarket contract addresses and deposit-wallet CREATE2 constants — single
- * source of truth. Address constants are stored as published by Polymarket (case-insensitive; the calldata
- * encoder lowercases them). [UUPS_INIT_CONST1] / [UUPS_INIT_CONST2] are raw init-code bytes used verbatim
- * in the deposit-wallet derivation.
+ * source of truth. Address constants are stored as published by Polymarket; their checksum casing is not
+ * significant to consumers (hex parsing and the calldata encoder are both case-insensitive).
+ * [UUPS_INIT_CONST1] / [UUPS_INIT_CONST2] are raw init-code bytes used verbatim in the deposit-wallet derivation.
  */
 object PolymarketContracts {
 
