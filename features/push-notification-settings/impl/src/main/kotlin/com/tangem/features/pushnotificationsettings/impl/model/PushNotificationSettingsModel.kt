@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
@@ -23,6 +24,7 @@ import com.tangem.domain.pushnotificationpreferences.UpdateWalletPushNotificatio
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
@@ -50,6 +52,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -67,6 +70,8 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val setNotificationsEnabled: SetNotificationsEnabledUseCase,
     private val isFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase,
     private val markFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase,
+    private val applyFirstActivation: ApplyPushNotificationFirstActivationUseCase,
+    private val notificationsRepository: NotificationsRepository,
 ) : Model() {
 
     private val params: PushNotificationSettingsComponent.Params = paramsContainer.require()
@@ -76,6 +81,7 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val osNotificationsEnabled = MutableStateFlow(systemNotificationsStateProvider.areNotificationsEnabled())
 
     private var pendingPermissionToggle: ToggleSpec? = null
+    private val wasAutoActivationAttempted = AtomicBoolean(false)
     private val preferencesJobHolder = JobHolder()
 
     private val cachedPrefs: WalletPushNotificationPreferences?
@@ -122,6 +128,7 @@ internal class PushNotificationSettingsModel @Inject constructor(
 
     fun onResume() {
         osNotificationsEnabled.value = systemNotificationsStateProvider.areNotificationsEnabled()
+        if (cachedPrefs != null) autoApplyFirstActivationIfNeeded()
     }
 
     fun onPermissionResult(isGranted: Boolean) {
@@ -156,9 +163,32 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 // Fall to Failed only when nothing is cached yet; otherwise keep showing the last value.
                 if (loadState.value !is LoadState.Content) loadState.value = LoadState.Failed
             }
-            .onEach { value -> loadState.value = LoadState.Content(value) }
+            .onEach { value ->
+                loadState.value = LoadState.Content(value)
+                autoApplyFirstActivationIfNeeded()
+            }
             .launchIn(modelScope)
             .saveIn(preferencesJobHolder)
+    }
+
+    /**
+     * Silently re-applies the first-activation rule once preferences are loaded: the grant-time attempt
+
+     */
+    private fun autoApplyFirstActivationIfNeeded() {
+        if (!wasAutoActivationAttempted.compareAndSet(false, true)) return
+        modelScope.launch(dispatchers.io) {
+            val areGatesPassed = osNotificationsEnabled.value &&
+                notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
+            if (areGatesPassed) {
+                // Deliberately not retried on failure within this screen instance: a retry fired by the
+                // cache echo of a manual toggle write would force-enable all three against the user's choice.
+                applyFirstActivation(userWalletId)
+            } else {
+                // A gate miss is not an attempt — onResume may retry after the OS state changes.
+                wasAutoActivationAttempted.set(false)
+            }
+        }
     }
 
     private fun buildContent(
