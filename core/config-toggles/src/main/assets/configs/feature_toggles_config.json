@@ -110,5 +110,17 @@
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1638_VA_MVP0_ENABLED",
+        "version": "6.0.1"
+    },
+    {
+        "name": "TWI_1637_CASHBACK_AND_REACTIVATION_CAMPAIGNS_ENABLED",
+        "version": "6.0.1"
+    },
+    {
+        "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
+        "version": "6.0.1"
     }
 ]
