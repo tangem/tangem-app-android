@@ -17,7 +17,9 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletIcon
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
+import com.tangem.features.foryou.impl.tokensummary.model.SwapHolding
 import com.tangem.features.foryou.impl.tokensummary.swapchooser.SwapTokenChooserComponent
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -39,7 +41,7 @@ import java.math.BigDecimal
 
 /**
  * The chooser only renders the holdings resolved by the parent, so the tests drive
- * [SwapTokenChooserComponent.Params.entries] and assert what lands in [SwapTokenChooserModel.content].
+ * [SwapTokenChooserComponent.Params.holdings] and assert what lands in [SwapTokenChooserModel.content].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -49,7 +51,7 @@ internal class SwapTokenChooserModelTest {
     private val ethereum = currencyFactory.createCoin(Blockchain.Ethereum)
     private val ethereumStatus = CryptoCurrencyStatus(currency = ethereum, value = loadedValue())
 
-    private val entries = MutableStateFlow<List<TokenSelectorEntry>>(value = emptyList())
+    private val holdings = MutableStateFlow<List<SwapHolding>>(value = emptyList())
 
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
@@ -67,7 +69,7 @@ internal class SwapTokenChooserModelTest {
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
 
-        entries.value = listOf(entry(WALLET_ID), entry(OTHER_WALLET_ID))
+        holdings.value = listOf(holding(WALLET_ID), holding(OTHER_WALLET_ID))
     }
 
     @Test
@@ -89,9 +91,10 @@ internal class SwapTokenChooserModelTest {
         }
 
     @Test
-    fun `GIVEN a rendered holding WHEN it is clicked THEN it is reported with its own wallet`() = runTest {
-        // Arrange
-        entries.value = listOf(entry(OTHER_WALLET_ID))
+    fun `GIVEN a rendered holding WHEN it is clicked THEN the holding it came from is reported`() = runTest {
+        // Arrange — an unavailable holding is rendered like any other; the parent decides what its click does
+        val unavailable = holding(OTHER_WALLET_ID, ScenarioUnavailabilityReason.SingleWallet)
+        holdings.value = listOf(unavailable)
         val model = createModel()
         advanceUntilIdle()
 
@@ -105,7 +108,8 @@ internal class SwapTokenChooserModelTest {
         item?.onClick?.invoke()
 
         // Assert
-        verify(exactly = 1) { callbacks.onTokenSelected(OTHER_WALLET_ID, ethereumStatus) }
+        verify(exactly = 1) { callbacks.onHoldingSelected(unavailable) }
+        verify(exactly = 0) { callbacks.onDismiss() }
 
         model.onDestroy()
     }
@@ -117,7 +121,7 @@ internal class SwapTokenChooserModelTest {
         advanceUntilIdle()
 
         // Act
-        entries.value = emptyList()
+        holdings.value = emptyList()
         advanceUntilIdle()
 
         // Assert — the parent only opens the chooser for holdings it has, so an empty list is not a loading state
@@ -131,7 +135,7 @@ internal class SwapTokenChooserModelTest {
     fun `GIVEN balance hiding is on WHEN model created THEN balances are hidden`() = runTest {
         // Arrange
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
-        entries.value = listOf(entry(WALLET_ID))
+        holdings.value = listOf(holding(WALLET_ID))
         val model = createModel()
 
         // Act
@@ -151,6 +155,11 @@ internal class SwapTokenChooserModelTest {
 
     // region arrange helpers
 
+    private fun holding(
+        walletId: UserWalletId,
+        reason: ScenarioUnavailabilityReason = ScenarioUnavailabilityReason.None,
+    ) = SwapHolding(entry = entry(walletId), unavailabilityReason = reason)
+
     private fun entry(walletId: UserWalletId) = TokenSelectorEntry(
         wallet = wallet(walletId),
         account = portfolio(walletId),
@@ -167,7 +176,7 @@ internal class SwapTokenChooserModelTest {
     }
 
     private fun TestScope.createModel(): SwapTokenChooserModel {
-        val params = SwapTokenChooserComponent.Params(entries = entries, callbacks = callbacks)
+        val params = SwapTokenChooserComponent.Params(holdings = holdings, callbacks = callbacks)
 
         return SwapTokenChooserModel(
             paramsContainer = MutableParamsContainer(params),
