@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.signing
 
 import arrow.core.left
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
@@ -10,6 +11,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.polymarket.builder.PolymarketTypedDataBuilder
 import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -83,13 +85,23 @@ internal class DefaultPolymarketTypedDataSignerTest {
         nonce = "0",
         deadline = "1735690200",
         calls = listOf(
-            PolymarketApprovalCall(target = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB", value = "0", data = "0x095ea7b3"),
+            PolymarketApprovalCall(
+                target = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB",
+                value = "0",
+                data = "0x095ea7b3",
+            ),
         ),
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(userWalletsListRepository, derivationsRepository, cardSdkConfigRepository, hotSignerFactory, transactionSigner)
+        clearMocks(
+            userWalletsListRepository,
+            derivationsRepository,
+            cardSdkConfigRepository,
+            hotSignerFactory,
+            transactionSigner,
+        )
         mockkStatic(UserWalletsListRepository::getSyncStrict)
     }
 
@@ -172,6 +184,24 @@ internal class DefaultPolymarketTypedDataSignerTest {
             batchSignature = formatter.format(sign(hashes.captured[1]), hashes.captured[1], publicKey.captured),
         )
         assertThat(result.getOrNull()).isEqualTo(expected)
+        val ownerAddress = PolymarketAddressFactory().createAddress(ownerKey)
+        val expectedClobDigest = EthereumUtils.makeTypedDataHash(
+            PolymarketTypedDataBuilder.buildClobAuth(
+                address = ownerAddress,
+                timestamp = clobAuth.timestamp,
+                nonce = clobAuth.nonce,
+            ),
+        )
+        val expectedBatchDigest = EthereumUtils.makeTypedDataHash(
+            PolymarketTypedDataBuilder.buildApprovalsBatch(
+                depositWallet = approvals.depositWalletAddress,
+                nonce = approvals.nonce,
+                deadline = approvals.deadline,
+                calls = approvals.calls,
+            ),
+        )
+        assertThat(hashes.captured[0]).isEqualTo(expectedClobDigest)
+        assertThat(hashes.captured[1]).isEqualTo(expectedBatchDigest)
     }
 
     @Test
@@ -180,9 +210,11 @@ internal class DefaultPolymarketTypedDataSignerTest {
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey()
         stubColdSigner()
+        val hashes = slot<List<ByteArray>>()
         val publicKey = slot<Wallet.PublicKey>()
-        coEvery { transactionSigner.sign(any<List<ByteArray>>(), capture(publicKey)) } returns
-            CompletionResult.Success(listOf(SIGNATURE_A.hexToBytes(), SIGNATURE_B.hexToBytes()))
+        coEvery { transactionSigner.sign(capture(hashes), capture(publicKey)) } answers {
+            CompletionResult.Success(hashes.captured.map { sign(it) })
+        }
 
         // Act
         signer.signOnboarding(userWalletId, clobAuth, approvals)
@@ -237,6 +269,60 @@ internal class DefaultPolymarketTypedDataSignerTest {
 
     internal data class SigningFailureModel(val error: TangemSdkError, val expected: PolymarketSigningError)
 
+    @Test
+    fun `GIVEN clob auth only WHEN signClobAuth THEN signs a single hash`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+        stubDerivedKey()
+        stubColdSigner()
+        val hashes = slot<List<ByteArray>>()
+        val publicKey = slot<Wallet.PublicKey>()
+        coEvery { transactionSigner.sign(capture(hashes), capture(publicKey)) } answers {
+            CompletionResult.Success(hashes.captured.map { sign(it) })
+        }
+
+        // Act
+        val result = signer.signClobAuth(userWalletId, clobAuth)
+
+        // Assert
+        assertThat(hashes.captured).hasSize(1)
+        assertThat(result.getOrNull()).isEqualTo(
+            PolymarketSignatureFormatter().format(sign(hashes.captured[0]), hashes.captured[0], publicKey.captured),
+        )
+    }
+
+    @Test
+    fun `GIVEN hot wallet WHEN signOnboarding THEN uses the hot signer`() = runTest {
+        // Arrange
+        val hotWallet = mockk<UserWallet.Hot> {
+            every { walletId } returns userWalletId
+            every { wallets } returns listOf(
+                com.tangem.domain.models.MobileWallet(
+                    publicKey = seedKey,
+                    chainCode = null,
+                    curve = EllipticCurve.Secp256k1,
+                    derivedKeys = emptyMap(),
+                ),
+            )
+        }
+        val hotSigner = mockk<TangemHotWalletSigner>()
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet
+        every { hotSignerFactory.create(hotWallet) } returns hotSigner
+        stubDerivedKey()
+        val hashes = slot<List<ByteArray>>()
+        coEvery { hotSigner.sign(capture(hashes), any()) } answers {
+            CompletionResult.Success(hashes.captured.map { sign(it) })
+        }
+
+        // Act
+        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { hotSigner.sign(any<List<ByteArray>>(), any()) }
+        coVerify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) }
+    }
+
     private fun provideTestModels() = listOf(
         SigningFailureModel(TangemSdkError.UserCancelled(), PolymarketSigningError.UserCancelled),
         SigningFailureModel(TangemSdkError.WalletNotFound(), PolymarketSigningError.MissingWallet),
@@ -246,7 +332,5 @@ internal class DefaultPolymarketTypedDataSignerTest {
     private companion object {
         const val CHAIN_CODE_SIZE = 32
         val OWNER_PRIVATE_KEY: BigInteger = BigInteger.ONE
-        val SIGNATURE_A = "11".repeat(64)
-        val SIGNATURE_B = "22".repeat(64)
     }
 }
