@@ -15,4 +15,7 @@ dependencies {
 
     /** Domain */
     api(projects.domain.models)
+
+    /** Compose */
+    implementation(deps.compose.runtime)
 }
