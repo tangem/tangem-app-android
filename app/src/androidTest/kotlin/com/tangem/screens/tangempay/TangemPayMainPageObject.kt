@@ -27,6 +27,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val tileBalance: KNode = child {
+        hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE_BALANCE)
+        useUnmergedTree = true
+    }
+
     val balance: KNode = child {
         hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE)
         useUnmergedTree = true
