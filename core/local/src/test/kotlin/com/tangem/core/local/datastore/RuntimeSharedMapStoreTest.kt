@@ -125,11 +125,12 @@ internal class RuntimeSharedMapStoreTest {
     }
 
     @Test
-    fun `GIVEN absent key WHEN updateIfPresent THEN it is a no-op and no entry is created`() = runTest {
+    fun `GIVEN absent key WHEN updateIfPresent THEN it is a no-op and store stays uninitialized`() = runTest {
         store.updateIfPresent(key = "a") { it + 1 }
 
         assertThat(store.getSyncOrNull(key = "a")).isNull()
         assertThat(store.contains(key = "a")).isFalse()
+        assertThat(store.getAllSyncOrNull()).isNull()
     }
 
     @Test
@@ -139,5 +140,15 @@ internal class RuntimeSharedMapStoreTest {
         store.updateIfPresent(key = "a") { it + 1 }
 
         assertThat(store.getSyncOrNull(key = "a")).isEqualTo(6)
+    }
+
+    @Test
+    fun `GIVEN initialized store WHEN updateIfPresent on absent key THEN no-op and key not created`() = runTest {
+        store.store(key = "a", value = 1)
+
+        store.updateIfPresent(key = "b") { it + 1 }
+
+        assertThat(store.contains(key = "b")).isFalse()
+        assertThat(store.getSyncOrNull(key = "a")).isEqualTo(1)
     }
 }
