@@ -2,16 +2,14 @@ package com.tangem.features.tangempay.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 
 internal data class ButtonState(
     val text: TextReference,
     val onClick: () -> Unit,
-    val startIcon: ImageReference.Res? = null,
 )
 
-internal data class TangemPayTxHistoryDetailsUMV2(
+internal data class TangemPayTxHistoryDetailsUM(
     val isBalanceHidden: Boolean,
     val title: TextReference,
     val subtitle: TextReference,
