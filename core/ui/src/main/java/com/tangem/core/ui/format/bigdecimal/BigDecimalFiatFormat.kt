@@ -97,7 +97,7 @@ fun BigDecimalFiatFormatStyled.defaultAmount(spanStyleReference: SpanStyleRefere
         value.zeroIfRoundsToZero(FIAT_MARKET_DEFAULT_DIGITS)
     }
 
-    val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
+    val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.monetaryDecimalSeparator
     val currencySymbol = formatterCurrency.getSymbol(locale)
     val rawFormatted = formatter.format(formattingAmount)
 
@@ -200,7 +200,7 @@ private fun BigDecimalFiatFormatStyled.price(spanStyleReference: SpanStyleRefere
         roundingMode = RoundingMode.HALF_UP
     }
 
-    val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
+    val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.monetaryDecimalSeparator
     val currencySymbol = formatterCurrency.getSymbol(locale)
     val rawFormatted = formatter.format(priceAmount)
 
