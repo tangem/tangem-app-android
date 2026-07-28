@@ -58,21 +58,24 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /**
      * Express status plaque under the two-asset block. The UI animates between successive emissions.
      *
-     * @property severity Plaque colors (background tint + text/icon color).
+     * @property style Visual identity of the status — selects the plaque colors, the trailing glyph and the title
+     * motion together. One value per distinct look, so a terminal whose glyph diverges from a plain colour (the grey
+     * [Expired][Style.Expired] clock, the red [Refunded][Style.Refunded] arrow) is its own entry rather than a colour
+     * plus a separate glyph override.
      * @property title Status line, e.g. "Awaiting funds" / "Confirmed" / "Failed".
      * @property subtitle Optional second line (e.g. the refund hint on a failed terminal). May carry a styled
      * tappable part (e.g. the "Learn more" of the refunded terminal) — rendered as an annotated reference.
-     * @property isLoading `true` → trailing rotating loader (in-progress); `false` → static [severity] glyph.
+     * @property isLoading `true` → trailing rotating loader (in-progress); `false` → the [style]'s static glyph.
      */
     data class StatusBannerUM(
-        val severity: Severity,
+        val style: Style,
         val title: TextReference,
         val subtitle: TextReference? = null,
         val isLoading: Boolean,
     ) {
 
-        /** Visual severity of the [StatusBannerUM] — selects the background tint and the text/icon color. */
-        enum class Severity { Info, Success, Error, Warning }
+        /** Visual identity of the [StatusBannerUM] — drives the plaque colors, the trailing glyph and the title motion. */
+        enum class Style { Info, Success, Warning, Error, Refunded, Expired }
     }
 
     /**
