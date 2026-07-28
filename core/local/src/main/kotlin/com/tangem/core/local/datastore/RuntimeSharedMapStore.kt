@@ -47,10 +47,12 @@ interface RuntimeSharedMapStore<K : Any, V : Any> {
     suspend fun update(key: K, default: V, transform: (V) -> V)
 
     /**
-     * Atomically update the value under [key] only if it is already present.
+     * Update the value under [key] only if it is already present.
      *
+     * The presence check and the mutation both run under the store's mutex, so a concurrent insert of
 
-     * race with concurrent updates of the same [key].
+     * the mutex is a short-circuit when the store has never been written to — that keeps
+     * [getAllSyncOrNull] returning null if nothing has ever been stored.
      */
     suspend fun updateIfPresent(key: K, transform: (V) -> V)
 
@@ -95,6 +97,8 @@ interface RuntimeSharedMapStore<K : Any, V : Any> {
             }
 
             override suspend fun updateIfPresent(key: K, transform: (V) -> V) {
+                if (store.getSyncOrNull() == null) return
+
                 store.update(default = emptyMap()) { map ->
                     val current = map[key] ?: return@update map
                     map + (key to transform(current))
