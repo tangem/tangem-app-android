@@ -44,9 +44,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
             is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] {auto-filled subject}"
-            is FeedbackEmailType.Visa.Dispute,
-            is FeedbackEmailType.Visa.DisputeV2,
-            -> "[Visa] [DISPUTE] {auto-filled subject}"
+            is FeedbackEmailType.Visa.Dispute -> "[Visa] [DISPUTE] {auto-filled subject}"
             is FeedbackEmailType.Visa.Withdrawal -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
             is FeedbackEmailType.Visa.FeatureIsBeta -> "[VISA] [FEEDBACK]"
             is FeedbackEmailType.Visa.KycRejected -> "Tangem Pay - [VISA] [KYC REJECTED]"
