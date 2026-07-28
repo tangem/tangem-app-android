@@ -22,6 +22,9 @@ import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHist
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
+import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkComponent
+import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksComponent
+import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.utils.toRequisitesRows
@@ -184,6 +187,27 @@ internal class TangemPayDetailsComponent(
                     feeCurrency = navigation.feeCurrency,
                     fiatBalance = navigation.fiatBalance,
                     listener = model,
+                ),
+            )
+            is TangemPayDetailsNavigation.ChooseNetwork -> PaymentChooseNetworkComponent(
+                appComponentContext = context,
+                params = PaymentChooseNetworkComponent.Params(
+                    walletId = navigation.walletId,
+                    listener = model,
+                ),
+            )
+            is TangemPayDetailsNavigation.OtherNetworks -> PaymentOtherNetworksComponent(
+                appComponentContext = context,
+                params = PaymentOtherNetworksComponent.Params(
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                ),
+            )
+            is TangemPayDetailsNavigation.PaymentReceive -> PaymentReceiveComponent(
+                appComponentContext = context,
+                params = PaymentReceiveComponent.Params(
+                    walletId = navigation.walletId,
+                    networkRawId = navigation.networkRawId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
         }
