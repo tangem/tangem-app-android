@@ -44,6 +44,8 @@ import com.tangem.features.tangempay.components.TangemPayIssueAdditionalCardComp
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.model.transformers.*
+import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
+import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.utils.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
@@ -53,10 +55,10 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
@@ -88,7 +90,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
     AddFundsListener,
-    TangemPayIssueAdditionalCardComponent.Listener {
+    TangemPayIssueAdditionalCardComponent.Listener,
+    ChooseNetworkListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
@@ -427,17 +430,40 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickReceive(data: TangemPayTopUpData) {
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
-        val config = TokenReceiveConfig(
-            shouldShowWarning = true,
-            cryptoCurrency = data.currency,
-            userWalletId = data.walletId,
-            showMemoDisclaimer = false,
-            receiveAddress = data.receiveAddress,
-        )
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
+        val loaded = currentStatus.value.ifLoadedOrNull { it }
+        val shouldChooseNetwork = loaded != null &&
+            shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, loaded.networks)
+        if (shouldChooseNetwork) {
+            bottomSheetNavigation.activate(TangemPayDetailsNavigation.ChooseNetwork(walletId = data.walletId))
+        } else {
+            val config = TokenReceiveConfig(
+                shouldShowWarning = true,
+                cryptoCurrency = data.currency,
+                userWalletId = data.walletId,
+                showMemoDisclaimer = false,
+                receiveAddress = data.receiveAddress,
+            )
+            bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
+        }
     }
 
     override fun onDismissAddFunds() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    override fun onSelectAvailable(networkRawId: String) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.PaymentReceive(walletId = userWalletId, networkRawId = networkRawId),
+        )
+    }
+
+    override fun onSelectDisabled() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayDetailsNavigation.OtherNetworks)
+    }
+
+    override fun onDismiss() {
         bottomSheetNavigation.dismiss()
     }
 
