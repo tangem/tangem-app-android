@@ -18,9 +18,9 @@ import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import com.tangem.features.tangempay.entity.TransactionLoadState
-import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverterV2
+import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -61,7 +61,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
         detail to loadState
     }
 
-    val uiState: StateFlow<TangemPayTxHistoryDetailsUMV2> = combine(
+    val uiState: StateFlow<TangemPayTxHistoryDetailsUM> = combine(
         balanceHidingSettings.isBalanceHidden(),
         cardState,
         cashbackState,
@@ -137,9 +137,9 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
         transactionLoadState: TransactionLoadState,
         cashbackDetail: TangemPayTxHistoryItem.Cashback?,
         cashbackLoadState: TransactionLoadState,
-    ): TangemPayTxHistoryDetailsUMV2 {
-        return TangemPayTxHistoryDetailsConverterV2.convert(
-            value = TangemPayTxHistoryDetailsConverterV2.Input(
+    ): TangemPayTxHistoryDetailsUM {
+        return TangemPayTxHistoryDetailsConverter.convert(
+            value = TangemPayTxHistoryDetailsConverter.Input(
                 item = transaction,
                 isBalanceHidden = isBalanceHidden,
                 transactionLoadState = transactionLoadState,
@@ -166,7 +166,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
             val walletMetaInfo = getWalletMetaInfoUseCase.invoke(params.userWalletId).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase.invoke(
-                FeedbackEmailType.Visa.DisputeV2(
+                FeedbackEmailType.Visa.Dispute(
                     item = params.transaction,
                     walletMetaInfo = walletMetaInfo,
                     customerId = customerId,

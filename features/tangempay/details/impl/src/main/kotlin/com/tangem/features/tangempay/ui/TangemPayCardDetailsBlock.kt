@@ -618,7 +618,7 @@ private fun TangemPayCardDetailsCustomButton(
 
 @Preview(widthDp = 400, heightDp = 700, showBackground = true)
 @Composable
-private fun TangemPayCardDetailsBlockV2Preview(
+private fun TangemPayCardDetailsBlockPreview(
     @PreviewParameter(TangemPayCardDetailsUMProvider::class) state: TangemPayCardDetailsUM,
 ) {
     TangemThemePreview(isDark = true) {
