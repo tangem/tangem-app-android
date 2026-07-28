@@ -718,10 +718,16 @@
   <string name="feedback_subject_support_tangem">Comentarios en Tangem</string>
   <string name="feedback_subject_tx_failed">No se puede completar una transacción</string>
   <string name="feedback_token_description_error">Error de descripción de moneda</string>
-  <string name="force_update_banner_message">Actualice la aplicación a la última versión para garantizar su correcto funcionamiento</string>
-  <string name="force_update_banner_title">Se necesita actualizar</string>
+  <string name="force_update_action">Actualizar ahora</string>
+  <string name="force_update_banner_message">Actualice la aplicación Tangem para desbloquear nuevas funciones y disfrutar de las últimas mejoras.</string>
+  <string name="force_update_banner_title">Nueva versión disponible</string>
+  <string name="force_update_brick_description">Tangem no funciona con esta versión del sistema operativo. Sus fondos están a salvo y puede seguir utilizando su billetera en otro dispositivo compatible.</string>
+  <string name="force_update_brick_title">Actualización no disponible</string>
   <string name="force_update_button">Actualizar</string>
-  <string name="force_update_warning_message">Por favor, actualice la aplicación a la última versión para garantizar su correcto funcionamiento.</string>
+  <string name="force_update_os_description">Su sistema operativo está desactualizado. Tangem seguirá funcionando por ahora, pero tendrá que actualizarlo para recibir futuras actualizaciones de la aplicación.</string>
+  <string name="force_update_os_title">Actualice su sistema operativo</string>
+  <string name="force_update_required_action">Actualizar la app</string>
+  <string name="force_update_warning_message">Actualice Tangem a la última versión para seguir utilizando la aplicación.</string>
   <string name="force_update_warning_title">Es necesario actualizar</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Fondos insuficientes</string>
   <string name="gasless_transaction_fee">Tarifa de transacción</string>
@@ -903,6 +909,7 @@
   <string name="markets_portfolio_block_subtitle">En su portafolio</string>
   <string name="markets_portfolio_block_title">Su portafolio</string>
   <string name="markets_portfolio_block_token_unsupported">**Token no soportado**. Este token no está soportado actualmente en la billetera.</string>
+  <string name="markets_portfolio_eligible_block_title">Otros tokens elegibles</string>
   <string name="markets_pulse_common_title">Análisis del Mercado</string>
   <string name="markets_quick_actions">Acciones rápidas</string>
   <string name="markets_search_clear_all_hints">Borrar todo</string>
@@ -1587,6 +1594,7 @@
   <string name="staking_error_no_validators_message">No hay validadores disponibles en este momento. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="staking_error_no_validators_title">Staking no disponible</string>
   <string name="staking_error_unavailable_region">Staking no está disponible en tu región.</string>
+  <string name="staking_error_unavailable_region_description">Actualmente, el staking no está disponible en su región. Si tiene activada una VPN, pruebe a desactivarla.</string>
   <string name="staking_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que usted está autorizando el uso de su token para el staking.</string>
   <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
@@ -1697,7 +1705,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
   <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
   <string name="support_chat_screen_title">Chat de soporte</string>
-  <string name="support_chat_share_logs_button">Adjuntar registros de la aplicación</string>
+  <string name="support_chat_share_logs_button">Adjuntar logs de la app</string>
   <string name="support_chat_swap_prefilled_message">Datos de la operación SWAP:\nDe: %1$s %2$s\nPara: %3$s %4$s\nPor %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Abrir chat</string>
   <string name="support_selector_view_email_button">Abrir correo</string>
