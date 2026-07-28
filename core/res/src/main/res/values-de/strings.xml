@@ -281,6 +281,7 @@
   <string name="common_added">Hinzugefügt</string>
   <string name="common_address">Vertragsadresse</string>
   <string name="common_all">Alle</string>
+  <string name="common_all_accounts">Alle Konten</string>
   <string name="common_allow">Erlauben</string>
   <string name="common_amount">Betrag</string>
   <string name="common_analytics">Analysen</string>
@@ -329,6 +330,7 @@
   <string name="common_create">Erstellen</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Eigen</string>
+  <string name="common_day">Tag</string>
   <plurals name="common_days">
     <item quantity="one">%d tag</item>
     <item quantity="other">%d tage</item>
@@ -403,7 +405,22 @@
     <item quantity="other">%dMinuten her</item>
   </plurals>
   <string name="common_month">Monat</string>
+  <string-array name="common_month_in">
+    <item>Januar</item>
+    <item>Februar</item>
+    <item>März</item>
+    <item>April</item>
+    <item>Mai</item>
+    <item>Juni</item>
+    <item>Juli</item>
+    <item>August</item>
+    <item>September</item>
+    <item>Oktober</item>
+    <item>November</item>
+    <item>Dezember</item>
+  </string-array>
   <string name="common_more">Mehr</string>
+  <string name="common_negative">Negativ</string>
   <string name="common_network">Netzwerk</string>
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
@@ -411,6 +428,7 @@
     <item quantity="one">%d Netzwerk</item>
     <item quantity="other">%d Netzwerke</item>
   </plurals>
+  <string name="common_neutral">Neutral</string>
   <string name="common_new_address">Neue Adresse</string>
   <string name="common_news">Nachrichten</string>
   <string name="common_next">Weiter</string>
@@ -418,6 +436,7 @@
   <string name="common_no">Nein</string>
   <string name="common_no_address">Keine Adresse</string>
   <string name="common_no_results">Keine Ergebnisse gefunden</string>
+  <string name="common_none">Keine</string>
   <string name="common_not_added">Nicht hinzugefügt</string>
   <string name="common_not_available">Nicht verfügbar</string>
   <string name="common_not_now">Nicht jetzt</string>
@@ -431,6 +450,7 @@
   <string name="common_other">Sonstiges</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
+  <string name="common_positive">Positiv</string>
   <string name="common_privacy_policy">Datenschutzrichtlinie</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -732,6 +752,7 @@
   <string name="for_you_description">Portfolio prüfen und Verdienstmöglichkeiten erkunden</string>
   <string name="for_you_earn_opportunities">Verdienstmöglichkeiten</string>
   <string name="for_you_earn_opportunities_all_tokens_active">Alle Ihre Ressourcen sind im Einsatz – entdecken Sie neue Möglichkeiten</string>
+  <string name="for_you_earn_opportunities_explore">Alle Token entdecken</string>
   <string name="for_you_earn_opportunities_no_available_tokens">Erhalten Sie jährlich bis zu %1$s</string>
   <string name="for_you_earn_opportunities_tokens_rewards">Maximale potenzielle Gewinne %1$s</string>
   <string name="for_you_earn_per_year">%1$s/Jahr</string>
@@ -745,6 +766,7 @@
   <string name="force_update_button">Update</string>
   <string name="force_update_os_description">Ihr Betriebssystem ist veraltet. Bitte aktualisieren Sie es, um die App weiterhin nutzen zu können.</string>
   <string name="force_update_os_title">Aktualisieren Sie Ihr Betriebssystem</string>
+  <string name="force_update_required_action">App aktualisieren</string>
   <string name="force_update_warning_message">Bitte aktualisiere die Anwendung auf die neueste Version, um eine einwandfreie Funktion zu gewährleisten.</string>
   <string name="force_update_warning_title">Aktualisierung erforderlich</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Nicht genügend Mittel</string>
@@ -1317,6 +1339,8 @@
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
+  <string name="prediction_account_subtitle">Guthaben aufladen und mit den Vorhersagen beginnen</string>
+  <string name="prediction_account_title">Prognosekonto</string>
   <string name="promo_campaign_already_activated_subtitle">Berechtigte Cashback-Zahlungen werden wie folgt ausgezahlt:</string>
   <string name="promo_campaign_already_activated_title">Sie sind bereits eingeschrieben in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Zulässige Token</string>
@@ -1626,7 +1650,7 @@
   <string name="staking_error_no_validators_message">Zurzeit sind keine Validierer verfügbar. Bitte versuche es später noch einmal.</string>
   <string name="staking_error_no_validators_title">Staking nicht verfügbar</string>
   <string name="staking_error_unavailable_region">Staking ist in Ihrer Region nicht verfügbar.</string>
-  <string name="staking_error_unavailable_region_description">Staking ist in Ihrer Region derzeit nicht verfügbar. Falls Sie ein VPN aktiviert haben, deaktivieren Sie es bitte.</string>
+  <string name="staking_error_unavailable_region_description">Staking ist in Deiner Region derzeit nicht verfügbar. Falls Du ein VPN aktiviert hast, deaktiviere es bitte.</string>
   <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
   <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
@@ -1840,6 +1864,12 @@
   <string name="tangem_pay_terms_fees_limits">Bedingungen, Gebühren &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Der Mindestbetrag für den Versand beträgt %1$s.</string>
+  <string name="tangem_pay_transaction_details_cashback_cap_reached">Monatslimit erreicht</string>
+  <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC ausgeschlossen</string>
+  <string name="tangem_pay_transaction_details_cashback_none">Kein Cashback</string>
+  <string name="tangem_pay_transaction_details_cashback_refund">Rückgabe des Kaufs</string>
+  <string name="tangem_pay_transaction_details_cashback_region_excluded">Ausgeschlossene Region</string>
   <string name="tangem_pay_transaction_details_category">Kategorie</string>
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">Eine Gebühr wird gemäß den Servicetarifen erhoben</string>
@@ -1949,16 +1979,25 @@
   <string name="tangempay_cashback_additional_until">Bis %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Dies geschah aufgrund Ihres verdächtigen Verhaltens. Wenden Sie sich an den Support, um mehr zu erfahren.</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deaktiviert</string>
+  <string name="tangempay_cashback_deposit_banner">Der Cashback- %1$s -Betrag für %2$s wird bis zum %3$s</string>
   <string name="tangempay_cashback_deposited_on">Wird eingezahlt am %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s maximal pro Monat</string>
   <string name="tangempay_cashback_details_eu_excluded">Kein Cashback für Einkäufe vor Ort bei Händlern in der EU</string>
   <string name="tangempay_cashback_details_paid_in">Bezahlt in %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% Bei allen Einkäufen mit Ihren „ %2$s “-Karten gilt ein Mindestumsatz von %3$s</string>
+  <string name="tangempay_cashback_earned_title">%1$s verdient in %2$s</string>
+  <string name="tangempay_cashback_empty_subtitle">Der gesammelte Betrag wird hier angezeigt</string>
+  <string name="tangempay_cashback_empty_title">Fangen Sie an, Geld auszugeben\nund Cashback zu verdienen</string>
   <string name="tangempay_cashback_error_title">Die Seite konnte nicht geladen werden.\nZum Neuladen bitte antippen</string>
+  <string name="tangempay_cashback_rate_subtitle">Mit Ihrem „ %1$s “-Tarif</string>
+  <string name="tangempay_cashback_rate_title">Cashback %1$s%%</string>
+  <string name="tangempay_cashback_rate_title_up_to">Cashback bis zu %1$s%%</string>
   <string name="tangempay_cashback_refund_banner">Wir haben eine Rückerstattung für einen Kauf erhalten, für den zuvor bereits Cashback gewährt worden war</string>
+  <string name="tangempay_cashback_title">Cashback</string>
   <string name="tangempay_cashback_total_earned">%1$s insgesamt verdient</string>
   <string name="tangempay_cashback_widget_title">%1$s Cashback in %2$s</string>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
+  <string name="tangempay_changing_plan">Deinen Tarif ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
   <string name="tangempay_common_error_loading">Fehler beim Laden</string>
@@ -2028,6 +2067,9 @@
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_main_select_plan">Tarif auswählen</string>
   <string name="tangempay_maximum_cards_issued_description">Du kannst bis zu 3 Karten haben. Lösche eine, um eine neue Karte hinzuzufügen.</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade-Plan für mehr Karten</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_title">Das Kartenlimit für diesen Tarif wurde erreicht</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade-Plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximale Anzahl ausgegebener Karten</string>
   <string name="tangempay_newonboard_Q1_body">Ja — für die Nutzung einer regulierten Visa-Karte ist eine Identitätsprüfung Pflicht. Das KYC wird von Sumsub abgewickelt, dem Compliance-Partner.</string>
   <string name="tangempay_newonboard_Q1_title">Muss ich meine Dokumente teilen?</string>
@@ -2115,8 +2157,11 @@
   <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
+  <string name="tangempay_va_account_details">Kontodetails</string>
+  <string name="tangempay_va_available_to_deposit_day">Täglich zur Einzahlung verfügbar:</string>
   <string name="tangempay_va_banking_details_error_description">Bitte versuche es später erneut. Sollte das Problem weiterhin bestehen, kontaktiere bitte unseren Support. Wir helfen Dir gerne bei der Lösung.</string>
   <string name="tangempay_va_banking_details_error_title">Die Bankdaten konnten nicht geladen werden</string>
+  <string name="tangempay_va_limit_resetting_everyday">Das Limit wird jeden Tag zurückgesetzt</string>
   <string name="tangempay_visa_benefits">Visavorteile</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
@@ -2164,6 +2209,7 @@
   <string name="token_summary_last_update_subtitle">Letzte Aktualisierung: %1$s</string>
   <string name="token_summary_negative_outlook_title">Negativer Ausblick</string>
   <string name="token_summary_neutral_outlook_title">Neutraler Ausblick</string>
+  <string name="token_summary_outlook_is_not_available">Outlook für dieses Token ist nicht verfügbar</string>
   <string name="token_summary_positive_outlook_title">Positiver Ausblick</string>
   <string name="token_summary_title">Token-Zusammenfassung</string>
   <string name="token_swap_changelly_promotion_message">Tausche diesen Token gegen einen anderen zu %1$s Servicegebühren von Februar %2$s-%3$s.</string>
@@ -2176,6 +2222,8 @@
   <string name="tokens_list_unavailable_to_swap_source_header">Nicht zum Tausch verfügbar</string>
   <string name="transaction_history_claiming_reward">Belohnung einfordern</string>
   <string name="transaction_history_contract_address">Vertrag: %s</string>
+  <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
+  <string name="transaction_history_detail_page_amount_value" formatted="false">%1s %2s</string>
   <string name="transaction_history_disabling_yield_mode">Deaktivierung des Ertragsmodus</string>
   <string name="transaction_history_earned_from_stake">Verdient aus dem Einsatz</string>
   <string name="transaction_history_empty_transactions">Du hast noch keine Transaktionen</string>
