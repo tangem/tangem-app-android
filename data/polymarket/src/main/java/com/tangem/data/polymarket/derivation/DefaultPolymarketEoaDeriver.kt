@@ -1,6 +1,7 @@
 package com.tangem.data.polymarket.derivation
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.card.EllipticCurve
@@ -13,7 +14,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.derivation.OWNER_DERIVATION_PATH
+import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -32,25 +33,29 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
 
     override suspend fun deriveOwnerEoa(userWalletId: UserWalletId): Either<PolymarketDerivationError, String> =
         withContext(dispatchers.io) {
-            val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+            Either
+                .catch {
+                    val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
 
-            if (userWallet is UserWallet.Cold &&
-                userWallet.scanResponse.card.firmwareVersion < FirmwareVersion.HDWalletAvailable
-            ) {
-                return@withContext PolymarketDerivationError.DerivationUnsupported.left()
-            }
+                    if (userWallet is UserWallet.Cold &&
+                        userWallet.scanResponse.card.firmwareVersion < FirmwareVersion.HDWalletAvailable
+                    ) {
+                        return@catch PolymarketDerivationError.DerivationUnsupported.left()
+                    }
 
-            val seedKey = userWallet.secp256k1SeedKey()
-                ?: return@withContext PolymarketDerivationError.MissingWallet.left()
+                    val seedKey = userWallet.secp256k1SeedKey()
+                        ?: return@catch PolymarketDerivationError.MissingWallet.left()
 
-            val path = DerivationPath(OWNER_DERIVATION_PATH)
+                    val path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
 
-            cachedAddress(userWalletId, seedKey, path)?.let { return@withContext it.right() }
+                    cachedAddress(userWalletId, seedKey, path)?.let { return@catch it.right() }
 
-            when (userWallet) {
-                is UserWallet.Cold -> deriveCold(userWalletId, seedKey, path)
-                is UserWallet.Hot -> deriveHot(userWalletId, seedKey, path)
-            }
+                    when (userWallet) {
+                        is UserWallet.Cold -> deriveCold(userWalletId, seedKey, path)
+                        is UserWallet.Hot -> deriveHot(userWalletId, seedKey, path)
+                    }
+                }
+                .getOrElse { it.toDerivationError().left() }
         }
 
     private suspend fun cachedAddress(userWalletId: UserWalletId, seedKey: ByteArray, path: DerivationPath): String? {
@@ -82,17 +87,16 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
         userWalletId: UserWalletId,
         seedKey: ByteArray,
         path: DerivationPath,
-    ): Either<PolymarketDerivationError, String> = Either
-        .catch {
-            val derived = derivationsRepository.derivePublicKeys(
-                userWalletId,
-                mapOf(ByteArrayKey(seedKey) to listOf(path)),
-            )
-            val extendedPublicKey = derived.getValue(ByteArrayKey(seedKey))[path]
-                ?: error("Failed to derive Polymarket owner key")
-            addressFactory.createAddress(extendedPublicKey)
-        }
-        .mapLeft { it.toDerivationError() }
+    ): Either<PolymarketDerivationError, String> {
+        val derived = derivationsRepository.derivePublicKeys(
+            userWalletId,
+            mapOf(ByteArrayKey(seedKey) to listOf(path)),
+        )
+        val extendedPublicKey = derived[ByteArrayKey(seedKey)]?.get(path)
+            ?: return PolymarketDerivationError.Unknown.left()
+
+        return addressFactory.createAddress(extendedPublicKey).right()
+    }
 
     private fun UserWallet.secp256k1SeedKey(): ByteArray? = when (this) {
         is UserWallet.Cold -> scanResponse.card.wallets

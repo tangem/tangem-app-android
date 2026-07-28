@@ -1,10 +1,10 @@
 package com.tangem.data.polymarket.derivation
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toHexString
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
+import com.tangem.utils.extensions.hexToBytes
+import com.tangem.utils.extensions.toHexString
 import javax.inject.Inject
 
 /**
