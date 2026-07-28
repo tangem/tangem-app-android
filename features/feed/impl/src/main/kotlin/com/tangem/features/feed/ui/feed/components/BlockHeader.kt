@@ -16,11 +16,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -31,10 +27,7 @@ internal fun ColumnScope.Header(
     modifier: Modifier = Modifier,
     title: @Composable () -> Unit,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
-    if (isRedesignEnabled) {
-        SpacerH(12.dp)
-    }
+    SpacerH(12.dp)
     AnimatedContent(
         targetState = isLoading,
         modifier = modifier,
@@ -45,45 +38,32 @@ internal fun ColumnScope.Header(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (animatedState) {
-                if (isRedesignEnabled) {
-                    RectangleShimmer(
-                        modifier = Modifier.size(width = 130.dp, height = 24.dp),
-                        radius = TangemTheme.dimens2.x25,
-                    )
-                } else {
-                    RectangleShimmer(modifier = Modifier.size(width = 104.dp, height = 18.dp))
-                }
+                RectangleShimmer(
+                    modifier = Modifier.size(width = 130.dp, height = 24.dp),
+                    radius = TangemTheme.dimens2.x25,
+                )
             } else {
                 Box(modifier = Modifier.weight(1f)) {
                     title()
                 }
                 SpacerW(8.dp)
                 AnimatedVisibility(shouldShowSeeAll) {
-                    if (isRedesignEnabled) {
-                        Row(
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .clickable(onClick = onSeeAllClick),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = stringResourceSafe(R.string.common_see_all),
-                                color = TangemTheme.colors2.text.neutral.primary,
-                                style = TangemTheme.typography2.bodySemibold16,
-                            )
-                            Icon(
-                                modifier = Modifier.size(24.dp),
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
-                                tint = TangemTheme.colors2.markers.iconGray,
-                                contentDescription = null,
-                            )
-                        }
-                    } else {
-                        SecondarySmallButton(
-                            config = SmallButtonConfig(
-                                text = TextReference.Res(R.string.common_see_all),
-                                onClick = onSeeAllClick,
-                            ),
+                    Row(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .clickable(onClick = onSeeAllClick),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResourceSafe(R.string.common_see_all),
+                            color = TangemTheme.colors2.text.neutral.primary,
+                            style = TangemTheme.typography2.bodySemibold16,
+                        )
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
+                            tint = TangemTheme.colors2.markers.iconGray,
+                            contentDescription = null,
                         )
                     }
                 }
