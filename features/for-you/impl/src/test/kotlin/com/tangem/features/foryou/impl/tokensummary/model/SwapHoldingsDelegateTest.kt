@@ -103,11 +103,11 @@ internal class SwapHoldingsDelegateTest {
             // Act
             advanceUntilIdle()
 
-            // Assert — a filtered-out holding leaves the token unheld, which reads as nothing to swap from
+            // Assert — a filtered-out holding leaves the token unheld, which reads as an offer to add it
             val expected = if (model.isMatched) {
-                SwapHoldingsState.Available(entries = listOf(entry(WALLET_ID, loadedEthereum)))
+                SwapHoldingsState.Resolved(holdings = listOf(holding(WALLET_ID, loadedEthereum)))
             } else {
-                SwapHoldingsState.Unavailable
+                SwapHoldingsState.NotHeld
             }
             assertThat(delegate.state.value).isEqualTo(expected)
         }
@@ -160,7 +160,7 @@ internal class SwapHoldingsDelegateTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(delegate.state.value).isEqualTo(SwapHoldingsState.Unavailable)
+            assertThat(delegate.state.value).isEqualTo(SwapHoldingsState.NotHeld)
             verify(exactly = 0) { getCryptoCurrencyActionsUseCase(any(), any(), any()) }
         }
     }
@@ -170,19 +170,18 @@ internal class SwapHoldingsDelegateTest {
     inner class Balances {
 
         @Test
-        fun `GIVEN the token is not held at all WHEN resolved THEN swap is unavailable rather than add funds`() =
-            runTest {
-                // Arrange — the summary can be opened from a market review for a token the user does not own
-                givenPortfolios(WALLET_ID to emptyList())
-                val delegate = createDelegate()
+        fun `GIVEN the token is not held at all WHEN resolved THEN it can only be added to a portfolio`() = runTest {
+            // Arrange — the summary can be opened from a market review for a token the user does not own
+            givenPortfolios(WALLET_ID to emptyList())
+            val delegate = createDelegate()
 
-                // Act
-                advanceUntilIdle()
+            // Act
+            advanceUntilIdle()
 
-                // Assert
-                assertThat(delegate.state.value).isEqualTo(SwapHoldingsState.Unavailable)
-                verify(exactly = 0) { getCryptoCurrencyActionsUseCase(any(), any(), any()) }
-            }
+            // Assert
+            assertThat(delegate.state.value).isEqualTo(SwapHoldingsState.NotHeld)
+            verify(exactly = 0) { getCryptoCurrencyActionsUseCase(any(), any(), any()) }
+        }
 
         @Test
         fun `GIVEN every holding is empty WHEN resolved THEN add funds is offered and no actions are requested`() =
@@ -242,8 +241,8 @@ internal class SwapHoldingsDelegateTest {
                 advanceUntilIdle()
 
                 // Assert — a loading status reports default ACTUAL sources, so the use case calls its swap available
-                val expected = SwapHoldingsState.Available(
-                    entries = listOf(entry(WALLET_ID, loadingEthereum), entry(OTHER_WALLET_ID, loadedEthereum)),
+                val expected = SwapHoldingsState.Resolved(
+                    holdings = listOf(holding(WALLET_ID, loadingEthereum), holding(OTHER_WALLET_ID, loadedEthereum)),
                 )
                 assertThat(delegate.state.value).isEqualTo(expected)
             }
@@ -261,7 +260,7 @@ internal class SwapHoldingsDelegateTest {
             advanceUntilIdle()
 
             // Assert
-            val expected = SwapHoldingsState.Available(entries = listOf(entry(WALLET_ID, loadedEthereum)))
+            val expected = SwapHoldingsState.Resolved(holdings = listOf(holding(WALLET_ID, loadedEthereum)))
             assertThat(delegate.state.value).isEqualTo(expected)
         }
     }
@@ -281,61 +280,74 @@ internal class SwapHoldingsDelegateTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(delegate.state.value).isEqualTo(model.expected)
+            val expected = SwapHoldingsState.Resolved(
+                holdings = listOf(holding(WALLET_ID, loadedEthereum, model.expectedReason)),
+            )
+            assertThat(delegate.state.value).isEqualTo(expected)
         }
 
         private fun provideTestModels() = listOf(
             AvailabilityModel(
                 name = "GIVEN swap is available WHEN resolved THEN the holding can be swapped from",
                 reason = ScenarioUnavailabilityReason.None,
-                expected = SwapHoldingsState.Available(entries = listOf(entry(WALLET_ID, loadedEthereum))),
+                expectedReason = ScenarioUnavailabilityReason.None,
             ),
             AvailabilityModel(
-                name = "GIVEN the status is being refreshed WHEN resolved THEN swap is unavailable for now",
+                name = "GIVEN the status is being refreshed WHEN resolved THEN the loading reason is kept",
                 reason = ScenarioUnavailabilityReason.DataLoading,
-                expected = SwapHoldingsState.Unavailable,
+                expectedReason = ScenarioUnavailabilityReason.DataLoading,
             ),
             AvailabilityModel(
-                name = "GIVEN the refresh failed WHEN resolved THEN swap is unavailable",
+                name = "GIVEN the refresh failed WHEN resolved THEN the outdated data reason is kept",
                 reason = ScenarioUnavailabilityReason.UsedOutdatedData,
-                expected = SwapHoldingsState.Unavailable,
+                expectedReason = ScenarioUnavailabilityReason.UsedOutdatedData,
             ),
             AvailabilityModel(
-                name = "GIVEN the token is custom WHEN resolved THEN swap is unavailable",
+                name = "GIVEN the token is custom WHEN resolved THEN the custom token reason is kept",
                 reason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrencyName = "Ethereum"),
-                expected = SwapHoldingsState.Unavailable,
+                expectedReason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrencyName = "Ethereum"),
             ),
             AvailabilityModel(
-                name = "GIVEN the wallet is single-currency WHEN resolved THEN swap is unavailable",
+                name = "GIVEN the wallet is single-currency WHEN resolved THEN the single wallet reason is kept",
                 reason = ScenarioUnavailabilityReason.SingleWallet,
-                expected = SwapHoldingsState.Unavailable,
+                expectedReason = ScenarioUnavailabilityReason.SingleWallet,
             ),
             AvailabilityModel(
-                name = "GIVEN no swap action is offered at all WHEN resolved THEN swap is unavailable",
+                name = "GIVEN no swap action is offered at all WHEN resolved THEN a generic reason stands in",
                 reason = null,
-                expected = SwapHoldingsState.Unavailable,
+                expectedReason = ScenarioUnavailabilityReason.Unreachable,
             ),
         )
 
         @Test
-        fun `GIVEN two wallets hold the token WHEN only one can swap THEN only its holding is offered`() = runTest {
-            // Arrange
-            givenWallets(WALLET_ID, OTHER_WALLET_ID)
-            givenPortfolios(
-                WALLET_ID to listOf(loadedEthereum),
-                OTHER_WALLET_ID to listOf(loadedEthereum),
-            )
-            givenSwapReason(ScenarioUnavailabilityReason.CustomToken("Ethereum"), walletId = WALLET_ID)
-            givenSwapReason(ScenarioUnavailabilityReason.None, walletId = OTHER_WALLET_ID)
-            val delegate = createDelegate()
+        fun `GIVEN two wallets hold the token WHEN only one can swap THEN both are offered with their own reasons`() =
+            runTest {
+                // Arrange
+                givenWallets(WALLET_ID, OTHER_WALLET_ID)
+                givenPortfolios(
+                    WALLET_ID to listOf(loadedEthereum),
+                    OTHER_WALLET_ID to listOf(loadedEthereum),
+                )
+                givenSwapReason(ScenarioUnavailabilityReason.CustomToken("Ethereum"), walletId = WALLET_ID)
+                givenSwapReason(ScenarioUnavailabilityReason.None, walletId = OTHER_WALLET_ID)
+                val delegate = createDelegate()
 
-            // Act
-            advanceUntilIdle()
+                // Act
+                advanceUntilIdle()
 
-            // Assert — availability is per holding, so an unavailable one does not mask the available one
-            val expected = SwapHoldingsState.Available(entries = listOf(entry(OTHER_WALLET_ID, loadedEthereum)))
-            assertThat(delegate.state.value).isEqualTo(expected)
-        }
+                // Assert — an unavailable holding is still offered, and says why when it is picked
+                val expected = SwapHoldingsState.Resolved(
+                    holdings = listOf(
+                        holding(
+                            walletId = WALLET_ID,
+                            status = loadedEthereum,
+                            reason = ScenarioUnavailabilityReason.CustomToken("Ethereum"),
+                        ),
+                        holding(walletId = OTHER_WALLET_ID, status = loadedEthereum),
+                    ),
+                )
+                assertThat(delegate.state.value).isEqualTo(expected)
+            }
     }
 
     // region arrange helpers
@@ -399,6 +411,12 @@ internal class SwapHoldingsDelegateTest {
         currencyStatus = status,
     )
 
+    private fun holding(
+        walletId: UserWalletId,
+        status: CryptoCurrencyStatus,
+        reason: ScenarioUnavailabilityReason = ScenarioUnavailabilityReason.None,
+    ) = SwapHolding(entry = entry(walletId, status), unavailabilityReason = reason)
+
     /**
      * The delegate is given a scope of its own — the one a `Model` would hand it — rather than `backgroundScope`,
      * whose work `advanceUntilIdle` does not drive. Every scope is cancelled after the test.
@@ -438,7 +456,7 @@ internal class SwapHoldingsDelegateTest {
     internal data class AvailabilityModel(
         val name: String,
         val reason: ScenarioUnavailabilityReason?,
-        val expected: SwapHoldingsState,
+        val expectedReason: ScenarioUnavailabilityReason,
     ) {
         override fun toString(): String = name
     }
