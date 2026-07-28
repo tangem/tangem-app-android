@@ -23,6 +23,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
@@ -127,6 +128,7 @@ internal class WalletModel @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
+    private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -151,6 +153,7 @@ internal class WalletModel @Inject constructor(
         maybeMigrateNames()
         maybeSetWalletFirstTimeUsage()
         preloadPushNotificationPreferences()
+        warmUpMarketingCampaigns()
         updateYieldSupplyApy()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
@@ -195,6 +198,12 @@ internal class WalletModel @Inject constructor(
     private fun maybeMigrateNames() {
         modelScope.launch {
             walletNameMigrationUseCase()
+        }
+    }
+
+    private fun warmUpMarketingCampaigns() {
+        modelScope.launch(dispatchers.io) {
+            warmUpMarketingCampaignsUseCase()
         }
     }
 

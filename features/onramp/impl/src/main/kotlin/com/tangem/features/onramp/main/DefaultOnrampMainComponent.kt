@@ -10,9 +10,11 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
@@ -29,9 +31,23 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
     private val confirmResidencyComponentFactory: ConfirmResidencyComponent.Factory,
     private val selectCurrencyComponentFactory: SelectCurrencyComponent.Factory,
     private val allOffersComponentFactory: AllOffersComponent.Factory,
+    private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : OnrampMainComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampMainComponentModel = getOrCreateModel(params)
+
+    private val marketingBannerComponent: MarketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("marketing_banner"),
+        params = MarketingBannerComponent.Params.Standalone(
+            requestFlow = model.marketingRequest,
+            onDeeplinkClick = model::onMarketingBannerDeeplink,
+        ),
+    )
+
+    private val linkedMarketingBannerComponent: MarketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("marketing_banner_linked"),
+        params = MarketingBannerComponent.Params.Linked(requestFlow = model.linkedMarketingRequest),
+    )
 
     init {
         lifecycle.subscribe(onStop = model::onStop)
@@ -49,7 +65,12 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         val state by model.state.collectAsState()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        OnrampMainScreen(modifier = modifier, state = state)
+        OnrampMainScreen(
+            modifier = modifier,
+            state = state,
+            marketingBannerComponent = marketingBannerComponent,
+            linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+        )
         bottomSheet.child?.instance?.BottomSheet()
     }
 
@@ -85,6 +106,8 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 onDismiss = model.bottomSheetNavigation::dismiss,
                 openRedirectPage = params.openRedirectPage,
                 amountCurrencyCode = config.amountCurrencyCode,
+                marketingBannerComponent = marketingBannerComponent,
+                linkedMarketingBannerComponent = linkedMarketingBannerComponent,
             ),
         )
     }

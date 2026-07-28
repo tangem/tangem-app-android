@@ -3,13 +3,18 @@ package com.tangem.tap.domain.userWalletList.repository
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
@@ -143,5 +148,163 @@ internal class DefaultUserWalletsListRepositoryTest {
         // Assert
         assertThat(result.isLeft()).isTrue()
         verify(exactly = 0) { trackingContextProxy.eraseContext() }
+    }
+
+    @Test
+    fun `GIVEN stale backup status WHEN duplicate save rejected THEN stored card state refreshed`() = runTest {
+        // Arrange
+        val storedWallet = MockUserWalletFactory.create(staleScanResponse)
+        val freshWallet = MockUserWalletFactory.create(freshScanResponse)
+        repository.userWallets.value = listOf(storedWallet)
+        coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+        // Act
+        val result = repository.saveWithoutLock(freshWallet, canOverride = false)
+
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        val updatedWallet = repository.userWallets.value?.single() as UserWallet.Cold
+        assertThat(updatedWallet.scanResponse.card.backupStatus)
+            .isEqualTo(CardDTO.BackupStatus.Active(cardCount = 1))
+        assertThat(updatedWallet.scanResponse.card.isAccessCodeSet).isTrue()
+        coVerify(exactly = 1) { publicInformationRepository.save(any(), true) }
+    }
+
+    @Test
+    fun `GIVEN locked wallet with stale backup status WHEN unlock with scanned card THEN stored card state refreshed`() =
+        runTest {
+            // Arrange
+            val storedWallet = MockUserWalletFactory.create(staleScanResponse).let { wallet ->
+                wallet.copy(
+                    scanResponse = wallet.scanResponse.copy(
+                        card = wallet.scanResponse.card.copy(wallets = emptyList()),
+                    ),
+                )
+            }
+            repository.userWallets.value = listOf(storedWallet)
+            coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+            coEvery { sensitiveInformationRepository.getAll(any()) } returns CompletionResult.Success(emptyMap())
+
+            // Act
+            val result = repository.unlock(
+                userWalletId = storedWallet.walletId,
+                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                    scanResponse = freshScanResponse,
+                    source = AnalyticsParam.ScreensSources.SignIn,
+                ),
+            )
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            val updatedWallet = repository.userWallets.value?.single() as UserWallet.Cold
+            assertThat(updatedWallet.scanResponse.card.backupStatus)
+                .isEqualTo(CardDTO.BackupStatus.Active(cardCount = 1))
+            assertThat(updatedWallet.scanResponse.card.isAccessCodeSet).isTrue()
+            coVerify(exactly = 1) { publicInformationRepository.save(any(), true) }
+        }
+
+    @Test
+    fun `GIVEN active card of backup set scanned WHEN duplicate save rejected THEN stored card state refreshed`() =
+        runTest {
+            // Arrange
+            val storedWallet = MockUserWalletFactory.create(staleScanResponse)
+            val otherCardScanResponse = freshScanResponse.copy(
+                card = freshScanResponse.card.copy(cardId = "OTHER-CARD"),
+            )
+            val freshWallet = MockUserWalletFactory.create(otherCardScanResponse)
+            repository.userWallets.value = listOf(storedWallet)
+            coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+            // Act
+            val result = repository.saveWithoutLock(freshWallet, canOverride = false)
+
+            // Assert
+            assertThat(result.isLeft()).isTrue()
+            val updatedWallet = repository.userWallets.value?.single() as UserWallet.Cold
+            assertThat(updatedWallet.scanResponse.card.cardId).isEqualTo(storedWallet.scanResponse.card.cardId)
+            assertThat(updatedWallet.scanResponse.card.backupStatus)
+                .isEqualTo(CardDTO.BackupStatus.Active(cardCount = 1))
+            assertThat(updatedWallet.scanResponse.card.isAccessCodeSet).isTrue()
+            coVerify(exactly = 1) { publicInformationRepository.save(any(), true) }
+        }
+
+    @Test
+    fun `GIVEN no backup card of same wallet scanned WHEN duplicate save rejected THEN stored status downgraded`() =
+        runTest {
+            // Arrange
+            val storedWallet = MockUserWalletFactory.create(freshScanResponse)
+            val newCardScanResponse = staleScanResponse.copy(
+                card = staleScanResponse.card.copy(cardId = "SAME-SEED-NEW-CARD"),
+            )
+            val freshWallet = MockUserWalletFactory.create(newCardScanResponse)
+            repository.userWallets.value = listOf(storedWallet)
+            coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+            // Act
+            val result = repository.saveWithoutLock(freshWallet, canOverride = false)
+
+            // Assert
+            assertThat(result.isLeft()).isTrue()
+            val updatedWallet = repository.userWallets.value?.single() as UserWallet.Cold
+            assertThat(updatedWallet.scanResponse.card.cardId).isEqualTo(storedWallet.scanResponse.card.cardId)
+            assertThat(updatedWallet.scanResponse.card.backupStatus).isEqualTo(CardDTO.BackupStatus.NoBackup)
+            assertThat(updatedWallet.scanResponse.card.isAccessCodeSet).isFalse()
+            coVerify(exactly = 1) { publicInformationRepository.save(any(), true) }
+        }
+
+    @Test
+    fun `GIVEN stored card linked status WHEN duplicate save with another card rejected THEN status preserved`() =
+        runTest {
+            // Arrange
+            val cardLinkedScanResponse = staleScanResponse.copy(
+                card = staleScanResponse.card.copy(backupStatus = CardDTO.BackupStatus.CardLinked(cardCount = 1)),
+            )
+            val storedWallet = MockUserWalletFactory.create(cardLinkedScanResponse)
+            val otherCardScanResponse = freshScanResponse.copy(
+                card = freshScanResponse.card.copy(cardId = "OTHER-CARD"),
+            )
+            val freshWallet = MockUserWalletFactory.create(otherCardScanResponse)
+            repository.userWallets.value = listOf(storedWallet)
+
+            // Act
+            val result = repository.saveWithoutLock(freshWallet, canOverride = false)
+
+            // Assert
+            assertThat(result.isLeft()).isTrue()
+            assertThat(repository.userWallets.value).containsExactly(storedWallet)
+            coVerify(exactly = 0) { publicInformationRepository.save(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN stored card state is actual WHEN duplicate save rejected THEN nothing persisted`() = runTest {
+        // Arrange
+        val storedWallet = MockUserWalletFactory.create(freshScanResponse)
+        val freshWallet = MockUserWalletFactory.create(freshScanResponse)
+        repository.userWallets.value = listOf(storedWallet)
+
+        // Act
+        val result = repository.saveWithoutLock(freshWallet, canOverride = false)
+
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        assertThat(repository.userWallets.value).containsExactly(storedWallet)
+        coVerify(exactly = 0) { publicInformationRepository.save(any(), any()) }
+    }
+
+    private companion object {
+
+        val staleScanResponse = MockScanResponseFactory.create(
+            cardConfig = GenericCardConfig(maxWalletCount = 2),
+            derivedKeys = emptyMap(),
+        ).let { scanResponse ->
+            scanResponse.copy(card = scanResponse.card.copy(backupStatus = CardDTO.BackupStatus.NoBackup))
+        }
+
+        val freshScanResponse = staleScanResponse.copy(
+            card = staleScanResponse.card.copy(
+                backupStatus = CardDTO.BackupStatus.Active(cardCount = 1),
+                isAccessCodeSet = true,
+            ),
+        )
     }
 }

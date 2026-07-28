@@ -14,6 +14,7 @@ import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
+import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
@@ -56,12 +57,13 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val name = displayName?.ifEmpty { null }
         return ProductInstance(
             id = id,
-            cardId = cardId,
+            cardId = cardId.orEmpty(),
             frozenState = cardFrozenState,
             status = status,
             displayName = if (name != null) CardDisplayName(name).getOrElse { null } else null,
             actualCardLimit = actualCardLimit?.parseCardLimit(),
             adminCardLimit = adminCardLimit?.parseCardLimit(),
+            specificationDataType = specificationDataType.toDomain(),
         )
     }
 
@@ -108,4 +110,10 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         CustomerMeResponse.ProductInstance.Status.CANCELED -> Status.CANCELED
         CustomerMeResponse.ProductInstance.Status.UNKNOWN -> Status.UNKNOWN
     }
+
+    private fun CustomerMeResponse.ProductInstance.SpecificationDataType.toDomain(): SpecificationDataType =
+        when (this) {
+            CustomerMeResponse.ProductInstance.SpecificationDataType.ACCOUNT -> SpecificationDataType.ACCOUNT
+            CustomerMeResponse.ProductInstance.SpecificationDataType.CARD -> SpecificationDataType.CARD
+        }
 }

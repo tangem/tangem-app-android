@@ -10,4 +10,5 @@ android {
 }
 
 dependencies {
+    api(projects.domain.models)
 }
