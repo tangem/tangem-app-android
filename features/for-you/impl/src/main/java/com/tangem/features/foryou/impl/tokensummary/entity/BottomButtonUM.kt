@@ -1,8 +1,10 @@
 package com.tangem.features.foryou.impl.tokensummary.entity
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
 /** State of the single button pinned to the bottom of the token summary. */
+@Immutable
 internal sealed interface BottomButtonUM {
 
     /** The user's holdings of the summary token are still being resolved. */
