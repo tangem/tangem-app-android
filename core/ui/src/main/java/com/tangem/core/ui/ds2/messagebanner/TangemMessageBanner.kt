@@ -5,9 +5,13 @@ package com.tangem.core.ui.ds2.messagebanner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
@@ -29,6 +33,7 @@ import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -40,11 +45,15 @@ import com.tangem.core.ui.res.generated.icons.ic_cross_circle_20_filled
  * Design-system v2 (DS3) **Message Banner** — low-level slot API: a [content] block above an
  * optional action-button row. For the common title/description layout, prefer the `title` overload.
  *
+ * Version: 1.2
+ *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
  *
  * @param variant Visual appearance — background color + glow ring.
  * @param showGlowRing Whether the glow ring is drawn around the banner. `false` shows only the
  * background.
+ * @param onClick Makes the whole banner clickable. Honored only when no action buttons are present — ignored while
+ * [secondaryButton] or [primaryButton] is set.
  * @param secondaryButton Start action. `null` hides it.
  * @param primaryButton End action. `null` hides it.
  * @param content The banner body above the buttons.
@@ -54,26 +63,33 @@ fun TangemMessageBanner(
     modifier: Modifier = Modifier,
     variant: TangemMessageBanner.Variant = TangemMessageBanner.Variant.Default,
     showGlowRing: Boolean = true,
+    onClick: (() -> Unit)? = null,
     secondaryButton: TangemMessageBanner.Button? = null,
     primaryButton: TangemMessageBanner.Button? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tokens = variant.tokens()
+    val isClickable = onClick != null && secondaryButton == null && primaryButton == null
 
     Box(modifier = modifier) {
-        TangemSurface(
-            modifier = Modifier.fillMaxWidth(),
-            color = tokens.background,
-            shape = RoundedCornerShape(28.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+        WithMessageBannerRipple(enabled = isClickable) {
+            TangemSurface(
+                modifier = Modifier.fillMaxWidth(),
+                color = tokens.background,
+                shape = RoundedCornerShape(28.dp),
             ) {
-                content()
-                MessageBannerButtons(secondaryButton = secondaryButton, primaryButton = primaryButton)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .conditionalCompose(isClickable) {
+                            clickableSingle(role = Role.Button) { onClick?.invoke() }
+                        }
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    content()
+                    MessageBannerButtons(secondaryButton = secondaryButton, primaryButton = primaryButton)
+                }
             }
         }
         if (showGlowRing) {
@@ -90,6 +106,8 @@ fun TangemMessageBanner(
  * Design-system v2 (DS3) **Message Banner** — title/description header with optional slots and an
  * action-button row.
  *
+ * Version: 1.2
+ *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
  *
  * @param title Banner headline.
@@ -97,6 +115,8 @@ fun TangemMessageBanner(
  * @param contentAlign Horizontal alignment of the text block.
  * @param showGlowRing Whether the glow ring is drawn around the banner. `false` shows only the
  * background.
+ * @param onClick Makes the whole banner clickable. Honored only when no action buttons are present — ignored while
+ * [secondaryButton] or [primaryButton] is set.
  * @param description Secondary line under the [title]. `null` hides it.
  * @param secondaryButton Start action. `null` hides it.
  * @param primaryButton End action. `null` hides it.
@@ -112,6 +132,7 @@ fun TangemMessageBanner(
     variant: TangemMessageBanner.Variant = TangemMessageBanner.Variant.Default,
     contentAlign: TangemMessageBanner.ContentAlign = TangemMessageBanner.ContentAlign.Start,
     showGlowRing: Boolean = true,
+    onClick: (() -> Unit)? = null,
     description: TextReference? = null,
     secondaryButton: TangemMessageBanner.Button? = null,
     primaryButton: TangemMessageBanner.Button? = null,
@@ -123,6 +144,7 @@ fun TangemMessageBanner(
         modifier = modifier,
         variant = variant,
         showGlowRing = showGlowRing,
+        onClick = onClick,
         secondaryButton = secondaryButton,
         primaryButton = primaryButton,
     ) {
@@ -252,7 +274,7 @@ private fun MessageBannerTextWrapper(
             )
         }
         extraBottomSlot?.let { slot ->
-            Column(modifier = Modifier.padding(top = 12.dp)) { slot() }
+            Column(modifier = Modifier.padding(top = 8.dp)) { slot() }
         }
     }
 }
@@ -388,6 +410,29 @@ fun TangemMessageBanner.CloseButton(
     )
 }
 
+/** Overrides the ripple for a clickable banner; pass-through when [enabled] is `false`. */
+@Composable
+private fun WithMessageBannerRipple(enabled: Boolean, content: @Composable () -> Unit) {
+    if (enabled) {
+        CompositionLocalProvider(LocalRippleConfiguration provides messageBannerRipple(), content = content)
+    } else {
+        content()
+    }
+}
+
+/** Press ripple of a clickable banner — the `color/interaction/press/static-light` token. */
+@Composable
+@ReadOnlyComposable
+private fun messageBannerRipple(): RippleConfiguration = RippleConfiguration(
+    color = TangemTheme.colors3.interaction.press.staticLight,
+    rippleAlpha = RippleAlpha(
+        draggedAlpha = 0f,
+        focusedAlpha = 0f,
+        hoveredAlpha = 0.05f,
+        pressedAlpha = 0.1f,
+    ),
+)
+
 /** Resolved appearance tokens for a [TangemMessageBanner.Variant]. */
 private data class MessageBannerTokens(val background: Color, val glowRing: TangemGlowRing.Variant)
 
@@ -449,6 +494,12 @@ private fun TangemMessageBannerPreview() {
                 )
             },
             primaryButton = TangemMessageBanner.Button(text = stringReference("Invite friends"), onClick = {}),
+        )
+        TangemMessageBanner(
+            modifier = Modifier.fillMaxWidth(),
+            title = stringReference("Clickable banner"),
+            description = stringReference("Whole banner is tappable when no buttons are set."),
+            onClick = {},
         )
     }
 }

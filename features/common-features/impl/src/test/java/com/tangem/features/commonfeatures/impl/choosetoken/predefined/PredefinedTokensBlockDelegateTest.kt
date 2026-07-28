@@ -125,6 +125,41 @@ internal class PredefinedTokensBlockDelegateTest {
         assertThat(actual).isNull()
     }
 
+    @Test
+    fun `GIVEN predefined token already in portfolio WHEN state emitted THEN it is excluded`() = runTest {
+        // Arrange
+        val tokens = listOf(
+            createPredefinedToken(id = "usd-coin", symbol = "USDC", networkId = ETHEREUM_NETWORK_ID),
+            createPredefinedToken(id = "tether", symbol = "USDT", networkId = ETHEREUM_NETWORK_ID),
+        )
+        val delegate = createDelegate(
+            predefinedTokens = MutableStateFlow(tokens),
+            portfolioTokenKeys = MutableStateFlow(setOf("usd-coin" to ETHEREUM_NETWORK_ID)),
+        )
+
+        // Act
+        val actual = lastState(delegate)
+
+        // Assert — usd-coin is already in the portfolio, so only tether stays in "Other eligible tokens"
+        assertThat(actual?.items?.map { it.id }).containsExactly("tether_$ETHEREUM_NETWORK_ID")
+    }
+
+    @Test
+    fun `GIVEN all predefined tokens already in portfolio WHEN state emitted THEN emits null`() = runTest {
+        // Arrange
+        val token = createPredefinedToken(id = "usd-coin", symbol = "USDC", networkId = ETHEREUM_NETWORK_ID)
+        val delegate = createDelegate(
+            predefinedTokens = MutableStateFlow(listOf(token)),
+            portfolioTokenKeys = MutableStateFlow(setOf("usd-coin" to ETHEREUM_NETWORK_ID)),
+        )
+
+        // Act
+        val actual = lastState(delegate)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun filter(model: FilterModel) = runTest {
@@ -234,6 +269,7 @@ internal class PredefinedTokensBlockDelegateTest {
         searchQueryState: MutableStateFlow<SearchQuery> = MutableStateFlow(SearchQuery.Empty),
         tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean> =
             MutableStateFlow({ _, _ -> true }),
+        portfolioTokenKeys: MutableStateFlow<Set<Pair<String, String>>> = MutableStateFlow(emptySet()),
     ): PredefinedTokensBlockDelegate = PredefinedTokensBlockDelegate(
         predefinedTokens = predefinedTokens,
         searchQueryState = searchQueryState,
@@ -241,6 +277,7 @@ internal class PredefinedTokensBlockDelegateTest {
         addToPortfolioSlot = addToPortfolioSlot,
         modelScope = CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
         tokenFilter = tokenFilter,
+        portfolioTokenKeys = portfolioTokenKeys,
     )
 
     private fun currency(rawId: String, networkId: String): CryptoCurrencyStatus =

@@ -78,8 +78,6 @@ internal fun ActivateCampaignContent(um: ActivateCampaignUM, modifier: Modifier 
             selectedAccount = um.selectedAccount,
             onChooseTokenClick = um.onChooseTokenClick,
         )
-
-        SpacerH32()
     }
 }
 
@@ -94,8 +92,8 @@ private fun SelectedTokenContent(
 
         Text(
             text = stringResourceSafe(R.string.promo_campaign_select_cashback_account),
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.fillMaxWidth(),
         )
 
