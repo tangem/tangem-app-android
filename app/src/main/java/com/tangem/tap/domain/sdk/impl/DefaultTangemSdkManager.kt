@@ -44,12 +44,10 @@ import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.sdk.api.polymarket.PolymarketOwnerKeyData
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.domain.tasks.polymarket.PolymarketDeriveOwnerKeyTask
 import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
@@ -556,21 +554,6 @@ internal class DefaultTangemSdkManager(
                 is CompletionResult.Failure<*> -> result.error.left()
                 is CompletionResult.Success<VirtualAccountActivationData> -> result.data.right()
             }
-        }
-    }
-
-    override suspend fun polymarketProduceOwnerKeyData(
-        preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, PolymarketOwnerKeyData> {
-        val result = runTaskAsyncReturnOnMain(
-            runnable = PolymarketDeriveOwnerKeyTask(),
-            cardId = null,
-            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-            preflightReadFilter = preflightReadFilter,
-        )
-        return when (result) {
-            is CompletionResult.Failure<*> -> result.error.left()
-            is CompletionResult.Success<PolymarketOwnerKeyData> -> result.data.right()
         }
     }
 
