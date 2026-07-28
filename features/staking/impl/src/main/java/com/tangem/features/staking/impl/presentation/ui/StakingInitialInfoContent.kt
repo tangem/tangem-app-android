@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH12
@@ -51,6 +52,7 @@ import com.tangem.core.ui.test.StakingDetailsScreenTestTags
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -67,6 +69,7 @@ private const val BANNER_BLOCK_KEY = "BannerBlock"
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 private const val STAKE_PRIMARY_BUTTON_KEY = "StakePrimaryButton"
+private const val MARKETING_BANNER_BLOCK_KEY = "MarketingBannerBlock"
 
 @Composable
 internal fun StakingInitialInfoContent(
@@ -74,6 +77,7 @@ internal fun StakingInitialInfoContent(
     buttonState: NavigationButtonsState,
     clickIntents: StakingClickIntents,
     isBalanceHidden: Boolean,
+    marketingBannerComponent: MarketingBannerComponent,
 ) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
@@ -103,6 +107,10 @@ internal fun StakingInitialInfoContent(
                 footerContent = { SpacerH12() },
                 hideEndText = isBalanceHidden,
             )
+
+            item(key = MARKETING_BANNER_BLOCK_KEY) {
+                marketingBannerComponent.Content(Modifier.fillMaxWidth().padding(bottom = 12.dp))
+            }
 
             activeStakingBlock(
                 state = state,
@@ -491,6 +499,10 @@ private fun StakingInitialInfoContent_Preview(
             buttonState = NavigationButtonsState.Empty,
             clickIntents = StakingClickIntentsStub,
             isBalanceHidden = false,
+            marketingBannerComponent = object : MarketingBannerComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+            },
         )
     }
 }

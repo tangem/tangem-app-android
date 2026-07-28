@@ -67,7 +67,7 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
                         commonNetworkStatusFetcher.fetch(
                             userWalletId = params.userWalletId,
                             network = network,
-                            networkCurrencies = networksCurrencies[network].orEmpty().toSet(),
+                            networkCurrencies = networksCurrencies[network].orEmpty().toSet() + params.extraTokens,
                             xpub = xpubByNetwork[network],
                         )
                     }

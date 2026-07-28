@@ -9,4 +9,7 @@ internal class DefaultVirtualAccountFeatureToggles @Inject constructor(
 ) : VirtualAccountFeatureToggles {
     override val isVirtualAccountsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.VIRTUAL_ACCOUNTS_ENABLED)
+
+    override val isVaMvp0Enabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.TWI_1638_VA_MVP0_ENABLED)
 }

@@ -68,6 +68,8 @@ dependencies {
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.marketing.models)
+    implementation(projects.domain.onramp.models)
 
     /** Common */
     implementation(projects.common.ui)
@@ -80,6 +82,7 @@ dependencies {
     implementation(projects.features.staking.api)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.approval.api)
+    implementation(projects.features.marketing.api)
 
     /** Decompose */
     implementation(deps.decompose.ext.compose)
