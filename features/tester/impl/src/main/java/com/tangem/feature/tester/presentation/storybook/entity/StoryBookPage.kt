@@ -376,59 +376,6 @@ internal data class TangemTokenIconStory(
     enum class UiStateVariant { Token, Shimmer, Error }
 }
 
-internal data class TangemGlowRingStory(
-    val variant: TangemGlowRing.Variant,
-    val quality: TangemGlowRing.Quality,
-    val background: Background,
-    val isAnimated: Boolean,
-    val onVariantChange: (TangemGlowRing.Variant) -> Unit,
-    val onQualityChange: (TangemGlowRing.Quality) -> Unit,
-    val onBackgroundChange: (Background) -> Unit,
-    val onAnimatedToggle: () -> Unit,
-) : DsStoryBookPage {
-
-    /** Backdrop the glow-ring preview is rendered on top of. */
-    enum class Background(val label: String) {
-        BgPrimary("bg.primary"),
-        BgSecondary("bg.secondary"),
-        BgInverse("bg.inverse"),
-    }
-}
-
-@Suppress("BooleanPropertyNaming")
-internal data class TangemMessageBannerStory(
-    val variant: TangemMessageBanner.Variant,
-    val contentAlign: TangemMessageBanner.ContentAlign,
-    val hasGlowRing: Boolean,
-    val hasDescription: Boolean,
-    val hasSecondaryButton: Boolean,
-    val hasPrimaryButton: Boolean,
-    val hasCloseButton: Boolean,
-    val hasSlotStart: Boolean,
-    val hasSlotEnd: Boolean,
-    val hasExtraContent: Boolean,
-    val background: Background,
-    val onVariantChange: (TangemMessageBanner.Variant) -> Unit,
-    val onContentAlignChange: (TangemMessageBanner.ContentAlign) -> Unit,
-    val onGlowRingToggle: () -> Unit,
-    val onDescriptionToggle: () -> Unit,
-    val onSecondaryButtonToggle: () -> Unit,
-    val onPrimaryButtonToggle: () -> Unit,
-    val onCloseButtonToggle: () -> Unit,
-    val onSlotStartToggle: () -> Unit,
-    val onSlotEndToggle: () -> Unit,
-    val onExtraContentToggle: () -> Unit,
-    val onBackgroundChange: (Background) -> Unit,
-) : DsStoryBookPage {
-
-    /** Backdrop the banner preview is rendered on top of. */
-    enum class Background(val label: String) {
-        BgPrimary("bg.primary"),
-        BgSecondary("bg.secondary"),
-        BgInverse("bg.inverse"),
-    }
-}
-
 internal data class TextStyleStory(
     val style: Style,
     val textScale: Float,
@@ -504,6 +451,61 @@ internal data class TangemTokenRowMarketStory(
     val onChartToggle: () -> Unit,
     val onLongTitleToggle: () -> Unit,
 ) : DsStoryBookPage
+
+internal data class TangemGlowRingStory(
+    val variant: TangemGlowRing.Variant,
+    val quality: TangemGlowRing.Quality,
+    val background: Background,
+    val isAnimated: Boolean,
+    val onVariantChange: (TangemGlowRing.Variant) -> Unit,
+    val onQualityChange: (TangemGlowRing.Quality) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onAnimatedToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the glow-ring preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemMessageBannerStory(
+    val variant: TangemMessageBanner.Variant,
+    val contentAlign: TangemMessageBanner.ContentAlign,
+    val hasGlowRing: Boolean,
+    val hasDescription: Boolean,
+    val hasSecondaryButton: Boolean,
+    val hasPrimaryButton: Boolean,
+    val hasCloseButton: Boolean,
+    val hasSlotStart: Boolean,
+    val hasSlotEnd: Boolean,
+    val hasExtraContent: Boolean,
+    val isClickable: Boolean,
+    val background: Background,
+    val onVariantChange: (TangemMessageBanner.Variant) -> Unit,
+    val onContentAlignChange: (TangemMessageBanner.ContentAlign) -> Unit,
+    val onGlowRingToggle: () -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onSecondaryButtonToggle: () -> Unit,
+    val onPrimaryButtonToggle: () -> Unit,
+    val onCloseButtonToggle: () -> Unit,
+    val onSlotStartToggle: () -> Unit,
+    val onSlotEndToggle: () -> Unit,
+    val onExtraContentToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the banner preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgInverse("bg.inverse"),
+    }
+}
 
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,
