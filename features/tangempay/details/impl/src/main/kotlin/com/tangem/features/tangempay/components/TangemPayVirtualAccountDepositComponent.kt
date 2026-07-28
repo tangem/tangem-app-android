@@ -38,6 +38,7 @@ internal class TangemPayVirtualAccountDepositComponent(
         val paymentAccountAddress: String,
         val onDismiss: () -> Unit,
         val onShowDetails: (VirtualAccountOnramp.Available) -> Unit,
+        val onShowBankingDetailsError: () -> Unit,
         val onOrderCreated: () -> Unit,
     )
 }
