@@ -33,6 +33,16 @@ object PreferencesKeys {
 
     val APP_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "launchCount") }
 
+    val LAST_OPTIONAL_UPDATE_SHOWN_VERSION_KEY by lazy {
+        stringPreferencesKey(name = "lastOptionalUpdateShownVersion")
+    }
+
+    val LAST_OPTIONAL_UPDATE_SHOWN_AT_KEY by lazy { longPreferencesKey(name = "lastOptionalUpdateShownAt") }
+
+    val CACHED_APP_VERSIONS_KEY by lazy { stringPreferencesKey(name = "cachedApplicationVersions") }
+
+    val CACHED_APP_VERSIONS_AT_KEY by lazy { longPreferencesKey(name = "cachedApplicationVersionsAt") }
+
     val SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "showRatingDialogAtLaunchCount") }
 
     val FUNDS_FOUND_DATE_KEY by lazy { longPreferencesKey(name = "fundsFoundDate") }
@@ -40,6 +50,8 @@ object PreferencesKeys {
     val USER_WAS_INTERACT_WITH_RATING_KEY by lazy { booleanPreferencesKey(name = "userWasInteractWithRating") }
 
     val USED_CARDS_INFO_KEY by lazy { stringPreferencesKey(name = "usedCardsInfo_v2") }
+
+    val USEDESK_CLIENT_ID_KEY by lazy { stringPreferencesKey(name = "usedeskClientId") }
 
     val APP_THEME_MODE_KEY by lazy { stringPreferencesKey(name = "appThemeMode") }
 
@@ -105,6 +117,9 @@ object PreferencesKeys {
 
     val IS_DEVICE_REGISTERED_KEY by lazy { booleanPreferencesKey(name = "isDeviceRegistered") }
 
+    /** Base64 `UserWalletId`s already registered with the Tangem Auth Service (`/auth/wallet`). */
+    val REGISTERED_WALLET_IDS_KEY by lazy { stringSetPreferencesKey(name = "registeredWalletIds") }
+
     val WAS_LOG_FILE_CLEARED by lazy { booleanPreferencesKey(name = "wasLogFileCleared") }
 
     val SEED_FIRST_NOTIFICATION_SHOW_TIME by lazy { longPreferencesKey("seedFirstNotificationTime") }
@@ -146,6 +161,10 @@ object PreferencesKeys {
         )
     }
 
+    val PUSH_NOTIFICATION_FIRST_ACTIVATION_DONE_WALLET_IDS_KEY by lazy {
+        stringSetPreferencesKey(name = "pushNotificationFirstActivationDoneWalletIds")
+    }
+
     val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
@@ -185,6 +204,9 @@ object PreferencesKeys {
 
     fun getTangemPayAddToWalletKey(customerWalletAddress: String) =
         booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
+
+    fun getTangemPayCashbackDeactivationDismissedKey(customerWalletAddress: String) =
+        booleanPreferencesKey("tangem_pay_cashback_deactivation_dismissed_key_$customerWalletAddress")
 
     fun getTangemPayOrderIdKey(customerWalletAddress: String) =
         stringPreferencesKey("tangem_pay_order_id_key_$customerWalletAddress")

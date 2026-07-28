@@ -18,6 +18,7 @@ import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -70,6 +71,7 @@ internal class ProdApiConfigsManagerTest {
         every { appInfoProvider.osVersion } returns "Android 16"
         every { appInfoProvider.language } returns Locale.getDefault().toLanguageTag()
         every { appInfoProvider.device } returns "${Build.MANUFACTURER} ${Build.MODEL}"
+        every { appInfoProvider.deviceScale } returns DEVICE_SCALE
 
         manager = ProdApiConfigsManager(apiConfigs = createApiConfigs())
     }
@@ -170,7 +172,7 @@ internal class ProdApiConfigsManagerTest {
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (environment) {
-                    ApiEnvironment.PROD -> "https://authentication.tangem.org/"
+                    ApiEnvironment.PROD -> "https://api.tangem.org/"
                     else -> "[REDACTED_ENV_URL]"
                 },
                 headers = emptyMap(),
@@ -298,6 +300,8 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
+                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
+                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
@@ -313,6 +317,8 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
                     "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
+                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
+                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
@@ -457,6 +463,7 @@ internal class ProdApiConfigsManagerTest {
     private companion object {
 
         const val VERSION_NAME = "debug"
+        const val DEVICE_SCALE = 3f
         const val EXPRESS_SESSION_ID = "express_session_id"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
         const val P2P_API_KEY = "p2p_api_key"

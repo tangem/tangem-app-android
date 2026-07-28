@@ -2,20 +2,55 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { stripCr, compareCodeUnits } from './hash-util.mjs';
 
 // ── Paths ──────────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const iconsDir = path.join(__dirname, '..', 'ds-tokens', 'icons');
-const outputDir = path.join(
-  __dirname, '..', 'src', 'main', 'java', 'com', 'tangem', 'core', 'ui',
-  'res', 'generated', 'icons',
+const dsTokensDir = path.join(__dirname, '..', 'ds-tokens');
+const generatedDir = path.join(
+  __dirname, '..', 'src', 'main', 'java', 'com', 'tangem', 'core', 'ui', 'res', 'generated',
 );
 
-const PACKAGE = 'com.tangem.core.ui.res.generated.icons';
+// ── Build configs ────────────────────────────────────────────────────────────────
+// Two families of SVG vectors are generated the same way, only differing by:
+//  • source folder / output folder / package / namespace object
+//  • tint handling: icons are single-color and tintable (the #0F0F0F placeholder is
+//    rewritten to Color.Black so Icon(tint = …) can recolor them); illustrations
+//    ("assets") keep their own colors verbatim, so they have no tint placeholder.
 
-// Source SVGs use #0F0F0F as a "tint placeholder" — rewrite to Color.Black so
-// Icon(tint = …) at the call site can re-color the icon.
-const TINT_PLACEHOLDERS = new Set(['#0f0f0f', '#0F0F0F']);
+const ICONS_CONFIG = {
+  label: 'icon',
+  sourceDir: path.join(dsTokensDir, 'icons'),
+  outputDir: path.join(generatedDir, 'icons'),
+  packageName: 'com.tangem.core.ui.res.generated.icons',
+  namespace: 'Icons',
+  // Icons own the `Icons` namespace object, generated alongside them in this package.
+  generateNamespaceObject: true,
+  namespaceImport: null,
+  hashFileName: '.icons-hash',
+  namespaceDoc:
+    'Auto-generated namespace for design-system icons.\n' +
+    ' * Each icon is provided as an extension property on this object.',
+  // Source SVGs use #0F0F0F as a "tint placeholder" — rewrite to Color.Black so
+  // Icon(tint = …) at the call site can re-color the icon.
+  tintPlaceholders: new Set(['#0f0f0f', '#0F0F0F']),
+};
+
+const ASSETS_CONFIG = {
+  label: 'asset',
+  sourceDir: path.join(dsTokensDir, 'assets'),
+  outputDir: path.join(generatedDir, 'assets'),
+  packageName: 'com.tangem.core.ui.res.generated.assets',
+  // Illustrations are exposed as `Icons.<name>` extensions (same namespace as icons),
+  // so they reuse the `Icons` object from the icons package — no separate object here.
+  namespace: 'Icons',
+  generateNamespaceObject: false,
+  namespaceImport: 'com.tangem.core.ui.res.generated.icons.Icons',
+  hashFileName: '.assets-hash',
+  namespaceDoc: null,
+  // Illustrations keep their own colors — no tint placeholder rewrite.
+  tintPlaceholders: new Set(),
+};
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -98,6 +133,8 @@ function parseSvg(filePath) {
 /**
  * ic_arrow_down_24_regular.svg →
  *   { propName: 'ic_arrow_down_24', fileName: 'IcArrowDown24' }
+ * il_token_custom.svg →
+ *   { propName: 'il_token_custom', fileName: 'IlTokenCustom' }
  */
 function deriveNames(svgFile) {
   const base = path.basename(svgFile, '.svg').replace(/_regular$/, '');
@@ -106,15 +143,15 @@ function deriveNames(svgFile) {
     .map(part => capitalize(part))
     .join('');
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(base)) {
-    throw new Error(`Icon name "${base}" is not a valid Kotlin identifier`);
+    throw new Error(`Vector name "${base}" is not a valid Kotlin identifier`);
   }
   return { propName: base, fileName };
 }
 
 /** Convert an SVG color string into a Compose Color expression, or null to skip. */
-function svgColorToKotlin(value) {
+function svgColorToKotlin(value, tintPlaceholders) {
   if (!value || value === 'none') return null;
-  if (TINT_PLACEHOLDERS.has(value.toLowerCase())) return 'Color.Black';
+  if (tintPlaceholders.has(value.toLowerCase())) return 'Color.Black';
 
   const hex6 = value.match(/^#([0-9a-fA-F]{6})$/);
   if (hex6) return `Color(0xFF${hex6[1].toUpperCase()})`;
@@ -144,7 +181,7 @@ function svgColorToKotlin(value) {
   throw new Error(`Unsupported SVG color: "${value}"`);
 }
 
-function renderPath(p, indent) {
+function renderPath(p, indent, config) {
   const pad = '    '.repeat(indent);
   const pad1 = '    '.repeat(indent + 1);
   const args = [];
@@ -152,7 +189,7 @@ function renderPath(p, indent) {
   // If a path has no fill at all and has stroke, leave fill out. Otherwise default to tintable black.
   const hasStroke = !!p.stroke && p.stroke !== 'none';
   const fillSpecified = p.fill != null;
-  let fillKt = svgColorToKotlin(p.fill);
+  let fillKt = svgColorToKotlin(p.fill, config.tintPlaceholders);
   if (!fillSpecified && !hasStroke) fillKt = 'Color.Black';
   if (fillKt) args.push(`fill = SolidColor(${fillKt})`);
 
@@ -162,7 +199,7 @@ function renderPath(p, indent) {
     args.push(`fillAlpha = ${parseFloat(p.opacity)}f`);
   }
 
-  const strokeKt = svgColorToKotlin(p.stroke);
+  const strokeKt = svgColorToKotlin(p.stroke, config.tintPlaceholders);
   if (strokeKt) args.push(`stroke = SolidColor(${strokeKt})`);
   if (p.strokeWidth != null) args.push(`strokeLineWidth = ${parseFloat(p.strokeWidth)}f`);
   if (p.strokeLinecap) args.push(`strokeLineCap = StrokeCap.${capitalize(p.strokeLinecap)}`);
@@ -177,7 +214,7 @@ function renderPath(p, indent) {
   return lines.join('\n');
 }
 
-function renderIconFile({ propName, fileName }, icon) {
+function renderIconFile({ propName, fileName }, icon, config) {
   const usesStroke = icon.paths.some(p => p.stroke && p.stroke !== 'none');
 
   const imports = [
@@ -195,13 +232,15 @@ function renderIconFile({ propName, fileName }, icon) {
     imports.push('androidx.compose.ui.graphics.StrokeCap');
     imports.push('androidx.compose.ui.graphics.StrokeJoin');
   }
+  // When the namespace object lives in another package, import it.
+  if (config.namespaceImport) imports.push(config.namespaceImport);
   imports.sort();
 
-  const pathBlocks = icon.paths.map(p => renderPath(p, 2)).join('\n');
+  const pathBlocks = icon.paths.map(p => renderPath(p, 2, config)).join('\n');
 
   return `@file:Suppress("all")
 
-package ${PACKAGE}
+package ${config.packageName}
 
 ${imports.map(i => `import ${i}`).join('\n')}
 
@@ -211,7 +250,7 @@ ${imports.map(i => `import ${i}`).join('\n')}
 
 private var _${propName}: ImageVector? = null
 
-val Icons.${propName}: ImageVector
+val ${config.namespace}.${propName}: ImageVector
     get() {
         if (_${propName} != null) return _${propName}!!
         _${propName} = ImageVector.Builder(
@@ -230,69 +269,71 @@ ${pathBlocks.replace(/^/gm, '    ')}
 @Preview(showBackground = true)
 private fun ${fileName}Preview() {
     Icon(
-        imageVector = Icons.${propName},
+        imageVector = ${config.namespace}.${propName},
         contentDescription = null,
     )
 }
 `;
 }
 
-const ICONS_NAMESPACE = `@file:Suppress("all")
+function renderNamespaceFile(config) {
+  return `@file:Suppress("all")
 
-package ${PACKAGE}
+package ${config.packageName}
 
 /**
- * Auto-generated namespace for design-system icons.
- * Each icon is provided as an extension property on this object.
+ * ${config.namespaceDoc}
  */
-object Icons
+object ${config.namespace}
 `;
+}
 
 // ── Hash gate ──────────────────────────────────────────────────────────────────
 
-function computeIconsHash() {
-  const files = [...walkSvgs(iconsDir)];
-  files.sort((a, b) => {
-    const ra = path.relative(iconsDir, a).split(path.sep).join('/');
-    const rb = path.relative(iconsDir, b).split(path.sep).join('/');
-    return ra.localeCompare(rb);
-  });
+function computeSourceHash(config) {
+  const files = [...walkSvgs(config.sourceDir)];
+  // Code-unit order (not localeCompare) to match the Kotlin verifier's invariantSeparatorsPath
+  // sort deterministically across locales/ICU versions — see hash-util.mjs.
+  files.sort((a, b) => compareCodeUnits(
+    path.relative(config.sourceDir, a).split(path.sep).join('/'),
+    path.relative(config.sourceDir, b).split(path.sep).join('/'),
+  ));
   const hash = crypto.createHash('sha256');
   for (const file of files) {
-    hash.update(path.relative(iconsDir, file).split(path.sep).join('/'));
+    hash.update(path.relative(config.sourceDir, file).split(path.sep).join('/'));
     hash.update('\0');
-    hash.update(fs.readFileSync(file));
+    hash.update(stripCr(fs.readFileSync(file)));
     hash.update('\0');
   }
   return hash.digest('hex');
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────────
+// ── Generic build ────────────────────────────────────────────────────────────────
 
-export async function buildIcons() {
-  console.log('\nBuilding icon vectors...');
+function buildVectors(config) {
+  console.log(`\nBuilding ${config.label} vectors...`);
 
-  const newHash = computeIconsHash();
-  const hashFile = path.join(outputDir, '.icons-hash');
+  const newHash = computeSourceHash(config);
+  const hashFile = path.join(config.outputDir, config.hashFileName);
   if (fs.existsSync(hashFile)) {
     const prev = fs.readFileSync(hashFile, 'utf8').trim();
     if (prev === newHash) {
-      console.log(`  ✓ icons unchanged (${newHash.substring(0, 12)}…); skipping`);
+      console.log(`  ✓ ${config.label}s unchanged (${newHash.substring(0, 12)}…); skipping`);
       return { hash: newHash };
     }
   }
 
-  fs.mkdirSync(outputDir, { recursive: true });
+  fs.mkdirSync(config.outputDir, { recursive: true });
 
   // Parse every SVG up-front so we fail fast on errors before writing anything.
   const icons = [];
-  for (const svgFile of walkSvgs(iconsDir)) {
+  for (const svgFile of walkSvgs(config.sourceDir)) {
     const names = deriveNames(svgFile);
     let parsed;
     try {
       parsed = parseSvg(svgFile);
     } catch (e) {
-      throw new Error(`${path.relative(iconsDir, svgFile)}: ${e.message}`);
+      throw new Error(`${path.relative(config.sourceDir, svgFile)}: ${e.message}`);
     }
     icons.push({ names, parsed });
   }
@@ -302,39 +343,54 @@ export async function buildIcons() {
   for (const { names } of icons) {
     if (seen.has(names.propName)) {
       throw new Error(
-        `Duplicate icon property "${names.propName}" (file collision: ` +
+        `Duplicate ${config.label} property "${names.propName}" (file collision: ` +
         `${seen.get(names.propName)}.kt vs ${names.fileName}.kt)`,
       );
     }
     seen.set(names.propName, names.fileName);
   }
 
-  // Write namespace + per-icon files.
-  const expectedFiles = new Set(['Icons.kt', '.icons-hash']);
-  fs.writeFileSync(path.join(outputDir, 'Icons.kt'), ICONS_NAMESPACE);
+  // Write namespace (only if this family owns the object) + per-vector files.
+  const expectedFiles = new Set([config.hashFileName]);
+  if (config.generateNamespaceObject) {
+    const namespaceFile = `${config.namespace}.kt`;
+    expectedFiles.add(namespaceFile);
+    fs.writeFileSync(path.join(config.outputDir, namespaceFile), renderNamespaceFile(config));
+  }
 
   for (const { names, parsed } of icons) {
     const file = `${names.fileName}.kt`;
     expectedFiles.add(file);
-    fs.writeFileSync(path.join(outputDir, file), renderIconFile(names, parsed));
+    fs.writeFileSync(path.join(config.outputDir, file), renderIconFile(names, parsed, config));
   }
 
-  // Cleanup stale generated files (icons that no longer have a source SVG).
+  // Cleanup stale generated files (vectors that no longer have a source SVG).
   let removed = 0;
-  for (const entry of fs.readdirSync(outputDir)) {
+  for (const entry of fs.readdirSync(config.outputDir)) {
     if (!expectedFiles.has(entry) && entry.endsWith('.kt')) {
-      fs.unlinkSync(path.join(outputDir, entry));
+      fs.unlinkSync(path.join(config.outputDir, entry));
       removed++;
     }
   }
 
   fs.writeFileSync(hashFile, newHash + '\n');
   const removedNote = removed > 0 ? `, removed ${removed} stale` : '';
-  console.log(`  ✓ ${icons.length} icon(s) (${newHash.substring(0, 12)}…${removedNote})`);
+  console.log(`  ✓ ${icons.length} ${config.label}(s) (${newHash.substring(0, 12)}…${removedNote})`);
   return { hash: newHash };
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────────
+
+export async function buildIcons() {
+  return buildVectors(ICONS_CONFIG);
+}
+
+export async function buildAssets() {
+  return buildVectors(ASSETS_CONFIG);
 }
 
 // Run directly when executed as `node build-icons.mjs`.
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   await buildIcons();
+  await buildAssets();
 }

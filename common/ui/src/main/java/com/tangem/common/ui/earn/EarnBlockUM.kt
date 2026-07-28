@@ -45,8 +45,11 @@ sealed interface EarnBlockUM {
 
     @Immutable
     sealed interface IconUM {
-        data class Glowing(@DrawableRes val iconRes: Int) : IconUM
+        data class Glowing(@DrawableRes val iconRes: Int, val tone: Tone = Tone.Accent) : IconUM
         data class Plain(@DrawableRes val iconRes: Int) : IconUM
+
+        /** Accent — glow/tint follow the block [Type]; Warning — yellow icon tint and glow. */
+        enum class Tone { Accent, Warning }
     }
 
     @Immutable
@@ -54,13 +57,9 @@ sealed interface EarnBlockUM {
         val text: TextReference,
         val style: Style,
         val tone: Tone,
-        val iconUM: IconUM? = null,
     ) {
         enum class Style { Large, Small }
         enum class Tone { Primary, Secondary, Disabled, Accent }
-
-        data class IconUM(val tone: IconTone)
-        enum class IconTone { Warning, Info }
     }
 
     @Immutable
@@ -69,7 +68,6 @@ sealed interface EarnBlockUM {
             val text: TextReference,
             val style: Style,
             val tone: Tone,
-            val loader: Loader? = null,
         ) : SubtitleUM
 
         data class AccentedText(
@@ -78,11 +76,8 @@ sealed interface EarnBlockUM {
             val style: Style,
         ) : SubtitleUM
 
-        data class Loader(val tone: LoaderTone)
-
         enum class Style { Large, Small }
         enum class Tone { Primary, Disabled, Accent }
-        enum class LoaderTone { Positive, Muted }
     }
 
     @Immutable
@@ -100,5 +95,18 @@ sealed interface EarnBlockUM {
             val cryptoValue: TextReference,
             val isBalanceHidden: Boolean,
         ) : TrailingUM
+
+        /** Chevron indicating the whole row is clickable. */
+        data object Chevron : TrailingUM
+
+        /** Status icon (warning / info) placed in the trailing slot. */
+        data class StatusIcon(val tone: Tone) : TrailingUM {
+            enum class Tone { Warning, Info }
+        }
+
+        /** Circular progress indicator placed in the trailing slot (enabling / disabling states). */
+        data class Loader(val tone: LoaderTone) : TrailingUM {
+            enum class LoaderTone { Positive, Muted }
+        }
     }
 }

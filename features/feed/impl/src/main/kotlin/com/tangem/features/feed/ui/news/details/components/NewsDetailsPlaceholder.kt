@@ -10,94 +10,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
 fun NewsDetailsPlaceholder(contentPadding: PaddingValues, background: Color, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        NewsDetailsPlaceholderV2(contentPadding, background, modifier)
-    } else {
-        NewsDetailsPlaceholderV1(background, modifier)
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun NewsDetailsPlaceholderV1(background: Color, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(background)
-            .padding(16.dp),
-    ) {
-        RectangleShimmer(modifier = Modifier.size(width = 112.dp, height = 20.dp))
-        SpacerH(8.dp)
-        RectangleShimmer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(28.dp),
-        )
-        SpacerH(4.dp)
-        RectangleShimmer(modifier = Modifier.size(height = 28.dp, width = 208.dp))
-        SpacerH(20.dp)
-        RectangleShimmer(modifier = Modifier.size(height = 36.dp, width = 99.dp), radius = 12.dp)
-        SpacerH(32.dp)
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 30.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 30.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 24.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 70.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 30.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 96.dp),
-            )
-            RectangleShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .padding(end = 100.dp),
-            )
-        }
-    }
+    NewsDetailsPlaceholderV2(contentPadding, background, modifier)
 }
 
 @Suppress("LongMethod")
@@ -179,18 +97,6 @@ private fun NewsDetailsPlaceholderV2(contentPadding: PaddingValues, background: 
                 .height(20.dp)
                 .padding(end = 46.dp),
             radius = TangemTheme.dimens2.x25,
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun NewsDetailsPlaceholderPreviewV1() {
-    TangemThemePreview {
-        NewsDetailsPlaceholder(
-            background = TangemTheme.colors.background.tertiary,
-            contentPadding = PaddingValues(),
         )
     }
 }

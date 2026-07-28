@@ -2,18 +2,15 @@ package com.tangem.features.tangempay.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
-import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreen
 import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreenV2
 
 internal class TangemPayAddToWalletComponent(
@@ -28,19 +25,10 @@ internal class TangemPayAddToWalletComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         val cardDetailsState by model.cardDetailsState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
-        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
-            if (model.isRedesignEnabled()) {
-                TangemPayAddToWalletScreenV2(
-                    state = state,
-                    cardDetailsState = cardDetailsState,
-                )
-            } else {
-                TangemPayAddToWalletScreen(
-                    state = state,
-                    cardDetailsState = cardDetailsState,
-                )
-            }
-        }
+        TangemPayAddToWalletScreenV2(
+            state = state,
+            cardDetailsState = cardDetailsState,
+        )
     }
 
     data class Params(val card: TangemPayCard, val userWalletId: UserWalletId)

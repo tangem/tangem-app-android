@@ -61,6 +61,19 @@ fun BaseTestCase.openMainScreen(
     }
 }
 
+/** Opens the main screen, synchronizes addresses, and opens the details of the token with [tokenName]. */
+fun BaseTestCase.openTokenDetails(tokenName: String) {
+    step("Open 'Main Screen'") {
+        openMainScreen()
+    }
+    step("Synchronize addresses") {
+        synchronizeAddresses()
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+}
+
 @OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
     step("Click on 'Get started' button") {

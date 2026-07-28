@@ -2,13 +2,38 @@ package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TangemPayCardPagePageObject>(semanticsProvider = semanticsProvider) {
+
+    val moreButton: KNode = child {
+        hasTestTag(TangemPayTestTags.CARD_PAGE_MORE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val replaceCardMenuItem: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_reissue_card))
+        useUnmergedTree = true
+    }
+
+    val cardNumberShort: KNode = child {
+        hasTestTag(TangemPayTestTags.CARD_NUMBER_SHORT)
+        useUnmergedTree = true
+    }
+
+    val reissueInProgressBlock: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
 
     val changePinRow: KNode = child {
         hasTestTag(TangemPayTestTags.CHANGE_PIN_ROW)
@@ -62,6 +87,16 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
 
     val copyCvcButton: KNode = child {
         hasTestTag(TangemPayTestTags.CARD_DETAILS_COPY_CVC)
+        useUnmergedTree = true
+    }
+
+    val dailyLimitChangeButton: KNode = child {
+        hasTestTag(TangemPayTestTags.DAILY_LIMIT_CHANGE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val dailyLimitValue: KNode = child {
+        hasTestTag(TangemPayTestTags.DAILY_LIMIT_CURRENT_VALUE)
         useUnmergedTree = true
     }
 }

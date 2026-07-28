@@ -17,11 +17,9 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.commonfeatures.impl.tokenactions.model.TokenActionsModel
-import com.tangem.features.commonfeatures.impl.tokenactions.ui.TokenActionsContent
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.TokenActionsContentV2
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
@@ -49,17 +47,10 @@ internal class TokenActionsComponent @AssistedInject constructor(
         val state = model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val tokenActionsUM = state.value ?: return
-        if (LocalRedesignEnabled.current || params.isRedesignForced) {
-            TokenActionsContentV2(
-                modifier = modifier,
-                state = tokenActionsUM,
-            )
-        } else {
-            TokenActionsContent(
-                modifier = modifier,
-                state = tokenActionsUM,
-            )
-        }
+        TokenActionsContentV2(
+            modifier = modifier,
+            state = tokenActionsUM,
+        )
         bottomSheet.child?.instance?.BottomSheet()
     }
 

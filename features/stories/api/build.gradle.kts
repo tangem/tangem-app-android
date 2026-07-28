@@ -11,11 +11,10 @@ android {
 
 dependencies {
     /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Compose */
-    implementation(deps.kotlin.immutable.collections)
-    implementation(deps.compose.runtime)
-    implementation(projects.common.routing)
+    api(deps.kotlin.immutable.collections)
+    api(projects.common.routing)
 }
