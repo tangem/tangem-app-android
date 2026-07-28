@@ -441,6 +441,7 @@
   <string name="common_rename">Rename</string>
   <string name="common_required">Required</string>
   <string name="common_reset">Reset</string>
+  <string name="common_retry">Retry</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
   <string name="common_search">Search</string>
@@ -741,6 +742,7 @@
   <string name="force_update_button">Update</string>
   <string name="force_update_os_description">Your operating system is out of date. Please update it to continue using the app.</string>
   <string name="force_update_os_title">Update Your OS</string>
+  <string name="force_update_required_action">Update app</string>
   <string name="force_update_warning_message">Please update the app to its latest version to ensure proper functionality.</string>
   <string name="force_update_warning_title">Update required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
@@ -908,9 +910,11 @@
     <item quantity="one">%d asset</item>
     <item quantity="other">%d assets</item>
   </plurals>
+  <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
+  <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
   <string name="market_chart_top_holding">Top holding %s</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
@@ -1930,9 +1934,35 @@
     <item quantity="one">%d card</item>
     <item quantity="other">%d cards</item>
   </plurals>
+  <string name="tangempay_cashback_accruals_calc_description">We process purchases within 5 days after the operation and count only completed transactions</string>
+  <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">No cashback will be awarded for in-person/in-store purchases at EU merchants; also for withdrawals, transfers, quasi-cash, mobile phone bills, government services and certain other categories</string>
+  <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
+  <string name="tangempay_cashback_accruals_pay_description">From the 2nd and the 5th of the next month</string>
+  <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
+  <string name="tangempay_cashback_accruals_subtitle">Limits and exceptions</string>
+  <string name="tangempay_cashback_accruals_title">Accruals</string>
+  <string name="tangempay_cashback_additional_permanent">Permanent</string>
+  <string name="tangempay_cashback_additional_title">Additional cashback</string>
+  <string name="tangempay_cashback_additional_until">Until %1$s</string>
   <string name="tangempay_cashback_deactivated_description">It was made due to your suspicious behavior. Contact support to learn more</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deactivated</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s for %2$s will be deposited till %3$s</string>
   <string name="tangempay_cashback_deposited_on">Will be deposited on %1$s</string>
+  <string name="tangempay_cashback_details_cap">%1$s max per month</string>
+  <string name="tangempay_cashback_details_eu_excluded">No cashback for in-person purchases at EU merchants</string>
+  <string name="tangempay_cashback_details_paid_in">Paid in %1$s</string>
+  <string name="tangempay_cashback_details_tier">%1$s%% for all purchases with your %2$s cards, min purchase %3$s</string>
+  <string name="tangempay_cashback_earned_title">%1$s earned in %2$s</string>
+  <string name="tangempay_cashback_empty_subtitle">Collected amount will be shown here</string>
+  <string name="tangempay_cashback_empty_title">Start spending\nand earn cashback</string>
+  <string name="tangempay_cashback_error_title">Failed to load page.\nTap to reload</string>
+  <string name="tangempay_cashback_rate_subtitle">With your %1$s plan</string>
+  <string name="tangempay_cashback_rate_title">Cashback %1$s%%</string>
+  <string name="tangempay_cashback_rate_title_up_to">Cashback up to %1$s%%</string>
+  <string name="tangempay_cashback_refund_banner">We received a refund for a purchase for which cashback had previously been awarded</string>
+  <string name="tangempay_cashback_title">Cashback</string>
+  <string name="tangempay_cashback_total_earned">%1$s earned in total</string>
   <string name="tangempay_cashback_widget_title">%1$s cashback in %2$s</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
@@ -2091,8 +2121,11 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
+  <string name="tangempay_va_account_details">Account details</string>
+  <string name="tangempay_va_available_to_deposit_day">Available to deposit per day:</string>
   <string name="tangempay_va_banking_details_error_description">Please try again or contact support if the issue persists</string>
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
+  <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>

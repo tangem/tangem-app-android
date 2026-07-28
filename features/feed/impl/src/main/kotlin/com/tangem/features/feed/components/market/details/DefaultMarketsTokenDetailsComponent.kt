@@ -37,6 +37,7 @@ import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnal
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTitle
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -51,6 +52,7 @@ internal class DefaultMarketsTokenDetailsComponent(
     val params: Params,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
+    private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     // applying l2 compatibility
@@ -61,6 +63,11 @@ internal class DefaultMarketsTokenDetailsComponent(
     )
     private val analyticsParams = params.analyticsParams
     private val model: MarketsTokenDetailsModel = getOrCreateModel(updatedParams)
+
+    private val marketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("marketsTokenDetailsMarketingBanner"),
+        params = MarketingBannerComponent.Params.Standalone(requestFlow = model.marketingRequest),
+    )
 
     private val portfolioComponent: MarketsPortfolioComponent? =
         if (updatedParams.shouldShowPortfolio && !designFeatureToggles.isRedesignEnabled) {
@@ -213,6 +220,9 @@ internal class DefaultMarketsTokenDetailsComponent(
                 { blockModifier ->
                     component.Content(blockModifier)
                 }
+            },
+            marketingBanner = { blockModifier ->
+                marketingBannerComponent.Content(blockModifier)
             },
         )
         bottomSheet.child?.instance?.BottomSheet()

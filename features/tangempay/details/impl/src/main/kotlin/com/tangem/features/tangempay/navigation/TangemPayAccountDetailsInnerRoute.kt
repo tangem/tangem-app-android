@@ -14,4 +14,7 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
 
     @Serializable
     data class AddToWallet(val card: TangemPayCard) : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data object VirtualAccountDepositSuccess : TangemPayAccountDetailsInnerRoute()
 }
