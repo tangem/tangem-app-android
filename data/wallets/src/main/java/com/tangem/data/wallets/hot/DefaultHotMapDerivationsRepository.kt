@@ -101,6 +101,11 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         return updatedUserWallet.updateWithNewKeys(newKeys) to newKeys
     }
 
+    override fun mergeDerivedKeys(
+        userWallet: UserWallet.Hot,
+        keys: Map<ByteArrayKey, ExtendedPublicKeysMap>,
+    ): UserWallet.Hot = userWallet.updateWithNewKeys(keys)
+
     override suspend fun hasMissedDerivations(
         userWallet: UserWallet.Hot,
         networksWithDerivationPath: Map<BackendId, String?>,

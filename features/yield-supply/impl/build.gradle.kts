@@ -14,6 +14,7 @@ dependencies {
 
     /** Feature */
     implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.marketing.api)
 
     /** Core */
     implementation(projects.core.configToggles)
@@ -59,6 +60,8 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.marketing.models)
+    implementation(projects.domain.onramp.models)
     implementation(projects.libs.crypto)
 
     /** Compose */

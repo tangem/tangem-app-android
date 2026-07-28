@@ -49,11 +49,11 @@ data class MessageBottomSheetUM(
         var backgroundType: BackgroundType = BackgroundType.Unspecified,
     ) : Element {
         enum class Type {
-            Unspecified, Accent, Informative, Attention, Warning,
+            Unspecified, Accent, Informative, Attention, Warning, Success,
         }
 
         enum class BackgroundType {
-            Unspecified, SameAsTint, Accent, Informative, Attention, Warning,
+            Unspecified, SameAsTint, Accent, Informative, Attention, Warning, Success,
         }
     }
 

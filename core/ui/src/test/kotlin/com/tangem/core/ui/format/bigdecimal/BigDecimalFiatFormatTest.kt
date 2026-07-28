@@ -1,11 +1,16 @@
 package com.tangem.core.ui.format.bigdecimal
 
+import androidx.compose.ui.text.SpanStyle
 import com.google.common.truth.Truth
+import com.tangem.core.ui.extensions.SpanStyleReference
+import com.tangem.core.ui.extensions.TextReference
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.util.Locale
 
 internal class BigDecimalFiatFormatTest {
@@ -15,6 +20,8 @@ internal class BigDecimalFiatFormatTest {
 
     val usdCurrencyCode = "USD"
     val usdSymbol = "$"
+
+    private val spanStyleStub = SpanStyleReference { SpanStyle() }
 
     private fun String.addUsdSymbolLeft() = usdSymbol + this
 
@@ -130,6 +137,40 @@ internal class BigDecimalFiatFormatTest {
 
         Truth.assertThat(formatted)
             .isEqualTo("-" + "0.01".addUsdSymbolLeft())
+    }
+
+    // === defaultAmount() styled ===
+
+    @Test
+    fun `GIVEN locale with distinct monetary separator WHEN styled defaultAmount THEN fraction split at monetary separator`() {
+        // Arrange
+        // fr_CH plain separator is ',' but currency output uses '.' — searching for the plain one
+        // failed to split the amount into whole and styled fractional parts
+        val swissLocale = Locale("fr", "CH")
+        val symbols = (NumberFormat.getCurrencyInstance(swissLocale) as DecimalFormat).decimalFormatSymbols
+        Truth.assertThat(symbols.monetaryDecimalSeparator).isNotEqualTo(symbols.decimalSeparator)
+
+        val testValue = BigDecimal("12.34")
+
+        // Act
+        val formatted = testValue.formatStyled {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                spanStyleReference = spanStyleStub,
+                locale = swissLocale,
+            )
+        }
+
+        // Assert
+        val refs = (formatted as TextReference.Combined).refs.data
+        Truth.assertThat(refs).hasSize(3)
+        Truth.assertThat(refs[0]).isEqualTo(TextReference.EMPTY)
+        Truth.assertThat((refs[1] as TextReference.Str).value).isEqualTo("12")
+
+        val fraction = refs[2] as TextReference.StyledStr
+        Truth.assertThat(fraction.value).startsWith("${symbols.monetaryDecimalSeparator}34")
+        Truth.assertThat(fraction.value).endsWith(usdSymbol)
     }
 
     // === approximateAmount() ===

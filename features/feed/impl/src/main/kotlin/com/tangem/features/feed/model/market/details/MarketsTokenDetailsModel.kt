@@ -40,6 +40,7 @@ import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsUseCase
@@ -49,6 +50,7 @@ import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
+import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.feed.components.market.details.AddFundsSlotRoute
 import com.tangem.features.feed.components.market.details.AddToPortfolioSlotRoute
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
@@ -233,6 +235,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     val isVisibleOnScreen = MutableStateFlow(false)
     val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
+
+    val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
+        MarketingBannerRequest(screen = MarketingScreen.TokenMarkets(coingeckoId = params.token.id.value)),
+    )
 
     val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
     val addFundsSheetNavigation = SlotNavigation<AddFundsSlotRoute>()
