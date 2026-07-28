@@ -56,4 +56,21 @@ internal sealed class TangemPayCardNavigation {
 
     @Serializable
     data class Receive(val config: TokenReceiveConfig) : TangemPayCardNavigation()
+
+    /** Multichain: lets the user pick which network to receive funds on. */
+    @Serializable
+    data class ChooseNetwork(val walletId: UserWalletId) : TangemPayCardNavigation()
+
+    /** Multichain: the static "other networks" info sheet shown from [ChooseNetwork]. */
+    @Serializable
+    data object OtherNetworks : TangemPayCardNavigation()
+
+    /**
+     * Multichain: the pay-specific multi-token "Receive assets" sheet for an already-issued
+     * (Available) network, shown from [ChooseNetwork]. The network's currencies and deposit address
+     * are re-resolved from live status by walletId + the network's stable [networkRawId] rather than
+     * carried here, since [com.tangem.domain.models.currency.CryptoCurrency] is not cleanly serializable.
+     */
+    @Serializable
+    data class PaymentReceive(val walletId: UserWalletId, val networkRawId: String) : TangemPayCardNavigation()
 }

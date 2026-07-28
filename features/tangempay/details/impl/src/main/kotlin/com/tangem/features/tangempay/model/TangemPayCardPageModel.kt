@@ -13,6 +13,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -45,6 +46,7 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.closure.CloseCardListener
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.ReissueCardListener
@@ -55,11 +57,14 @@ import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsController
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
+import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
+import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.utils.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -68,8 +73,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
@@ -87,7 +90,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
-) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener {
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
 
@@ -422,14 +426,21 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onClickReceive(data: TangemPayTopUpData) {
         bottomSheetNavigation.dismiss()
-        val config = TokenReceiveConfig(
-            shouldShowWarning = true,
-            cryptoCurrency = data.currency,
-            userWalletId = data.walletId,
-            showMemoDisclaimer = false,
-            receiveAddress = data.receiveAddress,
-        )
-        bottomSheetNavigation.activate(TangemPayCardNavigation.Receive(config))
+        val loaded = currentStatus.value.ifLoadedOrNull { it }
+        val shouldChooseNetwork = loaded != null &&
+            shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, loaded.networks)
+        if (shouldChooseNetwork) {
+            bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = data.walletId))
+        } else {
+            val config = TokenReceiveConfig(
+                shouldShowWarning = true,
+                cryptoCurrency = data.currency,
+                userWalletId = data.walletId,
+                showMemoDisclaimer = false,
+                receiveAddress = data.receiveAddress,
+            )
+            bottomSheetNavigation.activate(TangemPayCardNavigation.Receive(config))
+        }
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
@@ -535,6 +546,22 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     override fun onDismissAddFunds() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    override fun onSelectAvailable(networkRawId: String) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.PaymentReceive(walletId = userWalletId, networkRawId = networkRawId),
+        )
+    }
+
+    override fun onSelectDisabled() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayCardNavigation.OtherNetworks)
+    }
+
+    override fun onDismiss() {
         bottomSheetNavigation.dismiss()
     }
 
