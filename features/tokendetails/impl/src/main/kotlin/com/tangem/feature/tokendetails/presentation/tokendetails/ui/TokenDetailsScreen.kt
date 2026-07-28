@@ -46,6 +46,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -73,6 +74,7 @@ internal fun TokenDetailsScreen(
     txHistoryComponent: TxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
     ratingComponent: RatingComponent?,
+    marketingBannerComponent: MarketingBannerComponent,
     modifier: Modifier = Modifier,
 ) {
     val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
@@ -100,6 +102,7 @@ internal fun TokenDetailsScreen(
                     txHistoryComponent = txHistoryComponent,
                     expressTransactionsComponent = expressTransactionsComponent,
                     expressTransactionsToDisplay = expressState.transactionsToDisplay,
+                    marketingBannerComponent = marketingBannerComponent,
                     rootBackground = rootBackground,
                     topContentPadding = topBarTotalHeight,
                     bottomContentPadding = effectiveBottomPadding,
@@ -161,6 +164,7 @@ private fun TokenDetailsBody(
     txHistoryComponent: TxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
     expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
+    marketingBannerComponent: MarketingBannerComponent,
     rootBackground: Color,
     topContentPadding: Dp,
     bottomContentPadding: Dp,
@@ -229,6 +233,9 @@ private fun TokenDetailsBody(
                     modifier = itemModifier.padding(top = 8.dp),
                 )
             }
+        }
+        item(key = "marketing_banner_block") {
+            marketingBannerComponent.Content(modifier = itemModifier.padding(vertical = 8.dp))
         }
         if (balance is TokenDetailsBalanceBlockUM.Content && balance.isBalanceZero) {
             item(key = "zero_balance_actions") {
@@ -317,6 +324,10 @@ private fun TokenDetailsScreen_Preview() {
             },
             expressTransactionsComponent = PreviewExpressTransactionsComponent,
             ratingComponent = null,
+            marketingBannerComponent = object : MarketingBannerComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+            },
         )
     }
 }

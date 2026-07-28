@@ -154,7 +154,7 @@ object PreferencesKeys {
     val TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY by lazy {
         stringPreferencesKey(name = "tangemPayActiveWithdrawOrdersKey")
     }
-    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityList") }
+    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityListV2") }
 
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
@@ -188,6 +188,9 @@ object PreferencesKeys {
 
     fun getTangemPayOrderIdKey(customerWalletAddress: String) =
         stringPreferencesKey("tangem_pay_order_id_key_$customerWalletAddress")
+
+    fun getTangemPayVirtualAccountOrderIdKey(customerWalletAddress: String) =
+        stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
 
     fun getTangemPayCustomerWalletAddressKey(userWalletId: UserWalletId) =
         stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")

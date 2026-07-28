@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.entity
 
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.serialization.SerializedCurrency
@@ -21,6 +23,25 @@ internal sealed class TangemPayDetailsNavigation {
         val fiatBalance: SerializedBigDecimal,
         val depositAddress: String,
         val cryptoCurrency: CryptoCurrency,
+        val virtualAccountOnramp: VirtualAccountOnramp?,
+    ) : TangemPayDetailsNavigation()
+
+    @Serializable
+    data class VirtualAccountDeposit(
+        val virtualAccountOnramp: VirtualAccountOnramp,
+        val userWalletId: UserWalletId,
+        val paymentAccountAddress: String,
+    ) : TangemPayDetailsNavigation()
+
+    @Serializable
+    data class VirtualAccountRequisites(
+        val userWalletId: UserWalletId,
+        val bankCredentials: BankCredentials,
+    ) : TangemPayDetailsNavigation()
+
+    @Serializable
+    data class VaBankingDetailsError(
+        val userWalletId: UserWalletId,
     ) : TangemPayDetailsNavigation()
 
     @Serializable
