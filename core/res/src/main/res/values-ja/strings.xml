@@ -427,6 +427,7 @@
   <string name="common_rename">名前を変更</string>
   <string name="common_required">必須</string>
   <string name="common_reset">リセット</string>
+  <string name="common_retry">リトライ</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>

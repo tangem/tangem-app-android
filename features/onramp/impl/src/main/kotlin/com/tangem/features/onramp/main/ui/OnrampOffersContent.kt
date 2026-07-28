@@ -29,15 +29,17 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
+internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBannerComponent: MarketingBannerComponent) {
     when (state) {
         is OnrampOffersBlockUM.Content -> {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -52,7 +54,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
 
                         SpacerH(8.dp)
 
-                        Offer(recentOffer)
+                        OfferWithLinkedBanner(recentOffer, linkedMarketingBannerComponent)
 
                         SpacerH(16.dp)
                     }
@@ -74,7 +76,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
 
                 state.recommended.fastForEach { offer ->
                     key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
-                        Offer(offer)
+                        OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)
                         SpacerH(8.dp)
                     }
                 }
@@ -102,13 +104,34 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
 }
 
 @Composable
-internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) {
+internal fun OfferWithLinkedBanner(offer: OnrampOfferUM, linkedMarketingBannerComponent: MarketingBannerComponent) {
+    val hasBanner = linkedMarketingBannerComponent.hasLinkedBanner(offer.providerId)
+    // Square the offer's bottom corners so the bottom-rounded banner glues to it as one card.
+    Offer(offer, roundBottom = !hasBanner)
+    if (hasBanner) {
+        TangemThemeRedesign {
+            linkedMarketingBannerComponent.LinkedContent(
+                providerId = offer.providerId,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, roundBottom: Boolean = true) {
+    // Square the bottom corners when a linked marketing banner is glued below, so they read as one card.
+    val shape = if (roundBottom) {
+        RoundedCornerShape(14.dp)
+    } else {
+        RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
                 color = TangemTheme.colors.background.action,
-                shape = RoundedCornerShape(14.dp),
+                shape = shape,
             )
             .padding(12.dp),
     ) {
@@ -386,6 +409,7 @@ private fun OnrampOffersContentPreview() {
                 imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                 type = PaymentMethodType.CARD,
             ),
+            providerId = "simplex",
             providerName = "Simplex",
             rate = "0,00045334 BTC",
             diff = stringReference("–27%"),
@@ -401,6 +425,7 @@ private fun OnrampOffersContentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
+                providerId = "simplex",
                 providerName = "Simplex",
                 rate = "0,0245334 BTC",
                 diff = null,
@@ -415,6 +440,7 @@ private fun OnrampOffersContentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
+                providerId = "simplex",
                 providerName = "Simplex",
                 rate = "0,00145334 BTC",
                 diff = stringReference("–0.07%"),
@@ -427,7 +453,10 @@ private fun OnrampOffersContentPreview() {
         ),
     )
     TangemThemePreview {
-        OnrampOffersContent(state)
+        OnrampOffersContent(state = state, linkedMarketingBannerComponent = object : MarketingBannerComponent {
+            @Composable
+            override fun Content(modifier: Modifier) = Unit
+        })
     }
 }
 
@@ -436,6 +465,12 @@ private fun OnrampOffersContentPreview() {
 @Composable
 private fun OnrampOffersLoadingPreview() {
     TangemThemePreview {
-        OnrampOffersContent(OnrampOffersBlockUM.Loading)
+        OnrampOffersContent(
+            state = OnrampOffersBlockUM.Loading,
+            linkedMarketingBannerComponent = object : MarketingBannerComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+            },
+        )
     }
 }
