@@ -25,9 +25,11 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
@@ -35,13 +37,18 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
 import com.tangem.features.onramp.main.entity.OnrampOfferUM
-import com.tangem.features.onramp.main.ui.Offer
+import com.tangem.features.onramp.main.ui.OfferWithLinkedBanner
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 @Composable
-internal fun AllOffersContentSheet(state: AllOffersStateUM, onCloseClick: () -> Unit) {
+internal fun AllOffersContentSheet(
+    state: AllOffersStateUM,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    onCloseClick: () -> Unit,
+) {
     val onBack = remember(state) {
         {
             if (state is AllOffersStateUM.Content && state.currentMethod != null) {
@@ -71,37 +78,64 @@ internal fun AllOffersContentSheet(state: AllOffersStateUM, onCloseClick: () -> 
             }
         },
         content = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 8.dp)
-                    .animateContentSize(),
-            ) {
-                AnimatedContent(
-                    targetState = state is AllOffersStateUM.Content && state.currentMethod != null,
-                    transitionSpec = {
-                        fadeIn(tween(durationMillis = 220)) togetherWith
-                            fadeOut(tween(durationMillis = 220))
-                    },
-                    label = "Change offers and payment method state",
-                ) { shouldShowOffersScreen ->
-                    when (state) {
-                        AllOffersStateUM.Loading -> AllOffersContentLoading()
-                        is AllOffersStateUM.Error -> AllOffersError(state.errorNotification)
-                        is AllOffersStateUM.Content -> {
-                            if (shouldShowOffersScreen) {
-                                state.currentMethod?.let {
-                                    OffersBasedOnPaymentMethodContent(offers = it.offers)
-                                }
-                            } else {
-                                PaymentMethodsContent(methods = state.methods)
+            AllOffersSheetContent(
+                state = state,
+                marketingBannerComponent = marketingBannerComponent,
+                linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+            )
+        },
+    )
+}
+
+@Composable
+private fun AllOffersSheetContent(
+    state: AllOffersStateUM,
+    marketingBannerComponent: MarketingBannerComponent,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Standalone marketing banner at the top of the sheet (DS3 -> wrap in the redesign theme).
+        // Renders nothing when no matching campaign, so it adds no space in the common case.
+        TangemThemeRedesign {
+            marketingBannerComponent.Content(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 8.dp)
+                .animateContentSize(),
+        ) {
+            AnimatedContent(
+                targetState = state is AllOffersStateUM.Content && state.currentMethod != null,
+                transitionSpec = {
+                    fadeIn(tween(durationMillis = 220)) togetherWith
+                        fadeOut(tween(durationMillis = 220))
+                },
+                label = "Change offers and payment method state",
+            ) { shouldShowOffersScreen ->
+                when (state) {
+                    AllOffersStateUM.Loading -> AllOffersContentLoading()
+                    is AllOffersStateUM.Error -> AllOffersError(state.errorNotification)
+                    is AllOffersStateUM.Content -> {
+                        if (shouldShowOffersScreen) {
+                            state.currentMethod?.let { method ->
+                                OffersBasedOnPaymentMethodContent(
+                                    offers = method.offers,
+                                    linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                                )
                             }
+                        } else {
+                            PaymentMethodsContent(methods = state.methods)
                         }
                     }
                 }
             }
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -127,7 +161,10 @@ private fun PaymentMethodTitle(onCloseClick: () -> Unit) {
 }
 
 @Composable
-private fun OffersBasedOnPaymentMethodContent(offers: ImmutableList<OnrampOfferUM>) {
+private fun OffersBasedOnPaymentMethodContent(
+    offers: ImmutableList<OnrampOfferUM>,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,7 +173,7 @@ private fun OffersBasedOnPaymentMethodContent(offers: ImmutableList<OnrampOfferU
     ) {
         offers.fastForEach { offer ->
             key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
-                Offer(offer)
+                OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)
                 SpacerH(8.dp)
             }
         }
@@ -205,6 +242,7 @@ private fun AllOffersContentSheetPaymentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
+                providerId = "simplex",
                 providerName = "Simplex",
                 rate = "0,0245334 BTC",
                 diff = null,
@@ -219,6 +257,7 @@ private fun AllOffersContentSheetPaymentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
+                providerId = "simplex",
                 providerName = "Simplex",
                 rate = "0,00145334 BTC",
                 diff = stringReference("–0.07%"),
@@ -248,9 +287,16 @@ private fun AllOffersContentSheetPaymentPreview() {
                 currentMethod = method,
                 onBackClicked = {},
             ),
+            marketingBannerComponent = PreviewMarketingBannerComponent,
+            linkedMarketingBannerComponent = PreviewMarketingBannerComponent,
             onCloseClick = {},
         )
     }
+}
+
+private val PreviewMarketingBannerComponent = object : MarketingBannerComponent {
+    @Composable
+    override fun Content(modifier: Modifier) = Unit
 }
 
 @Preview(showBackground = true, widthDp = 360)
@@ -270,6 +316,7 @@ private fun AllOffersContentSheetOffersPreview() {
                         "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                         type = PaymentMethodType.CARD,
                     ),
+                    providerId = "simplex",
                     providerName = "Simplex",
                     rate = "0,0245334 BTC",
                     diff = null,
@@ -285,6 +332,7 @@ private fun AllOffersContentSheetOffersPreview() {
                         "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                         type = PaymentMethodType.CARD,
                     ),
+                    providerId = "simplex",
                     providerName = "Simplex",
                     rate = "0,00145334 BTC",
                     diff = stringReference("–0.07%"),
@@ -315,6 +363,8 @@ private fun AllOffersContentSheetOffersPreview() {
                 currentMethod = null,
                 onBackClicked = {},
             ),
+            marketingBannerComponent = PreviewMarketingBannerComponent,
+            linkedMarketingBannerComponent = PreviewMarketingBannerComponent,
             onCloseClick = {},
         )
     }

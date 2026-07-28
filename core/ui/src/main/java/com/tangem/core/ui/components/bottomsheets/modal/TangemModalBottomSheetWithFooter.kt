@@ -178,11 +178,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
 
         val isKeyboardOpen by rememberIsKeyboardVisible()
         val buttonHeight by animateDpAsState(
-            if (footer != null) {
-                80.dp
-            } else {
-                0.dp
-            },
+            targetValue = if (footer != null) 80.dp else 0.dp,
         )
         // Offset calculation for keyboard scroll adjustment:
         // 1) Button height (footer)
