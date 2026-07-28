@@ -52,7 +52,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Info,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Info,
                 title = resourceReference(R.string.express_exchange_status_exchanging_active),
                 isLoading = true,
             ),
@@ -67,7 +67,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Warning,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
                 title = resourceReference(R.string.express_exchange_status_verifying),
                 subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
                 isLoading = false,
@@ -83,7 +83,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Success,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Success,
                 title = resourceReference(R.string.express_exchange_status_exchanged),
                 isLoading = false,
             ),
@@ -107,9 +107,24 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Error,
                 title = resourceReference(R.string.express_exchange_status_failed),
                 subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN expired express swap WHEN convert THEN grey clock terminal banner`() {
+        // Act
+        val banner = converter.convert(expressSwap(status = ExpressExchangeStatus.Expired)).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Expired,
+                title = resourceReference(R.string.tx_history_details_status_expired),
                 isLoading = false,
             ),
         )
@@ -123,7 +138,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Success,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Success,
                 title = resourceReference(R.string.express_exchange_status_bought),
                 isLoading = false,
             ),
@@ -138,7 +153,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(banner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Warning,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
                 title = resourceReference(R.string.express_exchange_status_verifying),
                 subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
                 isLoading = false,
@@ -148,11 +163,56 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     @Test
     fun `GIVEN unknown express onramp WHEN convert THEN no status banner`() {
-        // Act — nothing to surface, the plaque is hidden.
+        // Act — the terminal client fallback carries nothing to show; the plaque is hidden (same as the swap variant).
         val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.Unknown)).statusBanner
 
         // Assert
         assertThat(banner).isNull()
+    }
+
+    @Test
+    fun `GIVEN expired express onramp WHEN convert THEN grey clock terminal banner`() {
+        // Act
+        val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.Expired)).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Expired,
+                title = resourceReference(R.string.tx_history_details_status_expired),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN refund-in-progress express onramp WHEN convert THEN amber refunding loader banner`() {
+        // Act
+        val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.RefundInProgress)).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
+                title = resourceReference(R.string.tx_history_onramp_status_refunding),
+                isLoading = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN refunded express onramp WHEN convert THEN red terminal banner with refund glyph`() {
+        // Act
+        val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.Refunded)).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Refunded,
+                title = resourceReference(R.string.tx_history_onramp_status_refunded),
+                isLoading = false,
+            ),
+        )
     }
 
     // endregion
@@ -214,7 +274,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN finished express onramp WHEN convert THEN paid fiat is unsigned and topped-up crypto is plus`() {
+    fun `GIVEN finished express onramp WHEN convert THEN paid fiat and topped-up crypto are both unsigned`() {
         // Act
         val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished))
 
@@ -225,9 +285,11 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
         assertThat(result.from?.amount?.resolveString()).doesNotContain("+")
         assertThat(result.from?.amount?.resolveString()).doesNotContain("~")
-        // Topped-up crypto leg is settled: `+`, with an icon.
+        // Topped-up crypto leg has an icon but no sign — an onramp buy never shows `+`/`−`.
         assertThat(result.to?.currencyIcon).isNotNull()
-        assertThat(result.to?.amount?.resolveString()).startsWith("+ ")
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("+")
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("-")
+        assertThat(result.to?.amount?.resolveString()).doesNotContain("~")
         assertThat(result.to?.isFaded).isFalse()
     }
 
