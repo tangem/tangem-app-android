@@ -9,6 +9,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
@@ -17,6 +18,7 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.util.TangemPriceChange
+import kotlinx.collections.immutable.ImmutableSet
 
 internal sealed interface StoryBookPage
 
@@ -506,6 +508,34 @@ internal data class TangemTokenRowMarketStory(
     val onChartToggle: () -> Unit,
     val onLongTitleToggle: () -> Unit,
 ) : DsStoryBookPage
+
+internal data class TangemFilterGroupStory(
+    val variant: TangemFilterItem.Variant,
+    val background: Background,
+    val activeFilterIds: ImmutableSet<String>,
+    val hasCounter: Boolean,
+    val isLoading: Boolean,
+    val isBlurEnabled: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemFilterItem.Variant) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onFilterClick: (String) -> Unit,
+    val onFilterClear: (String) -> Unit,
+    val onCounterToggle: () -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the filter group preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
 
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,
