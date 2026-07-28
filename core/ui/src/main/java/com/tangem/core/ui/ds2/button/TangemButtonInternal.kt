@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,7 @@ import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BaseButtonTestTags
 
 /**
  * Inner content of [TangemButton]: an icon-text-icon row with a cross-fading loader overlay.
@@ -52,6 +54,7 @@ internal fun TangemButtonInternal(
 
     Box(
         modifier = modifier
+            .testTag(BaseButtonTestTags.BUTTON)
             .conditionalCompose(
                 condition = isIconOnly,
                 otherModifier = {
@@ -134,7 +137,9 @@ private fun ContentRow(
             displayedText?.let { textRef ->
                 CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
                     Text(
-                        modifier = Modifier.padding(horizontal = sizeTokens.textPadding),
+                        modifier = Modifier
+                            .padding(horizontal = sizeTokens.textPadding)
+                            .testTag(BaseButtonTestTags.TEXT),
                         text = textRef.resolveReference(),
                         textAlign = TextAlign.Center,
                         color = if (isEnabled) colorTokens.textColor else colorTokens.disabledTextColor,
