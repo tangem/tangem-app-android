@@ -10,27 +10,25 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.polymarket.derivation.OWNER_DERIVATION_PATH
+import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.polymarket.PolymarketOwnerKeyData
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Cold-card session that derives the secp256k1 Polymarket owner key on [OWNER_DERIVATION_PATH] and
+ * Cold-card session that derives the secp256k1 Polymarket owner key on [POLYMARKET_OWNER_DERIVATION_PATH] and
  * returns the derived key for the caller to persist and to compute the address from.
+ *
+ * It is a dedicated [CardSessionRunnable] rather than the generic derivation task on purpose: it will be extended
+ * to also sign the Polymarket typed data inside the same session, so that derivation and signing cost the user a
+ * single tap — the same fusion Tangem Pay does in `TangemPayGenerateAddressAndSignChallengeTask`.
  */
-class PolymarketDeriveOwnerKeyTask @AssistedInject constructor(
-    @Assisted private val coroutineScope: CoroutineScope,
-) : CardSessionRunnable<PolymarketOwnerKeyData> {
+class PolymarketDeriveOwnerKeyTask : CardSessionRunnable<PolymarketOwnerKeyData> {
 
     override fun run(session: CardSession, callback: CompletionCallback<PolymarketOwnerKeyData>) {
-        coroutineScope.launch { callback(runSuspend(session = session)) }
+        session.scope.launch { callback(runSuspend(session = session)) }
     }
 
     private suspend fun runSuspend(session: CardSession): CompletionResult<PolymarketOwnerKeyData> {
@@ -39,7 +37,7 @@ class PolymarketDeriveOwnerKeyTask @AssistedInject constructor(
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
             ?: return CompletionResult.Failure(TangemSdkError.WalletNotFound())
 
-        val path = DerivationPath(OWNER_DERIVATION_PATH)
+        val path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
         val extendedPublicKey = when (val result = runDerivationTask(session, wallet, path)) {
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
             is CompletionResult.Success<ExtendedPublicKey> -> result.data
@@ -62,10 +60,5 @@ class PolymarketDeriveOwnerKeyTask @AssistedInject constructor(
         DeriveWalletPublicKeyTask(walletPublicKey = wallet.publicKey, derivationPath = path)
             .run(session = session, callback = deferred::complete)
         return deferred.await()
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(coroutineScope: CoroutineScope): PolymarketDeriveOwnerKeyTask
     }
 }
