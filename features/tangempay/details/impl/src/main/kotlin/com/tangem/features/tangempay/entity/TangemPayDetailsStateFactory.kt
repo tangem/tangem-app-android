@@ -205,6 +205,7 @@ internal class TangemPayDetailsStateFactory(
                             state = TangemPayCardUiState.InProgress,
                         ),
                     ),
+                    progressBanner = CardsProgressBannerUM.Issuing.takeIf { notification == null },
                     onAddCardClick = {},
                     isAddCardEnabled = false,
                 ),
