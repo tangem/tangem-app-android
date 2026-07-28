@@ -13,6 +13,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -152,6 +153,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             balance = BigDecimal.TEN,
         ),
         tariffPlan: TangemPayCustomerTariffPlan? = null,
+        networks: List<CustomerInfo.NetworkInfo> = emptyList(),
     ) = CustomerInfo(
         customerId = "cust_1",
         kycStatus = KycStatus.APPROVED,
@@ -162,6 +164,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cards = listOf(cardInfo),
         productInstances = productInstances,
         tariffPlan = tariffPlan,
+        networks = networks,
     )
 
     @BeforeEach
@@ -184,6 +187,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         clearMocks(paymentAccountStatusesStore, answers = false)
         // Tiers off by default — legacy auto-order-creation behavior. Individual tests override.
         every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
+        // Multichain off by default — legacy single-chain behavior. Individual tests override.
+        every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
     }
 
     /**
@@ -258,6 +263,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             error = null,
             virtualAccount = virtualAccount,
             tariffPlan = null,
+            networks = emptyList(),
         )
     }
 
@@ -646,5 +652,61 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(loaded.cards).hasSize(1)
                 assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class MultichainNetworksAndCurrencies {
+
+        private val network = CustomerInfo.NetworkInfo(
+            name = "base",
+            chainId = 8453L,
+            isTestnet = false,
+            status = CustomerInfo.NetworkInfo.Status.ENABLED,
+            depositAddress = "0xEED",
+            tokens = listOf(CustomerInfo.NetworkInfo.Token("USDC", "0x036", BigDecimal("6"))),
+        )
+
+        @Test
+        fun `GIVEN multichain toggle OFF WHEN map loaded THEN networks empty`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(networks = listOf(network))
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
+            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert — toggle gates population even though customerInfo carries a network
+            val loaded = storedStatuses.lastLoaded()
+            assertThat(loaded.networks).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN multichain toggle ON WHEN map loaded THEN networks populated from factory`() = runTest {
+            // Arrange
+            val networkStatus = PaymentNetworkStatus.Available(
+                network = mockk(),
+                depositAddress = "0xDEPOSIT",
+                cryptoCurrencyStatuses = emptyList(),
+            )
+            val customerInfo = buildCustomerInfo(networks = listOf(network))
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns true
+            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
+            every {
+                tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any())
+            } returns listOf(networkStatus)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val loaded = storedStatuses.lastLoaded()
+            assertThat(loaded.networks).containsExactly(networkStatus)
+        }
     }
 }
