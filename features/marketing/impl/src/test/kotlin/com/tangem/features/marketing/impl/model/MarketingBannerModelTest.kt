@@ -16,6 +16,8 @@ import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
+import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -33,6 +35,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MarketingBannerModelTest {
@@ -280,4 +283,53 @@ internal class MarketingBannerModelTest {
         // Assert
         verify(exactly = 1) { deeplinkLauncher.launch("https://tangem.com/promo") }
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN iconAlign and dismissible WHEN mapped THEN align follows design default`(
+        model: IconAlignModel,
+    ) = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+            standaloneCampaign(id = 1, iconAlign = model.iconAlign, isDismissible = model.isDismissible),
+        ).right()
+        val bannerModel = createModel(
+            MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen))),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val content = bannerModel.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.single().iconAlign).isEqualTo(model.expected)
+    }
+
+    private fun standaloneCampaign(id: Int, iconAlign: MarketingBanner.IconAlign?, isDismissible: Boolean) =
+        campaign(id, MarketingBanner.UiType.STANDALONE).let { base ->
+            base.copy(banner = base.banner.copy(iconAlign = iconAlign, isDismissible = isDismissible))
+        }
+
+    internal data class IconAlignModel(
+        val iconAlign: MarketingBanner.IconAlign?,
+        val isDismissible: Boolean,
+        val expected: MarketingBannerUM.IconAlign,
+    )
+
+    private fun provideTestModels() = listOf(
+        // Backend omits iconAlign -> derived from dismissible (design default)
+        IconAlignModel(iconAlign = null, isDismissible = false, expected = MarketingBannerUM.IconAlign.RIGHT),
+        IconAlignModel(iconAlign = null, isDismissible = true, expected = MarketingBannerUM.IconAlign.LEFT),
+        // Explicit backend value is always honored regardless of dismissible
+        IconAlignModel(
+            iconAlign = MarketingBanner.IconAlign.LEFT,
+            isDismissible = false,
+            expected = MarketingBannerUM.IconAlign.LEFT,
+        ),
+        IconAlignModel(
+            iconAlign = MarketingBanner.IconAlign.RIGHT,
+            isDismissible = true,
+            expected = MarketingBannerUM.IconAlign.RIGHT,
+        ),
+    )
 }

@@ -1,8 +1,6 @@
 package com.tangem.features.promobanners.impl.campaigns.model
 
-import androidx.compose.ui.unit.dp
 import arrow.core.Either
-import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWalletId
@@ -108,11 +106,10 @@ internal class CampaignsModelTest {
     }
 
     @Test
-    fun `GIVEN footer height set WHEN onAlreadyActivated THEN analytics sent and height reset`() = runTest {
+    fun `WHEN onAlreadyActivated THEN analytics sent`() = runTest {
         // Arrange
         val model = createModel(campaignFlow = emptyFlow())
         advanceUntilIdle()
-        model.onFooterExtraHeightReady(100.dp)
 
         // Act
         model.onAlreadyActivated(CampaignType.WhaleSwapCashback(campaignId = "1"))
@@ -121,37 +118,20 @@ internal class CampaignsModelTest {
         verify(exactly = 1) {
             analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
         }
-        assertThat(model.footerExtraHeightState.value).isEqualTo(0.dp)
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN footer height set WHEN onActivated THEN no analytics and height reset`() = runTest {
+    fun `WHEN onActivated THEN no analytics sent`() = runTest {
         // Arrange
         val model = createModel(campaignFlow = emptyFlow())
         advanceUntilIdle()
-        model.onFooterExtraHeightReady(100.dp)
 
         // Act
         model.onActivated(CampaignType.WhaleSwapCashback(campaignId = "1"))
 
         // Assert
         verify { analyticsEventHandler wasNot Called }
-        assertThat(model.footerExtraHeightState.value).isEqualTo(0.dp)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `WHEN onFooterExtraHeightReady THEN height state is updated`() = runTest {
-        // Arrange
-        val model = createModel(campaignFlow = emptyFlow())
-        advanceUntilIdle()
-
-        // Act
-        model.onFooterExtraHeightReady(42.dp)
-
-        // Assert
-        assertThat(model.footerExtraHeightState.value).isEqualTo(42.dp)
         model.onDestroy()
     }
 
