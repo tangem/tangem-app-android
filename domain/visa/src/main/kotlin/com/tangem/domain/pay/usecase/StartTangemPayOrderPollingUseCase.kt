@@ -6,7 +6,9 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration
 
 class StartTangemPayOrderPollingUseCase(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
@@ -24,11 +26,15 @@ class StartTangemPayOrderPollingUseCase(
      * @param onTerminalReached invoked once the order is terminal, **before** the status refresh. Callers
      * use it to forget the locally stored order-id hint (issue / reissue / close) so the refresh does not
      * re-issue a `GET /order/{id}` for the order that was just resolved.
+     * @param timeout when set, bounds the poll loop — a still-non-terminal order after [timeout] elapses
+     * makes this return `false` (as if canceled) without further polling. `null` (default) polls
+     * indefinitely, preserving existing callers' behavior exactly.
      */
     suspend operator fun invoke(
         order: TangemPayOrderInfo,
         userWalletId: UserWalletId,
         onTerminalReached: (suspend () -> Unit)? = null,
+        timeout: Duration? = null,
     ): Boolean {
         // A poller for this exact order is already running — `false` only reaches fire-and-forget issue
         // callers (restore / issue-additional); the awaiting freeze caller always polls a fresh order id.
@@ -36,23 +42,37 @@ class StartTangemPayOrderPollingUseCase(
         if (!activeOrders.add(key)) return false
 
         try {
-            while (true) {
-                val newOrder = if (order.orderStatus.isTerminal) {
-                    order
-                } else {
-                    cardDetailsRepository.getOrderInfo(userWalletId, order.orderId).getOrNull()
-                }
-
-                if (newOrder != null && newOrder.orderStatus.isTerminal) {
-                    onTerminalReached?.invoke()
-                    paymentAccountStatusFetcher.invoke(userWalletId)
-                    return newOrder.orderStatus == OrderStatus.COMPLETED
-                }
-
-                delay(POLLING_DELAY)
+            val onTerminal = onTerminalReached ?: {}
+            val pollBlock: suspend () -> Boolean = { pollUntilTerminal(order, userWalletId, onTerminal) }
+            return if (timeout != null) {
+                withTimeoutOrNull(timeout) { pollBlock() } == true
+            } else {
+                pollBlock()
             }
         } finally {
             activeOrders.remove(key)
+        }
+    }
+
+    private suspend fun pollUntilTerminal(
+        order: TangemPayOrderInfo,
+        userWalletId: UserWalletId,
+        onTerminalReached: suspend () -> Unit,
+    ): Boolean {
+        while (true) {
+            val newOrder = if (order.orderStatus.isTerminal) {
+                order
+            } else {
+                cardDetailsRepository.getOrderInfo(userWalletId, order.orderId).getOrNull()
+            }
+
+            if (newOrder != null && newOrder.orderStatus.isTerminal) {
+                onTerminalReached()
+                paymentAccountStatusFetcher.invoke(userWalletId)
+                return newOrder.orderStatus == OrderStatus.COMPLETED
+            }
+
+            delay(POLLING_DELAY)
         }
     }
 
