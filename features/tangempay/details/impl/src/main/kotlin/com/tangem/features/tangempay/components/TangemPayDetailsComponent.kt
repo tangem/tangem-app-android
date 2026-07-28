@@ -24,16 +24,21 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreenV2
+import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.utils.requireLoaded
+import com.tangem.features.tangempay.utils.toRequisitesRows
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
 
 internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
@@ -94,6 +99,7 @@ internal class TangemPayDetailsComponent(
         }
     }
 
+    @Suppress("LongMethod")
     private fun bottomSheetChild(
         navigation: TangemPayDetailsNavigation,
         componentContext: ComponentContext,
@@ -126,6 +132,41 @@ internal class TangemPayDetailsComponent(
                     depositAddress = navigation.depositAddress,
                     cryptoCurrency = navigation.cryptoCurrency,
                     listener = model,
+                    virtualAccountOnramp = navigation.virtualAccountOnramp,
+                ),
+            )
+            is TangemPayDetailsNavigation.VirtualAccountDeposit -> TangemPayVirtualAccountDepositComponent(
+                appComponentContext = context,
+                params = TangemPayVirtualAccountDepositComponent.Params(
+                    virtualAccountOnramp = navigation.virtualAccountOnramp,
+                    userWalletId = navigation.userWalletId,
+                    paymentAccountAddress = navigation.paymentAccountAddress,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onShowDetails = model::onShowVirtualAccountRequisites,
+                    onShowBankingDetailsError = model::showVaBankingDetailsError,
+                    onOrderCreated = model::onVirtualAccountOrderCreated,
+                ),
+            )
+            is TangemPayDetailsNavigation.VirtualAccountRequisites -> virtualAccountAddFundsComponentFactory.create(
+                context = context,
+                params = VirtualAccountAddFundsBottomSheetComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    requisites = navigation.bankCredentials.toRequisitesRows(),
+                    dailyDepositLimit = VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER,
+                    shouldSkipIntro = true,
+                    listener = VirtualAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
+                    onDetailsShown = model::onVaBankingDetailsShown,
+                    onShareClicked = model::onVaShareDetailsClicked,
+                    onFieldCopied = model::onVaFieldCopied,
+                ),
+            )
+            is TangemPayDetailsNavigation.VaBankingDetailsError -> TangemPayVaBankingDetailsErrorComponent(
+                appComponentContext = context,
+                params = TangemPayVaBankingDetailsErrorComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onContactSupport = model::onContactSupportClicked,
+                    onResolved = model::onVaBankingDetailsResolved,
                 ),
             )
             is TangemPayDetailsNavigation.IssueAdditionalCard -> TangemPayIssueAdditionalCardComponent(
