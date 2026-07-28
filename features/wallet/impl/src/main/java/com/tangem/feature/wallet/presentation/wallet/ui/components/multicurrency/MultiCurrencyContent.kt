@@ -40,9 +40,6 @@ import com.tangem.core.ui.components.tokenlist.NON_CONTENT_TOKENS_LIST_KEY
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.ds.button.SecondaryTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
@@ -51,6 +48,7 @@ import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
@@ -123,6 +121,12 @@ internal fun LazyListScope.tokensListItems2(
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
+                    is TokensListItemUM2.Prediction -> predictionItem(
+                        listItem = listItem,
+                        index = index,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = modifier,
+                    )
                     is TokensListItemUM2.Portfolio -> portfolioItem(
                         listItem = listItem,
                         index = index,
@@ -153,13 +157,13 @@ private fun LazyListScope.tokenItem(
         val itemModifier = modifier
             .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             .semantics { lazyListItemPosition = index }
-            .padding(top = if (index == 0) TangemTheme.dimens2.x3 else 0.dp)
+            .padding(top = if (index == 0) 12.dp else 0.dp)
             .roundedShapeItemDecoration(
                 radius = 18.dp,
                 currentIndex = index,
                 addDefaultPadding = false,
                 lastIndex = lastIndex,
-                backgroundColor = TangemTheme.colors2.surface.level3,
+                backgroundColor = TangemTheme.colors3.bg.secondary,
             )
 
         var position by remember { mutableStateOf(Offset.Zero) }
@@ -180,6 +184,41 @@ private fun LazyListScope.tokenItem(
                 modifier = itemModifier,
             )
         }
+    }
+}
+
+private fun LazyListScope.predictionItem(
+    listItem: TokensListItemUM2.Prediction,
+    index: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    item(
+        key = listItem.tokenRowUM.id,
+        contentType = listItem.tokenRowUM::class.java,
+    ) {
+        val tokenRowUM = listItem.tokenRowUM
+        val itemModifier = modifier
+            .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            .semantics { lazyListItemPosition = index }
+            .padding(top = if (index == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x2)
+            // Standalone fully-rounded card, matching the account rows above/below it.
+            .roundedShapeItemDecoration(
+                radius = TangemTheme.dimens2.x5,
+                currentIndex = 0,
+                addDefaultPadding = false,
+                lastIndex = 0,
+                backgroundColor = TangemTheme.colors2.surface.level3,
+            )
+            .combinedClickable(
+                enabled = tokenRowUM.onItemClick != null,
+                onClick = tokenRowUM.onItemClick ?: {},
+            )
+        TangemTokenRow(
+            tokenRowUM = tokenRowUM,
+            isBalanceHidden = isBalanceHidden,
+            modifier = itemModifier,
+        )
     }
 }
 
@@ -220,11 +259,11 @@ private fun LazyListScope.portfolioItem(
                     modifier = modifier
                         .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                         .roundedShapeItemDecoration(
-                            radius = if (listItem.isExpanded) TangemTheme.dimens2.x6 else TangemTheme.dimens2.x5,
+                            radius = if (listItem.isExpanded) 24.dp else 20.dp,
                             currentIndex = tokenIndex + 1,
                             addDefaultPadding = false,
                             lastIndex = lastIndex,
-                            backgroundColor = TangemTheme.colors2.surface.level3,
+                            backgroundColor = TangemTheme.colors3.bg.secondary,
                         ),
                     visible = listItem.isExpanded,
                 ) {
@@ -286,15 +325,15 @@ private fun LazyListScope.accountItem(
         )
 
         val portfolioModifier = modifier
-            .padding(top = if (index != 0) TangemTheme.dimens2.x2 else TangemTheme.dimens2.x3)
+            .padding(top = if (index != 0) 8.dp else 12.dp)
             .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
             .semantics { lazyListItemPosition = index }
             .roundedShapeItemDecoration(
                 currentIndex = 0,
-                radius = if (listItem.isExpanded) TangemTheme.dimens2.x6 else TangemTheme.dimens2.x5,
+                radius = if (listItem.isExpanded) 24.dp else 20.dp,
                 addDefaultPadding = false,
                 lastIndex = effectiveLastIndex,
-                backgroundColor = TangemTheme.colors2.surface.level3,
+                backgroundColor = TangemTheme.colors3.bg.secondary,
             )
         if (listItem.isCollapsable) {
             PortfolioRowItem(
@@ -381,7 +420,7 @@ internal fun PortfolioRowItem(
                         }
 
                         val iconBoxSize = when (headIcon) {
-                            is TangemIconUM.Empty -> TangemTheme.dimens2.x9
+                            is TangemIconUM.Empty -> 36.dp
                             else -> size.toBoxSize()
                         }
                         TangemIcon(
@@ -403,8 +442,8 @@ internal fun PortfolioRowItem(
                             animationSpec = tween(durationMillis = 350),
                         )
 
-                        val startStyle = TangemTheme.typography2.captionSemibold12
-                        val stopStyle = TangemTheme.typography2.bodySemibold16
+                        val startStyle = TangemTheme.typography3.caption.medium
+                        val stopStyle = TangemTheme.typography3.body.medium
 
                         val textStyle by remember(animationFraction.value) {
                             derivedStateOf { lerp(startStyle, stopStyle, animationFraction.value) }
@@ -468,7 +507,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
         NonContentItemContent(
             modifier = modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
-                .padding(top = TangemTheme.dimens.spacing96),
+                .padding(top = 96.dp),
         )
     }
 }
@@ -480,7 +519,7 @@ private fun LazyListScope.nonContentItem2(onEmptyClick: () -> Unit, modifier: Mo
     ) {
         NonContentItemContentV2(
             onClick = onEmptyClick,
-            textColor = TangemTheme.colors2.text.neutral.tertiary,
+            textColor = TangemTheme.colors3.text.secondary,
             modifier = modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .padding(top = 46.dp),
@@ -499,17 +538,17 @@ private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Port
             modifier = modifier
                 .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                 .roundedShapeItemDecoration(
-                    radius = if (listItem.isExpanded) TangemTheme.dimens2.x6 else TangemTheme.dimens2.x5,
+                    radius = if (listItem.isExpanded) 24.dp else 20.dp,
                     addDefaultPadding = false,
                     currentIndex = 1,
                     lastIndex = 1,
-                    backgroundColor = TangemTheme.colors2.surface.level3,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
             visible = listItem.isExpanded,
         ) {
             NonContentItemContentV2(
                 modifier = Modifier.padding(vertical = 36.dp),
-                textColor = TangemTheme.colors2.text.neutral.secondary,
+                textColor = TangemTheme.colors3.text.secondary,
                 onClick = listItem.onEmptyClick,
             )
         }
@@ -525,23 +564,23 @@ internal fun NonContentItemContentV2(textColor: Color, modifier: Modifier = Modi
         Icon(
             painter = painterResource(id = R.drawable.ic_empty_64),
             contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens2.x16),
-            tint = TangemTheme.colors2.graphic.neutral.quaternary,
+            modifier = Modifier.size(64.dp),
+            tint = TangemTheme.colors3.icon.tertiary,
         )
-        SpacerH(TangemTheme.dimens2.x5)
+        SpacerH(20.dp)
         Text(
             text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
+            modifier = Modifier.padding(horizontal = 48.dp),
             color = textColor,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography2.bodyRegular14,
+            style = TangemTheme.typography3.subheading.medium,
         )
-        SpacerH(TangemTheme.dimens2.x4)
-        SecondaryTangemButton(
+        SpacerH(16.dp)
+        TangemButton(
             text = resourceReference(id = R.string.common_add_tokens),
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X9,
             onClick = onClick,
-            size = TangemButtonSize.X8,
-            shape = TangemButtonShape.Rounded,
             modifier = Modifier.testTag(MainScreenTestTags.EMPTY_TOKENS_ADD_BUTTON),
         )
     }

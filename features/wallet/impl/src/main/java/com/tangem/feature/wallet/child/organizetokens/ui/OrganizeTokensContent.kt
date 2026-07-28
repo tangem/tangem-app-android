@@ -34,8 +34,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.button.TangemButton
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
@@ -43,10 +43,9 @@ import com.tangem.core.ui.ds.row.internal.TangemRowTail
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowEndContent
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.copy
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -82,21 +81,21 @@ internal fun OrganizeTokensContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors2.surface.level2,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
-            TangemTopBar(
+            TangemTopNavigation(
+                contentPadding = TangemTopNavigation.DefaultContentPadding.copy(top = 16.dp),
+                windowInsets = WindowInsets(0.dp),
+                blurBackground = false,
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
                 title = resourceReference(R.string.organize_tokens_title),
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    TangemTopBarActionContent(
-                        actionUM = TangemTopBarActionUM(
-                            iconRes = R.drawable.ic_exchange_mini_24,
-                            isActionable = true,
-                            onClick = { isShowDropdownMenu = true },
-                            ghostModeProgress = 0f,
-                        ),
+                endButton = {
+                    TangemButton(
                         modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
-                        type = TangemTopBarType.BottomSheet,
+                        variant = TangemButton.Variant.Material,
+                        size = TangemButton.Size.X11,
+                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_mini_24),
+                        onClick = { isShowDropdownMenu = true },
                     )
                     OrganizeDropDownMenu(
                         organizeMenuUM = organizeTokensUM.organizeMenuUM,
@@ -137,7 +136,7 @@ private fun TokenList(
     var draggingItem by remember { mutableStateOf<OrganizeRowItemUM?>(null) }
 
     Box(
-        modifier = modifier.background(TangemTheme.colors2.surface.level2),
+        modifier = modifier.background(TangemTheme.colors3.bg.primary),
     ) {
         val footerInset = LocalTangemBottomSheetContentBottomInset.current
 
@@ -238,7 +237,7 @@ private fun LazyItemScope.DraggableItem(
         enabled = isValidDropTarget,
     ) { _ ->
         val modifierWithBackground = itemModifier
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .semantics { lazyListItemPosition = index }
 
         when (item) {
@@ -281,16 +280,23 @@ private fun BoxScope.BottomButtons(organizeTokensUM: OrganizeTokensUM) {
             .padding(bottom = bottomBarHeight + TangemTheme.dimens2.x4),
     ) {
         TangemButton(
-            buttonUM = organizeTokensUM.cancelButton,
             modifier = Modifier
                 .weight(1f)
                 .testTag(OrganizeTokensScreenTestTags.CANCEL_BUTTON),
+            onClick = organizeTokensUM.cancelButton.onClick,
+            text = organizeTokensUM.cancelButton.text,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X12,
+            isEnabled = organizeTokensUM.cancelButton.isEnabled,
         )
         TangemButton(
-            buttonUM = organizeTokensUM.applyButton,
             modifier = Modifier
                 .weight(1f)
                 .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
+            onClick = organizeTokensUM.applyButton.onClick,
+            text = organizeTokensUM.applyButton.text,
+            size = TangemButton.Size.X12,
+            isEnabled = organizeTokensUM.applyButton.isEnabled,
         )
     }
 }
@@ -355,8 +361,8 @@ private fun OrganizeTokenRow(
             TokenRowEndContent(
                 endContentUM = tokenRowUM.topEndContentUM,
                 isBalanceHidden = isBalanceHidden,
-                textStyle = TangemTheme.typography2.captionSemibold12,
-                textColor = TangemTheme.colors2.text.neutral.secondary,
+                textStyle = TangemTheme.typography3.caption.medium,
+                textColor = TangemTheme.colors3.text.secondary,
                 placeholderWidth = TangemTheme.dimens2.x11,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)

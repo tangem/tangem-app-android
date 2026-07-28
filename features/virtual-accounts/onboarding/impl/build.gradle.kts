@@ -12,22 +12,21 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
+    api(projects.core.decompose)
+    api(projects.core.utils)
     implementation(projects.core.error)
     implementation(projects.core.ui)
-    implementation(projects.core.utils)
 
     /** Common */
-    implementation(projects.common.routing)
-    implementation(projects.common.ui)
+    api(projects.common.routing)
 
     /** Api */
-    implementation(projects.features.virtualAccounts.onboarding.api)
+    api(projects.features.virtualAccounts.onboarding.api)
 
     /** Domain */
-    implementation(projects.domain.common)
+    api(projects.domain.common)
+    api(projects.domain.visa)
     implementation(projects.domain.models)
-    implementation(projects.domain.visa)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -41,5 +40,9 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
+    implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 }
