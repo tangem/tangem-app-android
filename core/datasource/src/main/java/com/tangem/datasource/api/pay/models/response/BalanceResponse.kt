@@ -9,7 +9,26 @@ data class BalanceResponse(
     @Json(name = "fiat") val fiat: FiatBalance?,
     @Json(name = "crypto") val crypto: CryptoBalance?,
     @Json(name = "available_for_withdrawal") val availableForWithdrawal: AvailableForWithdrawal?,
-)
+    @Json(name = "networks") val networks: List<NetworkResponse>? = null,
+) {
+
+    @JsonClass(generateAdapter = true)
+    data class NetworkResponse(
+        @Json(name = "name") val name: String,
+        @Json(name = "is_testnet") val isTestnet: Boolean,
+        @Json(name = "chain_id") val chainId: Long,
+        @Json(name = "status") val status: String,
+        @Json(name = "deposit_address") val depositAddress: String?,
+        @Json(name = "tokens") val tokens: List<NetworkTokenResponse>,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class NetworkTokenResponse(
+        @Json(name = "token") val token: String,
+        @Json(name = "token_contract_address") val tokenContractAddress: String,
+        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal?,
+    )
+}
 
 @JsonClass(generateAdapter = true)
 data class FiatBalance(
