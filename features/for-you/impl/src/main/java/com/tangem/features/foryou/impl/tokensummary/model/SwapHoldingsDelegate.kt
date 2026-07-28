@@ -11,9 +11,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.features.foryou.TokenSummaryComponent
+import com.tangem.features.foryou.impl.tokensummary.model.converter.SwapHoldingConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
@@ -24,18 +23,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 /**
- * Resolves what the summary token's bottom button can offer: topping up, swapping, or nothing.
+ * Resolves what the summary token's bottom button can offer: adding the token, topping it up, or swapping it.
  *
  * Holdings of the token are collected from every wallet and kept up to date, so the state settles on its own as
- * balances arrive. Swap availability is delegated to [GetCryptoCurrencyActionsUseCase] — the same source the Swap
- * button uses everywhere else — and is only consulted once at least one holding has funds, since there is nothing to
- * swap from otherwise.
+ * balances arrive. What a swap from a holding would run into is [SwapHoldingConverter]'s job, and it is only asked
+ * once at least one holding has funds — there is nothing to swap from otherwise. An unavailable holding is kept with
+ * its reason rather than dropped, so picking it can explain itself.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class SwapHoldingsDelegate @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
+    getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     dispatchers: CoroutineDispatcherProvider,
     @Assisted modelScope: CoroutineScope,
     @Assisted private val token: TokenSummaryComponent.Token,
@@ -45,10 +43,13 @@ internal class SwapHoldingsDelegate @AssistedInject constructor(
     private val network: Network? = token.network
     private val summaryTokenId: String? = rawCurrencyId?.value?.let(::getTokenIdIfL2Network)
 
+    private val holdingConverter = SwapHoldingConverter(getCryptoCurrencyActionsUseCase)
+
     val state: StateFlow<SwapHoldingsState> = buildStateFlow()
         .flowOn(dispatchers.default)
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = SwapHoldingsState.Loading)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun buildStateFlow(): Flow<SwapHoldingsState> {
         if (rawCurrencyId == null) return flowOf(SwapHoldingsState.Unavailable)
 
@@ -76,27 +77,12 @@ internal class SwapHoldingsDelegate @AssistedInject constructor(
 
     private fun resolveState(holdings: List<TokenSelectorEntry>): Flow<SwapHoldingsState> {
         return when {
-            holdings.isEmpty() -> flowOf(SwapHoldingsState.Unavailable)
+            holdings.isEmpty() -> flowOf(SwapHoldingsState.NotHeld)
             holdings.all { it.currencyStatus.hasZeroBalance() } -> flowOf(SwapHoldingsState.ZeroBalance)
-            else -> combine(holdings.map(::resolveSwappableHolding), ::resolveAvailability)
+            else -> combine(
+                holdings.map(holdingConverter::convert),
+            ) { SwapHoldingsState.Resolved(holdings = it.toList()) }
         }
-    }
-
-    private fun resolveSwappableHolding(holding: TokenSelectorEntry): Flow<TokenSelectorEntry?> =
-        getCryptoCurrencyActionsUseCase(userWallet = holding.wallet, cryptoCurrencyStatus = holding.currencyStatus)
-            .map { actions ->
-                val isSwapAvailable = actions.states
-                    .filterIsInstance<TokenActionsState.ActionState.Swap>()
-                    .any { it.unavailabilityReason == ScenarioUnavailabilityReason.None }
-
-                holding.takeIf { isSwapAvailable }
-            }
-            .distinctUntilChanged()
-
-    private fun resolveAvailability(holdings: Array<TokenSelectorEntry?>): SwapHoldingsState {
-        val swappable = holdings.filterNotNull()
-
-        return if (swappable.isEmpty()) SwapHoldingsState.Unavailable else SwapHoldingsState.Available(swappable)
     }
 
     private fun matchesSummaryToken(status: CryptoCurrencyStatus): Boolean {
