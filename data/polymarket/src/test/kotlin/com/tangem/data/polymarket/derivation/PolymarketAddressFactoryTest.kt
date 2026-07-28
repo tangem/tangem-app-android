@@ -1,8 +1,8 @@
 package com.tangem.data.polymarket.derivation
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.utils.extensions.hexToBytes
 import org.junit.jupiter.api.Test
 
 internal class PolymarketAddressFactoryTest {
