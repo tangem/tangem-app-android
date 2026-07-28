@@ -11,12 +11,10 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
-import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
-import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -47,12 +45,8 @@ internal class PushNotificationsModelTest {
     private val analyticHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val notificationsRepository: NotificationsRepository = mockk(relaxed = true)
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles = mockk(relaxed = true)
-    private val setAllWalletPushNotificationPreferences: SetAllWalletPushNotificationPreferencesUseCase =
-        mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase = mockk(relaxed = true)
-    private val isPushNotificationFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase =
-        mockk(relaxed = true)
+    private val applyPushNotificationFirstActivation: ApplyPushNotificationFirstActivationUseCase = mockk()
     private val markPushNotificationFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase =
         mockk(relaxed = true)
     private val getDoubleAskVariantUseCase: GetPushNotificationsDoubleAskVariantUseCase = mockk()
@@ -174,34 +168,43 @@ internal class PushNotificationsModelTest {
     }
 
     @Test
-    fun `GIVEN settings enabled WHEN onAllowPermission THEN fresh wallets get all-three and done wallets skipped`() =
+    fun `GIVEN settings enabled WHEN onAllowPermission THEN first activation applied for every wallet`() = runTest {
+        every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns true
+        val w1 = UserWalletId("aa")
+        val w2 = UserWalletId("bb")
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(w1), wallet(w2))
+        coEvery { applyPushNotificationFirstActivation(any()) } returns Either.Right(Unit)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        model.onAllowPermission()
+        advanceUntilIdle()
+
+        coVerifyOrder {
+            applyPushNotificationFirstActivation(w1)
+            applyPushNotificationFirstActivation(w2)
+        }
+    }
+
+    @Test
+    fun `GIVEN activation fails for first wallet WHEN onAllowPermission THEN second wallet still attempted`() =
         runTest {
             every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns true
-            val fresh = UserWalletId("aa")
-            val done = UserWalletId("bb")
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(fresh), wallet(done))
-            coEvery { isPushNotificationFirstActivationDone(fresh) } returns false
-            coEvery { isPushNotificationFirstActivationDone(done) } returns true
-            coEvery { setNotificationsEnabledUseCase(any(), any()) } returns Either.Right(Unit)
-            coEvery {
-                setAllWalletPushNotificationPreferences(any(), any(), any(), any())
-            } returns Either.Right(Unit)
+            val w1 = UserWalletId("aa")
+            val w2 = UserWalletId("bb")
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(w1), wallet(w2))
+            coEvery { applyPushNotificationFirstActivation(w1) } returns Either.Left(RuntimeException("404"))
+            coEvery { applyPushNotificationFirstActivation(w2) } returns Either.Right(Unit)
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             model.onAllowPermission()
             advanceUntilIdle()
 
-            // Fresh wallet: tokens (re-subscription) before preferences, then flag marked.
             coVerifyOrder {
-                setNotificationsEnabledUseCase(fresh, isEnabled = true)
-                setAllWalletPushNotificationPreferences(fresh, true, true, true)
+                applyPushNotificationFirstActivation(w1)
+                applyPushNotificationFirstActivation(w2)
             }
-            coVerify(exactly = 1) { markPushNotificationFirstActivationDone(fresh) }
-            // Already-activated wallet: skipped entirely.
-            coVerify(exactly = 0) { setAllWalletPushNotificationPreferences(done, any(), any(), any()) }
-            coVerify(exactly = 0) { setNotificationsEnabledUseCase(done, any()) }
-            coVerify(exactly = 0) { markPushNotificationFirstActivationDone(done) }
         }
 
     @Test
@@ -218,28 +221,23 @@ internal class PushNotificationsModelTest {
 
         coVerify(exactly = 1) { markPushNotificationFirstActivationDone(w1) }
         coVerify(exactly = 1) { markPushNotificationFirstActivationDone(w2) }
-        // Deny only fixes the flag — it must not enable any category or re-subscribe tokens.
-        coVerify(exactly = 0) { setAllWalletPushNotificationPreferences(any(), any(), any(), any()) }
-        coVerify(exactly = 0) { setNotificationsEnabledUseCase(any(), any()) }
+        // Deny only fixes the flag — it must not enable any category.
+        coVerify(exactly = 0) { applyPushNotificationFirstActivation(any()) }
     }
 
     @Test
     fun `GIVEN settings disabled WHEN onAllowPermission THEN no first-activation writes`() = runTest {
         every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns false
-        // Non-empty wallet list + not-done + successful stubs so that, if the toggle gate were removed,
-        // applyFirstActivationRule WOULD iterate and write — making the exactly=0 assertions actually protect the gate.
+        // Non-empty wallet list + successful stubs, so the exactly=0 assertions actually protect the toggle gate.
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(UserWalletId("aa")))
-        coEvery { isPushNotificationFirstActivationDone(any()) } returns false
-        coEvery { setNotificationsEnabledUseCase(any(), any()) } returns Either.Right(Unit)
-        coEvery { setAllWalletPushNotificationPreferences(any(), any(), any(), any()) } returns Either.Right(Unit)
+        coEvery { applyPushNotificationFirstActivation(any()) } returns Either.Right(Unit)
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.onAllowPermission()
         advanceUntilIdle()
 
-        coVerify(exactly = 0) { setAllWalletPushNotificationPreferences(any(), any(), any(), any()) }
-        coVerify(exactly = 0) { setNotificationsEnabledUseCase(any(), any()) }
+        coVerify(exactly = 0) { applyPushNotificationFirstActivation(any()) }
         coVerify(exactly = 0) { markPushNotificationFirstActivationDone(any()) }
     }
 
@@ -267,10 +265,8 @@ internal class PushNotificationsModelTest {
             analyticHandler = analyticHandler,
             notificationsRepository = notificationsRepository,
             pushNotificationSettingsFeatureToggles = pushNotificationSettingsFeatureToggles,
-            setAllWalletPushNotificationPreferences = setAllWalletPushNotificationPreferences,
             userWalletsListRepository = userWalletsListRepository,
-            setNotificationsEnabledUseCase = setNotificationsEnabledUseCase,
-            isPushNotificationFirstActivationDone = isPushNotificationFirstActivationDone,
+            applyPushNotificationFirstActivation = applyPushNotificationFirstActivation,
             markPushNotificationFirstActivationDone = markPushNotificationFirstActivationDone,
             getPushNotificationsDoubleAskVariantUseCase = getDoubleAskVariantUseCase,
         )
