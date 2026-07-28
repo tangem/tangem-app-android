@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -37,6 +38,7 @@ import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.YieldSupplyTestTags
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoClickIntents
@@ -75,7 +77,8 @@ internal fun YieldSupplyPromoContent(
                     end = 16.dp,
                     bottom = 8.dp,
                 )
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .testTag(YieldSupplyTestTags.PROMO_CONTINUE_BUTTON),
         )
     }
 }

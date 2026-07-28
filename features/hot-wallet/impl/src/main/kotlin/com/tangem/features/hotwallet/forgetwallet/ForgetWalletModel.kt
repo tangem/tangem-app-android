@@ -15,7 +15,6 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,7 +33,6 @@ internal class ForgetWalletModel @Inject constructor(
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val uiMessageSender: UiMessageSender,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ForgetWalletComponent.Params>()
@@ -84,9 +82,7 @@ internal class ForgetWalletModel @Inject constructor(
 
     private fun forgetWallet() {
         modelScope.launch {
-            if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
-                startAssetsDiscoveryUseCase.cancel(params.userWalletId)
-            }
+            startAssetsDiscoveryUseCase.cancel(params.userWalletId)
 
             val hasUserWallets = deleteWalletUseCase(params.userWalletId)
                 .getOrElse { error ->

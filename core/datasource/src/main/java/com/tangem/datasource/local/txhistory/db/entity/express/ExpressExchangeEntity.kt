@@ -10,11 +10,10 @@ import androidx.room.*
 @Entity(
     tableName = "express_exchange",
     indices = [
-        // Outgoing swaps lookup (observeOutgoingSwaps): owner + from-asset equality, created_at range/sort.
-        Index(value = ["owner_address", "from_network", "from_contract_address", "created_at"]),
-        // Incoming (cross-owner) swaps lookup (observeIncomingSwaps): to-asset equality, created_at range/sort.
-        // No owner filter here, so to_contract_address in the index is what keeps a popular to-network selective.
-        Index(value = ["to_network", "to_contract_address", "created_at"]),
+        // Outgoing swaps lookup (observeOutgoingSwaps): from-address + from-asset equality, created_at range/sort.
+        Index(value = ["from_address", "from_network", "from_contract_address", "created_at"]),
+        // Incoming swaps lookup (observeIncomingSwaps): payout-address + to-asset equality, created_at range/sort.
+        Index(value = ["payout_address", "to_network", "to_contract_address", "created_at"]),
     ],
 )
 data class ExpressExchangeEntity(
@@ -23,21 +22,16 @@ data class ExpressExchangeEntity(
     @ColumnInfo(name = "tx_id")
     val txId: String,
 
-    /**
-     * Address used to query the history. For exchange it matches [fromAddress].
-     */
-    @ColumnInfo(name = "owner_address")
-    val ownerAddress: String,
-
     @ColumnInfo(name = "provider_id")
     val providerId: String,
 
     /**
-     * Address from which the `from` assets were taken for the exchange. Optional because the very first
-     * app versions did not send it; for newer versions it can be considered effectively mandatory.
+     * Address from which the `from` assets were taken — the key outgoing swaps are looked up by. The API may omit it
+     * (the very first app versions did not send it), but such items are filtered out before persisting, so the stored
+     * value is always present.
      */
     @ColumnInfo(name = "from_address")
-    val fromAddress: String?,
+    val fromAddress: String,
 
     /** Address to which the source assets were transferred for the exchange */
     @ColumnInfo(name = "payin_address")

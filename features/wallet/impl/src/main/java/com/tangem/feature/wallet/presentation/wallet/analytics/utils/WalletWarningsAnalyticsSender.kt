@@ -145,6 +145,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             WalletNotificationUM.TangemPayUnreachable,
             is WalletNotificationUM.YieldBoostPromo,
             is WalletNotificationUM.AssetsDiscoveryCompleted,
+            is WalletNotificationUM.SoftUpdateAvailable,
             -> null
         }
     }

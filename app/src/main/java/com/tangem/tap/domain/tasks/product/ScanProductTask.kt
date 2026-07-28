@@ -34,7 +34,10 @@ import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.visa.VisaCardScanHandler
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.tap.mainScope
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -42,10 +45,11 @@ import kotlinx.coroutines.launch
 internal class ScanProductTask(
     private val card: Card?,
     private val visaCardScanHandler: VisaCardScanHandler?,
-    private val visaCoroutineScope: CoroutineScope?,
+    private val sessionCoroutineScope: CoroutineScope?,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
     private val shouldCheckIsAlreadyActivated: Boolean,
     private val cardRepository: CardRepository,
+    private val walletRegistrationLauncher: WalletRegistrationLauncher? = null,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -97,12 +101,44 @@ internal class ScanProductTask(
                             val processorScanResponseWithNewCard = processorResult.data.copy(
                                 card = CardDTO(scanTaskResult.data),
                             )
-                            callback(CompletionResult.Success(processorScanResponseWithNewCard))
+                            registerColdWalletThenComplete(session, processorScanResponseWithNewCard, callback)
                         }
                         is CompletionResult.Failure -> callback(CompletionResult.Failure(scanTaskResult.error))
                     }
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(processorResult.error))
+            }
+        }
+    }
+
+    /**
+     * Best-effort COLD wallet registration with the Auth Service while the session is still open
+     * (the card is tapped for `AttestWalletKeyTask`); the network POST is deferred by the launcher.
+     * The in-session part (nonce request + attestation) runs before the scan completes, so it can
+     * extend the scan slightly — but it never *fails* the scan: on any error the scan still
+     * completes successfully.
+     */
+    private fun registerColdWalletThenComplete(
+        session: CardSession,
+        scanResponse: ScanResponse,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
+    ) {
+        val scope = sessionCoroutineScope
+        val launcher = walletRegistrationLauncher
+        if (scope == null || launcher == null) {
+            TangemLogger.i("Skipping cold wallet registration: coroutine scope or launcher unavailable")
+            callback(CompletionResult.Success(scanResponse))
+            return
+        }
+        scope.launch {
+            try {
+                runSuspendCatching { launcher.registerColdInSession(session, scanResponse) }
+                    .onFailure { TangemLogger.e("Cold wallet registration failed", it) }
+            } finally {
+                // Always complete the scan, even if the registration coroutine is cancelled
+                // (runSuspendCatching rethrows CancellationException) — the scan never depends on
+                // the registration outcome.
+                callback(CompletionResult.Success(scanResponse))
             }
         }
     }
@@ -138,12 +174,12 @@ internal class ScanProductTask(
             return
         }
 
-        visaCoroutineScope ?: run {
+        sessionCoroutineScope ?: run {
             callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
             return
         }
 
-        visaCoroutineScope.launch {
+        sessionCoroutineScope.launch {
             when (val result = visaCardScanHandler.handleVisaCardScan(session = session)) {
                 is CompletionResult.Success -> {
                     scanWalletProcessor.proceed(

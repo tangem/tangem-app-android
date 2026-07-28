@@ -35,7 +35,7 @@ interface TangemSdkManager {
 
     val canUseBiometry: Boolean
 
-    val needEnrollBiometrics: Boolean
+    val isEnrollBiometricsNeeded: Boolean
 
     val keystoreManager: KeystoreManager
 

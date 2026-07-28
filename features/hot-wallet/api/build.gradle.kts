@@ -9,24 +9,17 @@ android {
 }
 
 dependencies {
-    implementation(projects.common.routing)
+    api(projects.common.routing)
 
     /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.wallets.models)
+    api(projects.domain.models)
+    api(projects.domain.wallets)
 
     /* Project - Core */
     api(projects.core.analytics.models)
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /* Tangem libraries */
-    implementation(tangemDeps.card.core)
-
-    /* Compose */
-    implementation(deps.compose.runtime)
-
-    /* Tangem libs */
-    implementation(tangemDeps.hot.core)
+    api(tangemDeps.card.core)
 }

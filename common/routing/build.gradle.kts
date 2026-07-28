@@ -10,31 +10,33 @@ android {
 }
 
 dependencies {
-    /* Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.utils)
 
-    /* Domain */
-    implementation(projects.domain.qrScanning.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.markets.models)
-    implementation(projects.domain.onramp.models)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.nft.models)
-    implementation(projects.domain.feedback.models)
-    implementation(projects.domain.visa.models)
-
-    /* Libs - Other */
+    // region Kotlin
     api(deps.kotlin.serialization)
-    implementation(deps.androidx.core.ktx)
+    // endregion
 
-    /* Tests */
-    testImplementation(deps.test.junit5)
+    // region Core
+    api(projects.core.analytics.models)
+    api(projects.core.decompose)
+    api(projects.core.utils)
+    // endregion
+
+    // region Domain
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.feedback.models)
+    api(projects.domain.markets.models)
+    api(projects.domain.models)
+    api(projects.domain.nft.models)
+    api(projects.domain.onramp.models)
+    api(projects.domain.staking)
+    api(projects.domain.tokens.models)
+    implementation(projects.domain.visa.models)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }

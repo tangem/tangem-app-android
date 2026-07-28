@@ -36,9 +36,9 @@ class AppsFlyerClient @AssistedInject constructor(
             setAppId(context.packageName)
             setDebugLog(true)
 
-            subscribeForDeepLink(appsFlyerDeepLinkListener)
-
             init(apiKey, tangemAFConversionListener, context)
+            subscribeForDeepLink(appsFlyerDeepLinkListener)
+            setOneLinkCustomDomain(BRANDED_ONELINK_DOMAIN)
 
             TangemLogger.i("Starting AppsFlyer SDK")
             start(context, apiKey, InitializationListener)
@@ -99,5 +99,10 @@ class AppsFlyerClient @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(apiKey: String): AppsFlyerClient
+    }
+
+    private companion object {
+        // Branded AppsFlyer OneLink domain (matches the join.tangem.com App Link filter in AndroidManifest).
+        const val BRANDED_ONELINK_DOMAIN = "join.tangem.com"
     }
 }

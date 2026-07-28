@@ -27,7 +27,11 @@ class ReissueTangemPayCardUseCase(
         paymentAccountStatusFetcher.invoke(userWalletId)
 
         appCoroutineScope.launch {
-            startTangemPayOrderPollingUseCase(order, userWalletId)
+            startTangemPayOrderPollingUseCase(
+                order = order,
+                userWalletId = userWalletId,
+                onTerminalReached = { reissueCardRepository.removeReissueOrderId(cardId) },
+            )
         }
     }
 }
