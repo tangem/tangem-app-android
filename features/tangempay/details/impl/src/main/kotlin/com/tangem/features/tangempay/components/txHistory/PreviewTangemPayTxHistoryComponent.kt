@@ -10,7 +10,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
-import com.tangem.features.tangempay.ui.tangemPayTxHistoryItems
+import com.tangem.features.tangempay.ui.tangemPayTxHistoryItemsV2
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
     override val state: StateFlow<TangemPayTxHistoryUM> = MutableStateFlow(txHistoryUM)
 
     override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TangemPayTxHistoryUM) {
-        tangemPayTxHistoryItems(listState = listState, state = state)
+        tangemPayTxHistoryItemsV2(listState = listState, state = state)
     }
 
     companion object {
