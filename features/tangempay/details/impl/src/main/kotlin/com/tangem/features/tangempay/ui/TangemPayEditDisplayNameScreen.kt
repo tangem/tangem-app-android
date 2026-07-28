@@ -20,7 +20,7 @@ import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
 
 @Composable
-internal fun TangemPayEditDisplayNameScreenV2(
+internal fun TangemPayEditDisplayNameScreen(
     state: TangemPayEditDisplayNameUM,
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,

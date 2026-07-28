@@ -24,7 +24,7 @@ import com.tangem.features.tangempay.entity.CashbackBlockUM
 import com.tangem.core.ui.R as CoreUiR
 
 /**
- * Cashback block shown on the Payment account screen V2. Renders either a tappable widget with the
+ * Cashback block shown on the Payment account screen. Renders either a tappable widget with the
  * accrued cashback amount or a warning banner when cashback has been deactivated.
  */
 @Composable
