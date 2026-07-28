@@ -47,7 +47,7 @@ import com.tangem.features.tangempay.entity.TangemPayReissueCardUM
 import com.tangem.features.tangempay.ui.components.TangemPayInsufficientFundsNotification
 
 @Composable
-internal fun TangemPayReissueCardContentV2(state: TangemPayReissueCardUM) {
+internal fun TangemPayReissueCardContent(state: TangemPayReissueCardUM) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -277,7 +277,7 @@ private fun TangemPayReissueCardUM.contentAppearance(): ReissueCardContentAppear
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemPayReissueCardContentV2Preview(
+private fun TangemPayReissueCardContentPreview(
     @PreviewParameter(TangemPayReissueCardUMPreviewProvider::class) state: TangemPayReissueCardUM,
 ) {
     TangemThemePreviewRedesign {

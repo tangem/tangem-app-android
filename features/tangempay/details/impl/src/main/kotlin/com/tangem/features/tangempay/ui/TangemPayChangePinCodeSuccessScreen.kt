@@ -10,7 +10,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.ui.components.TangemPaySuccessScreenWrapper
 
 @Composable
-internal fun TangemPayChangePinCodeSuccessScreenV2(onClose: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TangemPayChangePinCodeSuccessScreen(onClose: () -> Unit, modifier: Modifier = Modifier) {
     TangemPaySuccessScreenWrapper(
         modifier = modifier,
         title = resourceReference(R.string.tangempay_card_details_change_pin_success_title),
@@ -27,6 +27,6 @@ internal fun TangemPayChangePinCodeSuccessScreenV2(onClose: () -> Unit, modifier
 @Composable
 private fun Preview() {
     TangemThemePreviewRedesign {
-        TangemPayChangePinCodeSuccessScreenV2(onClose = {})
+        TangemPayChangePinCodeSuccessScreen(onClose = {})
     }
 }

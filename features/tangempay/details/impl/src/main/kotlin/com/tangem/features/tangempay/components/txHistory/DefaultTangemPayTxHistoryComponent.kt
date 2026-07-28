@@ -7,7 +7,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
-import com.tangem.features.tangempay.ui.tangemPayTxHistoryItemsV2
+import com.tangem.features.tangempay.ui.tangemPayTxHistoryItems
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,7 +20,7 @@ internal class DefaultTangemPayTxHistoryComponent(
     override val state: StateFlow<TangemPayTxHistoryUM> = model.uiState
 
     override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TangemPayTxHistoryUM) {
-        tangemPayTxHistoryItemsV2(listState, state)
+        tangemPayTxHistoryItems(listState, state)
     }
 
     data class Params(

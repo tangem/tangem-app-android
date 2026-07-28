@@ -39,25 +39,25 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_binoculars_20
 import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
-import com.tangem.features.tangempay.entity.TangemPayEmptyTransactionHistoryStateV2
+import com.tangem.features.tangempay.entity.TangemPayEmptyTransactionHistoryState
 import com.tangem.features.tangempay.entity.TangemPayTransactionCashbackUM
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 
 private const val LOAD_ITEMS_BUFFER = 20
 
-internal fun LazyListScope.tangemPayTxHistoryItemsV2(listState: LazyListState, state: TangemPayTxHistoryUM) {
+internal fun LazyListScope.tangemPayTxHistoryItems(listState: LazyListState, state: TangemPayTxHistoryUM) {
     when (state) {
         is TangemPayTxHistoryUM.Content -> {
             contentItems(listState = listState, state = state)
         }
         is TangemPayTxHistoryUM.Empty -> {
-            nonContentItem(listState = listState, state = TangemPayEmptyTransactionHistoryStateV2.Empty)
+            nonContentItem(listState = listState, state = TangemPayEmptyTransactionHistoryState.Empty)
         }
         is TangemPayTxHistoryUM.Error -> {
             nonContentItem(
                 listState = listState,
-                state = TangemPayEmptyTransactionHistoryStateV2.FailedToLoad(onReload = state.onReload),
+                state = TangemPayEmptyTransactionHistoryState.FailedToLoad(onReload = state.onReload),
             )
         }
         is TangemPayTxHistoryUM.Loading -> {
@@ -68,14 +68,14 @@ internal fun LazyListScope.tangemPayTxHistoryItemsV2(listState: LazyListState, s
 
 private fun LazyListScope.nonContentItem(
     listState: LazyListState,
-    state: TangemPayEmptyTransactionHistoryStateV2,
+    state: TangemPayEmptyTransactionHistoryState,
     modifier: Modifier = Modifier,
 ) {
     val itemKey = state::class.java
     item(key = itemKey, contentType = itemKey) {
         val fillRemaining = Modifier.heightIn(min = rememberRemainingViewportHeight(listState, itemKey))
         when (state) {
-            is TangemPayEmptyTransactionHistoryStateV2.Empty -> {
+            is TangemPayEmptyTransactionHistoryState.Empty -> {
                 TangemPayTransactionEmptyBlock(
                     state = state,
                     modifier = modifier
@@ -84,7 +84,7 @@ private fun LazyListScope.nonContentItem(
                         .fillMaxWidth(),
                 )
             }
-            is TangemPayEmptyTransactionHistoryStateV2.FailedToLoad -> {
+            is TangemPayEmptyTransactionHistoryState.FailedToLoad -> {
                 TangemPayFailedTransactionBlock(
                     state = state,
                     modifier = modifier
@@ -186,7 +186,7 @@ private fun GroupTitleBlock(
                     vertical = TangemTheme.dimens2.x3,
                     horizontal = TangemTheme.dimens2.x4,
                 ),
-            text = state.legacyGroupTitle.title,
+            text = state.title,
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.primary,
         )
@@ -240,7 +240,7 @@ private fun CashbackBadge(
 private fun Icon(state: TangemPayTransactionState, modifier: Modifier = Modifier) {
     when (state) {
         is TangemPayTransactionState.Content -> TransactionListIcon(
-            iconState = state.iconV2,
+            iconState = state.icon,
             modifier = modifier,
         )
         is TangemPayTransactionState.Loading -> TangemShimmer(
@@ -310,7 +310,7 @@ private fun Amount(state: TangemPayTransactionState, isBalanceHidden: Boolean, m
                 text = state.amount.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
                 textAlign = TextAlign.End,
-                color = state.amountColorV2(),
+                color = state.amountColor(),
                 style = TangemTheme.typography3.body.medium,
             )
         }
@@ -334,7 +334,7 @@ private fun Timestamp(state: TangemPayTransactionState, modifier: Modifier = Mod
 
 @Composable
 private fun TangemPayTransactionEmptyBlock(
-    state: TangemPayEmptyTransactionHistoryStateV2.Empty,
+    state: TangemPayEmptyTransactionHistoryState.Empty,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -370,7 +370,7 @@ private fun TangemPayTransactionEmptyBlock(
 
 @Composable
 private fun TangemPayFailedTransactionBlock(
-    state: TangemPayEmptyTransactionHistoryStateV2.FailedToLoad,
+    state: TangemPayEmptyTransactionHistoryState.FailedToLoad,
     modifier: Modifier = Modifier,
 ) {
     Column(
