@@ -94,6 +94,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.PreActivatedWallet,
             is FeedbackEmailType.CardAttestationFailed,
             is FeedbackEmailType.BiometricsAuthenticationFailed,
+            is FeedbackEmailType.AppUpdateProblem,
             is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.DisputeV2,
             is FeedbackEmailType.Visa.FeatureIsBeta,
