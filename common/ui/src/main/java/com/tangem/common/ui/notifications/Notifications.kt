@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -29,6 +30,7 @@ import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.NotificationTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -107,9 +109,11 @@ fun LazyListScope.notifications(
 private fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
     val iconUM = messageUM.iconUM
     TangemMessageBanner(
-        modifier = modifier.conditional(messageUM.onClick != null) {
-            clickableSingle(onClick = requireNotNull(messageUM.onClick))
-        },
+        modifier = modifier
+            .testTag(NotificationTestTags.CONTAINER)
+            .conditional(messageUM.onClick != null) {
+                clickableSingle(onClick = requireNotNull(messageUM.onClick))
+            },
         title = messageUM.title,
         description = messageUM.subtitle,
         variant = messageUM.messageEffect.toBannerVariant(),
@@ -126,7 +130,14 @@ private fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modif
             .firstOrNull { it.type != TangemButtonType.Secondary }
             ?.toBannerButton(),
         slotStart = iconUM?.let {
-            { TangemIcon(tangemIconUM = it, modifier = Modifier.size(messageUM.iconSize)) }
+            {
+                TangemIcon(
+                    tangemIconUM = it,
+                    modifier = Modifier
+                        .size(messageUM.iconSize)
+                        .testTag(NotificationTestTags.ICON),
+                )
+            }
         },
         slotEnd = messageUM.onCloseClick?.let { onCloseClick ->
             { TangemMessageBanner.CloseButton(onClick = onCloseClick) }
