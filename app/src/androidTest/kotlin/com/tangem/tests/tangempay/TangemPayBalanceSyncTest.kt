@@ -80,7 +80,7 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
     }
 
     @AllureId("9549")
-    @DisplayName("Tangem Pay: leaving card details refreshes the Main balance via customer info")
+    @DisplayName("Tangem Pay: leaving the payment account screen refreshes the Main balance via customer info")
     @Test
     fun balanceRefreshesOnLeavingDetailsTest() {
         setupHooks(
