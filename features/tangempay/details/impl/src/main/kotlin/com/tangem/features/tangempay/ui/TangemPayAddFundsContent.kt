@@ -36,7 +36,7 @@ import com.tangem.features.tangempay.entity.TangemPayAddFundsUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TangemPayAddFundsContentV2(state: TangemPayAddFundsUM) {
+internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -123,7 +123,7 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
 @Composable
 private fun TangemPayAddFundsContentPreview() {
     TangemThemePreviewRedesign {
-        TangemPayAddFundsContentV2(
+        TangemPayAddFundsContent(
             state = TangemPayAddFundsUM(
                 items = persistentListOf(
                     TangemPayAddFundsItemUM(

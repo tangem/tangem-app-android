@@ -76,7 +76,7 @@ private const val TOP_FADE_MID_ALPHA = 0.8f
 
 @Suppress("LongMethod")
 @Composable
-internal fun TangemPayDetailsScreenV2(
+internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
@@ -312,7 +312,7 @@ private fun PayDetailsTopBar(
                 variant = TangemButton.Variant.Material,
             )
         },
-        endContent = if (config.itemsV2.isNotEmpty()) {
+        endContent = if (config.items.isNotEmpty()) {
             {
                 var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
                 Box {
@@ -327,7 +327,7 @@ private fun PayDetailsTopBar(
                         variant = TangemButton.Variant.Material,
                     )
                     PayContextMenuBlock(
-                        items = config.itemsV2,
+                        items = config.items,
                         onMenuDismiss = { isDropdownMenuShown = false },
                         isDropdownMenuShown = isDropdownMenuShown,
                     )
@@ -497,7 +497,7 @@ private fun TangemPayDetailsScreenPreview(
     @PreviewParameter(TangemPayDetailsUMProvider::class) state: TangemPayDetailsUM,
 ) {
     TangemThemePreviewRedesign {
-        TangemPayDetailsScreenV2(
+        TangemPayDetailsScreen(
             state = state,
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(
                 txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
@@ -514,7 +514,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
     @PreviewParameter(TangemPayDetailsTxHistoryProvider::class) state: TangemPayTxHistoryUM,
 ) {
     TangemThemePreviewRedesign {
-        TangemPayDetailsScreenV2(
+        TangemPayDetailsScreen(
             state = TangemPayDetailsUMProvider().values.first(),
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
             expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
