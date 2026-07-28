@@ -47,7 +47,7 @@ import com.tangem.features.tangempay.entity.*
 
 @Suppress("LongMethod")
 @Composable
-internal fun TangemPayTxHistoryDetailsContentV2(state: TangemPayTxHistoryDetailsUMV2) {
+internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -152,7 +152,7 @@ private fun TransactionIcon(iconState: TangemIconUM, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun TransactionSecondaryLine(state: TangemPayTxHistoryDetailsUMV2, modifier: Modifier = Modifier) {
+private fun TransactionSecondaryLine(state: TangemPayTxHistoryDetailsUM, modifier: Modifier = Modifier) {
     val secondaryText = when {
         state.localTransactionText != null -> {
             buildString {
@@ -230,7 +230,7 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
 }
 
 @Composable
-private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUMV2, modifier: Modifier = Modifier) {
+private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         when (val detail = state.detail) {
             null -> Unit
@@ -429,17 +429,17 @@ private fun DetailRowSubvalue(text: TextReference, modifier: Modifier = Modifier
 @Preview(device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TangemPayTxHistoryDetailsContentPreview(
-    @PreviewParameter(TangemPayTxHistoryDetailsUMProviderV2::class) state: TangemPayTxHistoryDetailsUMV2,
+    @PreviewParameter(TangemPayTxHistoryDetailsUMProvider::class) state: TangemPayTxHistoryDetailsUM,
 ) {
     TangemThemePreviewRedesign {
-        TangemPayTxHistoryDetailsContentV2(state = state)
+        TangemPayTxHistoryDetailsContent(state = state)
     }
 }
 
-private class TangemPayTxHistoryDetailsUMProviderV2 :
-    CollectionPreviewParameterProvider<TangemPayTxHistoryDetailsUMV2>(
+private class TangemPayTxHistoryDetailsUMProvider :
+    CollectionPreviewParameterProvider<TangemPayTxHistoryDetailsUM>(
         listOf(
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = true,
                 title = resourceReference(R.string.tangem_pay_purchase),
                 subtitle = stringReference("12 June 2026, 12:40"),
@@ -465,7 +465,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 ),
                 dismiss = {},
             ),
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = true,
                 title = resourceReference(R.string.tangem_pay_purchase),
                 subtitle = stringReference("12 June 2026, 12:40"),
@@ -495,7 +495,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 ),
                 dismiss = {},
             ),
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = true,
                 title = resourceReference(R.string.tangem_pay_purchase),
                 subtitle = stringReference("12 June 2026, 12:40"),
@@ -524,7 +524,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 ),
                 dismiss = {},
             ),
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = false,
                 title = resourceReference(R.string.tangem_pay_fee_title),
                 subtitle = stringReference("12 June 2026, 12:40"),
@@ -548,7 +548,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 ),
                 dismiss = {},
             ),
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = false,
                 title = resourceReference(R.string.tangem_pay_deposit),
                 subtitle = stringReference("12 June 2026, 12:40"),
@@ -567,7 +567,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 ),
                 dismiss = {},
             ),
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = false,
                 title = resourceReference(R.string.tangem_pay_purchase),
                 subtitle = stringReference("12 June 2026, 12:40"),
@@ -590,7 +590,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 ),
                 dismiss = {},
             ),
-            TangemPayTxHistoryDetailsUMV2(
+            TangemPayTxHistoryDetailsUM(
                 isBalanceHidden = false,
                 title = resourceReference(R.string.tangem_pay_purchase),
                 subtitle = stringReference("12 June 2026, 12:40"),

@@ -120,7 +120,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             TangemPayCardPageUM(
                 onBackClick = router::pop,
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
-                settingsV2 = persistentListOf(),
+                settings = persistentListOf(),
                 menuItems = buildMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
                 ),
@@ -224,7 +224,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
-                    settingsV2 = buildSettingsV2(card),
+                    settings = buildSettings(card),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
                 )
@@ -245,9 +245,9 @@ internal class TangemPayCardPageModel @Inject constructor(
         }.collect { isDetailsShown ->
             uiState.update { state ->
                 state.copy(
-                    settingsV2 = state.settingsV2
+                    settings = state.settings
                         .map { setting ->
-                            if (setting.id == TangemPayCardPageSettingV2.Id.Details) {
+                            if (setting.id == TangemPayCardPageSetting.Id.Details) {
                                 setting.copy(isEnabled = !isDetailsShown)
                             } else {
                                 setting
@@ -259,17 +259,17 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    private fun buildSettingsV2(card: TangemPayCard): ImmutableList<TangemPayCardPageSettingV2> {
+    private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
         return persistentListOf(
-            TangemPayCardPageSettingV2(
-                id = TangemPayCardPageSettingV2.Id.Details,
+            TangemPayCardPageSetting(
+                id = TangemPayCardPageSetting.Id.Details,
                 title = TextReference.Res(R.string.tangempay_card_details_title),
                 onClick = ::onClickViewDetails,
                 iconRes = CoreUiR.drawable.ic_visa_card_details_24,
                 testTag = TangemPayTestTags.SHOW_DETAILS_ROW,
             ),
-            TangemPayCardPageSettingV2(
-                id = TangemPayCardPageSettingV2.Id.Freeze,
+            TangemPayCardPageSetting(
+                id = TangemPayCardPageSetting.Id.Freeze,
                 title = TextReference.Res(
                     if (card.isFrozen) {
                         R.string.tangem_pay_freeze_card_unfreeze
@@ -281,8 +281,8 @@ internal class TangemPayCardPageModel @Inject constructor(
                 iconRes = CoreUiR.drawable.ic_freeze_24,
                 testTag = TangemPayTestTags.FREEZE_CARD_ROW,
             ),
-            TangemPayCardPageSettingV2(
-                id = TangemPayCardPageSettingV2.Id.ChangePin,
+            TangemPayCardPageSetting(
+                id = TangemPayCardPageSetting.Id.ChangePin,
                 title = TextReference.Res(R.string.tangempay_card_details_change_pin),
                 onClick = { onClickChangePIN(card.hasPinCode) },
                 iconRes = CoreUiR.drawable.ic_card_pin_24,

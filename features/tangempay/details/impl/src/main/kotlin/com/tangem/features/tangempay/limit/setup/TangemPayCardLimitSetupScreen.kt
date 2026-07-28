@@ -37,7 +37,7 @@ import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun TangemPayCardLimitSetupScreenV2(state: TangemPayCardLimitSetupUM, modifier: Modifier = Modifier) {
+internal fun TangemPayCardLimitSetupScreen(state: TangemPayCardLimitSetupUM, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -183,7 +183,7 @@ private fun PresetChip(preset: TangemPayCardLimitSetupUM.LimitPresetUM, modifier
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun preview() = TangemThemePreviewRedesign {
-    TangemPayCardLimitSetupScreenV2(
+    TangemPayCardLimitSetupScreen(
         state = TangemPayCardLimitSetupUM.stub(),
     )
 }
