@@ -441,6 +441,7 @@
   <string name="common_rename">Umbenennen</string>
   <string name="common_required">Erforderlich</string>
   <string name="common_reset">Zurücksetzen</string>
+  <string name="common_retry">Wiederholen</string>
   <string name="common_save">Speichern</string>
   <string name="common_save_changes">Änderungen speichern</string>
   <string name="common_search">Suchen</string>
@@ -907,9 +908,11 @@
     <item quantity="one">Vermögenswert</item>
     <item quantity="other">Vermögenswerte</item>
   </plurals>
+  <string name="market_chart_bubble_no_amount">Kein Betrag  auf Token</string>
   <string name="market_chart_bubble_no_data">Keine Daten</string>
   <string name="market_chart_bubble_total_value">Gesamtwert</string>
   <string name="market_chart_can_not_load_data">Daten konnten nicht geladen werden</string>
+  <string name="market_chart_no_amount">Du hast keine Token mit diesem Betrag.</string>
   <string name="market_chart_top_holding">Top-Halterung %s</string>
   <string name="markets_about_coin_header">Über diesen Coin</string>
   <string name="markets_add_to_my_portfolio_description">Um dieses Asset zu kaufen, zu tauschen oder zu erhalten, füge diesen Deinem Portfolio hinzu</string>
@@ -1863,6 +1866,9 @@
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Zu Google Wallet hinzufügen</string>
+  <string name="tangempay_card_details_awaiting_deposit_cancel_button">Stornieren %1$s, umziehen nach %2$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_subtitle">Um die monatliche Gebühr für den Tarif zu bezahlen und die Karte zu nutzen</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Laden Sie Ihr Konto auf unter %1$s</string>
   <string name="tangempay_card_details_card_number">Kartennummer</string>
   <string name="tangempay_card_details_change_pin">PIN-Code</string>
   <string name="tangempay_card_details_change_pin_success_description">Die Karte ist vollständig für Zahlungen bereit.</string>
@@ -1897,6 +1903,8 @@
   <string name="tangempay_card_details_rename_card_placeholder">Kartenname</string>
   <string name="tangempay_card_details_reveal_text">Aufdecken</string>
   <string name="tangempay_card_details_show_details">Kartendetails</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">Sollte der Kontostand unter null bleiben, werden Ihre „ %1$s “-Karten am %2$s</string>
+  <string name="tangempay_card_details_system_downgrade_title">Laden Sie Ihr Konto in Kürze auf.</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Bitte versuche es später noch einmal.</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
@@ -1924,17 +1932,40 @@
     <item quantity="one">%d Karte</item>
     <item quantity="other">%d Karten</item>
   </plurals>
+  <string name="tangempay_cashback_accruals_calc_description">Wir bearbeiten Käufe innerhalb von 5 Tagen nach der Transaktion und berücksichtigen nur abgeschlossene Transaktionen.</string>
+  <string name="tangempay_cashback_accruals_calc_title">Wie berechnen wir Cashback?</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Für Einkäufe vor Ort bei Händlern in der EU wird kein Cashback gewährt; dies gilt ebenfalls für Abhebungen, Überweisungen, bargeldähnliche Zahlungen, Mobilfunkrechnungen, behördliche Dienstleistungen und bestimmte andere Kategorien.</string>
+  <string name="tangempay_cashback_accruals_exceptions_title">Ausnahmen</string>
+  <string name="tangempay_cashback_accruals_pay_description">Vom 2. bis zum 5. des nächsten Monats</string>
+  <string name="tangempay_cashback_accruals_pay_title">Wie erfolgt die Auszahlung von Cashback?</string>
+  <string name="tangempay_cashback_accruals_subtitle">Grenzen und Ausnahmen</string>
+  <string name="tangempay_cashback_accruals_title">Abgrenzungen</string>
+  <string name="tangempay_cashback_additional_permanent">Dauerhaft</string>
+  <string name="tangempay_cashback_additional_title">Zusätzliches Cashback</string>
+  <string name="tangempay_cashback_additional_until">Bis %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Dies geschah aufgrund Ihres verdächtigen Verhaltens. Wenden Sie sich an den Support, um mehr zu erfahren.</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deaktiviert</string>
   <string name="tangempay_cashback_deposited_on">Wird eingezahlt am %1$s</string>
+  <string name="tangempay_cashback_details_cap">%1$s maximal pro Monat</string>
+  <string name="tangempay_cashback_details_eu_excluded">Kein Cashback für Einkäufe vor Ort bei Händlern in der EU</string>
+  <string name="tangempay_cashback_details_paid_in">Bezahlt in %1$s</string>
+  <string name="tangempay_cashback_details_tier">%1$s%% Bei allen Einkäufen mit Ihren „ %2$s “-Karten gilt ein Mindestumsatz von %3$s</string>
+  <string name="tangempay_cashback_error_title">Die Seite konnte nicht geladen werden.\nZum Neuladen bitte antippen</string>
+  <string name="tangempay_cashback_refund_banner">Wir haben eine Rückerstattung für einen Kauf erhalten, für den zuvor bereits Cashback gewährt worden war</string>
+  <string name="tangempay_cashback_total_earned">%1$s insgesamt verdient</string>
   <string name="tangempay_cashback_widget_title">%1$s Cashback in %2$s</string>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
   <string name="tangempay_common_error_loading">Fehler beim Laden</string>
+  <string name="tangempay_current_plan_active_till_notification">Ihr „ %1$s “-Tarif ist bis zum %2$sgültig; danach werden wir Sie auf %3$sumstellen. Für %4$s fallen keine Kosten an.</string>
   <string name="tangempay_current_plan_change">Tarif wechseln</string>
+  <string name="tangempay_current_plan_fee_charged_notification">%1$s Die monatliche Gebühr wird am %2$s</string>
   <string name="tangempay_current_plan_section_card">Kartenbezogen</string>
   <string name="tangempay_current_plan_section_plan">Planbezogen</string>
+  <string name="tangempay_current_plan_stay_button">Bleib dran %1$s</string>
+  <string name="tangempay_current_plan_stay_sheet_body">Ihr Übergang auf „ %1$s “ wird storniert.</string>
+  <string name="tangempay_current_plan_stay_sheet_title">Möchtest du auf „ %1$s“ bleiben?</string>
   <string name="tangempay_current_plan_title">Aktueller Plan</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Limit von %s bis %s festlegen</string>
   <string name="tangempay_daily_limit_set_button">Limits festlegen</string>
@@ -2046,7 +2077,16 @@
   <string name="tangempay_select_plan_btn_select">Auswählen</string>
   <string name="tangempay_select_plan_btn_upgrade">Tarif wechseln</string>
   <string name="tangempay_select_plan_compare">Tarife vergleichen</string>
+  <string name="tangempay_select_plan_confirm_downgrade_title">Ihr „ %1$s “-Tarif und Ihre „ %2$s “-Karten sind gültig bis %3$s</string>
+  <string name="tangempay_select_plan_confirm_point_cancel_till">Sie können diesen Übergang bis zum %1$s</string>
+  <string name="tangempay_select_plan_confirm_point_cards_closed">Dein %1$s Die Karten werden geschlossen</string>
+  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s Die monatliche Gebühr wird von Ihrem Konto abgebucht.</string>
+  <string name="tangempay_select_plan_confirm_point_move_on_date">Am %1$s werden wir Sie auf den Tarif „ %2$s “ umstellen.</string>
+  <string name="tangempay_select_plan_confirm_point_no_fee">Es fällt keine Gebühr an</string>
+  <string name="tangempay_select_plan_confirm_point_virtual_card">In wenigen Minuten erhalten Sie Ihre virtuelle „ %1$s “.</string>
+  <string name="tangempay_select_plan_confirm_switch_title">Sie wechseln zu %1$s</string>
   <string name="tangempay_select_plan_confirm_title">Auswahl bestätigen</string>
+  <string name="tangempay_select_plan_confirm_upgrade_title">Wir stellen für Sie eine „ %1$s “ aus.</string>
   <string name="tangempay_select_plan_title">Plan auswählen</string>
   <string name="tangempay_service_unavailable_description">Wir beheben ein technisches Problem. Bitte versuchen Sie es später erneut.</string>
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
