@@ -25,6 +25,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -61,12 +62,12 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
@@ -175,6 +176,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     cryptoBalance = balance.availableForWithdrawal,
                     depositAddress = balance.cryptoBalance.depositAddress,
                     cryptoCurrency = cryptoCurrency,
+                    virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
                 ),
             )
         }
@@ -307,6 +309,84 @@ internal class TangemPayDetailsModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    override fun onClickBankTransfer() {
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        when (val onramp = loaded.virtualAccount) {
+            null -> return
+            VirtualAccountOnramp.Processing -> showVaPreparing()
+            // BankCredentialsError opens the deposit intro first; the retryable error sheet is shown from
+            // its "Show details" action (see onShowDetailsClick).
+            is VirtualAccountOnramp.Available,
+            VirtualAccountOnramp.Eligible,
+            is VirtualAccountOnramp.BankCredentialsError,
+            -> openVirtualAccountDeposit(onramp, loaded)
+        }
+    }
+
+    private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
+        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VirtualAccountDeposit(
+                virtualAccountOnramp = onramp,
+                userWalletId = userWalletId,
+                paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
+            ),
+        )
+    }
+
+    fun showVaBankingDetailsError() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VaBankingDetailsError(userWalletId = userWalletId),
+        )
+    }
+
+    private fun showVaPreparing() {
+        bottomSheetNavigation.dismiss()
+        uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
+    }
+
+    fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
+        when (onramp) {
+            // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
+            // instead of the intro deposit sheet that would need another "Show details" tap.
+            is VirtualAccountOnramp.Available -> onShowVirtualAccountRequisites(onramp)
+            else -> {
+                val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+                openVirtualAccountDeposit(onramp, loaded)
+            }
+        }
+    }
+
+    fun onVirtualAccountOrderCreated() {
+        analytics.send(TangemPayAnalyticsEvents.VaSuccessScreenActivation())
+        bottomSheetNavigation.dismiss()
+        router.push(TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess)
+    }
+
+    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.VirtualAccountRequisites(
+                userWalletId = userWalletId,
+                bankCredentials = onramp.bankCredentials,
+            ),
+        )
+    }
+
+    fun onVaBankingDetailsShown() {
+        analytics.send(TangemPayAnalyticsEvents.VaBankingDetailsShowed())
+    }
+
+    fun onVaShareDetailsClicked() {
+        analytics.send(TangemPayAnalyticsEvents.VaShareDetailsButtonClicked())
+    }
+
+    fun onVaFieldCopied(field: String) {
+        analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field))
     }
 
     override fun onClickReceive(data: TangemPayTopUpData) {

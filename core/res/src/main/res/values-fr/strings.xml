@@ -416,6 +416,7 @@
   <string name="common_rename">Renommer</string>
   <string name="common_required">Obligatoire</string>
   <string name="common_reset">Réinitialiser</string>
+  <string name="common_retry">Réessayer</string>
   <string name="common_save">Enregistrez</string>
   <string name="common_save_changes">Sauvegarder les modifications</string>
   <string name="common_search">Rechercher</string>

@@ -6,6 +6,7 @@ import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,7 +24,7 @@ internal class TangemPayErrorConverter @Inject constructor(
             if (value.code == ApiResponseError.HttpException.Code.UNAUTHORIZED) return VisaApiError.RefreshTokenExpired
 
             val errorBody = value.errorBody ?: return VisaApiError.UnknownWithoutCode
-            return runCatching {
+            runCatching {
                 tangemPayErrorAdapter.fromJson(errorBody)?.error?.code ?: value.code.numericCode
             }.map {
                 VisaApiError.fromBackendError(it)
@@ -31,6 +32,7 @@ internal class TangemPayErrorConverter @Inject constructor(
                 VisaApiError.UnknownWithoutCode
             }
         } else {
+            TangemLogger.e("Not HttpException. ${value.message}", value)
             VisaApiError.UnknownWithoutCode
         }
     }
