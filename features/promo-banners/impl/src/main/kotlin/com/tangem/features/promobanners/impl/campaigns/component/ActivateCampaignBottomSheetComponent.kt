@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -29,7 +28,6 @@ internal class ActivateCampaignBottomSheetComponent(
     chooseTokenComponentFactory: ChooseTokenComponent.Factory,
     private val params: Params,
     val onDismiss: () -> Unit,
-    val onFooterExtraHeightReady: (Dp) -> Unit,
 ) : ComposableModularContentComponent, AppComponentContext by appComponentContext {
 
     private val model: ActivateCampaignsModel = getOrCreateModel(params)
@@ -65,7 +63,6 @@ internal class ActivateCampaignBottomSheetComponent(
 
         ActivateCampaignFooter(
             footerUM = state.footerUM,
-            onFooterTextHeightReady = onFooterExtraHeightReady,
         )
     }
 
