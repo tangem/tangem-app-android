@@ -105,7 +105,7 @@ internal class SubmitTariffTransitionUseCaseTest {
     }
 
     @Test
-    fun `GIVEN system downgrade transition WHEN invoke THEN returns Right without side effects`() = runTest {
+    fun `GIVEN system downgrade transition WHEN invoke THEN returns Left without side effects`() = runTest {
         // GIVEN
         val transition = transition(TangemPayTariffPlanTransition.Type.SYSTEM_DOWNGRADE)
 
@@ -113,13 +113,13 @@ internal class SubmitTariffTransitionUseCaseTest {
         val result = useCase(USER_WALLET_ID, transition)
 
         // THEN
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { createTransitionOrder(any(), any(), any()) }
         coVerify(exactly = 0) { setPendingTransition(any(), any()) }
     }
 
     @Test
-    fun `GIVEN unknown transition WHEN invoke THEN returns Right without side effects`() = runTest {
+    fun `GIVEN unknown transition WHEN invoke THEN returns Left without side effects`() = runTest {
         // GIVEN
         val transition = transition(TangemPayTariffPlanTransition.Type.UNKNOWN)
 
@@ -127,7 +127,7 @@ internal class SubmitTariffTransitionUseCaseTest {
         val result = useCase(USER_WALLET_ID, transition)
 
         // THEN
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { createTransitionOrder(any(), any(), any()) }
         coVerify(exactly = 0) { setPendingTransition(any(), any()) }
     }
