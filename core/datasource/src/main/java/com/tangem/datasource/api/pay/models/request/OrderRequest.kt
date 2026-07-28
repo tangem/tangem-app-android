@@ -15,5 +15,6 @@ data class OrderRequest(
         @Json(name = "type") val type: String,
         @Json(name = "target_tariff_plan_id") val targetTariffPlanId: String? = null,
         @Json(name = "tariff_plan_transition_type") val tariffPlanTransitionType: String? = null,
+        @Json(name = "chain_id") val chainId: Int? = null,
     )
 }
