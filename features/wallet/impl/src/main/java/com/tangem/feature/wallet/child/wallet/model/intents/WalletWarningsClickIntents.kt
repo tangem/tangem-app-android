@@ -12,6 +12,7 @@ import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
+import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -43,6 +44,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
+import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -71,6 +73,8 @@ internal interface WalletWarningsClickIntents {
     fun onCloseRateAppWarningClick()
 
     fun onSupportClick()
+
+    fun onSoftUpdateClick()
 
     fun onBackupErrorClick()
 
@@ -110,6 +114,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val appStoreOpener: AppStoreOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
@@ -120,6 +125,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
+    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
@@ -244,6 +250,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
         }
+    }
+
+    override fun onSoftUpdateClick() {
+        appStoreOpener.openStorePage()
     }
 
     override fun onBackupErrorClick() {
@@ -373,6 +383,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     private suspend fun enableNotificationsIfNeeded() {
+        // New first-activation owns auto-enable when the feature is on; skip the legacy path.
+        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
         val alreadyEnabledWallets = notificationsRepository.getWalletAutomaticallyEnabledList().map {
             UserWalletId(it)
         }

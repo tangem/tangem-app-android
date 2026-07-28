@@ -22,7 +22,6 @@ import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
@@ -47,7 +46,6 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val saveUserWalletUseCase: SaveWalletUseCase,
     private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
@@ -120,9 +118,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
 
                         launch(dispatchers.main + NonCancellable) {
                             val syncResult = syncWalletWithRemoteUseCase(userWallet.walletId)
-                            if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled &&
-                                syncResult == WalletSyncResult.Created
-                            ) {
+                            if (syncResult == WalletSyncResult.Created) {
                                 startAssetsDiscoveryUseCase(userWallet.walletId)
                             }
                         }

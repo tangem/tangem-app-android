@@ -1,0 +1,52 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_eye_cross_24: ImageVector? = null
+
+val Icons.ic_eye_cross_24: ImageVector
+    get() {
+        if (_ic_eye_cross_24 != null) return _ic_eye_cross_24!!
+        _ic_eye_cross_24 = ImageVector.Builder(
+            name = "ic_eye_cross_24",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M4.29294 3.29307C4.68342 2.9026 5.31647 2.90267 5.707 3.29307L20.8564 18.4425C21.2467 18.833 21.2468 19.4661 20.8564 19.8565C20.466 20.2468 19.8328 20.2468 19.4424 19.8565L17.8759 18.2901C16.13 19.4056 14.0954 20.0026 12.0117 20.0001C8.04791 20.0702 4.3848 17.892 2.55466 14.3751C2.55139 14.3688 2.54802 14.3619 2.54489 14.3556C1.813 12.8718 1.81325 11.1314 2.54489 9.64756L2.54782 9.64073C3.26965 8.20336 4.32969 6.97014 5.62595 6.04014L4.29294 4.70713C3.90255 4.31663 3.90252 3.68357 4.29294 3.29307ZM7.06345 7.47764C5.9047 8.23778 4.96166 9.29213 4.33591 10.5382C3.88381 11.4598 3.88289 12.5391 4.33395 13.461C5.7692 16.2107 8.59102 17.9467 11.6767 18.0011H11.998C13.5549 18.0057 15.0781 17.5982 16.4189 16.8331L14.6113 15.0255C14.3231 15.2744 14.0016 15.4836 13.6533 15.6417C13.1369 15.8761 12.5759 15.9978 12.0088 15.9991C11.4415 16.0003 10.8798 15.8808 10.3623 15.6485C9.84478 15.4163 9.38295 15.076 9.0068 14.6515C8.6307 14.2269 8.34878 13.7273 8.18063 13.1856C8.01255 12.644 7.96155 12.0718 8.03122 11.5089C8.10099 10.9462 8.28991 10.4042 8.58493 9.92003C8.69972 9.73169 8.8302 9.55394 8.9736 9.3878L7.06345 7.47764ZM10.2929 10.961C10.1456 11.203 10.0514 11.4739 10.0166 11.755C9.98178 12.0362 10.0068 12.3222 10.0908 12.5929C10.1748 12.8635 10.3159 13.1131 10.5039 13.3253C10.6919 13.5375 10.9229 13.7073 11.1816 13.8233C11.4402 13.9393 11.7204 13.9997 12.0039 13.9991C12.2873 13.9985 12.5681 13.9375 12.8261 13.8204C12.9553 13.7618 13.077 13.6887 13.1904 13.6046L10.3955 10.8097C10.3592 10.8585 10.3247 10.9089 10.2929 10.961Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M11.9775 4.00303C15.9415 3.93267 19.6043 6.11108 21.4345 9.62803C21.4377 9.63411 21.4413 9.64148 21.4443 9.64756C22.1756 11.1305 22.1758 12.8695 21.4453 14.3526C21.4004 14.4443 21.3522 14.5225 21.33 14.5577C21.3105 14.5888 21.3035 14.5999 21.3017 14.6026C21.0435 15.0901 20.4381 15.277 19.9502 15.0196C19.4624 14.7616 19.2759 14.1561 19.5332 13.6681C19.5557 13.6255 19.5784 13.5881 19.5957 13.5597C19.6116 13.5335 19.6291 13.506 19.6377 13.4923C19.6425 13.4846 19.6467 13.4781 19.6494 13.4737L19.6513 13.4718C20.1066 12.5489 20.1072 11.4662 19.6552 10.5421C18.1736 7.70358 15.2145 5.94521 12.0127 6.00206C12.0071 6.00219 12.0006 6.00299 11.9951 6.00303C11.8078 6.00307 11.7164 6.02387 11.3955 6.04503C10.8452 6.08084 10.369 5.66353 10.332 5.11338C10.2957 4.56246 10.7138 4.08549 11.2646 4.04893C11.3846 4.04096 11.7187 4.00473 11.9775 4.00303Z"),
+            )
+        }.build()
+        return _ic_eye_cross_24!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcEyeCross24Preview() {
+    Icon(
+        imageVector = Icons.ic_eye_cross_24,
+        contentDescription = null,
+    )
+}

@@ -3,6 +3,7 @@ package com.tangem.domain.pay.util
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import org.junit.jupiter.api.Test
 
@@ -112,11 +113,12 @@ internal class OrderResolverTest {
         customerId = null,
         type = type,
         status = status,
-        step = null,
+        step = OrderStep.UNKNOWN,
         stepChangeCode = null,
         productInstanceId = productInstanceId,
         paymentAccountId = null,
         cardId = cardId,
+        toTariffPlanId = null,
         withdrawTxHash = null,
         createdAt = null,
         updatedAt = updatedAt,

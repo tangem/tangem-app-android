@@ -5,13 +5,11 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,16 +27,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.button.*
@@ -48,10 +39,8 @@ import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.ExchangeItemUM
@@ -68,56 +57,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet as TangemBot
  */
 @Composable
 internal fun ExchangesBottomSheet(config: TangemBottomSheetConfig) {
-    if (LocalRedesignEnabled.current) {
-        ExchangesBottomSheetV2(config)
-    } else {
-        ExchangesBottomSheetV1(config)
-    }
-}
-
-@Composable
-private fun ExchangesBottomSheetV1(config: TangemBottomSheetConfig) {
-    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-
-    TangemBottomSheet<ExchangesBottomSheetContent>(
-        config = config,
-        addBottomInsets = false,
-        title = { Title(textResId = it.titleResId, onBackClick = config.onDismissRequest) },
-        content = { content ->
-            Box {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = bottomBarHeight),
-                ) {
-                    item(key = "subtitle") {
-                        Subtitle(
-                            subtitleRes = content.subtitleResId,
-                            volumeReference = content.volumeReference,
-                            modifier = Modifier.padding(
-                                start = TangemTheme.dimens.spacing16,
-                                top = TangemTheme.dimens.spacing12,
-                                end = TangemTheme.dimens.spacing16,
-                                bottom = TangemTheme.dimens.spacing8,
-                            ),
-                        )
-                    }
-
-                    items(
-                        items = content.exchangeItems,
-                        key = TokenItemState::id,
-                        itemContent = { TokenItem(state = it, isBalanceHidden = false) },
-                    )
-                }
-
-                if (content is ExchangesBottomSheetContent.Error) {
-                    Error(
-                        content = content,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
-            }
-        },
-    )
+    ExchangesBottomSheetV2(config)
 }
 
 @Composable
@@ -192,14 +132,6 @@ private fun ExchangesBottomSheetV2(config: TangemBottomSheetConfig) {
 }
 
 @Composable
-private fun Title(@StringRes textResId: Int, onBackClick: () -> Unit) {
-    TangemTopAppBar(
-        title = stringResourceSafe(id = textResId),
-        startButton = TopAppBarButtonUM.Back(onBackClicked = onBackClick),
-    )
-}
-
-@Composable
 private fun Subtitle(@StringRes subtitleRes: Int, volumeReference: TextReference, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -213,57 +145,18 @@ private fun Subtitle(@StringRes subtitleRes: Int, volumeReference: TextReference
 
 @Composable
 private fun SubtitleText(textReference: TextReference) {
-    if (LocalRedesignEnabled.current) {
-        Text(
-            text = textReference.resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = TangemTheme.typography2.captionSemibold12,
-        )
-    } else {
-        Text(
-            text = textReference.resolveReference(),
-            color = TangemTheme.colors.text.tertiary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = TangemTheme.typography.body2,
-        )
-    }
+    Text(
+        text = textReference.resolveReference(),
+        color = TangemTheme.colors2.text.neutral.secondary,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+        style = TangemTheme.typography2.captionSemibold12,
+    )
 }
 
 @Composable
 private fun Error(content: ExchangesBottomSheetContent.Error, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        ErrorV2(content, modifier)
-    } else {
-        ErrorV1(content, modifier)
-    }
-}
-
-@Composable
-private fun ErrorV1(content: ExchangesBottomSheetContent.Error, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResourceSafe(id = content.message),
-            color = TangemTheme.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-            style = TangemTheme.typography.caption1,
-        )
-
-        SpacerH12()
-
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = resourceReference(id = R.string.alert_button_try_again),
-                onClick = content.onRetryClick,
-            ),
-        )
-    }
+    ErrorV2(content, modifier)
 }
 
 @Composable
@@ -427,10 +320,10 @@ private fun getColorByTrustValue(type: AuditLabelUM.Type): Color {
 @Preview
 @Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ExchangesBottomSheet(
+private fun Preview_ExchangesBottomSheetV2(
     @PreviewParameter(ExchangesBottomSheetContentProvider::class) content: ExchangesBottomSheetContent,
 ) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         ExchangesBottomSheet(
             config = TangemBottomSheetConfig(
                 onDismissRequest = {},
@@ -438,25 +331,6 @@ private fun Preview_ExchangesBottomSheet(
                 isShown = true,
             ),
         )
-    }
-}
-
-@Preview
-@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun Preview_ExchangesBottomSheetV2(
-    @PreviewParameter(ExchangesBottomSheetContentProvider::class) content: ExchangesBottomSheetContent,
-) {
-    TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            ExchangesBottomSheet(
-                config = TangemBottomSheetConfig(
-                    onDismissRequest = {},
-                    content = content,
-                    isShown = true,
-                ),
-            )
-        }
     }
 }
 
