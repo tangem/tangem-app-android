@@ -2,10 +2,10 @@ package com.tangem.features.feed.ui.feed.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
-import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -19,6 +19,7 @@ internal data class FeedListUM(
     val marketChartConfig: MarketChartConfig,
     val globalState: GlobalFeedState = GlobalFeedState.Content,
     val earnListUM: EarnListUM,
+    val forYouBannerUM: ForYouBannerUM,
 )
 
 internal data class FeedListCallbacks(
@@ -79,6 +80,16 @@ internal data class SortChartConfigUM(
     val sortByType: SortByTypeUM,
     val isSelected: Boolean,
 )
+
+@Immutable
+internal sealed interface ForYouBannerUM {
+
+    data class Content(
+        val onClick: () -> Unit,
+    ) : ForYouBannerUM
+
+    data object Empty : ForYouBannerUM
+}
 
 @Immutable
 internal sealed interface GlobalFeedState {

@@ -2,17 +2,20 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -30,23 +33,17 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds2.row.*
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.ButtonState
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
-import com.tangem.features.tangempay.entity.TransactionLabelUM
-import com.tangem.features.tangempay.entity.TransactionStateType
+import com.tangem.features.tangempay.entity.*
 
 @Suppress("LongMethod")
 @Composable
@@ -88,7 +85,9 @@ internal fun TangemPayTxHistoryDetailsContentV2(state: TangemPayTxHistoryDetails
                     modifier = Modifier.padding(top = TangemTheme.dimens2.x12),
                 )
                 Text(
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x6),
+                    modifier = Modifier
+                        .padding(top = TangemTheme.dimens2.x6)
+                        .testTag(TangemPayTestTags.TRANSACTION_DETAILS_AMOUNT),
                     text = state.transactionAmount.orMaskWithStars(state.isBalanceHidden),
                     style = TangemTheme.typography3.display.medium,
                     color = TangemTheme.colors3.text.primary,
@@ -233,40 +232,156 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
 @Composable
 private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUMV2, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
+        when (val detail = state.detail) {
+            null -> Unit
+            TransactionDetailUM.Loading -> CardRowShimmer()
+            is TransactionDetailUM.Content -> CardRow(content = detail)
+            is TransactionDetailUM.Error -> CardRowError(onRefreshClick = detail.onRefreshClick)
+        }
         TangemRow(
             divider = state.mcc != null,
-            contentLead = TangemRowContentLead.Start,
+            contentLead = TangemRowContentLead.End,
             titleSlot = {
                 TangemRowText(
                     text = resourceReference(R.string.tangem_pay_transaction_details_category),
                     role = TangemRowTextRole.Title,
                 )
             },
-            valueSlot = {
-                TangemRowText(
-                    text = state.transactionCategory,
-                    role = TangemRowTextRole.Value,
-                )
-            },
+            valueSlot = { DetailRowValue(text = state.transactionCategory) },
         )
         if (state.mcc != null) {
             TangemRow(
-                contentLead = TangemRowContentLead.Start,
+                contentLead = TangemRowContentLead.End,
                 titleSlot = {
                     TangemRowText(
                         text = resourceReference(R.string.tangem_pay_transaction_details_mcc),
                         role = TangemRowTextRole.Title,
                     )
                 },
-                valueSlot = {
-                    TangemRowText(
-                        text = state.mcc,
-                        role = TangemRowTextRole.Value,
-                    )
-                },
+                valueSlot = { DetailRowValue(text = state.mcc) },
             )
         }
     }
+}
+
+@Composable
+private fun CardRow(content: TransactionDetailUM.Content, modifier: Modifier = Modifier) {
+    val cardNumber = content.cardNumber
+    val cardName = content.cardName
+    TangemRow(
+        modifier = modifier,
+        divider = true,
+        contentLead = TangemRowContentLead.End,
+        titleSlot = {
+            TangemRowText(
+                text = resourceReference(R.string.tangempay_common_card),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        valueSlot = if (cardNumber != null) {
+            { DetailRowValue(text = cardNumber) }
+        } else {
+            null
+        },
+        subvalueSlot = if (cardName != null) {
+            { DetailRowSubvalue(text = cardName) }
+        } else {
+            null
+        },
+    )
+}
+
+@Composable
+private fun CardRowShimmer(modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier,
+        divider = true,
+        contentLead = TangemRowContentLead.End,
+        titleSlot = {
+            TangemRowText(
+                text = resourceReference(R.string.tangempay_common_card),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        valueSlot = {
+            TangemShimmer(
+                style = TangemTheme.typography3.body.medium,
+                textAlign = TextAlign.End,
+            )
+        },
+        subvalueSlot = {
+            TangemShimmer(
+                style = TangemTheme.typography3.caption.medium,
+                textAlign = TextAlign.End,
+            )
+        },
+    )
+}
+
+@Composable
+private fun CardRowError(onRefreshClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier,
+        divider = true,
+        contentLead = TangemRowContentLead.End,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        titleSlot = {
+            TangemRowText(
+                text = resourceReference(R.string.tangempay_common_card),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        valueSlot = {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onRefreshClick)
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = resourceReference(R.string.tangempay_common_error_loading).resolveReference(),
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.status.error,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.ic_arrow_refresh_20,
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.status.error,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun DetailRowValue(text: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text.resolveReference(),
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.body.medium,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun DetailRowSubvalue(text: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text.resolveReference(),
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Preview(device = Devices.PIXEL_7_PRO)
@@ -289,6 +404,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
+                detail = TransactionDetailUM.Content(
+                    cardNumber = stringReference("*9092"),
+                    cardName = stringReference("Basic card"),
+                ),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = stringReference("5814"),
                 transactionAmount = "-$5.86",
@@ -310,6 +429,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("NuCaloric"),
+                detail = TransactionDetailUM.Content(
+                    cardNumber = stringReference("*9092"),
+                    cardName = stringReference("Basic card"),
+                ),
                 transactionCategory = stringReference("Groceries"),
                 mcc = stringReference("0000"),
                 transactionAmount = "-$820.52",
@@ -332,6 +455,10 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
                 transactionTitle = stringReference("Starbucks"),
+                detail = TransactionDetailUM.Content(
+                    cardNumber = stringReference("*9092"),
+                    cardName = stringReference("Basic card"),
+                ),
                 transactionCategory = stringReference("Food and drinks"),
                 mcc = null,
                 transactionAmount = "-$5.86",
@@ -353,6 +480,7 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_percent_24),
                 transactionTitle = stringReference("Service fees"),
+                detail = null,
                 transactionCategory = stringReference("Service fees"),
                 mcc = null,
                 transactionAmount = "-$5.86",
@@ -375,11 +503,56 @@ private class TangemPayTxHistoryDetailsUMProviderV2 :
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
                 transactionTitle = resourceReference(R.string.common_transfer),
+                detail = null,
                 transactionCategory = resourceReference(R.string.common_transfer),
                 mcc = null,
                 transactionAmount = "+$20",
                 localTransactionText = null,
                 label = null,
+                buttonState = ButtonState(
+                    text = resourceReference(R.string.tangem_pay_get_help),
+                    onClick = {},
+                ),
+                dismiss = {},
+            ),
+            TangemPayTxHistoryDetailsUMV2(
+                isBalanceHidden = false,
+                title = resourceReference(R.string.tangem_pay_purchase),
+                subtitle = stringReference("12 June 2026, 12:40"),
+                iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
+                transactionTitle = stringReference("Starbucks"),
+                detail = TransactionDetailUM.Loading,
+                transactionCategory = stringReference("Food and drinks"),
+                mcc = stringReference("5814"),
+                transactionAmount = "-$5.86",
+                localTransactionText = null,
+                label = TransactionLabelUM(
+                    transactionStateType = TransactionStateType.Completed,
+                    icon = TangemIconUM.Icon(iconRes = R.drawable.ic_token_info_24),
+                    title = resourceReference(R.string.tangem_pay_status_completed),
+                ),
+                buttonState = ButtonState(
+                    text = resourceReference(R.string.tangem_pay_get_help),
+                    onClick = {},
+                ),
+                dismiss = {},
+            ),
+            TangemPayTxHistoryDetailsUMV2(
+                isBalanceHidden = false,
+                title = resourceReference(R.string.tangem_pay_purchase),
+                subtitle = stringReference("12 June 2026, 12:40"),
+                iconState = TangemIconUM.Icon(iconRes = R.drawable.ic_category_24),
+                transactionTitle = stringReference("Starbucks"),
+                detail = TransactionDetailUM.Error(onRefreshClick = {}),
+                transactionCategory = stringReference("Food and drinks"),
+                mcc = stringReference("5814"),
+                transactionAmount = "-$5.86",
+                localTransactionText = null,
+                label = TransactionLabelUM(
+                    transactionStateType = TransactionStateType.Completed,
+                    icon = TangemIconUM.Icon(iconRes = R.drawable.ic_token_info_24),
+                    title = resourceReference(R.string.tangem_pay_status_completed),
+                ),
                 buttonState = ButtonState(
                     text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = {},

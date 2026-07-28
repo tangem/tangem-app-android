@@ -13,6 +13,12 @@ sealed class StakingAvailability {
     data object Unavailable : StakingAvailability()
 
     data object TemporaryUnavailable : StakingAvailability()
+
+    /**
+     * The P2P API returned HTTP 451 — staking is blocked in the user's region.
+     * New stakes are not offered; an existing stake is shown as a read-only block.
+     */
+    data object RegionUnavailable : StakingAvailability()
 }
 
 /** Staking option if the integration is known (Available or Full), else null. */
@@ -22,5 +28,6 @@ val StakingAvailability.optionOrNull: StakingOption?
         is StakingAvailability.Full -> option
         StakingAvailability.Unavailable,
         StakingAvailability.TemporaryUnavailable,
+        StakingAvailability.RegionUnavailable,
         -> null
     }

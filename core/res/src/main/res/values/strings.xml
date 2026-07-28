@@ -281,15 +281,21 @@
   <string name="common_added">Added</string>
   <string name="common_address">Address</string>
   <string name="common_all">All</string>
+  <string name="common_all_accounts">All accounts</string>
   <string name="common_allow">Allow</string>
   <string name="common_amount">Amount</string>
   <string name="common_analytics">Analytics</string>
   <string name="common_and">and</string>
   <string name="common_apply">Apply</string>
+  <string name="common_apply_selected">Apply selected</string>
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
   <string name="common_approved">Approved</string>
   <string name="common_approving">Approving</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d asset</item>
+    <item quantity="other">%d assets</item>
+  </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
@@ -325,6 +331,7 @@
   <string name="common_create">Create</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Custom</string>
+  <string name="common_day">day</string>
   <plurals name="common_days">
     <item quantity="one">%d day</item>
     <item quantity="other">%d days</item>
@@ -399,7 +406,22 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="common_month">month</string>
+  <string-array name="common_month_in">
+    <item>January</item>
+    <item>February</item>
+    <item>March</item>
+    <item>April</item>
+    <item>May</item>
+    <item>June</item>
+    <item>July</item>
+    <item>August</item>
+    <item>September</item>
+    <item>October</item>
+    <item>November</item>
+    <item>December</item>
+  </string-array>
   <string name="common_more">More</string>
+  <string name="common_negative">Negative</string>
   <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>
   <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
@@ -407,6 +429,7 @@
     <item quantity="one">%d network</item>
     <item quantity="other">%d networks</item>
   </plurals>
+  <string name="common_neutral">Neutral</string>
   <string name="common_new_address">New address</string>
   <string name="common_news">News</string>
   <string name="common_next">Next</string>
@@ -414,6 +437,7 @@
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
   <string name="common_no_results">No results</string>
+  <string name="common_none">None</string>
   <string name="common_not_added">Not Added</string>
   <string name="common_not_available">Not available</string>
   <string name="common_not_now">Not now</string>
@@ -427,6 +451,7 @@
   <string name="common_other">Other</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
+  <string name="common_positive">Positive</string>
   <string name="common_privacy_policy">Privacy Policy</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -449,6 +474,7 @@
   <string name="common_second_no_param">sec</string>
   <string name="common_see_all">See all</string>
   <string name="common_seed_phrase">Seed phrase</string>
+  <string name="common_select_account">Select account</string>
   <string name="common_select_action">Select action</string>
   <string name="common_sell">Sell</string>
   <string name="common_send">Send</string>
@@ -729,21 +755,22 @@
   <string name="for_you_description">Review portfolio and explore earn opportunities</string>
   <string name="for_you_earn_opportunities">Earn opportunities</string>
   <string name="for_you_earn_opportunities_all_tokens_active">All your assets are at work, explore new opportunities</string>
+  <string name="for_you_earn_opportunities_explore">Explore all tokens</string>
   <string name="for_you_earn_opportunities_no_available_tokens">Get up to %1$s annually</string>
   <string name="for_you_earn_opportunities_tokens_rewards">Max potential rewards %1$s</string>
   <string name="for_you_earn_per_year">%1$s/year</string>
   <string name="for_you_portfolio_review_title">Portfolio review</string>
   <string name="for_you_title">For You</string>
   <string name="force_update_action">Update now</string>
-  <string name="force_update_banner_message">Update the app to its latest version to ensure proper functionality</string>
-  <string name="force_update_banner_title">Update needed</string>
-  <string name="force_update_brick_description">This version of the app is no longer supported and can\'t be updated on this device.</string>
+  <string name="force_update_banner_message">Update the Tangem app to unlock new features and enjoy the latest improvements.</string>
+  <string name="force_update_banner_title">New version available</string>
+  <string name="force_update_brick_description">Tangem can’t run on this OS version. Your funds are safe, and you can continue using your wallet on another supported device.</string>
   <string name="force_update_brick_title">Update Unavailable</string>
   <string name="force_update_button">Update</string>
-  <string name="force_update_os_description">Your operating system is out of date. Please update it to continue using the app.</string>
-  <string name="force_update_os_title">Update Your OS</string>
+  <string name="force_update_os_description">Your OS is outdated. Tangem will continue to work for now, but you’ll need to update it to receive future app updates.</string>
+  <string name="force_update_os_title">Update your OS</string>
   <string name="force_update_required_action">Update app</string>
-  <string name="force_update_warning_message">Please update the app to its latest version to ensure proper functionality.</string>
+  <string name="force_update_warning_message">Please update Tangem to the latest version to continue using the app.</string>
   <string name="force_update_warning_title">Update required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
   <string name="gasless_transaction_fee">Transaction fee</string>
@@ -1315,6 +1342,8 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
+  <string name="prediction_account_title">Prediction account</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
@@ -1838,6 +1867,12 @@
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Min trx amount is %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
+  <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluded</string>
+  <string name="tangem_pay_transaction_details_cashback_none">No cashback</string>
+  <string name="tangem_pay_transaction_details_cashback_refund">Return of purchase</string>
+  <string name="tangem_pay_transaction_details_cashback_region_excluded">Excluded region</string>
   <string name="tangem_pay_transaction_details_category">Category</string>
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">A fee is charged due to the service tariffs</string>
@@ -1938,7 +1973,7 @@
   <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">No cashback will be awarded for in-person/in-store purchases at EU merchants; also for withdrawals, transfers, quasi-cash, mobile phone bills, government services and certain other categories</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
-  <string name="tangempay_cashback_accruals_pay_description">From the 2nd and the 5th of the next month</string>
+  <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
   <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limits and exceptions</string>
   <string name="tangempay_cashback_accruals_title">Accruals</string>
@@ -1965,6 +2000,11 @@
   <string name="tangempay_cashback_total_earned">%1$s earned in total</string>
   <string name="tangempay_cashback_widget_title">%1$s cashback in %2$s</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
+  <string name="tangempay_changing_plan">Changing your plan</string>
+  <string name="tangempay_choose_network_fast_way">Fast way</string>
+  <string name="tangempay_choose_network_other_ways">Other ways</string>
+  <string name="tangempay_choose_network_row_error">Failed to get address, please try again</string>
+  <string name="tangempay_choose_network_row_loading">Preparing address…</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
   <string name="tangempay_common_error_loading">Error loading</string>
@@ -2033,7 +2073,10 @@
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
   <string name="tangempay_main_select_plan">Select plan</string>
-  <string name="tangempay_maximum_cards_issued_description">You can have up to 3 cards. Delete one to add a new card.</string>
+  <string name="tangempay_maximum_cards_issued_description">Delete one to add a new card</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade plan to have more cards</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_title">Cards limit reached for this plan</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
   <string name="tangempay_newonboard_Q1_title">Do I have to share my docs?</string>
@@ -2065,6 +2108,9 @@
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
+  <string name="tangempay_other_networks_header">Other networks</string>
+  <string name="tangempay_other_networks_subtitle">And then swap it to payment account with 1:1 rate and zero fees</string>
+  <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
@@ -2083,7 +2129,7 @@
   <string name="tangempay_remove_account_alert_description">Tangem Pay will be removed from the main screen and won\'t appear again, even after reinstalling the app.</string>
   <string name="tangempay_remove_account_alert_title">Remove account?</string>
   <string name="tangempay_select_plan_btn_cancel">Cancel</string>
-  <string name="tangempay_select_plan_btn_downgrade">Downgrade plan</string>
+  <string name="tangempay_select_plan_btn_downgrade">Continue</string>
   <string name="tangempay_select_plan_btn_select">Select</string>
   <string name="tangempay_select_plan_btn_upgrade">Upgrade plan</string>
   <string name="tangempay_select_plan_compare">Compare plans</string>
@@ -2117,6 +2163,7 @@
   <string name="tangempay_topup_bank_transfer_body">Receive fiat USD via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">Bank transfer</string>
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
+  <string name="tangempay_topup_receive_body_multichain">Send USDC or USDT to your account’s address</string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
@@ -2173,6 +2220,7 @@
   <string name="token_summary_last_update_subtitle">Last update: %1$s</string>
   <string name="token_summary_negative_outlook_title">Negative outlook</string>
   <string name="token_summary_neutral_outlook_title">Neutral outlook</string>
+  <string name="token_summary_outlook_is_not_available">Outlook for this token is not available</string>
   <string name="token_summary_positive_outlook_title">Positive outlook</string>
   <string name="token_summary_title">Token summary</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
@@ -2185,6 +2233,8 @@
   <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
   <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
+  <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
+  <string name="transaction_history_detail_page_amount_value" formatted="false">%1s %2s</string>
   <string name="transaction_history_disabling_yield_mode">Disabling Yield mode</string>
   <string name="transaction_history_earned_from_stake">Earned from stake</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
@@ -2499,7 +2549,7 @@
   </plurals>
   <plurals name="warning_missing_derivation_no_nfc_message">
     <item quantity="one">Sync addresses to get an address for %d network</item>
-    <item quantity="other">Sync addresses to get an addresses for %d networks</item>
+    <item quantity="other">Sync addresses to get addresses for %d networks</item>
   </plurals>
   <string name="warning_missing_derivation_title">Some addresses are missing</string>
   <string name="warning_mobile_access_denied_message">Use %s or access code to unlock access to your wallet</string>
