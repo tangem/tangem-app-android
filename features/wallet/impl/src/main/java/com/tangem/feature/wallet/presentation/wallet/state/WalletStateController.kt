@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.domain.models.wallet.UserWalletId
@@ -24,9 +23,7 @@ import javax.inject.Singleton
 [REDACTED_AUTHOR]
  */
 @Singleton
-internal class WalletStateController @Inject constructor(
-    private val designFeatureToggles: DesignFeatureToggles,
-) {
+internal class WalletStateController @Inject constructor() {
 
     val uiState: StateFlow<WalletScreenState> get() = mutableUiState
 
@@ -91,21 +88,13 @@ internal class WalletStateController @Inject constructor(
 
     fun getSelectedWalletId(): UserWalletId {
         return with(value) {
-            if (designFeatureToggles.isRedesignEnabled) {
-                wallets2[selectedWalletIndex].walletsBalanceUM.id
-            } else {
-                wallets[selectedWalletIndex].walletCardState.id
-            }
+            wallets2[selectedWalletIndex].walletsBalanceUM.id
         }
     }
 
     fun getWalletIndexByWalletId(userWalletId: UserWalletId): Int? {
         return with(value) {
-            if (designFeatureToggles.isRedesignEnabled) {
-                wallets2.indexOfFirstOrNull { it.walletsBalanceUM.id == userWalletId }
-            } else {
-                wallets.indexOfFirstOrNull { it.walletCardState.id == userWalletId }
-            }
+            wallets2.indexOfFirstOrNull { it.walletsBalanceUM.id == userWalletId }
         }
     }
 
@@ -147,7 +136,6 @@ internal class WalletStateController @Inject constructor(
             isHidingMode = false,
             showMarketsOnboarding = false,
             onDismissMarketsTooltip = {},
-            isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         )
     }
 }

@@ -23,11 +23,10 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.ds.button.SecondaryTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.orEmpty
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -109,12 +108,12 @@ private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) 
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        SecondaryTangemButton(
-            tangemIconUM = button.tangemIconUM,
+        TangemButton(
             onClick = button.onClick,
+            variant = TangemButton.Variant.Material,
             isEnabled = button.isEnabled,
-            shape = TangemButtonShape.Rounded,
-            onLongClick = button.onLongClick,
+            iconStart = button.tangemIconUM,
+            size = TangemButton.Size.X14,
         )
         Text(
             text = button.text.orEmpty().resolveReference(),

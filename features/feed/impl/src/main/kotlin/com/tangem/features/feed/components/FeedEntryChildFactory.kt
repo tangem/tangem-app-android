@@ -5,21 +5,23 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
-import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.foryou.ForYouComponent
+import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
@@ -28,12 +30,12 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val designFeatureToggles: DesignFeatureToggles,
+    private val forYouComponentFactory: ForYouComponent.Factory,
+    private val tokenSummaryComponentFactory: TokenSummaryComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) {
 
@@ -68,6 +70,17 @@ internal class FeedEntryChildFactory @Inject constructor(
         @Serializable
         @Immutable
         data class Search(val source: String) : Child
+
+        @Serializable
+        @Immutable
+        data object ForYou : Child
+
+        @Serializable
+        @Immutable
+        data class TokenSummary(
+            val userWalletId: UserWalletId,
+            val token: TokenSummaryComponent.Token,
+        ) : Child
     }
 
     @Suppress("LongMethod")
@@ -83,9 +96,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     appComponentContext = appComponentContext,
                     params = child.params,
                     analyticsEventHandler = analyticsEventHandler,
-                    portfolioComponentFactory = portfolioComponentFactory,
                     portfolioBlockComponentFactory = portfolioBlockComponentFactory,
-                    designFeatureToggles = designFeatureToggles,
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     manageFundsComponentFactory = manageFundsComponentFactory,
                     marketingBannerComponentFactory = marketingBannerComponentFactory,
@@ -148,6 +159,33 @@ internal class FeedEntryChildFactory @Inject constructor(
                     },
                     sourceParams = child.source,
                     onSeeAllMarketsClick = { feedEntryClickIntents.onMarketOpenClick(SortByTypeUM.Rating) },
+                ),
+            )
+            Child.ForYou -> forYouComponentFactory.create(
+                context = appComponentContext,
+                params = ForYouComponent.Params(
+                    callbacks = object : ForYouComponent.ForYouModelCallbacks {
+                        override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) {
+                            feedEntryClickIntents.openTokenSummary(
+                                userWalletId = userWalletId,
+                                token = TokenSummaryComponent.Token.Portfolio(currency),
+                            )
+                        }
+
+                        override fun onAllEarnTokensClick() {
+                            feedEntryClickIntents.onOpenEarnPage()
+                        }
+                    },
+                ),
+            )
+            is Child.TokenSummary -> tokenSummaryComponentFactory.create(
+                context = appComponentContext,
+                params = TokenSummaryComponent.Params(
+                    userWalletId = child.userWalletId,
+                    token = child.token,
+                    callbacks = object : TokenSummaryComponent.TokenSummaryModelCallbacks {
+                        override fun onDismiss() = onBackClicked()
+                    },
                 ),
             )
         }
