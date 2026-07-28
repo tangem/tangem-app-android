@@ -7,7 +7,6 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -15,13 +14,15 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.derivation.OWNER_DERIVATION_PATH
+import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.polymarket.PolymarketOwnerKeyData
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.extensions.hexToBytes
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultPolymarketEoaDeriverTest {
@@ -53,9 +55,10 @@ internal class DefaultPolymarketEoaDeriverTest {
     )
 
     private val userWalletId = UserWalletId("011")
-    private val path = DerivationPath(OWNER_DERIVATION_PATH)
+    private val path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
     private val seedKey = "02AABB".hexToBytes()
     private val seedKeyBAK = ByteArrayKey(seedKey)
+    private val derivations = mapOf(seedKeyBAK to listOf(path))
 
     // Known-answer key from PolymarketAddressFactoryTest → 0x7E5F...Bdf
     private val knownKey = ExtendedPublicKey(
@@ -121,7 +124,7 @@ internal class DefaultPolymarketEoaDeriverTest {
             // Assert
             assertThat(result).isEqualTo(knownAddress.right())
             coVerify(exactly = 0) { tangemSdkManager.polymarketProduceOwnerKeyData(any()) }
-            coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(any(), any<Map<ByteArrayKey, List<DerivationPath>>>()) }
+            coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
         }
 
     @Test
@@ -145,24 +148,40 @@ internal class DefaultPolymarketEoaDeriverTest {
         }
 
     @Test
+    fun `GIVEN storing derived keys fails WHEN deriveOwnerEoa THEN returns Unknown`() = runTest {
+        // Arrange
+        val derivedKeys = mapOf(seedKeyBAK to ExtendedPublicKeysMap(mapOf(path to knownKey)))
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+            ExtendedPublicKeysMap(emptyMap())
+        coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
+            PolymarketOwnerKeyData(derivedKeys = derivedKeys).right()
+        coEvery { derivationsRepository.storeDerivedKeys(userWalletId, derivedKeys) } throws
+            IllegalStateException("persistence failed")
+
+        // Act
+        val result = deriver.deriveOwnerEoa(userWalletId)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketDerivationError.Unknown.left())
+    }
+
+    @Test
     fun `GIVEN hot wallet without cache WHEN deriveOwnerEoa THEN derives via repository and returns address`() =
         runTest {
             // Arrange
             every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet()
             coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
                 ExtendedPublicKeysMap(emptyMap())
-            coEvery {
-                derivationsRepository.derivePublicKeys(userWalletId, mapOf(seedKeyBAK to listOf(path)))
-            } returns mapOf(seedKeyBAK to ExtendedPublicKeysMap(mapOf(path to knownKey)))
+            coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } returns
+                mapOf(seedKeyBAK to ExtendedPublicKeysMap(mapOf(path to knownKey)))
 
             // Act
             val result = deriver.deriveOwnerEoa(userWalletId)
 
             // Assert
             assertThat(result).isEqualTo(knownAddress.right())
-            coVerify(exactly = 1) {
-                derivationsRepository.derivePublicKeys(userWalletId, mapOf(seedKeyBAK to listOf(path)))
-            }
+            coVerify(exactly = 1) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
         }
 
     @Test
@@ -192,61 +211,14 @@ internal class DefaultPolymarketEoaDeriverTest {
     }
 
     @Test
-    fun `GIVEN card task cancelled WHEN deriveOwnerEoa THEN returns UserCancelled`() = runTest {
+    fun `GIVEN card task returns no key for the path WHEN deriveOwnerEoa THEN returns Unknown`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
             ExtendedPublicKeysMap(emptyMap())
         coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
-            TangemSdkError.UserCancelled().left()
-
-        // Act
-        val result = deriver.deriveOwnerEoa(userWalletId)
-
-        // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.UserCancelled.left())
-    }
-
-    @Test
-    fun `GIVEN card task generic sdk error WHEN deriveOwnerEoa THEN returns CardError`() = runTest {
-        // Arrange
-        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
-            ExtendedPublicKeysMap(emptyMap())
-        coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
-            TangemSdkError.MissingPreflightRead().left()
-
-        // Act
-        val result = deriver.deriveOwnerEoa(userWalletId)
-
-        // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.CardError.left())
-    }
-
-    @Test
-    fun `GIVEN card task WalletNotFound WHEN deriveOwnerEoa THEN returns MissingWallet`() = runTest {
-        // Arrange
-        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
-            ExtendedPublicKeysMap(emptyMap())
-        coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
-            TangemSdkError.WalletNotFound().left()
-
-        // Act
-        val result = deriver.deriveOwnerEoa(userWalletId)
-
-        // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.MissingWallet.left())
-    }
-
-    @Test
-    fun `GIVEN card task non-sdk throwable WHEN deriveOwnerEoa THEN returns Unknown`() = runTest {
-        // Arrange
-        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
-            ExtendedPublicKeysMap(emptyMap())
-        coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns
-            IllegalStateException("boom").left()
+            PolymarketOwnerKeyData(derivedKeys = emptyMap()).right()
+        coEvery { derivationsRepository.storeDerivedKeys(userWalletId, emptyMap()) } returns Unit
 
         // Act
         val result = deriver.deriveOwnerEoa(userWalletId)
@@ -256,14 +228,12 @@ internal class DefaultPolymarketEoaDeriverTest {
     }
 
     @Test
-    fun `GIVEN hot derivation throws WHEN deriveOwnerEoa THEN returns Unknown`() = runTest {
+    fun `GIVEN hot derivation returns no key for the path WHEN deriveOwnerEoa THEN returns Unknown`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet()
         coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
             ExtendedPublicKeysMap(emptyMap())
-        coEvery {
-            derivationsRepository.derivePublicKeys(userWalletId, mapOf(seedKeyBAK to listOf(path)))
-        } throws IllegalStateException("hot sdk failed")
+        coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } returns emptyMap()
 
         // Act
         val result = deriver.deriveOwnerEoa(userWalletId)
@@ -271,4 +241,71 @@ internal class DefaultPolymarketEoaDeriverTest {
         // Assert
         assertThat(result).isEqualTo(PolymarketDerivationError.Unknown.left())
     }
+
+    @Test
+    fun `GIVEN wallet is missing WHEN deriveOwnerEoa THEN returns Unknown`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } throws
+            IllegalStateException("UserWallet $userWalletId not found")
+
+        // Act
+        val result = deriver.deriveOwnerEoa(userWalletId)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketDerivationError.Unknown.left())
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN card task fails WHEN deriveOwnerEoa THEN maps the error`(model: DerivationFailureModel) = runTest {
+        // Arrange
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+            ExtendedPublicKeysMap(emptyMap())
+        coEvery { tangemSdkManager.polymarketProduceOwnerKeyData(any()) } returns model.throwable.left()
+
+        // Act
+        val result = deriver.deriveOwnerEoa(userWalletId)
+
+        // Assert
+        assertThat(result).isEqualTo(model.expected.left())
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN hot derivation throws WHEN deriveOwnerEoa THEN maps the throwable`(model: DerivationFailureModel) =
+        runTest {
+            // Arrange
+            every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+                ExtendedPublicKeysMap(emptyMap())
+            coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } throws model.throwable
+
+            // Act
+            val result = deriver.deriveOwnerEoa(userWalletId)
+
+            // Assert
+            assertThat(result).isEqualTo(model.expected.left())
+        }
+
+    internal data class DerivationFailureModel(val throwable: Throwable, val expected: PolymarketDerivationError)
+
+    private fun provideTestModels() = listOf(
+        DerivationFailureModel(
+            throwable = TangemSdkError.UserCancelled(),
+            expected = PolymarketDerivationError.UserCancelled,
+        ),
+        DerivationFailureModel(
+            throwable = TangemSdkError.WalletNotFound(),
+            expected = PolymarketDerivationError.MissingWallet,
+        ),
+        DerivationFailureModel(
+            throwable = TangemSdkError.MissingPreflightRead(),
+            expected = PolymarketDerivationError.CardError,
+        ),
+        DerivationFailureModel(
+            throwable = IllegalStateException("boom"),
+            expected = PolymarketDerivationError.Unknown,
+        ),
+    )
 }
