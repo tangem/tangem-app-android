@@ -58,8 +58,6 @@ fun CampaignEnrolledMessageContent(message: TextReference, modifier: Modifier = 
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        SpacerH32()
     }
 }
 

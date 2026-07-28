@@ -81,6 +81,9 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked())
                 createVirtualAccountOrder()
             }
+            VirtualAccountOnramp.BankCredentialsError -> params.onShowBankingDetailsError()
+            // Processing never reaches this sheet (the Preparing message is shown instead); defensive.
+            VirtualAccountOnramp.Processing -> onDismiss()
         }
     }
 
