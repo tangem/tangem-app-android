@@ -29,6 +29,7 @@ dependencies {
     /* Project - Domain */
     api(projects.domain.pushNotificationPreferences)
     implementation(projects.domain.models)
+    implementation(projects.domain.notifications)
     implementation(projects.domain.wallets)
 
     /* AndroidX */
