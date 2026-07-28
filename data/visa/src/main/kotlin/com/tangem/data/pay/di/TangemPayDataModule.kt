@@ -125,7 +125,7 @@ internal interface TangemPayDataModule {
         repository: DefaultTariffPlanTransitionsRepository,
     ): TangemPayTariffPlanTransitionsRepository
 
-    @Suppress("TooManyFunctions")
+    @Suppress("TooManyFunctions", "LargeClass")
     companion object {
 
         @Provides
@@ -393,6 +393,19 @@ internal interface TangemPayDataModule {
                 customerOrderRepository = customerOrderRepository,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+            )
+        }
+
+        @Provides
+        fun provideCreatePaymentNetworkContractUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            pollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): CreatePaymentNetworkContractUseCase {
+            return CreatePaymentNetworkContractUseCase(
+                customerOrderRepository = customerOrderRepository,
+                pollingUseCase = pollingUseCase,
+                appCoroutineScope = appCoroutineScope,
             )
         }
 

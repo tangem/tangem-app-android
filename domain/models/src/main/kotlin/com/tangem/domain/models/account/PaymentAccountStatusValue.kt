@@ -2,6 +2,8 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.PaymentAccountStatusValue.Deactivated
+import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
@@ -140,6 +142,8 @@ sealed class PaymentAccountStatusValue {
      * @property customerId The unique identifier of the customer.
      * @property balance The balance details (fiat, crypto and amount available for withdrawal).
      * @property cryptoCurrency The crypto currency held by the deactivated account.
+     * @property networks Multichain: the blockchain networks attached to the account, each tagged by its
+     *                    issuance status ([PaymentNetworkStatus]). Empty when not applicable (toggle off).
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
@@ -152,6 +156,7 @@ sealed class PaymentAccountStatusValue {
         val customerId: String,
         val balance: Balance,
         val cryptoCurrency: CryptoCurrency.Token,
+        val networks: List<PaymentNetworkStatus>,
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
     ) : PaymentAccountStatusValue() {
@@ -164,6 +169,16 @@ sealed class PaymentAccountStatusValue {
                 depositAddress = balance.cryptoBalance.depositAddress,
             ),
         )
+
+        /**
+         * Multichain: statuses of every [PaymentNetworkStatus.Available] network flattened together,
+         * or the single legacy [cryptoCurrencyStatus] when there are no `Available` networks (empty
+         * [networks] / multichain toggle off). Statuses are built per-network by the data layer.
+         */
+        val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>
+            get() = networks.filterIsInstance<PaymentNetworkStatus.Available>()
+                .flatMap { it.cryptoCurrencyStatuses }
+                .ifEmpty { listOf(cryptoCurrencyStatus) }
     }
 
     /**
@@ -175,6 +190,8 @@ sealed class PaymentAccountStatusValue {
      * @property balance The balance details (fiat, crypto and amount available for withdrawal).
      *                   The fiat currency code is available via [Balance.fiatBalance].
      * @property cryptoCurrency The crypto currency held by the account.
+     * @property networks Multichain: the blockchain networks attached to the account, each tagged by its
+     *                    issuance status ([PaymentNetworkStatus]). Empty when not applicable (toggle off).
      * @property cards The list of user's cards.
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
@@ -194,6 +211,7 @@ sealed class PaymentAccountStatusValue {
         val depositAddress: String?,
         val balance: Balance,
         val cryptoCurrency: CryptoCurrency.Token,
+        val networks: List<PaymentNetworkStatus>,
         val cards: List<TangemPayCard>,
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
@@ -209,6 +227,16 @@ sealed class PaymentAccountStatusValue {
                 depositAddress = balance.cryptoBalance.depositAddress,
             ),
         )
+
+        /**
+         * Multichain: statuses of every [PaymentNetworkStatus.Available] network flattened together,
+         * or the single legacy [cryptoCurrencyStatus] when there are no `Available` networks (empty
+         * [networks] / multichain toggle off). Statuses are built per-network by the data layer.
+         */
+        val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>
+            get() = networks.filterIsInstance<PaymentNetworkStatus.Available>()
+                .flatMap { it.cryptoCurrencyStatuses }
+                .ifEmpty { listOf(cryptoCurrencyStatus) }
     }
 
     /** Represents an error state for the payment account status. */

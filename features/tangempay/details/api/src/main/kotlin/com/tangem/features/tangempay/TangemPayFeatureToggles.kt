@@ -5,4 +5,5 @@ interface TangemPayFeatureToggles {
     val isTiersPlusPlanEnabled: Boolean
     val isCashbackEnabled: Boolean
     val isPlasticCardOrderEnabled: Boolean
+    val isAccountMultichainEnabled: Boolean
 }

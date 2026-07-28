@@ -2,6 +2,7 @@ package com.tangem.data.pay.util
 
 import arrow.core.getOrElse
 import com.tangem.data.pay.converter.TangemPayTariffPlanConverter
+import com.tangem.datasource.api.pay.models.response.BalanceResponse
 import com.tangem.datasource.api.pay.models.response.CryptoBalance
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.FiatBalance
@@ -50,6 +51,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             cryptoBalance = cryptoBalance?.toDomain(),
             availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             tariffPlan = value.customerTariffPlan?.toDomain(),
+            networks = value.balance?.networks.orEmpty().map { it.toDomain() },
         )
     }
 
@@ -147,4 +149,19 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         }
 
     private fun String?.toDateTimeOrNull(): DateTime? = this?.let { runCatching { DateTime.parse(it) }.getOrNull() }
+
+    private fun BalanceResponse.NetworkResponse.toDomain() = CustomerInfo.NetworkInfo(
+        name = name,
+        chainId = chainId,
+        isTestnet = isTestnet,
+        status = CustomerInfo.NetworkInfo.Status.fromWire(status),
+        depositAddress = depositAddress,
+        tokens = tokens.map { it.toDomain() },
+    )
+
+    private fun BalanceResponse.NetworkTokenResponse.toDomain() = CustomerInfo.NetworkInfo.Token(
+        symbol = token,
+        contractAddress = tokenContractAddress,
+        availableForWithdrawal = availableForWithdrawal,
+    )
 }
