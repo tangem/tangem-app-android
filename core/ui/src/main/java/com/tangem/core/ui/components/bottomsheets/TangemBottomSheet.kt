@@ -323,7 +323,9 @@ fun BoxScope.FooterOverlay(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
         ) {
-            if (gradientHeight > 0.dp) {
+            val isGradientDisplayed = gradientHeight > 0.dp
+
+            if (isGradientDisplayed) {
                 Fade(
                     backgroundColor = fadeMax,
                     height = gradientHeight,
@@ -333,7 +335,7 @@ fun BoxScope.FooterOverlay(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(measuredFooterHeight ?: 0.dp)
-                    .background(fadeMax),
+                    .background(if (isGradientDisplayed) fadeMax else Color.Transparent),
             )
         }
     }

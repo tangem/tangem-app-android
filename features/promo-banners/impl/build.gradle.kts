@@ -25,9 +25,11 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.markets.models)
 
     /** Data */
     implementation(projects.data.common)
+    implementation(tangemDeps.blockchain)
 
     /** Core */
     api(projects.core.configToggles)
@@ -43,6 +45,7 @@ dependencies {
     api(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.material3)
     implementation(deps.lifecycle.compose)
 
     /** Other */
