@@ -41,7 +41,8 @@ import dev.chrisbanes.haze.HazeTint
  *   drop shadow and a gradient stroke (`material.border`), then renders a haze-blurred backdrop
  *   tinted with `material.fill.blur`. When `LocalHazeState.blurEnabled` is `false` (e.g.
  *   previews, low-end devices), the surface falls back to opaque `material.fill.solid` overlaid
- *   with translucent `material.tint.solid` so both layers remain visible.
+ *   with translucent `material.tint.solid` so both layers remain visible. [materialStyle] picks the
+ *   token set all of the above is read from.
  *
  * Interaction:
  * - When [onClick] is non-null the surface is clickable. The v2 ripple configuration is provided
@@ -51,6 +52,9 @@ import dev.chrisbanes.haze.HazeTint
  *
  * @param color Background color used in flat mode. Ignored when [isMaterial] is `true`.
  * @param isMaterial Switches to the haze-based translucent rendering.
+ * @param materialStyle Material token set used when [isMaterial] is `true`. `Inverted` renders the
+ *   material of the opposite theme — dark in light theme and light in dark theme. Ignored in flat
+ *   mode. See [TangemSurface.MaterialStyle].
  * @param border Optional outer stroke. Drawn underneath the material gradient stroke when both
  *   are present.
  * @param shape Shape used for clipping, background, and borders.
@@ -66,6 +70,7 @@ fun TangemSurface(
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors3.bg.primary,
     isMaterial: Boolean = false,
+    materialStyle: TangemSurface.MaterialStyle = TangemSurface.MaterialStyle.Default,
     border: BorderStroke? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
@@ -81,10 +86,10 @@ fun TangemSurface(
             modifier = modifier
                 .conditionalCompose(isMaterial) { materialShadow(shape, shadowRadius) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
-                .conditionalCompose(isMaterial) { materialBorder(shape) }
+                .conditionalCompose(isMaterial) { materialBorder(shape = shape, style = materialStyle) }
                 .clip(shape)
                 .background(if (isMaterial) Color.Transparent else color, shape)
-                .conditionalCompose(isMaterial) { materialFill() }
+                .conditionalCompose(isMaterial) { materialFill(style = materialStyle) }
                 .conditionalCompose(onClick != null) {
                     clickable(
                         interactionSource = resolvedInteractionSource,
@@ -100,11 +105,27 @@ fun TangemSurface(
     }
 
     if (onClick != null) {
-        CompositionLocalProvider(LocalRippleConfiguration provides tangemSurfaceRipple(color)) {
+        val isInverseSurface = isInverseSurface(color = color, isMaterial = isMaterial, style = materialStyle)
+        CompositionLocalProvider(LocalRippleConfiguration provides tangemSurfaceRipple(isInverseSurface)) {
             surface()
         }
     } else {
         surface()
+    }
+}
+
+object TangemSurface {
+
+    /**
+     * Material token set the material rendering mode reads its fill, tint and stroke from.
+     *
+     * - [Default] — material of the current theme (`colors3.material`).
+     * - [Inverted] — material of the opposite theme (`colors3.materialInverted`): dark in light
+     *   theme, light in dark theme.
+     */
+    enum class MaterialStyle {
+        Default,
+        Inverted,
     }
 }
 
@@ -131,9 +152,9 @@ private fun Modifier.materialShadow(shape: Shape, radius: Dp): Modifier {
 
 /** Diagonal gradient stroke that wraps the material variant. */
 @Composable
-private fun Modifier.materialBorder(shape: Shape): Modifier = border(
+private fun Modifier.materialBorder(shape: Shape, style: TangemSurface.MaterialStyle): Modifier = border(
     width = 1.dp,
-    brush = materialBorderBrush(),
+    brush = materialBorderBrush(style),
     shape = shape,
 )
 
@@ -148,15 +169,15 @@ private fun Modifier.materialBorder(shape: Shape): Modifier = border(
  * surface fully transparent.
  */
 @Composable
-private fun Modifier.materialFill(): Modifier {
+private fun Modifier.materialFill(style: TangemSurface.MaterialStyle): Modifier {
     val isBlurEnabled = LocalHazeState.current.blurEnabled
-    val material = TangemTheme.colors3.material
+    val material = materialColors(style)
     val hazed = hazeEffectTangem(
         style = HazeStyle(
             backgroundColor = Color.Transparent,
             blurRadius = 32.dp,
             tints = listOf(
-                HazeTint(material.fill.blur),
+                HazeTint(material.fillBlur),
             ),
         ),
     ) {
@@ -164,19 +185,53 @@ private fun Modifier.materialFill(): Modifier {
     }
     return hazed.conditionalCompose(!isBlurEnabled) {
         // Paint the opaque fill first, then layer the translucent tint on top so both are visible.
-        background(material.fill.solid)
-            .background(material.tint.solid)
+        background(material.fillSolid)
+            .background(material.tintSolid)
     }
 }
+
+/**
+ * Material colors of the requested [style]. `colors3.material` and `colors3.materialInverted` are
+ * generated as unrelated types, so the needed colors are copied into a common holder.
+ */
+@Composable
+@ReadOnlyComposable
+private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
+    val colors = TangemTheme.colors3
+    return when (style) {
+        TangemSurface.MaterialStyle.Default -> MaterialColors(
+            fillBlur = colors.material.fill.blur,
+            fillSolid = colors.material.fill.solid,
+            tintSolid = colors.material.tint.solid,
+            borderStart = colors.material.border.start,
+            borderEnd = colors.material.border.end,
+        )
+        TangemSurface.MaterialStyle.Inverted -> MaterialColors(
+            fillBlur = colors.materialInverted.fill.blur,
+            fillSolid = colors.materialInverted.fill.solid,
+            tintSolid = colors.materialInverted.tint.solid,
+            borderStart = colors.materialInverted.border.start,
+            borderEnd = colors.materialInverted.border.end,
+        )
+    }
+}
+
+private class MaterialColors(
+    val fillBlur: Color,
+    val fillSolid: Color,
+    val tintSolid: Color,
+    val borderStart: Color,
+    val borderEnd: Color,
+)
 
 @Suppress("MagicNumber")
 @Composable
 @ReadOnlyComposable
-private fun materialBorderBrush(): Brush {
-    val border = TangemTheme.colors3.material.border
-    val startColor = border.start
+private fun materialBorderBrush(style: TangemSurface.MaterialStyle): Brush {
+    val material = materialColors(style)
+    val startColor = material.borderStart
     val midColor = Color.Transparent
-    val endColor = border.end
+    val endColor = material.borderEnd
     return object : ShaderBrush() {
         override fun createShader(size: Size): Shader {
             val w = size.width
@@ -194,10 +249,23 @@ private fun materialBorderBrush(): Brush {
 
 // endregion
 
+/**
+ * Whether the surface reads as inverse-colored, i.e. light content on a dark background in light
+ * theme and vice versa. Such surfaces need the inverse press overlay — the default one is a
+ * same-theme dim and stays invisible on them.
+ *
+ * A surface is inverse either because [color] is `bg.inverse`, or because it renders the inverted
+ * material, whose fill lives in `materialInverted.*` rather than in [color].
+ */
 @Composable
 @ReadOnlyComposable
-private fun tangemSurfaceRipple(backgroundColor: Color): RippleConfiguration = RippleConfiguration(
-    color = if (backgroundColor == TangemTheme.colors3.bg.inverse) {
+private fun isInverseSurface(color: Color, isMaterial: Boolean, style: TangemSurface.MaterialStyle): Boolean =
+    color == TangemTheme.colors3.bg.inverse || isMaterial && style == TangemSurface.MaterialStyle.Inverted
+
+@Composable
+@ReadOnlyComposable
+private fun tangemSurfaceRipple(isInverseSurface: Boolean): RippleConfiguration = RippleConfiguration(
+    color = if (isInverseSurface) {
         TangemTheme.colors3.interaction.press.inverse
     } else {
         TangemTheme.colors3.interaction.press.default
