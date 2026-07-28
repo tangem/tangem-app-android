@@ -4,6 +4,7 @@ import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 
 /**
  * A single row of the unified transaction history shown on the token-details screen.
@@ -38,11 +39,10 @@ sealed interface OnChainTx : TxHistoryInfo {
         override val timestampMillis: Long get() = txInfo.timestampInMillis
     }
 
-    // todo txHistory next step
-    /*data class TangemPay(val txInfo: TangemPayTxHistoryItem) : OnChainTx {
+    data class TangemPay(val txInfo: TangemPayTxHistoryItem) : OnChainTx {
         override val txId: String get() = txInfo.id
         override val timestampMillis: Long get() = txInfo.date.millis
-    }*/
+    }
 
     // todo txHistory next step
     /*data class Gateway() : OnChainTx {
@@ -62,6 +62,32 @@ sealed interface OnChainTx : TxHistoryInfo {
  * in the history pipeline.
  */
 fun TxInfo.identityKey(): String = "$txHash|$type"
+
+/**
+ * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
+ * blockchain tx to link to — an [ExpressTx] whose on-chain leg has not matched yet. The express `txId`
+ * must never stand in here: it is not an on-chain hash and would build a broken explorer URL.
+ */
+inline val TxHistoryInfo.explorerHash: String?
+    get() = when (this) {
+        is OnChainTx.BSDK -> txInfo.txHash
+        is OnChainTx.TangemPay -> when (val item = txInfo) {
+            is TangemPayTxHistoryItem.Payment -> item.transactionHash
+            is TangemPayTxHistoryItem.Collateral -> item.transactionHash
+            is TangemPayTxHistoryItem.Spend,
+            is TangemPayTxHistoryItem.Fee,
+            -> null
+        }
+        is ExpressTx -> matchHash
+    }
+
+/** Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal id otherwise. */
+inline val TxHistoryInfo.idToCopy: String
+    get() = when (this) {
+        is OnChainTx.BSDK -> txInfo.txHash
+        is OnChainTx.TangemPay -> explorerHash ?: txId
+        is ExpressTx -> txId
+    }
 
 /**
  * A history row backed by an express operation. It is a thin wrapper over the standalone express
@@ -88,6 +114,12 @@ sealed interface ExpressTx : TxHistoryInfo {
     /** Provider behind this op, resolved from the local providers table by `providerId`; `null` if unknown. */
     val provider: ExpressProvider?
 
+    /**
+     * Provider's page for this deal (tracking / refund / KYC), surfaced as the "Go to provider" CTA on the
+     * failed / verification terminals; `null` when the provider supplies no such link.
+     */
+    val externalTxUrl: String?
+
     /** Whether the deal reached a final state. Delegates to the wrapped model's typed status. */
     val isTerminal: Boolean
 
@@ -103,6 +135,7 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val createdAtMillis: Long get() = tx.createdAtMillis
         override val matchHash: String? get() = if (isOutgoing) tx.payinHash else tx.payoutHash
         override val provider: ExpressProvider? get() = tx.provider
+        override val externalTxUrl: String? get() = tx.externalTxUrl
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
 
@@ -114,6 +147,7 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val createdAtMillis: Long get() = tx.createdAtMillis
         override val matchHash: String? get() = tx.payoutHash
         override val provider: ExpressProvider? get() = tx.provider
+        override val externalTxUrl: String? get() = tx.externalTxUrl
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
 }

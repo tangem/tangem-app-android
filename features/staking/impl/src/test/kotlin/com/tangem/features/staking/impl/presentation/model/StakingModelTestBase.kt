@@ -29,11 +29,9 @@ import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
@@ -60,11 +58,12 @@ internal abstract class StakingModelTestBase {
     protected val testUserWalletId = UserWalletId("1234567890ABCDEF")
     protected val testCryptoCurrency: CryptoCurrency = mockk(relaxed = true)
     protected open val testIntegrationId: StakingIntegrationID = StakingIntegrationID.StakeKit.Coin.Solana
-    private val testParams get() = StakingComponent.Params(
-        userWalletId = testUserWalletId,
-        cryptoCurrency = testCryptoCurrency,
-        integrationId = testIntegrationId,
-    )
+    private val testParams
+        get() = StakingComponent.Params(
+            userWalletId = testUserWalletId,
+            cryptoCurrency = testCryptoCurrency,
+            integrationId = testIntegrationId,
+        )
     protected val testYield: Yield = mockk(relaxed = true)
     protected val testUserWallet: UserWallet = mockk(relaxed = true)
     protected val initialUiState: StakingUiState = mockk(relaxed = true) {
@@ -87,7 +86,6 @@ internal abstract class StakingModelTestBase {
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
     protected val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase = mockk()
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk()
-    protected val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk()
     protected val getAllowanceUseCase: GetAllowanceUseCase = mockk()
     protected val vibratorHapticManager: VibratorHapticManager = mockk()
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
@@ -115,10 +113,6 @@ internal abstract class StakingModelTestBase {
     private val coroutineScope: AppCoroutineScope = mockk()
     protected val innerRouter: InnerStakingRouter = mockk()
     protected val messageSender: UiMessageSender = mockk()
-    protected val giveApprovalFeatureToggles: GiveApprovalFeatureToggles = mockk()
-    protected val stakingFeatureToggles: StakingFeatureToggles = mockk {
-        every { isSolanaUnstakeValidationEnabled() } returns false
-    }
 
     @BeforeEach
     fun setUp() {
@@ -180,7 +174,6 @@ internal abstract class StakingModelTestBase {
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
-            createApprovalTransactionUseCase = createApprovalTransactionUseCase,
             getAllowanceUseCase = getAllowanceUseCase,
             vibratorHapticManager = vibratorHapticManager,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
@@ -211,8 +204,6 @@ internal abstract class StakingModelTestBase {
             coroutineScope = coroutineScope,
             innerRouter = innerRouter,
             messageSender = messageSender,
-            giveApprovalFeatureToggles = giveApprovalFeatureToggles,
-            stakingFeatureToggles = stakingFeatureToggles,
             appRouter = appRouter,
         )
     }

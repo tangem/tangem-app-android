@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
@@ -25,6 +26,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSy
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.DefaultUserWalletSelectedHandler
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -188,8 +190,16 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesDeleteWalletUseCase(userWalletsListRepository: UserWalletsListRepository): DeleteWalletUseCase {
-        return DeleteWalletUseCase(userWalletsListRepository = userWalletsListRepository)
+    fun providesDeleteWalletUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        userWalletDataCleaners: Set<@JvmSuppressWildcards UserWalletDataCleaner>,
+        appCoroutineScope: AppCoroutineScope,
+    ): DeleteWalletUseCase {
+        return DeleteWalletUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            userWalletDataCleaners = userWalletDataCleaners,
+            appCoroutineScope = appCoroutineScope,
+        )
     }
 
     @Provides

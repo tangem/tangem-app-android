@@ -48,6 +48,8 @@ internal sealed class TangemPayDetailsNavigation {
     data class TransactionDetails(
         val transaction: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
+        val userWalletId: UserWalletId,
+        val customerId: String,
     ) : TangemPayDetailsNavigation()
 
     @Serializable

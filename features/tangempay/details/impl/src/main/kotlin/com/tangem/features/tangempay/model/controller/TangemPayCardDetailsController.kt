@@ -12,6 +12,8 @@ import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.backgroundImageUrl
+import com.tangem.domain.models.pay.mainImageUrl
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -78,6 +80,8 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
         onCopy = ::copyData,
         shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
         cardState = card.state,
+        cardImageUrl = card.mainImageUrl,
+        cardBackgroundImageUrl = card.backgroundImageUrl,
     )
 
     val uiState: StateFlow<TangemPayCardDetailsUM>
@@ -119,6 +123,8 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
                             cardFrozenState = card.frozenState,
                             isActionsAvailable = card.state == TangemPayCardState.Active,
                             cardState = card.state,
+                            cardImageUrl = card.mainImageUrl,
+                            cardBackgroundImageUrl = card.backgroundImageUrl,
                         )
                     }
                     subscribeToCardFrozenState(card.id)

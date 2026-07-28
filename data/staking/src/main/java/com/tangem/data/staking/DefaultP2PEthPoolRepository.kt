@@ -1,12 +1,12 @@
 package com.tangem.data.staking
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.data.staking.converters.ethpool.*
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
@@ -14,6 +14,7 @@ import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolTransactionReq
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolTransactionResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.P2PVaultLimitsStore
 import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
@@ -41,6 +42,7 @@ import kotlinx.coroutines.withContext
 /**
  * P2PEthPool staking repository implementation
  */
+@Suppress("LongParameterList")
 internal class DefaultP2PEthPoolRepository(
     private val p2pEthPoolApi: P2PEthPoolApi,
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
@@ -48,6 +50,7 @@ internal class DefaultP2PEthPoolRepository(
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggles: StakingFeatureToggles,
+    private val p2pEthPoolRegionBlockedStore: P2PEthPoolRegionBlockedStore,
 ) : P2PEthPoolRepository {
 
     private val vaultConverter = P2PEthPoolVaultConverter
@@ -76,15 +79,29 @@ internal class DefaultP2PEthPoolRepository(
 
     override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
         val vaults = if (stakingFeatureToggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)) {
-            getVaults(network).getOrElse { error ->
-                TangemLogger.e("Error fetching P2PEthPool vaults: $error")
-                emptyList()
-            }
+            getVaults(network).fold(
+                ifLeft = { error ->
+                    TangemLogger.e("Error fetching P2PEthPool vaults: $error")
+                    p2pEthPoolRegionBlockedStore.store(error.isRegionBlocked())
+                    emptyList()
+                },
+                ifRight = { fetched ->
+                    p2pEthPoolRegionBlockedStore.store(false)
+                    fetched
+                },
+            )
         } else {
+            p2pEthPoolRegionBlockedStore.store(false)
             emptyList()
         }
 
         p2pEthPoolVaultsStore.store(vaults)
+    }
+
+    private fun StakingError.isRegionBlocked(): Boolean {
+        if (!stakingFeatureToggles.isRegionUnavailableHandlingEnabled()) return false
+        val httpException = (this as? StakingError.UnknownError)?.exception as? ApiResponseError.HttpException
+        return httpException?.code == ApiResponseError.HttpException.Code.UNAVAILABLE_FOR_LEGAL_REASONS
     }
 
     override suspend fun getVaults(network: P2PEthPoolNetwork): Either<StakingError, List<P2PEthPoolVault>> = either {
@@ -194,8 +211,10 @@ internal class DefaultP2PEthPoolRepository(
         return combine(
             getVaultsFlow().distinctUntilChanged(),
             getVaultLimitsFlow().distinctUntilChanged(),
-        ) { vaults, limits ->
+            p2pEthPoolRegionBlockedStore.get(),
+        ) { vaults, limits, regionBlocked ->
             when {
+                regionBlocked -> StakingAvailability.RegionUnavailable
                 vaults.isEmpty() -> StakingAvailability.TemporaryUnavailable
                 limits == null -> StakingAvailability.TemporaryUnavailable
                 else -> {
@@ -211,6 +230,7 @@ internal class DefaultP2PEthPoolRepository(
     }
 
     override suspend fun getStakingAvailabilitySync(): StakingAvailability {
+        if (p2pEthPoolRegionBlockedStore.getSyncOrNull() == true) return StakingAvailability.RegionUnavailable
         val vaults = getVaultsSync()
         if (vaults.isEmpty()) return StakingAvailability.TemporaryUnavailable
         val limits = getVaultLimitsSyncOrNull() ?: return StakingAvailability.TemporaryUnavailable

@@ -11,41 +11,55 @@ android {
 }
 dependencies {
 
-    /** Tangem SDKs */
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    /** Core */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
+    // region Other libraries
+    implementation(deps.androidx.core.ktx)
+    // endregion
 
-    /** Common */
-    implementation(projects.data.common)
+    // region Tangem SDKs
+    api(tangemDeps.blockchain)
+    // endregion
 
-    /** Domain */
-    implementation(projects.libs.blockchainSdk)
-    implementation(projects.libs.crypto)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.transaction.models)
-    implementation(projects.domain.transaction)
-    implementation(projects.domain.demo)
-
-    /** Api */
-    implementation(projects.features.send.api)
-
-    /** DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Other */
+    // region Core
+    api(projects.core.configToggles)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    // endregion
 
-    /** tests */
-    testImplementation(projects.common.test)
-    testImplementation(deps.test.junit5)
+    // region Common
+    api(projects.data.common)
+    // endregion
+
+    // region Domain
+    api(projects.domain.models)
+    api(projects.domain.transaction)
+    api(projects.domain.walletManager)
+    implementation(projects.domain.demo)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.wallets.models)
+    implementation(projects.domain.demo.models)
+    implementation(projects.domain.transaction.models)
+    // endregion
+
+    // region Libs
+    api(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }

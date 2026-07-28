@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
@@ -14,16 +15,15 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.StakingRegionUnavailableBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
@@ -33,6 +33,8 @@ import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
+import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -45,6 +47,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
+    private val txHistoryDetailsComponentFactory: TxHistoryDetailsComponent.Factory,
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
@@ -61,6 +64,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             userWalletId = params.userWalletId,
             currency = params.currency,
             openExplorer = model::onExploreClick,
+            onTxDetailsRequested = { txHistoryInfo ->
+                model.txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(txHistoryInfo))
+            },
         ),
     )
 
@@ -87,6 +93,28 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         serializer = null,
         childFactory = { params, ctx ->
             ratingComponentFactory.create(childByContext(ctx), params)
+        },
+    )
+
+    private val txHistoryDetailsSlot = childSlot(
+        key = TX_HISTORY_DETAILS_SLOT_KEY,
+        source = model.txDetailsNavigation,
+        serializer = null,
+        handleBackButton = true,
+        childFactory = { config, ctx ->
+            txHistoryDetailsComponentFactory.create(
+                context = childByContext(ctx),
+                params = TxHistoryDetailsComponent.Params(
+                    txHistoryInfo = config.txHistoryInfo,
+                    userWalletId = params.userWalletId,
+                    currency = params.currency,
+                    onDismiss = model.txDetailsNavigation::dismiss,
+                    onOpenTokenDetails = { currency ->
+                        model.txDetailsNavigation.dismiss()
+                        model.openTokenDetails(currency)
+                    },
+                ),
+            )
         },
     )
 
@@ -121,35 +149,24 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val ratingSlotState by ratingSlot.subscribeAsState()
+        val txHistoryDetails by txHistoryDetailsSlot.subscribeAsState()
         NavigationBar3ButtonsScrim()
 
-        if (LocalRedesignEnabled.current) {
-            val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
+        val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
 
-            TokenDetailsScreen(
-                tokenDetailsUM = tokenDetailsUM,
-                tokenMarketBlockComponent = tokenMarketBlockComponent,
-                yieldSupplyComponent = yieldSupplyComponent,
-                txHistoryComponent = txHistoryComponent,
-                expressTransactionsComponent = expressTransactionsComponent,
-                ratingComponent = ratingSlotState.child?.instance,
-                marketingBannerComponent = marketingBannerComponent,
-                modifier = modifier,
-            )
-        } else {
-            val state by model.uiState.collectAsStateWithLifecycle()
-            TokenDetailsScreenLegacy(
-                state = state,
-                tokenMarketBlockComponent = tokenMarketBlockComponent,
-                txHistoryComponent = txHistoryComponent,
-                yieldSupplyComponent = yieldSupplyComponent,
-                expressTransactionsComponent = expressTransactionsComponent,
-                ratingComponent = ratingSlotState.child?.instance,
-                marketingBannerComponent = marketingBannerComponent,
-            )
-        }
+        TokenDetailsScreen(
+            tokenDetailsUM = tokenDetailsUM,
+            tokenMarketBlockComponent = tokenMarketBlockComponent,
+            yieldSupplyComponent = yieldSupplyComponent,
+            txHistoryComponent = txHistoryComponent,
+            expressTransactionsComponent = expressTransactionsComponent,
+            ratingComponent = ratingSlotState.child?.instance,
+            marketingBannerComponent = marketingBannerComponent,
+            modifier = modifier,
+        )
 
         bottomSheet.child?.instance?.BottomSheet()
+        txHistoryDetails.child?.instance?.BottomSheet()
     }
 
     private fun CryptoCurrency.toTokenMarketParam(): TokenMarketBlockComponent.Params? {
@@ -206,6 +223,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             stateFlow = model.transferUiState,
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
+        is TokenDetailsBottomSheetConfig.RegionUnavailable -> StakingRegionUnavailableBottomSheetComponent(
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
     }
 
     @AssistedFactory
@@ -218,5 +238,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
     companion object {
         private const val RATING_SLOT_KEY = "ratingSlot"
+        private const val TX_HISTORY_DETAILS_SLOT_KEY = "txHistoryDetailsSlot"
     }
 }

@@ -22,6 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 fun RowScope.TokenRowPriceChangeContent(
     priceChangeState: PriceChangeState.Content,
     isFlickering: Boolean,
+    modifier: Modifier = Modifier,
     isAvailable: Boolean = true,
 ) {
     val color = when (priceChangeState.type) {
@@ -54,7 +55,7 @@ fun RowScope.TokenRowPriceChangeContent(
     AnimatedContent(
         targetState = priceChangeState.valueInPercent,
         label = "Update the price text",
-        modifier = Modifier.padding(start = TangemTheme.dimens2.x0_5),
+        modifier = modifier.padding(start = TangemTheme.dimens2.x0_5),
     ) { animatedText ->
         Text(
             text = animatedText,

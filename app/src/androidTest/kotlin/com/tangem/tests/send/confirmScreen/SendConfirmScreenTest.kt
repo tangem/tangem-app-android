@@ -24,6 +24,7 @@ import org.junit.Test
 @HiltAndroidTest
 class SendConfirmScreenTest : BaseTestCase() {
 
+    @Ignore("[REDACTED_JIRA]")
     @AllureId("4003")
     @DisplayName("Send (Confirm screen): change sending amount")
     @Test

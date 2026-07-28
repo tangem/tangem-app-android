@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import java.math.BigInteger
@@ -45,6 +46,16 @@ class MockedGaslessTransactionRepository(
 
     override suspend fun signGaslessTransaction(
         gaslessTransactionData: GaslessTransactionData,
+        signature: String,
+        userAddress: String,
+        network: Network,
+        eip7702Auth: Eip7702Authorization?,
+    ): GaslessSignedTransactionResult = GaslessSignedTransactionResult(
+        txHash = "0x000",
+    )
+
+    override suspend fun signGaslessBatchTransaction(
+        gaslessBatchTransactionData: GaslessBatchTransactionData,
         signature: String,
         userAddress: String,
         network: Network,

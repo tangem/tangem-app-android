@@ -4,8 +4,16 @@ plugins {
 }
 
 dependencies {
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
 
-    implementation(projects.domain.models)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }
