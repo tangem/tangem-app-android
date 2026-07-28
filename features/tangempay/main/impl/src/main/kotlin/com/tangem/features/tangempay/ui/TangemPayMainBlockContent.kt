@@ -233,6 +233,7 @@ private fun TangemPayFiatAmount(
                 textColor = TangemTheme.colors2.text.neutral.primary,
             ),
             textAlign = TextAlign.End,
+            modifier = Modifier.testTag(TangemPayTestTags.MAIN_SCREEN_TILE_BALANCE),
         )
     }
 }
