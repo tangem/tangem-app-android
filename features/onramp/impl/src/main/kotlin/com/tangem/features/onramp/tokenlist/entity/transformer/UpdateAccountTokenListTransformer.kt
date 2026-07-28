@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
+import com.tangem.features.onramp.tokenlist.entity.AccountAvailabilityUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer

@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicatorColors
 import com.tangem.core.ui.res.*
@@ -62,7 +61,6 @@ internal fun NewsDetailsContent(state: NewsDetailsUM, contentPadding: PaddingVal
 
 @Composable
 private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, background: Color) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
     val pagerState = rememberPagerState(
         initialPage = state.selectedArticleIndex,
         pageCount = { state.articles.size },
@@ -106,52 +104,18 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
                     )
                 }
                 if (state.articles.size > 1) {
-                    if (isRedesignEnabled) {
-                        TangemPagerIndicator(
-                            pagerState = pagerState,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .windowInsetsPadding(WindowInsets.navigationBars),
-                            colors = TangemPagerIndicatorColors.copy(
-                                overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(PAGER_BG_ALPHA),
-                            ),
-                            hazeState = localHaze,
-                        )
-                    } else {
-                        PagerIndicator(
-                            pagerState = pagerState,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .windowInsetsPadding(WindowInsets.navigationBars),
-                        )
-                    }
+                    TangemPagerIndicator(
+                        pagerState = pagerState,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .windowInsetsPadding(WindowInsets.navigationBars),
+                        colors = TangemPagerIndicatorColors.copy(
+                            overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(PAGER_BG_ALPHA),
+                        ),
+                        hazeState = localHaze,
+                    )
                 }
             }
-        }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun PreviewNewsDetailsContent() {
-    TangemThemePreview {
-        val background = TangemTheme.colors.background.tertiary
-        CompositionLocalProvider(
-            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
-        ) {
-            NewsDetailsContent(
-                state = NewsDetailsUM(
-                    articlesStateUM = ArticlesStateUM.Content,
-                    articles = MockArticlesFactory.createMockArticles(),
-                    selectedArticleIndex = 0,
-                    onShareClick = {},
-                    onLikeClick = {},
-                    onBackClick = {},
-                    onArticleIndexChanged = {},
-                ),
-                contentPadding = PaddingValues(),
-            )
         }
     }
 }

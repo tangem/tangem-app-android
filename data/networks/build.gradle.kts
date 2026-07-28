@@ -9,27 +9,18 @@ android {
     namespace = "com.tangem.data.networks"
 }
 dependencies {
-    // region Project - Core
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
+
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
     // endregion
 
-    // region Project - Data
-    implementation(projects.data.common)
-    implementation(projects.data.dynamicAddresses)
+    // region Other libraries
+    api(deps.moshi)
+    implementation(deps.androidx.datastore)
+    implementation(deps.arrow.core)
     // endregion
 
-    // region Project - Domain
-    implementation(projects.domain.card)
-    implementation(projects.domain.common)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.models)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.walletManager)
-    // endregion
-
-    // region Project - Libs
-    implementation(projects.libs.blockchainSdk)
+    // region Project - Libs (SDK)
     implementation(tangemDeps.blockchain) { exclude(module = "joda-time") }
     // endregion
 
@@ -38,15 +29,32 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Other libraries
-    implementation(deps.androidx.datastore)
-    implementation(deps.moshi)
+    // region Project - Core
+    api(projects.core.utils)
+    implementation(projects.core.datasource)
+    // endregion
+
+    // region Project - Data
+    api(projects.data.common)
+    api(projects.data.dynamicAddresses)
+    // endregion
+
+    // region Project - Domain
+    api(projects.domain.common)
+    api(projects.domain.core)
+    api(projects.domain.models)
+    api(projects.domain.networks)
+    api(projects.domain.walletManager)
+    runtimeOnly(projects.domain.card)
+    // endregion
+
+    // region Project - Libs
+    api(projects.libs.blockchainSdk)
     // endregion
 
     // region Tests
-    testImplementation(tangemDeps.blockchain)
-    testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.card)
     testImplementation(projects.test.core)
     // endregion
 }

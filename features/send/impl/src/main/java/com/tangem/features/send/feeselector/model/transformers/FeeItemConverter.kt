@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.send.api.entity.FeeItem
-import com.tangem.features.send.api.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList

@@ -1,13 +1,8 @@
 package com.tangem.features.txhistory.state
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
-import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
-import com.tangem.features.txhistory.entity.TxHistoryUM
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -15,12 +10,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryStateControllerTest {
 
-    private val controller = TxHistoryStateController(
-        designFeatureToggles = mockk { every { isRedesignEnabled } returns true },
-    )
-    private val legacyController = TxHistoryStateController(
-        designFeatureToggles = mockk { every { isRedesignEnabled } returns false },
-    )
+    private val controller = TxHistoryStateController()
 
     @Test
     fun `GIVEN empty items snapshot WHEN setContent THEN Empty state with explorer action`() {
@@ -80,41 +70,4 @@ internal class TxHistoryStateControllerTest {
 
         assertThat(controller.uiState.value).isInstanceOf(TxHistoryItemsUM.Empty::class.java)
     }
-
-    // region Legacy (e.g. Solana: probe reports HasTransactions but the mapped page is empty)
-
-    @Test
-    fun `GIVEN legacy snapshot with only a title WHEN setContent THEN legacy Empty state with explorer`() {
-        val onExploreClick = {}
-
-        legacyController.setContent(
-            snapshot = TxHistoryItemsSnapshot.LegacyItems(
-                persistentListOf(TxHistoryUM.TxHistoryItemUM.Title(onExploreClick = {})),
-            ),
-            loadMore = { true },
-            onExploreClick = onExploreClick,
-        )
-
-        val state = legacyController.legacyUiState.value
-        assertThat(state).isInstanceOf(TxHistoryUM.Empty::class.java)
-        assertThat((state as TxHistoryUM.Empty).onExploreClick).isEqualTo(onExploreClick)
-    }
-
-    @Test
-    fun `GIVEN legacy snapshot with transactions WHEN setContent THEN legacy Content state`() {
-        legacyController.setContent(
-            snapshot = TxHistoryItemsSnapshot.LegacyItems(
-                persistentListOf(
-                    TxHistoryUM.TxHistoryItemUM.Title(onExploreClick = {}),
-                    TxHistoryUM.TxHistoryItemUM.Transaction(TransactionState.Loading("hash")),
-                ),
-            ),
-            loadMore = { true },
-            onExploreClick = {},
-        )
-
-        assertThat(legacyController.legacyUiState.value).isInstanceOf(TxHistoryUM.Content::class.java)
-    }
-
-    // endregion
 }
