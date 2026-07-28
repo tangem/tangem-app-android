@@ -17,6 +17,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
@@ -31,6 +32,7 @@ import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.isNullOrZero
@@ -46,6 +48,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     private val swapFeeSelectorBlockComponentFactory: SwapFeeSelectorBlockComponent.Factory,
     private val giveApprovalEntryComponentFactory: GiveApprovalEntryComponent.Factory,
     private val chooseTokenComponentFactory: ChooseTokenComponent.Factory,
+    private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<SwapRoute>()
@@ -55,6 +58,14 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     )
 
     private val model: SwapModel = getOrCreateModel(params, router = innerRouter)
+
+    private val marketingBannerComponent: MarketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("marketing_banner"),
+        params = MarketingBannerComponent.Params.Standalone(
+            requestFlow = model.marketingRequest,
+            onDeeplinkClick = model::onMarketingBannerDeeplink,
+        ),
+    )
 
     private val childStack = childStack(
         key = STACK_KEY,
@@ -215,6 +226,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             SwapScreen(
                 stateHolder = model.uiState,
                 feeSelectorBlockComponent = feeSelectorBlockComponent,
+                marketingBannerComponent = marketingBannerComponent,
             )
         }
     }
@@ -236,6 +248,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 SwapScreen(
                     stateHolder = model.uiState,
                     feeSelectorBlockComponent = feeSelectorBlockComponent,
+                    marketingBannerComponent = marketingBannerComponent,
                 )
             }
         }

@@ -22,6 +22,9 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
+import com.tangem.domain.virtualaccount.model.VirtualAccountEntryPoint
+import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -34,6 +37,7 @@ import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
@@ -66,7 +70,9 @@ internal class DetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
+    private val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
@@ -99,6 +105,7 @@ internal class DetailsModel @Inject constructor(
         )
 
         addTangemPayItemIfEligible()
+        addVirtualAccountItemIfEligible()
 
         state = MutableStateFlow(
             value = DetailsUM(
@@ -281,6 +288,34 @@ internal class DetailsModel @Inject constructor(
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
             } else {
                 items.update { itemsBuilder.removeTangemPayItem(it) }
+            }
+        }
+    }
+
+    private fun addVirtualAccountItemIfEligible() {
+        modelScope.launch {
+            val isVirtualAccountEnabled = virtualAccountFeatureToggles.isVirtualAccountsEnabled
+            val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)
+            if (eligibility is VirtualAccountEligibility.Available && isVirtualAccountEnabled) {
+                items.update { items ->
+                    itemsBuilder.addVirtualAccountItem(
+                        items = items,
+                        onClick = ::onVirtualAccountItemClicked,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun onVirtualAccountItemClicked() {
+        modelScope.launch {
+            when (val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)) {
+                is VirtualAccountEligibility.Available -> router.push(
+                    AppRoute.VirtualAccountOnboarding(
+                        AppRoute.VirtualAccountOnboarding.Mode.FromDetailsScreen(eligibility.wallets.first().walletId),
+                    ),
+                )
+                VirtualAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeVirtualAccountItem(it) }
             }
         }
     }

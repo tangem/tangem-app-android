@@ -24,6 +24,7 @@ internal data class OnrampOfferUM(
     val category: OnrampOfferCategoryUM,
     val advantages: OnrampOfferAdvantagesUM,
     val paymentMethod: OnrampPaymentMethod,
+    val providerId: String,
     val providerName: String,
     val rate: String,
     val diff: TextReference?,

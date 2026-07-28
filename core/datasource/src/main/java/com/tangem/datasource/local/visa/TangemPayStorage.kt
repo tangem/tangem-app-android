@@ -23,6 +23,12 @@ interface TangemPayStorage {
 
     suspend fun clearOrderId(customerWalletAddress: String)
 
+    suspend fun storeVirtualAccountOrderId(customerWalletAddress: String, vaOrderId: String)
+
+    suspend fun getVirtualAccountOrderId(customerWalletAddress: String): String?
+
+    suspend fun clearVirtualAccountOrderId(customerWalletAddress: String)
+
     suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean
 
     suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean)
