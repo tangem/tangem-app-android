@@ -16,6 +16,8 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
+import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -55,6 +57,7 @@ import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.derivationIndex
@@ -65,6 +68,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
@@ -109,6 +113,7 @@ import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.entity.FeeItem
 import com.tangem.features.send.api.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
@@ -173,6 +178,7 @@ internal class SwapModel @Inject constructor(
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
     private val calculateAmountUseCase: CalculateAmountUseCase,
+    private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -223,6 +229,30 @@ internal class SwapModel @Inject constructor(
         set(value) {
             dataStateStateFlow.value = value
         }
+
+    /**
+     * Request flow for the STANDALONE marketing banner shown on the swap screen.
+     * Derives [MarketingScreen.Swap] from the live [dataStateStateFlow]; emits null until both the FROM and TO
+     * currencies are chosen. [amountUsd] is the entered FROM amount converted via the FROM token's USD rate
+     * ([getCurrencyUSDQuoteUseCase]); it stays null until both the amount and the USD quote are available.
+     */
+    val marketingRequest: Flow<MarketingBannerRequest?> = dataStateStateFlow.map { data ->
+        val fromCurrency = data.fromSwapCurrencyStatus?.currency ?: return@map null
+        val toCurrency = data.toSwapCurrencyStatus?.currency ?: return@map null
+        val amountUsd = data.amount?.toBigDecimalOrNull()?.let { fromAmount ->
+            val rawCurrencyId = fromCurrency.id.rawCurrencyId ?: return@let null
+            getCurrencyUSDQuoteUseCase(rawCurrencyId)?.let { usdRate -> fromAmount * usdRate }
+        }
+        MarketingBannerRequest(
+            screen = MarketingScreen.Swap(
+                fromNetwork = fromCurrency.network.rawId,
+                fromContractAddress = (fromCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
+                toNetwork = toCurrency.network.rawId,
+                toContractAddress = (toCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
+            ),
+            amountUsd = amountUsd,
+        )
+    }
 
     var uiState: SwapStateHolder by mutableStateOf(stateBuilder.createInitialLoadingState())
         internal set
@@ -351,6 +381,17 @@ internal class SwapModel @Inject constructor(
             uiState = uiState.copy(swapUIMode = swapUIMode)
             analyticsEventHandler.send(SwapEvents.SwapType(swapUIMode))
         }
+    }
+
+    fun onMarketingBannerDeeplink(deeplink: String): Boolean {
+        val fromCurrency = dataState.fromSwapCurrencyStatus?.currency ?: return false
+        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+            userWalletId = params.userWalletId,
+            currency = fromCurrency,
+            screenSource = ScreensSources.Swap,
+        ) ?: return false
+        appRouter.push(route)
+        return true
     }
 
     fun onStart() {
