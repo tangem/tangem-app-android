@@ -51,20 +51,8 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         approvals: PolymarketApprovalsPayload,
     ): Either<PolymarketSigningError, PolymarketOnboardingSignatures> = Either
         .catchOn(dispatchers.io) {
-            val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-            val seedKey = userWallet.secp256k1SeedKey()
-                ?: return@catchOn PolymarketSigningError.MissingWallet.left()
-            val ownerKey = ownerKey(userWalletId, ByteArrayKey(seedKey))
-                ?: return@catchOn PolymarketSigningError.NotDerived.left()
-
-            val publicKey = publicKey(seedKey = seedKey, ownerKey = ownerKey)
-            val clobDigest = EthereumUtils.makeTypedDataHash(
-                PolymarketTypedDataBuilder.buildClobAuth(
-                    address = addressFactory.createAddress(ownerKey),
-                    timestamp = clobAuth.timestamp,
-                    nonce = clobAuth.nonce,
-                ),
-            )
+            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
+            val clobDigest = clobDigest(context, clobAuth)
             val batchDigest = EthereumUtils.makeTypedDataHash(
                 PolymarketTypedDataBuilder.buildApprovalsBatch(
                     depositWallet = approvals.depositWalletAddress,
@@ -74,21 +62,65 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
                 ),
             )
 
-            val hashes = listOf(clobDigest, batchDigest)
-            val signatures = when (val result = signer(userWallet).sign(hashes, publicKey)) {
-                is CompletionResult.Success -> result.data
-                is CompletionResult.Failure -> return@catchOn result.error.toSigningError().left()
-            }
+            val signatures = sign(context, listOf(clobDigest, batchDigest))
+                .getOrElse { return@catchOn it.left() }
 
             PolymarketOnboardingSignatures(
-                l1Signature = formatter.format(signatures[0], clobDigest, publicKey),
-                batchSignature = formatter.format(signatures[1], batchDigest, publicKey),
+                l1Signature = formatter.format(signatures[0], clobDigest, context.publicKey),
+                batchSignature = formatter.format(signatures[1], batchDigest, context.publicKey),
             ).right()
         }
         .getOrElse { it.toSigningError().left() }
 
-    private suspend fun ownerKey(userWalletId: UserWalletId, seedKey: ByteArrayKey): ExtendedPublicKey? =
-        derivationsRepository.getExistingDerivedKeys(userWalletId, seedKey)[ownerPath]
+    override suspend fun signClobAuth(
+        userWalletId: UserWalletId,
+        clobAuth: PolymarketClobAuthData,
+    ): Either<PolymarketSigningError, String> = Either
+        .catchOn(dispatchers.io) {
+            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
+            val digest = clobDigest(context, clobAuth)
+            val signatures = sign(context, listOf(digest)).getOrElse { return@catchOn it.left() }
+
+            formatter.format(signatures[0], digest, context.publicKey).right()
+        }
+        .getOrElse { it.toSigningError().left() }
+
+    private suspend fun signingContext(userWalletId: UserWalletId): Either<PolymarketSigningError, SigningContext> {
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        val seedKey = userWallet.secp256k1SeedKey() ?: return PolymarketSigningError.MissingWallet.left()
+        val ownerKey = derivationsRepository.getExistingDerivedKeys(userWalletId, ByteArrayKey(seedKey))[ownerPath]
+            ?: return PolymarketSigningError.NotDerived.left()
+
+        return SigningContext(
+            userWallet = userWallet,
+            ownerKey = ownerKey,
+            publicKey = publicKey(seedKey = seedKey, ownerKey = ownerKey),
+        ).right()
+    }
+
+    private fun clobDigest(context: SigningContext, clobAuth: PolymarketClobAuthData): ByteArray =
+        EthereumUtils.makeTypedDataHash(
+            PolymarketTypedDataBuilder.buildClobAuth(
+                address = addressFactory.createAddress(context.ownerKey),
+                timestamp = clobAuth.timestamp,
+                nonce = clobAuth.nonce,
+            ),
+        )
+
+    private suspend fun sign(
+        context: SigningContext,
+        hashes: List<ByteArray>,
+    ): Either<PolymarketSigningError, List<ByteArray>> =
+        when (val result = signer(context.userWallet).sign(hashes, context.publicKey)) {
+            is CompletionResult.Success -> result.data.right()
+            is CompletionResult.Failure -> result.error.toSigningError().left()
+        }
+
+    private data class SigningContext(
+        val userWallet: UserWallet,
+        val ownerKey: ExtendedPublicKey,
+        val publicKey: Wallet.PublicKey,
+    )
 
     private fun publicKey(seedKey: ByteArray, ownerKey: ExtendedPublicKey): Wallet.PublicKey = Wallet.PublicKey(
         seedKey = seedKey,
