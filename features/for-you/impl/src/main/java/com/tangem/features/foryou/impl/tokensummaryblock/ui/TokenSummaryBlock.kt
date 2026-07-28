@@ -45,7 +45,7 @@ internal fun TokenSummaryBlock(state: TokenSummaryBlockUM, modifier: Modifier = 
                     .padding(16.dp),
             )
         }
-        TokenSentimentUM.Empty,
+        is TokenSentimentUM.Empty,
         TokenSentimentUM.Loading,
         -> Unit
     }
@@ -97,6 +97,7 @@ private fun previewBlockState(aiInsight: AiInsightUM): TokenSummaryBlockUM = Tok
         lastUpdate = stringReference("Updated Jan 20 2026, 9:24 PM"),
         totalScore = 5,
         indicators = persistentListOf(),
+        scaleMax = 5,
     ),
     aiInsight = aiInsight,
     onClick = {},
