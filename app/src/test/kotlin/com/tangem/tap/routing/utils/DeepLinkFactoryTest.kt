@@ -16,9 +16,11 @@ import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
+import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
@@ -84,6 +86,10 @@ class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val onboardVirtualAccountsDeepLink = mockk<OnboardVirtualAccountsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val tangemPayMainDeepLink = mockk<TangemPayMainDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
     }
@@ -110,6 +116,10 @@ class DeepLinkFactoryTest {
 
     private val yieldDeepLinkFactory = mockk<YieldDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
+    }
+
+    private val campaignsDeepLinkHandlerFactory = mockk<CampaignsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
     }
 
     private val marketsTokenExchangesDeepLinkFactory =
@@ -140,12 +150,14 @@ class DeepLinkFactoryTest {
         swapDeepLink = swapDeepLinkFactory,
         promoDeepLink = promoDeepLinkFactory,
         onboardVisaDeepLink = onboardVisaDeepLink,
+        onboardVirtualAccountsDeepLink = onboardVirtualAccountsDeepLink,
         tangemPayMainDeepLink = tangemPayMainDeepLink,
         newsDetailsDeepLink = newsDeeplink,
         newsDeepLink = newsDeepLinkFactory,
         earnDeepLink = earnDeepLinkFactory,
         yieldDeepLink = yieldDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
+        promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
