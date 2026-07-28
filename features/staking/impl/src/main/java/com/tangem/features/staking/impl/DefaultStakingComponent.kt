@@ -7,9 +7,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.presentation.model.StakingModel
 import com.tangem.features.staking.impl.presentation.ui.StakingScreen
@@ -21,9 +23,18 @@ internal class DefaultStakingComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: StakingComponent.Params,
     private val giveApprovalComponentFactory: GiveApprovalComponent.Factory,
+    private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : StakingComponent, AppComponentContext by appComponentContext {
 
     private val model: StakingModel = getOrCreateModel(params)
+
+    private val marketingBannerComponent: MarketingBannerComponent = marketingBannerComponentFactory.create(
+        context = child("stakingMarketingBanner"),
+        params = MarketingBannerComponent.Params.Standalone(
+            requestFlow = model.marketingRequest,
+            onDeeplinkClick = model::onMarketingBannerDeeplink,
+        ),
+    )
 
     private val approvalSlot = childSlot(
         key = "stakingApprovalSlot",
@@ -45,7 +56,7 @@ internal class DefaultStakingComponent @AssistedInject constructor(
         val currentState by model.uiState.collectAsStateWithLifecycle()
         val approvalSlotState by approvalSlot.subscribeAsState()
 
-        StakingScreen(currentState)
+        StakingScreen(currentState, marketingBannerComponent)
 
         approvalSlotState.child?.instance?.BottomSheet()
     }
