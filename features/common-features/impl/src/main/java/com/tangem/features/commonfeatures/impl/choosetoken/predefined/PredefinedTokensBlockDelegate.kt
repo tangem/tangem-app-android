@@ -33,6 +33,7 @@ internal class PredefinedTokensBlockDelegate @AssistedInject constructor(
     @Assisted private val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute>,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean>,
+    @Assisted private val portfolioTokenKeys: Flow<Set<Pair<String, String>>>,
 ) {
 
     init {
@@ -44,8 +45,13 @@ internal class PredefinedTokensBlockDelegate @AssistedInject constructor(
     val stateFlow: Flow<PredefinedTokensUM?> = combine(
         predefinedTokens,
         searchQueryState,
-    ) { tokens, query ->
-        val filtered = tokens.filter { it.hasValidNetwork() && it.matchesQuery(query.value) }
+        portfolioTokenKeys,
+    ) { tokens, query, portfolioKeys ->
+        val filtered = tokens.filter { token ->
+            token.hasValidNetwork() &&
+                token.matchesQuery(query.value) &&
+                !portfolioKeys.contains(token.toKey())
+        }
         if (filtered.isEmpty()) {
             null
         } else {
@@ -65,6 +71,9 @@ internal class PredefinedTokensBlockDelegate @AssistedInject constructor(
             tokenKeys.contains(rawId to currencyStatus.currency.network.rawId)
         }
     }
+
+    /** Identity of a predefined token as `(rawCurrencyId, networkId)` — matches the portfolio token keys. */
+    private fun PredefinedTokenToAdd.toKey(): Pair<String, String> = token.id.value to network.networkId
 
     private fun PredefinedTokenToAdd.hasValidNetwork(): Boolean =
         network.networkId.isNotBlank() && network.decimalCount != null
@@ -104,6 +113,7 @@ internal class PredefinedTokensBlockDelegate @AssistedInject constructor(
             addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute>,
             modelScope: CoroutineScope,
             tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean>,
+            portfolioTokenKeys: Flow<Set<Pair<String, String>>>,
         ): PredefinedTokensBlockDelegate
     }
 }

@@ -40,6 +40,11 @@ internal sealed class TangemPayDetailsNavigation {
     ) : TangemPayDetailsNavigation()
 
     @Serializable
+    data class VaBankingDetailsError(
+        val userWalletId: UserWalletId,
+    ) : TangemPayDetailsNavigation()
+
+    @Serializable
     data class TransactionDetails(
         val transaction: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,

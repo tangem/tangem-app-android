@@ -23,6 +23,7 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.addressbook.AddressBookFeatureToggles
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.utils.ItemsBuilder
@@ -64,6 +65,7 @@ internal abstract class DetailsModelTestBase {
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
     protected val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase = mockk()
+    protected val virtualAccountFeatureToggles: VirtualAccountFeatureToggles = mockk()
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
@@ -88,6 +90,7 @@ internal abstract class DetailsModelTestBase {
         every { appInfoProvider.appVersionCode } returns 456
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
         coEvery { getVirtualAccountEligibilityUseCase(any()) } returns VirtualAccountEligibility.NotAvailable
+        every { virtualAccountFeatureToggles.isVirtualAccountsEnabled } returns true
 
         every {
             itemsBuilder.buildAll(
@@ -128,6 +131,7 @@ internal abstract class DetailsModelTestBase {
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
         getVirtualAccountEligibilityUseCase = getVirtualAccountEligibilityUseCase,
+        virtualAccountFeatureToggles = virtualAccountFeatureToggles,
     )
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {

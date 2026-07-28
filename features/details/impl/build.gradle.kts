@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.details.api)
     api(projects.features.onboardingV2.api)
     api(projects.features.wallet.api)
+    implementation(projects.features.virtualAccounts.details.api)
 
     /* Project - Core */
     api(projects.core.analytics)
@@ -45,6 +46,7 @@ dependencies {
     runtimeOnly(projects.domain.appCurrency)
     runtimeOnly(projects.domain.balanceHiding)
     runtimeOnly(projects.domain.tokens)
+    implementation(projects.domain.virtualAccount)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring

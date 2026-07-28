@@ -106,6 +106,8 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 onDismiss = model.bottomSheetNavigation::dismiss,
                 openRedirectPage = params.openRedirectPage,
                 amountCurrencyCode = config.amountCurrencyCode,
+                marketingBannerComponent = marketingBannerComponent,
+                linkedMarketingBannerComponent = linkedMarketingBannerComponent,
             ),
         )
     }

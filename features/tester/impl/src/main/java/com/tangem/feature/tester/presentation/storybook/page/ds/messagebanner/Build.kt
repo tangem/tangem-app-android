@@ -18,6 +18,7 @@ internal fun StateUpdater<TangemMessageBannerStory>.build(): TangemMessageBanner
         hasSlotStart = true,
         hasSlotEnd = true,
         hasExtraContent = true,
+        isClickable = false,
         background = Background.BgSecondary,
         onVariantChange = { variant -> updateStory { it.copy(variant = variant) } },
         onContentAlignChange = { align -> updateStory { it.copy(contentAlign = align) } },
@@ -29,6 +30,7 @@ internal fun StateUpdater<TangemMessageBannerStory>.build(): TangemMessageBanner
         onSlotStartToggle = { updateStory { it.copy(hasSlotStart = !it.hasSlotStart) } },
         onSlotEndToggle = { updateStory { it.copy(hasSlotEnd = !it.hasSlotEnd) } },
         onExtraContentToggle = { updateStory { it.copy(hasExtraContent = !it.hasExtraContent) } },
+        onClickableToggle = { updateStory { it.copy(isClickable = !it.isClickable) } },
         onBackgroundChange = { background -> updateStory { it.copy(background = background) } },
     )
 }
