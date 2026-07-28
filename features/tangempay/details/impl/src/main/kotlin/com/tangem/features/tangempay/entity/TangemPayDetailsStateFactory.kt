@@ -2,11 +2,9 @@ package com.tangem.features.tangempay.entity
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
@@ -48,8 +46,7 @@ internal class TangemPayDetailsStateFactory(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
-                items = getTopBarMenuItems(),
-                itemsV2 = getTopBarMenuItemsV2(tariffPlan = null),
+                items = getTopBarMenuItems(tariffPlan = null),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -92,8 +89,7 @@ internal class TangemPayDetailsStateFactory(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
-                items = getTopBarMenuItems(),
-                itemsV2 = getTopBarMenuItemsV2(tariffPlan = status.tariffPlan),
+                items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -150,7 +146,6 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getDeactivatedMenuItems(),
-                itemsV2 = getDeactivatedMenuItemsV2(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -182,8 +177,7 @@ internal class TangemPayDetailsStateFactory(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
-                items = getTopBarMenuItems(),
-                itemsV2 = getTopBarMenuItemsV2(tariffPlan = null),
+                items = getTopBarMenuItems(tariffPlan = null),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -221,43 +215,7 @@ internal class TangemPayDetailsStateFactory(
         )
     }
 
-    private fun getTopBarMenuItems(): ImmutableList<TangemDropdownMenuItem> {
-        return persistentListOf(
-            TangemDropdownMenuItem(
-                title = resourceReference(R.string.tangem_pay_terms_limits),
-                textColor = themedColor { TangemTheme.colors.text.primary1 },
-                onClick = intents::onClickTermsAndLimits,
-            ),
-            TangemDropdownMenuItem(
-                title = resourceReference(R.string.tangempay_pay_support),
-                textColor = themedColor { TangemTheme.colors.text.primary1 },
-                onClick = intents::onContactSupportClicked,
-            ),
-        )
-    }
-
-    private fun getDeactivatedMenuItems(): ImmutableList<TangemDropdownMenuItem> {
-        return buildList {
-            add(
-                TangemDropdownMenuItem(
-                    title = resourceReference(R.string.tangempay_pay_support),
-                    textColor = themedColor { TangemTheme.colors.text.primary1 },
-                    onClick = intents::onContactSupportClicked,
-                ),
-            )
-            if (isRemoveAccountEnabled) {
-                add(
-                    TangemDropdownMenuItem(
-                        title = resourceReference(R.string.tangempay_remove_account),
-                        textColor = themedColor { TangemTheme.colors.text.warning },
-                        onClick = intents::onRemoveAccount,
-                    ),
-                )
-            }
-        }.toImmutableList()
-    }
-
-    private fun getDeactivatedMenuItemsV2(): ImmutableList<TangemPayDropDownItemUM> {
+    private fun getDeactivatedMenuItems(): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
             add(
                 TangemPayDropDownItemUM(
@@ -285,7 +243,7 @@ internal class TangemPayDetailsStateFactory(
         }.toImmutableList()
     }
 
-    private fun getTopBarMenuItemsV2(tariffPlan: TangemPayTariffPlanState?): ImmutableList<TangemPayDropDownItemUM> {
+    private fun getTopBarMenuItems(tariffPlan: TangemPayTariffPlanState?): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
             if (isTiersPlusPlanEnabled && tariffPlan != null) {
                 val isPlanChanging = tariffPlan.order?.step is TangemPayTariffPlanState.OrderStep.AwaitingDeposit ||

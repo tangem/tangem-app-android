@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TangemPayAddToWalletScreenV2(
+internal fun TangemPayAddToWalletScreen(
     state: TangemPayAddToWalletUM,
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
@@ -186,7 +186,7 @@ private fun AddToWalletBottomBar(state: TangemPayAddToWalletUM, modifier: Modifi
 @Composable
 private fun PreviewTangemPayAddToWalletScreen() {
     TangemThemePreviewRedesign {
-        TangemPayAddToWalletScreenV2(
+        TangemPayAddToWalletScreen(
             state = TangemPayAddToWalletUM(
                 steps = persistentListOf(
                     TangemPayAddToWalletStepItemUM(

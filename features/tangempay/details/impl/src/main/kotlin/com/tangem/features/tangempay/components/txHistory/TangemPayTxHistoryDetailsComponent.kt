@@ -7,7 +7,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
-import com.tangem.features.tangempay.ui.TangemPayTxHistoryDetailsContentV2
+import com.tangem.features.tangempay.ui.TangemPayTxHistoryDetailsContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,7 +26,7 @@ internal class TangemPayTxHistoryDetailsComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        TangemPayTxHistoryDetailsContentV2(state = state)
+        TangemPayTxHistoryDetailsContent(state = state)
     }
 
     @AssistedFactory

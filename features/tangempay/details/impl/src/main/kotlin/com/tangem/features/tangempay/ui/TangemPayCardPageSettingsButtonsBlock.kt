@@ -13,13 +13,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.tangempay.entity.TangemPayCardPageSettingV2
+import com.tangem.features.tangempay.entity.TangemPayCardPageSetting
 import com.tangem.features.tangempay.ui.components.TangemPayActionButton
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun TangemPayCardPageSettingsButtonsBlock(
-    settings: ImmutableList<TangemPayCardPageSettingV2>,
+    settings: ImmutableList<TangemPayCardPageSetting>,
     modifier: Modifier = Modifier,
 ) {
     if (settings.isEmpty()) return
@@ -49,7 +49,7 @@ private fun TangemPayCardPageSettingsButtonsBlockPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors3.bg.secondary),
-            settings = TangemPayCardPageSettingV2.stubList(),
+            settings = TangemPayCardPageSetting.stubList(),
         )
     }
 }
@@ -63,7 +63,7 @@ private fun TangemPayCardPageSettingsButtonsBlockFrozenPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors3.bg.secondary),
-            settings = TangemPayCardPageSettingV2.stubList(isFrozen = true),
+            settings = TangemPayCardPageSetting.stubList(isFrozen = true),
         )
     }
 }
