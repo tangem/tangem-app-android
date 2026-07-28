@@ -347,6 +347,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val cryptoBalance = cryptoBalance
         val hasCardData = cards.isNotEmpty() && productInstances.isNotEmpty()
         val isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled
+        val multichainNetworkStatuses by lazy {
+            if (tangemPayFeatureToggles.isAccountMultichainEnabled) {
+                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
+            } else {
+                emptyList()
+            }
+        }
         return when {
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.ACTUAL,
@@ -366,6 +373,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         availableForWithdrawal = availableForWithdrawal.orZero(),
                     ),
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                    networks = multichainNetworkStatuses,
                     fiatRate = quotesData?.fiatRate,
                     error = null,
                 )
@@ -376,6 +384,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     cryptoBalance = cryptoBalance,
                     fiatRate = quotesData?.fiatRate,
                     customerId = customerId,
+                    networks = multichainNetworkStatuses,
                 )
             else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
@@ -393,6 +402,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
         customerId: String,
         fiatRate: BigDecimal?,
+        networks: List<PaymentNetworkStatus>,
     ): PaymentAccountStatusValue {
         val cardsById = cards.associateBy { it.cardId }
         val tangemPayCards = cardProductInstances.mapNotNull { productInstance ->
@@ -446,6 +456,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             customerId = customerId,
             depositAddress = cryptoBalance.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+            networks = networks,
             fiatRate = fiatRate,
             cards = allCards,
             balance = PaymentAccountStatusValue.Balance(
