@@ -1,8 +1,6 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -12,28 +10,35 @@ android {
 
 dependencies {
 
-    implementation(projects.core.utils)
-    api(projects.domain.models)
-    api(projects.domain.appCurrency.models)
-    api(projects.domain.staking.models)
-    api(projects.libs.crypto)
+    // region Other libraries
+    implementation(deps.hilt.android)
+    // endregion
 
     // region Firebase libraries
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     implementation(deps.firebase.messaging)
-    // end
+    // endregion
 
+    // region Core modules
+    implementation(projects.core.utils)
+    // endregion
 
-    implementation(deps.arrow.core)
+    // region Domain
+    api(projects.domain.models)
+    // endregion
 
-    testImplementation(projects.test.core)
+    // region Libs
+    // libs:crypto is intentionally re-exported (api): :common is ubiquitous and many feature modules
+    // use BlockchainUtils / crypto helpers through it. Demoting to implementation cascades across the
+    // feature graph, so keep it api despite DAGP's advice (suppressed below).
+    api(projects.libs.crypto)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
-
-    // region DI
-    implementation(deps.hilt.android)
-    kapt(deps.hilt.kapt)
-    // end
+    testImplementation(projects.test.core)
+    // endregion
 }

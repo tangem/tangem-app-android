@@ -37,7 +37,7 @@ import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.ui.swapSuccessNavigation
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
 import com.tangem.utils.extensions.orZero
@@ -60,6 +60,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         uiStateHolder: SwapStateHolder,
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeSelectorUM: FeeSelectorUM?,
+        isHighNetworkFee: Boolean = false,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
@@ -70,6 +71,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             feeSelectorUM = feeSelectorUM,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             actions = actions,
+            isHighNetworkFee = isHighNetworkFee,
         )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
@@ -343,12 +345,14 @@ internal class SwapTransferStateBuilder @Inject constructor(
         fee: Fee?,
         isTangemPayWithdrawal: Boolean,
         feeSelectorUM: FeeSelectorUM?,
+        isHighNetworkFee: Boolean = false,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             feeSelectorUM = feeSelectorUM,
             actions = actions,
+            isHighNetworkFee = isHighNetworkFee,
         )
         return uiStateHolder.copy(
             notifications = notifications,

@@ -84,6 +84,8 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayDetails(status: AccountStatus.Payment)
 
+    fun openTangemPaySelectPlan(status: AccountStatus.Payment)
+
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
         cryptoCurrency: CryptoCurrency,
@@ -123,4 +125,7 @@ internal interface InnerWalletRouter {
 
     /** Open Transfer screen */
     fun openTransfer(userWalletId: UserWalletId)
+
+    /** Open Polymarket (prediction account) entry screen */
+    fun openPolymarket(userWalletId: UserWalletId)
 }
