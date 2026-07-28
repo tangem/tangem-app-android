@@ -18,6 +18,12 @@ interface PolymarketTypedDataSigner {
         clobAuth: PolymarketClobAuthData,
         approvals: PolymarketApprovalsPayload,
     ): Either<PolymarketSigningError, PolymarketOnboardingSignatures>
+
+    /** Signs only the `ClobAuth` payload — used when re-issuing API credentials. */
+    suspend fun signClobAuth(
+        userWalletId: UserWalletId,
+        clobAuth: PolymarketClobAuthData,
+    ): Either<PolymarketSigningError, String>
 }
 
 /** Variable part of the `ClobAuth` payload; the signed address comes from the signing key. */
