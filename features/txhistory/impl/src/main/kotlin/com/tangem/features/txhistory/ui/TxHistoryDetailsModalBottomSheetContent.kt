@@ -239,7 +239,7 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
         isFaded = true,
     ),
     statusBanner = TxHistoryDetailsUM.StatusBannerUM(
-        severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+        style = TxHistoryDetailsUM.StatusBannerUM.Style.Error,
         title = stringReference("Failed"),
         subtitle = stringReference("Funds will be refunded by the provider"),
         isLoading = false,
@@ -269,7 +269,7 @@ private fun previewRefunded() = previewTwoAssets().copy(
         menu = previewMenu(),
     ),
     statusBanner = TxHistoryDetailsUM.StatusBannerUM(
-        severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+        style = TxHistoryDetailsUM.StatusBannerUM.Style.Refunded,
         title = stringReference("Refunded in WBTC"),
         subtitle = stringReference(
             "Your funds have been refunded in WBTC to your wallet on the Polygon network, " +
