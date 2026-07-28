@@ -9,6 +9,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
@@ -17,6 +18,7 @@ import com.tangem.domain.pushnotificationpreferences.UpdateWalletPushNotificatio
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
 import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
 import com.tangem.features.pushnotificationsettings.impl.entity.PushNotificationSettingsUM
@@ -45,6 +47,8 @@ class PushNotificationSettingsModelTest {
     private val setNotificationsEnabled: SetNotificationsEnabledUseCase = mockk()
     private val isFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase = mockk()
     private val markFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase = mockk(relaxed = true)
+    private val applyFirstActivation: ApplyPushNotificationFirstActivationUseCase = mockk()
+    private val notificationsRepository: NotificationsRepository = mockk()
     private val systemNotificationsStateProvider: SystemNotificationsStateProvider = mockk()
     private val settingsManager: SettingsManager = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
@@ -53,6 +57,8 @@ class PushNotificationSettingsModelTest {
     private fun model(
         osEnabled: Boolean = true,
         firstActivationDone: Boolean = true,
+        consentGiven: Boolean = false,
+        activationResult: Either<Throwable, Unit> = Either.Right(Unit),
         preferencesFlow: MutableSharedFlow<WalletPushNotificationPreferences> = MutableSharedFlow(replay = 1),
     ): PushNotificationSettingsModel {
         every { systemNotificationsStateProvider.areNotificationsEnabled() } returns osEnabled
@@ -60,6 +66,8 @@ class PushNotificationSettingsModelTest {
         coEvery { isFirstActivationDone(userWalletId) } returns firstActivationDone
         coEvery { setNotificationsEnabled(any(), any()) } returns Either.Right(Unit)
         coEvery { setAllPreferences(any(), any(), any(), any()) } returns Either.Right(Unit)
+        coEvery { notificationsRepository.isUserAllowToSubscribeOnPushNotifications() } returns consentGiven
+        coEvery { applyFirstActivation(any()) } returns activationResult
         return PushNotificationSettingsModel(
             paramsContainer = MutableParamsContainer(PushNotificationSettingsComponent.Params(userWalletId)),
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -73,6 +81,8 @@ class PushNotificationSettingsModelTest {
             setNotificationsEnabled = setNotificationsEnabled,
             isFirstActivationDone = isFirstActivationDone,
             markFirstActivationDone = markFirstActivationDone,
+            applyFirstActivation = applyFirstActivation,
+            notificationsRepository = notificationsRepository,
         )
     }
 
@@ -95,6 +105,8 @@ class PushNotificationSettingsModelTest {
         coEvery { isFirstActivationDone(userWalletId) } returns true
         coEvery { setNotificationsEnabled(any(), any()) } returns Either.Right(Unit)
         coEvery { setAllPreferences(any(), any(), any(), any()) } returns Either.Right(Unit)
+        coEvery { notificationsRepository.isUserAllowToSubscribeOnPushNotifications() } returns false
+        coEvery { applyFirstActivation(any()) } returns Either.Right(Unit)
 
         val model = PushNotificationSettingsModel(
             paramsContainer = MutableParamsContainer(PushNotificationSettingsComponent.Params(userWalletId)),
@@ -109,6 +121,8 @@ class PushNotificationSettingsModelTest {
             setNotificationsEnabled = setNotificationsEnabled,
             isFirstActivationDone = isFirstActivationDone,
             markFirstActivationDone = markFirstActivationDone,
+            applyFirstActivation = applyFirstActivation,
+            notificationsRepository = notificationsRepository,
         )
         advanceUntilIdle()
 
@@ -467,6 +481,102 @@ class PushNotificationSettingsModelTest {
         coVerify(exactly = 1) { markFirstActivationDone(userWalletId) }
         coVerify(exactly = 0) { updatePreference(any(), any(), any()) }
         coVerify(exactly = 0) { setAllPreferences(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN consent and OS enabled WHEN preferences loaded THEN first activation reapplied`() = runTest {
+        // Arrange
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+
+        // Act
+        model(osEnabled = true, consentGiven = true, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { applyFirstActivation(userWalletId) }
+    }
+
+    @Test
+    fun `GIVEN preferences emitted twice WHEN loaded THEN first activation attempted once`() = runTest {
+        // Arrange
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+
+        // Act
+        model(osEnabled = true, consentGiven = true, preferencesFlow = flow)
+        advanceUntilIdle()
+        flow.tryEmit(anyOn())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { applyFirstActivation(userWalletId) }
+    }
+
+    @Test
+    fun `GIVEN no consent WHEN preferences loaded THEN first activation not reapplied`() = runTest {
+        // Arrange
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+
+        // Act
+        model(osEnabled = true, consentGiven = false, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { applyFirstActivation(any()) }
+    }
+
+    @Test
+    fun `GIVEN OS disabled WHEN preferences loaded THEN first activation not reapplied`() = runTest {
+        // Arrange
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+
+        // Act
+        model(osEnabled = false, consentGiven = true, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { applyFirstActivation(any()) }
+    }
+
+    @Test
+    fun `GIVEN activation failed WHEN preferences emitted again THEN not retried`() = runTest {
+        // Arrange
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+
+        // Act
+        model(
+            osEnabled = true,
+            consentGiven = true,
+            activationResult = Either.Left(RuntimeException("net")),
+            preferencesFlow = flow,
+        )
+        advanceUntilIdle()
+        flow.tryEmit(anyOn())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { applyFirstActivation(userWalletId) }
+    }
+
+    @Test
+    fun `GIVEN OS enabled after pause WHEN onResume THEN first activation reapplied`() = runTest {
+        // Arrange
+        val flow = MutableSharedFlow<WalletPushNotificationPreferences>(replay = 1)
+        flow.tryEmit(allFalse())
+        val model = model(osEnabled = false, consentGiven = true, preferencesFlow = flow)
+        advanceUntilIdle()
+
+        // Act: the user enabled notifications in the OS settings and returned to the screen.
+        every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { applyFirstActivation(userWalletId) }
     }
 
     private fun allFalse() = WalletPushNotificationPreferences(
