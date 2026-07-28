@@ -12,7 +12,7 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Immutable
 internal data class TangemPayCardPageUM(
-    val settingsV2: ImmutableList<TangemPayCardPageSettingV2>,
+    val settings: ImmutableList<TangemPayCardPageSetting>,
     val onBackClick: () -> Unit,
     val dailyLimitState: TangemPayDailyLimitBlockState,
     val addToWalletBlockState: AddToWalletBlockState? = null,
@@ -27,10 +27,10 @@ internal data class TangemPayCardPageUM(
             ),
             cardState: TangemPayCardState = TangemPayCardState.Active,
             dailyLimitState: TangemPayDailyLimitBlockState = TangemPayDailyLimitBlockState.Content.stub(),
-            settingsV2: ImmutableList<TangemPayCardPageSettingV2> = TangemPayCardPageSettingV2.stubList(),
+            settings: ImmutableList<TangemPayCardPageSetting> = TangemPayCardPageSetting.stubList(),
         ) = TangemPayCardPageUM(
             addToWalletBlockState = addToWalletBlockState,
-            settingsV2 = settingsV2,
+            settings = settings,
             onBackClick = {},
             cardState = cardState,
             dailyLimitState = dailyLimitState,
@@ -40,7 +40,7 @@ internal data class TangemPayCardPageUM(
 }
 
 @Immutable
-internal data class TangemPayCardPageSettingV2(
+internal data class TangemPayCardPageSetting(
     val id: Id,
     val title: TextReference,
     val isLoading: Boolean = false,
@@ -55,14 +55,14 @@ internal data class TangemPayCardPageSettingV2(
     }
 
     companion object {
-        fun stubList(isFrozen: Boolean = false): ImmutableList<TangemPayCardPageSettingV2> = persistentListOf(
-            TangemPayCardPageSettingV2(
+        fun stubList(isFrozen: Boolean = false): ImmutableList<TangemPayCardPageSetting> = persistentListOf(
+            TangemPayCardPageSetting(
                 id = Id.Details,
                 title = resourceReference(R.string.details_title),
                 onClick = {},
                 iconRes = CoreUiR.drawable.ic_visa_card_details_24,
             ),
-            TangemPayCardPageSettingV2(
+            TangemPayCardPageSetting(
                 id = Id.Freeze,
                 title = resourceReference(
                     if (isFrozen) {
@@ -74,7 +74,7 @@ internal data class TangemPayCardPageSettingV2(
                 onClick = {},
                 iconRes = CoreUiR.drawable.ic_freeze_24,
             ),
-            TangemPayCardPageSettingV2(
+            TangemPayCardPageSetting(
                 id = Id.ChangePin,
                 title = resourceReference(R.string.tangem_pay_pin_code_title),
                 onClick = {},

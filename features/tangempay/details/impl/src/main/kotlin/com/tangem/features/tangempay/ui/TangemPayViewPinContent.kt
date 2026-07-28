@@ -34,7 +34,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayViewPinUM
 
 @Composable
-internal fun TangemPayViewPinContentV2(state: TangemPayViewPinUM) {
+internal fun TangemPayViewPinContent(state: TangemPayViewPinUM) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -210,7 +210,7 @@ private fun PinCode(value: String, modifier: Modifier = Modifier, numbersCount: 
 @Composable
 private fun TangemPayViewPinContentPreview() {
     TangemThemePreviewRedesign {
-        TangemPayViewPinContentV2(
+        TangemPayViewPinContent(
             state = TangemPayViewPinUM.Content(
                 pin = "1234",
                 onClickChangePin = {},

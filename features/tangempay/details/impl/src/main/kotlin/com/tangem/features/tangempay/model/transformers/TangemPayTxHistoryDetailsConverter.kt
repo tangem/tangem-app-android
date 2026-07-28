@@ -15,7 +15,7 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.ButtonState
 import com.tangem.features.tangempay.entity.CashbackDetailUM
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import com.tangem.features.tangempay.entity.TransactionDetailUM
 import com.tangem.features.tangempay.entity.TransactionLabelUM
 import com.tangem.features.tangempay.entity.TransactionLoadState
@@ -25,13 +25,13 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 
-internal object TangemPayTxHistoryDetailsConverterV2 :
-    Converter<TangemPayTxHistoryDetailsConverterV2.Input, TangemPayTxHistoryDetailsUMV2> {
+internal object TangemPayTxHistoryDetailsConverter :
+    Converter<TangemPayTxHistoryDetailsConverter.Input, TangemPayTxHistoryDetailsUM> {
     private val dateFormatter = DateTimeFormatters.getBestFormatterBySkeleton("MMM dd yyyy, HH:mm")
 
-    override fun convert(value: Input): TangemPayTxHistoryDetailsUMV2 {
+    override fun convert(value: Input): TangemPayTxHistoryDetailsUM {
         val transaction = value.item
-        return TangemPayTxHistoryDetailsUMV2(
+        return TangemPayTxHistoryDetailsUM(
             isBalanceHidden = value.isBalanceHidden,
             title = transaction.extractBottomSheetTitle(),
             subtitle = transaction.extractDate(),

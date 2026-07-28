@@ -22,7 +22,7 @@ import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHist
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
-import com.tangem.features.tangempay.ui.TangemPayDetailsScreenV2
+import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tangempay.utils.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.utils.toRequisitesRows
 import com.tangem.features.tangempay.utils.userWalletId
@@ -95,7 +95,7 @@ internal class TangemPayDetailsComponent(
             )
         }
         NavigationBar3ButtonsScrim()
-        TangemPayDetailsScreenV2(
+        TangemPayDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
             expressTransactionsComponent = expressTransactionsComponent,
