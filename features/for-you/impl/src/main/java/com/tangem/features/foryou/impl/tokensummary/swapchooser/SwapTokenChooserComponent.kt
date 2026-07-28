@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorEmbeddedContent
-import com.tangem.common.ui.markets.tokenselector.TokenSelectorEntry
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.SecondaryButton
@@ -26,9 +25,8 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.tokensummary.model.SwapHolding
 import com.tangem.features.foryou.impl.tokensummary.swapchooser.model.SwapTokenChooserModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -91,12 +89,12 @@ internal class SwapTokenChooserComponent @AssistedInject constructor(
     }
 
     data class Params(
-        val entries: StateFlow<List<TokenSelectorEntry>>,
+        val holdings: StateFlow<List<SwapHolding>>,
         val callbacks: ModelCallbacks,
     )
 
     interface ModelCallbacks {
-        fun onTokenSelected(userWalletId: UserWalletId, status: CryptoCurrencyStatus)
+        fun onHoldingSelected(holding: SwapHolding)
         fun onDismiss()
     }
 

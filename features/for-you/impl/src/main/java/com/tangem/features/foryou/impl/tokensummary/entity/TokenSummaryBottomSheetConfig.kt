@@ -19,6 +19,12 @@ internal sealed interface TokenSummaryBottomSheetConfig {
     /** Top-up options for the summary token, shown when none of its holdings has a balance. */
     data class ManageFunds(val rawCurrencyId: CryptoCurrency.RawID) : TokenSummaryBottomSheetConfig
 
+    /**
+     * Add-to-portfolio flow for the summary token, shown when it is not held anywhere. Carries no data: the flow is
+     * driven by the manager the model has already prepared.
+     */
+    data object AddToPortfolio : TokenSummaryBottomSheetConfig
+
     /** Informational sheet describing the tapped [indicatorType]. */
     data class Info(val indicatorType: IndicatorType) : TokenSummaryBottomSheetConfig
 }
