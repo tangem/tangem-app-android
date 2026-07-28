@@ -12,25 +12,37 @@ android {
 
 dependencies {
 
-    /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.qrScanning)
-    implementation(projects.domain.qrScanning.models)
-    implementation(projects.domain.tokens.models)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
 
-    implementation(projects.core.ui)
-    implementation(projects.libs.blockchainSdk)
-
-    /** SdK */
+    // region SDK
     implementation(tangemDeps.blockchain)
+    // endregion
 
-    /** DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Tests */
-    testImplementation(deps.test.junit5)
+    // region Core modules
+    implementation(projects.core.ui)
+    // endregion
+
+    // region Domain
+    api(projects.domain.qrScanning)
+    implementation(projects.domain.models)
+    implementation(projects.domain.qrScanning.models)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tests
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    // endregion
 }

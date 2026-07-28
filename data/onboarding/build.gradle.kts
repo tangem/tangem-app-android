@@ -11,8 +11,13 @@ android {
 
 dependencies {
 
-    // region AndroidX libraries
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
     implementation(deps.androidx.datastore)
+    implementation(deps.moshi)
     // endregion
 
     // region DI
@@ -21,11 +26,12 @@ dependencies {
     // endregion
 
     // region Core modules
-    implementation(projects.core.datasource)
+    api(projects.core.datasource)
+    implementation(projects.core.utils)
     // endregion
 
     // region Domain modules
-    implementation(projects.domain.onboarding)
+    api(projects.domain.onboarding)
     implementation(projects.domain.models)
     // endregion
 }

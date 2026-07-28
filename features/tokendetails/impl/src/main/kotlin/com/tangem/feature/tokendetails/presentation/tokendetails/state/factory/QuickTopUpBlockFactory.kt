@@ -8,15 +8,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.QuickTopUpBlockUM
-import com.tangem.features.tokendetails.TokenDetailsFeatureToggles
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal class QuickTopUpBlockFactory @Inject constructor(
-    private val featureToggles: TokenDetailsFeatureToggles,
-) {
+internal class QuickTopUpBlockFactory @Inject constructor() {
 
     fun build(
         currencyStatus: CryptoCurrencyStatus,
@@ -25,8 +22,6 @@ internal class QuickTopUpBlockFactory @Inject constructor(
         onPresetClick: (BigDecimal, String) -> Unit,
         onOtherClick: () -> Unit,
     ): QuickTopUpBlockUM? {
-        if (!featureToggles.isQuickTopUpEnabled) return null
-
         val amount = currencyStatus.value.amount
         if (amount == null || !amount.isZero()) return null
 

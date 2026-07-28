@@ -86,8 +86,6 @@ sealed class MainScreenAnalyticsEvent(
 
     class BuyScreenOpened : MainScreenAnalyticsEvent(event = "Buy Screen Opened")
 
-    class SwapScreenOpened : MainScreenAnalyticsEvent(event = "Swap Screen Opened")
-
     class SellScreenOpened : MainScreenAnalyticsEvent(event = "Sell Screen Opened")
 
     data class BuyTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
@@ -97,21 +95,6 @@ sealed class MainScreenAnalyticsEvent(
 
     data class SellTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
         event = "Sell Token Clicked",
-        params = mapOf(TOKEN_PARAM to currencySymbol),
-    )
-
-    data class SwapTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
-        event = "Swap Token Clicked",
-        params = mapOf(TOKEN_PARAM to currencySymbol),
-    )
-
-    data class ReceiveTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
-        event = "Receive Token Clicked",
-        params = mapOf(TOKEN_PARAM to currencySymbol),
-    )
-
-    data class RemoveTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
-        event = "Remove Button Clicked",
         params = mapOf(TOKEN_PARAM to currencySymbol),
     )
 

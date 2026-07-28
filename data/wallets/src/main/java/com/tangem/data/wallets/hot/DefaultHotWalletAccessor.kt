@@ -28,6 +28,11 @@ class DefaultHotWalletAccessor @Inject constructor(
     private val scope: AppCoroutineScope,
 ) : HotWalletAccessor {
 
+    private data class RequestedAuth(
+        val auth: HotAuth,
+        val attemptRequest: HotWalletPasswordRequester.AttemptRequest?,
+    )
+
     private val contextualUnlockHotWallet: ConcurrentHashMap<HotWalletId, UnlockHotWallet?> = ConcurrentHashMap()
 
     override suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
@@ -84,8 +89,8 @@ class DefaultHotWalletAccessor @Inject constructor(
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
         val isAccessCodeRequired = isAccessCodeRequired()
 
-        val auth = when (hotWalletId.authType) {
-            HotWalletId.AuthType.NoPassword -> HotAuth.NoAuth
+        val requestedAuth = when (hotWalletId.authType) {
+            HotWalletId.AuthType.NoPassword -> RequestedAuth(HotAuth.NoAuth, attemptRequest = null)
             HotWalletId.AuthType.Password -> requestPassword(
                 hotWalletId = hotWalletId,
                 hasBiometry = false,
@@ -97,35 +102,32 @@ class DefaultHotWalletAccessor @Inject constructor(
                         hasBiometry = false,
                     )
                 } else {
-                    HotAuth.Biometry
+                    RequestedAuth(HotAuth.Biometry, attemptRequest = null)
                 }
             }
         }
 
-        return runCatchingSdkErrors(hotWalletId, auth) {
-            block(UnlockHotWallet(hotWalletId, it)).also {
-                hotWalletPasswordRequester.successfulAuthentication()
-                hotWalletPasswordRequester.dismiss()
-            }
+        return runCatchingSdkErrors(hotWalletId, requestedAuth) {
+            block(UnlockHotWallet(hotWalletId, it))
         }
     }
 
     private suspend fun <T> runCatchingSdkErrors(
         hotWalletId: HotWalletId,
-        auth: HotAuth,
+        requestedAuth: RequestedAuth,
         block: suspend (auth: HotAuth) -> T,
     ): T {
         return runCatchingWrongPassInternal(
             hotWalletId = hotWalletId,
-            originalAuth = auth,
-            auth = auth,
+            originalAuth = requestedAuth,
+            requestedAuth = requestedAuth,
             block = { blockAuth ->
                 val result = block(blockAuth)
 
                 // Update biometry auth if the original auth was password
                 updateBiometryAuthIfNeeded(
                     hotWalletId = hotWalletId,
-                    originalAuth = auth,
+                    originalAuth = requestedAuth.auth,
                 )
 
                 result
@@ -161,13 +163,19 @@ class DefaultHotWalletAccessor @Inject constructor(
 
     private suspend fun <T> runCatchingWrongPassInternal(
         hotWalletId: HotWalletId,
-        originalAuth: HotAuth,
-        auth: HotAuth,
+        originalAuth: RequestedAuth,
+        requestedAuth: RequestedAuth,
         block: suspend (auth: HotAuth) -> T,
     ): T = runSuspendCatching {
-        block(auth)
+        block(requestedAuth.auth).also {
+            val request = requestedAuth.attemptRequest
+            if (request != null) {
+                hotWalletPasswordRequester.successfulAuthentication(request)
+            }
+            hotWalletPasswordRequester.dismiss()
+        }
     }.getOrElse { exception ->
-        if (auth is HotAuth.Biometry && (exception.isBiometryError() || exception.isBiometryReset())) {
+        if (requestedAuth.auth is HotAuth.Biometry && (exception.isBiometryError() || exception.isBiometryReset())) {
             val shouldRetryBiometry = exception is TangemSdkError.AuthenticationCanceled
 
             // fallback to password if biometry fails
@@ -179,7 +187,7 @@ class DefaultHotWalletAccessor @Inject constructor(
             return@getOrElse runCatchingWrongPassInternal(
                 hotWalletId = hotWalletId,
                 originalAuth = originalAuth,
-                auth = passAuth,
+                requestedAuth = passAuth,
                 block = block,
             )
         }
@@ -190,29 +198,30 @@ class DefaultHotWalletAccessor @Inject constructor(
 
         // If the exception is a wrong password, we need to request the password again
 
-        hotWalletPasswordRequester.wrongPassword()
+        requestedAuth.attemptRequest?.let { hotWalletPasswordRequester.wrongPassword(it) }
         val passResult = requestPassword(
             hotWalletId = hotWalletId,
-            hasBiometry = originalAuth is HotAuth.Biometry,
+            hasBiometry = originalAuth.auth is HotAuth.Biometry,
         )
 
         runCatchingWrongPassInternal(
             hotWalletId = hotWalletId,
             originalAuth = originalAuth,
-            auth = passResult,
+            requestedAuth = passResult,
             block = block,
         )
     }
 
-    private suspend fun requestPassword(hotWalletId: HotWalletId, hasBiometry: Boolean): HotAuth {
+    private suspend fun requestPassword(hotWalletId: HotWalletId, hasBiometry: Boolean): RequestedAuth {
         val attemptRequest = HotWalletPasswordRequester.AttemptRequest(
             hotWalletId = hotWalletId,
             authMode = false,
             hasBiometry = hasBiometry,
         )
 
-        return hotWalletPasswordRequester.requestPassword(attemptRequest).toAuth()
+        val auth = hotWalletPasswordRequester.requestPassword(attemptRequest).toAuth()
             ?: throw TangemSdkError.UserCancelled()
+        return RequestedAuth(auth, attemptRequest)
     }
 
     private suspend fun isAccessCodeRequired(): Boolean {

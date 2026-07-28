@@ -2,19 +2,24 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,14 +28,35 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_heart_broken_32
 import com.tangem.core.ui.utils.WindowInsetsZero
+
+// Warm top glow of the "unavailable" screen: a translucent gold (sampled from Figma) drawn over
+// bg.primary, so one value matches both light and dark themes. Fades to transparent by mid-screen.
+private const val GLOW_COLOR = 0xFFFCB92A
+private const val GLOW_ALPHA = 0.49f
+private const val GLOW_FADE_STOP = 0.5f
 
 @Composable
 internal fun TandemPayOnboardingScreen(state: TangemPayOnboardingScreenState, modifier: Modifier = Modifier) {
+    when (state) {
+        is TangemPayOnboardingScreenState.NotAvailable ->
+            TangemPayOnboardingUnavailable(onBack = state.onBack, modifier = modifier)
+        is TangemPayOnboardingScreenState.Loading,
+        is TangemPayOnboardingScreenState.Content,
+        -> TangemPayOnboardingScaffold(state = state, modifier = modifier)
+    }
+}
+
+@Composable
+private fun TangemPayOnboardingScaffold(state: TangemPayOnboardingScreenState, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.systemBarsPadding(),
         topBar = {
@@ -52,7 +78,77 @@ internal fun TandemPayOnboardingScreen(state: TangemPayOnboardingScreenState, mo
                     state = state,
                     modifier = contentModifier,
                 )
+                is TangemPayOnboardingScreenState.NotAvailable -> Unit
             }
+        },
+    )
+}
+
+@Composable
+private fun TangemPayOnboardingUnavailable(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(TangemTheme.colors3.bg.primary),
+    ) {
+        UnavailableGlow(modifier = Modifier.matchParentSize())
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding(),
+        ) {
+            Column(
+                modifier = Modifier.padding(top = 72.dp, start = 24.dp, end = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Icon(
+                    modifier = Modifier.size(32.dp),
+                    imageVector = Icons.ic_heart_broken_32,
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.primary,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = stringResourceSafe(R.string.tangem_pay_unavailable_region_title),
+                        style = TangemTheme.typography3.heading.medium,
+                        color = TangemTheme.colors3.text.primary,
+                    )
+                    Text(
+                        text = stringResourceSafe(R.string.tangem_pay_unavailable_region_description),
+                        style = TangemTheme.typography3.subheading.medium,
+                        color = TangemTheme.colors3.text.secondary,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            TangemButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_got_it),
+                onClick = onBack,
+            )
+        }
+    }
+}
+
+@Composable
+private fun UnavailableGlow(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.drawBehind {
+            drawRect(
+                brush = Brush.radialGradient(
+                    colorStops = arrayOf(
+                        0f to Color(GLOW_COLOR).copy(alpha = GLOW_ALPHA),
+                        GLOW_FADE_STOP to Color.Transparent,
+                        1f to Color.Transparent,
+                    ),
+                    center = Offset(x = size.width / 2f, y = 0f),
+                    radius = size.height,
+                ),
+            )
         },
     )
 }
@@ -155,7 +251,7 @@ private fun TandemPayOnboardingScreenPreview(
     @PreviewParameter(TangemPayOnboardingScreenStateProvider::class)
     state: TangemPayOnboardingScreenState,
 ) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         TandemPayOnboardingScreen(state = state, modifier = Modifier.fillMaxSize())
     }
 }
@@ -174,5 +270,6 @@ private class TangemPayOnboardingScreenStateProvider :
                 onTermsClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = true, onClick = {}),
             ),
+            TangemPayOnboardingScreenState.NotAvailable(onBack = {}),
         ),
     )

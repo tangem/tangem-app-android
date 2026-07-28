@@ -23,4 +23,21 @@ interface TxHistoryRepositoryV2 {
         currency: CryptoCurrency,
         fromCreatedAtMillis: Long,
     ): Flow<List<ExpressTx>>
+
+    /**
+     * Reactive express history for [currency] paginated via the unified history index: the [limit] most recent index
+     * rows define the window (their oldest sort time), which bounds [getExpressHistory]. Grow [limit] to load more.
+     *
+     * Used as the standalone backbone when there is no on-chain history source for the currency.
+     */
+    fun getIndexedExpressHistory(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        limit: Int,
+    ): Flow<ExpressHistoryPage>
 }
+
+data class ExpressHistoryPage(
+    val items: List<ExpressTx>,
+    val hasMore: Boolean,
+)

@@ -598,21 +598,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private fun isMultiWalletTokensLoaded(): Boolean {
-        return if (stateHolder.value.isRedesignEnabled) {
-            val selectedWalletUM = stateHolder.getSelectedWalletUM() as? WalletUM.Content ?: return false
-            selectedWalletUM.tokensListUM is WalletTokensListUM.Content
-        } else {
-            val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return false
-            when (selectedWallet.tokensListState) {
-                is WalletTokensListState.ContentState.Content,
-                is WalletTokensListState.ContentState.PortfolioContent,
-                -> true
-                WalletTokensListState.ContentState.Loading,
-                WalletTokensListState.ContentState.Locked,
-                WalletTokensListState.Empty,
-                -> false
-            }
-        }
+        val selectedWalletUM = stateHolder.getSelectedWalletUM() as? WalletUM.Content ?: return false
+        return selectedWalletUM.tokensListUM is WalletTokensListUM.Content
     }
 
     private fun onMultiWalletActionClick(

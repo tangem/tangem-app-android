@@ -20,6 +20,7 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
@@ -34,6 +35,8 @@ import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHa
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
@@ -104,6 +107,12 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val authFeatureToggles: AuthFeatureToggles
         get() = entryPoint.getAuthFeatureToggles()
 
+    private val walletRegistrationLauncher: WalletRegistrationLauncher
+        get() = entryPoint.getWalletRegistrationLauncher()
+
+    private val userWalletsListRepository: UserWalletsListRepository
+        get() = entryPoint.getUserWalletsListRepository()
+
     // endregion
 
     private val appScope = MainScope()
@@ -152,6 +161,18 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                 deviceKeyManager.generateIfMissing()
                 deviceRegistrar.register()
                     .onLeft { error -> TangemLogger.w("Device registration deferred: $error") }
+                    .onRight {
+                        // Safety net: register any MOBILE wallets that missed it (created before the
+                        // toggle was on, or after a transient failure). Requires the DPoP session from
+                        // device registration, so it runs only once that succeeded. Best-effort —
+                        // loading the wallet list (userWalletsSync) can throw, which must not crash
+                        // startup, so the whole retry is guarded.
+                        runSuspendCatching {
+                            walletRegistrationLauncher.retryMobileRegistrations(
+                                userWalletsListRepository.userWalletsSync(),
+                            )
+                        }.onFailure { error -> TangemLogger.e("Mobile wallet registration retry failed", error) }
+                    }
             }
         }
         walletsRepository = entryPoint.getWalletsRepository()

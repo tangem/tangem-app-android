@@ -9,7 +9,6 @@ import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
@@ -89,7 +88,7 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.isRight()).isTrue()
         coVerify { authApi.requestDeviceNonce(any()) }
-        coVerify { authApi.register(any<RegisterApiRequest>()) }
+        coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
         assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
@@ -102,25 +101,25 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
-        coVerify(exactly = 0) { authApi.register(any<RegisterApiRequest>()) }
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify(exactly = 0) { store.save(any()) }
     }
 
     @Test
     fun `register returns DeviceKeyUnavailable when keystore has no key`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns None
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
 
         val result = registrar.register()
 
         assertThat(result.leftOrNull()).isEqualTo(DeviceRegistrationError.DeviceKeyUnavailable)
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
-        coVerify(exactly = 0) { authApi.register(any<RegisterApiRequest>()) }
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
         assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
     fun `register surfaces nonce-endpoint API error`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -133,13 +132,13 @@ class DefaultDeviceRegistrarTest {
         val result = registrar.register()
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
-        coVerify(exactly = 0) { authApi.register(any<RegisterApiRequest>()) }
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
         assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
     fun `register returns NonceDecryptionFailed when decryptor throws`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
@@ -148,34 +147,34 @@ class DefaultDeviceRegistrarTest {
         val result = registrar.register()
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.NonceDecryptionFailed::class.java)
-        coVerify(exactly = 0) { authApi.register(any<RegisterApiRequest>()) }
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
     }
 
     @Test
     fun `register returns SigningFailed when signing throws`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
-        coEvery { deviceKeyManager.sign(any()) } throws IllegalStateException("Keystore offline")
+        coEvery { deviceKeyManager.signDer(any()) } throws IllegalStateException("Keystore offline")
 
         val result = registrar.register()
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.SigningFailed::class.java)
-        coVerify(exactly = 0) { authApi.register(any<RegisterApiRequest>()) }
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
     }
 
     @Test
     fun `register surfaces register-endpoint API error and does not touch tokens or flag`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
-        coEvery { deviceKeyManager.sign(any()) } returns ByteArray(64)
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
         @Suppress("UNCHECKED_CAST")
-        coEvery { authApi.register(any<RegisterApiRequest>()) } returns ApiResponse.Error(
+        coEvery { authApi.registerDevice(any<RegisterApiRequest>()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
                 code = ApiResponseError.HttpException.Code.FORBIDDEN,
                 message = "already registered",
@@ -191,6 +190,31 @@ class DefaultDeviceRegistrarTest {
     }
 
     @Test
+    fun `register treats 409 Conflict as success, sets flag without persisting tokens`() = runTest {
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
+        coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
+            data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
+        )
+        coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.registerDevice(any<RegisterApiRequest>()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.CONFLICT,
+                message = "device already registered",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.register()
+
+        // Device is already registered server-side — no error, flag set, but no tokens minted here.
+        assertThat(result.isRight()).isTrue()
+        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
     fun `register returns PersistenceFailed when SessionTokensStore_save throws`() = runTest {
         stubHappyPath()
         coEvery { store.save(any()) } throws IllegalStateException("DataStore I/O")
@@ -203,13 +227,13 @@ class DefaultDeviceRegistrarTest {
     }
 
     private fun stubHappyPath() {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
-        coEvery { deviceKeyManager.sign(any()) } returns ByteArray(64)
-        coEvery { authApi.register(any<RegisterApiRequest>()) } returns ApiResponse.Success(
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
+        coEvery { authApi.registerDevice(any<RegisterApiRequest>()) } returns ApiResponse.Success(
             data = TokenApiResponse(
                 accessToken = "fresh-access",
                 accessTokenExpiresAt = "2024-01-01T00:00:00Z",
