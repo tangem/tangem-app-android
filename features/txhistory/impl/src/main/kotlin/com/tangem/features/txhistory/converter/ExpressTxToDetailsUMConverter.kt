@@ -32,7 +32,7 @@ import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
-import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Severity
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Style
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
@@ -113,7 +113,7 @@ internal class ExpressTxToDetailsUMConverter(
      * explanation and the underlined "Learn more" link appended to the subtitle.
      */
     private fun refundedInBanner(refundToken: CryptoCurrency) = TxHistoryDetailsUM.StatusBannerUM(
-        severity = Severity.Error,
+        style = Style.Refunded,
         title = resourceReference(
             id = R.string.express_exchange_notification_refunded_in_title,
             formatArgs = wrappedList(refundToken.symbol),
@@ -157,7 +157,7 @@ internal class ExpressTxToDetailsUMConverter(
             to = onramp.tx.toAsset.toAssetUM(
                 label = ownerLabel(toOwner, fallback = R.string.swapping_to_title, owned = R.string.common_to),
                 owner = toOwner,
-                sign = status.incomingSign(),
+                sign = status.onrampIncomingSign(),
                 isFaded = status is Status.Failed,
             ),
             statusBanner = onramp.tx.status.toStatusBannerUM(),
@@ -304,12 +304,13 @@ internal class ExpressTxToDetailsUMConverter(
 /**
  * Express swap status → the status plaque under the two-asset block.
  *
- * In-flight stages render as [Severity.Info] with the rotating loader; [Verifying][ExpressExchangeStatus.Verifying]
- * (KYC) and the paused terminal as [Severity.Warning]; the failure and refunded terminals as [Severity.Error]; the
- * [Finished][ExpressExchangeStatus.Finished] success as [Severity.Success] (the plaque then auto-collapses — see
+ * In-flight stages render as [Style.Info] with the rotating loader; [Verifying][ExpressExchangeStatus.Verifying]
+ * (KYC) and the paused terminal as [Style.Warning]; the failure terminals as [Style.Error], the refunded terminal as
+ * [Style.Refunded] and the [Expired][ExpressExchangeStatus.Expired] one as the grey [Style.Expired] clock; the
+ * [Finished][ExpressExchangeStatus.Finished] success as [Style.Success] (the plaque then auto-collapses — see
  * `TxHistoryDetailsStatusBanner`). [Unknown][ExpressExchangeStatus.Unknown] carries nothing to show, so it hides the
  * plaque (`null`). The [Refunded][ExpressExchangeStatus.Refunded] mapping here is the fallback for an unresolved
- * refund token — with a resolved one the converter builds the richer "Refunded in {symbol}" plaque instead.
+ * refund token — with a resolved one the converter builds the richer "Refunded in {symbol}" plaque.
  */
 private fun ExpressExchangeStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBannerUM? = when (this) {
     ExpressExchangeStatus.Preview,
@@ -322,31 +323,41 @@ private fun ExpressExchangeStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusB
     ExpressExchangeStatus.Exchanging -> loadingBanner(R.string.express_exchange_status_exchanging_active)
     ExpressExchangeStatus.Sending -> loadingBanner(R.string.express_exchange_status_sending_active)
     ExpressExchangeStatus.Verifying -> verificationBanner()
-    ExpressExchangeStatus.Refunded -> errorBanner(R.string.express_exchange_status_refunded)
+    ExpressExchangeStatus.Refunded -> refundedBanner(R.string.express_exchange_status_refunded)
     ExpressExchangeStatus.Paused -> warningBanner(R.string.express_exchange_status_paused)
     ExpressExchangeStatus.Failed,
     ExpressExchangeStatus.TxFailed,
     -> failedBanner()
-    ExpressExchangeStatus.Expired -> errorBanner(R.string.express_exchange_status_failed)
+    ExpressExchangeStatus.Expired -> expiredBanner(R.string.tx_history_details_status_expired)
     ExpressExchangeStatus.Finished -> successBanner(R.string.express_exchange_status_exchanged)
     ExpressExchangeStatus.Unknown -> null
 }
 
 /**
- * Express onramp status → the status plaque under the two-asset block. Same severity mapping as the swap variant; the
- * [Finished][ExpressOnrampStatus.Finished] success ("Purchase completed") is the only [Severity.Success] (auto-collapsed).
+ * Express onramp status → the status plaque under the two-asset block, mapped per the onramp status spec:
+ * the in-flight stages collapse to a blue "In progress" loader — [WaitingForPayment][ExpressOnrampStatus.WaitingForPayment]
+ * to "Awaiting funds"; [Verifying][ExpressOnrampStatus.Verifying] (KYC) and [Paused][ExpressOnrampStatus.Paused] are amber;
+ * [RefundInProgress][ExpressOnrampStatus.RefundInProgress] is an amber "Refunding" loader;
+ * [Failed][ExpressOnrampStatus.Failed] is a red [Style.Error] terminal and [Refunded][ExpressOnrampStatus.Refunded] a
+ * red [Style.Refunded] one (with the refund glyph); [Expired][ExpressOnrampStatus.Expired] is a grey [Style.Expired]
+ * clock terminal; and the [Finished][ExpressOnrampStatus.Finished] success is the only [Style.Success] (auto-collapsed).
+ * [Unknown][ExpressOnrampStatus.Unknown] is a terminal client fallback with nothing to show, so it hides the plaque
+ * (`null`) — same as the swap variant — rather than a loader that would spin forever once polling stops.
  */
 private fun ExpressOnrampStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBannerUM? = when (this) {
     ExpressOnrampStatus.Created,
-    ExpressOnrampStatus.WaitingForPayment,
-    -> loadingBanner(R.string.express_exchange_status_receiving_active)
-    ExpressOnrampStatus.PaymentProcessing -> loadingBanner(R.string.express_exchange_status_confirming_active)
+    ExpressOnrampStatus.PaymentProcessing,
+    ExpressOnrampStatus.Paid,
+    ExpressOnrampStatus.Sending,
+    -> loadingBanner(R.string.common_in_progress)
+    ExpressOnrampStatus.WaitingForPayment -> loadingBanner(R.string.tx_history_onramp_status_awaiting_funds)
     ExpressOnrampStatus.Verifying -> verificationBanner()
-    ExpressOnrampStatus.Paid -> loadingBanner(R.string.express_exchange_status_buying_active)
-    ExpressOnrampStatus.Sending -> loadingBanner(R.string.express_exchange_status_sending_active)
-    ExpressOnrampStatus.Paused -> warningBanner(R.string.express_exchange_status_paused)
-    ExpressOnrampStatus.Failed -> failedBanner()
-    ExpressOnrampStatus.Expired -> errorBanner(R.string.express_exchange_status_failed)
+    ExpressOnrampStatus.Paused -> warningBanner(R.string.tx_history_onramp_status_paused)
+    ExpressOnrampStatus.RefundInProgress ->
+        loadingBanner(R.string.tx_history_onramp_status_refunding, style = Style.Warning)
+    ExpressOnrampStatus.Failed -> failedBanner(R.string.tx_history_onramp_status_failed)
+    ExpressOnrampStatus.Expired -> expiredBanner(R.string.tx_history_details_status_expired)
+    ExpressOnrampStatus.Refunded -> refundedBanner(R.string.tx_history_onramp_status_refunded)
     ExpressOnrampStatus.Finished -> successBanner(R.string.express_exchange_status_bought)
     ExpressOnrampStatus.Unknown -> null
 }
@@ -373,45 +384,56 @@ private fun ExpressOnrampStatus.providerButtonLabel(): Int? = when (this) {
     ExpressOnrampStatus.Verifying -> R.string.common_go_to_verification
     ExpressOnrampStatus.Failed,
     ExpressOnrampStatus.Expired,
+    ExpressOnrampStatus.Refunded,
     -> R.string.common_go_to_provider
     else -> null
 }
 
-private fun loadingBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Info,
+/** In-progress plaque with the rotating loader; [style] is [Info] (blue) by default, [Warning] for a running refund. */
+private fun loadingBanner(@StringRes title: Int, style: Style = Style.Info) = TxHistoryDetailsUM.StatusBannerUM(
+    style = style,
     title = resourceReference(title),
     isLoading = true,
 )
 
 private fun successBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Success,
+    style = Style.Success,
     title = resourceReference(title),
     isLoading = false,
 )
 
 private fun warningBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Warning,
+    style = Style.Warning,
     title = resourceReference(title),
     isLoading = false,
 )
 
-private fun errorBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Error,
+/** Refunded (red) terminal with the refund-arrow glyph. */
+private fun refundedBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
+    style = Style.Refunded,
+    title = resourceReference(title),
+    isLoading = false,
+)
+
+/** Expired (grey) terminal with the clock glyph. */
+private fun expiredBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
+    style = Style.Expired,
     title = resourceReference(title),
     isLoading = false,
 )
 
 /** Failure terminal: red plaque with the shared "visit provider to refund" hint. */
-private fun failedBanner() = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Error,
-    title = resourceReference(R.string.express_exchange_status_failed),
-    subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
-    isLoading = false,
-)
+private fun failedBanner(@StringRes title: Int = R.string.express_exchange_status_failed) =
+    TxHistoryDetailsUM.StatusBannerUM(
+        style = Style.Error,
+        title = resourceReference(title),
+        subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
+        isLoading = false,
+    )
 
 /** KYC verification: amber plaque with the "visit provider for verification" hint. */
 private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Warning,
+    style = Style.Warning,
     title = resourceReference(R.string.express_exchange_status_verifying),
     subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
     isLoading = false,
@@ -530,6 +552,17 @@ private fun Status.incomingSign(): String = when (this) {
     is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
     is Status.Confirmed -> "${StringsSigns.PLUS} "
     is Status.Failed -> ""
+}
+
+/**
+ * Leading sign of an onramp payout leg: `~` while in flight (the received amount is still an estimate), and nothing
+ * once it has settled or failed — an onramp buy never carries a `+`/`−` sign (unlike a swap's two-way legs).
+ */
+private fun Status.onrampIncomingSign(): String = when (this) {
+    is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
+    is Status.Confirmed,
+    is Status.Failed,
+    -> ""
 }
 
 // endregion
