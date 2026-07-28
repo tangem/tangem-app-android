@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.models.ui.FeeBucket
@@ -221,6 +222,126 @@ internal class SwapFeeFactoryTest {
     }
 
     // -------------------------------------------------------------------------
+    // [REDACTED_TASK_KEY] — bridge-fee folding
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN native coin fee WHEN fromLoaded with Single THEN otherNativeFee folded into fee amount`() {
+        // Arrange
+        val singleFee = TransactionFee.Single(normal = ethLegacyFee(BigDecimal("0.002")))
+        val bridgeFee = BigDecimal("0.5")
+
+        // Act
+        val result = SwapFeeFactory.fromLoaded(
+            transactionFeeResult = TransactionFeeResult.Loaded(singleFee),
+            selectedFeeToken = coinFeeTokenStatus(),
+            otherNativeFee = bridgeFee,
+        )
+
+        // Assert — selected fee and the underlying tier both carry gas + bridge
+        assertThat(result.fee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.502"))
+        val folded = (result.transactionFeeResult as TransactionFeeResult.Loaded).fee as TransactionFee.Single
+        assertThat(folded.normal.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.502"))
+        // otherNativeFee retained as the included portion (non-additive downstream)
+        assertThat(result.otherNativeFee).isEquivalentAccordingToCompareTo(bridgeFee)
+    }
+
+    @Test
+    fun `GIVEN native coin fee WHEN fromLoaded with Choosable THEN all tiers folded`() {
+        // Arrange
+        val choosable = TransactionFee.Choosable(
+            minimum = ethLegacyFee(BigDecimal("0.001")),
+            normal = ethLegacyFee(BigDecimal("0.002")),
+            priority = ethLegacyFee(BigDecimal("0.003")),
+        )
+
+        // Act
+        val result = SwapFeeFactory.fromLoaded(
+            transactionFeeResult = TransactionFeeResult.Loaded(choosable),
+            selectedFeeToken = coinFeeTokenStatus(),
+            otherNativeFee = BigDecimal("0.5"),
+            feeBucket = FeeBucket.MARKET,
+        )
+
+        // Assert
+        val folded = (result.transactionFeeResult as TransactionFeeResult.Loaded).fee as TransactionFee.Choosable
+        assertThat(folded.minimum.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.501"))
+        assertThat(folded.normal.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.502"))
+        assertThat(folded.priority.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.503"))
+        // Selected MARKET fee = folded normal
+        assertThat(result.fee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.502"))
+    }
+
+    @Test
+    fun `GIVEN token fee token WHEN fromLoaded with nonzero otherNativeFee THEN not folded`() {
+        // Arrange — fee paid in a token: a native bridge fee must not be summed into it
+        val singleFee = TransactionFee.Single(normal = ethLegacyFee(BigDecimal("0.002")))
+
+        // Act
+        val result = SwapFeeFactory.fromLoaded(
+            transactionFeeResult = TransactionFeeResult.Loaded(singleFee),
+            selectedFeeToken = tokenFeeTokenStatus(),
+            otherNativeFee = BigDecimal("0.5"),
+        )
+
+        // Assert — fee unchanged, otherNativeFee retained separately
+        assertThat(result.fee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.002"))
+        assertThat(result.otherNativeFee).isEquivalentAccordingToCompareTo(BigDecimal("0.5"))
+    }
+
+    @Test
+    fun `GIVEN TokenCurrency fee subtype WHEN fold attempted THEN returned unchanged`() {
+        // Arrange — native coin fee token but a token-denominated Fee subtype: must stay unchanged
+        val singleFee = TransactionFee.Single(normal = ethTokenCurrencyFee(BigDecimal("0.002")))
+
+        // Act
+        val result = SwapFeeFactory.fromLoaded(
+            transactionFeeResult = TransactionFeeResult.Loaded(singleFee),
+            selectedFeeToken = coinFeeTokenStatus(),
+            otherNativeFee = BigDecimal("0.5"),
+        )
+
+        // Assert
+        assertThat(result.fee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.002"))
+    }
+
+    @Test
+    fun `GIVEN zero otherNativeFee WHEN fromLoaded THEN result identity preserved`() {
+        // Arrange
+        val loaded = TransactionFeeResult.Loaded(TransactionFee.Single(normal = ethLegacyFee(BigDecimal("0.002"))))
+
+        // Act
+        val result = SwapFeeFactory.fromLoaded(
+            transactionFeeResult = loaded,
+            selectedFeeToken = coinFeeTokenStatus(),
+            otherNativeFee = BigDecimal.ZERO,
+        )
+
+        // Assert — no rebuild when nothing to fold
+        assertThat(result.transactionFeeResult).isSameInstanceAs(loaded)
+    }
+
+    @Test
+    fun `GIVEN gasless extended fee WHEN fromLoadedExtended with nonzero otherNativeFee THEN not folded`() {
+        // Arrange
+        val rawFee = ethLegacyFee(BigDecimal("0.002"))
+        val extended = mockk<TransactionFeeExtended>(relaxed = true) {
+            io.mockk.every { transactionFee } returns TransactionFee.Single(normal = rawFee)
+        }
+
+        // Act
+        val result = SwapFeeFactory.fromLoadedExtended(
+            transactionFeeResult = TransactionFeeResult.LoadedExtended(extended),
+            selectedFeeToken = coinFeeTokenStatus(),
+            otherNativeFee = BigDecimal("0.5"),
+        )
+
+        // Assert — gasless (token-denominated) fee is never folded; otherNativeFee kept separate
+        assertThat(result.fee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.002"))
+        assertThat(result.otherNativeFee).isEquivalentAccordingToCompareTo(BigDecimal("0.5"))
+    }
+
+    // -------------------------------------------------------------------------
     // from() generic dispatcher
     // -------------------------------------------------------------------------
 
@@ -281,4 +402,22 @@ internal class SwapFeeFactoryTest {
         gasLimit = BigInteger.valueOf(100_000),
         gasPrice = BigInteger.valueOf(20_000_000_000),
     )
+
+    private fun ethTokenCurrencyFee(value: BigDecimal): Fee.Ethereum.TokenCurrency = Fee.Ethereum.TokenCurrency(
+        amount = Amount(currencySymbol = "USDT", value = value, decimals = 6),
+        gasLimit = BigInteger.valueOf(100_000),
+        coinPriceInToken = BigInteger.ONE,
+        feeTransferGasLimit = BigInteger.valueOf(21_000),
+        baseGas = BigInteger.ZERO,
+    )
+
+    /** A fee-token status whose currency really is a [CryptoCurrency.Coin] (so folding applies). */
+    private fun coinFeeTokenStatus(): CryptoCurrencyStatus = mockk(relaxed = true) {
+        io.mockk.every { currency } returns mockk<CryptoCurrency.Coin>(relaxed = true)
+    }
+
+    /** A fee-token status whose currency is a [CryptoCurrency.Token] (so folding is skipped). */
+    private fun tokenFeeTokenStatus(): CryptoCurrencyStatus = mockk(relaxed = true) {
+        io.mockk.every { currency } returns mockk<CryptoCurrency.Token>(relaxed = true)
+    }
 }

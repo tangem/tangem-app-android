@@ -103,14 +103,14 @@ internal class SetTokenListErrorTransformer(
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                 )
             },
             balance = BigDecimal.ZERO.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
-                    spanStyleReference = { TangemTheme.typography2.headingRegular28.toSpanStyle() },
+                    spanStyleReference = { TangemTheme.typography3.heading.medium.toSpanStyle() },
                 )
             },
             isZeroBalance = true,

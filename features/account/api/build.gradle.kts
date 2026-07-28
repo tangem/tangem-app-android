@@ -10,16 +10,12 @@ android {
 
 dependencies {
 
-    /* Project - Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.common.ui)
+    // region Project - Core
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    // endregion
 
-    /* Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.account)
+    // region Project - Domain
+    api(projects.domain.models)
+    // endregion
 }

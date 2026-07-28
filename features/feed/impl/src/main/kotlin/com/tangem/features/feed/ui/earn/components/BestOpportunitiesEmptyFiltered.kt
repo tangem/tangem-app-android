@@ -9,24 +9,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun BestOpportunitiesEmptyFiltered(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        BestOpportunitiesEmptyFilteredV2(onClearFilterClick, modifier)
-    } else {
-        BestOpportunitiesEmptyFilteredV1(onClearFilterClick, modifier)
-    }
+    BestOpportunitiesEmptyFilteredV2(onClearFilterClick, modifier)
 }
 
 @Composable
@@ -55,34 +47,6 @@ private fun BestOpportunitiesEmptyFilteredV2(onClearFilterClick: () -> Unit, mod
                 type = TangemButtonType.Secondary,
                 size = TangemButtonSize.X8,
                 shape = TangemButtonShape.Rounded,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun BestOpportunitiesEmptyFilteredV1(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .padding(vertical = 32.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.earn_no_results),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-        )
-        SpacerH(12.dp)
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = resourceReference(R.string.earn_clear_filter),
-                onClick = onClearFilterClick,
             ),
         )
     }

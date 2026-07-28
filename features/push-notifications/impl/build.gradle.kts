@@ -45,8 +45,8 @@ dependencies {
     implementation(projects.domain.notifications)
     implementation(projects.domain.pushNotificationPreferences)
     implementation(projects.domain.common)
-    implementation(projects.domain.account)
     implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
 
     /** Feature modules */
     implementation(projects.features.pushNotifications.api)

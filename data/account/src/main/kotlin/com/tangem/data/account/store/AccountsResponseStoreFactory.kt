@@ -11,8 +11,12 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.domain.models.wallet.UserWalletId
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -53,6 +57,26 @@ internal class AccountsResponseStoreFactory @Inject constructor(
                 produceFile = { context.dataStoreFile(fileName = "wallet_accounts_${userWalletId.stringValue}") },
                 scope = appScope,
             )
+        }
+    }
+
+    /**
+     * Clears the persisted accounts responses for the given [userWalletIds].
+     *
+     * Each wallet owns a separate store file, so they are reset concurrently. The store instances are kept alive
+     * (DataStore forbids multiple instances for the same file), only their content is reset to the default `null`.
+     *
+     * @param userWalletIds the unique identifiers of the user's wallets
+     */
+    suspend fun clear(userWalletIds: List<UserWalletId>) = coroutineScope {
+        // Best-effort: a failure clearing one wallet must not cancel clearing the others.
+        userWalletIds.forEach { userWalletId ->
+            launch {
+                runSuspendCatching { create(userWalletId).updateData { null } }
+                    .onFailure {
+                        TangemLogger.e("Failed to clear accounts response for wallet: ${userWalletId.stringValue}", it)
+                    }
+            }
         }
     }
 

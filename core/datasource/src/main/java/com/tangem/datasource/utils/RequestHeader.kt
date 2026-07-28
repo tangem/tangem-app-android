@@ -33,7 +33,15 @@ sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) 
         "platform" to ProviderSuspend { "android" },
         "language" to ProviderSuspend { appInfoProvider.language.checkHeaderValueOrEmpty() },
         "timezone" to ProviderSuspend {
-            TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+            val timeZone = TimeZone.getDefault()
+            // TimeZone.getDisplayName may throw AssertionError on some devices due to an Android ICU bug
+            // ("No NameTypeIndex match for SHORT_STANDARD"), so fall back to the timezone id.
+            val displayName = try {
+                timeZone.getDisplayName(false, TimeZone.SHORT)
+            } catch (_: AssertionError) {
+                timeZone.id
+            }
+            displayName.checkHeaderValueOrEmpty()
         },
         "device" to ProviderSuspend { appInfoProvider.device.checkHeaderValueOrEmpty() },
     )

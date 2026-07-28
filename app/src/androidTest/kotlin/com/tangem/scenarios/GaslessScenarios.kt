@@ -42,7 +42,14 @@ fun BaseTestCase.enterAmountAndOpenSendConfirm(amount: String, recipientAddress:
  * On the 'Send confirm' screen, open the network-fee selector and switch the fee token from the
  * native coin to the given (stablecoin) token — the core gasless action repeated across the suite.
  */
-fun BaseTestCase.selectStablecoinAsFeeToken(coinName: String, tokenName: String) {
+fun BaseTestCase.selectStablecoinAsFeeToken(
+    coinName: String,
+    tokenName: String,
+    // Positive flows wait until 'Apply' is enabled (fee is computed & payable). Negative flows
+    // (insufficient balance) must NOT wait for that — 'Apply' stays disabled — so pass false and let
+    // the caller assert the disabled/error state itself.
+    expectApplyEnabled: Boolean = true,
+) {
     step("Click on 'Network fee' block") {
         onSendConfirmScreen {
             feeSelectorBlock.assertIsDisplayed()
@@ -56,6 +63,17 @@ fun BaseTestCase.selectStablecoinAsFeeToken(coinName: String, tokenName: String)
     }
     step("Select '$tokenName' as the fee-paying token") {
         onSendFeeSelectorBottomSheet { feeTokenItem(tokenName).performClick() }
+    }
+    step("Wait until the '$tokenName' fee is loaded") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching {
+                onSendFeeSelectorBottomSheet {
+                    networkFeeTitle.assertIsDisplayed()
+                    feeTokenItem(tokenName).assertIsDisplayed()
+                    if (expectApplyEnabled) applyButton.assertIsEnabled()
+                }
+            }.isSuccess
+        }
     }
 }
 

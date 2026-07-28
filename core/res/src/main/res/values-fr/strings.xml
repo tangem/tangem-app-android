@@ -654,9 +654,15 @@
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
   <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
   <string name="feedback_token_description_error">Erreur de description de la pièce</string>
+  <string name="force_update_action">Mettre à jour maintenant</string>
   <string name="force_update_banner_message">Mettez l\'application à jour pour assurer son bon fonctionnement</string>
   <string name="force_update_banner_title">Mise à jour nécessaire</string>
+  <string name="force_update_brick_description">Tangem ne peut pas fonctionner sur cette version de système d\'exploitation. Vos fonds sont en sécurité, et vous pouvez continuer à utiliser votre wallet sur un autre appareil compatible.</string>
+  <string name="force_update_brick_title">Mise à jour indisponible</string>
   <string name="force_update_button">Mettre à jour</string>
+  <string name="force_update_os_description">Votre système d\'exploitation est obsolète. Tangem continuera de fonctionner pour l\'instant, mais vous devrez le mettre à jour pour recevoir les futures mises à jour de l\'application.</string>
+  <string name="force_update_os_title">Mettez à jour votre système d\'exploitation</string>
+  <string name="force_update_required_action">Mettre à jour l\'application</string>
   <string name="force_update_warning_message">Veuillez mettre à jour l\'application pour assurer son bon fonctionnement</string>
   <string name="force_update_warning_title">Mise à jour requise</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Fonds insuffisants</string>
@@ -834,6 +840,7 @@
   <string name="markets_portfolio_block_subtitle">Dans votre portfolio</string>
   <string name="markets_portfolio_block_title">Votre portfolio</string>
   <string name="markets_portfolio_block_token_unsupported">**Token non pris en charge**. Ce token n\'est actuellement pas pris en charge dans le portefeuille</string>
+  <string name="markets_portfolio_eligible_block_title">Autres tokens éligibles</string>
   <string name="markets_pulse_common_title">Rythme du marché</string>
   <string name="markets_quick_actions">Actions rapides</string>
   <string name="markets_search_header_title">Rechercher sur le marché</string>
@@ -1482,6 +1489,7 @@
   <string name="staking_error_no_validators_message">Aucun validateur disponible pour le moment. Veuillez réessayer plus tard.</string>
   <string name="staking_error_no_validators_title">Staking indisponible</string>
   <string name="staking_error_unavailable_region">Le staking est indisponible dans votre région</string>
+  <string name="staking_error_unavailable_region_description">Le staking n\'est actuellement pas disponible dans votre région. Si vous avez un VPN activé, essayez de le désactiver.</string>
   <string name="staking_give_permission_fee_footer">Le réseau facturera des frais d’approbation de jeton pour vérifier que vous autorisez l’utilisation de votre jeton pour le jalonnement.</string>
   <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les %1$s et %2$s du fournisseur</string>
   <string name="staking_locked">Bloqué</string>

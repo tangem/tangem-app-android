@@ -1,5 +1,3 @@
-import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
-
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.serialization)
@@ -8,13 +6,18 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.domain.core)
-    implementation(projects.domain.models)
 
-    implementation(deps.kotlin.datetime)
-    implementation(deps.kotlin.serialization)
-    implementation(deps.jodatime)
+    // region Kotlin
+    api(deps.kotlin.serialization)
+    // endregion
 
-    implementation(deps.moshi)
+    // region Other libraries
+    api(deps.jodatime)
+    api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
+    // endregion
+
+    // region Domain models
+    api(projects.domain.models)
+    // endregion
 }

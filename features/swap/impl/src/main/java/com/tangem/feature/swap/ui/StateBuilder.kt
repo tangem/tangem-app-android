@@ -51,8 +51,7 @@ import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
-import com.tangem.features.send.api.entity.FeeSelectorUM
-import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -73,7 +72,6 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val appRouter: AppRouter,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -124,7 +122,6 @@ internal class StateBuilder(
             onSwapUIModeChange = actions.onSwapUIModeChange,
             onSwapTypeMenuOpened = actions.onSwapTypeMenuOpened,
             onTronBannerShown = actions.onTronBannerShown,
-            shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
         )
     }
 
@@ -577,6 +574,7 @@ internal class StateBuilder(
         additionalBadge: ProviderState.AdditionalBadge,
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
+        isHighNetworkFee: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -590,6 +588,7 @@ internal class StateBuilder(
             swapFee = swapFee,
             feeError = feeError?.error,
             appRouter = appRouter,
+            isHighNetworkFee = isHighNetworkFee,
         )
 
         val fromAccountTitleUM = when {
@@ -735,16 +734,15 @@ internal class StateBuilder(
 
     /**
      * Builds the predefined percent buttons once per state update (off the composition path).
-     * The row is gated by the feature toggle; the MAX button is included only when
-     * [shouldShowMaxAmount] is `true` (e.g. it is dropped for a native coin swapped within the same
-     * network, where spending the full balance would leave nothing for the network fee).
+     * The MAX button is included only when [shouldShowMaxAmount] is `true` (e.g. it is dropped for a
+     * native coin swapped within the same network, where spending the full balance would leave nothing
+     * for the network fee).
      */
     private fun createPredefinedButtons(
         fromToken: CryptoCurrency?,
         toCurrency: CryptoCurrency?,
         isTransferMode: Boolean = false,
     ): ImmutableList<PredefinedPercentButtonUM> {
-        if (!swapFeatureToggles.isSwapPredefinedButtonsEnabled) return persistentListOf()
         val shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrency, isTransferMode)
         return PredefinedPercentAmount.entries
             .filter { it != PredefinedPercentAmount.MAX || shouldShowMaxAmount }
@@ -1222,7 +1220,6 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         needApplyFCARestrictions: Boolean,
-        isSwapBestDexRateEnabled: Boolean,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val successStates = providersStates.getLastLoadedSuccessStates()
@@ -1233,7 +1230,6 @@ internal class StateBuilder(
                     provider = entry.key,
                     needApplyFCARestrictions = needApplyFCARestrictions,
                     state = entry.value,
-                    isSwapBestDexRateEnabled = isSwapBestDexRateEnabled,
                 )
                 entry.convertToProviderBottomSheetState(
                     pricesLowerBest = pricesLowerBest,
@@ -1257,7 +1253,7 @@ internal class StateBuilder(
             providerType == ExchangeProviderType.DEX.providerName ||
                 providerType == ExchangeProviderType.DEX_BRIDGE.providerName
         }
-        val availableFilters = if (swapFeatureToggles.isSwapProviderFilterEnabled && hasCex && hasDex) {
+        val availableFilters = if (hasCex && hasDex) {
             persistentListOf(ProviderFilterType.ALL, ProviderFilterType.CEX, ProviderFilterType.DEX)
         } else {
             persistentListOf()
@@ -1328,7 +1324,8 @@ internal class StateBuilder(
 
     private fun formatSwapFeeForSuccess(swapFee: SwapFee): TextReference {
         val feeAmount = swapFee.fee.amount
-        val totalFeeValue = (feeAmount.value ?: BigDecimal.ZERO) + swapFee.otherNativeFee
+        // fee.amount already includes the bridge fee (folded in SwapFeeFactory); no re-add.
+        val totalFeeValue = feeAmount.value ?: BigDecimal.ZERO
         val cryptoFormatted = totalFeeValue.format {
             crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
         }

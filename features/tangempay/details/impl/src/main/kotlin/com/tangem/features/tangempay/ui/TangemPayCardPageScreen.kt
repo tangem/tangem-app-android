@@ -6,8 +6,6 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -16,7 +14,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -25,15 +22,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.details.impl.R
@@ -73,7 +69,6 @@ private fun TangemPayCardPageScreen(
     modifier: Modifier = Modifier,
     cardSection: @Composable () -> Unit,
 ) {
-    val isRedesignEnabled = LocalVisaRedesignEnabled.current
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -83,15 +78,11 @@ private fun TangemPayCardPageScreen(
             )
         },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
-        containerColor = if (isRedesignEnabled) {
-            TangemTheme.colors3.bg.primary
-        } else {
-            TangemTheme.colors.background.secondary
-        },
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { scaffoldPaddings ->
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
         val contentBottomPadding = TangemTheme.dimens.spacing16 + bottomBarHeight
-        val reissueTitle = reissueTitleOrNull(isRedesignEnabled = isRedesignEnabled, cardState = state.cardState)
+        val reissueTitle = reissueTitleOrNull(cardState = state.cardState)
 
         if (reissueTitle != null) {
             ReissueCardLayout(
@@ -108,9 +99,7 @@ private fun TangemPayCardPageScreen(
                     .fillMaxSize()
                     .padding(scaffoldPaddings),
                 contentPadding = PaddingValues(bottom = contentBottomPadding),
-                verticalArrangement = Arrangement.spacedBy(
-                    if (isRedesignEnabled) 0.dp else TangemTheme.dimens.spacing16,
-                ),
+                verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 item(key = "Card") {
                     Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
@@ -118,7 +107,6 @@ private fun TangemPayCardPageScreen(
                     }
                 }
                 if (
-                    isRedesignEnabled &&
                     state.settingsV2.isNotEmpty() &&
                     state.cardState == TangemPayCardState.Active
                 ) {
@@ -135,8 +123,7 @@ private fun TangemPayCardPageScreen(
     }
 }
 
-private fun reissueTitleOrNull(isRedesignEnabled: Boolean, cardState: TangemPayCardState): TextReference? {
-    if (!isRedesignEnabled) return null
+private fun reissueTitleOrNull(cardState: TangemPayCardState): TextReference? {
     return when (cardState) {
         TangemPayCardState.Reissuing -> combinedReference(
             resourceReference(R.string.tangempay_reissue_card_in_progress),
@@ -242,95 +229,14 @@ private fun CardDetailsPage(controller: TangemPayCardDetailsController, modifier
 }
 
 private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
-    when (state.cardState) {
-        TangemPayCardState.Active -> {
-            if (state.addToWalletBlockState != null) {
-                cardPageItem(key = "GooglePay") {
-                    TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
-                }
-            }
-            cardPageItem(key = "Limit") {
-                TangemPayDailyLimitBlock(state = state.dailyLimitState)
-            }
-            if (state.dailyLimitState is TangemPayDailyLimitBlockState.Error) {
-                cardPageItem(key = "LimitError") {
-                    TangemPayDailyLimitErrorBlock()
-                }
-            }
-            cardPageItem(key = "Settings") {
-                TangemPayCardPageSettingsBlock(settings = state.settings)
-            }
-        }
-        TangemPayCardState.Reissuing -> cardPageItem(key = "Reissue") {
-            TangemPayReplacingCardBlock()
-        }
-        TangemPayCardState.Closing -> cardPageItem(key = "Closing") {
-            TangemPayReplacingCardBlock(
-                title = resourceReference(R.string.tangempay_card_page_closing_banner_title),
-                subtitle = resourceReference(R.string.tangempay_card_page_closing_banner_description),
-            )
-        }
-        TangemPayCardState.Issuing -> cardPageItem(key = "Issuing") {
-            TangemPayReplacingCardBlock(
-                title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
-                subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
-            )
+    if (state.cardState != TangemPayCardState.Active) return
+    if (state.addToWalletBlockState != null) {
+        cardPageItem(key = "GooglePay") {
+            TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
         }
     }
-}
-
-@Composable
-private fun TangemPayCardPageSettingsBlock(
-    settings: ImmutableList<TangemPayCardPageSetting>,
-    modifier: Modifier = Modifier,
-) {
-    if (LocalVisaRedesignEnabled.current) return
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = TangemTheme.shapes.roundedCornersMedium,
-            ),
-    ) {
-        Text(
-            modifier = Modifier.padding(
-                start = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing4,
-            ),
-            text = stringResourceSafe(R.string.tangempay_card_page_settings_title),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-        )
-        settings.fastForEach { item ->
-            TangemPayCardPageSettingRow(
-                item = item,
-                onClick = item.onSettingClick,
-            )
-        }
-    }
-}
-
-@Composable
-private fun TangemPayCardPageSettingRow(
-    item: TangemPayCardPageSetting,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(TangemTheme.dimens.spacing12)
-            .then(if (item.testTag != null) Modifier.testTag(item.testTag) else Modifier),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text = item.title.resolveReference(),
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
-        )
+    cardPageItem(key = "Limit") {
+        TangemPayDailyLimitBlock(state = state.dailyLimitState)
     }
 }
 
@@ -340,40 +246,34 @@ private fun CardPageTopBar(
     items: ImmutableList<TangemPayDropDownItemUM>,
     modifier: Modifier = Modifier,
 ) {
-    if (LocalVisaRedesignEnabled.current) {
-        var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
-        TangemTopBar(
-            modifier = modifier.statusBarsPadding(),
-            startContent = {
+    var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
+    TangemTopBar(
+        modifier = modifier.statusBarsPadding(),
+        startContent = {
+            TangemButton(
+                iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
+                onClick = onBackClick,
+                size = TangemButton.Size.X11,
+                variant = TangemButton.Variant.Material,
+            )
+        },
+        endContent = {
+            Box {
                 TangemButton(
-                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
-                    onClick = onBackClick,
+                    modifier = Modifier.testTag(TangemPayTestTags.CARD_PAGE_MORE_BUTTON),
+                    iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
+                    onClick = { isDropdownMenuShown = true },
                     size = TangemButton.Size.X11,
                     variant = TangemButton.Variant.Material,
                 )
-            },
-            endContent = {
-                Box {
-                    TangemButton(
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
-                        onClick = { isDropdownMenuShown = true },
-                        size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
-                    )
-                    PayContextMenuBlock(
-                        items = items,
-                        onMenuDismiss = { isDropdownMenuShown = false },
-                        isDropdownMenuShown = isDropdownMenuShown,
-                    )
-                }
-            },
-        )
-    } else {
-        AppBarWithBackButton(
-            modifier = modifier.statusBarsPadding(),
-            onBackClick = onBackClick,
-        )
-    }
+                PayContextMenuBlock(
+                    items = items,
+                    onMenuDismiss = { isDropdownMenuShown = false },
+                    isDropdownMenuShown = isDropdownMenuShown,
+                )
+            }
+        },
+    )
 }
 
 private fun LazyListScope.cardPageItem(
@@ -398,23 +298,6 @@ private fun LazyListScope.cardPageItem(
     }
 }
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun TangemPayCardPageScreenPreviewV1() {
-    TangemThemePreview {
-        TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(),
-            cardSection = {
-                TangemPayCard(
-                    state = previewCardDetailsState(),
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-            },
-        )
-    }
-}
-
 private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDetailsUM(
     number = "•••• •••• •••• 1245",
     numberShort = "··1245",
@@ -428,6 +311,8 @@ private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDet
         onClick = {},
         isEditingEnabled = false,
     ),
+    cardImageUrl = null,
+    cardBackgroundImageUrl = null,
 )
 
 @Preview
@@ -435,19 +320,14 @@ private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDet
 @Composable
 private fun TangemPayCardPageScreenPreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(
-            LocalRedesignEnabled provides true,
-            LocalVisaRedesignEnabled provides true,
-        ) {
-            TangemPayCardPageScreen(
-                state = TangemPayCardPageUM.stub(),
-                cardSection = {
-                    TangemPayCard(
-                        state = previewCardDetailsState(),
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                },
-            )
-        }
+        TangemPayCardPageScreen(
+            state = TangemPayCardPageUM.stub(),
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
+        )
     }
 }

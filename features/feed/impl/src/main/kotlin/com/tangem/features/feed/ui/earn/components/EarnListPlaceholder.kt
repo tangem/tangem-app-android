@@ -10,70 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-
-@Composable
-internal fun EarnItemPlaceholderV1(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 16.dp,
-                vertical = 12.dp,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CircleShimmer(modifier = Modifier.size(36.dp))
-
-        SpacerW(12.dp)
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 4.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(70.dp)
-                        .height(12.dp),
-                    radius = 4.dp,
-                )
-                SpacerWMax()
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(12.dp),
-                    radius = 4.dp,
-                )
-            }
-
-            SpacerH(8.dp)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(52.dp)
-                        .height(12.dp),
-                    radius = 4.dp,
-                )
-                SpacerWMax()
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(12.dp),
-                    radius = 4.dp,
-                )
-            }
-        }
-    }
-}
 
 @Composable
 internal fun EarnItemPlaceholderV2(modifier: Modifier = Modifier) {
@@ -126,22 +63,6 @@ internal fun EarnItemPlaceholderV2(modifier: Modifier = Modifier) {
 }
 
 private const val PLACEHOLDER_ITEMS_COUNT = 8
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun EarnListPlaceholderPreviewV1() {
-    TangemThemePreview {
-        Column(
-            modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
-        ) {
-            repeat(PLACEHOLDER_ITEMS_COUNT) {
-                EarnItemPlaceholderV1()
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)

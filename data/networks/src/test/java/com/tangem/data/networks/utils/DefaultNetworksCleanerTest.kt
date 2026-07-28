@@ -8,6 +8,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -100,6 +101,22 @@ class DefaultNetworksCleanerTest {
         coVerifyOrder(inverse = true) {
             networksStatusesStore.clear(userWalletId = any(), networks = any())
             walletManagersFacade.remove(userWalletId = any(), networks = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN wallets WHEN clear THEN statuses removed once and Blockchain SDK untouched`() = runTest {
+        // Arrange
+        val ids = listOf(UserWalletId("011"), UserWalletId("022"))
+
+        // Act
+        cleaner.clear(userWalletIds = ids)
+
+        // Assert
+        coVerify(exactly = 1) { networksStatusesStore.remove(ids) }
+        coVerifyOrder(inverse = true) {
+            walletManagersFacade.remove(userWalletId = any(), networks = any())
+            walletManagersFacade.removeTokens(userWalletId = any(), tokens = any())
         }
     }
 

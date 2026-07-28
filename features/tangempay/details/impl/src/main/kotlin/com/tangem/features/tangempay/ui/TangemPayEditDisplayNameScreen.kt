@@ -4,98 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
-
-@Composable
-internal fun TangemPayEditDisplayNameScreen(
-    isRedesignEnabled: Boolean,
-    state: TangemPayEditDisplayNameUM,
-    cardDetailsState: TangemPayCardDetailsUM,
-    modifier: Modifier = Modifier,
-) {
-    if (isRedesignEnabled) {
-        TangemPayEditDisplayNameScreenV2(
-            state = state,
-            cardDetailsState = cardDetailsState,
-            modifier = modifier,
-        )
-    } else {
-        TangemPayEditDisplayNameScreenV1(
-            state = state,
-            cardDetailsState = cardDetailsState,
-            modifier = modifier,
-        )
-    }
-}
-
-@Composable
-internal fun TangemPayEditDisplayNameScreenV1(
-    state: TangemPayEditDisplayNameUM,
-    cardDetailsState: TangemPayCardDetailsUM,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary)
-            .navigationBarsPadding(),
-    ) {
-        Box(
-            modifier = Modifier
-                .statusBarsPadding()
-                .height(56.dp)
-                .fillMaxWidth(),
-        ) {
-            IconButton(
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-                onClick = state.onDismiss,
-            ) {
-                Icon(
-                    painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_close_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.primary1,
-                )
-            }
-        }
-
-        TangemPayCard(
-            state = cardDetailsState,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp),
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        PrimaryButton(
-            modifier = Modifier
-                .imePadding()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .fillMaxWidth(),
-            text = stringResourceSafe(R.string.common_done),
-            onClick = state.onDoneClick,
-            showProgress = state.isLoading,
-            enabled = !state.isLoading && state.isDoneEnabled,
-        )
-    }
-}
 
 @Composable
 internal fun TangemPayEditDisplayNameScreenV2(

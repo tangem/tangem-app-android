@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,15 +37,12 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
-import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -69,8 +65,6 @@ import java.util.UUID
  */
 @Composable
 internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
-    val snackbarHostState = remember(::SnackbarHostState)
-
     Scaffold(
         topBar = {
             AppBarWithBackButton(
@@ -79,61 +73,30 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
                 onBackClick = stateHolder.headerState.onBackClicked,
             )
         },
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .padding(bottom = TangemTheme.dimens.spacing108),
-            ) {
-                // TODO: use StateEvent
-                if (stateHolder.errorSnackbar != null) {
-                    TangemSnackbar(data = it, actionOnNewLine = true)
-                } else {
-                    CopiedTextSnackbar(it)
-                }
-            }
-        },
         containerColor = TangemTheme.colors.background.secondary,
-    ) {
+    ) { paddingValues ->
         ReferralContent(
             stateHolder = stateHolder,
-            snackbarHostState = snackbarHostState,
             onAgreementClick = stateHolder.analytics.onAgreementClicked,
-            modifier = Modifier.padding(it),
+            modifier = Modifier.padding(paddingValues),
         )
     }
 
     val errorSnackbar = stateHolder.errorSnackbar
     val coroutineScope = rememberCoroutineScope()
     val resources = LocalContext.current.resources
-    val isRedesignEnabled = LocalRedesignEnabled.current
     val topSnackbarHostState = LocalTopSnackbarHostState.current
 
     SideEffect {
         if (errorSnackbar != null) {
             coroutineScope.launch {
-                if (isRedesignEnabled) {
-                    topSnackbarHostState.showSnackbar(
-                        message = resources.getMessageForErrorSnackbar(errorSnackbar.throwable),
-                        actionLabel = resources.getStringSafe(R.string.warning_button_ok),
-                        duration = SnackbarMessage.Duration.Indefinite,
-                    )
-
-                    errorSnackbar.onOkClicked()
-
-                    return@launch
-                }
-
-                val result = snackbarHostState.showSnackbar(
+                topSnackbarHostState.showSnackbar(
                     message = resources.getMessageForErrorSnackbar(errorSnackbar.throwable),
                     actionLabel = resources.getStringSafe(R.string.warning_button_ok),
-                    duration = SnackbarDuration.Indefinite,
+                    duration = SnackbarMessage.Duration.Indefinite,
                 )
 
-                if (result == SnackbarResult.ActionPerformed) {
-                    errorSnackbar.onOkClicked()
-                }
+                errorSnackbar.onOkClicked()
             }
         }
     }
@@ -142,7 +105,6 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
 @Composable
 private fun ReferralContent(
     stateHolder: ReferralStateHolder,
-    snackbarHostState: SnackbarHostState,
     onAgreementClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -155,7 +117,6 @@ private fun ReferralContent(
             item {
                 ReferralInfo(
                     stateHolder = stateHolder,
-                    snackbarHostState = snackbarHostState,
                     onAgreementClick = onAgreementClick,
                 )
             }
@@ -189,11 +150,7 @@ private fun Header() {
 }
 
 @Composable
-private fun ReferralInfo(
-    stateHolder: ReferralStateHolder,
-    snackbarHostState: SnackbarHostState,
-    onAgreementClick: () -> Unit,
-) {
+private fun ReferralInfo(stateHolder: ReferralStateHolder, onAgreementClick: () -> Unit) {
     when (val state = stateHolder.referralInfoState) {
         is ReferralInfoState.ParticipantContent -> {
             Conditions(state = state)
@@ -203,7 +160,6 @@ private fun ReferralInfo(
                 shareLink = state.shareLink,
                 expectedAwards = state.expectedAwards,
                 accountAward = state.accountAward,
-                snackbarHostState = snackbarHostState,
                 onAgreementClick = onAgreementClick,
                 onCopyClick = stateHolder.analytics.onCopyClicked,
                 onShareClick = stateHolder.analytics.onShareClicked,
