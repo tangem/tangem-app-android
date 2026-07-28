@@ -34,28 +34,43 @@ internal class DefaultDeviceKeyManager(
         }
     }
 
-    override suspend fun getPublicKey(): Option<ByteArray> = withContext(dispatchers.io) {
+    override suspend fun getPublicKeyEncoded(): Option<ByteArray> = withContext(dispatchers.io) {
         Option.catch(
             recover = { e ->
                 TangemLogger.e("Failed to get device public key", e)
                 None
             },
-            f = ::getPublicKeyBytes,
+            f = ::getEncodedPublicKeyBytes,
+        )
+    }
+
+    override suspend fun getPublicKeyRawPoint(): Option<ByteArray> = withContext(dispatchers.io) {
+        Option.catch(
+            recover = { e ->
+                TangemLogger.e("Failed to get device public key", e)
+                None
+            },
+            f = ::getPublicKeyRawPointBytes,
         )
     }
 
     override suspend fun sign(data: ByteArray): ByteArray = withContext(dispatchers.io) {
-        try {
+        Secp256r1.toByte64(computeDerSignature(data))
+    }
+
+    override suspend fun signDer(data: ByteArray): ByteArray = withContext(dispatchers.io) {
+        computeDerSignature(data)
+    }
+
+    private fun computeDerSignature(data: ByteArray): ByteArray {
+        return try {
             val privateKey = keyStore.getKey(KEY_ALIAS, null)
                 ?: throw DeviceKeySigningException("Device key not found")
 
-            val signature = Signature.getInstance(SIGNATURE_ALGORITHM).apply {
+            Signature.getInstance(SIGNATURE_ALGORITHM).apply {
                 initSign(privateKey as java.security.PrivateKey)
                 update(data)
-            }
-
-            val derSignature = signature.sign()
-            Secp256r1.toByte64(derSignature)
+            }.sign()
         } catch (e: DeviceKeySigningException) {
             TangemLogger.e("Device key signing failed", e)
             throw e
@@ -101,10 +116,15 @@ internal class DefaultDeviceKeyManager(
         return builder.build()
     }
 
-    private fun getPublicKeyBytes(): ByteArray {
+    /** X.509 `SubjectPublicKeyInfo` (DER) encoding — sent as `devicePublicKey` and parsed server-side. */
+    private fun getEncodedPublicKeyBytes(): ByteArray {
         val cert = checkNotNull(keyStore.getCertificate(KEY_ALIAS)) { "Device key not found" }
+        return cert.publicKey.encoded
+    }
 
-        val encoded = cert.publicKey.encoded
+    /** Raw uncompressed EC point (0x04 || x || y) sliced from the SPKI encoding — used for the DPoP JWK. */
+    private fun getPublicKeyRawPointBytes(): ByteArray {
+        val encoded = getEncodedPublicKeyBytes()
         check(encoded.size >= EC_UNCOMPRESSED_POINT_SIZE) {
             "Invalid encoded public key: expected at least $EC_UNCOMPRESSED_POINT_SIZE bytes, got ${encoded.size}"
         }

@@ -6,8 +6,8 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.Companion.NFT_SEND_CATEGORY
-import com.tangem.features.send.api.entity.FeeNonce
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.sendnft.ui.state.NFTSendUM

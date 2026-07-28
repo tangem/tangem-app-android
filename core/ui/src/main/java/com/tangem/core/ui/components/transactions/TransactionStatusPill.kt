@@ -21,9 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
@@ -45,6 +47,7 @@ internal fun TransactionStatusPill(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .testTag(TransactionHistoryItemTestTags.ITEM)
             .clickable(onClick = state.onClick)
             .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x2),
         horizontalArrangement = Arrangement.Center,
