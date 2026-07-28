@@ -28,10 +28,15 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
+import com.tangem.common.routing.deeplink.toContextualRoute
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
 import com.tangem.domain.yield.supply.promo.usecase.GetYieldBoostStatusUseCase
 import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -98,6 +103,15 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
     private var appCurrency = AppCurrency.Default
 
+    val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
+        MarketingBannerRequest(
+            screen = MarketingScreen.Yield(
+                networkId = params.cryptoCurrency.network.rawId,
+                contractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
+            ),
+        ),
+    )
+
     val uiState: StateFlow<YieldSupplyActiveContentUM>
         field = MutableStateFlow(
             YieldSupplyActiveContentUM(
@@ -145,6 +159,16 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 },
             )
         }
+    }
+
+    fun onMarketingBannerDeeplink(deeplink: String): Boolean {
+        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+            userWalletId = userWalletId,
+            currency = cryptoCurrency,
+            screenSource = AnalyticsParam.ScreensSources.Token,
+        ) ?: return false
+        appRouter.push(route)
+        return true
     }
 
     override fun onDismissClick() {

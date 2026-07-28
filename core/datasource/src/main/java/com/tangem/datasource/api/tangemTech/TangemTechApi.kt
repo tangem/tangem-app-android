@@ -1,6 +1,9 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
+import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
@@ -120,7 +123,7 @@ interface TangemTechApi {
     @GET("v1/stories/{story_id}")
     suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
 
-    // region yield-boost promo
+    // region promotions
     @GET("/v2/promotion")
     suspend fun getPromotions(
         @Query("walletId") walletId: String,
@@ -130,6 +133,11 @@ interface TangemTechApi {
     @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
     @GET("/v2/promotion/yield-apr-boost/status")
     suspend fun getYieldBoostStatus(@Query("walletId") walletId: String): ApiResponse<YieldBoostStatusResponse>
+
+    @POST("/v2/promotion/registrations")
+    suspend fun createPromotionRegistration(
+        @Body body: CreatePromotionRegistrationBody,
+    ): ApiResponse<PromotionRegistrationResponse>
     // endregion
 
     // region push notifications
@@ -234,5 +242,19 @@ interface TangemTechApi {
 
     @GET("v1/earn/networks")
     suspend fun getEarnNetworks(@Query("type") type: String? = null): ApiResponse<EarnNetworkListResponse>
+    // endregion
+
+    // region marketing
+    @GET("api/v1/marketing/campaigns")
+    suspend fun getMarketingCampaigns(
+        @Query("type") type: String,
+        @Query("language") language: String? = null,
+        @Query("fromNetwork") fromNetwork: String? = null,
+        @Query("fromContractAddress") fromContractAddress: String? = null,
+        @Query("toNetwork") toNetwork: String? = null,
+        @Query("toContractAddress") toContractAddress: String? = null,
+        @Query("fromFiat") fromFiat: String? = null,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<MarketingCampaignsResponse>
     // endregion
 }
