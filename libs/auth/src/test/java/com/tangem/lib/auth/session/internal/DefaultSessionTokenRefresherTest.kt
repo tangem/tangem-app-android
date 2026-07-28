@@ -102,6 +102,7 @@ class DefaultSessionTokenRefresherTest {
         assertThat(tokens.refreshToken).isEqualTo("rt-2")
         assertThat(tokens.walletIds).containsExactly("w1", "w2")
         coVerify { store.save(tokens) }
+        coVerify(exactly = 0) { authApi.authenticate(any()) }
     }
 
     @Test
@@ -134,15 +135,43 @@ class DefaultSessionTokenRefresherTest {
     }
 
     @Test
+    fun `refresh returns DeviceBlocked when refresh returns 403 — does not call authenticate`() = runTest {
+        val stored = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.refresh(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.FORBIDDEN,
+                message = "RED tier",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = refresher.refresh()
+
+        // 403 means device is server-side blocked; /authenticate would also fail with 403.
+        // Don't fall through.
+        assertThat(result.leftOrNull()).isEqualTo(SessionRefreshError.DeviceBlocked)
+        coVerify(exactly = 0) { authApi.requestAuthNonce(any()) }
+        coVerify(exactly = 0) { authApi.authenticate(any()) }
+    }
+
+    @Test
     fun `refresh clears store when authenticate returns 403`() = runTest {
         coEvery { store.get() } returns None
 
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestAuthNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "nonce-decrypted"
-        coEvery { deviceKeyManager.sign(any()) } returns ByteArray(64)
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.authenticate(any<AuthApiRequest>()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -157,6 +186,17 @@ class DefaultSessionTokenRefresherTest {
         assertThat(result.isLeft()).isTrue()
         assertThat(result.leftOrNull()).isEqualTo(SessionRefreshError.SessionRevoked)
         coVerify { store.clear() }
+    }
+
+    @Test
+    fun `refresh returns DeviceKeyUnavailable when authenticate fallback has no key`() = runTest {
+        coEvery { store.get() } returns None
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
+
+        val result = refresher.refresh()
+
+        assertThat(result.leftOrNull()).isEqualTo(SessionRefreshError.DeviceKeyUnavailable)
+        coVerify(exactly = 0) { authApi.requestAuthNonce(any()) }
     }
 
     @Test
@@ -303,12 +343,12 @@ class DefaultSessionTokenRefresherTest {
     }
 
     private fun stubAuthenticateHappyPath() {
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(ByteArray(65))
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestAuthNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
         )
         coEvery { nonceDecryptor.decryptNonce("abc") } returns "nonce-decrypted"
-        coEvery { deviceKeyManager.sign(any()) } returns ByteArray(64)
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
         coEvery { authApi.authenticate(any<AuthApiRequest>()) } returns ApiResponse.Success(
             data = TokenApiResponse(
                 accessToken = "post-auth-access",

@@ -5,6 +5,8 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrap
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.converter.StakingBalanceConverter
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
@@ -96,6 +98,25 @@ internal class DefaultStakeKitBalancesStore(
         coroutineScope {
             launch { clearInRuntime(userWalletId = userWalletId, stakingIds = stakingIds) }
             launch { clearInPersistence(userWalletId = userWalletId, stakingIds = stakingIds) }
+        }
+    }
+
+    override suspend fun remove(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        val walletIds = userWalletIds.toSet()
+        val stringKeys = userWalletIds.mapTo(hashSetOf()) { it.stringValue }
+
+        // Best-effort: attempt both runtime and persistence removal even if one fails.
+        coroutineScope {
+            launch {
+                runSuspendCatching { runtimeStore.update(default = emptyMap()) { stored -> stored - walletIds } }
+                    .onFailure { TangemLogger.e("Failed to remove StakeKit staking balances from runtime", it) }
+            }
+            launch {
+                runSuspendCatching { persistenceStore.updateData { stored -> stored - stringKeys } }
+                    .onFailure { TangemLogger.e("Failed to remove StakeKit staking balances from persistence", it) }
+            }
         }
     }
 

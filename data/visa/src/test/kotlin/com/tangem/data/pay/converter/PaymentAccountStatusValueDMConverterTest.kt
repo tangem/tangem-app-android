@@ -104,6 +104,40 @@ internal class PaymentAccountStatusValueDMConverterTest {
         }
 
         @Test
+        fun `GIVEN domain AwaitingPlanSelection WHEN convert THEN returns null (transient, not persisted)`() {
+            // GIVEN
+            val domain = PaymentAccountStatusValue.AwaitingPlanSelection(
+                source = StatusSource.ACTUAL,
+                tariffPlan = mockk(),
+            )
+
+            // WHEN
+            val result = converter.convert(domain)
+
+            // THEN
+            assertThat(result).isNull()
+        }
+
+        @Test
+        fun `GIVEN domain Inactive WHEN convert THEN returns null (transient, not persisted)`() {
+            // GIVEN
+            val domain = PaymentAccountStatusValue.Inactive(
+                source = StatusSource.ACTUAL,
+                fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                    availableBalance = BigDecimal("100"),
+                    currency = "USD",
+                ),
+                tariffPlan = mockk(),
+            )
+
+            // WHEN
+            val result = converter.convert(domain)
+
+            // THEN
+            assertThat(result).isNull()
+        }
+
+        @Test
         fun `GIVEN domain Error Unavailable WHEN convert THEN returns null (transient, not persisted)`() {
             // GIVEN
             val domain = PaymentAccountStatusValue.Error.Unavailable

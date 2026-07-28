@@ -3,7 +3,7 @@ package com.tangem.data.txhistory.fetcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.data.txhistory.repository.ExpressHistoryRepository
+import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
 import com.tangem.datasource.api.express.models.response.ExchangeHistoryDeltaResponse
 import com.tangem.datasource.api.express.models.response.ExchangeHistoryResponse
 import com.tangem.datasource.api.express.models.response.ExpressPagination
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultExpressTxHistoryFetcherTest {
 
     private val expressSyncStateDao: ExpressSyncStateDao = mockk()
-    private val expressHistoryRepository: ExpressHistoryRepository = mockk()
+    private val expressHistoryRepository: DefaultExpressHistoryRepository = mockk()
 
     private val coin: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
