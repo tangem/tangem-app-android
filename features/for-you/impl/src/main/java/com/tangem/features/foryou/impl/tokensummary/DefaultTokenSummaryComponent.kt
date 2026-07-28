@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.foryou.impl.tokensummary.entity.InfoBottomSheetContent
@@ -34,6 +35,7 @@ internal class DefaultTokenSummaryComponent @AssistedInject constructor(
     @Assisted private val params: TokenSummaryComponent.Params,
     private val swapTokenChooserComponentFactory: SwapTokenChooserComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : TokenSummaryComponent, AppComponentContext by context {
 
     private val model: TokenSummaryModel = getOrCreateModel(params = params)
@@ -48,6 +50,7 @@ internal class DefaultTokenSummaryComponent @AssistedInject constructor(
             when (config) {
                 is TokenSummaryBottomSheetConfig.SwapChooser -> swapChooserChild(componentContext)
                 is TokenSummaryBottomSheetConfig.ManageFunds -> manageFundsChild(config, componentContext)
+                is TokenSummaryBottomSheetConfig.AddToPortfolio -> addToPortfolioChild(componentContext)
                 is TokenSummaryBottomSheetConfig.Info -> infoChild(config)
             }
         },
@@ -57,8 +60,18 @@ internal class DefaultTokenSummaryComponent @AssistedInject constructor(
         swapTokenChooserComponentFactory.create(
             context = childByContext(componentContext),
             params = SwapTokenChooserComponent.Params(
-                entries = model.swapEntries,
+                holdings = model.swapHoldings,
                 callbacks = model.swapChooserCallbacks,
+            ),
+        )
+
+    private fun addToPortfolioChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
+        addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(
+                addToPortfolioManager = checkNotNull(model.addToPortfolioManager) {
+                    "addToPortfolioManager must be set before activating AddToPortfolio slot"
+                },
             ),
         )
 

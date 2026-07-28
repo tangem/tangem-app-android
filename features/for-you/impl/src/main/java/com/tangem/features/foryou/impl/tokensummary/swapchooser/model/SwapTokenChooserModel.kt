@@ -2,7 +2,6 @@ package com.tangem.features.foryou.impl.tokensummary.swapchooser.model
 
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentConverter
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
-import com.tangem.common.ui.markets.tokenselector.TokenSelectorEntry
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -11,6 +10,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
+import com.tangem.features.foryou.impl.tokensummary.model.SwapHolding
 import com.tangem.features.foryou.impl.tokensummary.swapchooser.SwapTokenChooserComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -29,7 +29,7 @@ internal class SwapTokenChooserModel @Inject constructor(
     private val params = paramsContainer.require<SwapTokenChooserComponent.Params>()
 
     val content: StateFlow<TokenSelectorContentUM?> = combine(
-        flow = params.entries,
+        flow = params.holdings,
         flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         transform = ::buildContent,
@@ -37,8 +37,8 @@ internal class SwapTokenChooserModel @Inject constructor(
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
 
     init {
-        params.entries
-            .filter(List<TokenSelectorEntry>::isEmpty)
+        params.holdings
+            .filter(List<SwapHolding>::isEmpty)
             .onEach { params.callbacks.onDismiss() }
             .launchIn(modelScope)
     }
@@ -46,19 +46,19 @@ internal class SwapTokenChooserModel @Inject constructor(
     fun onDismiss() = params.callbacks.onDismiss()
 
     private fun buildContent(
-        entries: List<TokenSelectorEntry>,
+        holdings: List<SwapHolding>,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
     ): TokenSelectorContentUM? {
-        if (entries.isEmpty()) return null
+        if (holdings.isEmpty()) return null
 
         return TokenSelectorContentConverter(
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
             resolveWalletDeviceIcon = { walletIconUMConverter.convert(getWalletIconUseCase(it)) },
             onEntryClick = { entry ->
-                params.callbacks.onTokenSelected(entry.wallet.walletId, entry.currencyStatus)
+                holdings.firstOrNull { it.entry == entry }?.let(params.callbacks::onHoldingSelected)
             },
-        ).convert(entries)
+        ).convert(holdings.map(SwapHolding::entry))
     }
 }

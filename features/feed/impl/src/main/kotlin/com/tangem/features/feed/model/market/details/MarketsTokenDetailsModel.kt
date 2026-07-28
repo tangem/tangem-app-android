@@ -421,6 +421,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 symbol = token.symbol,
                 title = token.name,
                 tangemIconUrl = token.imageUrl.orEmpty(),
+                networks = (networksState.value as? TokenNetworksState.NetworksAvailable)?.networks.orEmpty(),
             ),
             tokenSummaryPeriodConverter.convert(state.value.selectedInterval).id,
         )
