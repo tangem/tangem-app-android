@@ -281,6 +281,7 @@
   <string name="common_added">Adicionado</string>
   <string name="common_address">Endereço</string>
   <string name="common_all">Todos</string>
+  <string name="common_all_accounts">Todas as contas</string>
   <string name="common_allow">Permitir</string>
   <string name="common_amount">Quantia</string>
   <string name="common_analytics">Análises</string>
@@ -290,6 +291,10 @@
   <string name="common_approve">Aprovar</string>
   <string name="common_approved">Aprovado</string>
   <string name="common_approving">Aprovando</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d ativo</item>
+    <item quantity="other">%d ativos</item>
+  </plurals>
   <string name="common_attention">Atenção</string>
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>
@@ -325,6 +330,7 @@
   <string name="common_create">Criar</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Personalizado</string>
+  <string name="common_day">dia</string>
   <plurals name="common_days">
     <item quantity="one">dia</item>
     <item quantity="other">dias</item>
@@ -399,7 +405,22 @@
     <item quantity="other">OUTRO</item>
   </plurals>
   <string name="common_month">mês</string>
+  <string-array name="common_month_in">
+    <item>Janeiro</item>
+    <item>Fevereiro</item>
+    <item>Março</item>
+    <item>Abril</item>
+    <item>Maio</item>
+    <item>Junho</item>
+    <item>Julho</item>
+    <item>Agosto</item>
+    <item>Setembro</item>
+    <item>Outubro</item>
+    <item>Novembro</item>
+    <item>Dezembro</item>
+  </string-array>
   <string name="common_more">Mais</string>
+  <string name="common_negative">Negativo</string>
   <string name="common_network">Rede</string>
   <string name="common_network_fee_title">Taxa de rede</string>
   <string name="common_network_fee_warning_content">O valor enviado será reduzido em %1$s (%2$s) para cobrir o nível de taxa selecionado</string>
@@ -407,6 +428,7 @@
     <item quantity="one">UM</item>
     <item quantity="other">OUTRO</item>
   </plurals>
+  <string name="common_neutral">Neutro</string>
   <string name="common_new_address">Novo endereço</string>
   <string name="common_news">Notícias</string>
   <string name="common_next">Próximo</string>
@@ -414,6 +436,7 @@
   <string name="common_no">Não</string>
   <string name="common_no_address">Sem endereço</string>
   <string name="common_no_results">Nenhum resultado</string>
+  <string name="common_none">Nenhum</string>
   <string name="common_not_added">Não adicionado</string>
   <string name="common_not_available">Não disponível</string>
   <string name="common_not_now">Agora não</string>
@@ -427,6 +450,7 @@
   <string name="common_other">Outro</string>
   <string name="common_passphrase">Senha</string>
   <string name="common_paste">Colar</string>
+  <string name="common_positive">Positivo</string>
   <string name="common_privacy_policy">política de Privacidade</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -728,6 +752,7 @@
   <string name="for_you_description">Analise seu portfólio e explore oportunidades de ganhos.</string>
   <string name="for_you_earn_opportunities">Oportunidades de ganhar</string>
   <string name="for_you_earn_opportunities_all_tokens_active">Todos os seus recursos estão em ação, explore novas oportunidades.</string>
+  <string name="for_you_earn_opportunities_explore">Explore todos os tokens</string>
   <string name="for_you_earn_opportunities_no_available_tokens">Levante-se %1$s anualmente</string>
   <string name="for_you_earn_opportunities_tokens_rewards">recompensas potenciais máximas %1$s</string>
   <string name="for_you_earn_per_year">%1$s/ano</string>
@@ -741,6 +766,7 @@
   <string name="force_update_button">Atualizar</string>
   <string name="force_update_os_description">Seu sistema operacional está desatualizado. Atualize-o para continuar usando o aplicativo.</string>
   <string name="force_update_os_title">Atualize seu sistema operacional</string>
+  <string name="force_update_required_action">Atualizar aplicativo</string>
   <string name="force_update_warning_message">Por favor, atualize o aplicativo para a versão mais recente para garantir o funcionamento correto.</string>
   <string name="force_update_warning_title">Atualização necessária</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Fundos insuficientes</string>
@@ -908,9 +934,11 @@
     <item quantity="one">%d ativo</item>
     <item quantity="other">%d ativos</item>
   </plurals>
+  <string name="market_chart_bubble_no_amount">Nenhum valor em fichas</string>
   <string name="market_chart_bubble_no_data">Sem dados</string>
   <string name="market_chart_bubble_total_value">Valor total</string>
   <string name="market_chart_can_not_load_data">Não foi possível carregar os dados.</string>
+  <string name="market_chart_no_amount">Você não possui nenhum token com o valor</string>
   <string name="market_chart_top_holding">Posição superior %s</string>
   <string name="markets_about_coin_header">Sobre a moeda</string>
   <string name="markets_add_to_my_portfolio_description">Para comprar, trocar ou receber este ativo, adicione-o à sua carteira.</string>
@@ -1311,6 +1339,8 @@
   <string name="organize_tokens_sort_by_balance">Por equilíbrio</string>
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
+  <string name="prediction_account_subtitle">Adicione fundos e comece a fazer previsões.</string>
+  <string name="prediction_account_title">Conta de previsão</string>
   <string name="promo_campaign_already_activated_subtitle">O cashback elegível será distribuído para:</string>
   <string name="promo_campaign_already_activated_title">Você já está matriculado(a) em %1$s</string>
   <string name="promo_campaign_eligible_tokens">Tokens elegíveis</string>
@@ -1834,6 +1864,12 @@
   <string name="tangem_pay_terms_fees_limits">Termos, taxas e limites</string>
   <string name="tangem_pay_terms_limits">Termos e Limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">O valor mínimo da transação é %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_cap_reached">O limite mensal foi atingido.</string>
+  <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluído</string>
+  <string name="tangem_pay_transaction_details_cashback_none">Sem reembolso</string>
+  <string name="tangem_pay_transaction_details_cashback_refund">Devolução da compra</string>
+  <string name="tangem_pay_transaction_details_cashback_region_excluded">Região excluída</string>
   <string name="tangem_pay_transaction_details_category">Categoria</string>
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">Uma taxa é cobrada de acordo com as tarifas de serviço</string>
@@ -1864,6 +1900,9 @@
   <string name="tangempay_card_details_add_funds">Adicionar fundos</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opções de recarga</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar ao Google Wallet</string>
+  <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancelar %1$s, mude-se para %2$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_subtitle">Para pagar a mensalidade do plano e começar a usar o cartão.</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Recarregue sua conta em %1$s</string>
   <string name="tangempay_card_details_card_number">Número do cartão</string>
   <string name="tangempay_card_details_change_pin">Código PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">O cartão está totalmente pronto para pagamentos.</string>
@@ -1898,6 +1937,8 @@
   <string name="tangempay_card_details_rename_card_placeholder">Nome do cartão</string>
   <string name="tangempay_card_details_reveal_text">Revelar</string>
   <string name="tangempay_card_details_show_details">Detalhes</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">Se permanecer abaixo de zero, seu %1$s Os cartões serão fechados em %2$s</string>
+  <string name="tangempay_card_details_system_downgrade_title">Recarregue sua conta em breve.</string>
   <string name="tangempay_card_details_title">Detalhes</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Por favor, tente novamente mais tarde.</string>
   <string name="tangempay_card_details_unfreeze_card">Descongelar cartão</string>
@@ -1925,17 +1966,49 @@
     <item quantity="one">%d cartão</item>
     <item quantity="other">%d cartões</item>
   </plurals>
+  <string name="tangempay_cashback_accruals_calc_description">Processamos as compras em até 5 dias após a operação e contabilizamos apenas as transações concluídas.</string>
+  <string name="tangempay_cashback_accruals_calc_title">Como calculamos o cashback?</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Não haverá reembolso em dinheiro para compras presenciais em estabelecimentos comerciais da UE; o mesmo se aplica a saques, transferências, pagamentos eletrônicos, contas de celular, serviços governamentais e algumas outras categorias.</string>
+  <string name="tangempay_cashback_accruals_exceptions_title">Exceções</string>
+  <string name="tangempay_cashback_accruals_pay_description">Do dia 2 ao dia 5 do próximo mês</string>
+  <string name="tangempay_cashback_accruals_pay_title">Como pagamos o cashback?</string>
+  <string name="tangempay_cashback_accruals_subtitle">Limites e exceções</string>
+  <string name="tangempay_cashback_accruals_title">Acréscimos</string>
+  <string name="tangempay_cashback_additional_permanent">Permanente</string>
+  <string name="tangempay_cashback_additional_title">Cashback adicional</string>
+  <string name="tangempay_cashback_additional_until">Até %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Isso ocorreu devido ao seu comportamento suspeito. Entre em contato com o suporte para saber mais.</string>
   <string name="tangempay_cashback_deactivated_title">Cashback desativado</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s para %2$s será depositado até %3$s</string>
   <string name="tangempay_cashback_deposited_on">Será depositado em %1$s</string>
+  <string name="tangempay_cashback_details_cap">%1$s máximo por mês</string>
+  <string name="tangempay_cashback_details_eu_excluded">Não há reembolso em compras presenciais em estabelecimentos comerciais da UE.</string>
+  <string name="tangempay_cashback_details_paid_in">Pago em %1$s</string>
+  <string name="tangempay_cashback_details_tier">%1$s%% para todas as compras com o seu %2$s cartões, compra mínima %3$s</string>
+  <string name="tangempay_cashback_earned_title">%1$s ganho em %2$s</string>
+  <string name="tangempay_cashback_empty_subtitle">O valor arrecadado será exibido aqui.</string>
+  <string name="tangempay_cashback_empty_title">Comece a gastar e ganhe cashback</string>
+  <string name="tangempay_cashback_error_title">Não foi possível carregar a página.\nToque para recarregar</string>
+  <string name="tangempay_cashback_rate_subtitle">Com o seu %1$s plano</string>
+  <string name="tangempay_cashback_rate_title">Cashback %1$s%%</string>
+  <string name="tangempay_cashback_rate_title_up_to">Cashback de até %1$s%%</string>
+  <string name="tangempay_cashback_refund_banner">Recebemos um reembolso por uma compra para a qual já havíamos recebido cashback.</string>
+  <string name="tangempay_cashback_title">Cashback</string>
+  <string name="tangempay_cashback_total_earned">%1$s ganhos no total</string>
   <string name="tangempay_cashback_widget_title">%1$s cashback em %2$s</string>
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
+  <string name="tangempay_changing_plan">Alterar seu plano</string>
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
   <string name="tangempay_common_card">Cartão</string>
   <string name="tangempay_common_error_loading">Erro ao carregar</string>
+  <string name="tangempay_current_plan_active_till_notification">Seu %1$s O plano está ativo até %2$s, então nós o transferiremos para %3$s. %4$s Não será cobrado.</string>
   <string name="tangempay_current_plan_change">Alterar plano</string>
+  <string name="tangempay_current_plan_fee_charged_notification">%1$s Será cobrada uma taxa mensal em %2$s</string>
   <string name="tangempay_current_plan_section_card">relacionado a cartões</string>
   <string name="tangempay_current_plan_section_plan">Plano relacionado</string>
+  <string name="tangempay_current_plan_stay_button">Continue em %1$s</string>
+  <string name="tangempay_current_plan_stay_sheet_body">Sua transição em %1$s será cancelado</string>
+  <string name="tangempay_current_plan_stay_sheet_title">Você deseja continuar? %1$s?</string>
   <string name="tangempay_current_plan_title">Plano atual</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Defina um limite a partir de %s para %s</string>
   <string name="tangempay_daily_limit_set_button">Definir limites</string>
@@ -1994,6 +2067,9 @@
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
   <string name="tangempay_main_select_plan">Selecione o plano</string>
   <string name="tangempay_maximum_cards_issued_description">Você pode ter até 3 cartões. Exclua um para adicionar um novo.</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões.</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_title">O limite de cartões para este plano foi atingido.</string>
+  <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Plano de atualização</string>
   <string name="tangempay_maximum_cards_issued_title">Número máximo de cartões emitidos</string>
   <string name="tangempay_newonboard_Q1_body">Sim — para usar um cartão Visa regulado, a verificação de identidade é obrigatória. O KYC é feito pela Sumsub, parceira de compliance.</string>
   <string name="tangempay_newonboard_Q1_title">Preciso enviar meus documentos?</string>
@@ -2047,7 +2123,16 @@
   <string name="tangempay_select_plan_btn_select">Selecionar</string>
   <string name="tangempay_select_plan_btn_upgrade">Plano de atualização</string>
   <string name="tangempay_select_plan_compare">Comparar planos</string>
+  <string name="tangempay_select_plan_confirm_downgrade_title">Seu %1$s plano e %2$s Os cartões ficarão ativos até %3$s</string>
+  <string name="tangempay_select_plan_confirm_point_cancel_till">Você pode cancelar essa transição até %1$s</string>
+  <string name="tangempay_select_plan_confirm_point_cards_closed">Seu %1$s Os cartões serão fechados.</string>
+  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s A taxa mensal será debitada da sua conta.</string>
+  <string name="tangempay_select_plan_confirm_point_move_on_date">Sobre %1$s nós o transferiremos para %2$s plano</string>
+  <string name="tangempay_select_plan_confirm_point_no_fee">Nenhuma taxa será cobrada.</string>
+  <string name="tangempay_select_plan_confirm_point_virtual_card">Você receberá sua versão virtual. %1$s em minutos</string>
+  <string name="tangempay_select_plan_confirm_switch_title">Você está mudando para %1$s</string>
   <string name="tangempay_select_plan_confirm_title">Confirmar seleção</string>
+  <string name="tangempay_select_plan_confirm_upgrade_title">Iremos emitir %1$s para você</string>
   <string name="tangempay_select_plan_title">Selecione um plano</string>
   <string name="tangempay_service_unavailable_description">Estamos resolvendo um problema técnico. Por favor, tente novamente mais tarde.</string>
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
@@ -2072,8 +2157,11 @@
   <string name="tangempay_topup_swap_body">Recarregue sua conta com qualquer token da carteira</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
+  <string name="tangempay_va_account_details">Detalhes da conta</string>
+  <string name="tangempay_va_available_to_deposit_day">Disponível para depósito por dia:</string>
   <string name="tangempay_va_banking_details_error_description">Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.</string>
   <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários.</string>
+  <string name="tangempay_va_limit_resetting_everyday">O limite é reiniciado todos os dias.</string>
   <string name="tangempay_visa_benefits">Benefícios do visto</string>
   <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
   <string name="tangempay_withdrawal_note_title">Observe</string>

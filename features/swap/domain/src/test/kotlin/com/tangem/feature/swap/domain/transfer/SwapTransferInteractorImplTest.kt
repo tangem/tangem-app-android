@@ -38,7 +38,6 @@ import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -53,7 +52,6 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SwapTransferInteractorImplTest {
 
-    private val swapFeatureToggles: SwapFeatureToggles = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
@@ -72,7 +70,6 @@ internal class SwapTransferInteractorImplTest {
     private val validateTransactionUseCase: ValidateTransactionUseCase = mockk()
 
     private val sut = SwapTransferInteractorImpl(
-        swapFeatureToggles = swapFeatureToggles,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
@@ -1315,22 +1312,7 @@ internal class SwapTransferInteractorImplTest {
     // region shouldTransferInsteadOfSwap
 
     @Test
-    fun `GIVEN feature toggle disabled WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns false
-
-        val result = sut.shouldTransferInsteadOfSwap(
-            fromSwapCurrency = buildCoin(networkRawId = ETHEREUM),
-            toSwapCurrency = buildCoin(networkRawId = ETHEREUM),
-        )
-
-        assertThat(result).isFalse()
-        verify { swapFeatureToggles.isSwapSwitchToTransferEnabled }
-    }
-
-    @Test
     fun `GIVEN both coins on the same network WHEN shouldTransferInsteadOfSwap THEN return true`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildCoin(networkRawId = ETHEREUM),
             toSwapCurrency = buildCoin(networkRawId = ETHEREUM),
@@ -1341,8 +1323,6 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN coins on different networks WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildCoin(networkRawId = ETHEREUM),
             toSwapCurrency = buildCoin(networkRawId = POLYGON),
@@ -1353,8 +1333,6 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN tokens with same network and same contract WHEN shouldTransferInsteadOfSwap THEN return true`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
             toSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
@@ -1365,8 +1343,6 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN tokens with same network but different contract WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
             toSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDC_CONTRACT),
@@ -1377,8 +1353,6 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN tokens with same contract but different network WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
             toSwapCurrency = buildToken(networkRawId = POLYGON, contractAddress = USDT_CONTRACT),
@@ -1389,8 +1363,6 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN coin from and token to WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildCoin(networkRawId = ETHEREUM),
             toSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
@@ -1401,8 +1373,6 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN token from and coin to WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        every { swapFeatureToggles.isSwapSwitchToTransferEnabled } returns true
-
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
             toSwapCurrency = buildCoin(networkRawId = ETHEREUM),
