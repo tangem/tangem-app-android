@@ -10,7 +10,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.ui.components.TangemPaySuccessScreenWrapper
 
 @Composable
-internal fun TangemPayCardLimitSetupSuccessScreenV2(onDoneClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TangemPayCardLimitSetupSuccessScreen(onDoneClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemPaySuccessScreenWrapper(
         modifier = modifier,
         title = resourceReference(R.string.tangempay_card_page_daily_limit_success_title),
@@ -26,6 +26,6 @@ internal fun TangemPayCardLimitSetupSuccessScreenV2(onDoneClick: () -> Unit, mod
 @Composable
 private fun Preview() {
     TangemThemePreviewRedesign {
-        TangemPayCardLimitSetupSuccessScreenV2(onDoneClick = {})
+        TangemPayCardLimitSetupSuccessScreen(onDoneClick = {})
     }
 }

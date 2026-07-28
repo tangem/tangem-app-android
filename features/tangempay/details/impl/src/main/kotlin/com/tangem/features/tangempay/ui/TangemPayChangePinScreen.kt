@@ -43,7 +43,7 @@ import com.tangem.features.tangempay.entity.TangemPayChangePinUM
 import kotlinx.coroutines.delay
 
 @Composable
-internal fun TangemPayChangePinScreenV2(
+internal fun TangemPayChangePinScreen(
     state: TangemPayChangePinUM,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -200,11 +200,11 @@ private fun PinCode(
 
 @Preview(showBackground = true)
 @Composable
-private fun TangemPayChangePinScreenV2Preview(
+private fun TangemPayChangePinScreenPreview(
     @PreviewParameter(TangemPayChangePinUMPreviewProvider::class) state: TangemPayChangePinUM,
 ) {
     TangemThemePreviewRedesign {
-        TangemPayChangePinScreenV2(
+        TangemPayChangePinScreen(
             state = state,
             onBackClick = {},
         )
