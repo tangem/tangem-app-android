@@ -7,7 +7,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -55,25 +54,31 @@ internal class VirtualAccountAddFundsModel @Inject constructor(
         uiState.update { state -> state.copy(content = buildDetailsContent()) }
     }
 
-    private fun buildDetailsContent() = VirtualAccountAddFundsUM.Content.Details(
-        items = params.requisites
-            .map { detailItem(label = it.title, value = it.value) }
-            .toImmutableList(),
-        dailyLimit = params.dailyDepositLimit,
-        onShareClick = {
-            params.onShareClicked()
-            shareManager.shareText(buildShareText())
-        },
-    )
+    private fun buildDetailsContent(): VirtualAccountAddFundsUM.Content.Details {
+        return VirtualAccountAddFundsUM.Content.Details(
+            items = params.requisites
+                .map(::detailItem)
+                .toImmutableList(),
+            dailyLimit = params.dailyDepositLimit,
+            onShareClick = {
+                params.onShareClicked()
+                shareManager.shareText(buildShareText())
+            },
+        )
+    }
 
-    private fun detailItem(label: String, value: String) = VirtualAccountAddFundsUM.DetailItem(
-        label = stringReference(label),
-        value = value,
-        onCopyClick = {
-            params.onFieldCopied(label)
-            clipboardManager.setText(text = value, isSensitive = true)
-        },
-    )
+    private fun detailItem(
+        requisitesRow: VirtualAccountAddFundsBottomSheetComponent.RequisitesRow,
+    ): VirtualAccountAddFundsUM.DetailItem {
+        return VirtualAccountAddFundsUM.DetailItem(
+            label = requisitesRow.title,
+            value = requisitesRow.value,
+            onCopyClick = {
+                params.onFieldCopied(requisitesRow.titleForShare)
+                clipboardManager.setText(text = requisitesRow.value, isSensitive = true)
+            },
+        )
+    }
 
     private fun buildShareText(): String {
         return buildString {
