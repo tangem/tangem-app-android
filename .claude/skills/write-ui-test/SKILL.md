@@ -32,6 +32,34 @@ different setup.
 5. **Write the test** per Conventions below.
 6. **Build BOTH APKs, install, run, and classify the result** correctly — Allure post-run hook
    failures are not test failures (see `reference/running-and-debugging.md`).
+7. **Final cleanup pass — remove what you no longer use.** Before declaring done, review every file you
+   touched for leftovers from iteration (see "Final cleanup" below). This is a required step, not optional.
+
+## Final cleanup (required before done)
+
+Iterating on a test typically leaves dead code behind — an import for a helper you swapped out, an
+`@OptIn` for an API you stopped calling directly, a matcher you replaced. Reviewers flag these, and a
+stray `@OptIn` reads as "this code needs an experimental API" when it doesn't. For **every file you
+added or edited** (production `testTag` files included), check and remove:
+
+- **Unused imports.** Any leftover after swapping an approach (e.g. `performTextReplacement` →
+  `performTextInputInChunks`, `onDialog` after extracting a scenario). Diff-check each import against
+  the body: `for f in <changed .kt>; do grep '^import' "$f" | while read -r i; do n=${i##*.}; n=${n%% *};
+  grep -q "\b$n\b" <(grep -v '^import' "$f") || echo "$f: unused? $i"; done; done`
+  (heuristic — `foundation.layout.*` wildcards and `getValue`/`setValue` used only by `by` delegates
+  are false positives; verify before deleting).
+- **Redundant `@OptIn(ExperimentalTestApi::class)`.** Needed **only** where you call an experimental
+  API *directly* (`performScrollToNode`, `waitUntilAtLeastOneExists`, `waitUntilDoesNotExist`, …).
+  It is **not** needed just to call your own helper that is already annotated (e.g. a page-object
+  `scrollToNetwork` that wraps `performScrollToNode`), nor for the stable `composeTestRule.waitUntil(timeoutMillis, condition)`.
+  A `BaseTestCase`-extension scenario that only calls annotated page-object methods + stable `waitUntil`
+  needs no `@OptIn` — drop it (and its `import androidx.compose.ui.test.ExperimentalTestApi`).
+- **Dead vals / matchers / page-object members** you introduced and then stopped referencing.
+
+Then recompile the changed module(s) to confirm the removals are valid — the androidTest APK
+(`:app:assembleGoogleMockedAndroidTest`) for test-side edits, or the touched production module
+(e.g. `:core:ui:compileDebugKotlin`) for `testTag` edits. A clean compile with no opt-in / unused-symbol
+warnings is the pass criterion. Behavior-only-neutral cleanups don't need a re-run of the suite.
 
 ## Porting a test from iOS
 
@@ -101,6 +129,47 @@ When the user asks to **port** an iOS test to Android:
 
 Scenario files orchestrate flows; they must not define page objects or duplicate generic helpers.
 
+### Page-object matchers: exhaust the native Kakao API before dropping to raw Compose
+
+**Reviewers reject raw `composeTestRule` / `semanticsProvider.onNode(...)` / `onAllNodes(...)[i]` and
+deep nested matchers when a native Kakao-Compose mechanism does the same thing.** Before writing any
+such construct, look for the built-in KNode / `ViewBuilder` / `KLazyListNode` API — it almost always
+exists. The raw form is a last resort, and even then it stays **inside the page object**, never in the
+test body (the test only calls page-object members and scenarios — no `composeTestRule`, no test tags,
+no `onNode`/`onAllNodes`, no bare matchers leak into it).
+
+Native first, by need:
+- **N-th of several identical nodes** → `child { … ; hasPosition(index) }` (Kakao maps
+  `NodeMatcher.position` → `onAllNodes(matcher)[index]` for you). Do **not** hand-roll
+  `semanticsProvider.onAllNodes(matcher)[index]`.
+- **Scroll to index / matcher / key** → inside a KNode block: `knode { performScrollToIndex(index) }`,
+  `knode { performScrollToNode(matcher) }`, `knode { performScrollToKey(key) }` (mirror
+  `MarketsPageObject.scrollToListedOnBlock`). These wrappers are `@ExperimentalTestApi`, so annotate the
+  page-object method `@OptIn(ExperimentalTestApi::class)` — that opt-in is expected, not a smell.
+- **Relationship filters** → `ViewBuilder` DSL inside `child { }`: `hasAnyChild`, `hasAnySibling`,
+  `hasAnyAncestor`, `hasAnyDescendant`, `addSemanticsMatcher(matcher)`, `useUnmergedTree = true`.
+- **Lazy list / pager item (esp. below the fold)** → `KLazyListNode` + `childWith { … }` / `childAt(index)`
+  (see `AddFundsBottomSheetPageObject`, `BuyTokenPageObject`), not a manual scroll + `onAllNodes`.
+- **A raw Compose-Test op with no KNode wrapper** (e.g. `captureToImage()`, and any other
+  `SemanticsNodeInteraction` extension Kakao doesn't surface) → do **not** fall back to
+  `composeTestRule.onNode(hasTestTag(...))` in the scenario. Every KNode exposes a public `delegate`, and
+  the built-in actions/assertions are all just `delegate.perform(type) { <this: SemanticsNodeInteraction> }`
+  / `delegate.check(type) { … }`. `ComposeOperationType` is an open interface, so declare a tiny private
+  `enum class Xxx : ComposeOperationType { … }` and reach the underlying `SemanticsNodeInteraction` from a
+  **page-object method** — reusing an existing KNode (its testTag + `useUnmergedTree`). Capture a return
+  value via a `lateinit var` written inside the lambda. Example (`TokenReceiveQrCodeBottomSheetPageObject.captureQrCodeBitmap`):
+  ```kotlin
+  fun captureQrCodeBitmap(): Bitmap {
+      lateinit var bitmap: Bitmap
+      qrCode.delegate.perform(QrCodeAction.CAPTURE) { bitmap = captureToImage().asAndroidBitmap() }
+      return bitmap
+  }
+  private enum class QrCodeAction : ComposeOperationType { CAPTURE }
+  ```
+  This keeps `composeTestRule` / test tags out of the scenario — the scenario just calls the page-object method.
+- **Only if truly nothing fits** → `semanticsProvider.onNode(...)` / `onAllNodes(...)` (the escape hatch
+  used by `MainScreenPageObject`), wrapped in a named page-object method with a one-line WHY comment.
+
 ### Strings
 
 - **No hardcoded UI text** in matchers. Use `getResourceString(R.string.foo)` from
@@ -136,9 +205,19 @@ Scenario files orchestrate flows; they must not define page objects or duplicate
   that a screen "never idles", **cold-boot a fresh emulator** (`emulator -avd … -no-snapshot -wipe-data
   -memory 4096 -cores 2`) and re-run. A suite that flaked across runs on a tired emulator can be a clean
   10/10 on a fresh one (verified on this exact suite). Don't rewrite waits to work around emulator rot.
-- **In scenario / `BaseTestCase`-extension code, `flakySafely` is NOT available** regardless — use the
-  same `composeTestRule.waitUntil` fallback (or `waitUntilAtLeastOneExists(matcher, timeout)` to wait for
-  appearance, `{ a exists || b exists }` for either/or).
+- **In scenario / `BaseTestCase`-extension code, `flakySafely` is NOT available** regardless — use
+  `BaseTestCase.awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) { … }` (a shared member on `BaseTestCase`,
+  no import needed) which wraps `composeTestRule.waitUntil { runCatching(block).isSuccess }`. Each async step
+  reads `awaitSuccess { onXxxScreen { field.assertExists() } }` before the action. For appearance-only waits
+  `composeTestRule.waitUntilAtLeastOneExists(matcher, timeout)` (or `{ a exists || b exists }` for either/or)
+  is also fine.
+  **Do not re-declare a private `awaitSuccess` in a scenario file** — the shared `BaseTestCase.awaitSuccess`
+  already exists; older files may still have a private copy, don't copy that pattern.
+- **Right-size the timeout — don't stamp `WAIT_UNTIL_TIMEOUT_LONG` on every step.** The timeout is a
+  *ceiling*, not a sleep (`waitUntil` returns the moment the condition holds), but the default
+  `WAIT_UNTIL_TIMEOUT` (20 s) already dwarfs a normal async transition. Reserve `…_LONG` / `…_VERY_LONG`
+  for steps that are genuinely slow (a real network round-trip + debounce that can approach 20 s);
+  using LONG uniformly is lazy and hides which step is actually the slow one.
 
 ### Comment hygiene
 
@@ -158,3 +237,7 @@ Delete anything explaining WHAT a step does.
   vs. raw `am instrument`), running against a local WireMock, interpreting CLI/Allure output, using
   `@Ignore`, or driving WireMock scenarios. Includes how to find app-side root causes when the UI fails
   silently (the app log in `files/log.txt`, and the WireMock journal).
+- **`reference/yield-mode.md`** — read before writing any **Yield Mode (yield-supply / "Earning")** test.
+  Covers the hot-wallet activation flow, why Ethereum (not Polygon — gasless), the full mock set +
+  scenarios, the `isActive`-semantics / lowercase-address / hold-timing / Pill-testTag gotchas, and the
+  production testTags already added. Mirror `tests/yield/YieldModeTest.kt`.

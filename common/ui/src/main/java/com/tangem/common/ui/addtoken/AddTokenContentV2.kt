@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +36,6 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -202,15 +200,13 @@ private fun AddButton(state: AddTokenUM.Button, modifier: Modifier = Modifier) {
 @Composable
 private fun Preview(@PreviewParameter(PreviewProvider::class) state: AddTokenUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level2)
-                    .padding(horizontal = 16.dp),
-            ) {
-                AddTokenContentV2(state = state)
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors2.surface.level2)
+                .padding(horizontal = 16.dp),
+        ) {
+            AddTokenContentV2(state = state)
         }
     }
 }

@@ -46,7 +46,6 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
@@ -54,7 +53,6 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
 class SwapTransferInteractorImpl @Inject constructor(
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
@@ -306,7 +304,6 @@ class SwapTransferInteractorImpl @Inject constructor(
         fromSwapCurrency: CryptoCurrency?,
         toSwapCurrency: CryptoCurrency?,
     ): Boolean {
-        if (swapFeatureToggles.isSwapSwitchToTransferEnabled.not()) return false
         val isSameCurrency = when {
             fromSwapCurrency is CryptoCurrency.Coin && toSwapCurrency is CryptoCurrency.Coin -> {
                 fromSwapCurrency.network.rawId == toSwapCurrency.network.rawId

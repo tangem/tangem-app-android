@@ -14,14 +14,14 @@ internal class DefaultStakingFeatureToggles(
         return featureTogglesManager.isFeatureEnabled(toggle)
     }
 
-    override fun isSolanaUnstakeValidationEnabled(): Boolean {
+    override fun isRegionUnavailableHandlingEnabled(): Boolean {
         return featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_16148_SOLANA_UNSTAKE_VALIDATION_ENABLED,
+            FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED,
         )
     }
 
     private fun StakingIntegrationID.getFeatureToggle(): FeatureToggles? = when (this) {
-        is StakingIntegrationID.P2PEthPool -> FeatureToggles.STAKING_ETH_ENABLED
+        is StakingIntegrationID.P2PEthPool -> null
         is StakingIntegrationID.StakeKit -> this.getStakeKitFeatureToggle()
     }
 

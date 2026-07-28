@@ -62,11 +62,11 @@ private fun Menu(
 private fun SortByBalanceMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMenuUM, onDropdownDismiss: () -> Unit) {
     Text(
         text = stringResourceSafe(R.string.organize_tokens_sort_by_balance),
-        style = TangemTheme.typography2.headingSemibold17,
+        style = TangemTheme.typography3.body.medium,
         color = if (organizeMenuUM.isSortedByBalance) {
-            TangemTheme.colors2.text.status.disabled
+            TangemTheme.colors3.text.tertiary
         } else {
-            TangemTheme.colors2.text.neutral.primary
+            TangemTheme.colors3.text.primary
         },
         maxLines = 1,
         modifier = Modifier
@@ -79,12 +79,12 @@ private fun SortByBalanceMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMe
                 },
                 enabled = !organizeMenuUM.isSortedByBalance,
             )
-            .padding(vertical = TangemTheme.dimens2.x2_5, horizontal = TangemTheme.dimens2.x4),
+            .padding(vertical = 10.dp, horizontal = 16.dp),
     )
 
     HorizontalDivider(
         thickness = 0.5.dp,
-        color = TangemTheme.colors2.border.neutral.quaternary,
+        color = TangemTheme.colors3.border.tertiary,
     )
 }
 
@@ -102,36 +102,36 @@ private fun GroupTokensMenuSection(organizeMenuUM: OrganizeTokensUM.OrganizeMenu
                     onDropdownDismiss()
                 },
             )
-            .padding(vertical = TangemTheme.dimens2.x2_5, horizontal = TangemTheme.dimens2.x4),
+            .padding(vertical = 10.dp, horizontal = 16.dp),
     ) {
         Text(
             text = stringResourceSafe(R.string.organize_tokens_group),
-            style = TangemTheme.typography2.headingSemibold17,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
         )
         Box(
-            modifier = Modifier.size(TangemTheme.dimens2.x6),
+            modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
         ) {
             if (organizeMenuUM.isGrouped) {
                 Box(
                     modifier = Modifier
-                        .padding(TangemTheme.dimens2.x0_5)
-                        .size(TangemTheme.dimens2.x5)
+                        .padding(2.dp)
+                        .size(20.dp)
                         .background(
-                            color = TangemTheme.colors2.graphic.neutral.primary,
+                            color = TangemTheme.colors3.icon.primary,
                             shape = CircleShape,
                         ),
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_check_default_24),
                         contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primaryInverted,
+                        tint = TangemTheme.colors3.icon.inverse,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(TangemTheme.dimens2.x0_5)
-                            .size(TangemTheme.dimens2.x4),
+                            .padding(2.dp)
+                            .size(16.dp),
                     )
                 }
             }

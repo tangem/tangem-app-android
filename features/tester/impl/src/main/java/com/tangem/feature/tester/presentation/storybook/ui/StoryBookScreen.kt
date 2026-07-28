@@ -48,6 +48,10 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.Ta
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.TangemRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.TangemSearchStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.TangemShimmerStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.TextStyleStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.TangemTokenIconStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.TangemTokenRowMarketStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.TangemTokenRowV2Story
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.TangemTopNavigationStory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.TangemHeaderRowStory
 import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessageStory
@@ -98,6 +102,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
             is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
             is TangemCheckboxV2Story -> TangemCheckboxV2Story(state = storyState)
             is TangemCheckmarkStory -> TangemCheckmarkStory(state = storyState)
+            is TangemTokenIconStory -> TangemTokenIconStory(state = storyState)
             is TangemGlowRingStory -> TangemGlowRingStory(state = storyState)
             is TangemRowStory -> TangemRowStory(state = storyState)
             is TangemSearchStory -> TangemSearchStory(state = storyState)
@@ -105,6 +110,9 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
             is TangemFadeStory -> TangemFadeStory(state = storyState)
             is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
             is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
+            is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
+            is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)
+            is TextStyleStory -> TextStyleStory(state = storyState)
         }
     }
 }

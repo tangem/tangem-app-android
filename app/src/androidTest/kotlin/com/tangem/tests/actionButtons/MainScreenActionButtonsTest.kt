@@ -503,6 +503,9 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Swap' button") {
                 onMainScreen { swapButton.performClick() }
             }
+            step("Skip stories if displayed") {
+                skipSwapStories()
+            }
             step("Check 'Action is unavailable' dialog") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     checkActionIsUnavailableDialog()

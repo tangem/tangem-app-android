@@ -11,14 +11,11 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
@@ -34,63 +31,14 @@ fun ArticleHeader(
     tags: ImmutableList<LabelUM>,
     modifier: Modifier = Modifier,
 ) {
-    if (LocalRedesignEnabled.current) {
-        ArticleHeaderV2(
-            isTrending = isTrending,
-            title = title,
-            createdAt = createdAt,
-            score = score,
-            tags = tags,
-            modifier = modifier,
-        )
-    } else {
-        ArticleHeaderV1(
-            title = title,
-            createdAt = createdAt,
-            score = score,
-            tags = tags,
-            modifier = modifier,
-        )
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ArticleHeaderV1(
-    title: String,
-    createdAt: String,
-    score: Float,
-    tags: ImmutableList<LabelUM>,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        ArticleInfo(
-            score = score,
-            createdAt = createdAt,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = title,
-            style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
-        )
-
-        if (tags.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(20.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                tags.forEach { tag ->
-                    Label(
-                        state = tag,
-                    )
-                }
-            }
-        }
-    }
+    ArticleHeaderV2(
+        isTrending = isTrending,
+        title = title,
+        createdAt = createdAt,
+        score = score,
+        tags = tags,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -220,21 +168,7 @@ private fun labelLeadingBadgeIconPosition(content: LabelLeadingContentUM): Tange
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ArticleHeaderPreviewV1() {
-    TangemThemePreview {
-        ArticleHeader(
-            title = "Something going good!",
-            createdAt = "1 hour ago",
-            score = 5.5f,
-            tags = persistentListOf(),
-            isTrending = true,
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ArticleHeaderPreviewV2() {
+private fun ArticleHeaderPreview() {
     TangemThemePreviewRedesign {
         ArticleHeader(
             title = "Something going good!",

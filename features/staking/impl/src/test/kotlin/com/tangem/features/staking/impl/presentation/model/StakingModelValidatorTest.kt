@@ -314,6 +314,7 @@ internal class StakingModelValidatorTest : StakingModelTestBase() {
             advanceUntilIdle()
 
             model.onActiveStake(activeStake)
+            advanceUntilIdle()
 
             verify {
                 stateController.update(

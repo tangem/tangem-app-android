@@ -25,7 +25,6 @@ internal class MetricsConverter(
     private val appCurrency: Provider<AppCurrency>,
     private val tokenSymbol: String,
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
-    private val isRedesignEnabled: Boolean,
 ) : Converter<TokenMarketInfo.Metrics, MetricsUM> {
 
     @Suppress("LongMethod")
@@ -118,11 +117,7 @@ internal class MetricsConverter(
                         },
                     ),
                 ),
-                metricsV2 = if (isRedesignEnabled) {
-                    convertToMetricsV2UM(value)
-                } else {
-                    null
-                },
+                metricsV2 = convertToMetricsV2UM(value),
             )
         }
     }
