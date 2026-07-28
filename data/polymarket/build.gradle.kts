@@ -44,6 +44,7 @@ dependencies {
     api(projects.domain.polymarket)
     implementation(projects.domain.wallets)
     implementation(projects.domain.common)
+    implementation(projects.domain.card)
     implementation(projects.data.wallets)
     // endregion
 
