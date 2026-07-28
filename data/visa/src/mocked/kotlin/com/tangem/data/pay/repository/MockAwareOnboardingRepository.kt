@@ -6,6 +6,7 @@ import com.tangem.core.error.UniversalError
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
@@ -23,6 +24,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 ) : OnboardingRepository {
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
+    private val mockVaOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
@@ -47,6 +49,11 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> =
         real.getCustomerInfo(userWalletId)
 
+    override suspend fun getBankCredentials(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, BankCredentials> = real.getBankCredentials(userWalletId, productInstanceId)
+
     override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> {
         if (isMockMode) {
             mockOrderIds.add(userWalletId)
@@ -68,6 +75,39 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         return real.getOrderId(userWalletId)
     }
 
+    override suspend fun createVirtualAccountOrder(
+        userWalletId: UserWalletId,
+        paymentAccountAddress: String,
+        idempotencyKey: String,
+    ): Either<VisaApiError, String> {
+        if (isMockMode) {
+            mockVaOrderIds.add(userWalletId)
+            return MOCK_VA_ORDER_ID.right()
+        }
+        return real.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
+    }
+
+    override suspend fun getVirtualAccountOrderId(userWalletId: UserWalletId): String? {
+        if (isMockMode) return MOCK_VA_ORDER_ID.takeIf { userWalletId in mockVaOrderIds }
+        return real.getVirtualAccountOrderId(userWalletId)
+    }
+
+    override suspend fun storeVirtualAccountOrderId(userWalletId: UserWalletId, vaOrderId: String) {
+        if (isMockMode) {
+            mockVaOrderIds.add(userWalletId)
+            return
+        }
+        real.storeVirtualAccountOrderId(userWalletId, vaOrderId)
+    }
+
+    override suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId) {
+        if (isMockMode) {
+            mockVaOrderIds.remove(userWalletId)
+            return
+        }
+        real.clearVirtualAccountOrderId(userWalletId)
+    }
+
     override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> =
         real.hasTangemPayInWallet(userWalletId)
 
@@ -76,6 +116,10 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> =
         real.getCustomerEligibility()
+
+    override suspend fun fetchCustomerEligibility(
+        userWalletId: UserWalletId,
+    ): Either<VisaApiError, List<TangemPayEligibilityType>> = real.fetchCustomerEligibility(userWalletId)
 
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? =
         real.getSavedCustomerInfo(userWalletId)
@@ -102,5 +146,6 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     private companion object {
         const val MOCK_ORDER_ID = "mock-order-id"
+        const val MOCK_VA_ORDER_ID = "mock-va-order-id"
     }
 }
