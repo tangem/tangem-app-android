@@ -26,7 +26,7 @@ internal class PolymarketOnboardingErrorMappingTest {
     }
 
     @Test
-    fun `GIVEN a wallet error WHEN mapped THEN it is wrapped without losing the cause`() {
+    fun `GIVEN a non-network wallet error WHEN mapped THEN it is wrapped without losing the cause`() {
         // Arrange
         val cause = PolymarketWalletError.RelayerRejected.NonceReused
 
@@ -35,6 +35,15 @@ internal class PolymarketOnboardingErrorMappingTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketOnboardingError.Wallet(cause))
+    }
+
+    @Test
+    fun `GIVEN a network wallet error WHEN mapped THEN returns Network`() {
+        // Act
+        val actual = PolymarketWalletError.Network.toOnboardingError()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketOnboardingError.Network)
     }
 
     @Test
