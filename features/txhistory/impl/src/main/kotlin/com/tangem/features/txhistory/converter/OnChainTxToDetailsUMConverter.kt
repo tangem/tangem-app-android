@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.converter
 
+import androidx.annotation.StringRes
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
@@ -69,7 +70,9 @@ internal class OnChainTxToDetailsUMConverter(
             rows = buildList {
                 tx.validatorRow()?.let(::add)
                 tx.protocolRow()?.let(::add)
-                addAll(tx.toInfoRows())
+                // A received plain transfer's fee was paid by the sender, not the user — omit it here. Non-Transfer
+                // ops the user initiated (Approve, staking) keep their fee even when incoming.
+                if (!tx.isReceivedTransfer()) addAll(tx.toInfoRows())
             }.toImmutableList(),
         )
     }
@@ -138,9 +141,12 @@ internal class OnChainTxToDetailsUMConverter(
 
     /** A transfer whose counterparty resolves to one of the user's own accounts/wallets reads "Transfer". */
     private fun TxInfo.isOwnTransfer(): Boolean = when (resolvedCounterparty()) {
-        is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnWallet -> true
+        is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount, is ResolvedOwner.OwnWallet -> true
         is ResolvedOwner.External, null -> false
     }
+
+    /** A received plain transfer — its on-chain fee belongs to the sender, so the details omit the fee row. */
+    private fun TxInfo.isReceivedTransfer(): Boolean = type is TxInfo.TransactionType.Transfer && !isOutgoing
 
     /**
      * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
@@ -211,7 +217,7 @@ internal class OnChainTxToDetailsUMConverter(
         if (isContractInteraction) return null
         return when (val owner = resolvedCounterparty()) {
             is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(),
+                label = counterpartyLabel(incoming = R.string.common_from_account),
                 title = owner.account.accountName.toUM().value,
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
                     iconResId = owner.account.icon.value.getResId(),
@@ -219,14 +225,20 @@ internal class OnChainTxToDetailsUMConverter(
                 ),
                 onCopyClick = null,
             )
+            is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.CounterpartyUM(
+                label = counterpartyLabel(incoming = R.string.common_from_account),
+                title = owner.account.accountName.toUM().value,
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount,
+                onCopyClick = null,
+            )
             is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(),
+                label = counterpartyLabel(incoming = R.string.common_from_wallet),
                 title = stringReference(owner.walletInfo.name),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(deviceIconUM = owner.walletInfo.deviceIconUM),
                 onCopyClick = null,
             )
             is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(),
+                label = counterpartyLabel(incoming = R.string.common_from_address),
                 title = stringReference(owner.address.toBriefAddressFormat()),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = owner.address),
                 onCopyClick = { onCopyAddress(owner.address) },
@@ -235,9 +247,12 @@ internal class OnChainTxToDetailsUMConverter(
         }
     }
 
-    /** Section label above the counterparty: "Recipient" for outgoing transfers, "From" for incoming. */
-    private fun TxInfo.counterpartyLabel(): TextReference =
-        if (isOutgoing) resourceReference(R.string.send_recipient) else resourceReference(R.string.common_from)
+    /**
+     * Section label above the counterparty: "Recipient" for outgoing transfers, and for incoming the caller-supplied
+     * [incoming] label reflecting the resolved sender kind ("From account" / "From wallet" / "From address").
+     */
+    private fun TxInfo.counterpartyLabel(@StringRes incoming: Int): TextReference =
+        if (isOutgoing) resourceReference(R.string.send_recipient) else resourceReference(incoming)
 }
 
 // region Amount / header building helpers

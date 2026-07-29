@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -11,6 +12,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -292,6 +294,32 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val subtitle = result.subtitle as ContentSubtitle.OwnAccount
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
         assertThat(subtitle.iconResId).isNotEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN Transfer to own Payment account in accounts mode WHEN convert THEN OwnPaymentAccount subtitle`() {
+        val ownPaymentAccount = Account.Payment(UserWalletId(stringValue = "00"))
+        val converter = TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            lookupContext = TxHistoryLookupContext(
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
+                isAccountsModeEnabled = true,
+                walletInfoById = emptyMap(),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        val subtitle = result.subtitle as ContentSubtitle.OwnPaymentAccount
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+        assertThat(subtitle.accountName).isEqualTo(ownPaymentAccount.accountName.toUM().value)
     }
 
     @Test
