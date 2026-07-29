@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
@@ -16,9 +17,16 @@ import java.math.BigInteger
 interface PolymarketRepository {
 
     /**
-     * Fetch the Discovery feed of prediction events (each with its top active markets).
+     * Fetch the BFF-owned UI categories shown as Discovery feed tabs.
      */
-    suspend fun getEvents(): Either<DataError, List<PolymarketEvent>>
+    suspend fun getCategories(): Either<DataError, List<PolymarketCategory>>
+
+    /**
+     * Fetch the Discovery feed of prediction events (each with its top active markets).
+     *
+     * @param category optional category id to filter by; `null` for the default (Trending) feed
+     */
+    suspend fun getEvents(category: Int? = null): Either<DataError, List<PolymarketEvent>>
 
     /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
