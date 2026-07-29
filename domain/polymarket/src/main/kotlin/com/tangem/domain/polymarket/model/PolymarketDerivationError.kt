@@ -3,7 +3,7 @@ package com.tangem.domain.polymarket.model
 /**
  * Typed failure surface of Polymarket owner-EOA derivation.
  */
-sealed interface PolymarketDerivationError {
+sealed interface PolymarketDerivationError : PolymarketError {
 
     /** No secp256k1 key material on the wallet (card has no such wallet / hot wallet locked). */
     data object MissingWallet : PolymarketDerivationError
