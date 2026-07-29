@@ -89,6 +89,7 @@ internal fun PortfolioSelectorBS(
                 SecondaryButton(
                     text = state.button.text.resolveReference(),
                     onClick = state.button.onClick,
+                    enabled = state.button.isEnabled,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),

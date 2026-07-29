@@ -13,21 +13,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
-import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.filter.TangemFilterItem
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_down_16
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.MarketChart
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
@@ -40,8 +37,7 @@ internal fun ForYouPortfolioReview(
     periodPickerUM: TangemSegmentedPickerUM,
     onPeriodClick: (TangemSegmentUM) -> Unit,
     portfolioReviewUM: PortfolioReviewUM,
-    portfolioSelectorLabel: TextReference,
-    onSelectPortfolioClick: () -> Unit,
+    portfolioFilter: TangemFilterItemUM,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -55,12 +51,9 @@ internal fun ForYouPortfolioReview(
                 style = TangemTheme.typography3.heading.small,
                 color = TangemTheme.colors3.text.primary,
             )
-            TangemBadge(
-                text = portfolioSelectorLabel,
-                variant = TangemBadge.Variant.Solid,
-                size = TangemBadge.Size.X9,
-                iconEnd = TangemIconUM.Icon(Icons.ic_chevron_down_16),
-                onClick = onSelectPortfolioClick,
+            TangemFilterItem(
+                state = portfolioFilter,
+                variant = TangemFilterItem.Variant.Transparent,
             )
         }
         SpacerH(16.dp)
@@ -112,8 +105,11 @@ private fun ForYouPortfolioReview_Review(
         ForYouPortfolioReview(
             portfolioReviewUM = params,
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
-            portfolioSelectorLabel = stringReference("All accounts"),
-            onSelectPortfolioClick = {},
+            portfolioFilter = TangemFilterItemUM.Inactive(
+                id = "portfolio_selector",
+                label = stringReference("All accounts"),
+                onClick = {},
+            ),
             periodPickerUM = TangemSegmentedPickerUM(
                 items = persistentListOf(
                     TangemSegmentUM(id = "0", title = stringReference("Day")),

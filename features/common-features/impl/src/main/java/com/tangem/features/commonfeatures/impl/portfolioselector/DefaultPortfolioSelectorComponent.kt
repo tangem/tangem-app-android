@@ -69,6 +69,7 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
                     SecondaryButton(
                         text = button.text.resolveReference(),
                         onClick = button.onClick,
+                        enabled = button.isEnabled,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
