@@ -353,7 +353,7 @@ private fun Preview() {
             Modifier
                 .fillMaxWidth()
                 .hazeSourceTangem()
-                .background(TangemTheme.colors.background.secondary),
+                .background(TangemTheme.colors3.bg.secondary),
         ) {
             Spacer(Modifier.height(32.dp))
             // Screen-level usage: default insets reserve space for the system status bar.
