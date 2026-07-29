@@ -25,14 +25,6 @@ import kotlinx.collections.immutable.persistentListOf
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/branch/0xt9Tg8x8f0Z0m2KUdLG9q/%F0%9F%92%A0-DS-Components?node-id=7959-24284&m=dev)
  *
- * Behavior notes:
- * - The group is display-only: it neither owns nor mutates the selection. Callers rebuild [items]
- *   in response to the chips' own callbacks, so any number of chips may be active at once.
- * - Chips are keyed by [TangemFilterItemUM.id], so reordering or swapping a chip between
- *   inactive / active / loading keeps its scroll position and press state.
- * - The row scrolls horizontally when the chips don't fit and never wraps to a second line.
- * - All [TangemFilterItemUM.Loading] chips in the group shimmer in phase with each other.
- *
  * @param items Chips to render, in display order.
  * @param modifier Modifier applied to the row. The row fills the available width by default.
  * @param variant Visual style applied to every chip (Figma `APPEARANCE`).
