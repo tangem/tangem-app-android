@@ -6,6 +6,7 @@ import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.model.ForYouNotification
@@ -18,8 +19,7 @@ internal data class ForYouUM(
     val notifications: ImmutableList<ForYouNotification>,
     val periodPickerUM: TangemSegmentedPickerUM,
     val onPeriodClick: (tangemSegmentUM: TangemSegmentUM) -> Unit,
-    val portfolioSelectorLabel: TextReference,
-    val onSelectPortfolioClick: () -> Unit,
+    val portfolioFilter: TangemFilterItemUM,
 )
 
 @Immutable
