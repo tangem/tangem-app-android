@@ -39,6 +39,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -160,6 +161,8 @@ internal class DefaultPolymarketTypedDataSignerTest {
         assertThat(result.isRight()).isTrue()
         assertThat(hashes.captured).hasSize(2)
         coVerify(exactly = 1) { transactionSigner.sign(any<List<ByteArray>>(), any()) }
+        // Card is not backed up (backupStatus == null) and not a twin, so its id is passed to the signer
+        verify(exactly = 1) { cardSdkConfigRepository.getCommonSigner(cardId = "CB79", twinKey = null, userWalletId) }
     }
 
     @Test

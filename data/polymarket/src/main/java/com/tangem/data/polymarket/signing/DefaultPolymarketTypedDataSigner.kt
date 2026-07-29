@@ -8,13 +8,13 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.data.polymarket.builder.PolymarketTypedDataBuilder
 import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
+import com.tangem.data.polymarket.secp256k1SeedKey
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
@@ -140,15 +140,6 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
                 userWalletId = userWallet.walletId,
             )
         }
-    }
-
-    private fun UserWallet.secp256k1SeedKey(): ByteArray? = when (this) {
-        is UserWallet.Cold -> scanResponse.card.wallets
-            .firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-            ?.publicKey
-        is UserWallet.Hot -> wallets
-            ?.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-            ?.publicKey
     }
 
     private fun Throwable.toSigningError(): PolymarketSigningError = when (this) {
