@@ -304,6 +304,10 @@ private fun resolveOwnSubtitle(
             iconResId = resolved.account.icon.value.getResId(),
             iconBackgroundColor = resolved.account.icon.color.getUiColor(),
         )
+        is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
+            direction = direction,
+            accountName = resolved.account.accountName.toUM().value,
+        )
         is ResolvedOwner.OwnWallet -> ContentSubtitle.OwnWallet(
             direction = direction,
             walletName = resolved.walletInfo.name,
