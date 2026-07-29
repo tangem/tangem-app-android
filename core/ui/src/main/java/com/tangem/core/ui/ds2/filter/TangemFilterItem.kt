@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -63,34 +61,6 @@ import com.tangem.core.ui.res.generated.icons.ic_cross_16
  *
  * Usually placed inside a [TangemFilterGroup] rather than used standalone.
  *
- * Behavior notes:
- * - The chip has **two** click targets: clicking anywhere on it invokes `onClick` (open the list of
- *   options), while clicking the trailing cross of a [TangemFilterItemUM.Active] chip invokes
- *   `onClearClick` (drop the picked values). The cross has a slightly enlarged touch area that does
- *   not affect its visual position.
- * - [TangemFilterItemUM.Inactive] renders the filter name with a chevron;
- *   [TangemFilterItemUM.Active] renders the picked value, an optional `+N` counter and the cross.
- * - [TangemFilterItemUM.Loading] renders a fixed-width shimmer pill; [variant],
- *   [contentDescription] and clicks are ignored in that state.
- * - The label never wraps — it truncates with an ellipsis once a width constraint is applied via
- *   [modifier]. Without such a constraint the chip grows with its content.
- * - Content changes are animated, so the chip resizes smoothly instead of snapping: the old label
- *   fades out and the new one fades in only after it (so two values never overlap) while the width
- *   animates, the `+N` counter expands / shrinks horizontally as it appears and disappears, and the
- *   trailing chevron and cross crossfade without any size change. The width animation runs inside the
- *   pill, so its round caps stay intact throughout — do **not** add `Modifier.animateContentSize()`
- *   on top, it would flatten the leading cap behind its rectangular clip.
- * - Because the growth is anchored to the chip's end edge, place the chip so that edge is fixed (e.g.
- *   as the trailing child of a `Row(horizontalArrangement = Arrangement.SpaceBetween)`) and it will
- *   only ever extend towards the start.
- * - The active chip is inverse-colored: the material variant switches to the `material-inverted`
- *   token set, the transparent one to a flat `bg.inverse` fill. The recoloring is not animated — it
- *   lands in one frame, together with the pill's own fill, which the material token set switches
- *   instantly anyway.
- * - The press overlay comes from [TangemSurface]'s ripple and follows the background: the flat
- *   inverse-colored active chip is lightened, every other state is dimmed.
- * - While focused the chip is wrapped in the brand focus ring, which replaces its regular border.
- *
  * @param state Content and callbacks of the chip. See [TangemFilterItemUM].
  * @param modifier Modifier applied to the chip container. Constrain the width here (e.g.
  *   `Modifier.widthIn(max = 160.dp)`) to make long values truncate.
@@ -136,7 +106,7 @@ fun TangemFilterItem(
         color = colorTokens.backgroundColor,
         isMaterial = colorTokens.isMaterial,
         materialStyle = colorTokens.materialStyle,
-        border = resolveBorder(isFocused = isFocused, borderColor = colorTokens.borderColor),
+        border = resolveBorder(isFocused = isFocused),
         shape = CircleShape,
         onClick = state.clickHandler(),
         interactionSource = interactionSource,
@@ -151,12 +121,11 @@ fun TangemFilterItem(
 
 /** The focus ring replaces the chip's regular border while it is focused. */
 @Composable
-private fun resolveBorder(isFocused: Boolean, borderColor: Color?): BorderStroke? = when {
+private fun resolveBorder(isFocused: Boolean): BorderStroke? = when {
     isFocused -> BorderStroke(
         width = FocusRingWidth,
         color = TangemTheme.colors3.interaction.focusRing.brand,
     )
-    borderColor != null -> BorderStroke(width = BorderWidth, color = borderColor)
     else -> null
 }
 
@@ -366,7 +335,6 @@ private data class FilterColorTokens(
     val iconTint: Color,
     val isMaterial: Boolean = false,
     val materialStyle: TangemSurface.MaterialStyle = TangemSurface.MaterialStyle.Default,
-    val borderColor: Color? = null,
 )
 
 @Composable
@@ -407,7 +375,6 @@ private fun resolveColorTokens(variant: TangemFilterItem.Variant, isActive: Bool
 private val MinHeight: Dp = 36.dp
 private val MinWidth: Dp = 64.dp
 private val PillRadius: Dp = 999.dp
-private val BorderWidth: Dp = 1.dp
 private val FocusRingWidth: Dp = 2.dp
 private val IconSize: Dp = 16.dp
 private val ContentStartPadding: Dp = 12.dp
