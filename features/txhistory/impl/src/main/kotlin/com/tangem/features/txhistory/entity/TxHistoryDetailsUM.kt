@@ -125,6 +125,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
             val backgroundColor: Color,
         ) : AssetOwnerUM
 
+        /** User's own Tangem Pay (Payment) account — the Visa icon, shown **before** the [name]. */
+        data class PaymentAccount(override val name: TextReference) : AssetOwnerUM
+
         /** User's own wallet — the wallet card [deviceIconUM], shown **after** the [name]. */
         data class Wallet(
             override val name: TextReference,
@@ -236,6 +239,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
             @DrawableRes val iconResId: Int,
             val backgroundColor: Color,
         ) : CounterpartyAvatar
+
+        /** User's own Tangem Pay (Payment) account — rendered as the Visa icon. */
+        data object PaymentAccount : CounterpartyAvatar
 
         /** User's own wallet — rendered as the wallet card [deviceIconUM]. */
         data class Wallet(val deviceIconUM: DeviceIconUM) : CounterpartyAvatar
