@@ -3,7 +3,8 @@ package com.tangem.features.txhistory.model
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
@@ -17,7 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  *  - [isAccountsModeEnabled] — toggles whether a resolved owner is rendered as account or wallet.
  */
 internal data class TxHistoryLookupContext(
-    val ownAccountByNetwork: Map<Network.RawID, Map<String, Account.CryptoPortfolio>>,
+    val ownAccountByNetwork: Map<Network.RawID, Map<String, Account>>,
     val isAccountsModeEnabled: Boolean,
     val walletInfoById: Map<UserWalletId, WalletInfo>,
 )
@@ -31,6 +32,7 @@ internal data class WalletInfo(val name: String, val deviceIconUM: DeviceIconUM)
  */
 internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
+    data class OwnPaymentAccount(val account: Account.Payment) : ResolvedOwner
     data class OwnWallet(val userWalletId: UserWalletId, val walletInfo: WalletInfo) : ResolvedOwner
     data class External(val address: String) : ResolvedOwner
 }
@@ -55,13 +57,15 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
     }
     return when {
         account == null -> ResolvedOwner.External(address)
-        isAccountsModeEnabled -> ResolvedOwner.OwnAccount(account)
-        else -> {
+        !isAccountsModeEnabled -> {
             val userWalletId = account.accountId.userWalletId
             walletInfoById[userWalletId]
                 ?.let { ResolvedOwner.OwnWallet(userWalletId, it) }
                 ?: ResolvedOwner.External(address)
         }
+        account is Account.CryptoPortfolio -> ResolvedOwner.OwnAccount(account)
+        account is Account.Payment -> ResolvedOwner.OwnPaymentAccount(account)
+        else -> ResolvedOwner.External(address)
     }
 }
 
@@ -96,7 +100,9 @@ internal fun TxInfo.reclassifyOwnOperationAsTransfer(
 
     val counterparty = counterpartyAddress() ?: return this
     val owner = lookup.resolveOwner(address = counterparty, networkRawId = networkRawId)
-    val isOwn = owner is ResolvedOwner.OwnAccount || owner is ResolvedOwner.OwnWallet
+    val isOwn = owner is ResolvedOwner.OwnAccount ||
+        owner is ResolvedOwner.OwnPaymentAccount ||
+        owner is ResolvedOwner.OwnWallet
     return if (isOwn) {
         copy(
             type = TxInfo.TransactionType.Transfer,
@@ -113,28 +119,38 @@ internal fun TxInfo.reclassifyOwnOperationAsTransfer(
  * checksummed vs lowercase EVM). A differing-case variant of another valid address would fail its checksum, so the
  * case-insensitive fallback cannot mis-attribute an external counterparty.
  */
-private fun Map<String, Account.CryptoPortfolio>.getByAddress(address: String): Account.CryptoPortfolio? =
+private fun Map<String, Account>.getByAddress(address: String): Account? =
     this[address] ?: entries.firstOrNull { it.key.equals(address, ignoreCase = true) }?.value
 
 /**
- * Flattens every crypto-portfolio account of every wallet into `address -> account` maps keyed by [Network.RawID]
- * (a swap's two legs can sit on different networks). Used to decide whether a transfer counterparty is one of the
- * user's own accounts/wallets.
+ * Flattens every account of every wallet into `address -> account` maps keyed by [Network.RawID] (a swap's two legs can
+ * sit on different networks). Used to decide whether a transfer counterparty is one of the user's own accounts/wallets.
+ * Crypto-portfolio accounts contribute each currency's address; a Payment (Tangem Pay) account contributes its deposit
+ * address, so a transfer to the user's own Tangem Pay account resolves as own — not as an external address.
  */
 internal fun buildOwnAccountAddressMapAllNetworks(
     lists: List<AccountStatusList>,
-): Map<Network.RawID, Map<String, Account.CryptoPortfolio>> {
-    val map = mutableMapOf<Network.RawID, MutableMap<String, Account.CryptoPortfolio>>()
+): Map<Network.RawID, Map<String, Account>> {
+    val map = mutableMapOf<Network.RawID, MutableMap<String, Account>>()
     lists.forEach { accountList ->
-        accountList.accountStatuses
-            .filterCryptoPortfolio()
-            .forEach { status ->
-                status.flattenCurrencies().forEach { currencyStatus ->
+        accountList.accountStatuses.forEach { status ->
+            when (status) {
+                is AccountStatus.CryptoPortfolio -> status.flattenCurrencies().forEach { currencyStatus ->
                     val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
                     val rawId = currencyStatus.currency.network.id.rawId
                     map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
                 }
+                is AccountStatus.Payment -> {
+                    val currencyStatus = (status.value as? PaymentAccountStatusValue.Loaded)?.cryptoCurrencyStatus
+                    val address = currencyStatus?.value?.networkAddress?.defaultAddress?.value
+                    if (currencyStatus != null && address != null) {
+                        val rawId = currencyStatus.currency.network.id.rawId
+                        map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
+                    }
+                }
+                is AccountStatus.Virtual -> Unit
             }
+        }
     }
     return map.mapValues { (_, addresses) -> addresses.toMap() }
 }

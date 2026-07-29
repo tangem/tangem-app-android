@@ -421,7 +421,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     )
 
     @Test
-    fun `GIVEN incoming Transfer with User address WHEN convert THEN address-avatar counterparty with From label`() {
+    fun `GIVEN incoming Transfer with User address WHEN convert THEN address-avatar counterparty with From address label`() {
         // Arrange
         val tx = txInfo(
             type = TransactionType.Transfer,
@@ -434,7 +434,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
-        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
     }
 
     @Test
@@ -450,6 +450,27 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = converter.convert(tx).counterparty
 
         // Assert
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+    }
+
+    @Test
+    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card without copy`() {
+        // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert — resolved as own Payment account (not an external address): Visa avatar, name, no copy button.
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount)
+        assertThat(counterparty?.onCopyClick).isNull()
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
     }
 
@@ -472,7 +493,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(EXTERNAL_ADDRESS))
-        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
     }
 
     @Test
@@ -591,7 +612,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
         assertThat(result.counterparty).isEqualTo(
             TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.common_from),
+                label = resourceReference(R.string.common_from_account),
                 title = stringReference("Family"),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
                     iconResId = ownAccount.icon.value.getResId(),
@@ -627,10 +648,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     // region Network-fee row
 
     @Test
-    fun `GIVEN tx with fee WHEN convert THEN single network-fee row`() {
+    fun `GIVEN outgoing Transfer with fee WHEN convert THEN single network-fee row`() {
         // Arrange
         val tx = txInfo(
             type = TransactionType.Transfer,
+            isOutgoing = true,
             fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
         )
 
@@ -641,6 +663,40 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows).hasSize(1)
         assertThat(rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
         assertThat(rows.first().value.resolveString()).contains("ETH")
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer with fee WHEN convert THEN no network-fee row`() {
+        // A received transfer's fee belongs to the sender, not the user — it must not be shown.
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN incoming ClaimRewards with fee WHEN convert THEN network-fee row shown`() {
+        // Staking claims are isOutgoing = false yet the user paid the gas — the fee stays (only plain Transfers hide it).
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Staking.ClaimRewards,
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows.map { it.label }).contains(resourceReference(R.string.common_network_fee_title))
     }
 
     @Test
