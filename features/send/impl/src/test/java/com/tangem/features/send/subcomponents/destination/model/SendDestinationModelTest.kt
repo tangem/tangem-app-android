@@ -6,6 +6,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -105,7 +107,14 @@ internal class SendDestinationModelTest {
     fun setUp() {
         MockKAnnotations.init(this)
         // PER_CLASS parameterized nested classes reuse one instance — reset verified mocks between rows.
-        clearMocks(callback, validateWalletAddressUseCase, answers = false, recordedCalls = true, childMocks = false)
+        clearMocks(
+            callback,
+            validateWalletAddressUseCase,
+            router,
+            answers = false,
+            recordedCalls = true,
+            childMocks = false,
+        )
         coEvery { getNetworkAddressesUseCase.invokeSync(any(), any<Network.RawID>()) } returns emptyList()
         every { getWalletsUseCase() } returns flowOf(emptyList())
         every { multiAccountStatusListSupplier() } returns flowOf(emptyList())
@@ -537,6 +546,74 @@ internal class SendDestinationModelTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnAddContactClick {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `WHEN onAddContactClick THEN address book opened with the sent address and memo`(
+            model: AddContactRouteModel,
+        ) = runTest {
+            // Arrange
+            val sut = buildModel(
+                initialState = contentState(
+                    address = "0xDave",
+                    blockchainAddress = model.blockchainAddress,
+                    memo = model.memoFieldValue,
+                ),
+            )
+            advanceUntilIdle()
+
+            // Act
+            sut.onAddContactClick()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(
+                    AppRoute.AddressBook(
+                        AddressBookOpenMode.WithContactCreation(
+                            address = model.expectedAddress,
+                            networkId = networkRawId,
+                            memo = model.expectedMemo,
+                        ),
+                    ),
+                )
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            // memo entered -> carried over to the new contact
+            AddContactRouteModel(
+                memoFieldValue = "12345",
+                blockchainAddress = null,
+                expectedAddress = "0xDave",
+                expectedMemo = "12345",
+            ),
+            // memo field shown but left blank -> nothing to carry
+            AddContactRouteModel(
+                memoFieldValue = "   ",
+                blockchainAddress = null,
+                expectedAddress = "0xDave",
+                expectedMemo = null,
+            ),
+            // network without transaction extras -> no memo field at all
+            AddContactRouteModel(
+                memoFieldValue = null,
+                blockchainAddress = null,
+                expectedAddress = "0xDave",
+                expectedMemo = null,
+            ),
+            // ENS-resolved recipient -> the canonical address is saved, not the typed name
+            AddContactRouteModel(
+                memoFieldValue = "42",
+                blockchainAddress = "0xCanonical",
+                expectedAddress = "0xCanonical",
+                expectedMemo = "42",
+            ),
+        )
+    }
+
+    @Nested
     inner class SyncAddressBooks {
 
         @Test
@@ -741,7 +818,51 @@ internal class SendDestinationModelTest {
     private fun content(model: SendDestinationModel): DestinationUM.Content =
         model.uiState.value as DestinationUM.Content
 
+    /**
+     * A ready-made [DestinationUM.Content] with `isInitialized = true`, so `SendDestinationInitialStateTransformer`
+     * leaves it alone and the test fully controls the address / memo fields. A null [memo] means the network has no
+     * transaction extras and therefore no memo field.
+     */
+    private fun contentState(
+        address: String,
+        blockchainAddress: String? = null,
+        memo: String? = null,
+    ): DestinationUM.Content = DestinationUM.Content(
+        isPrimaryButtonEnabled = false,
+        isInitialized = true,
+        addressTextField = DestinationTextFieldUM.RecipientAddress(
+            value = address,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Text),
+            placeholder = stringReference(""),
+            label = stringReference(""),
+            isValuePasted = false,
+            blockchainAddress = blockchainAddress,
+        ),
+        memoTextField = memo?.let {
+            DestinationTextFieldUM.RecipientMemo(
+                value = it,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Text),
+                placeholder = stringReference(""),
+                label = stringReference(""),
+                disabledText = stringReference(""),
+                isEnabled = true,
+                isValuePasted = false,
+            )
+        },
+        recent = persistentListOf(),
+        wallets = persistentListOf(),
+        networkName = "Ethereum",
+        isRecentHidden = false,
+    )
+
     data class AutoNextModel(val addressValidation: AddressValidationResult, val expectedNextClicks: Int)
+
+    data class AddContactRouteModel(
+        val memoFieldValue: String?,
+        val blockchainAddress: String?,
+        val expectedAddress: String,
+        val expectedMemo: String?,
+    )
 
     data class AddContactModel(
         val isAddContactAvailable: Boolean,
