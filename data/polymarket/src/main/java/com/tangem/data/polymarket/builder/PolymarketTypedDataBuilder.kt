@@ -6,9 +6,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Builds EIP-712 typed-data JSON for the two Polymarket onboarding signatures (kb/03, kb/07):
- * `ClobAuth` (L1 API auth) and the `DepositWallet` approvals `Batch`. The output JSON is consumed by
- * `EthereumUtils.makeTypedDataHash` downstream (APP-7b) — same contract as `Eip712TypedDataBuilder`.
+ * Builds EIP-712 typed-data JSON for the two Polymarket onboarding signatures: `ClobAuth` (L1 API auth)
+ * and the `DepositWallet` approvals `Batch`. The output JSON is consumed by `EthereumUtils.makeTypedDataHash`.
  *
  * Note the two `EIP712Domain` type arrays differ: `ClobAuth` has NO `verifyingContract`, the batch does.
  */

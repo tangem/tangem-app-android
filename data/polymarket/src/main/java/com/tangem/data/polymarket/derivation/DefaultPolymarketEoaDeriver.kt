@@ -4,12 +4,12 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.polymarket.secp256k1SeedKey
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.utils.catchOn
@@ -56,15 +56,6 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
             ?: derivationsRepository
                 .derivePublicKeys(userWalletId, mapOf(seedKey to listOf(path)))[seedKey]
                 ?.get(path)
-    }
-
-    private fun UserWallet.secp256k1SeedKey(): ByteArray? = when (this) {
-        is UserWallet.Cold -> scanResponse.card.wallets
-            .firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-            ?.publicKey
-        is UserWallet.Hot -> wallets
-            ?.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-            ?.publicKey
     }
 
     private fun Throwable.toDerivationError(): PolymarketDerivationError = when (this) {
