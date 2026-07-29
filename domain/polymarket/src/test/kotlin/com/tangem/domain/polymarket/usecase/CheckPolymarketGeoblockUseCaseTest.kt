@@ -37,6 +37,18 @@ internal class CheckPolymarketGeoblockUseCaseTest {
     }
 
     @Test
+    fun `GIVEN region is not blocked WHEN invoke THEN returns false`() = runTest {
+        // Arrange
+        coEvery { polymarketRepository.checkGeoblock() } returns false.right()
+
+        // Act
+        val actual = useCase()
+
+        // Assert
+        assertThat(actual).isEqualTo(false.right())
+    }
+
+    @Test
     fun `GIVEN no connection WHEN invoke THEN returns Network`() = runTest {
         // Arrange
         coEvery { polymarketRepository.checkGeoblock() } returns DataError.NetworkError.NoInternetConnection.left()
