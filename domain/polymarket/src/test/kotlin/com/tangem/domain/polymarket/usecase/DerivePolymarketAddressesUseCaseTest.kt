@@ -49,9 +49,26 @@ internal class DerivePolymarketAddressesUseCaseTest {
         val actual = useCase(userWalletId = userWalletId)
 
         // Assert
-        val expected = PolymarketAddresses(ownerAddress = OWNER, depositWalletAddress = DEPOSIT_WALLET)
+        val expected = PolymarketAddresses(
+            ownerAddress = OWNER,
+            depositWalletAddress = DEPOSIT_WALLET,
+            userWalletId = userWalletId,
+        )
         assertThat(actual).isEqualTo(expected.right())
         verify(exactly = 1) { depositWalletDeriver.deriveDepositWallet(OWNER) }
+    }
+
+    @Test
+    fun `GIVEN the deposit deriver throws WHEN invoke THEN returns Unknown`() = runTest {
+        // Arrange
+        coEvery { eoaDeriver.deriveOwnerEoa(userWalletId) } returns OWNER.right()
+        every { depositWalletDeriver.deriveDepositWallet(OWNER) } throws IllegalArgumentException("boom")
+
+        // Act
+        val actual = useCase(userWalletId = userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketOnboardingError.Unknown.left())
     }
 
     @ParameterizedTest
