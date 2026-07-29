@@ -16,8 +16,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -50,6 +50,7 @@ import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConvert
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.availableAccountIds
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.ForYouEarnOpportunitiesConverter
+import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouPortfolioFilterConverter
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouPortfolioReviewConverter
 import com.tangem.features.foryou.impl.model.converter.portfolioReview.ForYouSelectedPortfolioConverter
 import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer
@@ -118,6 +119,11 @@ internal class ForYouModel @Inject constructor(
                 multiAccountStatusListSupplier.invokeAsMap().map(converter::convert)
             }
 
+    private val portfolioFilterConverter = ForYouPortfolioFilterConverter(
+        onClick = ::onSelectPortfolioClick,
+        onClearClick = ::onClearPortfolioSelectionClick,
+    )
+
     private val expandedPortfolioReviewAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val expandedEarnOpportunitiesAssetIds = MutableStateFlow<Set<String>>(value = emptySet())
     private val selectedPeriod = MutableStateFlow(value = ForYouPeriod.Day)
@@ -150,8 +156,7 @@ internal class ForYouModel @Inject constructor(
                     }.toPersistentList().asSingleForYouGroup(),
                 ),
                 onPeriodClick = ::onPeriodClick,
-                portfolioSelectorLabel = stringReference("All account"),
-                onSelectPortfolioClick = ::onSelectPortfolioClick,
+                portfolioFilter = TangemFilterItemUM.Loading(id = ForYouPortfolioFilterConverter.ID),
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData(
                         title = resourceReference(R.string.market_chart_can_not_load_data),
@@ -248,6 +253,7 @@ internal class ForYouModel @Inject constructor(
                     selectedPortfolio = selectedPortfolio,
                     portfolioReviewUM = portfolioReviewUM,
                     earnOpportunitiesUM = earnOpportunitiesUM,
+                    portfolioFilter = portfolioFilterConverter.convert(selectedPortfolio),
                     expandedPortfolioReviewAssetIds = expandedPortfolioReviewAssetIds::value,
                     expandedEarnOpportunitiesAssetIds = expandedEarnOpportunitiesAssetIds::value,
                 ),
@@ -271,6 +277,20 @@ internal class ForYouModel @Inject constructor(
 
     private fun onSelectPortfolioClick() {
         bottomSheetNavigation.activate(ForYouBottomSheetConfig.PortfolioSelector)
+    }
+
+    /**
+     * Clears the portfolio filter by re-selecting every available account — the same selection
+     * [initDefaultPortfolioSelection] applies on the first launch.
+     */
+    private fun onClearPortfolioSelectionClick() {
+        modelScope.launch {
+            val accountList = multiAccountStatusListSupplier.invokeAsMap()
+                .firstOrNull { it.availableAccountIds().isNotEmpty() }
+                ?: return@launch
+
+            portfolioSelectorController.selectAccount(accountList.availableAccountIds())
+        }
     }
 
     /**
