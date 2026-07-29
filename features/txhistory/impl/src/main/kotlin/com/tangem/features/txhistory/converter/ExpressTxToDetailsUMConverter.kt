@@ -205,6 +205,8 @@ internal class ExpressTxToDetailsUMConverter(
     private fun isSameOwnPortfolio(from: ResolvedOwner?, to: ResolvedOwner?): Boolean = when {
         from is ResolvedOwner.OwnAccount && to is ResolvedOwner.OwnAccount ->
             from.account.accountId == to.account.accountId
+        from is ResolvedOwner.OwnPaymentAccount && to is ResolvedOwner.OwnPaymentAccount ->
+            from.account.accountId == to.account.accountId
         from is ResolvedOwner.OwnWallet && to is ResolvedOwner.OwnWallet ->
             from.userWalletId == to.userWalletId
         else -> false
@@ -226,6 +228,9 @@ internal class ExpressTxToDetailsUMConverter(
             name = account.accountName.toUM().value,
             iconResId = account.icon.value.getResId(),
             backgroundColor = account.icon.color.getUiColor(),
+        )
+        is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.AssetOwnerUM.PaymentAccount(
+            name = account.accountName.toUM().value,
         )
         is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
             name = stringReference(walletInfo.name),
