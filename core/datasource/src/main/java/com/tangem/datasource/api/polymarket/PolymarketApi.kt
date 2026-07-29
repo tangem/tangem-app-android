@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
@@ -19,13 +20,23 @@ import retrofit2.http.Query
 interface PolymarketApi {
 
     /**
+     * BFF-owned UI categories shown as Discovery feed tabs.
+     *
+     * @param locale optional locale for the category labels; BFF defaults to `en`
+     */
+    @GET("api/predictions/v1/categories")
+    suspend fun getCategories(@Query("locale") locale: String?): ApiResponse<PolymarketCategoriesResponse>
+
+    /**
      * Discovery feed: paginated prediction events, each with its top active markets.
      *
+     * @param category optional category id to filter by; `null` for the default (Trending) feed
      * @param limit page size (BFF default 20)
      * @param cursor keyset pagination cursor; `null` for the first page
      */
     @GET("api/predictions/v1/events")
     suspend fun getEvents(
+        @Query("category") category: Int?,
         @Query("limit") limit: Int,
         @Query("cursor") cursor: String?,
     ): ApiResponse<PolymarketEventsResponse>

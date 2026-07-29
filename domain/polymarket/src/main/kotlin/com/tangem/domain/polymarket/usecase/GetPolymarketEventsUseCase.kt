@@ -1,22 +1,21 @@
 package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
-import arrow.core.right
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 
 /**
- * Serves the Discovery feed.
- *
- * The feed is built against static fixtures ([PolymarketMockData]) so the UI can be developed without depending on
- * the shared [com.tangem.domain.polymarket.PolymarketRepository] binding — the BFF Discovery endpoint is not
- * deployed yet, and keeping the mock here avoids touching the data layer that other teams evolve in parallel.
+ * Serves the Discovery feed of prediction events (each with its top active markets) from the BFF.
  */
-class GetPolymarketEventsUseCase {
+class GetPolymarketEventsUseCase(
+    private val polymarketRepository: PolymarketRepository,
+) {
 
-    // Not `suspend` while it serves fixtures; restore the modifier together with the suspending repository call.
-    operator fun invoke(): Either<DataError, List<PolymarketEvent>> {
-        // TODO([REDACTED_TASK_KEY]): serve events from PolymarketRepository.getEvents() once the BFF Discovery endpoint is live
-        return PolymarketMockData.events.right()
+    /**
+     * @param category optional category id to filter by; `null` for the default (Trending) feed.
+     */
+    suspend operator fun invoke(category: Int? = null): Either<DataError, List<PolymarketEvent>> {
+        return polymarketRepository.getEvents(category = category)
     }
 }
