@@ -1,6 +1,6 @@
 package com.tangem.domain.polymarket.model
 
-sealed interface PolymarketAuthError {
+sealed interface PolymarketAuthError : PolymarketError {
 
     /** The L1 signature was rejected (HTTP 401). */
     data object InvalidSignature : PolymarketAuthError
