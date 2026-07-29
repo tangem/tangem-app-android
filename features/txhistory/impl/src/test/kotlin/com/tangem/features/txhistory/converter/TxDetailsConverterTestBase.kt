@@ -54,6 +54,7 @@ internal open class TxDetailsConverterTestBase {
     protected val ownAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1, name = "Family")
     protected val secondAccount: Account.CryptoPortfolio =
         MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
+    protected val ownPaymentAccount: Account.Payment = Account.Payment(MockAccounts.userWalletId)
     protected val copiedAddresses = mutableListOf<String>()
     protected val openedUrls = mutableListOf<String>()
 
@@ -253,7 +254,7 @@ internal open class TxDetailsConverterTestBase {
 
     /** Builds a details lookup with the given per-network own-address maps. */
     protected fun lookupOf(
-        vararg networks: Pair<Network.RawID, Map<String, Account.CryptoPortfolio>>,
+        vararg networks: Pair<Network.RawID, Map<String, Account>>,
         isAccountsModeEnabled: Boolean = true,
         walletInfoById: Map<UserWalletId, WalletInfo> = mapOf(
             MockAccounts.userWalletId to WalletInfo(
