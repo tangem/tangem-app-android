@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.res.TangemTheme
 
-private enum class ScaffoldSlot { TopBar, Content }
+private enum class ScaffoldSlot { TopBar, Content, Overlay }
 
 /**
  * Design-system v2 scaffold: [content] scrolls edge-to-edge under an overlaid, blurring [topBar].
@@ -30,6 +30,10 @@ private enum class ScaffoldSlot { TopBar, Content }
  * @param modifier applied to the scaffold root.
  * @param containerColor background behind [content], and what the blur samples.
  * @param topBar bar overlaid on [content]; blurs the content beneath it (usually a top navigation).
+ * @param overlay optional chrome drawn above [content] but below [topBar], outside the blur source —
+ *   e.g. a band of pinned tabs or a custom fade shared by the bar and the band. Kept out of the haze
+ *   source so blur effects never sample their own overlay back as a ghost. Receives the same padding
+ *   as [content].
  * @param content screen body behind [topBar]; must consume [contentPadding].
  */
 @Composable
@@ -37,6 +41,7 @@ fun TangemTopBarScaffold(
     modifier: Modifier = Modifier,
     containerColor: Color = TangemTheme.colors3.bg.primary,
     topBar: @Composable () -> Unit,
+    overlay: (@Composable BoxScope.(contentPadding: PaddingValues) -> Unit)? = null,
     content: @Composable BoxScope.(contentPadding: PaddingValues) -> Unit,
 ) {
     val systemBars = WindowInsets.systemBars.asPaddingValues()
@@ -66,8 +71,19 @@ fun TangemTopBarScaffold(
             }
         }.map { it.measure(constraints) }
 
+        val overlayPlaceables = if (overlay == null) {
+            emptyList()
+        } else {
+            subcompose(ScaffoldSlot.Overlay) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    overlay(contentPadding)
+                }
+            }.map { it.measure(constraints) }
+        }
+
         layout(constraints.maxWidth, constraints.maxHeight) {
             contentPlaceables.forEach { it.place(x = 0, y = 0) }
+            overlayPlaceables.forEach { it.place(x = 0, y = 0) }
             topBarPlaceables.forEach { it.place(x = 0, y = 0) }
         }
     }
