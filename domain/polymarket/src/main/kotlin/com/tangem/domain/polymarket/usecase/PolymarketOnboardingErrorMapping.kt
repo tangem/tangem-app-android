@@ -8,8 +8,10 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 internal fun PolymarketDerivationError.toOnboardingError(): PolymarketOnboardingError =
     PolymarketOnboardingError.Derivation(cause = this)
 
-internal fun PolymarketWalletError.toOnboardingError(): PolymarketOnboardingError =
-    PolymarketOnboardingError.Wallet(cause = this)
+internal fun PolymarketWalletError.toOnboardingError(): PolymarketOnboardingError = when (this) {
+    PolymarketWalletError.Network -> PolymarketOnboardingError.Network
+    else -> PolymarketOnboardingError.Wallet(cause = this)
+}
 
 internal fun DataError.toOnboardingError(): PolymarketOnboardingError = when (this) {
     is DataError.NetworkError -> PolymarketOnboardingError.Network
