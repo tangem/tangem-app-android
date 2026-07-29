@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
@@ -97,6 +99,10 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
         }
         is CounterpartyAvatar.Wallet -> TangemDeviceIcon(
             state = avatar.deviceIconUM,
+            modifier = avatarModifier,
+        )
+        is CounterpartyAvatar.PaymentAccount -> PaymentAccountIcon(
+            size = AccountIconSize.RedesignedDefault,
             modifier = avatarModifier,
         )
     }
