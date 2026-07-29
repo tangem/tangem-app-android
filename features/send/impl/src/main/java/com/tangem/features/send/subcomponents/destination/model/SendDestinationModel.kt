@@ -183,12 +183,16 @@ internal class SendDestinationModel @Inject constructor(
         )
     }
 
-    /** Opens the contact editor pre-filled with the sent address/network to save the recipient (success screen). */
+    /** Opens the contact editor pre-filled with the sent address/network/memo to save the recipient (success screen). */
     fun onAddContactClick() {
-        val address = (uiState.value as? DestinationUM.Content)?.addressTextField?.actualAddress ?: return
+        val content = uiState.value as? DestinationUM.Content ?: return
         router.push(
             AppRoute.AddressBook(
-                AddressBookOpenMode.WithContactCreation(address = address, networkId = cryptoCurrency.network.rawId),
+                AddressBookOpenMode.WithContactCreation(
+                    address = content.addressTextField.actualAddress,
+                    networkId = cryptoCurrency.network.rawId,
+                    memo = content.memoTextField?.value?.takeIf(String::isNotBlank),
+                ),
             ),
         )
     }
