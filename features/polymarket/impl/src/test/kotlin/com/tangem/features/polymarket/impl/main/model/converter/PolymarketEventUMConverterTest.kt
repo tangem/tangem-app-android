@@ -1,7 +1,9 @@
 package com.tangem.features.polymarket.impl.main.model.converter
 
 import com.google.common.truth.Truth
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
@@ -94,13 +96,13 @@ internal class PolymarketEventUMConverterTest {
             RowTitleModel(
                 displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
                 groupItemTitle = null,
-                expected = stringReference("Probability"),
+                expected = resourceReference(R.string.prediction_event_probability),
             ),
             // Even when a plain market reports a group item title, it is not what labels the row.
             RowTitleModel(
                 displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
                 groupItemTitle = "France",
-                expected = stringReference("Probability"),
+                expected = resourceReference(R.string.prediction_event_probability),
             ),
         )
     }
