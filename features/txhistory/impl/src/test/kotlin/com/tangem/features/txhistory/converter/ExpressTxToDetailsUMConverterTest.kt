@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -321,8 +322,10 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
         )
 
-        // Act
-        val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished, txInfo = leg))
+        // Act — both legs resolved so the rate row is present.
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Finished, txInfo = leg, fromCurrency = currency),
+        )
 
         // Assert — no provider in the fixture, so rate then the on-chain leg's network fee.
         assertThat(result.rows.map { it.label }).containsExactly(
@@ -339,6 +342,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
                 status = ExpressExchangeStatus.Finished,
                 provider = provider(name = "Mercuryo"),
                 externalTxUrl = EXTERNAL_URL,
+                fromCurrency = currency,
             ),
         )
 
@@ -377,9 +381,14 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
         )
 
-        // Act
+        // Act — both legs resolved (from = ETH, to = BTC) so the canonical rate row is present.
         val result = converter.convert(
-            expressSwap(status = ExpressExchangeStatus.Finished, txInfo = leg, provider = provider(name = "Changelly")),
+            expressSwap(
+                status = ExpressExchangeStatus.Finished,
+                txInfo = leg,
+                provider = provider(name = "Changelly"),
+                fromCurrency = currency,
+            ),
         )
 
         // Assert
@@ -391,10 +400,14 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN express swap with both amounts WHEN convert THEN rate row 1 from approx to follows provider`() {
-        // Act — no on-chain leg, so the rows are provider then rate.
+    fun `GIVEN express swap with both amounts WHEN convert THEN rate row follows provider`() {
+        // Act — no on-chain leg and both legs resolved, so the rows are provider then rate.
         val result = converter.convert(
-            expressSwap(status = ExpressExchangeStatus.Finished, provider = provider(name = "Changelly")),
+            expressSwap(
+                status = ExpressExchangeStatus.Finished,
+                provider = provider(name = "Changelly"),
+                fromCurrency = currency,
+            ),
         )
 
         // Assert
@@ -403,11 +416,40 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             resourceReference(R.string.common_rate),
         ).inOrder()
         val rate = result.rows[1].value.resolveString()
-        // 0.001 BTC / 1.5 ETH ≈ 0.00066667; base falls back to the unresolved from-leg network id, quote to BTC.
-        assertThat(rate).startsWith("1")
-        assertThat(rate).contains("≈")
-        assertThat(rate).contains("ethereum")
-        assertThat(rate).contains("BTC")
+        // ETH <-> BTC keeps ETH as the base; 0.001 BTC / 1.5 ETH ≈ 0.00066667 BTC per 1 ETH.
+        val (basePart, quotePart) = rate.split("≈").let { it.first() to it.last() }
+        assertThat(basePart).contains("ETH")
+        assertThat(quotePart).contains("BTC")
+    }
+
+    @Test
+    fun `GIVEN express swap with unresolved from leg WHEN convert THEN no rate row`() {
+        // Act — the from leg has no resolved currency, so the canonical direction cannot be picked and the rate is
+        // dropped rather than shown with a raw network id.
+        val result = converter.convert(
+            expressSwap(status = ExpressExchangeStatus.Finished, provider = provider(name = "Changelly")),
+        )
+
+        // Assert — only the provider row remains.
+        assertThat(result.rows.map { it.label }).containsExactly(resourceReference(R.string.express_provider))
+    }
+
+    @Test
+    fun `GIVEN swap with both legs resolved WHEN convert THEN rate direction follows SwapRateFormatter`() {
+        // Arrange — both legs resolve to a portfolio currency, so the canonical SwapRateFormatter applies. The from
+        // leg is a regular token, the to leg is BTC (a coin); the direction resolver puts the coin as the base,
+        // inverting the raw from->to order the fallback would use.
+        val fromToken = mockCurrencyFactory.createToken(Blockchain.Ethereum)
+        val swap = expressSwap(status = ExpressExchangeStatus.Finished, fromCurrency = fromToken)
+
+        // Act
+        val result = converter.convert(swap)
+
+        // Assert — base = BTC (the to-leg), quote = the from-token: `1 BTC ≈ {x} {token}`.
+        val rate = result.rows.single { it.label == resourceReference(R.string.common_rate) }.value.resolveString()
+        val (basePart, quotePart) = rate.split("≈").let { it.first() to it.last() }
+        assertThat(basePart).contains("BTC")
+        assertThat(quotePart).contains(fromToken.symbol)
     }
 
     @Test
