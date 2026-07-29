@@ -112,7 +112,10 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         hashes: List<ByteArray>,
     ): Either<PolymarketSigningError, List<ByteArray>> =
         when (val result = signer(context.userWallet).sign(hashes, context.publicKey)) {
-            is CompletionResult.Success -> result.data.right()
+            is CompletionResult.Success -> result.data
+                .takeIf { it.size == hashes.size }
+                ?.right()
+                ?: PolymarketSigningError.Unknown.left()
             is CompletionResult.Failure -> result.error.toSigningError().left()
         }
 
