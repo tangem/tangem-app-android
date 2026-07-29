@@ -24,13 +24,36 @@ internal data class PolymarketMainUM(
 
         data object Loading : ContentUM
 
-        data class Content(val events: ImmutableList<PolymarketEventUM>) : ContentUM
+        /**
+         * @property categories category tabs shown above the feed, with the active one selected
+         * @property events event cards of the selected category
+         */
+        data class Content(
+            val categories: ImmutableList<PolymarketCategoryTabUM>,
+            val events: ImmutableList<PolymarketEventUM>,
+        ) : ContentUM
 
         data object Empty : ContentUM
 
         data class Error(val onRetryClick: () -> Unit) : ContentUM
     }
 }
+
+/**
+ * A category tab.
+ *
+ * @property id category id used to filter the feed
+ * @property label tab caption
+ * @property isSelected whether this is the active tab
+ * @property onClick selects this category
+ */
+@Immutable
+internal data class PolymarketCategoryTabUM(
+    val id: Int,
+    val label: String,
+    val isSelected: Boolean,
+    val onClick: () -> Unit,
+)
 
 /**
  * A single event card.
