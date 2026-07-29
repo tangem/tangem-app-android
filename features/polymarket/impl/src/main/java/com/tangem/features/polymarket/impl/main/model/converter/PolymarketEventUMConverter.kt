@@ -1,6 +1,8 @@
 package com.tangem.features.polymarket.impl.main.model.converter
 
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -33,7 +35,7 @@ internal class PolymarketEventUMConverter(
             id = value.id,
             title = stringReference(value.title),
             iconUrl = value.iconUrl,
-            volume = value.volume?.let { stringReference("$TOTAL_VOLUME_LABEL${it.formatVolume()}") },
+            volume = value.volume?.let { stringReference(it.formatVolume()) },
             rows = value.markets
                 .map { convertRow(event = value, market = it) }
                 .toImmutableList(),
@@ -65,7 +67,7 @@ internal class PolymarketEventUMConverter(
             PolymarketDisplayMode.PLAIN_MARKETS -> if (event.markets.size > 1) {
                 stringReference(market.title)
             } else {
-                stringReference(PROBABILITY_LABEL)
+                resourceReference(R.string.prediction_event_probability)
             }
         }
     }
@@ -94,9 +96,5 @@ internal class PolymarketEventUMConverter(
     private companion object {
         const val USD_CODE = "USD"
         const val USD_SYMBOL = "$"
-
-        // Placeholders until the Lokalise keys land; see PolymarketMainModel.
-        const val TOTAL_VOLUME_LABEL = "Total volume: "
-        const val PROBABILITY_LABEL = "Probability"
     }
 }
