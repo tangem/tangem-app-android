@@ -80,6 +80,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                 val button = PortfolioSelectorButtonUM(
                     text = resourceReference(R.string.common_apply),
                     onClick = { onApplyClick() },
+                    isEnabled = selectedAccount.isNotEmpty(),
                 )
                 state.value = PortfolioSelectorUM(
                     title = title,
