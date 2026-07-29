@@ -2,13 +2,12 @@ package com.tangem.features.foryou.impl.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
@@ -18,11 +17,7 @@ import com.tangem.features.foryou.impl.entity.asSingleForYouGroup
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.model.ForYouPeriod
-import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createEarnCurrency
-import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createPortfolioStatus
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createSelectedPortfolio
-import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createStatus
-import com.tangem.test.mock.MockAccounts
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
@@ -116,6 +111,7 @@ internal class SetPortfolioReviewTransformerTest {
                 selectedPortfolio = createSelectedPortfolio(),
                 portfolioReviewUM = portfolioReview,
                 earnOpportunitiesUM = contentEarnOpportunities(),
+                portfolioFilter = loadingPortfolioFilter(),
                 expandedPortfolioReviewAssetIds = { expandedIds },
                 expandedEarnOpportunitiesAssetIds = { emptySet() },
             )
@@ -239,101 +235,51 @@ internal class SetPortfolioReviewTransformerTest {
         }
     }
 
+    /**
+     * How the selection maps onto the chip's states is `ForYouPortfolioFilterConverter`'s job and is
+     * covered by its own test — the transformer only has to put the pre-built chip on the state.
+     */
     @Nested
-    inner class PortfolioSelectorLabel {
+    inner class PortfolioFilter {
 
         @Test
-        fun `GIVEN every account selected WHEN transform THEN label is All accounts`() {
+        fun `GIVEN a pre-built chip WHEN transform THEN it is set on the state as is`() {
             // Arrange
-            val account1 = MockAccounts.createAccount(derivationIndex = 1)
-            val account2 = MockAccounts.createAccount(derivationIndex = 2)
-            val transformer = createTransformer(
-                selectedPortfolio = createSelectedPortfolio(
-                    accountStatusWithCurrency(account1),
-                    accountStatusWithCurrency(account2),
-                    totalAccountsCount = 2,
-                ),
+            val portfolioFilter = TangemFilterItemUM.Active(
+                id = "portfolio_selector",
+                value = stringReference("Accounts"),
+                counter = 3,
+                onClick = {},
+                onClearClick = {},
             )
+            val transformer = createTransformer(portfolioFilter = portfolioFilter)
 
             // Act
             val result = transformer.transform(loadingState())
 
             // Assert
-            assertThat(result.portfolioSelectorLabel).isEqualTo(stringReference("All accounts"))
-        }
-
-        @Test
-        fun `GIVEN no account selected WHEN transform THEN label is All accounts`() {
-            // Arrange
-            val transformer = createTransformer(
-                selectedPortfolio = createSelectedPortfolio(totalAccountsCount = 1),
-            )
-
-            // Act
-            val result = transformer.transform(loadingState())
-
-            // Assert
-            assertThat(result.portfolioSelectorLabel).isEqualTo(stringReference("All accounts"))
-        }
-
-        @Test
-        fun `GIVEN a single account selected out of many WHEN transform THEN label is the account name`() {
-            // Arrange
-            val account1 = MockAccounts.createAccount(derivationIndex = 1)
-            val transformer = createTransformer(
-                selectedPortfolio = createSelectedPortfolio(
-                    accountStatusWithCurrency(account1),
-                    totalAccountsCount = 2,
-                ),
-            )
-
-            // Act
-            val result = transformer.transform(loadingState())
-
-            // Assert
-            assertThat(result.portfolioSelectorLabel).isEqualTo(account1.accountName.toUM().value)
-        }
-
-        @Test
-        fun `GIVEN a subset of several accounts selected WHEN transform THEN label is the selected count`() {
-            // Arrange
-            val account1 = MockAccounts.createAccount(derivationIndex = 1)
-            val account2 = MockAccounts.createAccount(derivationIndex = 2)
-            val transformer = createTransformer(
-                selectedPortfolio = createSelectedPortfolio(
-                    accountStatusWithCurrency(account1),
-                    accountStatusWithCurrency(account2),
-                    totalAccountsCount = 3,
-                ),
-            )
-
-            // Act
-            val result = transformer.transform(loadingState())
-
-            // Assert
-            assertThat(result.portfolioSelectorLabel).isEqualTo(stringReference("2 accounts"))
+            assertThat(result.portfolioFilter).isEqualTo(portfolioFilter)
         }
     }
-
-    /** A selected account carrying a single currency, so it shows up in the portfolio's account statuses. */
-    private fun accountStatusWithCurrency(account: Account.CryptoPortfolio) = createPortfolioStatus(
-        currencies = listOf(createStatus(createEarnCurrency())),
-        account = account,
-    )
 
     private fun createTransformer(
         selectedPortfolio: ForYouSelectedPortfolio = createSelectedPortfolio(),
         portfolioReviewUM: PortfolioReviewUM = contentPortfolioReview(),
         earnOpportunitiesUM: EarnOpportunitiesUM = contentEarnOpportunities(),
+        portfolioFilter: TangemFilterItemUM = loadingPortfolioFilter(),
         expandedPortfolioReviewAssetIds: Set<String> = emptySet(),
         expandedEarnOpportunitiesAssetIds: Set<String> = emptySet(),
     ) = SetPortfolioReviewTransformer(
         selectedPortfolio = selectedPortfolio,
         portfolioReviewUM = portfolioReviewUM,
         earnOpportunitiesUM = earnOpportunitiesUM,
+        portfolioFilter = portfolioFilter,
         expandedPortfolioReviewAssetIds = { expandedPortfolioReviewAssetIds },
         expandedEarnOpportunitiesAssetIds = { expandedEarnOpportunitiesAssetIds },
     )
+
+    private fun loadingPortfolioFilter(): TangemFilterItemUM =
+        TangemFilterItemUM.Loading(id = "portfolio_selector")
 
     private fun contentPortfolioReview(): PortfolioReviewUM.Content = PortfolioReviewUM.Content(
         tokenList = persistentListOf(),
@@ -385,7 +331,6 @@ internal class SetPortfolioReviewTransformerTest {
         notifications = persistentListOf(),
         periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
         onPeriodClick = {},
-        portfolioSelectorLabel = stringReference("All accounts"),
-        onSelectPortfolioClick = {},
+        portfolioFilter = loadingPortfolioFilter(),
     )
 }
