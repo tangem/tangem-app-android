@@ -253,6 +253,40 @@ internal class DefaultPolymarketTypedDataSignerTest {
         assertThat(result).isEqualTo(PolymarketSigningError.MissingWallet.left())
     }
 
+    @Test
+    fun `GIVEN signer returns fewer signatures than hashes WHEN signOnboarding THEN returns Unknown`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+        stubDerivedKey()
+        stubColdSigner()
+        val hashes = slot<List<ByteArray>>()
+        coEvery { transactionSigner.sign(capture(hashes), any()) } answers {
+            CompletionResult.Success(listOf(sign(hashes.captured.first())))
+        }
+
+        // Act
+        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketSigningError.Unknown.left())
+    }
+
+    @Test
+    fun `GIVEN signer returns no signatures WHEN signClobAuth THEN returns Unknown`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+        stubDerivedKey()
+        stubColdSigner()
+        coEvery { transactionSigner.sign(any<List<ByteArray>>(), any()) } returns
+            CompletionResult.Success(emptyList())
+
+        // Act
+        val result = signer.signClobAuth(userWalletId, clobAuth)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketSigningError.Unknown.left())
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN signing fails WHEN signOnboarding THEN maps the error`(model: SigningFailureModel) = runTest {
