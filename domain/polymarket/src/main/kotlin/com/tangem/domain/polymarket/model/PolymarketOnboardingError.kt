@@ -11,6 +11,10 @@ sealed interface PolymarketOnboardingError : PolymarketError {
 
     data class Wallet(val cause: PolymarketWalletError) : PolymarketOnboardingError
 
+    data class Signing(val cause: PolymarketSigningError) : PolymarketOnboardingError
+
+    data class Auth(val cause: PolymarketAuthError) : PolymarketOnboardingError
+
     /** The backend knows a deposit wallet that is not the one derived locally. */
     data class AddressMismatch(val expected: String, val actual: String) : PolymarketOnboardingError
 
