@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -22,7 +23,11 @@ internal class GetPolymarketWalletStatusUseCaseTest {
 
     private val useCase = GetPolymarketWalletStatusUseCase(polymarketRepository = polymarketRepository)
 
-    private val addresses = PolymarketAddresses(ownerAddress = OWNER, depositWalletAddress = DEPOSIT_WALLET)
+    private val addresses = PolymarketAddresses(
+        ownerAddress = OWNER,
+        depositWalletAddress = DEPOSIT_WALLET,
+        userWalletId = UserWalletId("011"),
+    )
 
     @BeforeEach
     fun resetMocks() {
@@ -82,7 +87,19 @@ internal class GetPolymarketWalletStatusUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the backend fails WHEN invoke THEN wraps the wallet error`() = runTest {
+    fun `GIVEN the backend fails with a non-network error WHEN invoke THEN wraps the wallet error`() = runTest {
+        // Arrange
+        coEvery { polymarketRepository.getWalletStatus(OWNER) } returns PolymarketWalletError.Unauthorized.left()
+
+        // Act
+        val actual = useCase(addresses = addresses)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketOnboardingError.Wallet(PolymarketWalletError.Unauthorized).left())
+    }
+
+    @Test
+    fun `GIVEN the backend fails with a network error WHEN invoke THEN returns Network`() = runTest {
         // Arrange
         coEvery { polymarketRepository.getWalletStatus(OWNER) } returns PolymarketWalletError.Network.left()
 
@@ -90,7 +107,7 @@ internal class GetPolymarketWalletStatusUseCaseTest {
         val actual = useCase(addresses = addresses)
 
         // Assert
-        assertThat(actual).isEqualTo(PolymarketOnboardingError.Wallet(PolymarketWalletError.Network).left())
+        assertThat(actual).isEqualTo(PolymarketOnboardingError.Network.left())
     }
 
     private companion object {
