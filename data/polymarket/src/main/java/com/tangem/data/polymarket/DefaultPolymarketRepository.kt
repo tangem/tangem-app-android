@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
+import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
@@ -47,15 +48,27 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
 
-    override suspend fun getEvents(): Either<DataError, List<PolymarketEvent>> = withContext(dispatchers.io) {
+    override suspend fun getCategories(): Either<DataError, List<PolymarketCategory>> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                polymarketApi.getEvents(limit = DEFAULT_LIMIT, cursor = null).bind().events.map(eventConverter::convert)
+                polymarketApi.getCategories(locale = null).bind().categories
+                    .map { PolymarketCategory(id = it.id, label = it.label, iconUrl = it.icon) }
                     .right()
             },
             onError = { DataError.NetworkError.NoInternetConnection.left() },
         )
     }
+
+    override suspend fun getEvents(category: Int?): Either<DataError, List<PolymarketEvent>> =
+        withContext(dispatchers.io) {
+            safeApiCall(
+                call = {
+                    polymarketApi.getEvents(category = category, limit = DEFAULT_LIMIT, cursor = null)
+                        .bind().events.map(eventConverter::convert).right()
+                },
+                onError = { DataError.NetworkError.NoInternetConnection.left() },
+            )
+        }
 
     override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
         withContext(dispatchers.io) {
