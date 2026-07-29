@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
+import arrow.core.flatMap
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
@@ -19,10 +20,15 @@ class DerivePolymarketAddressesUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketAddresses> =
         eoaDeriver.deriveOwnerEoa(userWalletId = userWalletId)
             .mapLeft { it.toOnboardingError() }
-            .map { ownerAddress ->
-                PolymarketAddresses(
-                    ownerAddress = ownerAddress,
-                    depositWalletAddress = depositWalletDeriver.deriveDepositWallet(ownerAddress = ownerAddress),
-                )
+            .flatMap { ownerAddress ->
+                Either.catch { depositWalletDeriver.deriveDepositWallet(ownerAddress = ownerAddress) }
+                    .mapLeft { PolymarketOnboardingError.Unknown }
+                    .map { depositWalletAddress ->
+                        PolymarketAddresses(
+                            ownerAddress = ownerAddress,
+                            depositWalletAddress = depositWalletAddress,
+                            userWalletId = userWalletId,
+                        )
+                    }
             }
 }
