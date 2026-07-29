@@ -370,6 +370,9 @@
   <string name="common_forget">Forget</string>
   <string name="common_free">Free</string>
   <string name="common_from">From</string>
+  <string name="common_from_account">From account</string>
+  <string name="common_from_address">From address</string>
+  <string name="common_from_wallet">From wallet</string>
   <string name="common_from_wallet_name">From %s</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get">Get</string>
@@ -1893,7 +1896,7 @@
   <string name="tangempay_bank_transfer_fee_header">Fee for onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Received USD will be converted to USDC by 1:1 rate</string>
   <string name="tangempay_bank_transfer_intro_title">Bank transfer might take 1-2 business days</string>
-  <string name="tangempay_bank_transfer_legal">By using service, you agree with provider %1$s and %2$s</string>
+  <string name="tangempay_bank_transfer_legal">By using service, you agree with %1$s and %2$s</string>
   <string name="tangempay_bank_transfer_show_details">Show details</string>
   <string name="tangempay_bank_transfer_success_subtitle">This may take a little time</string>
   <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
@@ -1904,7 +1907,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
-  <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use card</string>
+  <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">PIN code</string>
@@ -1932,6 +1935,9 @@
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
   <string name="tangempay_card_details_pin_code">PIN code</string>
+  <string name="tangempay_card_details_protection_not_set_button">Set screen lock</string>
+  <string name="tangempay_card_details_protection_not_set_description">Unable to view your card data without a screen lock. \nSet one in your device settings.</string>
+  <string name="tangempay_card_details_protection_not_set_title">Screen lock is not set</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reissue_card">Replace card</string>
@@ -2216,12 +2222,17 @@
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Show QR code</string>
   <string name="token_summary_can_not_load_token">Can’t load data of the token</string>
+  <string name="token_summary_galaxy_score_description">It is an indicator that shows the overall health of a cryptocurrency by combining its price performance with how actively and positively it\'s being talked about on social media, developed by LunarCrush.</string>
   <string name="token_summary_go_to_swap_button">Go to swap</string>
   <string name="token_summary_last_update_subtitle">Last update: %1$s</string>
+  <string name="token_summary_ma_cross_description">It is an indicator that compares the average price of an asset over the last 50 days with its average price over the last 200 days to show whether it\'s in a longer-term uptrend or downtrend.</string>
+  <string name="token_summary_macd_description">It is an indicator that compares two price averages over different periods to show whether the asset\'s momentum is picking up or slowing down, and in which direction the trend may be shifting.</string>
   <string name="token_summary_negative_outlook_title">Negative outlook</string>
   <string name="token_summary_neutral_outlook_title">Neutral outlook</string>
   <string name="token_summary_outlook_is_not_available">Outlook for this token is not available</string>
   <string name="token_summary_positive_outlook_title">Positive outlook</string>
+  <string name="token_summary_rsi_description">It is an indicator that shows whether an asset\'s price has risen or fallen too quickly in the recent period, helping to spot when it might be overbought or oversold.</string>
+  <string name="token_summary_sentiment_description">It is an indicator that shows whether people online are talking about the asset in a mostly positive or mostly negative way, based on social media and news data collected by LunarCrush.</string>
   <string name="token_summary_title">Token summary</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
