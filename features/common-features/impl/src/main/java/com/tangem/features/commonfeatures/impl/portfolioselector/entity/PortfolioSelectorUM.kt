@@ -14,9 +14,17 @@ data class PortfolioSelectorUM(
     val isSelectorV3Enabled: Boolean,
 )
 
+/**
+ * Confirmation button of the multi-choice selector.
+ *
+ * @property isEnabled `false` dims the button and ignores clicks. Applying an empty selection would
+ * leave the consumer with no portfolio at all, so the button stays disabled until at least one
+ * account is picked.
+ */
 data class PortfolioSelectorButtonUM(
     val text: TextReference,
     val onClick: () -> Unit,
+    val isEnabled: Boolean = true,
 )
 
 @Immutable
