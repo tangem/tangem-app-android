@@ -1,5 +1,12 @@
 package com.tangem.core.ui.ds2.filter
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,9 +40,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
+import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -63,8 +74,19 @@ import com.tangem.core.ui.res.generated.icons.ic_cross_16
  *   [contentDescription] and clicks are ignored in that state.
  * - The label never wraps — it truncates with an ellipsis once a width constraint is applied via
  *   [modifier]. Without such a constraint the chip grows with its content.
+ * - Content changes are animated, so the chip resizes smoothly instead of snapping: the old label
+ *   fades out and the new one fades in only after it (so two values never overlap) while the width
+ *   animates, the `+N` counter expands / shrinks horizontally as it appears and disappears, and the
+ *   trailing chevron and cross crossfade without any size change. The width animation runs inside the
+ *   pill, so its round caps stay intact throughout — do **not** add `Modifier.animateContentSize()`
+ *   on top, it would flatten the leading cap behind its rectangular clip.
+ * - Because the growth is anchored to the chip's end edge, place the chip so that edge is fixed (e.g.
+ *   as the trailing child of a `Row(horizontalArrangement = Arrangement.SpaceBetween)`) and it will
+ *   only ever extend towards the start.
  * - The active chip is inverse-colored: the material variant switches to the `material-inverted`
- *   token set, the transparent one to a flat `bg.inverse` fill.
+ *   token set, the transparent one to a flat `bg.inverse` fill. The recoloring is not animated — it
+ *   lands in one frame, together with the pill's own fill, which the material token set switches
+ *   instantly anyway.
  * - The press overlay comes from [TangemSurface]'s ripple and follows the background: the flat
  *   inverse-colored active chip is lightened, every other state is dimmed.
  * - While focused the chip is wrapped in the brand focus ring, which replaces its regular border.
@@ -144,54 +166,131 @@ private fun FilterItemContent(
     colorTokens: FilterColorTokens,
     clearContentDescription: String?,
 ) {
-    val isActive = state is TangemFilterItemUM.Active
-
     Row(
+        // The trailing slot is always the enlarged touch box the active chip's cross needs, so the
+        // paddings around it are shrunk by [TouchExpansion] in *every* state. Keeping that geometry
+        // state-independent is what makes the trailing icon sit exactly where Figma puts it (its
+        // centre stays 18dp from the chip's end edge) and keeps it from shifting while the chip
+        // animates its width.
         modifier = Modifier.padding(
             start = ContentStartPadding,
-            // The cross sits inside an enlarged touch box, so the paddings around it are shrunk by
-            // the same amount to keep the icon exactly where Figma puts it.
-            end = if (isActive) ContentEndPadding - TouchExpansion else ContentEndPadding,
+            end = ContentEndPadding - TouchExpansion,
         ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(
-            if (isActive) TrailingIconSpacing - TouchExpansion else TrailingIconSpacing,
-        ),
+        horizontalArrangement = Arrangement.spacedBy(TrailingIconSpacing - TouchExpansion),
     ) {
+        val counter = (state as? TangemFilterItemUM.Active)?.counter
+        // Kept outside AnimatedVisibility: its content lambda stops composing once hidden, so the
+        // shrink transition needs the last value from here to still have something to render.
+        val displayedCounter = rememberLastNonNull(counter)
+
         Row(
             // Vertical padding lives on the text wrapper rather than on the whole row so the cross
             // touch box may be taller than the text without growing the chip.
             modifier = Modifier.padding(vertical = ContentVerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(LabelCounterSpacing),
         ) {
-            state.text()?.let { text ->
-                FilterText(text = text, color = colorTokens.textColor)
-            }
-            (state as? TangemFilterItemUM.Active)?.counter?.let { counter ->
-                FilterText(text = stringReference("+$counter"), color = colorTokens.counterColor)
+            FilterLabel(text = state.text(), color = colorTokens.textColor)
+
+            AnimatedVisibility(
+                visible = counter != null,
+                enter = TangemTransition.SlotEnterHorizontally,
+                exit = TangemTransition.SlotExitHorizontally,
+            ) {
+                displayedCounter?.let { value ->
+                    FilterText(
+                        // Spacing lives on the counter instead of the row's arrangement so it
+                        // collapses together with the counter — an arrangement gap would survive.
+                        modifier = Modifier.padding(start = LabelCounterSpacing),
+                        text = stringReference("+$value"),
+                        color = colorTokens.counterColor,
+                    )
+                }
             }
         }
-        when (state) {
-            is TangemFilterItemUM.Active -> ClearIcon(
-                tint = colorTokens.iconTint,
+
+        TrailingIcon(
+            isActive = state is TangemFilterItemUM.Active,
+            tint = colorTokens.iconTint,
+            clearContentDescription = clearContentDescription,
+            onClearClick = (state as? TangemFilterItemUM.Active)?.onClearClick,
+        )
+    }
+}
+
+/**
+ * The chip's main text. Swapping the filter name for a picked value (or one value for another)
+ * crossfades and animates the width, and the text hugs the end of its box so the growth happens
+ * towards the start — the trailing icon never moves.
+ *
+ * The size animation runs *inside* [TangemSurface], so the pill is measured at the intermediate width
+ * and keeps its round caps. `Modifier.animateContentSize()` on the chip itself cannot do this: it
+ * reports an animating size upwards while drawing the content at full size behind a rectangular
+ * `clipToBounds()`, which flattens the pill's leading cap for the whole animation.
+ */
+@Composable
+private fun FilterLabel(text: TextReference?, color: Color) {
+    AnimatedContent(
+        targetState = text,
+        transitionSpec = {
+            ContentTransform(
+                targetContentEnter = TangemTransition.FadeEnter,
+                initialContentExit = TangemTransition.FadeExit,
+                sizeTransform = SizeTransform(sizeAnimationSpec = { _, _ -> TangemAnimationSpec.Size }),
+            )
+        },
+        contentAlignment = Alignment.CenterEnd,
+        label = "filterLabel",
+    ) { target ->
+        target?.let { FilterText(text = it, color = color) }
+    }
+}
+
+/**
+ * Trailing icon: a chevron on an inactive chip, a clickable cross on an active one.
+ *
+ * Both branches fill the same [TouchExpansion]-enlarged box, so the swap is a pure crossfade with no
+ * size change and the chip's width can't wobble while the state flips. The cross that is still
+ * fading out after a flip to inactive receives a `null` [onClearClick] and is therefore inert.
+ */
+@Composable
+private fun TrailingIcon(
+    isActive: Boolean,
+    tint: Color,
+    clearContentDescription: String?,
+    onClearClick: (() -> Unit)?,
+) {
+    Crossfade(
+        targetState = isActive,
+        animationSpec = TangemAnimationSpec.Alpha,
+        label = "filterTrailingIcon",
+    ) { active ->
+        if (active) {
+            ClearIcon(
+                tint = tint,
                 contentDescription = clearContentDescription,
-                onClick = state.onClearClick,
+                onClick = onClearClick,
             )
-            is TangemFilterItemUM.Inactive -> Icon(
-                modifier = Modifier.size(IconSize),
-                imageVector = Icons.ic_chevron_down_16,
-                tint = colorTokens.iconTint,
-                contentDescription = null,
-            )
-            is TangemFilterItemUM.Loading -> Unit
+        } else {
+            Box(
+                modifier = Modifier.size(IconSize + TouchExpansion * 2),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    modifier = Modifier.size(IconSize),
+                    imageVector = Icons.ic_chevron_down_16,
+                    tint = tint,
+                    contentDescription = null,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun FilterText(text: TextReference, color: Color) {
+private fun FilterText(text: TextReference, color: Color, modifier: Modifier = Modifier) {
     Text(
+        modifier = modifier,
         text = text.resolveReference(),
         color = color,
         style = TangemTheme.typography3.subheading.medium,
@@ -204,20 +303,22 @@ private fun FilterText(text: TextReference, color: Color) {
 /**
  * Trailing cross of an active chip. The icon keeps its 16dp visual size while the clickable box
  * around it is [TouchExpansion] bigger on every side, which the parent row compensates with smaller
- * paddings.
+ * paddings. A `null` [onClick] leaves the cross visible but non-interactive.
  */
 @Composable
-private fun ClearIcon(tint: Color, contentDescription: String?, onClick: () -> Unit) {
+private fun ClearIcon(tint: Color, contentDescription: String?, onClick: (() -> Unit)?) {
     Box(
         modifier = Modifier
             .size(IconSize + TouchExpansion * 2)
             // Clipped so the press ripple stays round instead of flashing a square inside the pill.
             .clip(CircleShape)
-            .clickable(
-                role = Role.Button,
-                onClickLabel = contentDescription,
-                onClick = onClick,
-            ),
+            .conditional(onClick != null) {
+                clickable(
+                    role = Role.Button,
+                    onClickLabel = contentDescription,
+                    onClick = onClick ?: {},
+                )
+            },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
