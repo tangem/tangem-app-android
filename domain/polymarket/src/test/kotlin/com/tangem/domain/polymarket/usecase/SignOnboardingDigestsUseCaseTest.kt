@@ -56,7 +56,7 @@ internal class SignOnboardingDigestsUseCaseTest {
         assertThat(approvals.captured.depositWalletAddress).isEqualTo(DEPOSIT_WALLET)
         assertThat(approvals.captured.nonce).isEqualTo("10")
         assertThat(approvals.captured.calls).isEqualTo(PolymarketApprovalCalls.build())
-        assertThat(result.getOrNull()?.approvals).isEqualTo(approvals.captured)
+        assertThat(result.getOrNull()?.approvals).isSameInstanceAs(approvals.captured)
     }
 
     @Test
