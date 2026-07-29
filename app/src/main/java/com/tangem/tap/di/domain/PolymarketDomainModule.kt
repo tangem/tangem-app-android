@@ -1,13 +1,19 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
+import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,5 +58,33 @@ internal object PolymarketDomainModule {
         polymarketRepository: PolymarketRepository,
     ): GetPolymarketWalletStatusUseCase = GetPolymarketWalletStatusUseCase(
         polymarketRepository = polymarketRepository,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSignOnboardingDigestsUseCase(signer: PolymarketTypedDataSigner): SignOnboardingDigestsUseCase =
+        SignOnboardingDigestsUseCase(signer = signer)
+
+    @Provides
+    @Singleton
+    fun provideDeployDepositWalletUseCase(polymarketRepository: PolymarketRepository): DeployDepositWalletUseCase =
+        DeployDepositWalletUseCase(polymarketRepository = polymarketRepository)
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketApiCredentialsUseCase(
+        credentialsStore: PolymarketCredentialsStore,
+    ): GetPolymarketApiCredentialsUseCase = GetPolymarketApiCredentialsUseCase(
+        credentialsStore = credentialsStore,
+    )
+
+    @Provides
+    @Singleton
+    fun provideDeriveApiCredentialsUseCase(
+        polymarketRepository: PolymarketRepository,
+        credentialsStore: PolymarketCredentialsStore,
+    ): DeriveApiCredentialsUseCase = DeriveApiCredentialsUseCase(
+        polymarketRepository = polymarketRepository,
+        credentialsStore = credentialsStore,
     )
 }
