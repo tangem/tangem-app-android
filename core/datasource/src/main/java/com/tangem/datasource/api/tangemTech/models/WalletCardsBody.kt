@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 /**
  * Body of `POST v1/user-wallets/wallets/{wallet_id}/cards`.
  *
- * Reports the cards known to the app for a wallet and the state of its backup, so the backend can detect
+ * Reports the cards known to the app for a wallet so the backend can detect
  * an interrupted backup even after the app is reinstalled or the wallet is opened on another device.
  *
  * @property cards    cards associated with the wallet
