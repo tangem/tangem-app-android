@@ -7,6 +7,7 @@ import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.swap.SwapRateFormatter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -482,22 +483,24 @@ private fun OnChainTx?.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM>
 // region Rate row
 
 private const val RATE_MAX_DECIMALS = 8
-private const val RATE_IF_ZERO_DECIMALS = 2
 
 /**
- * Effective swap rate row `1 {from} ≈ {x} {to}`, computed on the fly as `x = toAmount / fromAmount` (`toAmount` is
- * already the actual-or-expected payout — the data layer coalesces `actualAmount ?: amount`). Hidden (`null`) when an
- * amount is missing or non-positive — there is then no rate to show and division by zero is avoided.
+ * Effective swap rate row `1 {base} ≈ {x} {quote}`. The base/quote direction and formatting follow the app-wide
+ * [SwapRateFormatter] rules ([REDACTED_TASK_KEY]) so the pair reads the same as on the swap screen. Hidden (`null`) when a leg
+ * has no resolved [CryptoCurrency] (the direction rules need the currency type — no way to pick a canonical base) or
+ * when an amount is missing or non-positive.
  */
 private fun ExchangeTransaction.swapRateRow(): TxHistoryDetailsUM.InfoRowUM? {
+    val fromCurrency = fromAsset.cryptoCurrency ?: return null
+    val toCurrency = toAsset.cryptoCurrency ?: return null
     val fromAmount = fromAsset.amount.takeIfPositive() ?: return null
     val toAmount = toAsset.amount.takeIfPositive() ?: return null
-    val rate = toAmount.divide(fromAmount, rateScale(toAsset.decimals), RoundingMode.HALF_UP)
-    val baseSymbol = fromAsset.displaySymbol
-    val quoteSymbol = toAsset.displaySymbol
-    val value = rateText(
-        base = oneOf(baseSymbol),
-        quote = rate.format { crypto(symbol = quoteSymbol, decimals = toAsset.decimals, ignoreSymbolPosition = true) },
+
+    val value = SwapRateFormatter.formatRate(
+        from = fromCurrency,
+        to = toCurrency,
+        fromAmount = fromAmount,
+        toAmount = toAmount,
     )
     return rateRowUM(value)
 }
@@ -525,10 +528,6 @@ private fun rateRowUM(value: String): TxHistoryDetailsUM.InfoRowUM = TxHistoryDe
     label = resourceReference(R.string.common_rate),
     value = stringReference(value),
 )
-
-/** Division scale: the quote's decimals, capped at [RATE_MAX_DECIMALS]; a zero-decimal quote still shows two. */
-private fun rateScale(quoteDecimals: Int): Int =
-    (if (quoteDecimals == 0) RATE_IF_ZERO_DECIMALS else quoteDecimals).coerceAtMost(RATE_MAX_DECIMALS)
 
 /**
  * Leading `1 {symbol}` of the rate, e.g. `1 POL` — number-first, matching the amount legs (the crypto formatter forces a
