@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Wallet
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.utils.extensions.hexToBytes
 import org.junit.jupiter.api.Test
 import org.web3j.crypto.ECKeyPair
@@ -61,7 +62,7 @@ internal class PolymarketSignatureFormatterTest {
             derivationType = Wallet.PublicKey.DerivationType.Plain(
                 Wallet.HDKey(
                     extendedPublicKey = ExtendedPublicKey(publicKey = keyBytes, chainCode = ByteArray(CHAIN_CODE)),
-                    path = DerivationPath("m/44'/60'/999997'/0/0"),
+                    path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH),
                 ),
             ),
         )
