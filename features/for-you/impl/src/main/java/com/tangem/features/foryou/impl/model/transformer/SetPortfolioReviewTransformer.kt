@@ -1,10 +1,8 @@
 package com.tangem.features.foryou.impl.model.transformer
 
-import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
@@ -19,11 +17,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 /**
- * Applies one combined emission to the [ForYouUM] state: sets the pre-built portfolio-review and
- * earn-opportunities sections (see [ForYouPortfolioReviewConverter] and
- * `ForYouEarnOpportunitiesConverter`), derives the outdated-data notification from the selected
- * portfolio's aggregate total-balance source, and builds the portfolio-selector badge label from the
- * selected accounts against [ForYouSelectedPortfolio.totalAccountsCount].
+ * Applies one combined emission to the [ForYouUM] state: sets the pre-built portfolio-review,
+ * earn-opportunities and portfolio-filter sections (see [ForYouPortfolioReviewConverter],
+ * `ForYouEarnOpportunitiesConverter` and `ForYouPortfolioFilterConverter`) and derives the
+ * outdated-data notification from the selected portfolio's aggregate total-balance source.
  *
 
  * subsequent refreshes the previous picker is carried over so the user's selection is not reset.
@@ -41,6 +38,7 @@ internal class SetPortfolioReviewTransformer(
     private val selectedPortfolio: ForYouSelectedPortfolio,
     private val portfolioReviewUM: PortfolioReviewUM,
     private val earnOpportunitiesUM: EarnOpportunitiesUM,
+    private val portfolioFilter: TangemFilterItemUM,
     private val expandedPortfolioReviewAssetIds: () -> Set<String>,
     private val expandedEarnOpportunitiesAssetIds: () -> Set<String>,
 ) : Transformer<ForYouUM> {
@@ -55,26 +53,12 @@ internal class SetPortfolioReviewTransformer(
             },
             earnOpportunities = earnOpportunitiesUM.applyExpandedAssets(expandedEarnOpportunitiesAssetIds()),
             portfolioReviewUM = portfolioReviewUM.applyExpandedAssets(expandedPortfolioReviewAssetIds()),
-            portfolioSelectorLabel = buildPortfolioSelectorLabel(),
+            portfolioFilter = portfolioFilter,
             periodPickerUM = when (prevState.portfolioReviewUM) {
                 is PortfolioReviewUM.Loading -> createPeriodPicker()
                 is PortfolioReviewUM.Content -> prevState.periodPickerUM
             },
         )
-    }
-
-    /**
-     * The portfolio-selector badge label: "All accounts" when everything (or nothing specific) is
-     * selected, the account name for a single selection, otherwise the selected count.
-     */
-    private fun buildPortfolioSelectorLabel(): TextReference {
-        val selectedAccounts = selectedPortfolio.accountCryptoCurrencyStatuses.map { it.account }.distinct()
-        return when {
-            selectedAccounts.isEmpty() || selectedAccounts.size == selectedPortfolio.totalAccountsCount ->
-                stringReference("All accounts")
-            selectedAccounts.size == 1 -> selectedAccounts.first().accountName.toUM().value
-            else -> stringReference("${selectedAccounts.size} accounts")
-        }
     }
 
     private fun createPeriodPicker(): TangemSegmentedPickerUM {
