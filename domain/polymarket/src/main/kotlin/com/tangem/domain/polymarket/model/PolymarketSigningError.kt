@@ -1,7 +1,7 @@
 package com.tangem.domain.polymarket.model
 
 /** Failure surface of [com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner]. */
-sealed interface PolymarketSigningError {
+sealed interface PolymarketSigningError : PolymarketError {
 
     /** The owner key has not been derived yet — derive it before signing. */
     data object NotDerived : PolymarketSigningError
