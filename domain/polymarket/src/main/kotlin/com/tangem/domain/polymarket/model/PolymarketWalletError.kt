@@ -6,7 +6,7 @@ package com.tangem.domain.polymarket.model
  * these variants let callers (the onboarding orchestrator) react with an exhaustive `when` instead of
  * inspecting raw codes and parsing message strings.
  */
-sealed interface PolymarketWalletError {
+sealed interface PolymarketWalletError : PolymarketError {
 
     /** `400` — malformed request (bad params). Not user-recoverable; a client bug. */
     data object InvalidRequest : PolymarketWalletError
