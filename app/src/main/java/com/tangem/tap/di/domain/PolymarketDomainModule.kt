@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
@@ -29,7 +30,17 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetPolymarketEventsUseCase(): GetPolymarketEventsUseCase = GetPolymarketEventsUseCase()
+    fun provideGetPolymarketEventsUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventsUseCase {
+        return GetPolymarketEventsUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketCategoriesUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPolymarketCategoriesUseCase {
+        return GetPolymarketCategoriesUseCase(polymarketRepository = polymarketRepository)
+    }
 
     @Provides
     @Singleton
