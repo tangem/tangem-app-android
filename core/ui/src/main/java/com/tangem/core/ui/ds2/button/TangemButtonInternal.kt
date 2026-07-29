@@ -1,9 +1,7 @@
 package com.tangem.core.ui.ds2.button
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
@@ -19,10 +17,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -117,8 +115,8 @@ private fun ContentRow(
     ) {
         AnimatedVisibility(
             visible = iconStart != null,
-            enter = SlotEnterTransition,
-            exit = SlotExitTransition,
+            enter = TangemTransition.SlotEnterHorizontally,
+            exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedIconStart?.let { icon ->
                 TangemIcon(
@@ -130,8 +128,8 @@ private fun ContentRow(
 
         AnimatedVisibility(
             visible = text != null,
-            enter = SlotEnterTransition,
-            exit = SlotExitTransition,
+            enter = TangemTransition.SlotEnterHorizontally,
+            exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedText?.let { textRef ->
                 CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
@@ -161,8 +159,8 @@ private fun ContentRow(
 
         AnimatedVisibility(
             visible = iconEnd != null,
-            enter = SlotEnterTransition,
-            exit = SlotExitTransition,
+            enter = TangemTransition.SlotEnterHorizontally,
+            exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedIconEnd?.let { icon ->
                 TangemIcon(
@@ -194,14 +192,6 @@ private fun cappedFontScaleDensity(): Density {
 }
 
 private const val MAX_BUTTON_FONT_SCALE = 1.3f
-
-// Shared, snappy specs so size and alpha animations stay in sync across the three slots.
-private val SlotSizeSpec = spring<IntSize>(stiffness = Spring.StiffnessMediumLow)
-private val SlotAlphaSpec = spring<Float>(stiffness = Spring.StiffnessMediumLow)
-private val SlotEnterTransition: EnterTransition =
-    fadeIn(animationSpec = SlotAlphaSpec) + expandHorizontally(animationSpec = SlotSizeSpec)
-private val SlotExitTransition: ExitTransition =
-    fadeOut(animationSpec = SlotAlphaSpec) + shrinkHorizontally(animationSpec = SlotSizeSpec)
 
 /**
  * Forces the variant's icon color (or its disabled variant when [isEnabled] is `false`) onto
