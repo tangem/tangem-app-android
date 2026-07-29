@@ -74,10 +74,18 @@ internal class AddressBookChildFactory @Inject constructor(
         )
     }
 
-    /** Builds the address attached up-front in WithContactCreation mode, when both the address and network are known. */
+    /**
+     * Builds the address attached up-front in WithContactCreation mode, when both the address and network are known.
+     * The memo rides along when one was provided; `ContactAddressEntriesConverter` drops it on save if the network has
+     * no transaction extras.
+     */
     private fun buildPredefinedAddress(route: AddressBookRoute.EditContact): ValidatedAddress? {
         val address = route.predefinedAddress ?: return null
         val networkId = route.predefinedNetworkId ?: return null
-        return ValidatedAddress(address = address, networkIds = persistentListOf(networkId))
+        return ValidatedAddress(
+            address = address,
+            networkIds = persistentListOf(networkId),
+            memo = route.predefinedMemo,
+        )
     }
 }
