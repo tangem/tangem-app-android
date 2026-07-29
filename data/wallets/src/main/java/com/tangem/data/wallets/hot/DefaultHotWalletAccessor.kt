@@ -13,7 +13,6 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
 import com.tangem.utils.coroutines.runSuspendCatching
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -221,7 +220,7 @@ class DefaultHotWalletAccessor @Inject constructor(
         )
 
         val auth = hotWalletPasswordRequester.requestPassword(attemptRequest).toAuth()
-            ?: throw CancellationException("Password request cancelled", TangemSdkError.UserCancelled())
+            ?: throw TangemSdkError.UserCancelled()
         return RequestedAuth(auth, attemptRequest)
     }
 
