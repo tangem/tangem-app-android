@@ -2,7 +2,9 @@ package com.tangem.features.foryou.impl.tokensummary.entity
 
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -22,12 +24,25 @@ internal sealed class TokenSentimentUM {
         override val indicators: ImmutableList<TokenIndicatorUM>,
     ) : TokenSentimentUM()
 
-    data class Empty(
-        val text: TextReference,
-    ) : TokenSentimentUM() {
+    /** No sentiment to show. The subtype carries the reason, which drives the message shown to the user. */
+    sealed class Empty : TokenSentimentUM() {
+
+        /** Explains to the user why the sentiment is missing. */
+        abstract val message: TextReference
+
         override val indicators: ImmutableList<TokenIndicatorUM> = IndicatorType.entries
             .map { TokenIndicatorUM.NoData(indicatorType = it) }
             .toImmutableList()
+
+        /** Indicators never arrived from the backend — nothing about the token could be loaded. */
+        data object NoResponse : Empty() {
+            override val message: TextReference = resourceReference(R.string.token_summary_can_not_load_token)
+        }
+
+        /** Indicators arrived, but none of them carries a reading — there is no outlook for this token. */
+        data object NoOutlook : Empty() {
+            override val message: TextReference = resourceReference(R.string.token_summary_outlook_is_not_available)
+        }
     }
 
     data object Loading : TokenSentimentUM() {
