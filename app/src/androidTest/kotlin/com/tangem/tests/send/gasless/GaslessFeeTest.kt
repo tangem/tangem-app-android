@@ -262,7 +262,11 @@ class GaslessFeeTest : BaseTestCase() {
                 enterRecipientAndOpenSendConfirm(ETHEREUM_RECIPIENT_ADDRESS)
             }
             step("Pay the network fee with '$tokenName' via the fee selector") {
-                selectStablecoinAsFeeToken(coinName = nativeTokenName, tokenName = tokenName)
+                selectStablecoinAsFeeToken(
+                    coinName = nativeTokenName,
+                    tokenName = tokenName,
+                    expectApplyEnabled = false,
+                )
             }
             step("Assert 'Not enough funds' error is displayed in the fee selector") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
