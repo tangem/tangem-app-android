@@ -18,7 +18,7 @@ internal class CardBackupConverterTest {
 
     @ParameterizedTest(name = "{0}")
     @ProvideTestModels
-    fun convert(model: StatusModel) {
+    fun `GIVEN card backup status WHEN convert THEN status is mapped`(model: StatusModel) {
         // Act
         val actual = CardBackupConverter.convert(
             card = card(backupStatus = model.cardStatus),
