@@ -2,6 +2,7 @@ package com.tangem.data.wallets.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
+import com.tangem.data.wallets.DefaultWalletCardsBackupRepository
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsPromoRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
@@ -18,6 +19,7 @@ import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
+import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -50,6 +52,18 @@ internal object WalletsDataModule {
             dispatchers = dispatchers,
             walletServerBinder = walletServerBinder,
             moshi = moshi,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideWalletCardsBackupRepository(
+        tangemTechApi: TangemTechApi,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WalletCardsBackupRepository {
+        return DefaultWalletCardsBackupRepository(
+            tangemTechApi = tangemTechApi,
+            dispatchers = dispatchers,
         )
     }
 
