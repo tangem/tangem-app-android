@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
@@ -30,6 +31,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -82,6 +84,36 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN virtual account is processing WHEN bank transfer clicked THEN preparation popup event sent`() =
+        runTest {
+            // GIVEN
+            val model = createModel(testScope = this, virtualAccount = VirtualAccountOnramp.Processing)
+            advanceUntilIdle()
+
+            // WHEN
+            model.onClickBankTransfer()
+
+            // THEN
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN loaded status WHEN banking details error shown THEN details error event sent`() = runTest {
+        // GIVEN
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // WHEN
+        model.showVaBankingDetailsError()
+
+        // THEN
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource = StatusSource.ACTUAL,
@@ -89,11 +121,13 @@ internal class TangemPayDetailsModelTest {
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         accountError: PaymentAccountStatusValue.Error? = null,
         statusValue: PaymentAccountStatusValue? = null,
+        virtualAccount: VirtualAccountOnramp? = null,
     ): TangemPayDetailsModel {
         val loaded: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns statusSource
             every { error } returns accountError
             every { customerId } returns "customer-id"
+            every { this@mockk.virtualAccount } returns virtualAccount
             every { cards } returns listOf(tangemPayCard())
             every { balance } returns PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
