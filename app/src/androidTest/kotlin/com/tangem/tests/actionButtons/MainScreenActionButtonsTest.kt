@@ -472,15 +472,16 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @DisplayName("Action buttons (main screen): click on buttons without data")
     @Test
     fun clickOnActionButtonsWithoutDataTest() {
+        val scenarioName = "express_api_assets"
+        val scenarioState = "Unreachable"
+
         setupHooks(
             additionalAfterSection = {
-                enableWiFi()
-                enableMobileData()
+                resetWireMockScenarioState(scenarioName)
             }
         ).run {
-            step("Turn off internet") {
-                disableWiFi()
-                disableMobileData()
+            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
+                setWireMockScenarioState(scenarioName, scenarioState)
             }
             step("Open 'Main Screen'") {
                 openMainScreen()
