@@ -13,6 +13,12 @@ internal class IgraBlockchainMappingTest {
     }
 
     @Test
+    fun `GIVEN igra id WHEN fromId THEN returns Igra`() {
+        assertThat(Blockchain.fromId("igra")).isEqualTo(Blockchain.Igra)
+        assertThat(Blockchain.fromId("igra/test")).isEqualTo(Blockchain.IgraTestnet)
+    }
+
+    @Test
     fun `GIVEN Igra WHEN toNetworkId THEN returns igra`() {
         assertThat(Blockchain.Igra.toNetworkId()).isEqualTo("igra")
         assertThat(Blockchain.IgraTestnet.toNetworkId()).isEqualTo("igra/test")
