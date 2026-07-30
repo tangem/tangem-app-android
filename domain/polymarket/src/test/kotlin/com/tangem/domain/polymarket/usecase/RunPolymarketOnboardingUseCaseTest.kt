@@ -21,6 +21,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -306,7 +307,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
         }
 
     @Test
-    fun `GIVEN an unrecognised status WHEN collected THEN waits instead of acting`() = runTest {
+    fun `GIVEN an unrecognised status WHEN collected THEN owes approvals but does not deploy`() = runTest {
         // Arrange
         coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
             walletState(PolymarketWalletStatus.UNKNOWN).right(),
@@ -328,6 +329,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
             awaitComplete()
         }
         coVerify(exactly = 0) { deployDepositWallet(any()) }
+        coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
     }
 
     @Test
@@ -452,6 +454,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
             )
             awaitComplete()
         }
+        coVerify(exactly = 4) { getWalletStatus(ADDRESSES) }
     }
 
     @Test
@@ -499,6 +502,52 @@ internal class RunPolymarketOnboardingUseCaseTest {
         coVerify(exactly = 0) { deployDepositWallet(any()) }
     }
 
+    @Test
+    fun `GIVEN a run is polling WHEN the collector cancels THEN polling stops`() = runTest {
+        // Arrange
+        var pollCount = 0
+        coEvery { getWalletStatus(ADDRESSES) } coAnswers {
+            pollCount++
+            walletState(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS).right()
+        }
+
+        // Act
+        useCase(USER_WALLET_ID).test {
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+            assertThat(awaitItem()).isEqualTo(
+                PolymarketOnboardingProgress.Working(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS),
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+        val pollCountAtCancellation = pollCount
+        advanceTimeBy(TWELVE_POLL_INTERVALS_MILLIS)
+
+        // Assert
+        assertThat(pollCount).isEqualTo(pollCountAtCancellation)
+    }
+
+    @Test
+    fun `GIVEN reading stored credentials throws WHEN collected THEN fails with Unknown instead of crashing`() =
+        runTest {
+            // Arrange
+            coEvery { getWalletStatus(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.NOT_CREATED).right()
+            coEvery { getApiCredentials(OWNER) } throws IllegalStateException("keystore")
+
+            // Act & Assert
+            useCase(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                assertThat(awaitItem()).isEqualTo(
+                    PolymarketOnboardingProgress.Failed(
+                        error = PolymarketOnboardingError.Unknown,
+                        isRetryable = true,
+                    ),
+                )
+                awaitComplete()
+            }
+        }
+
     private fun walletState(status: PolymarketWalletStatus) = PolymarketWalletState(
         depositWalletAddress = DEPOSIT_WALLET,
         status = status,
@@ -509,6 +558,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
         const val DEPOSIT_WALLET = "0xfAeA0f08159fcF2f573fE24E9E989B0d48f7651B"
         const val L1_SIGNATURE = "0xaa"
         const val TIMESTAMP = "1735689600"
+        const val TWELVE_POLL_INTERVALS_MILLIS = 30_000L
 
         val USER_WALLET_ID = UserWalletId("011")
         val NONCE: BigInteger = BigInteger.valueOf(7)
