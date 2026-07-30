@@ -2198,6 +2198,21 @@
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="one">Up to %d business day</item>
+    <item quantity="other">Up to %d business days</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_fee">Delivery fee</string>
+  <string name="tangempay_order_type_delivery_time">Delivery time</string>
+  <string name="tangempay_order_type_delivery_time_instant">Instant</string>
+  <string name="tangempay_order_type_delivery_to">Deliver to</string>
+  <string name="tangempay_order_type_first_delivery_free">First delivery for free</string>
+  <string name="tangempay_order_type_issue_fee">Issue fee</string>
+  <string name="tangempay_order_type_not_enough_money">Not enough money</string>
+  <string name="tangempay_order_type_segment_plastic">Plastic</string>
+  <string name="tangempay_order_type_segment_virtual">Virtual</string>
+  <string name="tangempay_order_type_select">Select</string>
+  <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_other_networks_header">Other networks</string>
   <string name="tangempay_other_networks_subtitle">And then swap it to payment account with 1:1 rate and zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
