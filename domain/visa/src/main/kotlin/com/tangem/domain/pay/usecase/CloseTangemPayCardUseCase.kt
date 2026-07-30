@@ -30,7 +30,11 @@ class CloseTangemPayCardUseCase(
             startTangemPayOrderPollingUseCase(
                 order = order,
                 userWalletId = userWalletId,
-                onTerminalReached = { closeCardRepository.removeCloseOrderId(cardId) },
+                onOrderStateChange = { newOrder ->
+                    if (newOrder.orderStatus.isTerminal) {
+                        closeCardRepository.removeCloseOrderId(cardId)
+                    }
+                },
             )
         }
     }
