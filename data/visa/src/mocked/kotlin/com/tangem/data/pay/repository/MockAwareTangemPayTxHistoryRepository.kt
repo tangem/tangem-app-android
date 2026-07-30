@@ -29,6 +29,10 @@ import javax.inject.Singleton
 /**
  * In MOCK env returns a canned transaction list covering every inline-cashback badge state;
  * otherwise delegates to [DefaultTangemPayTxHistoryRepository].
+ *
+ * UI tests need the history to come from WireMock instead (so they can drive the list, its error state
+ * and pagination), so they opt out via the [UITEST_HISTORY_FROM_API_KEY] system property — set once for
+ * every instrumentation run by `HiltTestRunner`. Running the mocked build by hand keeps the canned list.
  */
 @Singleton
 internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
@@ -40,7 +44,8 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
     private val isMockMode: Boolean
         get() = apiConfigsManager
             .getEnvironmentConfig(TangemPay.Bff.ID)
-            .environment == ApiEnvironment.MOCK
+            .environment == ApiEnvironment.MOCK &&
+            System.getProperty(UITEST_HISTORY_FROM_API_KEY) != "1"
 
     override fun getTxHistoryBatchFlow(
         userWalletId: UserWalletId,
@@ -224,7 +229,10 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
         )
     }
 
-    private companion object {
+    internal companion object {
         private val USD: Currency = Currency.getInstance("USD")
+
+        /** Set to "1" to serve the history from the API (WireMock) instead of the canned list. */
+        const val UITEST_HISTORY_FROM_API_KEY = "uitest.tangempay.tx_history_from_api"
     }
 }
