@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
@@ -139,9 +140,52 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         }
 
     @Test
-    fun `GIVEN processing order WHEN poll returns terminal THEN onTerminalReached runs before status fetch`() = runTest {
-        // Arrange — recording both callbacks proves the order hint is cleared before the refresh that
-        // would otherwise re-poll GET /order/{id} for the just-resolved order.
+    fun `GIVEN processing order WHEN step changes while non-terminal THEN onOrderStateChange gets every new order`() =
+        runTest {
+            // Arrange — a step-only transition (PROCESSING/AWAITING_DEPOSIT) must be reported, which is only
+            // observable because the step is part of the order identity.
+            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+            val awaitingDeposit = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING, OrderStep.AWAITING_DEPOSIT)
+            val completed = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
+            val changes = mutableListOf<TangemPayOrderInfo>()
+            coEvery {
+                cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
+            } returnsMany listOf(awaitingDeposit.right(), completed.right())
+            coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+
+            // Act
+            val result = useCase(order, USER_WALLET_ID, onOrderStateChange = { changes.add(it) })
+
+            // Assert — the terminal state is reported as well, so callers see the whole transition chain.
+            assertThat(result).isTrue()
+            assertThat(changes).containsExactly(awaitingDeposit, completed).inOrder()
+        }
+
+    @Test
+    fun `GIVEN order already in target step WHEN poll returns the same step THEN onOrderStateChange still reports it`() =
+        runTest {
+            // Arrange — a restored order can already sit in AWAITING_DEPOSIT; the first poll then returns a
+            // value equal to the incoming one and must still be reported.
+            val awaitingDeposit = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING, OrderStep.AWAITING_DEPOSIT)
+            val completed = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
+            val changes = mutableListOf<TangemPayOrderInfo>()
+            coEvery {
+                cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
+            } returnsMany listOf(awaitingDeposit.right(), completed.right())
+            coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+
+            // Act
+            val result = useCase(awaitingDeposit, USER_WALLET_ID, onOrderStateChange = { changes.add(it) })
+
+            // Assert
+            assertThat(result).isTrue()
+            assertThat(changes).containsExactly(awaitingDeposit, completed).inOrder()
+        }
+
+    @Test
+    fun `GIVEN processing order WHEN poll returns terminal THEN terminal is reported before status fetch`() = runTest {
+        // Arrange — recording both the callback and the fetch proves callers can clear the order hint before
+        // the refresh that would otherwise re-issue GET /order/{id} for the just-resolved order.
         val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
         val events = mutableListOf<String>()
         coEvery {
@@ -153,30 +197,35 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         }
 
         // Act
-        val result = useCase(order, USER_WALLET_ID, onTerminalReached = { events.add("clear") })
+        val result = useCase(
+            order = order,
+            userWalletId = USER_WALLET_ID,
+            onOrderStateChange = { events.add(if (it.orderStatus.isTerminal) "terminal" else "changed") },
+        )
 
         // Assert
         assertThat(result).isTrue()
-        assertThat(events).containsExactly("clear", "fetch").inOrder()
+        assertThat(events).containsExactly("terminal", "fetch").inOrder()
     }
 
     @Test
-    fun `GIVEN order already being polled WHEN invoke again THEN onTerminalReached is not invoked for duplicate`() =
+    fun `GIVEN order already being polled WHEN invoke again THEN onOrderStateChange is not invoked for duplicate`() =
         runTest {
             // Arrange — first poller never reaches terminal, so it keeps polling.
             val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
             coEvery { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) } returns
                 TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING).right()
-            var duplicateCleared = false
+            var duplicateNotified = false
 
             // Act — start the first poller, then invoke again for the same order.
             val firstPoller = launch { useCase(order, USER_WALLET_ID) }
             runCurrent()
-            val secondResult = useCase(order, USER_WALLET_ID, onTerminalReached = { duplicateCleared = true })
+            val secondResult = useCase(order, USER_WALLET_ID, onOrderStateChange = { duplicateNotified = true })
 
-            // Assert — the duplicate is a no-op: it must not clear the hint of the live poller.
+            // Assert — the duplicate is a no-op: it must not report state for the live poller, otherwise the
+            // caller would clear the hint of that poller and hide the in-flight order from the status.
             assertThat(secondResult).isFalse()
-            assertThat(duplicateCleared).isFalse()
+            assertThat(duplicateNotified).isFalse()
 
             firstPoller.cancel()
         }
