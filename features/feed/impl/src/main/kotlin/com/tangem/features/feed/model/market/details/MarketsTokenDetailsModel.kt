@@ -326,6 +326,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         .map { tokenSummaryPeriodConverter.convert(it.selectedInterval) }
         .distinctUntilChanged()
 
+    /** Whether the body is still loading. Fed to the embedded token-summary block so both shimmers end together. */
+    val isBodyLoading: Flow<Boolean> = state
+        .map { it.body is MarketsTokenDetailsUM.Body.Loading }
+        .distinctUntilChanged()
+
     init {
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
             ?: UserCountry.Other(Locale.getDefault().country)

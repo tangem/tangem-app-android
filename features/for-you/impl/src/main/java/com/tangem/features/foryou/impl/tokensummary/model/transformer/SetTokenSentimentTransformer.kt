@@ -1,7 +1,5 @@
 package com.tangem.features.foryou.impl.tokensummary.model.transformer
 
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
@@ -26,7 +24,7 @@ internal class SetTokenSentimentTransformer(
                 coinIndicators != null -> TokenSentimentConverter(
                     timeframe = ForYouPeriod.fromId(periodId).timeframe,
                 ).convert(coinIndicators)
-                else -> TokenSentimentUM.Empty(resourceReference(R.string.token_summary_can_not_load_token))
+                else -> TokenSentimentUM.Empty.NoResponse
             },
         )
     }

@@ -15,7 +15,7 @@ import java.math.BigDecimal
 internal class SetTokenSentimentTransformerTest {
 
     @Test
-    fun `GIVEN indicators with all null values WHEN transform THEN period picker and sentiment are Empty`() {
+    fun `GIVEN indicators with all null values WHEN transform THEN picker is Empty and sentiment is NoOutlook`() {
         // Arrange — the indicators exist but carry no readings' values at all
         val indicators = coinIndicators(
             reading(type = Type.RSI, value = null),
@@ -25,9 +25,9 @@ internal class SetTokenSentimentTransformerTest {
         // Act
         val result = transform(indicators, prevPeriodPicker = PeriodPickerUM.Loading)
 
-        // Assert — value-less indicators disable the picker and collapse the sentiment section
+        // Assert — value-less indicators disable the picker; the response did arrive, so there is just no outlook
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Empty)
-        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty::class.java)
+        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
     }
 
     @Test
@@ -46,17 +46,17 @@ internal class SetTokenSentimentTransformerTest {
     }
 
     @Test
-    fun `GIVEN null indicators WHEN transform THEN period picker kept and sentiment is Empty`() {
+    fun `GIVEN null indicators WHEN transform THEN period picker kept and sentiment is NoResponse`() {
         // Act — no indicators loaded yet
         val result = transform(coinIndicators = null, prevPeriodPicker = PeriodPickerUM.Loading)
 
-        // Assert — absent indicators must not touch the picker, but the sentiment section is Empty
+        // Assert — absent indicators must not touch the picker; nothing arrived, so the sentiment is NoResponse
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Loading)
-        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty::class.java)
+        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty.NoResponse)
     }
 
     @Test
-    fun `GIVEN indicators with no readings WHEN transform THEN period picker and sentiment are Empty`() {
+    fun `GIVEN indicators with no readings WHEN transform THEN picker is Empty and sentiment is NoOutlook`() {
         // Arrange — an empty readings list vacuously satisfies "all values null"
         val indicators = coinIndicators()
 
@@ -65,7 +65,7 @@ internal class SetTokenSentimentTransformerTest {
 
         // Assert
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Empty)
-        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty::class.java)
+        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
     }
 
     private fun transform(coinIndicators: CoinIndicators?, prevPeriodPicker: PeriodPickerUM): TokenSummaryUm {
