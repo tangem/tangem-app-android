@@ -168,4 +168,5 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Monad, MonadTestnet -> null
         Gonka -> null
         Robinhood, RobinhoodTestnet -> null
+        Igra, IgraTestnet -> null
     }
