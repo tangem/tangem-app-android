@@ -62,6 +62,8 @@ class RunPolymarketOnboardingUseCase(
         target: PolymarketWalletStatus,
         from: PolymarketWalletStatus,
     ): PolymarketWalletStatus? {
+        if (from == target) return from
+
         var reported = from
         var waited = 0L
         emit(PolymarketOnboardingProgress.Working(from))
@@ -88,7 +90,7 @@ class RunPolymarketOnboardingUseCase(
         block: suspend () -> Either<PolymarketOnboardingError, T>,
     ): T? = block().fold(
         ifLeft = { error ->
-            emit(PolymarketOnboardingProgress.Failed(error = error, retryable = error.isRetryable()))
+            emit(PolymarketOnboardingProgress.Failed(error = error, isRetryable = error.isRetryable()))
             null
         },
         ifRight = { it },
