@@ -377,6 +377,29 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
+        fun `GIVEN loaded total balance WHEN the donut is tapped twice THEN the callback is invoked per tap`() {
+            // Arrange
+            var taps = 0
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                    loadedValue(BigDecimal.ONE, BigDecimal("100")),
+                ),
+            )
+            val portfolio = selectedPortfolio(currencies = statuses, totalFiatBalance = BigDecimal("100"))
+
+            // Act
+            val result = createConverter(onDiagramTap = { taps++ })
+                .convert(portfolio) as PortfolioReviewUM.Content
+            val donutChart = (result.marketChartUM as MarketChartUM.Loaded).donutChart
+            donutChart.onSegmentTap()
+            donutChart.onSegmentTap()
+
+            // Assert — taps are not deduplicated
+            assertThat(taps).isEqualTo(2)
+        }
+
+        @Test
         fun `GIVEN non-loaded total balance WHEN convert THEN market chart is NoData`() {
             // Arrange
             val statuses = listOf(
@@ -762,6 +785,7 @@ internal class ForYouPortfolioReviewConverterTest {
         expandClick: (String) -> Unit = {},
         onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
         onAddFundsClick: (UserWalletId) -> Unit = {},
+        onDiagramTap: () -> Unit = {},
         selectedWalletId: UserWalletId? = UserWalletId("01"),
         coinIndicators: Map<String, CoinIndicators> = emptyMap(),
         timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
@@ -770,6 +794,7 @@ internal class ForYouPortfolioReviewConverterTest {
         expandClick = expandClick,
         onTokenClick = onTokenClick,
         onAddFundsClick = onAddFundsClick,
+        onDiagramTap = onDiagramTap,
         selectedWalletId = selectedWalletId,
         coinIndicators = coinIndicators,
         timeframe = timeframe,
