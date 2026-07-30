@@ -80,7 +80,7 @@ internal fun TokenSummaryContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 is TokenSentimentUM.Empty -> EmptySentimentContent(
-                    text = tokenSentiment.text,
+                    tokenSentiment = tokenSentiment,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 is TokenSentimentUM.Loading -> LoadingSentimentContent(
@@ -128,13 +128,13 @@ private fun BottomButton(bottomButton: BottomButtonUM, modifier: Modifier = Modi
 }
 
 @Composable
-private fun EmptySentimentContent(text: TextReference, modifier: Modifier = Modifier) {
+private fun EmptySentimentContent(tokenSentiment: TokenSentimentUM.Empty, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = text.resolveReference(),
+            text = tokenSentiment.message.resolveReference(),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.heading.small,
         )
@@ -360,17 +360,34 @@ private fun TokenSummaryContentLoadingPreview() {
     }
 }
 
-@Preview(name = "Empty · Light", showBackground = true, widthDp = 360)
-@Preview(name = "Empty · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
+@Preview(name = "No response · Light", showBackground = true, widthDp = 360)
+@Preview(name = "No response · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
 @Composable
-private fun TokenSummaryContentEmptyPreview() {
+private fun TokenSummaryContentNoResponsePreview() {
     TangemThemePreviewRedesign {
         TokenSummaryContent(
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Empty,
-                tokenSentiment = TokenSentimentUM.Empty(
-                    resourceReference(R.string.token_summary_can_not_load_token),
-                ),
+                tokenSentiment = TokenSentimentUM.Empty.NoResponse,
+                bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
+            ),
+            contentPadding = PaddingValues.Zero,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors3.bg.primary),
+        )
+    }
+}
+
+@Preview(name = "No outlook · Light", showBackground = true, widthDp = 360)
+@Preview(name = "No outlook · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
+@Composable
+private fun TokenSummaryContentNoOutlookPreview() {
+    TangemThemePreviewRedesign {
+        TokenSummaryContent(
+            tokenSummary = previewTokenSummary(
+                periodPickerUm = PeriodPickerUM.Empty,
+                tokenSentiment = TokenSentimentUM.Empty.NoOutlook,
                 bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
             ),
             contentPadding = PaddingValues.Zero,
