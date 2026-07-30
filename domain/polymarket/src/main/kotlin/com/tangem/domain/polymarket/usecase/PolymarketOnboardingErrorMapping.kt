@@ -27,3 +27,31 @@ internal fun PolymarketAuthError.toOnboardingError(): PolymarketOnboardingError 
     PolymarketAuthError.Network -> PolymarketOnboardingError.Network
     else -> PolymarketOnboardingError.Auth(cause = this)
 }
+
+internal fun PolymarketOnboardingError.isRetryable(): Boolean = when (this) {
+    is PolymarketOnboardingError.AddressMismatch -> false
+    is PolymarketOnboardingError.Wallet -> when (cause) {
+        PolymarketWalletError.InvalidRequest,
+        PolymarketWalletError.Unauthorized,
+        -> false
+        else -> true
+    }
+    is PolymarketOnboardingError.Signing -> when (cause) {
+        PolymarketSigningError.NotDerived,
+        PolymarketSigningError.MissingWallet,
+        -> false
+        else -> true
+    }
+    is PolymarketOnboardingError.Derivation -> when (cause) {
+        PolymarketDerivationError.MissingWallet,
+        PolymarketDerivationError.DerivationUnsupported,
+        -> false
+        else -> true
+    }
+    is PolymarketOnboardingError.Auth,
+    PolymarketOnboardingError.DeploymentFailed,
+    PolymarketOnboardingError.ApprovalsFailed,
+    PolymarketOnboardingError.Network,
+    PolymarketOnboardingError.Unknown,
+    -> true
+}

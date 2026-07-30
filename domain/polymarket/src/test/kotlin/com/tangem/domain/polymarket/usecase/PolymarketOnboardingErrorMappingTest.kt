@@ -119,6 +119,50 @@ internal class PolymarketOnboardingErrorMappingTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsRetryable {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an error WHEN classified THEN retryability matches the contract`(model: RetryModel) {
+            // Act
+            val actual = model.error.isRetryable()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.retryable)
+        }
+
+        private fun provideTestModels() = listOf(
+            RetryModel(PolymarketOnboardingError.AddressMismatch(expected = "0xa", actual = "0xb"), false),
+            RetryModel(PolymarketOnboardingError.Wallet(PolymarketWalletError.InvalidRequest), false),
+            RetryModel(PolymarketOnboardingError.Wallet(PolymarketWalletError.Unauthorized), false),
+            RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.NotDerived), false),
+            RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.MissingWallet), false),
+            RetryModel(PolymarketOnboardingError.Derivation(PolymarketDerivationError.MissingWallet), false),
+            RetryModel(
+                error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.DerivationUnsupported),
+                retryable = false,
+            ),
+            RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled), true),
+            RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.CardError), true),
+            RetryModel(PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled), true),
+            RetryModel(PolymarketOnboardingError.Wallet(PolymarketWalletError.WalletNotDeployed), true),
+            RetryModel(
+                error = PolymarketOnboardingError.Wallet(PolymarketWalletError.RelayerRejected.DeadlineTooSoon),
+                retryable = true,
+            ),
+            RetryModel(PolymarketOnboardingError.Wallet(PolymarketWalletError.RelayerUnavailable), true),
+            RetryModel(PolymarketOnboardingError.Auth(PolymarketAuthError.InvalidSignature), true),
+            RetryModel(PolymarketOnboardingError.DeploymentFailed, true),
+            RetryModel(PolymarketOnboardingError.ApprovalsFailed, true),
+            RetryModel(PolymarketOnboardingError.Network, true),
+            RetryModel(PolymarketOnboardingError.Unknown, true),
+        )
+    }
+
+    internal data class RetryModel(val error: PolymarketOnboardingError, val retryable: Boolean)
+
     private fun provideTestModels() = listOf(
         PolymarketDerivationError.MissingWallet,
         PolymarketDerivationError.UserCancelled,
