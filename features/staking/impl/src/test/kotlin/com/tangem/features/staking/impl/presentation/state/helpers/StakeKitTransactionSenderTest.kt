@@ -20,6 +20,7 @@ import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.StakeKitIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
@@ -30,16 +31,19 @@ import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.utils.Provider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -137,6 +141,44 @@ internal class StakeKitTransactionSenderTest {
         }
     }
 
+    @Test
+    fun `GIVEN status without address WHEN send THEN construct error and nothing sent`() = runTest {
+        // Arrange
+        givenBuild(network = NetworkType.POLYGON, verdict = StakingTransactionVerdict.SAFE)
+        val sender = createSender(statusProvider = Provider { cryptoCurrencyStatus(address = null) })
+        var constructError: StakingError? = null
+        stubState(StateArgs())
+
+        // Act
+        sender.send(sendCallbacks(onConstructError = { constructError = it }))
+
+        // Assert
+        assertThat(constructError).isInstanceOf(StakingError.DomainError::class.java)
+        coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN status recovers address after failed send WHEN send again THEN sent with fresh address`() = runTest {
+        // Arrange
+        givenBuild(network = NetworkType.POLYGON, verdict = StakingTransactionVerdict.SAFE)
+        val paramsSlot = slot<ActionParams>()
+        coEvery {
+            getStakingTransactionsUseCase(any(), any(), capture(paramsSlot))
+        } returns Either.Right(listOf(stakingTransaction(network = NetworkType.POLYGON)))
+        var currentStatus = cryptoCurrencyStatus(address = null)
+        val sender = createSender(statusProvider = Provider { currentStatus })
+        stubState(StateArgs())
+
+        // Act
+        sender.send(sendCallbacks())
+        currentStatus = cryptoCurrencyStatus(address = FRESH_ADDRESS)
+        sender.send(sendCallbacks())
+
+        // Assert
+        assertThat(paramsSlot.captured.address).isEqualTo(FRESH_ADDRESS)
+        coVerify(exactly = 1) { sendTransactionUseCase(any(), any(), any(), any()) }
+    }
+
     // `@ProvideTestModels` lives in `:test:core`, which this module does not depend on, so we wire the
     // JUnit 5 `@MethodSource` directly — it is exactly what that annotation expands to.
     private fun provideTestModels() = listOf(
@@ -207,7 +249,9 @@ internal class StakeKitTransactionSenderTest {
         ),
     )
 
-    private fun createSender(): StakeKitTransactionSender = StakeKitTransactionSender(
+    private fun createSender(
+        statusProvider: Provider<CryptoCurrencyStatus> = Provider { cryptoCurrencyStatus() },
+    ): StakeKitTransactionSender = StakeKitTransactionSender(
         stateController = stateController,
         stakingBalanceUpdater = stakingBalanceUpdaterFactory,
         getStakingTransactionsUseCase = getStakingTransactionsUseCase,
@@ -219,7 +263,7 @@ internal class StakeKitTransactionSenderTest {
         isFeeApproximateUseCase = isFeeApproximateUseCase,
         checkStakingTransactionUseCase = checkStakingTransactionUseCase,
         clock = clock,
-        cryptoCurrencyStatus = cryptoCurrencyStatus(),
+        cryptoCurrencyStatusProvider = statusProvider,
         userWallet = userWallet,
         integration = integration,
         isAmountSubtractAvailable = false,
@@ -264,11 +308,15 @@ internal class StakeKitTransactionSenderTest {
         every { stateController.value } returns state
     }
 
-    private fun cryptoCurrencyStatus(): CryptoCurrencyStatus {
+    private fun cryptoCurrencyStatus(address: String? = ACCOUNT_ADDRESS): CryptoCurrencyStatus {
         val statusValue = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
-            every { networkAddress } returns mockk(relaxed = true) {
-                every { defaultAddress } returns mockk(relaxed = true) {
-                    every { value } returns ACCOUNT_ADDRESS
+            if (address == null) {
+                every { networkAddress } returns null
+            } else {
+                every { networkAddress } returns mockk(relaxed = true) {
+                    every { defaultAddress } returns mockk(relaxed = true) {
+                        every { value } returns address
+                    }
                 }
             }
         }
@@ -339,6 +387,7 @@ internal class StakeKitTransactionSenderTest {
 
     private companion object {
         const val ACCOUNT_ADDRESS = "ACCOUNT_ADDRESS"
+        const val FRESH_ADDRESS = "FRESH_ADDRESS"
         val BASE_TIME: Instant = Instant.fromEpochSeconds(1_700_000_000)
     }
 }
