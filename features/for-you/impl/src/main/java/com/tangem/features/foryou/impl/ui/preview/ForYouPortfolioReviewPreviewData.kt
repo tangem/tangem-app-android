@@ -42,6 +42,7 @@ internal object ForYouPortfolioReviewPreviewData {
                         fiatValue = stringReference("\$728.30"),
                     ),
                 ),
+                onSegmentTap = {},
             ),
             topHoldingPercent = stringReference("Top holding 42%"),
         ),
