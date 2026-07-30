@@ -25,6 +25,8 @@ dependencies {
     implementation(projects.features.commonFeatures.api)
 
     /** Project - Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.utils)
