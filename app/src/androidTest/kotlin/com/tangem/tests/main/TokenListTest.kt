@@ -67,6 +67,9 @@ class TokenListTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen(mockContent = NoteMockContent)
             }
+            step("Scroll to the token row (notification cards push the sole token below the fold)") {
+                onMainScreen { scrollToTokenList() }
+            }
             val tokensList = getMainScreenTokensOrder()
 
             step("Assert only one token in list is displayed") {
