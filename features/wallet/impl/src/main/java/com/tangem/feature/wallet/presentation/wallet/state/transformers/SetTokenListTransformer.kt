@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -9,7 +11,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
-import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
+import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
@@ -68,16 +70,21 @@ internal class SetTokenListTransformer(
         return when (walletUM) {
             is WalletUM.Content -> {
                 val tokensListUM = toLoadedState()
+                val isTokensEmpty = tokensListUM is WalletTokensListUM.Empty
+                val areActionsAvailable = getTotalFiatBalance().areActionsAvailable()
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
                     virtualAccountMainUM = walletUM.virtualAccountMainUM.toLoadedVirtualState(),
                     tokensListUM = tokensListUM,
-                    buttons = if (tokensListUM is WalletTokensListUM.Empty) {
-                        walletUM.disableButtons()
-                    } else {
-                        walletUM.enableButtons()
-                    },
+                    areActionsAvailable = areActionsAvailable,
+                    buttons = createWalletActionButtons(
+                        userWallet = userWallet,
+                        clickIntents = clickIntents,
+                        isAddFundsEnabled = !isTokensEmpty,
+                        isSwapEnabled = !isTokensEmpty && areActionsAvailable,
+                        isTransferEnabled = !isTokensEmpty,
+                    ),
                 )
             }
             is WalletUM.Locked -> {
@@ -86,6 +93,14 @@ internal class SetTokenListTransformer(
             }
         }
     }
+
+    private fun getTotalFiatBalance(): TotalFiatBalance = when (params) {
+        is TokenConverterParams.Account -> params.accountList.totalFiatBalance
+        is TokenConverterParams.Wallet -> params.tokenList.totalFiatBalance
+    }
+
+    private fun TotalFiatBalance.areActionsAvailable(): Boolean =
+        (this as? TotalFiatBalance.Loaded)?.source != StatusSource.ONLY_CACHE
 
     private fun WalletCardState.toLoadedState(): WalletCardState {
         val fiatBalance = when (params) {
