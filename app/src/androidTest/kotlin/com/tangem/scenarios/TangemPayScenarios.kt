@@ -38,6 +38,24 @@ fun BaseTestCase.openTangemPay() {
     }
 }
 
+/** From the open payment account screen, opens the details bottom sheet for transaction [name]. */
+fun BaseTestCase.openTangemPayTransactionDetails(name: String) {
+    step("Assert '$name' transaction row is displayed") {
+        awaitSuccess {
+            onTangemPayMainScreen {
+                scrollToTransactionWithText(name)
+                transactionRowWithText(name).assertIsDisplayed()
+            }
+        }
+    }
+    step("Click on '$name' transaction row") {
+        onTangemPayMainScreen { transactionRowWithText(name).performClick() }
+    }
+    step("Assert transaction details bottom sheet is displayed") {
+        awaitSuccess { onTangemPayTransactionDetailsSheet { amount.assertIsDisplayed() } }
+    }
+}
+
 /** Opens Tangem Pay and taps the card to reach the card management page. */
 fun BaseTestCase.openTangemPayCardPage() {
     openTangemPay()
