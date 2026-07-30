@@ -20,7 +20,10 @@ class CancelTangemPayOrderUseCase(
         paymentAccountStatusFetcher.invoke(userWalletId)
 
         startTangemPayOrderPollingUseCase(
-            order = TangemPayOrderInfo(orderId = orderId, orderStatus = OrderStatus.PROCESSING),
+            order = TangemPayOrderInfo(
+                orderId = orderId,
+                orderStatus = OrderStatus.PROCESSING,
+            ),
             userWalletId = userWalletId,
         )
     }
