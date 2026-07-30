@@ -116,6 +116,13 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             )
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToTokenList() {
+        collapseHeader()
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM))
+    }
+
     // Wallet pager keeps the adjacent page composed (beyondViewportPageCount=1), so the token is mounted on two pages — click the displayed copy.
     fun clickDisplayedToken(tokenName: String) {
         val matcher = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName))
