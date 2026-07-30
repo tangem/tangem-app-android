@@ -9,6 +9,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
@@ -69,6 +70,9 @@ internal class TangemPayMainBlockConverter(
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Loaded -> {
+                if (statusValue.tariffPlan?.isPlanTransitioningState == true) {
+                    return TangemPayMainUM.IssuingCard(onClick = { tangemPayClickIntents.openDetails(value) })
+                }
                 val cardsCount = statusValue.cards.count()
                 val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
                 val subtitle = when {
