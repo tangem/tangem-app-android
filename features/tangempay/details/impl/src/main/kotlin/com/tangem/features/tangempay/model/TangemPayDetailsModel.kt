@@ -531,6 +531,10 @@ internal class TangemPayDetailsModel @Inject constructor(
                 uiMessageSender.send(message)
                 return@launch
             }
+            if (tangemPayFeatureToggles.isPlasticCardOrderEnabled) {
+                router.push(TangemPayAccountDetailsInnerRoute.OrderCard)
+                return@launch
+            }
             analytics.send(TangemPayAnalyticsEvents.IssueAdditionalCardPopupShown())
             bottomSheetNavigation.activate(
                 TangemPayDetailsNavigation.IssueAdditionalCard(
