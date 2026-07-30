@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
@@ -49,6 +50,20 @@ class RunPolymarketOnboardingUseCase(
         val nonce = step { getRelayerNonce(addresses) } ?: return
         val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
+        settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
+    }
+
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
+        addresses: PolymarketAddresses,
+        entry: PolymarketWalletStatus,
+        signed: PolymarketSignedOnboarding,
+        credentials: PolymarketApiCredentials?,
+    ) {
+        var current = entry
+        if (entry.needsDeploy()) {
+            current = step { deployDepositWallet(addresses) } ?: return
+        }
+
         if (credentials == null) {
             step {
                 deriveApiCredentials(
@@ -57,19 +72,6 @@ class RunPolymarketOnboardingUseCase(
                     timestamp = signed.clobAuthTimestamp,
                 )
             } ?: return
-        }
-
-        settleWallet(addresses, entry, signed)
-    }
-
-    private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
-        addresses: PolymarketAddresses,
-        entry: PolymarketWalletStatus,
-        signed: PolymarketSignedOnboarding,
-    ) {
-        var current = entry
-        if (entry.needsDeploy()) {
-            current = step { deployDepositWallet(addresses) } ?: return
         }
 
         if (entry.owesApprovals()) {
@@ -104,7 +106,7 @@ class RunPolymarketOnboardingUseCase(
                     }
                     consecutiveFailures++
                     if (consecutiveFailures >= MAX_CONSECUTIVE_POLL_FAILURES) {
-                        emit(PolymarketOnboardingProgress.Failed(error, isRetryable = true))
+                        emit(PolymarketOnboardingProgress.Failed(error, isRetryable = error.isRetryable()))
                         return null
                     }
                     null
@@ -119,7 +121,7 @@ class RunPolymarketOnboardingUseCase(
             if (status == target) return status
             if (status != null) {
                 status.toFailure()?.let { failure ->
-                    emit(PolymarketOnboardingProgress.Failed(failure, isRetryable = true))
+                    emit(PolymarketOnboardingProgress.Failed(failure, isRetryable = failure.isRetryable()))
                     return null
                 }
                 if (status != reported) {
