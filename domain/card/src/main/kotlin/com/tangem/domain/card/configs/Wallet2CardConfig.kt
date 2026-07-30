@@ -226,6 +226,8 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.MonadTestnet -> EllipticCurve.Secp256k1
             Blockchain.Robinhood -> EllipticCurve.Secp256k1
             Blockchain.RobinhoodTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Igra -> EllipticCurve.Secp256k1
+            Blockchain.IgraTestnet -> EllipticCurve.Secp256k1
         }
     }
 }
