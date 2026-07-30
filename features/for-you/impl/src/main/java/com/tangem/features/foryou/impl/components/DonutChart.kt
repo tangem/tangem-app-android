@@ -65,15 +65,19 @@ import kotlin.math.min
  * track (unfilled remainder) — so only the selected slice stays at full strength. Only one slice can be
  * selected at a time — selection is hoisted (the index is the slice's identity, as there are no segment ids
  * yet). Taps are hit-tested against the ring band only and reported via [onSegmentClick]; the chart is
- * interactive only when [onSegmentClick] is set **and** [segments] is non-empty.
+ * interactive when [onSegmentClick] or [onTap] is set **and** [segments] is non-empty.
  *
  * @param segments Slices, in priority order (index 0 is painted on top). See [DonutSegmentUM.weight].
  * @param modifier Modifier; should carry the overall size (e.g. `Modifier.size(240.dp)`).
  * @param selectedIndex Index of the currently selected slice, or `null` for no selection (nothing dimmed).
- * @param onSegmentClick Invoked on every tap inside the chart: with the tapped slice index, or with `null`
- *   when the tap missed all slices (the center hole or the unfilled track). Passing `null` for the whole
- *   callback makes the chart non-interactive. Toggling/switching/clearing the selection is the caller's
- *   responsibility — e.g. map a repeat tap or a miss to deselection, and a tap on another slice to a switch.
+ * @param onSegmentClick Invoked when a tap lands on a slice **other than** the selected one, or misses all
+ *   slices (the center hole or the unfilled track) while something is selected — i.e. only when the tap can
+ *   change the selection. A repeat tap on the selected slice is not reported here; use [onTap] to observe
+ *   every tap. Toggling/switching/clearing the selection is the caller's responsibility — e.g. map a miss to
+ *   deselection, and a tap on another slice to a switch.
+ * @param onTap Invoked on every tap inside the chart, without the de-duplication [onSegmentClick] applies —
+ *   repeat taps on the selected slice and taps that miss the ring included. Fires on press, in step with
+ *   [onSegmentClick].
  * @param strokeWidth Thickness of the ring.
  * @param trackColor Fill of the unfilled remainder of the circle (and the empty-state ring).
  * @param startAngle Angle (degrees) where the first slice starts. `-90f` = 12 o'clock.
@@ -86,6 +90,7 @@ internal fun DonutChart(
     modifier: Modifier = Modifier,
     selectedIndex: Int? = null,
     onSegmentClick: ((index: Int?) -> Unit)? = null,
+    onTap: (() -> Unit)? = null,
     strokeWidth: Dp = 28.dp,
     trackColor: Color = TangemTheme.colors3.border.tertiary,
     startAngle: Float = -90f,
@@ -111,11 +116,13 @@ internal fun DonutChart(
 
     val latestSelectedIndex by rememberUpdatedState(selectedIndex)
     val latestOnSegmentClick by rememberUpdatedState(onSegmentClick)
+    val latestOnTap by rememberUpdatedState(onTap)
 
-    val clickModifier = if (onSegmentClick != null && segments.isNotEmpty()) {
+    val clickModifier = if ((onSegmentClick != null || onTap != null) && segments.isNotEmpty()) {
         Modifier.pointerInput(segments, startAngle, strokePx) {
             detectTapGestures(
                 onPress = { tap ->
+                    latestOnTap?.invoke()
                     val clickedIndex = segmentIndexAt(tap, size.toSize(), strokePx, segments, startAngle)
                     if (latestSelectedIndex != clickedIndex) latestOnSegmentClick?.invoke(clickedIndex)
                 },

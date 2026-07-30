@@ -8,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -25,6 +26,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.foryou.TokenSummaryComponent
+import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
+import com.tangem.features.foryou.impl.analytics.toAnalyticsTokenAndNetwork
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.tokensummary.entity.*
@@ -49,6 +52,7 @@ internal class TokenSummaryModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     getCoinIndicatorsUpdatesUseCase: GetCoinIndicatorsUpdatesUseCase,
     swapHoldingsDelegateFactory: SwapHoldingsDelegate.Factory,
 ) : Model() {
@@ -100,6 +104,9 @@ internal class TokenSummaryModel @Inject constructor(
         field = MutableStateFlow<TokenSummaryUm>(buildInitialUiState())
 
     init {
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.TokenSummary(token = token, blockchain = network))
+
         modelScope.launch {
             fetchCoinIndicatorsUseCase(symbols = listOf(tokenSymbol))
         }
@@ -166,18 +173,35 @@ internal class TokenSummaryModel @Inject constructor(
     private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
         if (tangemSegmentUM.id == selectedTokenPeriodId.value) return
 
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(
+            ForYouAnalyticsEvent.TokenSummaryInterval(
+                token = token,
+                blockchain = network,
+                period = ForYouPeriod.fromId(tangemSegmentUM.id).analyticsValue,
+            ),
+        )
+
         selectedTokenPeriodId.value = tangemSegmentUM.id
     }
 
+    /**
+     * Both this and [openAddToPortfolio] sit behind the same "Add funds" label
+     * (see `BottomButtonUMConverter`), so they report the same event — the user sees one button.
+     */
     private fun openManageFunds() {
         val rawCurrencyId = params.token.rawCurrencyId ?: return
 
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.AddFunds(token = token, blockchain = network))
         bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.ManageFunds(rawCurrencyId))
     }
 
     private fun openAddToPortfolio() {
         if (addToPortfolioManager == null) return
 
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.AddFunds(token = token, blockchain = network))
         bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.AddToPortfolio)
     }
 
@@ -217,6 +241,9 @@ internal class TokenSummaryModel @Inject constructor(
     }
 
     private fun openSwap(holdings: List<SwapHolding>) {
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.GoToSwap(token = token, blockchain = network))
+
         val onlyHolding = holdings.singleOrNull()
 
         when {
@@ -243,13 +270,13 @@ internal class TokenSummaryModel @Inject constructor(
             AppRoute.Swap(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = currency,
-                // TODO ask about right value
-                screenSource = "Token summary", // AnalyticsParam.ScreensSources.TokenSummary
+                screenSource = AnalyticsParam.ScreensSources.ForYou.value,
             ),
         )
     }
 
     private fun onInfoClick(indicatorType: IndicatorType) {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.IndicatorInfo(info = indicatorType.analyticsValue))
         bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.Info(indicatorType))
     }
 }
