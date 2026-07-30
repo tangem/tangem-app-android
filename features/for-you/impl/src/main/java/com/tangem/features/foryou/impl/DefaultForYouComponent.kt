@@ -1,6 +1,7 @@
 package com.tangem.features.foryou.impl
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -122,7 +123,7 @@ internal class DefaultForYouComponent @AssistedInject constructor(
             bottomSheetState = bottomSheetState,
             promoBannersBlockComponent = promoBannersBlockComponent,
             contentPadding = contentPadding,
-            modifier = modifier,
+            modifier = modifier.navigationBarsPadding(),
         )
 
         bottomSheet.child?.instance?.BottomSheet()
