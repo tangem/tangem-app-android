@@ -1,9 +1,10 @@
 package com.tangem.features.foryou.impl.tokensummary.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 
 @Immutable
 internal sealed interface TokenIndicatorUM {
@@ -34,43 +35,26 @@ internal enum class IndicatorType(
     GalaxyScore(
         analyticsValue = "Galaxy Score",
         title = "Galaxy score",
-        description = stringReference(
-            "Galaxy Score combines market performance and social media activity into a " +
-                "single 0 to 100" +
-                " score that reflects overall asset health. Source: LunarCrush.",
-        ),
+        description = resourceReference(R.string.token_summary_galaxy_score_description),
     ),
     Sentiment(
         analyticsValue = "Sentiment",
         title = "Sentiment",
-        description = stringReference(
-            "Sentiment scores the tone of social media posts about the asset on a 1 to 5 " +
-                "scale, where higher means more positive discussion. Source: LunarCrush.",
-        ),
+        description = resourceReference(R.string.token_summary_sentiment_description),
     ),
     RSI(
         analyticsValue = "RSI",
         title = "RSI",
-        description = stringReference(
-            "RSI (Relative Strength Index) measures whether an asset has been bought or " +
-                "sold too heavily over the last 14 periods, flagging potential overbought or oversold conditions. " +
-                "Source: taapi.io.",
-        ),
+        description = resourceReference(R.string.token_summary_rsi_description),
     ),
     MACD(
         analyticsValue = "MACD",
         title = "MACD",
-        description = stringReference(
-            "MACD compares short-term and long-term price momentum to show whether an asset's momentum is" +
-                " strengthening or weakening. Source: taapi.io.",
-        ),
+        description = resourceReference(R.string.token_summary_macd_description),
     ),
     MA_CROSS(
         analyticsValue = "MA Cross",
         title = "MA Cross",
-        description = stringReference(
-            "MA Cross compares the 50-day and 200-day average prices to show whether the " +
-                "asset is trading above or below its long-term trend. Source: taapi.io.",
-        ),
+        description = resourceReference(R.string.token_summary_ma_cross_description),
     ),
 }
