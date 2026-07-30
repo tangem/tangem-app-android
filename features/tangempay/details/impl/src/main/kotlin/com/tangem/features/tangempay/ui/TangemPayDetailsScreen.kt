@@ -106,6 +106,7 @@ internal fun TangemPayDetailsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CONTENT)
                     .topFade(
                         height = topBarTotalHeight,
                         0f to rootBackground,
