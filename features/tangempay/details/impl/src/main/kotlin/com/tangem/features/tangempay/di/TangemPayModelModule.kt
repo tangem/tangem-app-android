@@ -9,6 +9,8 @@ import com.tangem.features.tangempay.model.*
 import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkModel
 import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksModel
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardTypeModel
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
 import dagger.Binds
@@ -126,4 +128,14 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(PaymentReceiveModel::class)
     fun bindPaymentReceiveModel(model: PaymentReceiveModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayOrderCardTypeModel::class)
+    fun bindTangemPayOrderCardTypeModel(model: TangemPayOrderCardTypeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayOrderCardModel::class)
+    fun bindTangemPayOrderCardModel(model: TangemPayOrderCardModel): Model
 }
