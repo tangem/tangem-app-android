@@ -74,6 +74,11 @@ private fun LazyListScope.tokenMarketDetailsBodyBlock(
                 DescriptionPlaceholder(modifier = Modifier.padding(28.dp))
             }
 
+            // The block renders its own loading placeholder, so it is shown in both states
+            if (tokenSummaryBlock != null) {
+                tokenSummaryBlockItem(tokenSummaryBlock)
+            }
+
             loadingInfoBlocks()
         }
         is MarketsTokenDetailsUM.Body.Content -> {
