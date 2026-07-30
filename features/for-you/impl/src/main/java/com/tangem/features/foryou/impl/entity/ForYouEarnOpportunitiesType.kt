@@ -11,6 +11,9 @@ import com.tangem.domain.staking.model.StakingIntegrationID
  */
 internal sealed interface ForYouEarnOpportunitiesType {
 
+    /** Value reported in the `Type` analytics param. */
+    val analyticsValue: String
+
     /** Whether the opportunity's rate is expressed as an APY or an APR. */
     val rewardType: EarnRewardType
 
@@ -23,7 +26,9 @@ internal sealed interface ForYouEarnOpportunitiesType {
     data class YieldSupply(
         val apy: String,
         override val rewardType: EarnRewardType = EarnRewardType.APY,
-    ) : ForYouEarnOpportunitiesType
+    ) : ForYouEarnOpportunitiesType {
+        override val analyticsValue: String = "Yield"
+    }
 
     /**
      * Staking opportunity.
@@ -33,5 +38,7 @@ internal sealed interface ForYouEarnOpportunitiesType {
     data class Staking(
         val integrationID: StakingIntegrationID,
         override val rewardType: EarnRewardType,
-    ) : ForYouEarnOpportunitiesType
+    ) : ForYouEarnOpportunitiesType {
+        override val analyticsValue: String = "Staking"
+    }
 }
