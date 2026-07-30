@@ -19,6 +19,7 @@ import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -96,6 +97,10 @@ internal class RunPolymarketOnboardingUseCaseTest {
         coVerify(exactly = 1) { deployDepositWallet(ADDRESSES) }
         coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
         coVerify(exactly = 1) { deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP) }
+        coVerifyOrder {
+            deployDepositWallet(ADDRESSES)
+            deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP)
+        }
     }
 
     @Test
@@ -208,6 +213,30 @@ internal class RunPolymarketOnboardingUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the wallet is deployed and credentials are stored WHEN collected THEN does not re-derive credentials`() =
+        runTest {
+            // Arrange
+            coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+            coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
+                walletState(PolymarketWalletStatus.DEPLOYED).right(),
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
+            )
+
+            // Act & Assert
+            useCase(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                assertThat(awaitItem()).isEqualTo(
+                    PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
+                )
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                awaitComplete()
+            }
+            coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any()) }
+            coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
+        }
+
+    @Test
     fun `GIVEN approvals are in flight and credentials are stored WHEN collected THEN only waits`() = runTest {
         // Arrange
         coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
@@ -228,6 +257,29 @@ internal class RunPolymarketOnboardingUseCaseTest {
         coVerify(exactly = 0) { signOnboardingDigests(any(), any()) }
         coVerify(exactly = 0) { submitApprovals(any(), any()) }
     }
+
+    @Test
+    fun `GIVEN approvals are in flight and credentials are missing WHEN collected THEN taps but does not resubmit`() =
+        runTest {
+            // Arrange
+            coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
+                walletState(PolymarketWalletStatus.APPROVALS_IN_PROGRESS).right(),
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
+            )
+
+            // Act & Assert
+            useCase(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                assertThat(awaitItem()).isEqualTo(
+                    PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
+                )
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                awaitComplete()
+            }
+            coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
+            coVerify(exactly = 0) { submitApprovals(any(), any()) }
+        }
 
     @Test
     fun `GIVEN previous approvals failed WHEN collected THEN re-signs and resubmits without deploying`() =
