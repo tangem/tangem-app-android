@@ -230,22 +230,22 @@ internal class TokenSentimentConverterTest {
     }
 
     @Test
-    fun `GIVEN no readings WHEN convert THEN result is Empty with rows in indicator type order`() {
+    fun `GIVEN no readings WHEN convert THEN result is NoOutlook with rows in indicator type order`() {
         // Arrange
         val coinIndicators = createCoinIndicators(readings = emptyList())
 
         // Act
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
-        // Assert — no data at all collapses to the Empty state, whose rows still follow the indicator order
-        assertThat(actual).isInstanceOf(TokenSentimentUM.Empty::class.java)
+        // Assert — a response without readings collapses to NoOutlook, whose rows still follow the indicator order
+        assertThat(actual).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
         assertThat(actual.indicators.map(TokenIndicatorUM::indicatorType))
             .containsExactlyElementsIn(IndicatorType.entries)
             .inOrder()
     }
 
     @Test
-    fun `GIVEN readings present but all values null WHEN convert THEN result is Empty`() {
+    fun `GIVEN readings present but all values null WHEN convert THEN result is NoOutlook`() {
         // Arrange — readings exist for the timeframe but none carries a value
         val coinIndicators = createCoinIndicators(
             readings = listOf(
@@ -258,7 +258,7 @@ internal class TokenSentimentConverterTest {
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
         // Assert
-        assertThat(actual).isInstanceOf(TokenSentimentUM.Empty::class.java)
+        assertThat(actual).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
     }
 
     @Test

@@ -4,8 +4,6 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
 import com.tangem.domain.markets.GetCoinIndicatorsUpdatesUseCase
 import com.tangem.features.foryou.TokenSummaryBlockComponent
@@ -53,12 +51,16 @@ internal class TokenSummaryBlockModel @Inject constructor(
         combine(
             getCoinIndicatorsUpdatesUseCase().map { it[params.symbol.uppercase()] }.distinctUntilChanged(),
             params.selectedPeriod,
-        ) { coinIndicators, period ->
+            params.isHostLoading.distinctUntilChanged(),
+        ) { coinIndicators, period, isHostLoading ->
             uiState.update { state ->
                 state.copy(
-                    sentiment = coinIndicators
-                        ?.let { TokenSentimentConverter(timeframe = period.timeframe).convert(it) }
-                        ?: TokenSentimentUM.Empty(resourceReference(R.string.token_summary_can_not_load_token)),
+                    sentiment = when {
+                        isHostLoading -> TokenSentimentUM.Loading
+                        coinIndicators != null ->
+                            TokenSentimentConverter(timeframe = period.timeframe).convert(coinIndicators)
+                        else -> TokenSentimentUM.Empty.NoResponse
+                    },
                 )
             }
         }.launchIn(modelScope)
