@@ -4,6 +4,7 @@ import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONException
 import org.json.JSONObject
 import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
@@ -88,6 +89,9 @@ fun getWireMockRequestCount(
     } catch (e: IOException) {
         TangemLogger.e("WireMock request count error", e)
         0
+    } catch (e: JSONException) {
+        TangemLogger.e("WireMock request count: unexpected response body", e)
+        0
     }
 }
 
@@ -134,6 +138,9 @@ fun getWireMockRequestCountByQueryParam(
         }
     } catch (e: IOException) {
         TangemLogger.e("WireMock request count (by query param) error", e)
+        0
+    } catch (e: JSONException) {
+        TangemLogger.e("WireMock request count (by query param): unexpected response body", e)
         0
     }
 }
