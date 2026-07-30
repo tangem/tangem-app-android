@@ -6,8 +6,12 @@ object TangemPayTestTags {
     const val MAIN_SCREEN_TILE_BALANCE = "TANGEM_PAY_MAIN_SCREEN_TILE_BALANCE"
 
     // Payment account details screen
+    const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
     const val PAYMENT_ACCOUNT_BALANCE = "TANGEM_PAY_PAYMENT_ACCOUNT_BALANCE"
     const val PAYMENT_ACCOUNT_CARD_BUTTON = "TANGEM_PAY_PAYMENT_ACCOUNT_CARD_BUTTON"
+
+    // Reload button shown in the transaction-history "failed to load" state
+    const val TRANSACTION_HISTORY_RELOAD_BUTTON = "TANGEM_PAY_TRANSACTION_HISTORY_RELOAD_BUTTON"
 
     // Card details (reveal + copy)
     const val CARD_DETAILS_SHOW_BUTTON = "TANGEM_PAY_CARD_DETAILS_SHOW_BUTTON"

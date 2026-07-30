@@ -39,6 +39,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_binoculars_20
 import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.entity.TangemPayEmptyTransactionHistoryState
 import com.tangem.features.tangempay.entity.TangemPayTransactionCashbackUM
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
@@ -379,6 +380,7 @@ private fun TangemPayFailedTransactionBlock(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemButton(
+            modifier = Modifier.testTag(TangemPayTestTags.TRANSACTION_HISTORY_RELOAD_BUTTON),
             iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_20),
             onClick = state.onReload,
         )
