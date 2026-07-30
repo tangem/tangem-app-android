@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -43,6 +44,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
 import com.tangem.features.foryou.model.ForYouPeriod
@@ -90,6 +92,7 @@ internal class ForYouModel @Inject constructor(
     val portfolioSelectorController: PortfolioSelectorController,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletHeaderConverter: ForYouWalletHeaderConverter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -112,7 +115,11 @@ internal class ForYouModel @Inject constructor(
     private val selectedPortfolio: Flow<ForYouSelectedPortfolio> =
         portfolioSelectorController
             .selectedAccounts
-            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach {
+                bottomSheetNavigation.dismiss { isSuccess ->
+                    if (isSuccess) analyticsEventHandler.send(ForYouAnalyticsEvent.ApplySelected)
+                }
+            }
             .distinctUntilChanged()
             .flatMapLatest { selectedAccounts ->
                 val converter = ForYouSelectedPortfolioConverter(selectedAccounts)
@@ -183,6 +190,8 @@ internal class ForYouModel @Inject constructor(
         )
 
     init {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.ScreenOpened)
+
         initDefaultPortfolioSelection()
         createCoinIndicatorsFetchFlow().launchIn(modelScope)
 
@@ -231,6 +240,7 @@ internal class ForYouModel @Inject constructor(
                 expandClick = ::onExpandPortfolioReviewClick,
                 onTokenClick = ::onPortfolioReviewTokenClick,
                 onAddFundsClick = ::onAddFundsClick,
+                onDiagramTap = ::onDiagramTap,
                 selectedWalletId = selectedUserWallet?.walletId,
                 coinIndicators = indicators,
                 timeframe = period.timeframe,
@@ -245,7 +255,7 @@ internal class ForYouModel @Inject constructor(
                 topEarnTokens = topEarnTokens,
                 expandClick = ::onExpandEarnOpportunitiesClick,
                 onTokenClick = ::onEarnOpportunitiesTokenClick,
-                onAllEarnTokensClick = params.callbacks::onAllEarnTokensClick,
+                onAllEarnTokensClick = ::onAllEarnTokensClick,
                 walletHeaders = walletHeaders,
                 isBalanceHidden = isBalanceHidden,
             ).convert(selectedPortfolio)
@@ -278,7 +288,17 @@ internal class ForYouModel @Inject constructor(
     }
 
     private fun onSelectPortfolioClick() {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.AccountFilterOpened)
         bottomSheetNavigation.activate(ForYouBottomSheetConfig.PortfolioSelector)
+    }
+
+    private fun onAllEarnTokensClick() {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.ExploreAllTokens)
+        params.callbacks.onAllEarnTokensClick()
+    }
+
+    private fun onDiagramTap() {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.DiagramTap)
     }
 
     /**
@@ -449,6 +469,10 @@ internal class ForYouModel @Inject constructor(
     private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
         if (tangemSegmentUM.id == selectedPeriod.value.id) return
 
+        analyticsEventHandler.send(
+            ForYouAnalyticsEvent.FilterInterval(period = ForYouPeriod.fromId(tangemSegmentUM.id).analyticsValue),
+        )
+
         uiState.update { state ->
             state.copy(
                 periodPickerUM = state.periodPickerUM.copy(
@@ -510,6 +534,14 @@ internal class ForYouModel @Inject constructor(
         currency: CryptoCurrency,
         type: ForYouEarnOpportunitiesType,
     ) {
+        analyticsEventHandler.send(
+            ForYouAnalyticsEvent.EarnTokenOpened(
+                token = currency.symbol,
+                blockchain = currency.network.name,
+                type = type.analyticsValue,
+            ),
+        )
+
         router.push(
             when (type) {
                 is ForYouEarnOpportunitiesType.Staking -> {
