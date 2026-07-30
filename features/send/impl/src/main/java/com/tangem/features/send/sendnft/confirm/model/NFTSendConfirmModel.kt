@@ -402,8 +402,8 @@ internal class NFTSendConfirmModel @Inject constructor(
                     is ConfirmUM.Success -> {
                         modelScope.launch {
                             nftSendSuccessTrigger.triggerSuccessNFTSend()
+                            appRouter.pop()
                         }
-                        appRouter.pop()
                     }
                     is ConfirmUM.Content -> if (confirmUM.isSending) {
                         return@NavigationButton
