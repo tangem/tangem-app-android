@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.utils
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -50,6 +51,9 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.Deactivated -> null
         else -> error("TangemPayDetails opened with unsupported status: $v")
     }
+
+internal val AccountStatus.Payment.cardMainImageUrl: String?
+    get() = tariffPlan?.plan?.images?.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
