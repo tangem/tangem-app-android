@@ -148,6 +148,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             userWalletId = params.userWalletId,
             cryptoCurrency = model.cryptoCurrency,
             callback = model,
+            isInitialRoute = true,
         ),
     )
 
