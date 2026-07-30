@@ -35,6 +35,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
+import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -62,11 +63,16 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val checkStakingTransactionUseCase: CheckStakingTransactionUseCase,
     @StakingClock private val clock: Clock,
-    @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: StakeKitIntegration,
     @Assisted private val isAmountSubtractAvailable: Boolean,
 ) : StakingTransactionSender {
+
+    // Re-read on every use: a captured snapshot would freeze a transient address-less status for the
+    // whole screen lifetime (CRASHAND-53); the live read lets sending recover once the status updates
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus
+        get() = cryptoCurrencyStatusProvider()
 
     private val balanceUpdater: StakingBalanceUpdater
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
@@ -257,7 +263,11 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
         val defaultAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-            ?: error("No available address")
+            ?: run {
+                TangemLogger.e("StakeKitTransactionSender: no available address to construct transactions")
+                onConstructError(StakingError.DomainError("No available address"))
+                return emptyList()
+            }
         val amountState = state.amountState as? AmountState.Data
             ?: error("No amount provided")
 
@@ -473,7 +483,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            cryptoCurrencyStatus: CryptoCurrencyStatus,
+            cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
             userWallet: UserWallet,
             integration: StakeKitIntegration,
             isAmountSubtractAvailable: Boolean,

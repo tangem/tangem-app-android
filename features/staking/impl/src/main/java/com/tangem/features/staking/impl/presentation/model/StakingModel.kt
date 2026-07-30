@@ -254,7 +254,9 @@ internal class StakingModel @Inject constructor(
 
     private val feeLoader: StakingFeeLoader by lazy(LazyThreadSafetyMode.NONE) {
         stakingOperationsFactory.createFeeLoader(
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            // Provider, not a value: a value would freeze the status captured at the first fee request
+            // for the whole screen lifetime, crashing on transient address-less states (CRASHAND-53)
+            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
             userWallet = userWallet,
             integration = integration,
         )
@@ -263,7 +265,7 @@ internal class StakingModel @Inject constructor(
     @Suppress("PropertyUsedBeforeDeclaration")
     private val transactionSender: StakingTransactionSender by lazy(LazyThreadSafetyMode.NONE) {
         stakingOperationsFactory.createTransactionSender(
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
             userWallet = userWallet,
             integration = integration,
             isAmountSubtractAvailable = isAmountSubtractAvailable,
