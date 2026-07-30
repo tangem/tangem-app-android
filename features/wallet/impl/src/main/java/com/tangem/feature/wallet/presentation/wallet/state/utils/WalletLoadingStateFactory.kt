@@ -18,11 +18,9 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
-import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -174,33 +172,13 @@ internal class WalletLoadingStateFactory(
     }
 
     private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
-        val isSingleWalletWithToken =
-            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
-        return buildList {
-            add(
-                WalletActionButtons.AddFunds(
-                    isEnabled = false,
-                    onClick = { clickIntents.onAddFundsClick(userWalletId = userWallet.walletId) },
-                ).buttonUM,
-            )
-            addIf(
-                condition = !userWallet.isSingleWallet() && !isSingleWalletWithToken,
-                element = WalletActionButtons.Swap(
-                    isEnabled = false,
-                    onClick = {
-                        clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId)
-                    },
-                ).buttonUM,
-            )
-            add(
-                WalletActionButtons.Transfer(
-                    isEnabled = false,
-                    onClick = {
-                        clickIntents.onTransferClick(userWalletId = userWallet.walletId)
-                    },
-                ).buttonUM,
-            )
-        }.toPersistentList()
+        return createWalletActionButtons(
+            userWallet = userWallet,
+            clickIntents = clickIntents,
+            isAddFundsEnabled = false,
+            isSwapEnabled = false,
+            isTransferEnabled = false,
+        )
     }
 
     private fun createDimmedButtons(): PersistentList<WalletManageButton> {
