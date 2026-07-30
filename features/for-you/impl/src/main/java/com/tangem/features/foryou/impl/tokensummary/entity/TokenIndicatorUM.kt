@@ -22,11 +22,17 @@ internal sealed interface TokenIndicatorUM {
     data class Loading(override val indicatorType: IndicatorType) : TokenIndicatorUM
 }
 
+/**
+ * @property analyticsValue value reported in the `Info` analytics param. Deliberately separate from
+ * [title], whose casing is display-driven ("Galaxy score") and does not match the analytics spec.
+ */
 internal enum class IndicatorType(
     val title: String,
     val description: TextReference,
+    val analyticsValue: String,
 ) {
     GalaxyScore(
+        analyticsValue = "Galaxy Score",
         title = "Galaxy score",
         description = stringReference(
             "Galaxy Score combines market performance and social media activity into a " +
@@ -35,6 +41,7 @@ internal enum class IndicatorType(
         ),
     ),
     Sentiment(
+        analyticsValue = "Sentiment",
         title = "Sentiment",
         description = stringReference(
             "Sentiment scores the tone of social media posts about the asset on a 1 to 5 " +
@@ -42,6 +49,7 @@ internal enum class IndicatorType(
         ),
     ),
     RSI(
+        analyticsValue = "RSI",
         title = "RSI",
         description = stringReference(
             "RSI (Relative Strength Index) measures whether an asset has been bought or " +
@@ -50,6 +58,7 @@ internal enum class IndicatorType(
         ),
     ),
     MACD(
+        analyticsValue = "MACD",
         title = "MACD",
         description = stringReference(
             "MACD compares short-term and long-term price momentum to show whether an asset's momentum is" +
@@ -57,6 +66,7 @@ internal enum class IndicatorType(
         ),
     ),
     MA_CROSS(
+        analyticsValue = "MA Cross",
         title = "MA Cross",
         description = stringReference(
             "MA Cross compares the 50-day and 200-day average prices to show whether the " +

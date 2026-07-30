@@ -5,12 +5,15 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -52,8 +55,10 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
@@ -96,6 +101,7 @@ internal class ForYouModelTest {
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk()
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk(relaxed = true)
     private val router: AppRouter = mockk(relaxUnitFun = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     // A working controller fake: selecting accounts pushes them into the flow the model observes.
     private val selectedAccountsFlow = MutableStateFlow<Set<AccountId>>(emptySet())
@@ -119,9 +125,12 @@ internal class ForYouModelTest {
     )
 
     private var model: ForYouModel? = null
+    private var allEarnTokensClicked = false
 
     @BeforeEach
     fun setup() {
+        clearMocks(analyticsEventHandler, answers = false)
+        allEarnTokensClicked = false
         // Default: a real, non-empty emission so the model's `getOrElse { Default }` mapping path is
         // actually exercised in every test, not bypassed by an empty flow.
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
@@ -690,6 +699,220 @@ internal class ForYouModelTest {
             (bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content).text
     }
 
+    @Nested
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN nothing WHEN model created THEN screen opened event is sent`() = runTest {
+            // Arrange
+            every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+
+            // Act
+            createModel(testScope = this)
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ForYouAnalyticsEvent.ScreenOpened) }
+        }
+
+        @Test
+        fun `GIVEN model created WHEN portfolio filter clicked THEN account filter opened event is sent`() = runTest {
+            // Arrange
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.clickPortfolioFilter()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ForYouAnalyticsEvent.AccountFilterOpened) }
+        }
+
+        @Test
+        fun `GIVEN selector sheet open WHEN accounts applied THEN apply selected event is sent`() = runTest {
+            // Arrange — a slot host is required: DefaultSlotNavigation only relays events, so without one
+            // the dismiss completion callback the model keys off never runs.
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+            val model = createModel(testScope = this)
+            FakeSlotHost(model.bottomSheetNavigation)
+            // Lets the programmatic default selection land first — it must not be taken for an Apply.
+            advanceUntilIdle()
+            model.uiState.value.clickPortfolioFilter()
+
+            // Act — this is what the selector's Apply button does
+            portfolioSelectorController.selectAccount(setOf(mockk<AccountId>()))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ForYouAnalyticsEvent.ApplySelected) }
+        }
+
+        @Test
+        fun `GIVEN no sheet open WHEN default selection is applied THEN apply selected event is not sent`() = runTest {
+            // Arrange — the model programmatically selects the default portfolio on init
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+            val model = createModel(testScope = this)
+            FakeSlotHost(model.bottomSheetNavigation)
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ForYouAnalyticsEvent.ApplySelected) }
+        }
+
+        @Test
+        fun `GIVEN Day selected WHEN Week period clicked THEN filter interval event carries Week`() = runTest {
+            // Arrange
+            every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val state = model.uiState.value
+
+            // Act
+            state.onPeriodClick(state.periodPickerUM.items[1])
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(ForYouAnalyticsEvent.FilterInterval(period = "Week"))
+            }
+        }
+
+        @Test
+        fun `GIVEN Day selected WHEN Day period clicked again THEN no filter interval event is sent`() = runTest {
+            // Arrange
+            every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val state = model.uiState.value
+
+            // Act
+            state.onPeriodClick(state.periodPickerUM.items[0])
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<ForYouAnalyticsEvent.FilterInterval>()) }
+        }
+
+        @Test
+        fun `GIVEN loaded chart WHEN the donut is tapped twice THEN a diagram tap event is sent per tap`() = runTest {
+            // Arrange
+            val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+            stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val content = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
+            val donutChart = (content.marketChartUM as MarketChartUM.Loaded).donutChart
+
+            // Act
+            donutChart.onSegmentTap()
+            donutChart.onSegmentTap()
+
+            // Assert — every tap is reported, repeats are not collapsed
+            verify(exactly = 2) { analyticsEventHandler.send(ForYouAnalyticsEvent.DiagramTap) }
+        }
+
+        @Test
+        fun `GIVEN earn section WHEN explore all tokens clicked THEN event is sent and callback is invoked`() =
+            runTest {
+                // Arrange
+                val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
+                stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+                stubTopEarnTokens(
+                    status = PaginationStatus.EndOfPagination,
+                    suggestions = listOf(createTopEarnSuggestion()),
+                )
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                (model.uiState.value.earnOpportunities as EarnOpportunitiesUM.Content).onAllEarnTokensClick()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(ForYouAnalyticsEvent.ExploreAllTokens) }
+                assertThat(allEarnTokensClicked).isTrue()
+            }
+
+        @Test
+        fun `GIVEN held stakeable token WHEN earn row clicked THEN earn token opened event reports Staking`() =
+            runTest {
+                // Arrange
+                val currency = createCoin(rawCurrencyId = "eth", symbol = "ETH")
+                val option: StakingOption.P2PEthPool = mockk {
+                    every { apy } returns BigDecimal("0.05")
+                    every { integrationId } returns StakingIntegrationID.P2PEthPool
+                }
+                coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns
+                    mapOf(currency to StakingAvailability.Available(option))
+                stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                // Built outside verify: the event reads the currency's fields, which inside a verify block
+                // would be recorded as matchers instead of plain calls.
+                val expected = ForYouAnalyticsEvent.EarnTokenOpened(
+                    token = currency.symbol,
+                    blockchain = currency.network.name,
+                    type = "Staking",
+                )
+
+                // Act
+                model.clickFirstEarnRow()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            }
+
+        @Test
+        fun `GIVEN held yield-eligible token WHEN earn row clicked THEN earn token opened event reports Yield`() =
+            runTest {
+                // Arrange
+                val token = createYieldToken()
+                every { yieldSupplyApyFlowUseCase() } returns flowOf(mapOf(token.yieldSupplyKey() to BigDecimal("5.5")))
+                stubSelectedWallet(currencies = listOf(createStatus(token, loadedValue(BigDecimal("100")))))
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                val expected = ForYouAnalyticsEvent.EarnTokenOpened(
+                    token = token.symbol,
+                    blockchain = token.network.name,
+                    type = "Yield",
+                )
+
+                // Act
+                model.clickFirstEarnRow()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            }
+    }
+
+    /** Taps the portfolio-filter chip, whose click handler only exists once the chip has loaded. */
+    private fun ForYouUM.clickPortfolioFilter() {
+        when (val filter = portfolioFilter) {
+            is TangemFilterItemUM.Inactive -> filter.onClick()
+            is TangemFilterItemUM.Active -> filter.onClick()
+            is TangemFilterItemUM.Loading -> error("Portfolio filter is still loading")
+        }
+    }
+
+    /**
+     * Minimal stand-in for `childSlot`: tracks the active configuration and invokes each navigation
+     * event's completion callback, which `DefaultSlotNavigation` leaves to its host.
+     */
+    private class FakeSlotHost<C : Any>(navigation: SlotNavigation<C>) {
+
+        private var configuration: C? = null
+
+        init {
+            navigation.subscribe { event ->
+                val oldConfiguration = configuration
+                configuration = event.transformer(oldConfiguration)
+                event.onComplete(configuration, oldConfiguration)
+            }
+        }
+    }
+
     private fun PortfolioReviewUM.Content.assetRow(): TangemTokenRowUM.Content =
         tokenList.single().tokenRowUM as TangemTokenRowUM.Content
 
@@ -767,7 +990,9 @@ internal class ForYouModelTest {
                 ForYouComponent.Params(
                     callbacks = object : ForYouComponent.ForYouModelCallbacks {
                         override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) = Unit
-                        override fun onAllEarnTokensClick() = Unit
+                        override fun onAllEarnTokensClick() {
+                            allEarnTokensClicked = true
+                        }
                     },
                 ),
             ),
@@ -788,6 +1013,7 @@ internal class ForYouModelTest {
             portfolioFetcherFactory = portfolioFetcherFactory,
             portfolioSelectorController = portfolioSelectorController,
             walletHeaderConverter = walletHeaderConverter,
+            analyticsEventHandler = analyticsEventHandler,
         ).also { model = it }
     }
 

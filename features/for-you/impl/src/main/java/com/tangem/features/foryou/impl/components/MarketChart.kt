@@ -115,6 +115,9 @@ private fun ColumnScope.DonutChartBlock(donutChartUM: DonutChartUM, cardBoundsIn
             onSegmentClick = { index ->
                 selectedIndex = index?.takeIf { it != selectedIndex }
             },
+            // Reported separately from the selection: DonutChart drops taps that cannot change it, and every
+            // tap has to be counted — a deselect and a repeat tap on the selected slice included.
+            onTap = { (donutChartUM as? DonutChartUM.Loaded)?.onSegmentTap?.invoke() },
             segments = segments,
         ) {
             when (donutChartUM) {
@@ -312,6 +315,7 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
                     fiatValue = stringReference("$728.30"),
                 ),
             ),
+            onSegmentTap = {},
         ),
     )
     MarketChartPreviewScenario.NO_DATA -> MarketChartUM.NoData(
@@ -350,6 +354,7 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
             fiatValue = stringReference("$520.18"),
         ),
     ),
+    onSegmentTap = {},
 )
 
 // endregion
