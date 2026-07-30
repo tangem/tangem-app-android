@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
+import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -31,29 +32,54 @@ class RunPolymarketOnboardingUseCase(
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
         emit(PolymarketOnboardingProgress.Deriving)
         val addresses = step { deriveAddresses(userWalletId) } ?: return@flow
-        val state = step { getWalletStatus(addresses) } ?: return@flow
+        runOnboarding(addresses)
+    }
+
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.runOnboarding(addresses: PolymarketAddresses) {
+        val entry = (step { getWalletStatus(addresses) } ?: return).status
+        val credentials = getApiCredentials(addresses.ownerAddress)
+
+        if (!entry.owesApprovals() && credentials != null) {
+            awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
+            emit(PolymarketOnboardingProgress.Ready)
+            return
+        }
 
         emit(PolymarketOnboardingProgress.AwaitingSignature)
-        val nonce = step { getRelayerNonce(addresses) } ?: return@flow
-        val signed = step { signOnboardingDigests(addresses, nonce) } ?: return@flow
+        val nonce = step { getRelayerNonce(addresses) } ?: return
+        val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
-        val deployed = step { deployDepositWallet(addresses) } ?: return@flow
-
-        if (getApiCredentials(addresses.ownerAddress) == null) {
+        if (credentials == null) {
             step {
                 deriveApiCredentials(
                     ownerAddress = addresses.ownerAddress,
                     l1Signature = signed.l1Signature,
                     timestamp = signed.clobAuthTimestamp,
                 )
-            } ?: return@flow
+            } ?: return
         }
 
-        awaitStatus(addresses, target = PolymarketWalletStatus.DEPLOYED, from = deployed) ?: return@flow
-        val submitted = step { submitApprovals(addresses, signed) } ?: return@flow
-        awaitStatus(addresses, target = PolymarketWalletStatus.READY_TO_TRADE, from = submitted)
-            ?: return@flow
+        settleWallet(addresses, entry, signed)
+    }
 
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
+        addresses: PolymarketAddresses,
+        entry: PolymarketWalletStatus,
+        signed: PolymarketSignedOnboarding,
+    ) {
+        var current = entry
+        if (entry.needsDeploy()) {
+            current = step { deployDepositWallet(addresses) } ?: return
+        }
+
+        if (entry.owesApprovals()) {
+            if (!entry.isDeployComplete()) {
+                current = awaitStatus(addresses, PolymarketWalletStatus.DEPLOYED, from = current) ?: return
+            }
+            current = step { submitApprovals(addresses, signed) } ?: return
+        }
+
+        awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
         emit(PolymarketOnboardingProgress.Ready)
     }
 
@@ -66,16 +92,40 @@ class RunPolymarketOnboardingUseCase(
 
         var reported = from
         var waited = 0L
+        var consecutiveFailures = 0
         emit(PolymarketOnboardingProgress.Working(from))
 
         while (waited < POLL_CEILING_MILLIS) {
-            val state = step { getWalletStatus(addresses) } ?: return null
-            val status = state.status
+            val state = getWalletStatus(addresses).fold(
+                ifLeft = { error ->
+                    if (error != PolymarketOnboardingError.Network) {
+                        emit(PolymarketOnboardingProgress.Failed(error, isRetryable = error.isRetryable()))
+                        return null
+                    }
+                    consecutiveFailures++
+                    if (consecutiveFailures >= MAX_CONSECUTIVE_POLL_FAILURES) {
+                        emit(PolymarketOnboardingProgress.Failed(error, isRetryable = true))
+                        return null
+                    }
+                    null
+                },
+                ifRight = { walletState ->
+                    consecutiveFailures = 0
+                    walletState
+                },
+            )
 
+            val status = state?.status
             if (status == target) return status
-            if (status != reported) {
-                emit(PolymarketOnboardingProgress.Working(status))
-                reported = status
+            if (status != null) {
+                status.toFailure()?.let { failure ->
+                    emit(PolymarketOnboardingProgress.Failed(failure, isRetryable = true))
+                    return null
+                }
+                if (status != reported) {
+                    emit(PolymarketOnboardingProgress.Working(status))
+                    reported = status
+                }
             }
 
             delay(POLL_INTERVAL_MILLIS)
@@ -96,8 +146,28 @@ class RunPolymarketOnboardingUseCase(
         ifRight = { it },
     )
 
+    private fun PolymarketWalletStatus.owesApprovals(): Boolean = when (this) {
+        PolymarketWalletStatus.READY_TO_TRADE,
+        PolymarketWalletStatus.APPROVALS_IN_PROGRESS,
+        -> false
+        else -> true
+    }
+
+    private fun PolymarketWalletStatus.needsDeploy(): Boolean = this == PolymarketWalletStatus.NOT_CREATED ||
+        this == PolymarketWalletStatus.DEPLOYMENT_FAILED
+
+    private fun PolymarketWalletStatus.isDeployComplete(): Boolean =
+        this == PolymarketWalletStatus.DEPLOYED || this == PolymarketWalletStatus.APPROVALS_FAILED
+
+    private fun PolymarketWalletStatus.toFailure(): PolymarketOnboardingError? = when (this) {
+        PolymarketWalletStatus.DEPLOYMENT_FAILED -> PolymarketOnboardingError.DeploymentFailed
+        PolymarketWalletStatus.APPROVALS_FAILED -> PolymarketOnboardingError.ApprovalsFailed
+        else -> null
+    }
+
     private companion object {
         const val POLL_INTERVAL_MILLIS = 2_500L
         const val POLL_CEILING_MILLIS = 120_000L
+        const val MAX_CONSECUTIVE_POLL_FAILURES = 3
     }
 }
