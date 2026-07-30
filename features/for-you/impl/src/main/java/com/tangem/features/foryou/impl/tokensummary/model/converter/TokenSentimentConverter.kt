@@ -38,7 +38,7 @@ internal class TokenSentimentConverter(
         }
 
         return if (readings.all { it.second?.value == null }) {
-            TokenSentimentUM.Empty(resourceReference(R.string.token_summary_outlook_is_not_available))
+            TokenSentimentUM.Empty.NoOutlook
         } else {
             val totalScore = value.totalSentimentScore(timeframe)
             TokenSentimentUM.Content(
