@@ -8,6 +8,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.usedesk.analytics.UsedeskAnalyticsEvents
@@ -17,6 +19,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -25,40 +28,42 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class UsedeskModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val feedbackRepository: FeedbackRepository,
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params = paramsContainer.require<UsedeskComponent.Params>()
 
-    private val _state = MutableStateFlow(UsedeskState(usedeskChatConfiguration = null))
+    val state: StateFlow<UsedeskState>
+        field = MutableStateFlow(UsedeskState(usedeskChatConfiguration = null))
 
-    val state: StateFlow<UsedeskState> = _state
-
-    // The chat screen opened/error event is sent only once.
     private var isScreenLoadEventSent = false
 
     init {
         modelScope.launch {
             val clientId = getOrCreateClientId()
-            _state.value = UsedeskState(
-                UsedeskChatConfiguration(
-                    urlChat = URL_CHAT,
-                    urlChatApi = URL_CHAT_API,
-                    companyId = COMPANY_ID,
-                    channelId = CHANNEL_ID,
-                    clientId = clientId,
-                    clientEmail = params.userWalletId,
-                    clientInitMessage = params.prefilledMessage,
-                    additionalFields = additionalFieldsFor(params.source),
-                    tokenTtlMillis = usedeskTokenTtlManager.getTokenTtlMillisSync(),
-                ),
-            )
+            state.update { current ->
+                current.copy(
+                    usedeskChatConfiguration = UsedeskChatConfiguration(
+                        urlChat = URL_CHAT,
+                        urlChatApi = URL_CHAT_API,
+                        companyId = COMPANY_ID,
+                        channelId = CHANNEL_ID,
+                        clientId = clientId,
+                        clientEmail = params.walletMetaInfo.userWalletId?.stringValue,
+                        clientInitMessage = params.prefilledMessage,
+                        additionalFields = additionalFieldsFor(params.source),
+                        tokenTtlMillis = usedeskTokenTtlManager.getTokenTtlMillisSync(),
+                    ),
+                )
+            }
         }
     }
 
@@ -74,6 +79,14 @@ internal class UsedeskModel @Inject constructor(
         if (isScreenLoadEventSent) return
         isScreenLoadEventSent = true
         analyticsEventHandler.send(UsedeskAnalyticsEvents.ChatScreenError())
+    }
+
+    fun onSupportClick() {
+        modelScope.launch {
+            runSuspendCatching {
+                sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(params.walletMetaInfo))
+            }
+        }
     }
 
     /**
