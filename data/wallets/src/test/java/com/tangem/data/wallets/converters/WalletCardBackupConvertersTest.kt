@@ -59,7 +59,7 @@ internal class WalletCardBackupConvertersTest {
 
         @ParameterizedTest(name = "{0}")
         @ProvideTestModels
-        fun convert(model: StatusModel) {
+        fun `GIVEN domain backup status WHEN convert THEN dto status is mapped`(model: StatusModel) {
             // Act
             val actual = WalletCardDTOConverter.convert(domainCard(model.domain))
 
