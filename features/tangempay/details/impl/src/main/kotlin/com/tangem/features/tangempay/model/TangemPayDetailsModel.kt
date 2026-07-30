@@ -380,6 +380,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun showVaBankingDetailsError() {
+        analytics.send(TangemPayAnalyticsEvents.VaDetailsErrorShowed())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VaBankingDetailsError(userWalletId = userWalletId),
@@ -387,6 +388,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun showVaPreparing() {
+        analytics.send(TangemPayAnalyticsEvents.VaPreparationPopupShowed())
         bottomSheetNavigation.dismiss()
         uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }
