@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -18,6 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +48,7 @@ internal class WalletClickIntents @Inject constructor(
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -108,6 +111,13 @@ internal class WalletClickIntents @Inject constructor(
 
     fun onTransferClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonTransfer())
+
+        val selectedWallet = stateController.getSelectedWalletUM() as? WalletUM.Content
+        if (selectedWallet?.areActionsAvailable == false) {
+            uiMessageSender.send(WalletAlertUM.unavailableOperation())
+            return
+        }
+
         router.openTransfer(userWalletId)
     }
 

@@ -8,6 +8,7 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -26,7 +27,16 @@ internal sealed class WalletActionButtons(
     val buttonUM: TangemButtonUM
         get() = TangemButtonUM(
             text = text,
-            tangemIconUM = TangemIconUM.Icon(iconRes = iconRes),
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = iconRes,
+                tintReference = {
+                    if (isEnabled) {
+                        TangemTheme.colors2.graphic.neutral.primary
+                    } else {
+                        TangemTheme.colors2.graphic.neutral.quaternary
+                    }
+                },
+            ),
             type = TangemButtonType.Secondary,
             shape = TangemButtonShape.Rounded,
             onClick = onClick,
