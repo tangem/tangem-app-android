@@ -1,5 +1,6 @@
 package com.tangem.features.send.sendnft.success
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -82,10 +83,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
     @Composable
     override fun Title() {
         AppBarWithBackButtonAndIcon(
-            onBackClick = {
-                model.onBackClick()
-                router.pop()
-            },
+            onBackClick = model::onBackClick,
             backIconRes = R.drawable.ic_close_24,
             backgroundColor = TangemTheme.colors.background.tertiary,
             modifier = Modifier.height(TangemTheme.dimens.size56),
@@ -95,6 +93,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        BackHandler(onBack = model::onBackClick)
         NFTSendSuccessContent(
             nftSendUM = state,
             destinationBlockComponent = sendDestinationBlockComponent,
@@ -127,7 +126,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
             )
             PrimaryButton(
                 text = stringResourceSafe(R.string.common_close),
-                onClick = router::pop,
+                onClick = model::onBackClick,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
