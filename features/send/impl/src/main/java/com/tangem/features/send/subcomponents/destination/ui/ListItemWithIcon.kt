@@ -118,7 +118,6 @@ private fun ListItemWithIcon(
         )
         Column(
             modifier = Modifier
-                .height(36.dp)
                 .padding(start = 12.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -210,7 +209,7 @@ private fun ListItemLoading(modifier: Modifier = Modifier) {
 
 // region preview
 @Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, fontScale = 2f)
 @Composable
 private fun ListItemWithIconPreview(
     @PreviewParameter(ListItemWithIconPreviewProvider::class) config: ListItemWithIconPreviewConfig,
