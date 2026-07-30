@@ -56,6 +56,7 @@ internal class ForYouPortfolioReviewConverter(
     private val expandClick: (assetId: String) -> Unit,
     private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
     private val onAddFundsClick: (UserWalletId) -> Unit,
+    private val onDiagramTap: () -> Unit,
     private val selectedWalletId: UserWalletId?,
     private val coinIndicators: Map<String, CoinIndicators>,
     private val timeframe: CoinIndicators.Reading.Timeframe,
@@ -132,6 +133,7 @@ internal class ForYouPortfolioReviewConverter(
         val marketChartUM = ForYouPortfolioReviewMarketChartConverter(
             appCurrency = appCurrency,
             topAssets = topAssets.map { (networks, assetBalance) -> networks.map { it.status } to assetBalance },
+            onSegmentTap = onDiagramTap,
             isBalanceHidden = isBalanceHidden,
         ).convert(totalFiatBalance)
 
