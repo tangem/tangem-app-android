@@ -21,6 +21,7 @@ import java.math.BigDecimal
 internal class ForYouPortfolioReviewMarketChartConverter(
     private val appCurrency: AppCurrency,
     private val topAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>>,
+    private val onSegmentTap: () -> Unit,
     private val isBalanceHidden: Boolean = false,
 ) : Converter<TotalFiatBalance?, MarketChartUM> {
     override fun convert(value: TotalFiatBalance?): MarketChartUM {
@@ -48,6 +49,7 @@ internal class ForYouPortfolioReviewMarketChartConverter(
                             }.orMaskWithStars(isBalanceHidden)),
                         )
                     }.toPersistentList(),
+                    onSegmentTap = onSegmentTap,
                 ),
                 aiInsight = AiInsightUM.Hide,
                 topHoldingPercent = resourceReference(
