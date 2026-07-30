@@ -89,7 +89,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
         }
         every {
             stakingOperationsFactory.createTransactionSender(
-                cryptoCurrencyStatus = any(),
+                cryptoCurrencyStatusProvider = any(),
                 userWallet = any(),
                 integration = any(),
                 isAmountSubtractAvailable = any()
@@ -173,7 +173,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
         }
         every {
             stakingOperationsFactory.createTransactionSender(
-                cryptoCurrencyStatus = any(),
+                cryptoCurrencyStatusProvider = any(),
                 userWallet = any(),
                 integration = any(),
                 isAmountSubtractAvailable = any()
@@ -261,7 +261,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
         }
         every {
             stakingOperationsFactory.createTransactionSender(
-                cryptoCurrencyStatus = any(),
+                cryptoCurrencyStatusProvider = any(),
                 userWallet = any(),
                 integration = any(),
                 isAmountSubtractAvailable = any(),

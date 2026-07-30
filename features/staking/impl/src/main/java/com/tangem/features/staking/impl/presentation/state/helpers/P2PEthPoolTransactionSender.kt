@@ -18,6 +18,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -31,10 +32,14 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val p2pEthPoolRepository: P2PEthPoolRepository,
     private val checkStakingTransactionUseCase: CheckStakingTransactionUseCase,
-    @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: P2PEthPoolIntegration,
 ) : StakingTransactionSender {
+
+    // Re-read on every use so the sender never operates on a stale frozen snapshot (CRASHAND-53)
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus
+        get() = cryptoCurrencyStatusProvider()
 
     private val balanceUpdater: StakingBalanceUpdater
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
@@ -154,7 +159,7 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            cryptoCurrencyStatus: CryptoCurrencyStatus,
+            cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
             userWallet: UserWallet,
             integration: P2PEthPoolIntegration,
         ): P2PEthPoolTransactionSender
