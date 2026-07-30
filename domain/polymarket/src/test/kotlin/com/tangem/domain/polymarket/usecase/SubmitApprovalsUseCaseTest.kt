@@ -47,13 +47,14 @@ internal class SubmitApprovalsUseCaseTest {
         assertThat(batch.captured).isEqualTo(
             PolymarketApprovalsBatch(
                 ownerAddress = OWNER,
-                depositWalletAddress = DEPOSIT_WALLET,
+                depositWalletAddress = SIGNED_DEPOSIT_WALLET,
                 nonce = NONCE,
                 deadline = DEADLINE,
-                calls = PolymarketApprovalCalls.build(),
+                calls = SIGNED.approvals.calls,
                 signature = BATCH_SIGNATURE,
             ),
         )
+        assertThat(batch.captured.calls).isSameInstanceAs(SIGNED.approvals.calls)
     }
 
     @Test
@@ -86,6 +87,7 @@ internal class SubmitApprovalsUseCaseTest {
     private companion object {
         const val OWNER = "0x1111111111111111111111111111111111111111"
         const val DEPOSIT_WALLET = "0xfAeA0f08159fcF2f573fE24E9E989B0d48f7651B"
+        const val SIGNED_DEPOSIT_WALLET = "0xC0FFEE0000000000000000000000000000C0FFEE"
         const val NONCE = "7"
         const val DEADLINE = "1735690200"
         const val BATCH_SIGNATURE = "0xbb"
@@ -101,7 +103,7 @@ internal class SubmitApprovalsUseCaseTest {
             clobAuthTimestamp = "1735689600",
             batchSignature = BATCH_SIGNATURE,
             approvals = PolymarketApprovalsPayload(
-                depositWalletAddress = DEPOSIT_WALLET,
+                depositWalletAddress = SIGNED_DEPOSIT_WALLET,
                 nonce = NONCE,
                 deadline = DEADLINE,
                 calls = PolymarketApprovalCalls.build(),
