@@ -11,6 +11,7 @@ import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.scenarios.*
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -201,8 +202,8 @@ class TangemPayTransactionsTest : BaseTestCase() {
         val coffeeMerchant = "Tangem Coffee"
         val coffeeAmount = "-\$12.34"
         val coffeeCategory = "Restaurants"
-        // Group header for 2026-04-23 in the app's "d MMM, yyyy" format (en-US locale).
-        val sectionHeader = "23 Apr, 2026"
+        // Built with the screen's own formatter: the header follows the device locale and timezone.
+        val sectionHeader = COFFEE_TX_MILLIS.toDateFormatWithTodayYesterday()
 
         setupHooks(
             additionalBeforeSection = {
@@ -283,5 +284,10 @@ class TangemPayTransactionsTest : BaseTestCase() {
                 }
             }
         }
+    }
+
+    private companion object {
+        // authorized_at of the mocked "Tangem Coffee" spend (2026-04-23T14:00:00Z).
+        const val COFFEE_TX_MILLIS = 1776952800000L
     }
 }
