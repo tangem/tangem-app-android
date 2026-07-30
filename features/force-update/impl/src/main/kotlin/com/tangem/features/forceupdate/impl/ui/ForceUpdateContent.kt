@@ -112,9 +112,10 @@ private fun Buttons(state: ForceUpdateUM, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         state.onSupportClick?.let { onClick ->
+            val isOnlyAction = state.onUpdateClick == null && state.onLaterClick == null
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
-                variant = TangemButton.Variant.Secondary,
+                variant = if (isOnlyAction) TangemButton.Variant.Primary else TangemButton.Variant.Secondary,
                 text = resourceReference(R.string.common_contact_support),
                 onClick = onClick,
             )
