@@ -101,8 +101,11 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
             .flatMap { response ->
                 val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
-                val status = result.productInstance?.status
-                val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
+                val productInstances = result.productInstances
+
+                val isDeactivated = productInstances.isNotEmpty() &&
+                    productInstances.all { it.status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED }
+
                 val isFormer = result.state.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
                 if (isDeactivated || isFormer) {
                     tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
