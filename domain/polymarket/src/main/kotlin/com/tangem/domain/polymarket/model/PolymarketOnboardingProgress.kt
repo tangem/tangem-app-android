@@ -21,9 +21,9 @@ sealed interface PolymarketOnboardingProgress {
      */
     data class StillWorking(val status: PolymarketWalletStatus) : PolymarketOnboardingProgress
 
-    /** Terminal: [retryable] tells whether starting another run can plausibly succeed. */
+    /** Terminal: [isRetryable] tells whether starting another run can plausibly succeed. */
     data class Failed(
         val error: PolymarketOnboardingError,
-        @Suppress("BooleanPropertyNaming") val retryable: Boolean,
+        val isRetryable: Boolean,
     ) : PolymarketOnboardingProgress
 }
