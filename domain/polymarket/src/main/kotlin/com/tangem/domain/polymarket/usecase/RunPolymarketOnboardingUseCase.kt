@@ -11,12 +11,13 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 
 /**
  * Drives a Polymarket onboarding run to completion, resuming from the status the backend currently reports.
- * The card is used at most once per run: this use case never asks for a second signature, it reports a
- * retryable failure and lets the caller start a new run.
+ * The card is used for at most one signing session per run: this use case never asks for a second signature,
+ * it reports a retryable failure and lets the caller start a new run.
  */
 @Suppress("LongParameterList")
 class RunPolymarketOnboardingUseCase(
@@ -34,6 +35,8 @@ class RunPolymarketOnboardingUseCase(
         emit(PolymarketOnboardingProgress.Deriving)
         val addresses = step { deriveAddresses(userWalletId) } ?: return@flow
         runOnboarding(addresses)
+    }.catch { _ ->
+        emit(PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Unknown, isRetryable = true))
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.runOnboarding(addresses: PolymarketAddresses) {
