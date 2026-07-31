@@ -10,6 +10,6 @@ internal data class TokenSummaryUm(
     val tokenSentiment: TokenSentimentUM,
     val bottomButton: BottomButtonUM,
     val onPeriodClick: (TangemSegmentUM) -> Unit,
-    val onInfoClick: (IndicatorType) -> Unit,
+    val onInfoClick: (TokenIndicatorUM.Loaded) -> Unit,
     val onCloseClick: () -> Unit,
 )
