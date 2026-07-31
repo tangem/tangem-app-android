@@ -5,4 +5,5 @@ internal data class UpgradeWalletUM(
     val onBuyTangemWalletClick: () -> Unit,
     val onContinueClick: () -> Unit,
     val isLoading: Boolean = false,
+    val isCloudBackupRemovalShown: Boolean = false,
 )
