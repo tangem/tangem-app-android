@@ -32,7 +32,7 @@ internal class CoinIndicatorsConverterTest {
     }
 
     @Test
-    fun `GIVEN full reading fields WHEN convert THEN value subLabel and updatedAt are carried over`() {
+    fun `GIVEN full reading fields WHEN convert THEN value and signal are carried over`() {
         // Arrange
         val asset = asset(
             indicators = listOf(
@@ -40,8 +40,7 @@ internal class CoinIndicatorsConverterTest {
                     type = Indicator.Type.RSI,
                     timeframe = Indicator.Timeframe.H24,
                     value = BigDecimal("42.5"),
-                    label = Indicator.Signal.BULLISH,
-                    subLabel = "Oversold",
+                    label = Indicator.Signal.POSITIVE,
                 ),
             ),
         )
@@ -51,8 +50,7 @@ internal class CoinIndicatorsConverterTest {
 
         // Assert
         assertThat(reading.value).isEqualTo(BigDecimal("42.5"))
-        assertThat(reading.subLabel).isEqualTo("Oversold")
-        assertThat(reading.signal).isEqualTo(CoinIndicators.Reading.Signal.BULLISH)
+        assertThat(reading.signal).isEqualTo(CoinIndicators.Reading.Signal.POSITIVE)
     }
 
     @Test
@@ -89,27 +87,12 @@ internal class CoinIndicatorsConverterTest {
         assertThat(actual.readings.map { it.type }).containsExactly(CoinIndicators.Reading.Type.MACD)
     }
 
-    @Test
-    fun `GIVEN reading with null timeframe WHEN convert THEN it is kept as timeframe-agnostic`() {
-        // Arrange — MA_CROSS / GALAXY_SCORE / SENTIMENT legitimately have no timeframe
-        val asset = asset(
-            indicators = listOf(indicator(type = Indicator.Type.SENTIMENT, timeframe = null)),
-        )
-
-        // Act
-        val reading = CoinIndicatorsConverter.convert(asset).readings.single()
-
-        // Assert
-        assertThat(reading.type).isEqualTo(CoinIndicators.Reading.Type.SENTIMENT)
-        assertThat(reading.timeframe).isNull()
-    }
-
     @ParameterizedTest
     @MethodSource("provideTypeModels")
     fun `map indicator type`(model: TypeModel) {
         // Act
         val actual = CoinIndicatorsConverter.convert(
-            asset(indicators = listOf(indicator(type = model.dto, timeframe = null))),
+            asset(indicators = listOf(indicator(type = model.dto, timeframe = Indicator.Timeframe.H24))),
         )
 
         // Assert
@@ -147,7 +130,11 @@ internal class CoinIndicatorsConverterTest {
     fun `map indicator signal`(model: SignalModel) {
         // Act
         val actual = CoinIndicatorsConverter.convert(
-            asset(indicators = listOf(indicator(type = Indicator.Type.RSI, timeframe = null, label = model.dto))),
+            asset(
+                indicators = listOf(
+                    indicator(type = Indicator.Type.RSI, timeframe = Indicator.Timeframe.H24, label = model.dto),
+                ),
+            ),
         )
 
         // Assert
@@ -155,12 +142,11 @@ internal class CoinIndicatorsConverterTest {
     }
 
     private fun provideSignalModels() = listOf(
-        SignalModel(Indicator.Signal.BULLISH, CoinIndicators.Reading.Signal.BULLISH),
-        SignalModel(Indicator.Signal.BEARISH, CoinIndicators.Reading.Signal.BEARISH),
+        SignalModel(Indicator.Signal.POSITIVE, CoinIndicators.Reading.Signal.POSITIVE),
+        SignalModel(Indicator.Signal.NEGATIVE, CoinIndicators.Reading.Signal.NEGATIVE),
         SignalModel(Indicator.Signal.NEUTRAL, CoinIndicators.Reading.Signal.NEUTRAL),
         SignalModel(Indicator.Signal.INSUFFICIENT_DATA, CoinIndicators.Reading.Signal.INSUFFICIENT_DATA),
-        SignalModel(Indicator.Signal.NOT_APPLICABLE, CoinIndicators.Reading.Signal.NOT_APPLICABLE),
-        // Both the explicit `na` and any unknown signal collapse to NOT_AVAILABLE
+        // Both the explicit `not_available` and any unknown signal collapse to NOT_AVAILABLE
         SignalModel(Indicator.Signal.NOT_AVAILABLE, CoinIndicators.Reading.Signal.NOT_AVAILABLE),
         SignalModel(Indicator.Signal.UNKNOWN, CoinIndicators.Reading.Signal.NOT_AVAILABLE),
     )
@@ -176,16 +162,16 @@ internal class CoinIndicatorsConverterTest {
 
     private fun indicator(
         type: Indicator.Type,
-        timeframe: Indicator.Timeframe?,
+        timeframe: Indicator.Timeframe,
         value: BigDecimal? = null,
         label: Indicator.Signal = Indicator.Signal.NEUTRAL,
-        subLabel: String? = null,
+        name: String = type.name,
     ) = Indicator(
         type = type,
+        name = name,
         timeframe = timeframe,
         value = value,
         label = label,
-        subLabel = subLabel,
         updatedAt = null,
     )
 }
