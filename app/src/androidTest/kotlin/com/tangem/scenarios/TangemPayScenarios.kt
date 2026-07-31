@@ -30,8 +30,10 @@ fun BaseTestCase.openTangemPay() {
     step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
         openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
     }
+    // The tile only renders once the customer check resolves, so it can lag behind the Main screen.
     step("Click on Tangem Pay tile") {
-        onTangemPayMainScreen { mainScreenTile.clickWithAssertion() }
+        awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
+        onTangemPayMainScreen { mainScreenTile.performClick() }
     }
     step("Assert payment account balance is displayed") {
         onTangemPayMainScreen { balance.assertIsDisplayed() }
@@ -89,6 +91,22 @@ fun BaseTestCase.openTangemPayCardRename() {
             onTangemPayCardRenameScreen {
                 nameField.assertIsDisplayed()
                 doneButton.assertIsDisplayed()
+            }
+        }
+    }
+}
+
+/** Opens the card page and taps the 'PIN code' row to reach the PIN entry screen (requires an unset PIN). */
+fun BaseTestCase.openTangemPayChangePin() {
+    openTangemPayCardPage()
+    step("Click on 'PIN code' row") {
+        onTangemPayCardPageScreen { changePinRow.clickWithAssertion() }
+    }
+    step("Assert PIN entry screen is displayed") {
+        awaitSuccess {
+            onTangemPayChangePinScreen {
+                title.assertIsDisplayed()
+                inputField.assertIsDisplayed()
             }
         }
     }
