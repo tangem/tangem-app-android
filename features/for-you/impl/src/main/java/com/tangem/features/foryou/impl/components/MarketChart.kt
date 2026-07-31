@@ -85,6 +85,11 @@ private fun ColumnScope.DonutChartBlock(donutChartUM: DonutChartUM, cardBoundsIn
     var dismissJob by remember { mutableStateOf<Job?>(null) }
     var chartSize by remember { mutableStateOf(IntSize.Zero) }
     var chartWindowOffset by remember { mutableStateOf(Offset.Zero) }
+    // Empty bounds mean the card is clipped away: no anchor to point the tooltip at, so drop the selection.
+    val hasAnchor = !cardBoundsInWindow.isEmpty
+    LaunchedEffect(hasAnchor) {
+        if (!hasAnchor) selectedIndex = null
+    }
 
     Box(
         modifier = Modifier
@@ -184,6 +189,8 @@ private fun DonutSegmentTooltipBlock(
     cardBoundsInWindow: Rect,
     onDismissRequest: () -> Unit,
 ) {
+    if (cardBoundsInWindow.isEmpty) return
+
     val density = LocalDensity.current
     val gapPx = with(density) { 8.dp.roundToPx() }
     val strokePx = with(density) { DonutStrokeWidth.toPx() }
