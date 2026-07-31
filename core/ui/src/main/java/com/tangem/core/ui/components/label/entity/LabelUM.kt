@@ -22,7 +22,7 @@ sealed class LabelLeadingContentUM {
 }
 
 enum class LabelStyle {
-    REGULAR, ACCENT, WARNING,
+    REGULAR, ACCENT, WARNING, ATTENTION
 }
 
 enum class LabelSize {
