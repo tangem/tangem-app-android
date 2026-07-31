@@ -227,6 +227,33 @@ internal class TokenSentimentConverterTest {
         assertThat(row.scoreBadgeText).isEqualTo(stringReference("58.4"))
     }
 
+    @ParameterizedTest
+    @MethodSource("provideMaCrossScoreModels")
+    fun `GIVEN MA Cross deviation WHEN convert THEN score is shown as a signed percent`(model: MaCrossScoreModel) {
+        // Arrange — the backend sends the SMA50/SMA200 deviation already in percent units
+        val coinIndicators = createCoinIndicators(
+            readings = listOf(createReading(type = Type.MA_CROSS, value = model.value)),
+        )
+
+        // Act
+        val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
+
+        // Assert
+        val row = (actual as TokenSentimentUM.Content).row(IndicatorType.MA_CROSS) as TokenIndicatorUM.Content
+        assertThat(row.scoreBadgeText).isEqualTo(stringReference(model.expected))
+    }
+
+    private fun provideMaCrossScoreModels() = listOf(
+        MaCrossScoreModel(value = BigDecimal("12.34"), expected = "12.34%"),
+        // SMA50 below SMA200 — the sign carries the direction and must survive
+        MaCrossScoreModel(value = BigDecimal("-12.34"), expected = "-12.34%"),
+        MaCrossScoreModel(value = BigDecimal("0.00"), expected = "0.00%"),
+    )
+
+    internal data class MaCrossScoreModel(val value: BigDecimal, val expected: String) {
+        override fun toString(): String = "$value -> $expected"
+    }
+
     @Test
     fun `GIVEN no readings WHEN convert THEN result is NoOutlook without rows`() {
         // Arrange
@@ -367,8 +394,8 @@ internal class TokenSentimentConverterTest {
         return indicators.first { it.indicatorType == indicatorType }
     }
 
-    private fun TokenSentimentUM.Content.namedRow(indicatorType: IndicatorType): TokenIndicatorUM.Named {
-        return row(indicatorType) as TokenIndicatorUM.Named
+    private fun TokenSentimentUM.Content.namedRow(indicatorType: IndicatorType): TokenIndicatorUM.Loaded {
+        return row(indicatorType) as TokenIndicatorUM.Loaded
     }
 
     private fun TokenSentimentUM.Content.rowSentimentText(indicatorType: IndicatorType): TextReference {
