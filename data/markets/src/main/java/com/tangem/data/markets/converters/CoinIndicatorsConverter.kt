@@ -18,16 +18,14 @@ internal object CoinIndicatorsConverter : Converter<Asset, CoinIndicators> {
     /** Readings of a type or timeframe unknown to this app version cannot be displayed — drop them */
     private fun convertReading(dto: Indicator): Reading? {
         val type = convertType(dto.type) ?: return null
-
-        // `null` timeframe is valid (timeframe-agnostic indicators), unlike UNKNOWN
-        if (dto.timeframe == Indicator.Timeframe.UNKNOWN) return null
+        val timeframe = convertTimeframe(dto.timeframe) ?: return null
 
         return Reading(
             type = type,
-            timeframe = dto.timeframe?.let(::convertTimeframe),
+            name = dto.name,
+            timeframe = timeframe,
             value = dto.value,
             signal = convertSignal(dto.label),
-            subLabel = dto.subLabel,
             updatedAt = dto.updatedAt,
         )
     }
@@ -54,11 +52,10 @@ internal object CoinIndicatorsConverter : Converter<Asset, CoinIndicators> {
 
     private fun convertSignal(dto: Indicator.Signal): Reading.Signal {
         return when (dto) {
-            Indicator.Signal.BULLISH -> Reading.Signal.BULLISH
-            Indicator.Signal.BEARISH -> Reading.Signal.BEARISH
+            Indicator.Signal.POSITIVE -> Reading.Signal.POSITIVE
+            Indicator.Signal.NEGATIVE -> Reading.Signal.NEGATIVE
             Indicator.Signal.NEUTRAL -> Reading.Signal.NEUTRAL
             Indicator.Signal.INSUFFICIENT_DATA -> Reading.Signal.INSUFFICIENT_DATA
-            Indicator.Signal.NOT_APPLICABLE -> Reading.Signal.NOT_APPLICABLE
             Indicator.Signal.NOT_AVAILABLE,
             Indicator.Signal.UNKNOWN,
             -> Reading.Signal.NOT_AVAILABLE
