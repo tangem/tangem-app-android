@@ -287,6 +287,43 @@ internal class ForYouModelTest {
     }
 
     @Nested
+    inner class LockedWallets {
+
+        @Test
+        fun `GIVEN a locked wallet WHEN advanced THEN only its unlocked sibling is preselected`() = runTest {
+            // Arrange
+            val (unlockedAccounts, _) = stubUnlockedAndLockedWallets()
+
+            // Act
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert — a locked wallet sits behind the lock screen, so its accounts must not be picked
+            assertThat(selectedAccountsFlow.value)
+                .containsExactly(unlockedAccounts.accountStatuses.single().accountId)
+        }
+
+        @Test
+        fun `GIVEN a locked wallet WHEN advanced THEN it is out of the total and the filter stays inactive`() =
+            runTest {
+                // Arrange
+                stubUnlockedAndLockedWallets()
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert — the chip is the only window into totalAccountsCount: it stays Inactive only while
+                // the selection covers every account the screen counts, so an Active chip here would mean the
+                // locked wallet is still counted and the user sees a filter they never applied
+                val state = model.uiState.value
+                assertThat(state.portfolioFilter).isInstanceOf(TangemFilterItemUM.Inactive::class.java)
+                val content = state.portfolioReviewUM as PortfolioReviewUM.Content
+                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
+            }
+    }
+
+    @Nested
     inner class ExpandClick {
 
         @Test
@@ -462,6 +499,7 @@ internal class ForYouModelTest {
                     walletB.walletId to createAccountStatusList(listOf(eth), walletId = walletB.walletId),
                 )
                 every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(map)
+                userWalletsFlow.value = listOf(walletA, walletB)
                 selectedUserWalletFlow.value = walletA
 
                 // Act
@@ -928,6 +966,9 @@ internal class ForYouModelTest {
         // The coin-indicators fetch flow keys the portfolio off the globally selected wallet, so this
         // must be set too — otherwise `accountList[null]` is empty and the fetch never fires.
         selectedUserWalletFlow.value = wallet
+        // The model drops accounts of wallets that aren't in the wallets list (or are locked), so the
+        // wallet backing the account map has to be present there as well.
+        userWalletsFlow.value = listOf(wallet)
         every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(
             linkedMapOf(
                 wallet.walletId to createAccountStatusList(currencies),
@@ -945,9 +986,49 @@ internal class ForYouModelTest {
         selectedWalletId: UserWalletId = WALLET_ID,
     ): MutableStateFlow<LinkedHashMap<UserWalletId, AccountStatusList>> {
         selectedUserWalletFlow.value = MockUserWalletFactory.create().copy(walletId = selectedWalletId)
+        userWalletsFlow.value = map.keys.map { walletId ->
+            MockUserWalletFactory.create().copy(walletId = walletId)
+        }
         val flow = MutableStateFlow(map)
         every { multiAccountStatusListSupplier.invokeAsMap() } returns flow
         return flow
+    }
+
+    /**
+     * Wires two wallets holding one coin each — [WALLET_ID] unlocked and holding BTC, [LOCKED_WALLET_ID]
+     * locked and holding ETH — and returns their account lists in that order.
+     *
+     * [MockUserWalletFactory] produces unlocked wallets, so the locked one is derived by emptying the
+     * card's wallets: `UserWallet.Cold.isLocked` is `scanResponse.card.wallets.isEmpty()`.
+     */
+    private fun stubUnlockedAndLockedWallets(): Pair<AccountStatusList, AccountStatusList> {
+        val unlockedWallet = MockUserWalletFactory.create().copy(walletId = WALLET_ID)
+        val lockedWallet = MockUserWalletFactory.create().copy(walletId = LOCKED_WALLET_ID).let { wallet ->
+            wallet.copy(
+                scanResponse = wallet.scanResponse.copy(
+                    card = wallet.scanResponse.card.copy(wallets = emptyList()),
+                ),
+            )
+        }
+        val unlockedAccounts = createAccountStatusList(
+            currencies = listOf(createStatus(createCoin("btc", "BTC"), loadedValue(BigDecimal("100")))),
+            walletId = WALLET_ID,
+        )
+        val lockedAccounts = createAccountStatusList(
+            currencies = listOf(createStatus(createCoin("eth", "ETH"), loadedValue(BigDecimal("50")))),
+            walletId = LOCKED_WALLET_ID,
+        )
+
+        selectedUserWalletFlow.value = unlockedWallet
+        userWalletsFlow.value = listOf(unlockedWallet, lockedWallet)
+        every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(
+            linkedMapOf(
+                unlockedWallet.walletId to unlockedAccounts,
+                lockedWallet.walletId to lockedAccounts,
+            ),
+        )
+
+        return unlockedAccounts to lockedAccounts
     }
 
     private fun stubTopEarnTokens(
@@ -1131,5 +1212,8 @@ internal class ForYouModelTest {
 
     private companion object {
         val WALLET_ID = UserWalletId("01")
+
+        /** UserWalletId parses its value as hex, so the id must be a valid hex string. */
+        val LOCKED_WALLET_ID = UserWalletId("02")
     }
 }
