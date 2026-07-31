@@ -13,7 +13,10 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
+import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
+import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -86,5 +89,40 @@ internal object PolymarketDomainModule {
     ): DeriveApiCredentialsUseCase = DeriveApiCredentialsUseCase(
         polymarketRepository = polymarketRepository,
         credentialsStore = credentialsStore,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSubmitApprovalsUseCase(polymarketRepository: PolymarketRepository): SubmitApprovalsUseCase =
+        SubmitApprovalsUseCase(polymarketRepository = polymarketRepository)
+
+    @Provides
+    @Singleton
+    fun provideSyncBalanceAllowanceUseCase(polymarketRepository: PolymarketRepository): SyncBalanceAllowanceUseCase =
+        SyncBalanceAllowanceUseCase(polymarketRepository = polymarketRepository)
+
+    @Provides
+    @Singleton
+    @Suppress("LongParameterList")
+    fun provideRunPolymarketOnboardingUseCase(
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        getWalletStatus: GetPolymarketWalletStatusUseCase,
+        getRelayerNonce: GetPolymarketRelayerNonceUseCase,
+        signOnboardingDigests: SignOnboardingDigestsUseCase,
+        deployDepositWallet: DeployDepositWalletUseCase,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+        deriveApiCredentials: DeriveApiCredentialsUseCase,
+        submitApprovals: SubmitApprovalsUseCase,
+        syncBalanceAllowance: SyncBalanceAllowanceUseCase,
+    ): RunPolymarketOnboardingUseCase = RunPolymarketOnboardingUseCase(
+        deriveAddresses = deriveAddresses,
+        getWalletStatus = getWalletStatus,
+        getRelayerNonce = getRelayerNonce,
+        signOnboardingDigests = signOnboardingDigests,
+        deployDepositWallet = deployDepositWallet,
+        getApiCredentials = getApiCredentials,
+        deriveApiCredentials = deriveApiCredentials,
+        submitApprovals = submitApprovals,
+        syncBalanceAllowance = syncBalanceAllowance,
     )
 }
