@@ -94,7 +94,7 @@ internal class DefaultTokenSummaryComponent @AssistedInject constructor(
             override fun BottomSheet() {
                 InfoBottomSheet(
                     infoBottomSheetContent = InfoBottomSheetContent(
-                        title = stringReference(config.indicatorType.title),
+                        title = stringReference(config.title),
                         body = config.indicatorType.description,
                     ),
                     onDismiss = ::dismiss,

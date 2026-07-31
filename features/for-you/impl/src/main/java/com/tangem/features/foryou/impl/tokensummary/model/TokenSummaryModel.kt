@@ -275,8 +275,10 @@ internal class TokenSummaryModel @Inject constructor(
         )
     }
 
-    private fun onInfoClick(indicatorType: IndicatorType) {
-        analyticsEventHandler.send(ForYouAnalyticsEvent.IndicatorInfo(info = indicatorType.analyticsValue))
-        bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.Info(indicatorType))
+    private fun onInfoClick(indicator: TokenIndicatorUM.Loaded) {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.IndicatorInfo(info = indicator.indicatorType.analyticsValue))
+        bottomSheetNavigation.activate(
+            TokenSummaryBottomSheetConfig.Info(indicatorType = indicator.indicatorType, title = indicator.title),
+        )
     }
 }
