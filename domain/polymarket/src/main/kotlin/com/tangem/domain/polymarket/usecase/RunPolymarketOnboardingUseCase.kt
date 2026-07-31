@@ -29,6 +29,7 @@ class RunPolymarketOnboardingUseCase(
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
     private val deriveApiCredentials: DeriveApiCredentialsUseCase,
     private val submitApprovals: SubmitApprovalsUseCase,
+    private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
@@ -45,6 +46,7 @@ class RunPolymarketOnboardingUseCase(
 
         if (!entry.owesApprovals() && credentials != null) {
             awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
+            primeBalanceCache(addresses, credentials)
             emit(PolymarketOnboardingProgress.Ready)
             return
         }
@@ -67,15 +69,13 @@ class RunPolymarketOnboardingUseCase(
             current = step { deployDepositWallet(addresses) } ?: return
         }
 
-        if (credentials == null) {
-            step {
-                deriveApiCredentials(
-                    ownerAddress = addresses.ownerAddress,
-                    l1Signature = signed.l1Signature,
-                    timestamp = signed.clobAuthTimestamp,
-                )
-            } ?: return
-        }
+        val activeCredentials = credentials ?: step {
+            deriveApiCredentials(
+                ownerAddress = addresses.ownerAddress,
+                l1Signature = signed.l1Signature,
+                timestamp = signed.clobAuthTimestamp,
+            )
+        } ?: return
 
         if (entry.owesApprovals()) {
             if (!entry.isDeployComplete()) {
@@ -85,6 +85,7 @@ class RunPolymarketOnboardingUseCase(
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
+        primeBalanceCache(addresses, activeCredentials)
         emit(PolymarketOnboardingProgress.Ready)
     }
 
@@ -139,6 +140,11 @@ class RunPolymarketOnboardingUseCase(
 
         emit(PolymarketOnboardingProgress.StillWorking(reported))
         return null
+    }
+
+    /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
+    private suspend fun primeBalanceCache(addresses: PolymarketAddresses, credentials: PolymarketApiCredentials) {
+        syncBalanceAllowance(ownerAddress = addresses.ownerAddress, credentials = credentials)
     }
 
     private suspend fun <T> FlowCollector<PolymarketOnboardingProgress>.step(
