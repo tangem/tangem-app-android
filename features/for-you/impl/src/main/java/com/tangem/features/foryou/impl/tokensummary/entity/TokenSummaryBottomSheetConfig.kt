@@ -25,6 +25,10 @@ internal sealed interface TokenSummaryBottomSheetConfig {
      */
     data object AddToPortfolio : TokenSummaryBottomSheetConfig
 
-    /** Informational sheet describing the tapped [indicatorType]. */
-    data class Info(val indicatorType: IndicatorType) : TokenSummaryBottomSheetConfig
+    /**
+     * Informational sheet describing the tapped [indicatorType].
+     *
+     * @param title the indicator name as shown in the tapped row — the backend one when a reading arrived
+     */
+    data class Info(val indicatorType: IndicatorType, val title: String) : TokenSummaryBottomSheetConfig
 }

@@ -27,6 +27,7 @@ import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.tokensummary.entity.BottomButtonUM
 import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
 import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
+import com.tangem.features.foryou.impl.tokensummary.entity.TokenIndicatorUM
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -252,7 +253,7 @@ internal class TokenSummaryModelTest {
                 val model = createModel(testScope = this, token = portfolioToken(ethereum))
 
                 // Act
-                model.uiState.value.onInfoClick(IndicatorType.GalaxyScore)
+                model.uiState.value.onInfoClick(indicatorRow(IndicatorType.GalaxyScore, title = "Galaxy score"))
 
                 // Assert — not the display title, which is "Galaxy score"
                 val events = mutableListOf<AnalyticsEvent>()
@@ -267,7 +268,7 @@ internal class TokenSummaryModelTest {
             val model = createModel(testScope = this, token = portfolioToken(ethereum))
 
             // Act
-            model.uiState.value.onInfoClick(IndicatorType.MA_CROSS)
+            model.uiState.value.onInfoClick(indicatorRow(IndicatorType.MA_CROSS))
 
             // Assert
             verify(exactly = 1) {
@@ -275,6 +276,10 @@ internal class TokenSummaryModelTest {
             }
         }
     }
+
+    /** The clicked row: analytics reports its [IndicatorType], not the backend name shown as [title] */
+    private fun indicatorRow(indicatorType: IndicatorType, title: String = "name from backend") =
+        TokenIndicatorUM.NoData(indicatorType = indicatorType, title = title)
 
     private fun TokenSummaryUm.periodItems(): List<TangemSegmentUM> =
         (periodPicker as PeriodPickerUM.Content).picker.items

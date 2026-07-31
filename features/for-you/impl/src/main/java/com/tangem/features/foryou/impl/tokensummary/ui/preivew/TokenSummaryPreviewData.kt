@@ -46,6 +46,17 @@ internal fun previewTokenSummary(
     onInfoClick = {},
 )
 
+/** Readings arrived — so the rows keep their backend names — but none of them carries a value. */
+internal val previewNoOutlookSentiment = TokenSentimentUM.Empty.NoOutlook(
+    indicators = persistentListOf(
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.GalaxyScore, title = "Galaxy score"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.Sentiment, title = "Sentiment"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.RSI, title = "RSI"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.MACD, title = "MACD"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.MA_CROSS, title = "MA Cross"),
+    ),
+)
+
 internal val previewContentSentiment = TokenSentimentUM.Content(
     sentiment = stringReference("Negative outlook"),
     lastUpdate = stringReference("Updated Jan 20 2026, 9:24 PM"),
@@ -57,30 +68,35 @@ internal val previewContentSentiment = TokenSentimentUM.Content(
             sentimentBadgeStatus = TangemBadge.Status.Info,
             scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.GalaxyScore,
+            title = "Galaxy score",
         ),
         TokenIndicatorUM.Content(
             sentimentBadgeText = resourceReference(R.string.common_positive),
             sentimentBadgeStatus = TangemBadge.Status.Success,
             scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.Sentiment,
+            title = "Sentiment",
         ),
         TokenIndicatorUM.Content(
             sentimentBadgeText = resourceReference(R.string.common_negative),
             sentimentBadgeStatus = TangemBadge.Status.Error,
             scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.RSI,
+            title = "RSI",
         ),
         TokenIndicatorUM.Content(
             sentimentBadgeText = resourceReference(R.string.common_negative),
             sentimentBadgeStatus = TangemBadge.Status.Error,
             scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.MACD,
+            title = "MACD",
         ),
         TokenIndicatorUM.Content(
             sentimentBadgeText = resourceReference(R.string.common_negative),
             sentimentBadgeStatus = TangemBadge.Status.Error,
             scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.MA_CROSS,
+            title = "MA Cross",
         ),
     ),
 )

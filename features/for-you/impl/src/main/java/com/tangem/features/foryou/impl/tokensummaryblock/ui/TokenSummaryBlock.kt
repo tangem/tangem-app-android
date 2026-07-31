@@ -30,6 +30,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
+import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewNoOutlookSentiment
 import com.tangem.features.foryou.impl.tokensummaryblock.entity.TokenSummaryBlockUM
 import com.tangem.features.foryou.impl.ui.components.AiInsightContent
 import com.tangem.features.foryou.impl.ui.components.GradientScaleBar
@@ -251,7 +252,7 @@ private fun TokenSummaryBlockNoResponsePreview() {
 private fun TokenSummaryBlockNoOutlookPreview() {
     TangemThemePreviewRedesign {
         TokenSummaryBlock(
-            state = previewSentimentState(sentiment = TokenSentimentUM.Empty.NoOutlook),
+            state = previewSentimentState(sentiment = previewNoOutlookSentiment),
             modifier = Modifier.padding(16.dp),
         )
     }
