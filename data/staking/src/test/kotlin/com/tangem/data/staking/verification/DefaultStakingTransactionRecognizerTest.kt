@@ -33,7 +33,9 @@ internal class DefaultStakingTransactionRecognizerTest {
 
     @Test
     fun `GIVEN solana staking tx WHEN recognize THEN delegates to true`() {
-        val hex = "0102" + "06a1d8179137542a983437bdfe2a7ab2557f535c8a78722b68a49dc000000000" + "0304"
+        val signatureAndHeader = "01" + "00".repeat(SOLANA_SIGNATURE_BYTES) + "010001"
+        val accountKeys = "11".repeat(SOLANA_ACCOUNT_KEY_BYTES) + SOLANA_STAKE_PROGRAM_KEY
+        val hex = signatureAndHeader + "02" + accountKeys
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.SOLANA, hex)).isTrue()
     }
 
@@ -58,5 +60,11 @@ internal class DefaultStakingTransactionRecognizerTest {
     @Test
     fun `GIVEN unsupported network WHEN recognize THEN false`() {
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.ETHEREUM, "deadbeef")).isFalse()
+    }
+
+    private companion object {
+        const val SOLANA_STAKE_PROGRAM_KEY = "06a1d8179137542a983437bdfe2a7ab2557f535c8a78722b68a49dc000000000"
+        const val SOLANA_SIGNATURE_BYTES = 64
+        const val SOLANA_ACCOUNT_KEY_BYTES = 32
     }
 }
